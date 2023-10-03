@@ -57,7 +57,7 @@ const config = {
         title: 'Operon',
         logo: {
           alt: 'My Site Logo',
-          src: 'img/logo.svg',
+          src: 'img/dbos-logo.jpg',
         },
         items: [
           {
