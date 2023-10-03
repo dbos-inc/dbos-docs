@@ -66,7 +66,7 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/dbos-inc/operon',
             label: 'GitHub',
             position: 'right',
           },
@@ -76,11 +76,11 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Learn',
             items: [
               {
                 label: 'Docs',
-                to: '/docs/',
+                to: '/',
               },
             ],
           },
@@ -88,16 +88,8 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                href: 'https://discord.gg/VrYtAZD5v',
               },
             ],
           },
@@ -106,7 +98,11 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/dbos-inc',
+              },
+              {
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/dbos-inc/',
               },
             ],
           },
