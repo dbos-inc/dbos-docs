@@ -1,6 +1,11 @@
-# Website
+# Operon Documentation
 
-This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+### Local Development
+
+This site is built using [Docusaurus](docusaurus.io).
+All documentation is written in Markdown in the `/docs` folder.
+Site-wide configuration (e.g., header, footer, favicon) is controlled from `docusaurus.config.js`.
+For detailed information, see the [Docusaurus documentation](https://docusaurus.io/docs/docs-introduction).
 
 ### Local Deployment
 
@@ -10,6 +15,9 @@ npm run start
 ```
 
 ### Publish on Github
+
+Publishing is done automatically by a commit hook--you should never need to run this yourself.
+
 ```
 GIT_USER=<GITHUB_USERNAME> npx run deploy
 ```
