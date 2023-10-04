@@ -9,7 +9,7 @@ Operon workflows group together a set of transactions and provide them with Once
 This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
 
 ## Transactions
-Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database interactions.
+Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database queries. Operon takes care of wrapping your queries inside a database transaction and handles rollback when they fail, so you can focus on your application logic.
 
 ## Workflows
 Operon workflows provide an abstraction for composing transactions. Workflows can carry metadata, such as their callers' identity.
@@ -20,7 +20,7 @@ If a workflow fails during execution, the caller can capture the failure, retry 
 For Operon's checkpointing to work, it needs to maintain two tables in your application database.
 
 ## Contexts
-When writing Operon code, you use a _context_ object to invoke transactions. Context objects are your main interface to Operon in your application code.
+When writing Operon code, you use a _context_ object to invoke transactions. Context objects are your main interface to Operon in your application code. For example, you can query your database with `context.pgClient.query`.
 
 ## Communicators
 Inside a workflow, you can use _communicators_ to call third party APIs. Like transactions, the output of communicators is checkpointed such that third party calls are sent only once.
