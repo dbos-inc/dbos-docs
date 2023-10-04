@@ -4,7 +4,19 @@ title: Workflows
 description: Compose transactions within a workflow
 ---
 
-An operon workflow composes transactions in a single unit of work with Oncce-And-Only-Once-Execution guarantees. In this example, we nest the hello transaction in a workflow.
+An operon workflow composes transactions in a single unit of work with Oncce-And-Only-Once-Execution guarantees.
+You can register a new workflow by annotating a function with the [`@OperonWorkflow()` decorator](../api-reference/decorators#operonworkflow):
+
+```tsx
+  @OperonWorkflow()
+  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
+	return await wfCtxt.invoke(Hello).helloTxn(name);
+  }
+```
+
+The first argument of the workflow is a [`WorkflowContext`](../api-reference/contexts#workflowcontext). We can use this context to invoke transactions, here `hello`, using `wfCtxt.invoke(Hello).helloTxn(name)`
+
+## Full code
 
 ```tsx
 import { HandlerContext, GetApi, OperonTransaction, OperonWorkflow, WorkflowContext, TransactionContext } from '@dbos-inc/operon'
@@ -28,14 +40,3 @@ export class Hello {
   }
 }
 ```
-
-Note we created a workflow named `helloWorkflow` using the `@OperonWorkflow()` decorator:
-
-```tsx
-  @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-	return await wfCtxt.invoke(Hello).helloTxn(name);
-  }
-```
-
-The first argument of the workflow is a [`WorkflowContext`](../api-reference/contexts#workflowcontext). We can use this context to sequence transactions within the workflow, here done with the `hello` transaction using `wfCtxt.invoke(Hello).helloTxn(name)`
