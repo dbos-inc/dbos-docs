@@ -14,13 +14,13 @@ Users write functions.
 The functions execute in a runtime provided by operon. Users do not have to code the entire server. Operon manages the lifecyle of the server and user code.
 The functions are triggered by HTTP requests.
 Decorators are used to annotate the function to describe whether it is a transaction or workflow and what http request triggers the execution.
+The separation of responsibility lets the developer focus on building business logic, while operon can focus on providing a reliable and scalable runtime.
 
 ### User code
-Functions that a user writes that are annotated as Transactions or Workflows.
+Functions that a user writes that are annotated as Transactions or Workflows. 
 
 ### Operon runtime
-Operon runtime that executes the user functions
-
+Operon runtime that executes the user functions. Provides reliable and scalable runtime with an embedded HTTP server, security, logging and other features.
 
 ## Transactions
 Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database queries. Operon takes care of wrapping your queries inside a database transaction and handles rollback when they fail, so you can focus on your application logic.
