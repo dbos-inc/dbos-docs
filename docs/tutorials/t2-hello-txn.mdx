@@ -24,13 +24,30 @@ export class Hello {
 }
 ```
 
-First, we declared a new static function in the `Hello` class: `static async hello(txnCtxt: TransactionContext, name: string)`. The function takes as parameters a `TransactionContext` and the `name` to greet. It uses the transaction context `txnCtxt` to insert a record in your database using a postgres client. Finally, it returns the greeting.
+First, we declared a new static function in the `Hello` class:
+```tsx
+@OperonTransaction()
+static async hello(txnCtxt: TransactionContext, name: string) {
+  const greeting = `Hello, ${name}!`
+  const { rows } = await txnCtxt.pgClient.query<{ greeting_id: number }>("INSERT INTO OperonHello(greeting) VALUES ($1) RETURNING greeting_id", [greeting])
+  return `Greeting ${rows[0].greeting_id}: ${greeting}`;
+}
+```
 
-Second, we modified the `greetingEndpoint` to invoke the transaction: `ctx.invoke(Hello).hello(name).then(x => x.getResult()`. In this line:
-- `ctx.invoke(Hello)` returns a proxy object containing all the Operon operations associated with the `Hello` class
-- `.hello(name)` calls the `hello` function with the `name` received in the HTTP request. Note Operon will automatically pass a `TransactionContext` for you under the hood. The return value of a transaction function is a promise to a [workflow handle](#), hence we next call
+The function is annotated with the [OperonTransaction decoratator](../api-reference/decorators#OperonTransaction).
+It takes as parameters a [`TransactionContext`](../api-reference/contexts#transactioncontext) and the `name` to greet. It uses the transaction context to insert a record in your database using a postgres client. Finally, it returns the greeting.
+
+Second, we modified the `greetingEndpoint` to invoke the transaction:
+```tsx
+ctx.invoke(Hello).hello(name).then(x => x.getResult()`
+```
+- `ctx.invoke(Hello)`: returns a proxy object containing all Operon operations registered with the `Hello` class
+- `.hello(name)` calls the `hello` function with the `name` received in the HTTP request and returns a promise
 - `.then(x => x.getResult())` to wait for `hello` to resolve.
 
+Note Operon will automatically pass a `TransactionContext` to your registered transactions under the hood.
+The return value of Operon functions is a promise to a [workflow handle](../api-reference/workflow-handles).
+The handle exposes a `getResult()` method you can use to get your workflow's final result.
 
 ## `OperonTransaction(config: TransactionConfig={})`
 You can configure two aspects of an Operon transaction: its isolation level and whether it is read only. Operon supports the same [isolation levels than postgres](https://www.postgresql.org/docs/current/transaction-iso.html), that is, `READ UNCOMMITTED`, `READ COMMITTED`, `REPEATABLE READ`, `SERIALIZABLE`.
@@ -39,16 +56,5 @@ You can configure two aspects of an Operon transaction: its isolation level and 
 export interface TransactionConfig {
   isolationLevel?: IsolationLevel;
   readOnly?: boolean;
-}
-```
-
-## `TransactionContext`
-Transaction context extends the base [OperonContext](#) with the database client to use for executing SQL queries.
-
-```tsx
-export interface TransactionContext extends OperonContext {
-  pgClient: PoolClient;
-  prismaClient: PrismaClient;
-  typeormEM: TypeORMEntityManager;
 }
 ```
