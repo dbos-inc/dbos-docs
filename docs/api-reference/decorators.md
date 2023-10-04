@@ -9,7 +9,7 @@ description: Operon decorators
 Registers a transaction with Operon. Takes an optional `TransactionConfig` to configure two aspects of your transaction: its isolation level and whether it is read only.
 
 ```tsx
-export interface TransactionConfig {
+interface TransactionConfig {
   isolationLevel?: IsolationLevel;
   readOnly?: boolean;
 }
