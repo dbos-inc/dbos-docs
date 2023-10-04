@@ -16,6 +16,15 @@ You can register a new workflow by annotating a function with the [`@OperonWorkf
 
 The first argument of the workflow is a [`WorkflowContext`](../api-reference/contexts#workflowcontext). We can use this context to invoke transactions, here `hello`, using `wfCtxt.invoke(Hello).helloTxn(name)`
 
+We also modify the HTTP handler to invoke the workflow:
+
+```tsx
+  @GetApi('/greeting/:name')
+  static async greetingEndpoint(ctx: HandlerContext, name: string) {
+    return await ctx.invoke(Hello).helloWorkflow(name).then(x => x.getResult());
+  }
+```
+
 ## Full code
 
 ```tsx
