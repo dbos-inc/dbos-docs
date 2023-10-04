@@ -21,9 +21,12 @@ It takes as parameters a [`TransactionContext`](../api-reference/contexts#transa
 
 now, let's modify the `greetingEndpoint` to invoke the transaction:
 ```tsx
-ctx.invoke(Hello).hello(name).then(x => x.getResult()`
+@GetApi('/greeting/:name')
+static async greetingEndpoint(ctx: HandlerContext, name: string) {
+  return await ctx.invoke(Hello).hello(name).then(x => x.getResult());
+}
 ```
-- `ctx.invoke(Hello)`: returns a proxy object containing all Operon operations registered with the `Hello` class
+- `ctx.invoke(Hello)` returns a proxy object containing all Operon operations registered with the `Hello` class
 - `.hello(name)` calls the `hello` function with the `name` received in the HTTP request and returns a promise
 - `.then(x => x.getResult())` to wait for `hello` to resolve.
 
