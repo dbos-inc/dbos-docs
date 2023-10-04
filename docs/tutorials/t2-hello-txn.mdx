@@ -6,6 +6,33 @@ description: Write transactional code
 
 An operon transaction is a function decorated with `@OperonTransaction` and taking a `TransactionContext` as a first argument. In this example, we will extend the `greetingEndpoint` to record greetings in the database.
 
+First, let's add a new static function in the `Hello` class:
+```tsx
+@OperonTransaction()
+static async hello(txnCtxt: TransactionContext, name: string) {
+  const greeting = `Hello, ${name}!`
+  const { rows } = await txnCtxt.pgClient.query<{ greeting_id: number }>("INSERT INTO OperonHello(greeting) VALUES ($1) RETURNING greeting_id", [greeting])
+  return `Greeting ${rows[0].greeting_id}: ${greeting}`;
+}
+```
+
+The function is annotated with the [OperonTransaction decoratator](../api-reference/decorators#OperonTransaction).
+It takes as parameters a [`TransactionContext`](../api-reference/contexts#transactioncontext) and the `name` to greet. It uses the transaction context to insert a record in your database using a postgres client. Finally, it returns the greeting.
+
+now, let's modify the `greetingEndpoint` to invoke the transaction:
+```tsx
+ctx.invoke(Hello).hello(name).then(x => x.getResult()`
+```
+- `ctx.invoke(Hello)`: returns a proxy object containing all Operon operations registered with the `Hello` class
+- `.hello(name)` calls the `hello` function with the `name` received in the HTTP request and returns a promise
+- `.then(x => x.getResult())` to wait for `hello` to resolve.
+
+Note Operon will automatically pass a `TransactionContext` to your registered transactions under the hood.
+The return value of Operon functions is a promise to a [workflow handle](../api-reference/workflow-handles).
+The handle exposes a `getResult()` method you can use to get your workflow's final result.
+
+## Final code
+
 ```tsx
 import { HandlerContext, GetApi } from '@dbos-inc/operon'
 
@@ -21,40 +48,5 @@ export class Hello {
   static async greetingEndpoint(ctx: HandlerContext, name: string) {
     return await ctx.invoke(Hello).hello(name).then(x => x.getResult());
   }
-}
-```
-
-First, we declared a new static function in the `Hello` class:
-```tsx
-@OperonTransaction()
-static async hello(txnCtxt: TransactionContext, name: string) {
-  const greeting = `Hello, ${name}!`
-  const { rows } = await txnCtxt.pgClient.query<{ greeting_id: number }>("INSERT INTO OperonHello(greeting) VALUES ($1) RETURNING greeting_id", [greeting])
-  return `Greeting ${rows[0].greeting_id}: ${greeting}`;
-}
-```
-
-The function is annotated with the [OperonTransaction decoratator](../api-reference/decorators#OperonTransaction).
-It takes as parameters a [`TransactionContext`](../api-reference/contexts#transactioncontext) and the `name` to greet. It uses the transaction context to insert a record in your database using a postgres client. Finally, it returns the greeting.
-
-Second, we modified the `greetingEndpoint` to invoke the transaction:
-```tsx
-ctx.invoke(Hello).hello(name).then(x => x.getResult()`
-```
-- `ctx.invoke(Hello)`: returns a proxy object containing all Operon operations registered with the `Hello` class
-- `.hello(name)` calls the `hello` function with the `name` received in the HTTP request and returns a promise
-- `.then(x => x.getResult())` to wait for `hello` to resolve.
-
-Note Operon will automatically pass a `TransactionContext` to your registered transactions under the hood.
-The return value of Operon functions is a promise to a [workflow handle](../api-reference/workflow-handles).
-The handle exposes a `getResult()` method you can use to get your workflow's final result.
-
-## `OperonTransaction(config: TransactionConfig={})`
-You can configure two aspects of an Operon transaction: its isolation level and whether it is read only. Operon supports the same [isolation levels than postgres](https://www.postgresql.org/docs/current/transaction-iso.html), that is, `READ UNCOMMITTED`, `READ COMMITTED`, `REPEATABLE READ`, `SERIALIZABLE`.
-
-```tsx
-export interface TransactionConfig {
-  isolationLevel?: IsolationLevel;
-  readOnly?: boolean;
 }
 ```
