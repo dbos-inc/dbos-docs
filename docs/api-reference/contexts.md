@@ -29,6 +29,14 @@ interface OperonContext {
 
 ## `WorkflowContext`
 ```tsx
+interface WorkflowContext extends OperonContext {
+  invoke<T extends object>(object: T): WFInvokeFuncs<T>;
+  send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string | null): Promise<void>;
+  recv<T extends NonNullable<any>>(topic?: string | null, timeoutSeconds?: number): Promise<T | null>
+  setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>;
+  transaction<T extends any[], R>(txn: OperonTransaction<T, R>, ...args: T): Promise<R>; // TODO: Make private
+  external<T extends any[], R>(commFn: OperonCommunicator<T, R>, ...args: T): Promise<R>; // TODO: Make private
+}
 ```
 
 ## `TransactionContext`
