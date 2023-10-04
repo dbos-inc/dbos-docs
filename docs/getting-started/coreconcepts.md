@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # Core Concepts
 
-Operon is a Function as a Service framework for transactional workflows.
-Operon workflows group together a set of transactions and provide them with Once and Only Once Execution guarantees.
-This means that opera workflows are guaranteed to run to completion and its composing transactions will be executed only once.
+Operon is a Function-as-a-Service framework for transactional workflows.
+Operon workflows group together a set of transactions and provide them with Once-and-Only-Once-Execution guarantees.
+This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
 
 ## Transactions
 Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database interactions.
@@ -17,6 +17,7 @@ Operon workflows provide an abstraction for composing transactions. Workflows ca
 ## Once and Only Once Execution
 Operon workflows use checkpointing to ensure each transaction in the workflow is executed only once.
 If a workflow fails to execute, the caller can retry it and expect execution to resume where it stopped.
+For Operon to work, it needs to maintain two tables in your application database.
 
 ## Contexts
 When writing Operon code, you can use a _context_ object to invoke transactions. Context objects are the main handler you will use when interacting with Operon in your application code.
