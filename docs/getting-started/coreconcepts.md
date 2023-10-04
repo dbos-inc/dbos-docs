@@ -16,14 +16,14 @@ Operon workflows provide an abstraction for composing transactions. Workflows ca
 
 ## Once and Only Once Execution
 Operon workflows use checkpointing to ensure each transaction in the workflow is executed only once.
-If a workflow fails to execute, the caller can retry it and expect execution to resume where it stopped.
-For Operon to work, it needs to maintain two tables in your application database.
+If a workflow fails during execution, the caller can capture the failure, retry the workflow and expect execution to resume where it stopped.
+For Operon's checkpointing to work, it needs to maintain two tables in your application database.
 
 ## Contexts
-When writing Operon code, you can use a _context_ object to invoke transactions. Context objects are the main handler you will use when interacting with Operon in your application code.
+When writing Operon code, you use a _context_ object to invoke transactions. Context objects are your main interface to Operon in your application code.
 
 ## Communicators
 Inside a workflow, you can use _communicators_ to call third party APIs. Like transactions, the output of communicators is checkpointed such that third party calls are sent only once.
 
 ## Decorators
-Operon programming model revolves heavily around _decorators_. Decorators are annotations that helps you declare your workflows and configure various details of its execution (for instance, setting the isolation level of a transaction.)
+Operon programming model revolves heavily around _decorators_. Decorators are annotations declaring your workflows and configuring various aspects of their execution (for instance, setting the isolation level of a transaction.)
