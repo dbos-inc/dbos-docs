@@ -40,7 +40,7 @@ export class Hello {
 
   @OperonWorkflow()
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-	return await wfCtxt.invoke(Hello).helloTxn(name);
+	return wfCtxt.invoke(Hello).helloTxn(name);
   }
 
   @GetApi('/greeting/:name')
