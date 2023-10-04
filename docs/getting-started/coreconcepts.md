@@ -4,9 +4,16 @@ sidebar_position: 2
 
 # Core Concepts
 
-Operon is a Function-as-a-Service framework for transactional workflows.
+Operon is a serverless framework for transactional workflows.
 Operon workflows group together a set of transactions and provide them with Once-and-Only-Once-Execution guarantees.
 This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
+
+# Programming model
+An operon application is a set of transactions and workflows.
+Users write functions.
+The functions execute in a runtime provided by operon. Users do not have to code the entire server. Operon manages the lifecyle of the server and user code.
+The functions are triggered by HTTP requests.
+Decorators are used to annotate the function to describe whether it is a transaction or workflow and what http request triggers the execution.
 
 ## Transactions
 Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database queries. Operon takes care of wrapping your queries inside a database transaction and handles rollback when they fail, so you can focus on your application logic.
