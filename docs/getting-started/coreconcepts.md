@@ -4,7 +4,8 @@ sidebar_position: 2
 
 # Core Concepts
 
-Operon is a serverless framework for transactional workflows.
+Operon is a simple easy to use serverless framework for developing transactional application.
+Operon applications are made up of transactions and workflows.
 Operon workflows group together a set of transactions and provide them with Once-and-Only-Once-Execution guarantees.
 This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
 
@@ -41,3 +42,13 @@ Inside a workflow, you can use _communicators_ to call third party APIs. Like tr
 
 ## Decorators
 Operon programming model revolves heavily around _decorators_. Decorators are annotations declaring your workflows and configuring various aspects of their execution (for instance, setting the isolation level of a transaction.)
+
+## Why should you consider using operon as your programming model ?
+
+It is easy to use.
+Write only business logic as functions. No monoliths, no microservices, no servers.
+It is fast, reliable and scalable.
+It provides the hard to code one and only one transactional semantics.
+Your resposibility is limited to business logic. Operon runtime does the rest.
+HttpServer, Security, Logging, Telemetry and more provided for free.
+Cloud deployment support coming soon.
