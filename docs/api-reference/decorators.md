@@ -263,6 +263,18 @@ export interface MiddlewareContext {
 ```
 
 #### `@KoaMiddleware`
+The `@KoaMiddleware()` class decorator configures the Operon HTTP server allow insertion of arbirtrary Koa middleware.  All methods in the decorated class will use the provided middleware list.
+
+```typescript
+const exampleMiddleware: Koa.Middleware = async (ctx, next) => {
+  await next();
+};  
+
+@KoaMiddleware(exampleMiddleware)
+class OperationEndpoints{
+  ...
+}
+```
 
 ### Declarative Security Decorators
 
