@@ -96,7 +96,7 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 }
 ```
 
-The first argument to an Operon workflow method must be a `WorkflowContext` (TODO add reference).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
+The first argument to an Operon workflow method must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
 `@OperonWorkflow()` takes an optional `WorkflowConfig` to configure the workflow, however there are currently no configuration items.
 
@@ -107,6 +107,8 @@ interface WorkflowConfig {
 
 #### `@OperonTransaction`
 This decorator registers a method as an Operon transaction.
+
+The first argument of the decorated method must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
 
 ```typescript
 @OperonTransaction({readOnly: true})
@@ -142,7 +144,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 }
 ```
 
-The first argument to an Operon communicator method must be a `CommunicatorContext` (TODO - reference).  This provides the communcator with information about the current authenticated user and execution state.
+The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).  This provides the communcator with information about the current authenticated user and execution state.
 
 `@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 
@@ -167,7 +169,7 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`OperonContext`](contexts.md#handlercontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
