@@ -341,6 +341,8 @@ Note that this validation is basic, and is not a substitute for the kind of inpu
 
 These decorators also serve a second purpose, which is to make the type information available to Operon.  Uses of this include creating a per-method schema for tracing logs, or automatically producing a description of the method for integration purposes.
 
+In simple cases (such as `string` or `number` arguments), the programmer need not do any decorating to get the functionality.  However, where the data types have some options, such as maximum length, precision, etc., there are decorators to control the behavior.
+
 #### `@Required`
 Ensures that the argument has a suitable value.  This is generally a default behavior.
 ```typescript
