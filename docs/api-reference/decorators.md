@@ -47,11 +47,25 @@ TODO: Here is where we say it doesn't matter what order you use them
 
 ### Decorator Implementations
 
-TODO: Here is the sob story about Stage 2 vs 3
+Work to add decorators to the TypeScript language and standards is currently ongoing, leaving things in a state of flux.
+
+Whereas the most useful version of decorators implemented in the TypeScript compiler is "experimental" or "Stage 2" decorators, the language specifications have not caught up.  "Stage 3" decorators, which are specified and implemented, are missing two key features used in Operon:
+- Parameter decorators
+- Metadata about method argument types
+
+It is expected that Operon will be moved from "experimental"/"Stage 2" decorators to a standards-based implementation once the standards have caught up.  It is hoped that user code would not be affected in this transition.
 
 ### Typescript Compiler Flags
 
-TODO: Here is the emit metadata and experimental decorators compilers flags
+In order to use the "Stage 2" experimental decorators implemented by Operon, the following configuration needs to be given to the TypeScript compiler (usually via the file `tsconfig.json`):
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    ...              
+```
 
 ## Decorator Locations
 
