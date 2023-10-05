@@ -278,8 +278,42 @@ class OperationEndpoints{
 
 ### Declarative Security Decorators
 
+Operon supports declarative, role-based security.  Methods are decorated with a list of roles (as strings), and access to the method is not authorized unless the authenticated user has at least one role on the list.  A role list can also be provided as a class-level default with `@DefaultRequiredRoles()`, in which case it applies to any Operon method in the class that does not override the defaults with its own `@RequiredRoles()` list.
+
 #### `@RequiredRoles`
+Specifies the list of required roles for the decorated method.  In order to execute the method, the authenticated user must have at least one role on the specified list.
+
+```typescript
+@RequiredRole(['user','guest'])
+@GetApi("/hello")
+static async helloUser(_ctx: HandlerContext) {
+  return { message: "hello registered user or guest!" };
+}
+```
+
 #### `@DefaultRequiredRoles`
+
+This class decorator specifies the list of required roles to be applied as a default to all Operon methods in the class.  This can be overridden at the method level with `@RequiredRoles`.
+
+```typescript
+@DefaultRequiredRole(['user'])
+class OperationEndpoints {
+  ...
+  // Authentication / authorization not required for this function
+  @RequiredRole([])
+  @GetApi("/hello")
+  static async hello(_ctx: HandlerContext) {
+    return { message: "hello!" };
+  }
+
+  // Role with elevated permissions required for this function
+  @RequiredRole(['admin'])
+  @GetApi("/hello")
+  static async administrate(_ctx: HandlerContext) {
+    return { message: "hello admin!" };
+  }
+}
+```
 
 ### Input Validation Decorators
 
