@@ -74,6 +74,22 @@ These go right before the arg: type
 ### Operon Decorators
 
 #### `@OperonWorkflow`
+This decorator registers a method as an Operon workflow.
+
+```typescript
+@OperonWorkflow()
+static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
+}
+```
+
+The first argument to an Operon workflow method must be a `WorkflowContext` (TODO add reference).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
+
+`@OperonWorkflow()` takes an optional `WorkflowConfig` to configure the workflow, however there are currently no configuration items.
+
+```typescript
+interface WorkflowConfig {
+}
+```
 
 #### `@OperonTransaction`
 This decorator registers a method as an Operon transaction.
@@ -103,6 +119,27 @@ Operon supports declaration of the following values for `IsolationLevel`:
 The precise transaction semantics of these levels may vary with the capabilities of the Operon user database.  For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@OperonCommunicator`
+This decorator registers a method as an Operon communicator.
+
+```typescript
+@OperonCommunicator()
+static async doComms(commCtxt: CommunicatorContext) {
+  ...
+}
+```
+
+The first argument to an Operon communicator method must be a `CommunicatorContext` (TODO - reference).  This provides the communcator with information about the current authenticated user and execution state.
+
+`@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
+
+```typescript
+export interface CommunicatorConfig {
+  retriesAllowed?: boolean; // Should failures be retried? (default true)
+  intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
+  maxAttempts?: number; // Maximum number of retry attempts (default 3). If the error occurs more times than this, return null.
+  backoffRate?: number; // The multiplier by which the retry interval increases after every retry attempt (default 2).
+}
+```
 
 ### HTTP API Registration Decorators
 
