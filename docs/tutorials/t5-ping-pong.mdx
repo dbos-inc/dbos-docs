@@ -90,6 +90,29 @@ Note the following with respect to sending and receiving workflow messages:
 - You can specify the type to use for deserializing the message. In this example, `Message`.
 - Topics are optional. You can use them for specific purposes as demonstrated in this example.
 
+`pong` is similar, with the exception it uses the UUID received in the message to determine who to send a pong:
+```tsx
+  @OperonWorkflow()
+  static async pong(wfCtxt: WorkflowContext) {
+    let running: boolean = true;
+    wfCtxt.recv("stopTopic").then((m) => {
+      if (m) {
+        wfCtxt.info("[PONG] received stop notification");
+        running = false;
+      }
+    });
+
+    while (running) {
+      const m = await wfCtxt.recv<Message>();
+      if (m) {
+        wfCtxt.info(`[PONG] received ${m.message}`);
+        m.message = "pong";
+        await wfCtxt.send(m.senderUUID, m);
+      }
+    }
+  }
+```
+
 ## Final code
 
 ```tsx
