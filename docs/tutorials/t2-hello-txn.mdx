@@ -23,21 +23,18 @@ now, let's modify the `greetingEndpoint` to invoke the transaction:
 ```tsx
 @GetApi('/greeting/:name')
 static async greetingEndpoint(ctx: HandlerContext, name: string) {
-  return await ctx.invoke(Hello).hello(name).then(x => x.getResult());
+  return await ctx.invoke(Hello).hello(name);
 }
 ```
 - `ctx.invoke(Hello)` returns a proxy object containing all Operon operations registered with the `Hello` class
-- `.hello(name)` calls the `hello` function with the `name` received in the HTTP request and returns a promise
-- `.then(x => x.getResult())` to wait for `hello` to resolve.
+- `.hello(name)` calls the `hello` transaction with the `name` received in the HTTP request and returns a promise
 
 Note Operon will automatically pass a `TransactionContext` to your registered transactions under the hood.
-The return value of Operon functions is a promise to a [workflow handle](../api-reference/workflow-handles).
-The handle exposes a `getResult()` method you can use to get your workflow's final result.
 
 ## Full code
 
 ```tsx
-import { HandlerContext, GetApi } from '@dbos-inc/operon'
+import { HandlerContext, OperonTransaction, TransactionContext, GetApi } from '@dbos-inc/operon'
 
 export class Hello {
   @OperonTransaction()
@@ -49,7 +46,7 @@ export class Hello {
 
   @GetApi('/greeting/:name')
   static async greetingEndpoint(ctx: HandlerContext, name: string) {
-    return await ctx.invoke(Hello).hello(name).then(x => x.getResult());
+    return await ctx.invoke(Hello).hello(name);
   }
 }
 ```

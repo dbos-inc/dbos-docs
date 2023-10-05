@@ -25,6 +25,9 @@ We also modify the HTTP handler to invoke the workflow:
   }
 ```
 
+Note the return value of an Operon workflow is a promise to a [workflow handle](../api-reference/workflow-handles).
+The handle exposes a `getResult()` method you can use to get your workflow's final result.
+
 ## Full code
 
 ```tsx

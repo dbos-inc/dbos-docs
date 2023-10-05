@@ -34,7 +34,8 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
 ```
 
 Note:
-- We can use `getStatus()` on a handle to retrieve a `WorkflowStatus` object. This object owns a `status` field which can take values `PENDING`, `SUCCESS`, `ERROR`.
+- We can use `getStatus()` on a handle to retrieve a `WorkflowStatus` object. This object owns a `status` field which can take values `PENDING`, `SUCCESS`, `ERROR`
+- if the workflow does not exist, `getStatus()` will return `null`, so you should check whether it is defined before using it
 - We use Operon baked-in logger through the workflow context (`ctx.log()`)
 
 ## Full code
