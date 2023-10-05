@@ -68,7 +68,16 @@ TODO: Here we describe class / method / parameter decorators
 #### `@OperonWorkflow`
 
 #### `@OperonTransaction`
-This decorator registers a method as an Operon transaction. Takes an optional `TransactionConfig` to configure two aspects of your transaction: its isolation level and whether it is read only.
+This decorator registers a method as an Operon transaction.
+
+```typescript
+@OperonTransaction({readOnly: true})
+static async doLogin(ctx: TransactionContext, username: string, ) {
+    ...
+}
+```
+
+`@OperonTransaction()` takes an optional `TransactionConfig` to configure two aspects of the transaction: its isolation level and whether it is read only.
 
 ```typescript
 interface TransactionConfig {
@@ -77,7 +86,7 @@ interface TransactionConfig {
 }
 ```
 
-Operon supports declaration of the following transaction isolation levels:
+Operon supports declaration of the following values for `IsolationLevel`:
 - `READ UNCOMMITTED`
 - `READ COMMITTED`
 - `REPEATABLE READ`
