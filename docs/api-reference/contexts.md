@@ -49,6 +49,12 @@ interface TransactionContext extends OperonContext {
 }
 ```
 
+## `CommunicatorContext`
+
+```tsx
+interface CommunicatorContext extends OperonContext {
+}
+```
 
 ## `HandlerContext`
 
