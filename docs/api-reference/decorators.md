@@ -200,6 +200,8 @@ The `@ArgSource` decorator takes one of the following values of `ArgSources`:
 - `QUERY`: Indicates that the value is to be taken from the URL query string
 - `URL`: Indicates that the value is to be taken from a placeholder in the URL
 
+Arguments sourced from an HTTP request generally get the name given in the code for the method.  However, if the name in the HTTP query string or body is different, [`@ArgName`](#argname) may be used.
+
 #### `@Authentication`
 The `@Authentication()` class decorator configures the Operon HTTP server to perform authentication.  All methods in the decorated class will use the provided function to act as an authentication middleware.
 
@@ -317,10 +319,52 @@ class OperationEndpoints {
 
 ### Input Validation Decorators
 
+A combination of Operon method and parameter decorators automatically provide rudimentary argument validation.
+
+While the typescript compiler does some compile-time checks, it is possible (and likely) for programmers to pass user input directly through their code through the `any` type or a series of poorly-validated casts.  The Operon method argument validation logic is able to check that the arguments exist, and are the right data types (or are close enough to be coerced through reasonable means).
+
+Note that this validation is basic, and is not a substitute for the kind of input validation that conforms to your business logic.  For example, a policy that user passwords should be 8 characters, and contain at least an uppercase, lowercase, and numeric character should be implemented in the web UI (for immediate feedback) and double-checked in your backend code (for security), whereas the Operon decorators will simply ensure that a password string was provided prior to method entry.
+
+These decorators also serve a second purpose, which is to make the type information available to Operon.  Uses of this include creating a per-method schema for tracing logs, or automatically producing a description of the method for integration purposes.
+
 #### `@Required`
+Ensures that the argument has a suitable value.  This is generally a default behavior.
+```typescript
+@GetApi("/string")
+static async checkStringG(_ctx: HandlerContext, @Required v: string) {
+  ...
+}
+```
+
 #### `@ArgName`
+Assigns a name to the decorated parameter.  The name of an argument is, by default, taken from the code, but if there is a reason for a disparity (perhaps the method was refactored but the external name used in HTTP requests is to be kept consistent), the name can be overriden with this parameter decorator.
+
+```typescript
+@GetApi("/string")
+static async checkStringG(_ctx: HandlerContext, @ArgName('call_me_maybe') internal_name: string) {
+  ...
+}
+```
+
 #### `@ArgDate`
+Ensures that a Date argument has a suitable value.  This decorator currently accepts no configuration, but may be altered in the future to indicate whether it is a timestamp or plain date.
+
+```typescript
+@GetApi("/date")
+static async checkDateG(_ctx: HandlerContext, @ArgDate() v: Date) {
+  ...
+}
+```
+
 #### `@ArgVarchar`
+Ensures that a string argument has a suitable length.  This decorator requires a length parameter.
+
+```typescript
+@GetApi("/string")
+static async checkStringG(_ctx: HandlerContext, @ArgVarchar(10) v: string) {
+  ...
+}
+```
 
 ### Logging and Tracing Decorators
 
