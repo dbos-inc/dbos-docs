@@ -120,13 +120,22 @@ The first argument to a handler function must be an `OperonContext`, but may mor
 
 The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
+Registration endpoints may have placeholders, which are parts of the URL that are mapped to method arguments.  These are represented by a section of the endpoint name that is prefixed with a `:`, and which can be referred to by [`@ArgSource`](#argsource).
+
+```typescript
+@GetApi("/post/:id")
+static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
+  ...
+}
+```
+
 #### `@PostApi`
 This decorator associates a method with an endpoint name, such as an HTTP URL accessed with POST.
 
 ```typescript
-@PostApi("/hello")
-static async hello(_ctx: HandlerContext) {
-  return { message: "hello!" };
+@PostApi("/testpost")
+  static async testpost(_ctx: HandlerContext, name: string) {
+  return `hello ${name}`;
 }
 ```
 
@@ -135,6 +144,24 @@ The first argument to a handler function must be an `OperonContext`, but may mor
 The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
 #### `@ArgSource`
+The `@ArgSource` parameter decorator indicates where a method argument is to be sourced, when it could come from more than one place.
+
+In the example below, `@ArgSource` is used to indicate that the `name` argument comes from the URL query string, rather than the posted message body.
+
+```typescript
+@PostApi("/workflow")
+@OperonWorkflow()
+static async testWorkflow(wfCtxt: WorkflowContext, @ArgSource(ArgSources.QUERY) name: string) {
+  const res = await wfCtxt.invoke(TestEndpoints).testTranscation(name);
+  return res;
+}
+```
+
+The `@ArgSource` decorator takes one of the following values of `ArgSources`:
+- `DEFAULT`: For GET requests, this comes from the query string; for POST requests it comes from the request body
+- `BODY`: Indicates that the value is to be taken from the request body
+- `QUERY`: Indicates that the value is to be taken from the URL query string
+- `URL`: Indicates that the value is to be taken from a placeholder in the URL
 
 #### `@Authentication`
 
