@@ -169,7 +169,7 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The first argument to a handler function must be an [`OperonContext`](contexts.md#handlercontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
@@ -192,7 +192,7 @@ This decorator associates a method with an endpoint name, such as an HTTP URL ac
 }
 ```
 
-The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
