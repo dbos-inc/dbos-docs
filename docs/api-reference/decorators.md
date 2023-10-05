@@ -9,7 +9,7 @@ sidebar_position: 2
 -   [Decorator Locations](#decorator-locations)
     -   [Class Decorators](#class-decorators)
     -   [Method Decorators](#method-decorators)  
-    -   [Parameter Decorators](#method-decorators)  
+    -   [Parameter Decorators](#parameter-decorators)  
 -   [Decorators Reference](#decorators-reference)
     -   [Operon Decorators](#operon-decorators)
         -   [`@OperonWorkflow`](#operonworkflow)
