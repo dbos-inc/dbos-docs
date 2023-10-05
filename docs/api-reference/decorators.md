@@ -92,7 +92,7 @@ Operon supports declaration of the following values for `IsolationLevel`:
 - `REPEATABLE READ`
 - `SERIALIZABLE`
 
-The precise transaction semantics of these levels may vary with the capabilities of the Operon user database.  For example, see [isolation levels in Postgres](https://www.postgresql.org/docs/current/transaction-iso.html).
+The precise transaction semantics of these levels may vary with the capabilities of the Operon user database.  For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@OperonCommunicator`
 
