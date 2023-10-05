@@ -1,5 +1,7 @@
 ---
 sidebar_position: 2
+title: Decorator Reference
+description: Usage of decorators in Operon, with exhaustive list
 ---
 
 # Decorator Reference
@@ -89,15 +91,62 @@ TODO: Here we describe class / method / parameter decorators
 ### Logging and Tracing Decorators
 
 #### `@Debug`
+Marks a method for debug tracing.
+
+```typescript
+export class Operations
+{
+  @Traced
+  static async doOperation(ctx: OperonContext) {
+    ...
+  }
+}
+```
+
+This decorator will ensure the method is registered and add it to tracing.
+
+So that tracing can access the ongoing execution state, authenticated user, and so on, the first argument of the decorated method must be OperonContext or one of its subclasses.
+
+Note: In the future, a different decorator may be suggested for the purpose of simply registering an Operon method, with separate control over which methods are traced.
+
 #### `@SkipLogging`
+
+This parameter decorator prevents a method argument from being recorded in traces.  This could be used if the argument is an opaque object, context, connection, or service.  This decorator could also be applied to arguments that are not to be recorded in logs due to their sensitive nature, but see also [`@LogMask`](#logmask).
+
+```typescript
+export class Operations
+{
+  @Traced
+  static async doOperation(ctx: OperonContext, @SkipLogging notToBeRecorded: unknown) {
+    ...
+  }
+}
+```
+
 #### `@LogMask`
+This parameter decorator prevents a method argument from being recorded in traces in cleartext.  This could be used if the argument is sensitive in nature, but may be useful for debugging or tracing.   See also [`@SkipLogging`](#skiplogging).
+
+```typescript
+export class Operations
+{
+  @Traced
+  static async doOperation(ctx: OperonContext, @LogMask(LogMasks.HASH) toBeHashed: string) {
+    ...
+  }
+}
+```
+
+Values of `LogMasks`:
+- `NONE`: No masking
+- `HASH`: When logging the value, substitute its (not cryptographically secure) hash
+- `SKIP`: Do not include the parameter in the log.  See [`@SkipLogging`](#skiplogging).
 
 ### Other Decorators
 
 #### TypeORM Decorators
 
 ##### `@OrmEntities`
-Marks your class as using ORM entity classes.   (Currently this is used for [TypeORM](https://typeorm.io) integration only.)
+Marks a class as using ORM entity classes.   (Currently this is used for [TypeORM](https://typeorm.io) integration only.)
 
 ```typescript
 @OrmEntities([OrmEntity1, OrmEntity2])
