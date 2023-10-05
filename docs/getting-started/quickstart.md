@@ -9,7 +9,7 @@ Here's how to get an Operon application up and running in less than five minutes
 ### System Requirements
 
 - [Node.js 18 or later](https://nodejs.org/en)
-- [macOS, Windows (through WSL), and Linux are supported]
+- macOS, Windows (through WSL), and Linux are supported
 - This tutorial requires [Docker](https://www.docker.com/)
 
 ### Automatic Installation
