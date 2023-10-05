@@ -66,7 +66,25 @@ TODO: Here we describe class / method / parameter decorators
 ### Operon Decorators
 
 #### `@OperonWorkflow`
+
 #### `@OperonTransaction`
+This decorator registers a method as an Operon transaction. Takes an optional `TransactionConfig` to configure two aspects of your transaction: its isolation level and whether it is read only.
+
+```typescript
+interface TransactionConfig {
+  isolationLevel?: IsolationLevel;
+  readOnly?: boolean;
+}
+```
+
+Operon supports declaration of the following transaction isolation levels:
+- `READ UNCOMMITTED`
+- `READ COMMITTED`
+- `REPEATABLE READ`
+- `SERIALIZABLE`
+
+The precise transaction semantics of these levels may vary with the capabilities of the Operon user database.  For example, see [isolation levels in Postgres](https://www.postgresql.org/docs/current/transaction-iso.html).
+
 #### `@OperonCommunicator`
 
 ### HTTP API Registration Decorators
