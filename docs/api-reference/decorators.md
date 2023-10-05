@@ -95,4 +95,13 @@ TODO: Here we describe class / method / parameter decorators
 ### Other Decorators
 
 #### TypeORM Decorators
+
 ##### `@OrmEntities`
+Marks your class as using ORM entity classes.   (Currently this is used for [TypeORM](https://typeorm.io) integration only.)
+
+```typescript
+@OrmEntities([OrmEntity1, OrmEntity2])
+export class User {}
+```
+
+This code will ensure that the TypeORM entity manager and repository knows about the entities in the list.
