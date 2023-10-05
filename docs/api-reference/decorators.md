@@ -26,7 +26,7 @@ sidebar_position: 2
         -   [`@DefaultRequiredRoles`](#defaultrequiredroles)
     -   [Input Validation Decorators](#input-validation-decorators)
         -   [`@Required`](#required)
-        -   [`@ArgName`](#argdate)
+        -   [`@ArgName`](#argname)
         -   [`@ArgDate`](#argdate)
         -   [`@ArgVarchar`](#argvarchar)
     -   [Logging and Tracing Decorators](#logging-and-tracing-decorators)
