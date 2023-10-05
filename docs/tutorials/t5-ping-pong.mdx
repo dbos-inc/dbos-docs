@@ -24,7 +24,7 @@ First, we will write the HTTP handler:
 
 ```tsx
   @GetApi("/pingpong")
-  static async greetingEndpoint(ctx: HandlerContext) {
+  static async pingPongEndpoint(ctx: HandlerContext) {
     const pongHandle = await ctx.invoke(PingPong).pong();
     const pongUUID = pongHandle.getWorkflowUUID();
 
@@ -175,7 +175,7 @@ export class PingPong {
   }
 
   @GetApi("/pingpong")
-  static async greetingEndpoint(ctx: HandlerContext) {
+  static async pingPongEndpoint(ctx: HandlerContext) {
     const pongHandle = await ctx.invoke(PingPong).pong();
     const pongUUID = pongHandle.getWorkflowUUID();
 
