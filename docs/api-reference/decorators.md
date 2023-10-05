@@ -201,6 +201,66 @@ The `@ArgSource` decorator takes one of the following values of `ArgSources`:
 - `URL`: Indicates that the value is to be taken from a placeholder in the URL
 
 #### `@Authentication`
+The `@Authentication()` class decorator configures the Operon HTTP server to perform authentication.  All methods in the decorated class will use the provided function to act as an authentication middleware.
+
+Example:
+```typescript
+async function exampleAuthMiddlware (ctx: MiddlewareContext) {
+  if (ctx.requiredRole.length > 0) {
+    const { userid } = ctx.koaContext.request.query;
+    const uid = userid?.toString();
+
+    if (!uid || uid.length === 0) {
+      const err = new OperonNotAuthorizedError("Not logged in.", 401);
+      throw err;
+    }
+    else {
+      if (uid === 'bad_person') {
+        throw new OperonNotAuthorizedError("Go away.", 401);
+      }
+      return {
+        authenticatedUser: uid,
+        authenticatedRoles: (uid === 'a_real_user' ? ['user'] : ['other'])
+      };
+    }
+  }
+  return;
+}
+
+@Authentication(exampleAuthMiddlware)
+class OperationEndpoints {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  @GetApi("/requireduser")
+  @RequiredRole(['user'])
+  static async checkAuth(_ctxt: HandlerContext, name: string) {
+    return `Please say hello to ${name}`;
+  }
+}
+```
+
+The interface for the authentication middleware is:
+```typescript
+/**
+ * Authentication middleware that executes before a request reaches a function.
+ * This is expected to:
+ *   - Validate the request found in the handler context and extract auth information from the request.
+ *   - Map the HTTP request to the user identity and roles defined in Operon app.
+ * If this succeeds, return the current authenticated user and a list of roles.
+ * If any step fails, throw an error.
+ */
+export type OperonHttpAuthMiddleware = (ctx: MiddlewareContext) => Promise<OperonHttpAuthReturn | void>;
+
+export interface OperonHttpAuthReturn {
+  authenticatedUser: string;
+  authenticatedRoles: string[];
+}
+
+export interface MiddlewareContext {
+  koaContext: Koa.Context;
+  name: string; // Method (handler, transaction, workflow) name
+  requiredRole: string[]; // Role required for the invoked Operon operation, if empty perhaps auth is not required
+}
+```
 
 #### `@KoaMiddleware`
 
