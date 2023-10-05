@@ -41,7 +41,9 @@ description: Usage of decorators in Operon, with exhaustive list
 
 ## Background Information
 
-TODO: Here is where we describe the nature of decorators/annotations and the general appeal and use
+TODO: Here is where we describe the nature of decorators - general appeal and use
+TODO: Here is where we compare them to annotations
+TODO: Here is where we say it doesn't matter what order you use them
 
 ### Decorator Implementations
 
@@ -57,9 +59,15 @@ TODO: Here we describe class / method / parameter decorators
 
 ### Class Decorators
 
+These go at the top of the class
+
 ### Method Decorators
 
+These go right before the method
+
 ### Parameter Decorators
+
+These go right before the arg: type
 
 ## Decorators Reference
 
@@ -97,10 +105,39 @@ The precise transaction semantics of these levels may vary with the capabilities
 #### `@OperonCommunicator`
 
 ### HTTP API Registration Decorators
+
 #### `@GetApi`
+This decorator associates a method with an endpoint name, such as an HTTP URL accessed with GET.
+
+```typescript
+@GetApi("/hello")
+static async hello(_ctx: HandlerContext) {
+  return { message: "hello!" };
+}
+```
+
+The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+
+The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
+
 #### `@PostApi`
+This decorator associates a method with an endpoint name, such as an HTTP URL accessed with POST.
+
+```typescript
+@PostApi("/hello")
+static async hello(_ctx: HandlerContext) {
+  return { message: "hello!" };
+}
+```
+
+The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+
+The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
+
 #### `@ArgSource`
+
 #### `@Authentication`
+
 #### `@KoaMiddleware`
 
 ### Declarative Security Decorators
