@@ -41,9 +41,34 @@ description: Usage of decorators in Operon, with exhaustive list
 
 ## Background Information
 
-TODO: Here is where we describe the nature of decorators - general appeal and use
-TODO: Here is where we compare them to annotations
-TODO: Here is where we say it doesn't matter what order you use them
+[Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, methods, and parameters.  Decorators precede the decorated class, method, or parameter, and begin with '@':
+```typescript
+  @Decorated
+  class decorated {
+  }
+```
+Decorators may or may not take arguments in parenthesis `()`.  However, each specific decorator either requires parenthesis, or requires their absence.  In the following, adding `()` after `@Required` will lead to an error, as will omitting the `()` after `@LogMask`.
+```
+@Required @LogMask(LogMasks.HASH) password: string
+```
+
+This concept is not new to TypeScript.  Python is another popular language with decorators prefixed with `@`.  In other languages, such as Java, similar declarations are called "annotations".
+ 
+While, in general, the order in which decorators are listed can affect the behavior, all decorators in the Operon API are order-independent.  So this:
+```typescript
+  @OperonTransaction()
+  @PostApi("/follow")
+  static async doFollow(ctx: TransactionContext, followUid: string) {
+  }
+```
+
+is the same as this:
+```typescript
+  @PostApi("/follow")
+  @OperonTransaction()
+  static async doFollow(ctx: TransactionContext, followUid: string) {
+  }
+```
 
 ### Decorator Implementations
 
@@ -64,24 +89,38 @@ In order to use the "Stage 2" experimental decorators implemented by Operon, the
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    ...              
+    ...
+  }
+}
 ```
 
 ## Decorator Locations
 
-TODO: Here we describe class / method / parameter decorators
+Operon currently uses decorators at the class, method, or method parameter level.  (The language also supports decorators at the property or accessor level, but Operon currently doesn't use them.)
 
 ### Class Decorators
 
-These go at the top of the class
+Class decorators are affixed to a class, just before the keyword `class`.  Operon decorators will be applied to all Operon methods in the class.
+-   [`@Authentication`](#authentication)
+-   [`@DefaultRequiredRoles`](#defaultrequiredroles)
 
 ### Method Decorators
 
-These go right before the method
+Method decorators are affixed to a method, just before its name and modifiers (such as `async` or `static`).  Operon method decorators apply to the decorated method and its parameters.  Examples of method-level decorators:
+-   [`@OperonWorkflow`](#operonworkflow)
+-   [`@OperonTransaction`](#operontransaction)
+-   [`@OperonCommunicator`](#operoncommunicator)
+-   [`@RequiredRoles`](#requiredroles)
+-   [`@GetApi`](#getapi)
+-   [`@PostApi`](#postapi)
 
 ### Parameter Decorators
 
-These go right before the arg: type
+Parameter decorators are affixed to a method parameter, just before its name.  Operon parameter decorators apply to the treatment of the parameter, and may affect how values are validated or logged.  Examples of parameter-level decorators:
+-   [`@ArgName`](#argname)
+-   [`@ArgDate`](#argdate)
+-   [`@SkipLogging`](#skiplogging)
+-   [`@LogMask`](#logmask)
 
 ## Decorators Reference
 
@@ -96,7 +135,7 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 }
 ```
 
-The first argument to an Operon workflow method must be a `WorkflowContext` (TODO add reference).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
+The first argument to an Operon workflow method must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
 `@OperonWorkflow()` takes an optional `WorkflowConfig` to configure the workflow, however there are currently no configuration items.
 
@@ -107,6 +146,8 @@ interface WorkflowConfig {
 
 #### `@OperonTransaction`
 This decorator registers a method as an Operon transaction.
+
+The first argument of the decorated method must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
 
 ```typescript
 @OperonTransaction({readOnly: true})
@@ -142,7 +183,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 }
 ```
 
-The first argument to an Operon communicator method must be a `CommunicatorContext` (TODO - reference).  This provides the communcator with information about the current authenticated user and execution state.
+The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).  This provides the communcator with information about the current authenticated user and execution state.
 
 `@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 
@@ -167,7 +208,7 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
@@ -190,7 +231,7 @@ This decorator associates a method with an endpoint name, such as an HTTP URL ac
 }
 ```
 
-The first argument to a handler function must be an `OperonContext`, but may more specifically be a `HandlerContext` (TODO - reference), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 

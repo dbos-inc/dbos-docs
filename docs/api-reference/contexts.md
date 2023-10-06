@@ -12,7 +12,7 @@ The base context for each operation
 ```tsx
 interface OperonContext {
   request?: IncomingMessage; // Nodejs IncomingMessage
-  workflowUUID: string; // Unique identifier for the workflow. Empty stringg for Handler instances.
+  workflowUUID: string; // Unique identifier for the workflow. Empty string for Handler instances.
   authenticatedUser: string; // Identity of the caller, if provided.
 
   span: Span; // An OpenTelemetry Trace object.
@@ -49,6 +49,12 @@ interface TransactionContext extends OperonContext {
 }
 ```
 
+## `CommunicatorContext`
+
+```tsx
+interface CommunicatorContext extends OperonContext {
+}
+```
 
 ## `HandlerContext`
 
