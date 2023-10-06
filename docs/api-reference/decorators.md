@@ -101,26 +101,26 @@ Operon currently uses decorators at the class, method, or method parameter level
 ### Class Decorators
 
 Class decorators are affixed to a class, just before the keyword `class`.  Operon decorators will be applied to all Operon methods in the class.
-        -   [`@Authentication`](#authentication)
-        -   [`@DefaultRequiredRoles`](#defaultrequiredroles)
+-   [`@Authentication`](#authentication)
+-   [`@DefaultRequiredRoles`](#defaultrequiredroles)
 
 ### Method Decorators
 
 Method decorators are affixed to a method, just before its name and modifiers (such as `async` or `static`).  Operon method decorators apply to the decorated method and its parameters.  Examples of method-level decorators:
-        -   [`@OperonWorkflow`](#operonworkflow)
-        -   [`@OperonTransaction`](#operontransaction)
-        -   [`@OperonCommunicator`](#operoncommunicator)
-        -   [`@RequiredRoles`](#requiredroles)
-        -   [`@GetApi`](#getapi)
-        -   [`@PostApi`](#postapi)
+-   [`@OperonWorkflow`](#operonworkflow)
+-   [`@OperonTransaction`](#operontransaction)
+-   [`@OperonCommunicator`](#operoncommunicator)
+-   [`@RequiredRoles`](#requiredroles)
+-   [`@GetApi`](#getapi)
+-   [`@PostApi`](#postapi)
 
 ### Parameter Decorators
 
 Parameter decorators are affixed to a method parameter, just before its name.  Operon parameter decorators apply to the treatment of the parameter, and may affect how values are validated or logged.  Examples of parameter-level decorators:
-        -   [`@ArgName`](#argname)
-        -   [`@ArgDate`](#argdate)
-        -   [`@SkipLogging`](#skiplogging)
-        -   [`@LogMask`](#logmask)
+-   [`@ArgName`](#argname)
+-   [`@ArgDate`](#argdate)
+-   [`@SkipLogging`](#skiplogging)
+-   [`@LogMask`](#logmask)
 
 ## Decorators Reference
 
