@@ -41,9 +41,34 @@ description: Usage of decorators in Operon, with exhaustive list
 
 ## Background Information
 
-TODO: Here is where we describe the nature of decorators - general appeal and use
-TODO: Here is where we compare them to annotations
-TODO: Here is where we say it doesn't matter what order you use them
+[Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, methods, and parameters.  Decorators precede the decorated class, method, or parameter, and begin with '@':
+```typescript
+  @Decorated
+  class decorated {
+  }
+```
+Decorators may or may not take arguments in parenthesis `()`.  However, each specific decorator either requires parenthesis, or requires their absence.  In the following, adding `()` after `@Required` will lead to an error, as will omitting the `()` after `@LogMask`.
+```
+@Required @LogMask(LogMasks.HASH) password: string
+```
+
+This concept is not new to TypeScript.  Python is another popular language with decorators prefixed with `@`.  In other languages, such as Java, similar declarations are called "annotations".
+ 
+While, in general, the order in which decorators are listed can affect the behavior, all decorators in the Operon API are order-independent.  So this:
+```typescript
+  @OperonTransaction()
+  @PostApi("/follow")
+  static async doFollow(ctx: TransactionContext, followUid: string) {
+  }
+```
+
+is the same as this:
+```typescript
+  @PostApi("/follow")
+  @OperonTransaction()
+  static async doFollow(ctx: TransactionContext, followUid: string) {
+  }
+```
 
 ### Decorator Implementations
 
