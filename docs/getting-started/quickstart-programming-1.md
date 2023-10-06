@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Programming in Operon
+# Programming Quickstart: Part 1
 
 Now that we have an application up and running, let's learn how to program in Operon!
 
@@ -99,4 +99,4 @@ curl http://localhost:3000/greeting/operon
 The greeting count should reset back to 1.
 
 If you've gotten this far, congratulations on writing your first few Operon functions!  
-Move on to the next page to learn how to use more complex Operon features, like reliable workflows.
+Move on to the next part to learn how to use more complex Operon features, like reliable workflows.
