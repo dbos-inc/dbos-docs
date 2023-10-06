@@ -89,7 +89,6 @@ In order to use the "Stage 2" experimental decorators implemented by Operon, the
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    ...
   }
 }
 ```
