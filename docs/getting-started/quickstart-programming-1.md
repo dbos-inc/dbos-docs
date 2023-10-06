@@ -6,7 +6,7 @@ sidebar_position: 2
 
 Now that we have an application up and running, let's learn how to program in Operon!
 
-Let's look at the code we have so far:
+Let's look at the code we have so far (in `src/userFunctions.ts`):
 
 ```javascript
 import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
@@ -62,8 +62,8 @@ First, let's write a function that clears the greeting count for a user:
 Add this function as a method of the `Hello` class.
 The `@OperonTransaction` decorator tells Operon this function should execute as a database transaction.
 The database operation is written using [knex.js](https://knexjs.org/), a popular query builder, 
-but Operon also supports raw SQL and several Typescript ORMs including [Primsa](https://www.prisma.io/) and TypeORM(https://typeorm.io/).
-To learn more about database operations and transactions in Operon, see [our guide](../tutorials/).
+but Operon also supports raw SQL and several Typescript ORMs including [Primsa](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+To learn more about database operations and transactions in Operon, see [our guide](..).
 
 Next, let's add an HTTP endpoint from which to call this function:
 
@@ -77,7 +77,7 @@ Next, let's add an HTTP endpoint from which to call this function:
 Once again, add this function as a method of the `Hello` class.
 The `@PostApi` decorator tells Operon this function should execute in response to HTTP POST requests to the `clear` endpoint.
 The `:name` syntax tells Operon to use the `name` path parameter from the URL as a parameter to the function.
-To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/)
+To learn more about HTTP endpoints and handlers in Operon, see [our guide](..).
 
 Now, let's test that this works!
 
@@ -98,5 +98,5 @@ curl http://localhost:3000/greeting/operon
 
 The greeting count should reset back to 1.
 
-If you've gotten this far, congratulations on writing your first few Operon functions!  
+If you've gotten this far, congratulations on writing your first few Operon functions!
 Move on to the next part to learn how to use more complex Operon features, like reliable workflows.
