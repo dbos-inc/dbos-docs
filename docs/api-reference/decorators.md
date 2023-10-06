@@ -96,19 +96,31 @@ In order to use the "Stage 2" experimental decorators implemented by Operon, the
 
 ## Decorator Locations
 
-TODO: Here we describe class / method / parameter decorators
+Operon currently uses decorators at the class, method, or method parameter level.  (The language also supports decorators at the property or accessor level, but Operon currently doesn't use them.)
 
 ### Class Decorators
 
-These go at the top of the class
+Class decorators are affixed to a class, just before the keyword `class`.  Operon decorators will be applied to all Operon methods in the class.
+        -   [`@Authentication`](#authentication)
+        -   [`@DefaultRequiredRoles`](#defaultrequiredroles)
 
 ### Method Decorators
 
-These go right before the method
+Method decorators are affixed to a method, just before its name and modifiers (such as `async` or `static`).  Operon method decorators apply to the decorated method and its parameters.  Examples of method-level decorators:
+        -   [`@OperonWorkflow`](#operonworkflow)
+        -   [`@OperonTransaction`](#operontransaction)
+        -   [`@OperonCommunicator`](#operoncommunicator)
+        -   [`@RequiredRoles`](#requiredroles)
+        -   [`@GetApi`](#getapi)
+        -   [`@PostApi`](#postapi)
 
 ### Parameter Decorators
 
-These go right before the arg: type
+Parameter decorators are affixed to a method parameter, just before its name.  Operon parameter decorators apply to the treatment of the parameter, and may affect how values are validated or logged.  Examples of parameter-level decorators:
+        -   [`@ArgName`](#argname)
+        -   [`@ArgDate`](#argdate)
+        -   [`@SkipLogging`](#skiplogging)
+        -   [`@LogMask`](#logmask)
 
 ## Decorators Reference
 
