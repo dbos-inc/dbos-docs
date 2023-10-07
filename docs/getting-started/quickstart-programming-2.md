@@ -62,18 +62,12 @@ To do this, let's write a new function:
 ```javascript
   @OperonCommunicator()
   static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
-    try {
-      await axios.get("https://postman-echo.com/get", {
-        params: {
-          greeting: greeting
-        }
-      });
-      console.log(`Greeting sent to postman!`)
-      return true;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      return false;
-    }
+    await axios.get("https://postman-echo.com/get", {
+      params: {
+        greeting: greeting
+      }
+    });
+    console.log(`Greeting sent to postman!`);
   }
 ```
 
@@ -82,14 +76,19 @@ The `@OperonCommunicator` decorator tells Operon that this function has external
 Communicators have useful built-in features such as configurable automatic retries.
 Learn more about communication with third-party services [here](..).
 
-Now, let's update our `greeting` handler to call this new function:
+Now, let's update our `greeting` handler to call this new function with some error handling:
 
 ```javascript
   @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
-    const greeting = await handlerCtxt.invoke(Hello).helloTransaction(name);
-    handlerCtxt.invoke(Hello).postmanFunction(greeting);
-    return greeting;
+  static async helloHandler(handlerContext: HandlerContext, name: string) {
+    const greeting = await handlerContext.invoke(Hello).helloTransaction(name);
+    try {
+      await handlerContext.invoke(Hello).postmanFunction(greeting);
+      return greeting;
+    } catch (e) {
+      console.warn("Error sending request:", e);
+      return `Greeting failed for ${name}\n`
+    }
   }
 ```
 
@@ -103,7 +102,7 @@ Every time you send a request, the server should print that it was forwarded to 
 
 Now, let's say that we're concerned about the _reliability_ of our simple application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
-To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then update our handler logic:
+To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler:
 
 ```javascript
   @OperonTransaction()
@@ -115,12 +114,14 @@ To do this, let's write a rollback transaction that decrements `greet_count` if 
   }
 
   @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
-    const greeting = await handlerCtxt.invoke(Hello).helloTransaction(name);
-    if (await handlerCtxt.invoke(Hello).postmanFunction(greeting)) {
+  static async helloHandler(handlerContext: HandlerContext, name: string) {
+    const greeting = await handlerContext.invoke(Hello).helloTransaction(name);
+    try {
+      await handlerContext.invoke(Hello).postmanFunction(greeting);
       return greeting;
-    } else {
-      await handlerCtxt.invoke(Hello).rollbackHelloTransaction(name);
+    } catch (e) {
+      console.warn("Error sending request:", e);
+      await handlerContext.invoke(Hello).rollbackHelloTransaction(name);
       return `Greeting failed for ${name}\n`
     }
   }
@@ -135,9 +136,11 @@ Here's how we can use a workflow in our example:
   @OperonWorkflow()
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
     const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
+    try {
+      await wfCtxt.invoke(Hello).postmanFunction(greeting);
       return greeting;
-    } else {
+    } catch (e) {
+      console.warn("Error sending request:", e);
       await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
       return `Greeting failed for ${name}\n`
     }
@@ -198,27 +201,23 @@ export class Hello {
 
   @OperonCommunicator()
   static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
-    try {
-      await axios.get("https://postman-echo.com/get", {
-        params: {
-          greeting: greeting
-        }
-      });
-      console.log(`Greeting sent to postman!`)
-      return true;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      return false;
-    }
+    await axios.get("https://postman-echo.com/get", {
+      params: {
+        greeting: greeting
+      }
+    });
+    console.log(`Greeting sent to postman!`);
   }
 
   @GetApi('/greeting/:name')
   @OperonWorkflow()
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
     const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    if (await wfCtxt.invoke(Hello).postmanFunction(greeting)) {
+    try {
+      await wfCtxt.invoke(Hello).postmanFunction(greeting);
       return greeting;
-    } else {
+    } catch (e) {
+      console.warn("Error sending request:", e);
       await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
       return `Greeting failed for ${name}\n`
     }
@@ -234,4 +233,5 @@ export class Hello {
     return `Cleared greet_count for ${name}!\n`
   }
 }
+
 ```
