@@ -52,10 +52,11 @@ First, let's write a function that clears the greeting count for a user:
 ```javascript
   @OperonTransaction()
   static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Delete a users's entry.
+    // Delete greet_count for a user.
     await txnCtxt.client<operon_hello>("operon_hello")
       .where({name: name})
       .delete()
+    return `Cleared greet_count for ${name}!\n`
   }
 ```
 
