@@ -27,7 +27,10 @@ description: Usage of decorators in Operon, with exhaustive list
         -   [`@RequiredRoles`](#requiredroles)
         -   [`@DefaultRequiredRoles`](#defaultrequiredroles)
     -   [Input Validation Decorators](#input-validation-decorators)
-        -   [`@Required`](#required)
+        -   [`@ArgRequired`](#argrequired)
+        -   [`@DefaultArgRequired`](#defaultargrequired)
+        -   [`@ArgOptional`](#argoptional)
+        -   [`@DefaultArgOptional`](#defaultargoptional)
         -   [`@ArgName`](#argname)
         -   [`@ArgDate`](#argdate)
         -   [`@ArgVarchar`](#argvarchar)
@@ -89,7 +92,6 @@ In order to use the "Stage 2" experimental decorators implemented by Operon, the
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    ...
   }
 }
 ```
@@ -384,13 +386,36 @@ These decorators also serve a second purpose, which is to make the type informat
 
 In simple cases (such as `string` or `number` arguments), the programmer need not do any decorating to get the functionality.  However, where the data types have some options, such as maximum length, precision, etc., there are decorators to control the behavior.
 
-#### `@Required`
-Ensures that the argument has a suitable value.  This is generally a default behavior.
+#### `@ArgRequired`
+Ensures that the decorated method argument has a suitable value.  This is generally a default behavior, but see [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
 ```typescript
 @GetApi("/string")
-static async checkStringG(_ctx: HandlerContext, @Required v: string) {
+static async checkStringG(_ctx: HandlerContext, @ArgRequired v: string) {
   ...
 }
+```
+
+#### `@DefaultArgRequired`
+Sets as the default policy that each argument of each registered method in the decorated class has a suitable value.  This is generally a default behavior, but see [`@ArgRequired`](#argrequired), [`@ArgOptional`](#argoptional) and [`@DefaultArgOptional`](#defaultargoptional).
+```typescript
+@DefaultArgRequired
+export class User {}
+```
+
+#### `@ArgOptional`
+Allows the argument to have an undefined value.  See also [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
+```typescript
+@GetApi("/string")
+static async checkStringG(_ctx: HandlerContext, @ArgOptional v?: string) {
+  ...
+}
+```
+
+#### `@DefaultArgOptional`
+Sets as the default policy that each argument of each registered method in the decorated class may have undefined value.  See also [`@ArgRequired`](#argrequired), [`@ArgOptional`](#argoptional) and [`@DefaultArgRequired`](#defaultargrequired).
+```typescript
+@DefaultArgOptional
+export class User {}
 ```
 
 #### `@ArgName`

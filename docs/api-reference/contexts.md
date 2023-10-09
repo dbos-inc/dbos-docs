@@ -53,6 +53,8 @@ interface TransactionContext extends OperonContext {
 
 ```tsx
 interface CommunicatorContext extends OperonContext {
+  readonly retriesAllowed: boolean;
+  readonly maxAttempts: number;
 }
 ```
 
