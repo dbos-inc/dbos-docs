@@ -1,49 +1,27 @@
 ---
 sidebar_position: 7
-title: Third party calls
-description: Send requests to a third party API from a workflow
+title: External Communication
+description: Learn how to communicate with external APIs and services
 ---
 
-Sending calls to third party API can be done through special [Communicator](../api-reference/decorators#operoncommunicator) methods. Communicators must return JSON serializable objects.
+In this guide, you'll learn how to communicate with external APIs and services from an Operon application.
 
-Here is a simple example that calls `https://postman-echo.com/get`:
+We recommend that all communication with external services be done in _communicator_ functions.
+For example, you can  use communicators to serve a file from [AWS S3](https://aws.amazon.com/s3/), call an external API like [Stripe](https://stripe.com/) or access a non-Postgres data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
 
-```tsx
+Communicators must be annotated with the [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator and must have a [`CommunicatorContext`](..) as their first argument.  Here's a simple example using [Axios](https://axios-http.com/docs/intro) to call the [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/):
+
+
+```javascript
   @OperonCommunicator()
-  static async postmanEcho(ctxt: CommunicatorContext) {
-    ctxt.info("Calling Postman Echo");
+  static async postmanEcho(_ctxt: CommunicatorContext) {
     const resp = await axios.get("https://postman-echo.com/get");
     return resp.data;
   }
 ```
 
-Communicators output are recorded, like transactions', such that they are only executed once during a workflow execution.
-An `OperonCommunicator` has a retry logic configurable through a `CommunicatorConfig`.
-Specifically, you can enable or disable retries (enabled by default) and configure the number of retries, their interval, and the exponential backoff multiplier.
+### Retries
 
-## Final code
-```tsx
-import {
-  CommunicatorContext,
-  OperonCommunicator,
-  OperonWorkflow,
-  WorkflowContext,
-  GetApi,
-} from "@dbos-inc/operon";
-import axios from "axios";
-
-export class External {
-  @OperonCommunicator()
-  static async postmanEcho(ctxt: CommunicatorContext) {
-    ctxt.info("Calling Postman Echo");
-    const resp = await axios.get("https://postman-echo.com/get");
-    return resp.data;
-  }
-
-  @GetApi("/external")
-  @OperonWorkflow()
-  static async postmanEchoEndpoint(ctx: WorkflowContext) {
-    return await ctx.invoke(External).postmanEcho();
-  }
-}
-```
+By default, Operon automatically retries any communicator function that throws an exception.
+It retries communicator functions a set number of times with exponential backoff, throwing an [`OperonError`](..) if the maximum number of retries is exceed.
+Retries are fully configurable through arguments to the [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator.
