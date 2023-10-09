@@ -130,7 +130,9 @@ Here's how we can use a workflow in our example:
 
 ```javascript
   @GetApi('/greeting/:name')
+  // highlight-next-line
   @OperonWorkflow()
+  // highlight-next-line
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
     const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
     try {
