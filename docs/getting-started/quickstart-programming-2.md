@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Programming Quickstart: Part 2
 
-Now that we've written our first few functions, let's see how to stitch them into powerful and reliable programs.
+Now that we've written our first few functions, let's learn how to stitch them into powerful and reliable programs.
 If you've been following along, here's the code you should have so far (in `src/userFunctions.ts`):
 
 ```javascript
@@ -40,6 +40,7 @@ export class Hello {
     return handlerCtxt.invoke(Hello).helloTransaction(name);
   }
 
+  @PostApi('/clear/:name')
   @OperonTransaction()
   static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
     // Delete a users's entry.
@@ -47,11 +48,6 @@ export class Hello {
       .where({name: name})
       .delete()
     return `Cleared greet_count for ${name}!\n`
-  }
-
-  @PostApi('/clear/:name')
-  static async clearHandler(handlerCtxt: HandlerContext, name: string) {
-    return handlerCtxt.invoke(Hello).clearTransaction(name);
   }
 }
 ```
@@ -71,10 +67,10 @@ To do this, let's write a new function:
   }
 ```
 
-This function forwards the greeting to the Postman Echo server, returning whether or not the request succeeded.
+This function forwards the greeting to the Postman Echo server.
 The `@OperonCommunicator` decorator tells Operon that this function has external side-effects.
 Communicators have useful built-in features such as configurable automatic retries.
-Learn more about communication with third-party services [here](..).
+Learn more about communication with external services [here](..).
 
 Now, let's update our `greeting` handler to call this new function with some error handling:
 
@@ -127,12 +123,13 @@ To do this, let's write a rollback transaction that decrements `greet_count` if 
   }
 ```
 
-This is better than before because we're robust to failures communicating with Postman.
-However, we're still not robust to failures of our own servers: if our server crashed midway through sending a request to Postman, the rollback code would never execute.
+Now, we'll roll back the increment of `greet_count` if our Postman request fails.
+However, we're still not completely reliable: if our server crashes midway through sending a request to Postman, the rollback code never executes and a spurious greeting is persisted to the database.
 Luckily, Operon solves this problem with _workflows_, orchestration functions that are guaranteed to run to completion.
 Here's how we can use a workflow in our example:
 
 ```javascript
+  @GetApi('/greeting/:name')
   @OperonWorkflow()
   static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
     const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
@@ -145,22 +142,14 @@ Here's how we can use a workflow in our example:
       return `Greeting failed for ${name}\n`
     }
   }
-
-  @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
-    return await handlerCtxt.invoke(Hello).helloWorkflow(name).then(i => i.getResult());
-  }
 ```
 
-You can see that we've moved all the business logic from the handler to the workflow.
+You can see that we've transformed the handler into a workflow by adding the `@OperonWorkflow` decorator.
 If a server executing a workflow fails and is restarted, Operon automatically resumes the workflow from where it left off, without re-executing any operation that already happened.
 Using workflows, we've made our little application resilient to failures: it never records a greeting unless it completed successfully.
 You can learn more about workflows and their guarantees [here](..).
 
-One bonus tip before you're done!
-You might have noticed that the handlers in this final example look superfluous because they directly call another function and return its result.
-Luckily, Operon lets you simplify your code by applying endpoint decorators directly to transactions, communicators, and workflows, so you only need to explicitly write out a handler if you want to interact with the HTTP request or response directly.  Using this trick, here's our final, simplified code:
-
+Here's our final code:
 
 ```javascript
 import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
@@ -173,21 +162,29 @@ interface operon_hello {
   name: string;
   greet_count: number;
 }
+
 export class Hello {
 
   @OperonTransaction()
   static async helloTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Increment greet_count.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .insert({ name: name, greet_count: 1 })
-      .onConflict('name')
-      .merge({ greet_count: txnCtxt.client.raw('operon_hello.greet_count + 1') });
-    // Retrieve greet_count.
-    const greet_count = await txnCtxt.client<operon_hello>("operon_hello")
+    // Look up greet_count.
+    let greet_count = await txnCtxt.client<operon_hello>("operon_hello")
       .select("greet_count")
       .where({ name: name })
       .first()
       .then(row => row?.greet_count);
+    if (greet_count) {
+      // If greet_count is set, increment it.
+      greet_count++;
+      await txnCtxt.client<operon_hello>("operon_hello")
+        .where({ name: name })
+        .increment('greet_count', 1);
+    } else {
+      // If greet_count is not set, set it to 1.
+      greet_count = 1;
+      await txnCtxt.client<operon_hello>("operon_hello")
+        .insert({ name: name, greet_count: 1 })
+    }
     return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
   }
 
@@ -233,5 +230,4 @@ export class Hello {
     return `Cleared greet_count for ${name}!\n`
   }
 }
-
 ```

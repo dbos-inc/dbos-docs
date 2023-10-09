@@ -18,21 +18,29 @@ interface operon_hello {
   name: string;
   greet_count: number;
 }
+
 export class Hello {
 
   @OperonTransaction()
   static async helloTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Increment greet_count.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .insert({name: name, greet_count: 1})
-      .onConflict('name')
-      .merge({ greet_count: txnCtxt.client.raw('operon_hello.greet_count + 1') });
-    // Retrieve greet_count.
-    const greet_count = await txnCtxt.client<operon_hello>("operon_hello")
+    // Look up greet_count.
+    let greet_count = await txnCtxt.client<operon_hello>("operon_hello")
       .select("greet_count")
-      .where({name:name})
+      .where({ name: name })
       .first()
       .then(row => row?.greet_count);
+    if (greet_count) {
+      // If greet_count is set, increment it.
+      greet_count++;
+      await txnCtxt.client<operon_hello>("operon_hello")
+        .where({ name: name })
+        .increment('greet_count', 1);
+    } else {
+      // If greet_count is not set, set it to 1.
+      greet_count = 1;
+      await txnCtxt.client<operon_hello>("operon_hello")
+        .insert({ name: name, greet_count: 1 })
+    }
     return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
   }
 
@@ -44,7 +52,7 @@ export class Hello {
 ```
 
 This simple program greets users and tracks the count of greetings per user.
-The `helloTransaction` function transactionally updates and fetches a user's greeting count, while `helloHandler` serves the greeting via an HTTP request to the `greeting` endpoint.
+The `helloTransaction` function transactionally fetches and updates a user's greeting count, while `helloHandler` serves the greeting via an HTTP request to the `greeting` endpoint.
 
 Let's make this program more interesting by giving users the ability to clear their greeting count.
 First, let's write a function that clears the greeting count for a user:
@@ -62,21 +70,27 @@ First, let's write a function that clears the greeting count for a user:
 
 Add this function as a method of the `Hello` class.
 The `@OperonTransaction` decorator tells Operon this function should execute as a database transaction.
-The database operation is written using [knex.js](https://knexjs.org/), a popular query builder, 
-but Operon also supports raw SQL and several Typescript ORMs including [Primsa](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+The database operations are written using [knex.js](https://knexjs.org/), a popular query builder, 
+but Operon also supports raw SQL and several Typescript ORMs including [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
 To learn more about database operations and transactions in Operon, see [our guide](..).
 
-Next, let's add an HTTP endpoint from which to call this function:
+Now, let's add an HTTP endpoint from which to serve this function.
+We can do this by annotating the function with another decorator:
 
 ```javascript
+  // highlight-next-line
   @PostApi('/clear/:name')
-  static async clearHandler(handlerCtxt: HandlerContext, name: string) {
-    return handlerCtxt.invoke(Hello).clearTransaction(name);
+  @OperonTransaction()
+  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
+    // Delete greet_count for a user.
+    await txnCtxt.client<operon_hello>("operon_hello")
+      .where({name: name})
+      .delete()
+    return `Cleared greet_count for ${name}!\n`
   }
 ```
 
-Once again, add this function as a method of the `Hello` class.
-The `@PostApi` decorator tells Operon this function should execute in response to HTTP POST requests to the `clear` endpoint.
+This `@PostApi` decorator tells Operon to execute this function in response to HTTP POST requests to the `clear` endpoint.
 The `:name` syntax tells Operon to use the `name` path parameter from the URL as a parameter to the function.
 To learn more about HTTP endpoints and handlers in Operon, see [our guide](..).
 
