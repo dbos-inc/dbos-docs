@@ -62,6 +62,17 @@ The name of the database to which the observability database is written to.
 #### ssl_ca
 The path to ssl certificate to connect to the database.
 
+### localRuntimeConfig
+```
+localRuntimeConfig
+    port: 6000
+```
+This section has properties needed to configure the runtime.
+
+#### port
+This is the port on which the embedded http server listens. Default is 3000.
+
+
 ### telemetryExporters
 
 List of exporter to whom telemetry logs are to be sent. Supported values are 'ConsoleExporter', 'JaegerExporter', 'PGExporter'.

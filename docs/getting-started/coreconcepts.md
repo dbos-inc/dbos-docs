@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Core Concepts
 
-Operon is a simple easy to use serverless framework for developing transactional application.
+Operon is a simple easy to use serverless framework for developing transactional applications.
 Operon applications are made up of transactions and workflows.
 Operon workflows group together a set of transactions and provide them with Once-and-Only-Once-Execution guarantees.
 This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
