@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
 title: Application Structure
-description: Learn how to structure an Operon application
+description: Learn the structure of an Operon application
 ---
 
-In this guide, you'll learn how to structure an Operon project.
+In this guide, you'll learn the structure of an Operon application.
 
 ### Directory Structure
 
@@ -112,3 +112,5 @@ Once you've written your functions, there are two basic ways to call them:
 
 1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](./http-serving-tutorial.md) for details.
 2. Handlers and workflows can invoke other functions via their contexts' [invoke](..) method.
+
+To learn more about each individual type of function and what it can do, see our [tutorials](../category/tutorials/).
