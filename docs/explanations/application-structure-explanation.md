@@ -93,13 +93,13 @@ An Operon application like this one is made up of classes encapsulating _functio
 There are four basic types of functions.
 This example contains two of them:
 
-- [**Transactions**](./transaction-tutorial), like `helloTransaction` perform database operations.
-- [**Handlers**](./http-serving-tutorial), like `helloHandler`, serve HTTP requests.
+- [**Transactions**](../tutorials/transaction-tutorial), like `helloTransaction` perform database operations.
+- [**Handlers**](../tutorials/http-serving-tutorial), like `helloHandler`, serve HTTP requests.
 
 There are two more:
 
-- [**Communicators**](./communicator-tutorial) manage communication with external services and APIs.
-- [**Workflows**](./workflow-tutorial) reliably orchestrate other functions.
+- [**Communicators**](../tutorials/communicator-tutorial) manage communication with external services and APIs.
+- [**Workflows**](../tutorials/workflow-tutorial) reliably orchestrate other functions.
 
 A function needs to follow a few rules:
 
@@ -110,7 +110,7 @@ A function needs to follow a few rules:
 
 Once you've written your functions, there are two basic ways to call them:
 
-1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](./http-serving-tutorial.md) for details.
+1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](../tutorials/http-serving-tutorial.md) for details.
 2. Handlers and workflows can invoke other functions via their contexts' [invoke](..) method.
 
 To learn more about each individual type of function and what it can do, see our [tutorials](../category/tutorials/).
