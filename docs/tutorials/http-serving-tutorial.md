@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 title: HTTP Serving
 description: Learn how to serve HTTP requests
 ---

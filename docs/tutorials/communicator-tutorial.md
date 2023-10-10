@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 3
 title: Communicators
 description: Learn how to communicate with external APIs and services
 ---
