@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
 title: Application Structure
-description: Learn the structure of an Operon application
+description: Learn about the structure of an Operon application
 ---
 
-In this guide, you'll learn the structure of an Operon application.
+In this guide, you'll learn about the structure of an Operon application.
 
 ### Directory Structure
 
