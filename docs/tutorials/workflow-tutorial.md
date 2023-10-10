@@ -24,7 +24,7 @@ By making this a workflow, we guarantee that the rollback always happens if the 
 ```javascript
 class Hello {
 
-  ... // Other function implemenations
+  ... // Other function implementations
 
   @GetApi('/greeting/:name')
   @OperonWorkflow()
