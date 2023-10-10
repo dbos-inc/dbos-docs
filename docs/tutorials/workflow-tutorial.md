@@ -10,7 +10,7 @@ Workflows orchestrate the execution of other functions, like transactions and co
 They're useful because they're _reliable_: if a server crashes and is restarted, it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
 You can use workflows when you need to coordinate multiple operations that all need to complete for a program to be correct.
 For example, in our [shop demo](..), we use a workflow to do payment processing.
-Workflow reliability guarantees are especially valuable when some of the operations are long-running, like waiting for user inputs.
+Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
 
 Workflows must be annotated with the [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) decorator and must have a [`WorkflowContext`](..) as their first argument.
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
@@ -19,7 +19,7 @@ Additionally, workflows must be [deterministic](#determinism).
 Here's an example workflow from our [programing quickstart](../getting-started/quickstart-programming-2).
 It increments a counter in the database, then sends an HTTP request.
 If the request fails, it rolls back the increment.
-By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server crashes in the interim.
+By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server crashes and is restarted.
 
 ```javascript
 class Hello {
@@ -70,9 +70,46 @@ In other words, a workflow function must always do the same thing given the same
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
 
+### Workflow Identity
+
+Every time you execute a workflow, that execution is assigned a unique identity, represented as a 128-bit [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this UUID through the `context.workflowUUID` field.
+Workflow identities are important for communicating with workflows and developing interactive workflows.
+For more information on workflow communication, see [our guide](./workflow-comm-tutorial.md).
+
+### Asynchronous Workflows
+
+Because workflows are often long-running, Operon supports invoking workflows asynchronously.
+When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](..):
+
+```javascript
+  @GetApi(...)
+  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
+    const workflowHandle = await handlerCtxt.invoke(Class).workflow(...);
+  }
+```
+
+Workflow handles can be queried for information on the state of the workflow as it runs.
+For more information on this, see our [workflow communication guide](./workflow-comm-tutorial).
+
+
+To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
+
+```javascript
+const workflowHandle = await handlerCtxt.invoke(Class).workflow(...);
+const result = await workflowHandle.getResult();
+```
+
+Or, more concisely:
+
+```javascript
+const result = await handlerCtxt.invoke(Class).workflow(name).then(h => h.getResult());
+```
+
+
 
 ### Further Reading
 
 To learn how to make workflows (or other functions) idempotent, see [our idempotency guide](./idempotency-tutorial).
 
-To learn how to make workflows interactive (for example, to handle user input), see our [workflow communcation guide](..).
+To learn how to make workflows interactive (for example, to handle user input), see our [workflow communcation guide](./workflow-comm-tutorial.md).

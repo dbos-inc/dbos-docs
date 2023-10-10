@@ -18,6 +18,13 @@ There are many popular libraries for generating UUIDs in Typescript, such as [uu
 To make a request idempotent, generate a UUID and set the request's `operon-workflowuuid` header field to that UUID.
 No matter how many times you send that request, as long as each request has the idempotency key set, the operation will only execute once.
 
+:::info
+
+It's not a coincidence that both idempotency keys and [workflow identities](./workflow-tutorial#workflow-identity) are UUIDs.
+If you run a workflow with an idempotency key, the identity of that execution is set to that UUID.
+
+:::
+
 ### Manually Setting Idempotency Keys
 
 Idempotency keys are not automatically used for [handlers](./http-serving-tutorial#handlers).
@@ -26,9 +33,9 @@ The syntax for invoking `Class.operation` with an idempotecy key is:
 
 ```javascript
   @GetApi(...)
-  static async helloHandler(handlerCtxt: HandlerContext, ...) {
+  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
     const idempotencyKey = ...;
-    handlerCtxt.invoke(Class, idempotencyKey).operation(...);
+    await handlerCtxt.invoke(Class, idempotencyKey).operation(...);
   }
 ```
 
