@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 6
 title: Workflow events
 description: Learn how to send events from workflows and receive them from handlers
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: Decorator Reference
 description: Usage of decorators in Operon, with exhaustive list
 ---
