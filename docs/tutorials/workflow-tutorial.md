@@ -4,6 +4,7 @@ title: Workflows
 description: Compose transactions within a workflow
 ---
 
+
 An operon workflow composes transactions in a single unit of work with Oncce-And-Only-Once-Execution guarantees.
 You can register a new workflow by annotating a function with the [`@OperonWorkflow()` decorator](../api-reference/decorators#operonworkflow):
 
