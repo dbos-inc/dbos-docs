@@ -21,7 +21,7 @@ No matter how many times you send that request, as long as each request has the 
 ### Manually Setting Idempotency Keys
 
 Idempotency keys are not automatically used for [handlers](./http-serving-tutorial#handlers).
-Instead, if you invoke an operation from a handler, you can manually set pass in an idempotency key as an argument to [`context.invoke`](..).
+Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`context.invoke`](..).
 The syntax for invoking `Class.operation` with an idempotecy key is:
 
 ```javascript
@@ -61,7 +61,7 @@ If we `curl` this endpoint normally multiple times, each request increments the 
 curl http://localhost:3000/greeting/operon
 ```
 
-However, if we set the idempotency key, we can send the request many times and have it return the same result each time, only executing once:
+However, if we set the idempotency key and send the request many times, each request returns the same response and the workflow only executes once:
 
 ```bash
 curl -H "operon-workflowuuid: 123e4567-e89b-12d3-a456-426614174000" http://localhost:3000/greeting/operon
