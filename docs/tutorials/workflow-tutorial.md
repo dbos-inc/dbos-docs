@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: Workflows
-description: Compose transactions within a workflow
+description: Learn how to make applications reliable using workflows.
 ---
 
 In this guide, you'll learn how to make your applications reliable using workflows.
@@ -73,6 +73,6 @@ Instead, you should do all database operations in [transactions](./transaction-t
 
 ### Further Reading
 
-To learn how to make workflows (or other functions) idempotent, see [our idempotency guide](..).
+To learn how to make workflows (or other functions) idempotent, see [our idempotency guide](./idempotency-tutorial).
 
 To learn how to make workflows interactive (for example, to handle user input), see our [workflow communcation guide](..).
