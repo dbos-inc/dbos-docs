@@ -4,7 +4,7 @@ title: Operon CLI
 description: API documentation for the Operon CLI
 ---
 
-The Operon CLI lets you manage Operon applications.
+The Operon CLI helps you manage Operon applications.
 
 ## Commands
 
