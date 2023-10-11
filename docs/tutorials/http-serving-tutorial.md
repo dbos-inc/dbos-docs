@@ -18,6 +18,13 @@ For example:
 We currently support two endpoint decorators, [`GetApi`](../api-reference/decorators#getapi) (HTTP `GET`) and [`PostApi`](../api-reference/decorators#postapi) (HTTP `POST`).
 Each associates a function with an HTTP URL.
 
+:::info
+
+You might be wondering why we don't talk about setting up an HTTP server.
+That's because Operon is a _serverless_ framework: we launch and manage the server for you when you start your app with `npx operon start`, using the endpoints and configuration you specify with decorators.
+
+:::
+
 ### Handlers
 
 A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](..) as its first argument, like in the example above.
