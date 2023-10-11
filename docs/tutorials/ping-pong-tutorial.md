@@ -1,8 +1,10 @@
 ---
-sidebar_position: 7
-title: Workflows communication
+sidebar_position: 10
+title: Communication Example
 description: Two workflows play ping pong
 ---
+
+### @Max: I like the ping-pong but I'm worried it's too complex to start the tutorial with it.  Also it would be great if it could also incorporate the events API.  Can you fully implement it in demo apps so we can link to it as an example?
 
 Workflows can communicate with each other. Specifically, using [WorkflowContext](../api-reference/contexts#workflowcontext), you can send a generic message to a destination workflow using its UUID.
 

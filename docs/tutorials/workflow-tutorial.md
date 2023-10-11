@@ -75,7 +75,7 @@ Instead, you should do all database operations in [transactions](./transaction-t
 Every time you execute a workflow, that execution is assigned a unique identity, represented as a 128-bit [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this UUID through the `context.workflowUUID` field.
 Workflow identities are important for communicating with workflows and developing interactive workflows.
-For more information on workflow communication, see [our guide](./workflow-comm-tutorial.md).
+For more information on workflow communication, see [our guide](./workflow-communication-tutorial.md).
 
 ### Asynchronous Workflows
 
@@ -89,9 +89,16 @@ When you invoke a workflow from a handler or from another workflow, the invocati
   }
 ```
 
-Workflow handles can be queried for information on the state of the workflow as it runs.
-For more information on this, see our [workflow communication guide](./workflow-comm-tutorial).
+You can also retrieve another workflow's handle if you know its identity:
 
+```javascript
+  @GetApi(...)
+  static async exampleHandler(handlerCtxt: HandlerContext, workflowIdentity: string, ...) {
+    const workflowHandle = await handlerCtxt.retrieveWorkflow(workflowIdentity);
+  }
+```
+
+For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
 
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
@@ -106,10 +113,8 @@ Or, more concisely:
 const result = await handlerCtxt.invoke(Class).workflow(name).then(h => h.getResult());
 ```
 
-
-
 ### Further Reading
 
 To learn how to make workflows (or other functions) idempotent, see [our idempotency guide](./idempotency-tutorial).
 
-To learn how to make workflows interactive (for example, to handle user input), see our [workflow communcation guide](./workflow-comm-tutorial.md).
+To learn how to make workflows interactive (for example, to handle user input), see our [workflow communication guide](./workflow-communication-tutorial).
