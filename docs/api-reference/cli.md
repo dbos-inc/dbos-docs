@@ -1,14 +1,31 @@
 ---
 sidebar_position: 2
-title: Operon Command line interface (CLI)
+title: Operon CLI
+description: API documentation for the Operon CLI
 ---
 
-The operon runtime with the application is started using the command line
+The Operon CLI lets you manage Operon applications.
 
-```
-npx operon start -p <port> -l <loglevel>
-```
+## Commands
 
--p or --port: The http port on which the runtime with listen for http requests
+---
 
--l or --loglevel: 'info','warn','error','debug'
+### `npx operon start`
+
+**Description:**  
+This command launches the Operon runtime and HTTP server to serve an application. It registers all functions and serves all endpoints in classes exported from `src/operations.ts`.
+
+**Parameters:**  
+- `-p, --port <port-number>`: The port on which to serve the application.
+- `-l, --logLevel <log-level>`: The log level at which to run the application. Must be one of `DEBUG`, `INFO`, `WARN`, `ERROR`.
+- `-c, --configFile <config-file>`: The path to an [Operon configuration file](./configuration) to use for this application.
+
+---
+
+### `npx operon init`
+
+**Description:**  
+This command initializes a new Operon application from a template into a target directory. By default, the instantiated application is the "Hello, world!" application using [knex.js](https://knexjs.org/) used in the [quickstart](../getting-started/quickstart).
+
+**Parameters:**  
+- `-n, --appName <application-name>`: The name and directory to which to initialize the application.
