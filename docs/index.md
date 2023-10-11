@@ -24,8 +24,8 @@ To get started with Operon in less than five minutes, check out our [quickstart]
 
 Here are some of Operon's core features:
 
-| Feature                                                                  | Description                                                                                                                                                                                      |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Feature                                                                  | Description
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | [HTTP Serving](./tutorials/transaction-tutorial)                         | Set up endpoints to serve requests from your application.
 | [Transactions](./tutorials/transaction-tutorial)                         | Easily query your application database, with support for raw SQL and popular ORMs.
 | [Workflows](./tutorials/workflow-tutorial)                               | Reliable workflow orchestration--make sure your program runs to completion, no matter what happens.
@@ -41,4 +41,4 @@ Here are some of Operon's core features:
 - If you're encountering Operon for the first time, start with our [quickstart](./getting-started/quickstart) to learn how to get an application up and running in less than five minutes.
 - If you want to learn how to use Operon's powerful features, check out our [tutorials](./category/tutorials).
 - If you want a detailed reference for the Operon API, check out our [API reference](./category/api-reference).
-- If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations)
+- If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations).
