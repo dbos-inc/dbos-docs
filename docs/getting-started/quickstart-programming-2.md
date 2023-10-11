@@ -5,7 +5,7 @@ sidebar_position: 2
 # Programming Quickstart: Part 2
 
 Now that we've written our first few functions, let's learn how to stitch them into powerful and reliable programs.
-If you've been following along, here's the code you should have so far (in `src/userFunctions.ts`):
+If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
 import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi } from '@dbos-inc/operon'

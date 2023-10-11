@@ -6,7 +6,7 @@ sidebar_position: 2
 
 Now that we have an application up and running, let's learn how to program in Operon!
 
-Let's look at the code we have so far (in `src/userFunctions.ts`):
+Let's look at the code we have so far (in `src/operations.ts`):
 
 ```javascript
 import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
