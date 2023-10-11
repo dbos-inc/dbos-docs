@@ -69,6 +69,21 @@ class KVOperations {
 ```
 
 ### Setting Up The Schema
+TypeORM can use the entity classes to create/migrate (synchronize), and drop the database schema.  (This behavior is optional, for those that hesistate to use such automation in production scenarios.)
+
+This may be invoked from an Operon user database instance:
+```
+  await operon.userDatabase.createSchema();
+  await operon.userDatabase.dropSchema();
+```
+
+Or from the runtime (in this example, in a unit test):
+```typescript
+    await testRuntime.dropUserSchema();
+    await testRuntime.createUserSchema();
+```
+
+Additional options for triggering schema migration during the application deployment process are forthcoming.
 
 ### Invoking Transactions
 In TypeORM (and many other frameworks), the pattern is to run [transactions](https://typeorm.io/transactions) as callback functions.  (This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.)
@@ -104,5 +119,7 @@ type TypeORMTransactionContext = TransactionContext<EntityManager>;
 ```
 
 ### Unit Testing
+TODO: A TypeORM test using the test runtime
 
 ## TypeORM Example
+The YKY social network example uses TypeORM.
