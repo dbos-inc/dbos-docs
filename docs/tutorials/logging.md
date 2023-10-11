@@ -1,6 +1,6 @@
 ---
 sidebar_position: 9
-title: Logging and tracing
+title: Logging and Tracing
 description: Learn how to observe your Operon workflows
 ---
 
@@ -53,7 +53,7 @@ Possible values are: `info`, `debug`, `warn`, `emerg`, `alert`, `crit` and `erro
 
 ## Tracing
 
-Operon workflows natively produces [OpenTelemetry](opentelemetry.io/)-compatible traces.
+Operon workflows natively produces [OpenTelemetry](https://opentelemetry.io/)-compatible traces.
 When a request arrives at an Operon handler, the frameworks looks up any [W3C-compatible trace context](https://www.w3.org/TR/trace-context/#trace-context-http-headers-format) in the HTTP headers.
 If found, it uses said context to create a new child Span and continue the trace, otherwise it creates a new Trace. Each Operon operation creates a new child Span for the current trace.
 Finally, Operon will inject the trace context in the HTTP headers of the response returned by the handler.
@@ -79,7 +79,7 @@ Under the hood, `ctx.span` is implemented by the [OpenTelemetry NodeJS SDK](http
 
 ### Jaeger exporter
 
-Operon ships with a [Jaeger](jaegertracing.io/) exporter whcih you can enable in the configuration file:
+Operon ships with a [Jaeger](https://jaegertracing.io/) exporter whcih you can enable in the configuration file:
 
 ```yaml
 database:
