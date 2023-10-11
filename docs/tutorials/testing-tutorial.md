@@ -14,7 +14,7 @@ We'll show you how to write unit tests for the `Hello` class we introduced in [P
 
 ### Creating Testing Runtime
 
-First, let's create a `OperonTestingRuntime` object:
+First, let's create an `OperonTestingRuntime` object:
 ```javascript
 testRuntime = await createTestingRuntime([Hello]);
 ```
@@ -28,7 +28,7 @@ For example, we can invoke `helloTransaction` and verify the output is as expect
 const res = await testRuntime.invoke(Hello).helloTransaction("operon");
 expect(res).toMatch("Hello, operon! You have been greeted");
 ```
-In this code, we invoke the transaction with input string `"operon"`.
+In this code, we invoke the transaction with the input string `"operon"`.
 
 ### Testing HTTP Endpoints
 
