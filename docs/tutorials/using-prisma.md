@@ -28,6 +28,36 @@ Write the operon application.
 
 ## Prisma setup
 
+This information is from the [Prisma Getting Started](https://www.prisma.io/docs/getting-started)
+
+Create a directory
+```
+mkdir hello-prisma
+```
+
+Install prisma
+```
+npm init -y
+npm install prisma typescript ts-node @types/node --save-dev
+npx prisma init
+```
+
+In the .env file, update the database URL if necessary
+DATABASE_URL="postgresql://postgres:${PGPASSWORD}@localhost:5432/helloprisma?schema=public"
+
+In the file prisma/schema.prisma, Add a model
+```tsx
+model OperonHello {
+  @@map("operonhello")
+  greeting_id Int @id @default(autoincrement())
+  greeting String
+}
+```
+
+Run this command in the database to create table:
+```
+npx prisma migrate dev --name init
+```
 
 
 ## Coding a transactional function
