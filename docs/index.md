@@ -31,7 +31,7 @@ Here are some of Operon's core features:
 | [Workflows](./tutorials/workflow-tutorial)                               | Reliable workflow orchestration--make sure your program runs to completion, no matter what happens.
 | [Idempotency](./tutorials/idempotency-tutorial)                          | Automatically make any request idempotent, so your requests happen exactly once.
 | [Logging and Tracing](./tutorials/logging)                               | Automatic OpenTelemetry-compatible tracing of all requests and built-in logging support with configurable exporters.
-| [Authentication and Authorization](..)                                   | Secure your HTTP endpoints so only authorized users can access them.
+| [Authentication and Authorization](./category/tutorials)                 | Secure your HTTP endpoints so only authorized users can access them.
 | [Testing and Debugging](./tutorials/testing-tutorial)                    | Easily write unit tests for your functions and endpoints, compatible with Jest and other popular testing frameworks.
 | [Cloud Deployment with DBOS](https://dbos.dev)                           | Coming soon!
 
