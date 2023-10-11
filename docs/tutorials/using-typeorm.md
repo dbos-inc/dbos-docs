@@ -64,13 +64,44 @@ export class KV {
 Operon handles the entity registration that would otherwise be done in a TypeORM `DataSource` instantiation or configuration file.  To make Operon aware of the entities, a class-level decorator is used on each class containing Operon transaction methods:
 ```typescript
 @OrmEntities([KV])
-class KVController {
+class KVOperations {
 }
 ```
 
 ### Setting Up The Schema
 
 ### Invoking Transactions
+In TypeORM (and many other frameworks), the pattern is to run [transactions](https://typeorm.io/transactions) as callback functions.  (This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.)
+
+Operon provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
+
+First, Operon transactions are declared.  The easiest way is with a class method decorated with [`@OperonTransaction`](../api-reference/decorators.md#operontransaction), and the first argument will be an Operon [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
+
+```typescript
+@OrmEntities([KV])
+class KVOperations {
+  @OperonTransaction()
+  static async writeTxn(txnCtxt: TransactionContext<EntityManager>, id: string, value: string) {
+    const kv: KV = new KV();
+    kv.id = id;
+    kv.value = value;
+    const res = await txnCtxt.client.save(kv);
+    return res.id;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  @OperonTransaction({ readOnly: true })
+  static async readTxn(txnCtxt: TransactionContext<EntityManager>, id: string) {
+    const kvp = await txnCtxt.client.findOneBy(KV, {id: id});
+    return kvp?.value || "<Not Found>";
+  }
+}
+```
+
+If preferred, it is possible to define a `type` to clean up the transaction method prototypes a little bit.
+```typescript
+type TypeORMTransactionContext = TransactionContext<EntityManager>;
+```
 
 ### Unit Testing
 
