@@ -157,6 +157,9 @@ handlerCtxt.invoke(Bar).foo(baz)
 
 You don't need to supply the context to an invoked function&#8212;the runtime does this for you.
 
+When calling transactions or communicators, `invoke()` asynchronously returns the function's output.
+When calling workflows, `invoke()` asynchronously returns a [`handle`](./workflow-handles) for the workflow.
+
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
@@ -215,7 +218,7 @@ To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflowwf-ar
 The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
 
 ```typescript
-handlerCtxt.invoke(Bar).foo(baz)
+workflowCtxt.invoke(Bar).foo(baz)
 ```
 
 You don't need to supply the context to an invoked function&#8212;the runtime does this for you.
