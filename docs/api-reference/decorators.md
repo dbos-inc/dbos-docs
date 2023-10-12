@@ -404,6 +404,9 @@ export class User {}
 
 #### `@ArgOptional`
 Allows the argument to have an undefined value.  See also [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
+
+_Note:_ TypeScript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, Operon converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in the TypeScript language.)
+
 ```typescript
 @GetApi("/string")
 static async checkStringG(_ctx: HandlerContext, @ArgOptional v?: string) {
