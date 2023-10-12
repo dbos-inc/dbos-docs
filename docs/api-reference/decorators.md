@@ -24,8 +24,8 @@ description: Usage of decorators in Operon, with exhaustive list
         -   [`@Authentication`](#authentication)
         -   [`@KoaMiddleware`](#koamiddleware)
     -   [Declarative Security Decorators](#declarative-security-decorators)
-        -   [`@RequiredRoles`](#requiredroles)
-        -   [`@DefaultRequiredRoles`](#defaultrequiredroles)
+        -   [`@RequiredRole`](#requiredrole)
+        -   [`@DefaultRequiredRole`](#defaultrequiredrole)
     -   [Input Validation Decorators](#input-validation-decorators)
         -   [`@ArgRequired`](#argrequired)
         -   [`@DefaultArgRequired`](#defaultargrequired)
@@ -104,7 +104,7 @@ Operon currently uses decorators at the class, method, or method parameter level
 
 Class decorators are affixed to a class, just before the keyword `class`.  Operon decorators will be applied to all Operon methods in the class.
 -   [`@Authentication`](#authentication)
--   [`@DefaultRequiredRoles`](#defaultrequiredroles)
+-   [`@DefaultRequiredRole`](#defaultrequiredrole)
 
 ### Method Decorators
 
@@ -112,7 +112,7 @@ Method decorators are affixed to a method, just before its name and modifiers (s
 -   [`@OperonWorkflow`](#operonworkflow)
 -   [`@OperonTransaction`](#operontransaction)
 -   [`@OperonCommunicator`](#operoncommunicator)
--   [`@RequiredRoles`](#requiredroles)
+-   [`@RequiredRole`](#requiredrole)
 -   [`@GetApi`](#getapi)
 -   [`@PostApi`](#postapi)
 
@@ -337,9 +337,9 @@ class OperationEndpoints{
 
 ### Declarative Security Decorators
 
-Operon supports declarative, role-based security.  Methods are decorated with a list of roles (as strings), and access to the method is not authorized unless the authenticated user has at least one role on the list.  A role list can also be provided as a class-level default with `@DefaultRequiredRoles()`, in which case it applies to any Operon method in the class that does not override the defaults with its own `@RequiredRoles()` list.
+Operon supports declarative, role-based security.  Methods are decorated with a list of roles (as strings), and access to the method is not authorized unless the authenticated user has at least one role on the list.  A role list can also be provided as a class-level default with `@DefaultRequiredRole()`, in which case it applies to any Operon method in the class that does not override the defaults with its own `@RequiredRole()` list.
 
-#### `@RequiredRoles`
+#### `@RequiredRole`
 Specifies the list of required roles for the decorated method.  In order to execute the method, the authenticated user must have at least one role on the specified list.
 
 ```typescript
@@ -350,9 +350,9 @@ static async helloUser(_ctx: HandlerContext) {
 }
 ```
 
-#### `@DefaultRequiredRoles`
+#### `@DefaultRequiredRole`
 
-This class decorator specifies the list of required roles to be applied as a default to all Operon methods in the class.  This can be overridden at the method level with `@RequiredRoles`.
+This class decorator specifies the list of required roles to be applied as a default to all Operon methods in the class.  This can be overridden at the method level with `@RequiredRole`.
 
 ```typescript
 @DefaultRequiredRole(['user'])
