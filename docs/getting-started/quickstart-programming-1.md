@@ -88,7 +88,8 @@ static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
 `@PostApi` register with Operon an HTTP endpoint handling `POST` requests aimed at `/clear/:name`, where `:name` is a route parameter.
 To learn more about HTTP endpoints and handlers in Operon, see [our guide](..).
 
-Now, let's test that this works! After adding the new code to the `Hello` class in `src/operations.ts`, let's run `npm run build` and `npx operon start`.
+Now, let's see if this works!
+After adding the new code to the `Hello` class and importing `PostApi` from `@dbos-inc/operon`, in `src/operations.ts`, let's run `npm run build` and `npx operon start`.
 With the application running, we can query it and observe the greeting count being incremented with each query:
 
 ```bash
