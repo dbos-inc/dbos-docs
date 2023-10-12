@@ -42,6 +42,23 @@ database:
 
 ---
 
+### Telemetry
+
+This section configures the behavior of Operon logging and tracing facilities. Note all this options are optional and will, if not specified, use the default values indicated bellow:
+
+```yaml
+telemetry:
+  logs:
+    loglevel: info (default) | debug | warn | emerg | alert | crit | error
+    addContextMetadata: true (default) | false
+    silent: false (default) | true
+  traces:
+    enable: true (default) | false
+    endpoint: http://localhost:4318/v1/traces (default)
+```
+
+---
+
 ### localRuntimeConfig
 
 This configuration is used to specify runtime parameters.
