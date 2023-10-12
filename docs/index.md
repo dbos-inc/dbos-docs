@@ -9,7 +9,7 @@ Welcome to the Operon documentation!
 ### What is Operon?
 
 Operon is a **Typescript framework for the backend**.
-Operon enables you to write backend applications that work right by default, providing native support for application database management, reliable workflow execution, OpenTelemetry-compatible tracing, authentication/authorizaton, and much more.
+Operon enables you to write backend applications that work right by default, providing native support for application database management, reliable workflow execution, OpenTelemetry-compatible tracing, authentication/authorization, and much more.
 
 Unlike in other backend frameworks, your application database is a _first-class citizen_ of Operon.
 Operon makes writing database operations painless for you, regardless of whether you prefer raw SQL or an ORM.
