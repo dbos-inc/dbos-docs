@@ -193,7 +193,7 @@ The first argument to an Operon communicator method must be a [`CommunicatorCont
 export interface CommunicatorConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default true)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
-  maxAttempts?: number; // Maximum number of retry attempts (default 3). If the error occurs more times than this, return null.
+  maxAttempts?: number; // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
   backoffRate?: number; // The multiplier by which the retry interval increases after every retry attempt (default 2).
 }
 ```
