@@ -16,9 +16,9 @@ This section covers two aspects of declarative security in Operon: authenticatio
     -   [HTTP Registration](#http-registration)
     -   [Other Entry Points](#other-entry-points)
 -   [Example Code](#example-code)
-        -   [Bank](#bank)
-        -   [Shop](#shop)
-        -   [Social](#social)
+    -   [Bank](#bank)
+    -   [Shop](#shop)
+    -   [Social](#social)
 
 ## Background Information
 Operon APIs make it easy to add role-based security to a backend application, and to automatically make a map of functions and their required roles for security auditing purposes.
@@ -32,7 +32,7 @@ Before entry to any Operon function, the list of roles assigned to the current u
 Programmers writing Operon functions list out the default roles required to execute functions in a class, and list required roles for any class methods that are exceptions from the class-level defaults.  Operon, with help from the authentication middleware, does the work of enforcing the declared authorization policy.
 
 ## Authorization Decorators
-A list of authorized roles is first provided at the class level with [`@DefaultRequiredRole`](../api-reference/decorators.md/#defaultrequiredrole):
+A list of authorized roles is first provided at the class level with [`@DefaultRequiredRole`](../api-reference/decorators.md#defaultrequiredrole):
 ```typescript
 @DefaultRequiredRole(['user'])
 class Operations
@@ -41,7 +41,7 @@ class Operations
 }
 ```
 
-For exceptions, requiring more or less privilege than the default,  [`@RequiredRole`](../api-reference/decorators.md/#requiredrole) is specified at the method level
+For exceptions, requiring more or less privilege than the default,  [`@RequiredRole`](../api-reference/decorators.md#requiredrole) is specified at the method level
 ```typescript
 @DefaultRequiredRole(['user'])
 class Operations
@@ -64,7 +64,7 @@ The procedural details of identifying the user associated with an inbound reques
 For these reasons, Operon allows user-specified middleware functions to extract authentication information from requests.
 
 ### HTTP Registration
-Operon can automatically register HTTP handlers based on endpoint decorators.  For this case, the [`@Authentication`](../api-reference/decorators.md/#authentication) class decorator is used to provide the middleware function to validate the HTTP request and extract the user and roles.
+Operon can automatically register HTTP handlers based on endpoint decorators.  For this case, the [`@Authentication`](../api-reference/decorators.md#authentication) class decorator is used to provide the middleware function to validate the HTTP request and extract the user and roles.
 
 ### Other Entry Points
 For other Operon entrypoints, the authorized user and role should be placed in the `parentCtx` before invoking Operon:
