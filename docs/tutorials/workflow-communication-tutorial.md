@@ -78,7 +78,7 @@ Any workflow or handler can call [ctxt.send](..) to send a message to a workflow
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 ```typescript
-ctxt.send<T>(destinationIdentityUUID: string, message: T, topic?: string | null): Promise<void>;
+ctxt.send<T>(destinationIdentityUUID: string, message: T, topic?: string): Promise<void>;
 ```
 
 #### Recv
@@ -87,7 +87,7 @@ Workflows can call [ctxt.recv](..) receive messages sent to their identity, opti
 Each call to `recv` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
 
 ```typescript
-ctxt.recv<T>(topic?: string | null, timeoutSeconds?: number): Promise<T | null>
+ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
 #### Messages Example
