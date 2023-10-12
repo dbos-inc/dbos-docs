@@ -1,6 +1,7 @@
 ---
 sidebar_position: 4
 title: Operon Contexts Reference
+description: API documentation for Operon Contexts
 ---
 
 # Operon Context Reference
@@ -57,7 +58,7 @@ This property exposes an HTTP request object, which contains details about the o
 It has the following structure:
 
 ```typescript
-export interface HTTPRequest {
+interface HTTPRequest {
   readonly headers?: IncomingHttpHeaders;  // A node's http.IncomingHttpHeaders object.
   readonly rawHeaders?: string[];          // Raw headers.
   readonly params?: unknown;               // Parsed path parameters from the URL.
