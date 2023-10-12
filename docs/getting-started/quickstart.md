@@ -12,7 +12,7 @@ Here's how to get an Operon application up and running in less than five minutes
 - macOS, Windows (through WSL), and Linux are supported
 - This tutorial requires [Docker](https://www.docker.com/)
 
-### Automatic Installation
+### Project Initialization
 
 We recommend starting a new Operon app using `operon init`, which sets up everything automatically for you.
 To create a project, run:
@@ -21,12 +21,12 @@ To create a project, run:
 npx operon init -n <project name> # Note: Once Operon is released to npm, this will prompt you to install our CLI if it isn't already installed.
 ```
 
-This creates a folder with your project name and installs the required dependencies.
+This creates a folder for your project, configures its layout, and installs required dependencies.
 
 ### Getting Started
 
 By default, `operon init` instantiates a "Hello, World!" application.
-First, we'll show you how to get that up and running, then we'll show you how to build something more powerful.
+First, we'll show you how to build and run it, then we'll show you how to extend it with more powerful features.
 
 Before you can launch your app, you need a database.
 Operon works with any Postgres database, but to make things easier, we've provided a nifty script that starts Postgres locally in a Docker container and creates a database:
@@ -51,11 +51,11 @@ npm run build
 npx operon start
 ```
 
-Finally, curl it to see that it's working:
+Finally, use curl to see that it's working:
 
 ```bash
  curl http://localhost:3000/greeting/operon
 ```
 
 Congratulations!  You just launched your first Operon application.
-Keep going into the next tutorial to see how to use Operon to easily build powerful, reliable application backends.
+Next, we'll see how to use Operon to easily build powerful and reliable application backends.
