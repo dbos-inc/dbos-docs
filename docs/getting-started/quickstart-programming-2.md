@@ -48,13 +48,13 @@ To do this, let's write a new function that forwards the greeting to the Postman
   import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
 
   @OperonCommunicator()
-  static async greetPostman(_ctxt: CommunicatorContext, greeting: string) {
+  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
     await axios.get("https://postman-echo.com/get", {
       params: {
         greeting: greeting
       }
     });
-    console.log(`Greeting sent to postman!`);
+    ctxt.logger.info(`Greeting sent to postman!`);
   }
 ```
 
@@ -72,7 +72,7 @@ Now, let's update `helloHandler` to call this new function with some error handl
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
+      ctxt.logger.error(e);
       return `Greeting failed for ${user}\n`
     }
   }
@@ -106,7 +106,7 @@ To do this, let's write a rollback transaction that decrements `greet_count` if 
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
+      ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
@@ -132,7 +132,7 @@ import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these 
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
+      ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
@@ -151,7 +151,7 @@ import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorCon
 import { Knex } from 'knex';
 import axios from 'axios';
 
-export interface operon_hello {
+interface operon_hello {
   name: string;
   greet_count: number;
 }
@@ -166,7 +166,7 @@ export class Hello {
       await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
+      ctxt.logger.error(e);
       await ctxt.invoke(Hello).rollbackHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
@@ -195,13 +195,13 @@ export class Hello {
   }
 
   @OperonCommunicator()
-  static async greetPostman(_ctxt: CommunicatorContext, greeting: string) {
+  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
     await axios.get("https://postman-echo.com/get", {
       params: {
         greeting: greeting
       }
     });
-    console.log(`Greeting sent to postman!`);
+    ctxt.logger.info(`Greeting sent to postman!`);
   }
 
   @PostApi('/clear/:user')
@@ -214,4 +214,5 @@ export class Hello {
     return `Cleared greet_count for ${user}!\n`
   }
 }
+
 ```
