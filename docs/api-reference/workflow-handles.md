@@ -1,30 +1,39 @@
 ---
 sidebar_position: 5
-title: Workflow handles
-description: API documentation for Operon Workflow Handles
+title: Workflow Handles
+description: API documentation for workflow handles
 ---
 
-Invoking an Operon workflow returns a handle representing an active or completed workflow execution.
-Using the handle, you can retrieve information about the workflow: status, result, and UUID.
+## Workflow Handles
 
-```tsx
-/**
- * Object representing an active or completed workflow execution, identified by the workflow UUID.
- * Allows retrieval of information about the workflow.
- */
-export interface WorkflowHandle<R> {
-  /**
-   * Retrieve the workflow's status.
-   * Statuses are updated asynchronously.
-   */
-  getStatus(): Promise<WorkflowStatus | null>;
-  /**
-   * Await workflow completion and return its result.
-   */
-  getResult(): Promise<R>;
-  /**
-   * Return the workflow's UUID.
-   */
-  getWorkflowUUID(): string;
+A workflow handle represents the state of a particular active or completed workflow execution.
+A workflow handle is obtained when [calling a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) from a handler or another workflow with [`ctxt.invoke`](..) or [`ctxt.childWorkflow`](..).
+Additionally, a handler can retrieve the handle of any workflow by calling [`ctxt.retrieveWorkflow`](..) on that workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
+
+---
+
+### Methods
+
+#### `getStatus() : Promise<WorkflowStatus>`
+
+This method retrieves the status of a workflow.
+It returns a status object with the following structure:
+
+```typescript
+export interface WorkflowStatus {
+  status: string; // The status of the workflow. One of PENDING, SUCCESS, or ERROR.
+  workflowName: string; // The name of the workflow function.
+  authenticatedUser: string; // The user who ran the workflow. Empty string if not set.
+  assumedRole: string; // The role used to run this workflow. Empty string if authorization is not required.
+  authenticatedRoles: string[]; // All roles the authenticated user has, if any.
+  request: HTTPRequest; // The parent request for this workflow, if any.
 }
 ```
+
+#### `getResult(): Promise<R>`
+
+This method waits for the workflow to complete then returns its output.
+
+#### `getWorkflowUUID() : string`
+
+This method retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a 128-bit UUID in string format that uniquely identifies that workflow's execution.

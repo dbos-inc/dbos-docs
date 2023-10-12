@@ -6,7 +6,7 @@ description: Learn how to use the testing runtime for unit tests.
 
 In this guide, you'll learn how to test your Operon applications.
 
-Operon provides a [testing runtime](..) that allows you to test your applications without starting an HTTP server.
+Operon provides a [testing runtime](../api-reference/testing-runtime.md) that allows you to test your applications without starting an HTTP server.
 The testing runtime provides useful methods for you to invoke decorated Operon functions, communicate with workflows, test HTTP endpoints, and query the user database.
 This is especially helpful if you want to thoroughly test your applications with unit tests and debug individual functions within complex workflows.
 
@@ -51,5 +51,5 @@ await testRuntime.destroy();
 
 ### Further Reading
 
-To learn the full testing runtime interface, please see [our testing runtime references](..).
-You can find the source code for this tutorial in [operations.test.ts](..).
+To learn the full testing runtime interface, please see [our testing runtime references](../api-reference/testing-runtime.md).
+You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/operon/blob/main/examples/hello/src/operations.test.ts).

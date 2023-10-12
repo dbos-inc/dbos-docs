@@ -52,12 +52,12 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
+      image: 'img/social-card.png',
       navbar: {
         title: 'Operon',
         logo: {
-          alt: 'My Site Logo',
-          src: 'img/dbos-logo.jpg',
+          alt: 'DBOS Logo',
+          src: 'img/dbos-logo.png',
         },
         items: [
           {
