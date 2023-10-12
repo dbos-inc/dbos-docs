@@ -1,6 +1,6 @@
 ---
 sidebar_position: 9
-title: Using TypeORM
+title: Using Prisma
 description: Learn how to create and register Prisma entities and perform transactional updates
 ---
 
