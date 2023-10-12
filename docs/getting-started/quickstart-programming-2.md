@@ -66,7 +66,7 @@ Now, let's update `helloHandler` to call this new function with some error handl
 
 ```javascript
   @GetApi('/greeting/:user')
-  static async helloHandler(ctxt: WorkflowContext, user: string) {
+  static async helloHandler(ctxt: HandlerContext, user: string) {
     const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
       await ctxt.invoke(Hello).greetPostman(greeting);
@@ -99,8 +99,8 @@ To do this, let's write a rollback transaction that decrements `greet_count` if 
       .decrement('greet_count', 1);
   }
 
-  @GetApi('/greeting/:name')
-    static async helloHandler(ctxt: WorkflowContext, user: string) {
+  @GetApi('/greeting/:user')
+  static async helloHandler(ctxt: HandlerContext, user: string) {
     const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
       await ctxt.invoke(Hello).greetPostman(greeting);
