@@ -16,7 +16,7 @@ npm run start
 
 ### Publish on Github
 
-Publishing is done automatically by a commit hook--you should never need to run this yourself.
+Publishing is done automatically by a commit hook. You should never need to run this yourself:
 
 ```
 GIT_USER=<GITHUB_USERNAME> npx run deploy
