@@ -6,12 +6,10 @@ description: API documentation for Operon Testing Runtime
 
 # Operon Testing Runtime
 
-Operon provides a testing runtime that allows you to test your application code without starting an Operon HTTP server.
-You can create a testing runtime and use it to invoke your Operon functions, interact with workflows, test HTTP endpoints, and query your database.
-
-Operon testing runtime is easy to use.
-Before running your tests, you simply [create a testing runtime](#create-testing-runtime).
-After your tests finish, you simply [release resources](#runtimedestroy) such as database connections.
+Operon provides a testing runtime to make it easier to write unit tests for Operon applications.
+Before running your tests, [create and configure the runtime](#create-testing-runtime).
+In your tests, use [the runtime's methods](#methods) to invoke your application's functions.
+After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
 
 ::::tip
 
@@ -22,8 +20,6 @@ If you use Knex or Prisma, you are responsible for setting up schemas/tables and
 
 ---
 
-## Testing Runtime Reference
-
 ### Create Testing Runtime
 
 #### createTestingRuntime(userClasses, \[configFilePath\])
@@ -32,16 +28,17 @@ async function createTestingRuntime(userClasses: object[], configFilePath: strin
 ```
 
 This method creates a testing runtime and loads user functions from provided `userClasses`.
-You can optionally provide a [config file](./configuration.md), for example, to use a different database or log level for debugging.
+You can also optionally provide a path to an Operon [configuration file](./configuration.md).
+If no path is provided, the runtime loads a configuration file from the default location (`operon-config.yaml` in the package root).
 
-For example, let's create a runtime that loads functions from the `Hello` class and use a `test-config.yaml` config file.
+This example creates a runtime that loads functions from the `Hello` class and uses the config file `test-config.yaml`:
 ```typescript
 testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 ```
 
 :::warning
 
-This method will *drop and re-create* a clean Operon system database. You will lose all persisted system information such as workflow status. Therefore, you should not run unit tests on your production database!
+This method *drops and re-creates* the Operon system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
 
 :::
 
@@ -150,7 +147,7 @@ This method retrieves a custom property value specified in [application configur
 queryUserDB<R>(sql: string, ...params: any[]): Promise<R[]>;
 ```
 
-This methods executes a [parameterized SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
+This methods executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
 The type `R` is the return type of the database row.
 
 For example, we can query the [`operon_hello`](../getting-started/quickstart-programming-1.md) table in our tests and check the `greet_count` is as expected.
