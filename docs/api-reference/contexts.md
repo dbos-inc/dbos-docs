@@ -190,7 +190,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 ```
 
 This method retrieves a value published by a workflow identity for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-A call to `getEvent` waits for the value to be published, returning `null` if the wait times out.
+A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ---
 
@@ -265,7 +265,7 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 ```
 
-A workflow can call `setEvent()` to immutably emit a key-value pair associated with its identity.
+A workflow can call `setEvent()` to immutably emit a key-value pair.
 Any handler can read the event by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's identity UUID.
 If a workflow has already set an event for a particular key, setting it again is an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
