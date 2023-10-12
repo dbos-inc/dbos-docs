@@ -1,6 +1,6 @@
 ---
 sidebar_position: 9
-title: Testing
+title: Testing and Debugging
 description: Learn how to use the testing runtime for unit tests.
 ---
 
@@ -15,16 +15,26 @@ We'll show you how to write unit tests for the `Hello` class we introduced in [P
 ### Creating Testing Runtime
 
 First, let's create an `OperonTestingRuntime` object:
-```javascript
+```typescript
 testRuntime = await createTestingRuntime([Hello]);
 ```
 You simply pass in a list of classes you want to test. For example, we pass in `[Hello]` here.
+
+::::warning
+
+This method will *drop and re-create* a clean Operon system database. You will lose all persisted system information such as workflow status. Therefore, you should not run unit tests on your production database!
+
+::::
+
+Optionally, you can use a different Operon config file for tests, for example to use a separate database from other tests or to configure the log level for debugging.
+Please see our [Testing Runtime reference](../api-reference/testing-runtime.md) for details.
+
 
 ### Invoking Functions
 
 A testing runtime object can invoke workflows, transactions, and communicators using the `invoke` method.
 For example, we can invoke `helloTransaction` and verify the output is as expected:
-```javascript
+```typescript
 const res = await testRuntime.invoke(Hello).helloTransaction("operon");
 expect(res).toMatch("Hello, operon! You have been greeted");
 ```
@@ -33,7 +43,7 @@ In this code, we invoke the transaction with the input string `"operon"`.
 ### Testing HTTP Endpoints
 
 The testing runtime provides a `getHandlersCallback()` function, which  returns a callback function for node's native http/http2 server. This allows you to test Operon handlers, for example, with [supertest](https://www.npmjs.com/package/supertest):
-```javascript
+```typescript
 const res = await request(testRuntime.getHandlersCallback()).get(
   "/greeting/operon"
 );
@@ -45,7 +55,7 @@ In this code, we send a `GET` request to our `/greeting/operon` URL and verify t
 ### Cleaning Up
 
 Finally, after your tests, you can clean up the testing runtime and release its resources:
-```javascript
+```typescript
 await testRuntime.destroy();
 ```
 
