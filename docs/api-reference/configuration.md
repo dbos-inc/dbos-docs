@@ -3,17 +3,32 @@ sidebar_position: 1
 title: Operon Configuration
 ---
 
-Configuration is set of properties and values provided by the application develop to influence the behaviour of the operon runtime as well as the application. 
+The configuration file informs the Operon runtime how to run an application.
+By default it is located in `operon-config.yaml` in the project root directory, but this is configurable through the [CLI](./cli).
 
-## configuration file
+Operon config files are YAML files.
+Values can be provided as strings or from environment variables using the syntax `key: ${VALUE}`.
 
-Standard yaml file operon-config.yaml.
-The file should be in the root directory of the project.
-A sample operon-config.yaml is shown below.
+---
 
-A value in the form ${SOMEVALUE} implies that the runtime will get the value from the environment variable SOMEVALUE.
+### Database
 
-```
+The database configuration is used to set up the connection to the database.
+Operon currently only supports Postgres-compatible databases.
+
+- **hostname**: The hostname or IP address of the application database.
+- **port**: The database port.
+- **username**: The username with which to connect to the database.
+- **password**: The password with which to connect to the database.  We strongly recommend storing this in an environment variable as shown below, instead of plain text.  
+- **connectionTimeoutMillis**: The database connection timeout.
+- **user_database**: The name of the application database.
+- **system_database**: The name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
+- **ssl_ca**: If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
+- **user_dbclient**: Specify which client to use to connect to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](..).
+
+**Example**:
+
+```yaml
 database:
   hostname: 'localhost'
   port: 5432
@@ -23,67 +38,28 @@ database:
   system_database: 'hello_systemdb'
   connectionTimeoutMillis: 3000
   user_dbclient: 'knex'
-telemetryExporters:
-  - 'ConsoleExporter'
 ```
-
-## Operon configuration
-
-### database
-The database section contains configuration parameters needed by operon to connect to user and system databases.
-
-#### hostname
-The hostname or ip address of the machine hosting the database.
-
-#### port
-The port that the database is listening on.
-
-#### username
-The username to use to connect to the database.
-
-#### password
-The password to use to connect to the database. It is strongly recommended that you do not put password in cleartext here. Instead use indirection like ${PGPASSWORD} so that the runtime can get the value from the environment variable PGPASSWORD.
-
-#### user_database
-This is the database that the application code reads and writes from.
-
-#### system_database
-This is the database that the operon runtime reads and writes from.
-
-#### user_dbclient
-This is the sql builder or ORM used to communicate with the database. Supported values are knex, prisma or typeorm. Default is knex
-
-#### connectionTimeoutMillis
-The timeout in milliseconds after which the database driver will timeout from connecting to the database.
-
-#### observability_database
-The name of the database to which the observability database is written to.
-
-#### ssl_ca
-The path to ssl certificate to connect to the database.
 
 ### localRuntimeConfig
+
+This configuration is used to specify runtime parameters.
+
+- **port**: The port from which to serve the application. If the port is also specified on the command line by [`npx operon start`](./cli#npx-operon-start), use that port instead.
+
+**Example**:
+
+```yaml
+localRuntimeConfig:
+  port: 6000
 ```
-localRuntimeConfig
-    port: 6000
-```
-This section has properties needed to configure the runtime.
 
-#### port
-This is the port on which the embedded http server listens. Default is 3000.
+### application
 
+The application configuration is used to define custom properties as key-value pairs.
+These can be retrieved from any [context](./contexts) via the [`getConfig`](..) method.
 
-### telemetryExporters
-
-List of exporter to whom telemetry logs are to be sent. Supported values are 'ConsoleExporter', 'JaegerExporter', 'PGExporter'.
-
-
-## Application configuration
-
-The application section can have any user defined properties and values used by the application.
-
-```
+**Example**:
+```yaml
 application:
     PAYMENTS_SERVICE: 'http://stripe.com/payment'
-
 ```
