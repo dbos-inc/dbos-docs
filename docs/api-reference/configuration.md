@@ -40,6 +40,8 @@ database:
   user_dbclient: 'knex'
 ```
 
+---
+
 ### localRuntimeConfig
 
 This configuration is used to specify runtime parameters.
@@ -52,6 +54,8 @@ This configuration is used to specify runtime parameters.
 localRuntimeConfig:
   port: 6000
 ```
+
+---
 
 ### application
 
