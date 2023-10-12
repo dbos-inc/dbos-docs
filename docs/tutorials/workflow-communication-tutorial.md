@@ -34,7 +34,7 @@ Workflows and handlers can call [`ctxt.getEvent`](..) to retrieve the value publ
 A call to `getEvent` waits for the key-value pair to be published, returning `null` if the wait times out:
 
 ```typescript
-ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds: number);
+ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: number);
 ```
 
 #### Events Example
