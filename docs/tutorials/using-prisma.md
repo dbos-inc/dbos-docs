@@ -59,11 +59,36 @@ Run this command in the database to create table:
 npx prisma migrate dev --name init
 ```
 
-
 ## Coding a transactional function
+The following code show a function that uses PrismaClient to perform a database operation.
+The operon framework has already created an instance of the PrismaClient and made it available as part of the transaction context. The code below insert a row into the table based on the model we defined above. The decorator @OperonTransaction wraps a database transaction around this function.
+
+```tsx
+@OperonTransaction()
+  static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
+    const greeting = `Hello, ${name}!`;
+    console.log(greeting);
+    const p: PrismaClient = txnCtxt.client as PrismaClient;
+    const res = await p.operonHello.create({
+        data: {
+        greeting: greeting,
+        },
+    });
+    return `Greeting ${res.greeting_id}: ${greeting}`;
+  };
 
 
-
-
+```
 
 ## Invoking a transactional function
+The code below shows how the function helloTransaction is involved.
+helloHandler is invoked when the runtime receives a httpRequest '/greeting/:name'.
+helloTransaction is invoked by calling the invoke method.
+
+```tsx
+ @GetApi('/greeting/:name')
+  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
+    return handlerCtxt.invoke(Hello).helloTransaction(name);
+  }
+
+```
