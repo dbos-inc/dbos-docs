@@ -153,7 +153,8 @@ The type `R` is the return type of the target workflow.
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
 ```
-The `send()` method sends a provided message to a destination workflow identity. Messages can optionally be associated with a `topic` and are queued on the receiver per topic. The message queue by default allows duplicated messages, but you can specify an `idempotencyKey` for the message to be sent exactly once.
+The `send()` method sends a provided message to a destination workflow identity. Messages can optionally be associated with a `topic` and are queued on the receiver per topic.
+The message may be sent multiple times and the receiver may receive duplicated messages, because a handler can potentially execute multiple times during failures, but you can specify an `idempotencyKey` for the message to be sent exactly once.
 The type `T` is the type of the message (non-nullable).
 
 #### handlerCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
