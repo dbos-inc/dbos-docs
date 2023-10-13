@@ -45,17 +45,17 @@ To make this more interesting, let's say that when we greet someone, we also wan
 To do this, let's write a new function that forwards the greeting to the Postman Echo server:
 
 ```javascript
-  import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
+import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
 
-  @OperonCommunicator()
-  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-    await axios.get("https://postman-echo.com/get", {
-      params: {
-        greeting: greeting
-      }
-    });
-    ctxt.logger.info(`Greeting sent to postman!`);
-  }
+@OperonCommunicator()
+static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
+  await axios.get("https://postman-echo.com/get", {
+    params: {
+      greeting: greeting
+    }
+  });
+  ctxt.logger.info(`Greeting sent to postman!`);
+}
 ```
 
 The `@OperonCommunicator` decorator registers this function so that Operon can manage its execution.
@@ -65,17 +65,17 @@ Learn more about communicators and communication with external services and APIs
 Now, let's update `helloHandler` to call this new function with some error handling:
 
 ```javascript
-  @GetApi('/greeting/:user')
-  static async helloHandler(ctxt: HandlerContext, user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      return `Greeting failed for ${user}\n`
-    }
+@GetApi('/greeting/:user')
+static async helloHandler(ctxt: HandlerContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 Try it out:
@@ -91,26 +91,26 @@ We want to keep the `greet_count` in the database synchronized with the number o
 To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler:
 
 ```javascript
-  @OperonTransaction()
-  static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
-    // Decrement greet_count.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .decrement('greet_count', 1);
-  }
+@OperonTransaction()
+static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  // Decrement greet_count.
+  await ctxt.client<operon_hello>("operon_hello")
+    .where({ name: user })
+    .decrement('greet_count', 1);
+}
 
-  @GetApi('/greeting/:user')
-  static async helloHandler(ctxt: HandlerContext, user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
-    }
+@GetApi('/greeting/:user')
+static async helloHandler(ctxt: HandlerContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 Now, we'll roll back the increment of `greet_count` if our Postman request fails.
@@ -122,21 +122,21 @@ Here's how we can use a workflow in our example:
 ```javascript
 import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
 
-  @GetApi('/greeting/:user')
-  // highlight-next-line
-  @OperonWorkflow()
-  // highlight-next-line
-  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
-    }
+@GetApi('/greeting/:user')
+// highlight-next-line
+@OperonWorkflow()
+// highlight-next-line
+static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 You can see that we've transformed the handler into a workflow by adding the `@OperonWorkflow` decorator.
