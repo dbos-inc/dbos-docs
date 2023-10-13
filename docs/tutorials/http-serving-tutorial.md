@@ -51,15 +51,16 @@ For example (from our [quickstart](../getting-started/quickstart-programming-1))
 
 Any Operon method invoked via HTTP request can access the raw request from its `context.request` field.
 
-When a function has arguments other than its context (e.g., `name: String` in the snippet above), Operon automatically attempts to parse them from the HTTP request.
-Arguments can be parsed from three places:
+When a function has arguments other than its context (e.g., `name: String` in the snippet above), Operon automatically parses them from the HTTP request, and returns an error to the client if arguments were not provided.
 
-1. From an URL path parameter, if one is specified in the decorated URL.
-2. For GET requests, from a URL query string parameter.
-3. For POST requests, from an HTTP body field.
+Arguments are parsed from three places by default:
 
-In all cases, the parameter name must match the function argument name. In the snippet above, `/clear/:name` must match `name: String`.
-Input parsing can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
+1. For GET requests, from a URL query string parameter.
+2. For POST requests, from an HTTP body field.
+3. From an URL path parameter, if there are placeholders specified in the decorated URL.
+
+In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the snippet above, `/clear/:name` will be matched `name: String`.
+Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 
 By default, Operon automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
 Validation can be turned off at the class level using [`@DefaultArgOptional`](..) or controlled at the parameter level using [`@ArgRequired`](..) and [`@ArgOptional`](..).
