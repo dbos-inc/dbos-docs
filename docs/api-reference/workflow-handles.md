@@ -1,7 +1,7 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Workflow Handles
-description: API documentation for workflow handles
+description: API reference for workflow handles
 ---
 
 # Workflow Handles

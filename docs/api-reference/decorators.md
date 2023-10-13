@@ -1,7 +1,7 @@
 ---
-sidebar_position: 3
-title: Decorator Reference
-description: Usage of decorators in Operon, with exhaustive list
+sidebar_position: 4
+title: Decorators
+description: API reference for Operon decorators.
 ---
 
 # Decorator Reference

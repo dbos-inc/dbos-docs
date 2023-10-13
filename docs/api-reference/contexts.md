@@ -1,7 +1,7 @@
 ---
-sidebar_position: 4
-title: Operon Contexts Reference
-description: API documentation for Operon Contexts
+sidebar_position: 3
+title: Contexts
+description: API reference for Operon contexts
 ---
 
 # Operon Context Reference

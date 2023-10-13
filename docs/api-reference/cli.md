@@ -1,7 +1,7 @@
 ---
-sidebar_position: 2
-title: Operon CLI
-description: API documentation for the Operon CLI
+sidebar_position: 1
+title: CLI
+description: Operon CLI reference
 ---
 
 The Operon CLI helps you manage Operon applications.

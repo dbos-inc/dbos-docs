@@ -1,7 +1,7 @@
 ---
-sidebar_position: 6
-title: Operon Testing Runtime
-description: API documentation for Operon Testing Runtime
+sidebar_position: 5
+title: Testing Runtime
+description: API documentation for the Operon testing runtime
 ---
 
 # Operon Testing Runtime

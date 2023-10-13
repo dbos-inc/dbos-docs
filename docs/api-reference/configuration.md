@@ -1,6 +1,7 @@
 ---
-sidebar_position: 1
-title: Operon Configuration
+sidebar_position: 2
+title: Configuration
+description: Operon configuration reference
 ---
 
 The configuration file informs the Operon runtime how to run an application.
