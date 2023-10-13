@@ -84,7 +84,7 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
 
 The `@PostApi` decorator we added tells Operon to execute this function in response to HTTP POST requests to the `clear` endpoint.
 The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
-To learn more about HTTP endpoints and handlers in Operon, see [our guide](..).
+To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
 
 Now, let's see if this works!
 First, build and start the application:
