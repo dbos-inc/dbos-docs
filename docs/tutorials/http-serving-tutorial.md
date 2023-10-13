@@ -10,7 +10,7 @@ For example:
 
 ```javascript
   @GetApi('/greeting/:name')
-  static async greetingEndpoint(ctx: HandlerContext, name: string) {
+  static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
 	  return `Greeting, ${name}`;
   }
 ```
