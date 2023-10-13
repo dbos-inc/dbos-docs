@@ -29,4 +29,10 @@ There are four basic types of functions:
 - **[Workflows](../tutorials/workflow-tutorial)** reliably orchestrate other functions&#8212;if a workflow is ever interrupted for any reason (like a server crash), it always resumes from where it left off.
 - **[Handlers](../tutorials/http-serving-tutorial)** serve HTTP requests.
 
-To learn how to use these to build an Operon application, we recommend our [quickstart](../getting-started/quickstart).
+When you launch an application, Operon automatically wires these functions together for you, setting up an HTTP server for you endpoints and a database connection pool for your transactions.
+
+A critical component of Operon's programming model is _reliability_, guaranteed by the database.
+Your transactions are always ACID.
+Your workflows always run to completion, even when interrupted by a server crash&#8212;when the server is restarted, they resume from where they left off and don't repeat any operation they previously completed.
+Your [messages](../tutorials/workflow-communication-tutorial) come with guaranteed exactly-once delivery.
+Our goal is to make your app work the way you think it should.
