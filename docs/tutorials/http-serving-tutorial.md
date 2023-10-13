@@ -27,7 +27,7 @@ That's because Operon is a _serverless_ framework: we launch and manage the serv
 
 ### Handlers
 
-A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](..) as its first argument, like in the example above.
+A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the example above.
 Handlers can invoke other functions and directly access HTTP requests and responses.
 However, Operon makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
 You should use handlers when you need to access HTTP responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
@@ -63,16 +63,16 @@ In all cases, the parameter name must match the function argument name (unless [
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 
 By default, Operon automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
-Validation can be turned off at the class level using [`@DefaultArgOptional`](..) or controlled at the parameter level using [`@ArgRequired`](..) and [`@ArgOptional`](..).
+Validation can be turned off at the class level using [`@DefaultArgOptional`](../api-reference/decorators#defaultargoptional) or controlled at the parameter level using [`@ArgRequired`](../api-reference/decorators#argrequired) and [`@ArgOptional`](../api-reference/decorators#argoptional).
 
 ### Outputs and HTTP Responses
 
 By default, if an Operon function invoked via HTTP request returns successfuly, its return value is sent in the HTTP response body with status code `200` (or `204` if nothing is returned).
 If the function throws an exception, the error message is sent in the response body with a `400` or `500` status code.
-If the error contains a `status` field (we provide [`OperonResponseError`](..) for this purpose), Operon uses that status code instead.
+If the error contains a `status` field, Operon uses that status code instead.
 
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
-Operon uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](..), which provides a [Koa response](https://koajs.com/#response).
+Operon uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../api-reference/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
 
 ### Middleware
 

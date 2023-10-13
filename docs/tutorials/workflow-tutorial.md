@@ -9,10 +9,10 @@ In this guide, you'll learn how to make your applications reliable using workflo
 Workflows orchestrate the execution of other functions, like transactions and communicators.
 They're useful because they're _reliable_: if a server crashes and is restarted, it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
 You can use workflows when you need to coordinate multiple operations that all need to complete for a program to be correct.
-For example, in our [shop demo](..), we use a workflow to do payment processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), we use a workflow to do payment processing.
 Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
 
-Workflows must be annotated with the [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) decorator and must have a [`WorkflowContext`](..) as their first argument.
+Workflows must be annotated with the [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
@@ -53,7 +53,7 @@ const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
 
 The syntax for invoking function `foo(args)` in class `Bar` is `context.invoke(Bar).foo(args)`.
 
-You can also invoke other workflows using the [context.childWorkflow](..) method.
+You can also invoke other workflows using the [context.childWorkflow](../api-reference/contexts#workflowctxtchildworkflowwf-args) method.
 
 ### Reliability Guarantees
 
@@ -80,7 +80,7 @@ For more information on workflow communication, see [our guide](./workflow-commu
 ### Asynchronous Workflows
 
 Because workflows are often long-running, Operon supports invoking workflows asynchronously.
-When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](..):
+When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](../api-reference/workflow-handles):
 
 ```javascript
   @GetApi(...)

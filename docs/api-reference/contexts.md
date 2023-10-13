@@ -88,7 +88,7 @@ readonly authenticatedUser: string
 ```
 
 This property exposes the identity of the authenticated user who ran this function.
-Authenticated users are set by [authentication middleware](..) and inherited through the calling chain.
+Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
 #### ctxt.logger
 

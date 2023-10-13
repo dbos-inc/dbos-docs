@@ -24,7 +24,7 @@ Operon currently only supports Postgres-compatible databases.
 - **user_database**: The name of the application database.
 - **system_database**: The name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
 - **ssl_ca**: If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
-- **user_dbclient**: Specify which client to use to connect to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](..).
+- **user_dbclient**: Specify which client to use to connect to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 
 **Example**:
 
@@ -89,7 +89,7 @@ localRuntimeConfig:
 ### application
 
 The application configuration is used to define custom properties as key-value pairs.
-These can be retrieved from any [context](./contexts) via the [`getConfig`](..) method.
+These can be retrieved from any [context](./contexts) via the [`getConfig`](../api-reference/contexts#ctxtgetconfigkey) method.
 
 **Example**:
 ```yaml

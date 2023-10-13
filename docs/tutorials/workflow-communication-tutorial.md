@@ -41,7 +41,7 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 #### Events Example
 
 Events are especially useful for writing interactive workflows that need to communicate information back to their caller.
-For example, in our [shop demo](..), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
 After validating an order, the payments workflow emits an event containing a payment link using `setEvent()`:
@@ -99,7 +99,7 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 #### Messages Example
 
 Messages are especially useful for communicating information or sending notifications to a running workflow.
-For example, in our [shop demo](..), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
