@@ -54,7 +54,7 @@ Note all this options are optional and will, if not specified, use the default v
 
 #### Traces
 - **enable**: Whether or not to export traces in [OTLP format](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md).
-- **endpoint**: The FQDN of a [Jaeger](Jaegertracing.io) endpoint.
+- **endpoint**: The FQDN of a [Jaeger](https://Jaegertracing.io) endpoint.
 
 **Example**:
 
