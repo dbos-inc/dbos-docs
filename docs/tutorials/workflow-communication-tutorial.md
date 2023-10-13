@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 6
 title: Workflow Communication
 description: Learn how to write interactive workflows
 ---

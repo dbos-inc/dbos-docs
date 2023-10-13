@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 7
 title: Logging and Tracing
 description: Learn how to observe your Operon workflows
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 title: Using Prisma
 description: Learn how to create and register Prisma entities and perform transactional updates
 ---
