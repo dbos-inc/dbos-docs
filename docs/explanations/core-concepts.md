@@ -4,51 +4,29 @@ sidebar_position: 4
 
 # Core Concepts
 
-Operon is a simple easy to use serverless framework for developing transactional applications.
-Operon applications are made up of transactions and workflows.
-Operon workflows group together a set of transactions and provide them with Once-and-Only-Once-Execution guarantees.
-This means Operon workflows are guaranteed to run to completion and their composing transactions will be executed only once.
+Operon is a Typescript framework for the backend that helps you build applications that work right by default.
+Its two main principles are inspired by the [DBOS research project from Stanford and MIT](https://dbos-project.github.io/):
 
-## Programming model
-An operon application is a set of transactions and workflows.
-Users write functions.
-The functions execute in a runtime provided by operon. Users do not have to code the entire server. Operon manages the lifecyle of the server and user code.
-The functions are triggered by HTTP requests.
-Decorators are used to annotate the function to describe whether it is a transaction or workflow and what http request triggers the execution.
-The separation of responsibility lets the developer focus on building business logic, while operon can focus on providing a reliable and scalable runtime.
+1. **Store all application state in the database.** By managing database connections and transactions, Operon makes it easy for you to store all your app state in the database so it can be safe, consistent, and durable.  Under the hood, we use the database to manage the state of workflow execution as well as all [messages](../tutorials/workflow-communication-tutorial#messages-api) and [events](../tutorials/workflow-communication-tutorial#events-api).
 
-### User code
-Functions that a user writes that are annotated as Transactions or Workflows. 
+2.  **Access state only through database transactions.** All database operations in Operon are transactional, making it easy for you to leverage databases' strong safety guarantees and eliminating most race conditions.  Under the hood, we use transactions to guarantee your workflows [always run to completion](../tutorials/workflow-tutorial#reliability-guarantees), your operations [execute exactly-once](../tutorials/idempotency-tutorial), and your messages are delievered reliably.
 
-### Operon runtime
-Operon runtime that executes the user functions. Provides reliable and scalable runtime with an embedded HTTP server, security, logging and other features.
+### Programming Model
+The Operon programming model is serverless and inspired by [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) principles.
+It should look familiar if you've worked with other popular web frameworks like [Spring Boot](https://spring.io/projects/spring-boot) or [Django](https://www.djangoproject.com/).
+You build your applications from Typescript functions, annotating them with [decorators](../api-reference/decorators) to give them properties.
+There are four basic types of functions:
 
-## Transactions
-Transactions are the smallest unit of work in an Operon workflow. A transaction is typically made of typescript code and database queries. Operon takes care of wrapping your queries inside a database transaction and handles rollback when they fail, so you can focus on your application logic.
+- **[Transactions](../tutorials/transaction-tutorial)** run your core business logic transactionally in the database.
+- **[Communicators](../tutorials/communicator-tutorial)** talk to external services and APIs, with built-in automatic retries.
+- **[Workflows](../tutorials/workflow-tutorial)** reliably orchestrate other functions&#8212;if a workflow is ever interrupted for any reason (like a server crash), it always resumes from where it left off.
+- **[Handlers](../tutorials/http-serving-tutorial)** serve HTTP requests.
 
-## Workflows
-Operon workflows provide an abstraction for composing transactions. Workflows can carry metadata, such as their callers' identity.
+To learn how to use these to build an Operon application, we recommend our [quickstart](../getting-started/quickstart).
 
-## Once and Only Once Execution
-Operon workflows use checkpointing to ensure each transaction in the workflow is executed only once.
-If a workflow fails during execution, the caller can capture the failure, retry the workflow and expect execution to resume where it stopped.
-For Operon's checkpointing to work, it needs to maintain two tables in your application database.
+### Why Build With Operon?
 
-## Contexts
-When writing Operon code, you use a _context_ object to invoke transactions. Context objects are your main interface to Operon in your application code. For example, you can query your database with `context.pgClient.query`.
-
-## Communicators
-Inside a workflow, you can use _communicators_ to call third party APIs. Like transactions, the output of communicators is checkpointed such that third party calls are sent only once.
-
-## Decorators
-Operon programming model revolves heavily around _decorators_. Decorators are annotations declaring your workflows and configuring various aspects of their execution (for instance, setting the isolation level of a transaction.)
-
-## Why should you consider using operon as your programming model ?
-
-It is easy to use.
-Write only business logic as functions. No monoliths, no microservices, no servers.
-It is fast, reliable and scalable.
-It provides the hard to code one and only one transactional semantics.
-Your resposibility is limited to business logic. Operon runtime does the rest.
-HttpServer, Security, Logging, Telemetry and more provided for free.
-Cloud deployment support coming soon.
+- **It's built on the tools you love**.  Operon leverages rock-solid infrastructure like Postgres and Typescript to build a better, more reliable framework for your applications.
+- **It's simple**.  Write your business logic using only functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
+- **It works right by default**.  [Reliability](../tutorials/workflow-tutorial) is built in, both for workflows and for messaging.  [Idempotency](../tutorials/idempotency-tutorial) is built in. [Authentication and authorization](../tutorials/authentication-authorization) are built in.  [Tracing](../tutorials/logging) is built in.
+- **It's built for the cloud**.  Operon is built to run on [DBOS's](https://www.dbos.dev) upcoming serverless cloud platform, so you can deploy your application to the cloud with a push of a button and run at scale without worrying about managing infrastructure.
