@@ -30,11 +30,10 @@ That's because Operon is a _serverless_ framework: we launch and manage the serv
 A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](..) as its first argument, like in the example above.
 Handlers can invoke other functions and directly access HTTP requests and responses.
 However, Operon makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
-You should use handlers when you need to access HTTP responses directly or when you're doing a lightweight task that doesn't need the strong guarantees of transactions and workflows.
+You should use handlers when you need to access HTTP responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
-You don't need a handler function to serve a transaction, workflow, or communicator from an HTTP URL.
-You can also annotate your existing function with an endpoint decorator in addition to its [`@OperonTransaction`](../api-reference/decorators#operontransaction), [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), or [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator.
-For example (from our [quickstart](..)):
+Operon decorators can be composed in any order. You can annotate existing functions with an endpoint decorator in addition to its [`@OperonTransaction`](../api-reference/decorators#operontransaction), [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), or [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator.
+For example (from our [quickstart](../getting-started/quickstart-programming-1)):
 
 ```javascript
   @PostApi('/clear/:name')
@@ -52,13 +51,14 @@ For example (from our [quickstart](..)):
 
 Any Operon method invoked via HTTP request can access the raw request from its `context.request` field.
 
-If a function has arguments other than its context, Operon attempts to automatically parse them from the HTTP request.
+When a function has arguments other than its context (e.g., `name: String` in the snippet above), Operon automatically attempts to parse them from the HTTP request.
 Arguments can be parsed from three places:
 
-1. From a URL query string parameter with the same name (by default, only for `GET`).
-2. From an HTTP body field with the same name (by default, only for `POST`).
-3. From an URL path parameter, if one is specified in the decorated URL.
+1. From an URL path parameter, if one is specified in the decorated URL.
+2. For GET requests, from a URL query string parameter.
+3. For POST requests, from an HTTP body field.
 
+In all cases, the parameter name must match the function argument name. In the snippet above, `/clear/:name` must match `name: String`.
 Input parsing can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 
 By default, Operon automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
@@ -71,9 +71,9 @@ If the function throws an exception, the error message is sent in the response b
 If the error contains a `status` field (we provide [`OperonResponseError`](..) for this purpose), Operon uses that status code instead.
 
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
-Operon uses [Koa](https://koajs.com/) for HTTP serving internally, so the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](..), which provides a [Koa response](https://koajs.com/#response).
+Operon uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](..), which provides a [Koa response](https://koajs.com/#response).
 
 ### Middleware
 
 Operon supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
-Middleware is configured at the class level through the [`@KoaMiddleware`](../api-reference/decorators#koamiddleware) decorator.
+Middlewares are configured at the class level through the [`@KoaMiddleware`](../api-reference/decorators#koamiddleware) decorator.
