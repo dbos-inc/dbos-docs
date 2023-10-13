@@ -23,6 +23,7 @@ The messages API:
 #### setEvent
 
 Any workflow can call `ctxt.setEvent()` to immutably publish a key-value pair.
+A workflow cannot set a key it has already set; doing so is an error.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
@@ -72,7 +73,7 @@ The handler that originally invoked the workflow uses `getEvent()` to await this
 
 #### Reliability Guarantees
 
-All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
+All events are persisted to the database and are immutable, so once an event it set, it is guaranteed to always be retrievable.
 
 ### Messages API
 
@@ -129,5 +130,5 @@ A webhook waits for the payment processor to send the notification, then uses `s
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
-If you're sending a message from a workflow, we guarantee the message will be sent exactly once because of [workflow reliability guarantees](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
 If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsenddestinationuuid-message-topic-idempotencykey) to guarantee exactly-once delivery.
