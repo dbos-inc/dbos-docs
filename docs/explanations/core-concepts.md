@@ -13,10 +13,10 @@ Its two main principles are inspired by the [DBOS research project from Stanford
 
 ### Why Build With Operon?
 
-- **It's built on the tools you love**.  Operon leverages rock-solid infrastructure like Postgres and Typescript to build a better, more reliable framework for your applications.
 - **It's simple**.  Write your business logic using only functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It works right by default**.  [Reliability](../tutorials/workflow-tutorial) is built in, both for workflows and for messaging.  [Idempotency](../tutorials/idempotency-tutorial) is built in. [Authentication and authorization](../tutorials/authentication-authorization) are built in.  [Tracing](../tutorials/logging) is built in.
 - **It's built for the cloud**.  Operon is built to run on [DBOS's](https://www.dbos.dev) upcoming serverless cloud platform, so you can deploy your application to the cloud with a push of a button and run at scale without worrying about managing infrastructure.
+- **It's built on the tools you love**.  Operon leverages rock-solid infrastructure like Postgres and Typescript to build a better, more reliable framework for your applications.
 
 ### Programming Model
 The Operon programming model is serverless and inspired by [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) principles.
