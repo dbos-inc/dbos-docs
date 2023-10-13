@@ -20,7 +20,7 @@ testRuntime = await createTestingRuntime([Hello]);
 ```
 This function takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class.
 
-You can also optionally provide a path to an Operon [configuration file](./configuration.md).
+You can also optionally provide a path to an Operon [configuration file](../api-reference/configuration.md).
 If no path is provided, the runtime loads a configuration file from the default location (`operon-config.yaml` in the package root).
 
 ### Testing Functions
