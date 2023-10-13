@@ -1,14 +1,14 @@
 ---
 sidebar_position: 7
 title: Logging and Tracing
-description: Learn how to observe your Operon workflows
+description: Learn to use Operon logging and tracing
 ---
 
-In this section we will learn about two aspects of observability in Operon: logging and tracing.
+In this section we will learn to use Operon's built-in logging and tracing systems.
 
 ## Logging
 
-An Operon runtime comes with a global logger you can access through the context of each Operation.
+The Operon runtime comes with a global logger you can access through any operation's [context](../api-reference/contexts.md).
 
 ### Usage
 
@@ -21,10 +21,8 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
 ```
 
 The logger supports `info()`, `debug()`, `warn()`, `emerg()`, `alert()`, `crit()` and `error()`.
-Each take a `string` argument, except for `error` which accepts `any` objects.
-You can directly pass to `error` an `Error` instance and have the stack trace displayed.
-If you pass a string, the logger will wrap it up in an `Error` so it can display a stack trace.
-Any other object type will be presented as-is.
+All except `error()` accept a `string` argument and print it as-is.
+`error()` accepts an argument of any type, wraps it in a Javascript `Error` object (if it isn't an `Error` already), and prints it with its stack trace.
 
 ```javascript
 @GetApi('/greeting/:name')
@@ -37,7 +35,7 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
 
 ### Configuration
 
-In `operon-config.yaml`, you can configure the logging level, silence the logger, and request contextual information being added to log entries:
+In the Operon [configuration file](../api-reference/configuration), you can configure the logging level, silence the logger, and request to add context metadata to log entries:
 ```yaml
 ...
 telemetry:
@@ -47,22 +45,22 @@ telemetry:
     silent: false (default) | true
 ```
 
-Context metadata include workflow UUID and workflow identity.
+Context metadata includes the workflow identity UUID and the name of the user running the workflow.
 
-You can also configure the logging level with a CLI argument to the Operon runtime:
+You can also configure the logging level as a CLI argument to the Operon runtime:
 ```shell
 npx operon start --loglevel debug
 ```
 
 ## Tracing
 
-Operon workflows natively produces [OpenTelemetry](https://opentelemetry.io/)-compatible traces.
-When a request arrives at an Operon handler, the frameworks looks up any [W3C-compatible trace context](https://www.w3.org/TR/trace-context/#trace-context-http-headers-format) in the HTTP headers.
-If found, it uses said context to create a new child Span and continue the trace, otherwise it starts a new trace. Each Operon operation creates a new child Span for the current trace.
+Operon workflows natively produce [OpenTelemetry](https://opentelemetry.io/)-compatible traces.
+When a request arrives at an Operon handler, the runtime looks up any [W3C-compatible trace context](https://www.w3.org/TR/trace-context/#trace-context-http-headers-format) in the HTTP headers.
+If found, it uses this context to create a new child [`Span`](https://opentelemetry.io/docs/concepts/signals/traces/#spans) and continue the trace, otherwise it starts a new trace. Each Operon operation creates a new child `Span` for the current trace.
 Finally, Operon will inject the trace context in the HTTP headers of the response returned by the handler.
 
-Each operation's Span is available through its Context.
-Here is an example accessing the Span to set custom trace attributes and events:
+Each operation's `Span` is available through its Context.
+Here is an example accessing the `Span` to set custom trace attributes and events:
 
 ```javascript
 @GetApi('/greeting/:name')
@@ -82,7 +80,7 @@ Under the hood, `ctx.span` is implemented by the [OpenTelemetry NodeJS SDK](http
 
 ### Jaeger exporter
 
-Operon ships with a [Jaeger](https://jaegertracing.io/) exporter whcih you can enable in the configuration file:
+Operon ships with a [Jaeger](https://jaegertracing.io/) exporter which you can enable in the configuration file:
 
 ```yaml
 ...
