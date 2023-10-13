@@ -70,6 +70,10 @@ The handler that originally invoked the workflow uses `getEvent()` to await this
   }
 ```
 
+#### Reliability Guarantees
+
+All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
+
 ### Messages API
 
 #### Send
@@ -121,3 +125,9 @@ A webhook waits for the payment processor to send the notification, then uses `s
     await ctxt.send(workflowIdentityUUID, notificationMessage, checkout_complete_topic);
   }
   ```
+
+#### Reliability Guarantees
+
+All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
+If you're sending a message from a workflow, we guarantee the message will be sent exactly once because of [workflow reliability guarantees](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsenddestinationuuid-message-topic-idempotencykey) to guarantee exactly-once delivery.
