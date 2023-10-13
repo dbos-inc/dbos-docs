@@ -7,7 +7,7 @@ description: Learn how to make applications reliable using workflows.
 In this guide, you'll learn how to make your applications reliable using workflows.
 
 Workflows orchestrate the execution of other functions, like transactions and communicators.
-They're useful because they're _reliable_: if a server crashes and is restarted, it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
+They're useful because they're _reliable_: if a server is interruped for any reason (for example, it crashes and restarts), it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
 You can use workflows when you need to coordinate multiple operations that all need to complete for a program to be correct.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), we use a workflow to do payment processing.
 Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
@@ -19,7 +19,7 @@ Additionally, workflows must be [deterministic](#determinism).
 Here's an example workflow from our [programing quickstart](../getting-started/quickstart-programming-2).
 It increments a counter in the database, then sends an HTTP request.
 If the request fails, it rolls back the increment.
-By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server crashes and is restarted.
+By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server is interrupted.
 
 ```javascript
 class Hello {
@@ -98,8 +98,6 @@ You can also retrieve another workflow's handle if you know its identity:
   }
 ```
 
-For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
-
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
@@ -112,6 +110,8 @@ Or, more concisely:
 ```javascript
 const result = await handlerCtxt.invoke(Class).workflow(name).then(h => h.getResult());
 ```
+
+For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
 
 ### Further Reading
 
