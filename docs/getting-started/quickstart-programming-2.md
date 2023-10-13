@@ -41,6 +41,8 @@ export class Hello {
 
 ```
 
+## Talking to Other Servies
+
 To make this more interesting, let's say that when we greet someone, we also want to send the greeting to a third party, like the [Postman Echo](https://postman-echo.com/) testing service.
 To do this, let's write a new function that forwards the greeting to the Postman Echo server:
 
@@ -86,9 +88,12 @@ curl http://localhost:3000/greeting/operon
 
 Every time you send a request, the server should print that it was forwarded to Postman.
 
+## Making it Reliable
+
 Now, let's say that we're concerned about the _reliability_ of our simple application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
-To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler:
+To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler.
+After adding this code, our app will roll back the increment of `greet_count` if our Postman request fails.
 
 ```javascript
 @OperonTransaction()
@@ -113,7 +118,7 @@ static async helloHandler(ctxt: HandlerContext, user: string) {
 }
 ```
 
-Now, we'll roll back the increment of `greet_count` if our Postman request fails.
+## Making it More Reliable with Workflows
 
 However, we're still not completely reliable: if our server crashes midway through sending a request to Postman, the rollback code never executes and a spurious greeting is persisted to the database.
 Luckily, Operon solves this problem with _workflows_, orchestration functions guaranteed to run to completion.
