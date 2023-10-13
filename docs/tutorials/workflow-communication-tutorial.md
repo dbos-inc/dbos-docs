@@ -22,7 +22,7 @@ The messages API:
 
 #### setEvent
 
-Any workflow can call [`ctxt.setEvent`](..) to immutably publish a key-value pair associated with its identity:
+Any workflow can call `ctxt.setEvent()` to immutably publish a key-value pair.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
@@ -30,8 +30,8 @@ ctxt.setEvent<T>(key: string, value: T): Promise<void>
 
 #### getEvent
 
-Workflows and handlers can call [`ctxt.getEvent`](..) to retrieve the value published by a workflow identity for a particular key.
-A call to `getEvent` waits for the key-value pair to be published, returning `null` if the wait times out:
+Workflows and handlers can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
+A call to `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ```typescript
 ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: number);
@@ -43,7 +43,7 @@ Events are especially useful for writing interactive workflows that need to comm
 For example, in our [shop demo](..), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
-After validating an order, the payments workflow emits an event containing a payment link:
+After validating an order, the payments workflow emits an event containing a payment link using `setEvent()`:
 
 ```javascript
   @OperonWorkflow()
@@ -55,7 +55,7 @@ After validating an order, the payments workflow emits an event containing a pay
   }
 ```
 
-The handler that originally invoked the workflow uses `getEvent` to await this URL, then redirects the customer to it:
+The handler that originally invoked the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
 
 ```javascript
   @PostApi('/api/checkout_session')
@@ -74,7 +74,7 @@ The handler that originally invoked the workflow uses `getEvent` to await this U
 
 #### Send
 
-Any workflow or handler can call [ctxt.send](..) to send a message to a workflow identity.
+Any workflow or handler can call `ctxt.send()` to send a message to a workflow identity.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 ```typescript
@@ -83,8 +83,9 @@ ctxt.send<T>(destinationIdentityUUID: string, message: T, topic?: string): Promi
 
 #### Recv
 
-Workflows can call [ctxt.recv](..) receive messages sent to their identity, optionally for a particular topic.
-Each call to `recv` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+Workflows can call `ctxt.recv()` to receive messages sent to their identity, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
 
 ```typescript
 ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
@@ -95,7 +96,7 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 Messages are especially useful for communicating information or sending notifications to a running workflow.
 For example, in our [shop demo](..), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
-To wait for this notification, the payments workflow uses `recv`, executing failure-handling code if the notification doesn't arrive in time:
+To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
 ```javascript
   @OperonWorkflow()
@@ -110,7 +111,7 @@ To wait for this notification, the payments workflow uses `recv`, executing fail
   }
 ```
 
-A webhook waits for the payment processor to send the notification, then uses `send` to forward it to the workflow:
+A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```javascript
   @PostApi('/payment_webhook')

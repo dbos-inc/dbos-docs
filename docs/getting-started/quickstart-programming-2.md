@@ -1,91 +1,81 @@
 ---
 sidebar_position: 2
+title: Programming Quickstart - Part 2
 ---
-
-# Programming Quickstart: Part 2
 
 Now that we've written our first few functions, let's learn how to stitch them into powerful and reliable programs.
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
-type KnexTransactionContext = TransactionContext<Knex>;
-
-interface operon_hello {
+// The schema of the database table used in this example.
+export interface operon_hello {
   name: string;
   greet_count: number;
 }
+
 export class Hello {
 
-  @OperonTransaction()
-  static async helloTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Increment greet_count.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .insert({name: name, greet_count: 1})
-      .onConflict('name')
-      .merge({ greet_count: txnCtxt.client.raw('operon_hello.greet_count + 1') });
-    // Retrieve greet_count.
-    const greet_count = await txnCtxt.client<operon_hello>("operon_hello")
-      .select("greet_count")
-      .where({name:name})
-      .first()
-      .then(row => row?.greet_count);
-    return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
+  @GetApi('/greeting/:user') // Serve this function from the /greeting endpoint with 'user' as a path parameter
+  static async helloHandler(ctxt: HandlerContext, user: string) {
+    // Invoke helloTransaction to greet the user and track how many times they've been greeted.
+    return ctxt.invoke(Hello).helloTransaction(user);
   }
 
-  @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
-    return handlerCtxt.invoke(Hello).helloTransaction(name);
-  }
-
-  @PostApi('/clear/:name')
-  @OperonTransaction()
-  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Delete a users's entry.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({name: name})
-      .delete()
-    return `Cleared greet_count for ${name}!\n`
+  @OperonTransaction()  // Declare this function to be a transaction.
+  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const rows = await ctxt.client<operon_hello>("operon_hello")
+      // Insert greet_count for this user.
+      .insert({ name: user, greet_count: 1 })
+      // If already present, increment it instead.
+      .onConflict("name").merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
+      // Return the inserted or incremented value.
+      .returning("greet_count");               
+    const greet_count = rows[0].greet_count;
+    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
 }
+
 ```
 
 To make this more interesting, let's say that when we greet someone, we also want to send the greeting to a third party, like the [Postman Echo](https://postman-echo.com/) testing service.
-To do this, let's write a new function:
+To do this, let's write a new function that forwards the greeting to the Postman Echo server:
 
 ```javascript
-  @OperonCommunicator()
-  static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
-    await axios.get("https://postman-echo.com/get", {
-      params: {
-        greeting: greeting
-      }
-    });
-    console.log(`Greeting sent to postman!`);
-  }
+import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
+
+@OperonCommunicator()
+static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
+  await axios.get("https://postman-echo.com/get", {
+    params: {
+      greeting: greeting
+    }
+  });
+  ctxt.logger.info(`Greeting sent to postman!`);
+}
 ```
 
-This function forwards the greeting to the Postman Echo server.
-The `@OperonCommunicator` decorator tells Operon that this function has external side-effects.
+The `@OperonCommunicator` decorator registers this function so that Operon can manage its execution.
 Communicators have useful built-in features such as configurable automatic retries.
-Learn more about communication with external services [here](..).
+Learn more about communicators and communication with external services and APIs [here](../tutorials/communicator-tutorial).
 
-Now, let's update our `greeting` handler to call this new function with some error handling:
+Now, let's update `helloHandler` to call this new function with some error handling:
 
 ```javascript
-  @GetApi('/greeting/:name')
-  static async helloHandler(handlerContext: HandlerContext, name: string) {
-    const greeting = await handlerContext.invoke(Hello).helloTransaction(name);
-    try {
-      await handlerContext.invoke(Hello).postmanFunction(greeting);
-      return greeting;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      return `Greeting failed for ${name}\n`
-    }
+@GetApi('/greeting/:user')
+static async helloHandler(ctxt: HandlerContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 Try it out:
@@ -101,64 +91,65 @@ We want to keep the `greet_count` in the database synchronized with the number o
 To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler:
 
 ```javascript
-  @OperonTransaction()
-  static async rollbackHelloTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Decrement greet_count.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({ name: name })
-      .decrement('greet_count', 1);
-  }
+@OperonTransaction()
+static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  // Decrement greet_count.
+  await ctxt.client<operon_hello>("operon_hello")
+    .where({ name: user })
+    .decrement('greet_count', 1);
+}
 
-  @GetApi('/greeting/:name')
-  static async helloHandler(handlerContext: HandlerContext, name: string) {
-    const greeting = await handlerContext.invoke(Hello).helloTransaction(name);
-    try {
-      await handlerContext.invoke(Hello).postmanFunction(greeting);
-      return greeting;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      await handlerContext.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
-    }
+@GetApi('/greeting/:user')
+static async helloHandler(ctxt: HandlerContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 Now, we'll roll back the increment of `greet_count` if our Postman request fails.
+
 However, we're still not completely reliable: if our server crashes midway through sending a request to Postman, the rollback code never executes and a spurious greeting is persisted to the database.
-Luckily, Operon solves this problem with _workflows_, orchestration functions that are guaranteed to run to completion.
+Luckily, Operon solves this problem with _workflows_, orchestration functions guaranteed to run to completion.
 Here's how we can use a workflow in our example:
 
 ```javascript
-  @GetApi('/greeting/:name')
-  // highlight-next-line
-  @OperonWorkflow()
-  // highlight-next-line
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    try {
-      await wfCtxt.invoke(Hello).postmanFunction(greeting);
-      return greeting;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
-    }
+import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
+
+@GetApi('/greeting/:user')
+// highlight-next-line
+@OperonWorkflow()
+// highlight-next-line
+static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 You can see that we've transformed the handler into a workflow by adding the `@OperonWorkflow` decorator.
-If a server executing a workflow fails and is restarted, Operon automatically resumes the workflow from where it left off, without re-executing any operation that already happened.
+When a workflow is interrupted and has to be restarted, Operon automatically resumes it from where it left off without re-executing any registered operation (like a transaction or communicator function) that already happened.
 Using workflows, we've made our little application resilient to failures: it never records a greeting unless it completed successfully.
-You can learn more about workflows and their guarantees [here](..).
+You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
 
 Here's our final code:
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 import axios from 'axios';
-
-type KnexTransactionContext = TransactionContext<Knex>;
 
 interface operon_hello {
   name: string;
@@ -167,69 +158,61 @@ interface operon_hello {
 
 export class Hello {
 
-  @OperonTransaction()
-  static async helloTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Look up greet_count.
-    let greet_count = await txnCtxt.client<operon_hello>("operon_hello")
-      .select("greet_count")
-      .where({ name: name })
-      .first()
-      .then(row => row?.greet_count);
-    if (greet_count) {
-      // If greet_count is set, increment it.
-      greet_count++;
-      await txnCtxt.client<operon_hello>("operon_hello")
-        .where({ name: name })
-        .increment('greet_count', 1);
-    } else {
-      // If greet_count is not set, set it to 1.
-      greet_count = 1;
-      await txnCtxt.client<operon_hello>("operon_hello")
-        .insert({ name: name, greet_count: 1 })
+  @GetApi('/greeting/:user')
+  @OperonWorkflow()
+  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+    try {
+      await ctxt.invoke(Hello).greetPostman(greeting);
+      return greeting;
+    } catch (e) {
+      ctxt.logger.error(e);
+      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      return `Greeting failed for ${user}\n`
     }
-    return `Hello, ${name}! You have been greeted ${greet_count} times.\n`;
+  }
+
+  @OperonTransaction()  // Declare this function to be a transaction.
+  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const rows = await ctxt.client<operon_hello>("operon_hello")
+      // Insert greet_count for this user.
+      .insert({ name: user, greet_count: 1 })
+      // If already present, increment it instead.
+      .onConflict("name").merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
+      // Return the inserted or incremented value.
+      .returning("greet_count");
+    const greet_count = rows[0].greet_count;
+    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
 
   @OperonTransaction()
-  static async rollbackHelloTransaction(txnCtxt: KnexTransactionContext, name: string) {
+  static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Decrement greet_count.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({ name: name })
+    await ctxt.client<operon_hello>("operon_hello")
+      .where({ name: user })
       .decrement('greet_count', 1);
   }
 
   @OperonCommunicator()
-  static async postmanFunction(_commCtxt: CommunicatorContext, greeting: string) {
+  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
     await axios.get("https://postman-echo.com/get", {
       params: {
         greeting: greeting
       }
     });
-    console.log(`Greeting sent to postman!`);
+    ctxt.logger.info(`Greeting sent to postman!`);
   }
 
-  @GetApi('/greeting/:name')
-  @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
-    try {
-      await wfCtxt.invoke(Hello).postmanFunction(greeting);
-      return greeting;
-    } catch (e) {
-      console.warn("Error sending request:", e);
-      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
-    }
-  }
-
-  @PostApi('/clear/:name')
+  @PostApi('/clear/:user')
   @OperonTransaction()
-  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
+  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Delete greet_count for a user.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({ name: name })
+    await ctxt.client<operon_hello>("operon_hello")
+      .where({ name: user })
       .delete()
-    return `Cleared greet_count for ${name}!\n`
+    return `Cleared greet_count for ${user}!\n`
   }
 }
+
 ```

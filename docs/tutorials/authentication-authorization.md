@@ -14,10 +14,8 @@ This section covers two aspects of declarative security in Operon: authenticatio
 -   [Authorization Decorators](#authorization-decorators)
 -   [Authentication Middleware](#authentication-middleware)
     -   [HTTP Registration](#http-registration)
-    -   [Other Entry Points](#other-entry-points)
 -   [Example Code](#example-code)
     -   [Bank](#bank)
-    -   [Shop](#shop)
     -   [Social](#social)
 
 ## Background Information
@@ -66,20 +64,11 @@ For these reasons, Operon allows user-specified middleware functions to extract 
 ### HTTP Registration
 Operon can automatically register HTTP handlers based on endpoint decorators.  For this case, the [`@Authentication`](../api-reference/decorators.md#authentication) class decorator is used to provide the middleware function to validate the HTTP request and extract the user and roles.
 
-### Other Entry Points
-For other Operon entrypoints, the authorized user and role should be placed in the `parentCtx` before invoking Operon:
-```typescript
-    operon.workflow(Operations.doOperation, {parentCtx: ctx}, "arg1", "arg2");
-```
-
 ## Example Code
 Each of the large Operon sample applications uses a different approach to authentication.  All of them use declarative role-based authorization.
 
 ### Bank
 In Bank, authentication is performed in the front end via an external service, and passed to the back end via JWT tokens and HTTP headers.
-
-### Shop
-(Shop passes a cookie from the frontend as the authenticated user.  Perhaps this isn't secure and needs work?)
 
 ### Social
 YKY Social uses its own backend database table to create and manage users.
