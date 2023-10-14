@@ -41,7 +41,7 @@ export class Hello {
 
 ```
 
-## Talking to Other Servies
+### Talking to Other Servies
 
 To make this more interesting, let's say that when we greet someone, we also want to send the greeting to a third party, like the [Postman Echo](https://postman-echo.com/) testing service.
 To do this, let's write a new function that forwards the greeting to the Postman Echo server:
@@ -88,7 +88,7 @@ curl http://localhost:3000/greeting/operon
 
 Every time you send a request, the server should print that it was forwarded to Postman.
 
-## Making it Reliable
+### Making it Reliable
 
 Now, let's say that we're concerned about the _reliability_ of our simple application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
@@ -118,7 +118,7 @@ static async helloHandler(ctxt: HandlerContext, user: string) {
 }
 ```
 
-## Making it More Reliable with Workflows
+### Making it More Reliable with Workflows
 
 However, we're still not completely reliable: if our server crashes midway through sending a request to Postman, the rollback code never executes and a spurious greeting is persisted to the database.
 Luckily, Operon solves this problem with _workflows_, orchestration functions guaranteed to run to completion.
@@ -148,6 +148,8 @@ You can see that we've transformed the handler into a workflow by adding the `@O
 When a workflow is interrupted and has to be restarted, Operon automatically resumes it from where it left off without re-executing any registered operation (like a transaction or communicator function) that already happened.
 Using workflows, we've made our little application resilient to failures: it never records a greeting unless it completed successfully.
 You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
+
+### Final Code
 
 Here's our final code:
 
