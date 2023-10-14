@@ -18,7 +18,7 @@ We recommend starting a new Operon app using `operon init`, which sets up everyt
 To create a project, run:
 
 ```shell
-npx operon init -n <project name> # Note: Once Operon is released to npm, this will prompt you to install our CLI if it isn't already installed.
+npx @dbos-inc/operon init -n <project name>
 ```
 
 This creates a folder for your project, configures its layout, and installs required dependencies.
