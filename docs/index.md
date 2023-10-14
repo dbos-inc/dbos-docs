@@ -13,7 +13,7 @@ Operon enables you to write backend applications that work right by default, pro
 
 Unlike with other backend frameworks, your application database is a _first-class citizen_ of Operon.
 Operon makes writing database operations painless for you, regardless of whether you prefer raw SQL or an ORM.
-Under the hood, Operon also leverages the database to give you _reliable workflows_, so you can write programs guaranteed to run to completion despite failures and always resume where they left off when your application is restarted.
+Under the hood, Operon also leverages the database to give you _reliable workflows_, so your programs are guaranteed to run to completion despite failures and always resume where they left off when your application is restarted.
 
 Operon is also the **SDK for DBOS's upcoming serverless cloud platform**.
 In the near future, you'll be able to deploy any Operon application serverlessly to the cloud with the push of a button, running effortlessly at scale without worrying about managing infrastructure.
