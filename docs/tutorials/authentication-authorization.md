@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 9
 title: Authentication and Authorization
 description: Use declarative security and middleware in Operon
 ---

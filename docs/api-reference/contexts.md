@@ -1,7 +1,7 @@
 ---
-sidebar_position: 4
-title: Operon Contexts Reference
-description: API documentation for Operon Contexts
+sidebar_position: 3
+title: Contexts
+description: API reference for Operon contexts
 ---
 
 # Operon Context Reference
@@ -88,7 +88,7 @@ readonly authenticatedUser: string
 ```
 
 This property exposes the identity of the authenticated user who ran this function.
-Authenticated users are set by [authentication middleware](..) and inherited through the calling chain.
+Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
 #### ctxt.logger
 

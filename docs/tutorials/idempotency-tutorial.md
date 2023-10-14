@@ -28,7 +28,7 @@ If you run a workflow with an idempotency key, the identity of that execution is
 ### Manually Setting Idempotency Keys
 
 Idempotency keys are not automatically used for [handlers](./http-serving-tutorial#handlers).
-Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`context.invoke`](..).
+Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`context.invoke`](../api-reference/contexts#handlerctxtinvoketargetclass-workflowuuid).
 The syntax for invoking `Class.operation` with an idempotency key is:
 
 ```javascript

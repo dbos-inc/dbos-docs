@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 6
 title: Workflow Communication
 description: Learn how to write interactive workflows
 ---
@@ -23,6 +23,7 @@ The messages API:
 #### setEvent
 
 Any workflow can call `ctxt.setEvent()` to immutably publish a key-value pair.
+A workflow cannot set a key it has already set; doing so is an error.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
@@ -40,7 +41,7 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 #### Events Example
 
 Events are especially useful for writing interactive workflows that need to communicate information back to their caller.
-For example, in our [shop demo](..), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
 After validating an order, the payments workflow emits an event containing a payment link using `setEvent()`:
@@ -70,6 +71,10 @@ The handler that originally invoked the workflow uses `getEvent()` to await this
   }
 ```
 
+#### Reliability Guarantees
+
+All events are persisted to the database and are immutable, so once an event it set, it is guaranteed to always be retrievable.
+
 ### Messages API
 
 #### Send
@@ -94,7 +99,7 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 #### Messages Example
 
 Messages are especially useful for communicating information or sending notifications to a running workflow.
-For example, in our [shop demo](..), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
@@ -121,3 +126,9 @@ A webhook waits for the payment processor to send the notification, then uses `s
     await ctxt.send(workflowIdentityUUID, notificationMessage, checkout_complete_topic);
   }
   ```
+
+#### Reliability Guarantees
+
+All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
+If you're sending a message from a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsenddestinationuuid-message-topic-idempotencykey) to guarantee exactly-once delivery.

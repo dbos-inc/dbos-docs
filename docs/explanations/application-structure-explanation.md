@@ -28,7 +28,7 @@ operon-hello-app/
 The two most important files in an Operon project are `operon-config.yaml` and `src/operations.ts`.
 
 `operon-config.yaml` defines the configuration of an Operon project, including database connection information, ORM configuration, and global logging configuration.
-All options are documented in our [configuration reference](..).
+All options are documented in our [configuration reference](../api-reference/configuration).
 
 `src/operations.ts` is where Operon looks for your code.
 At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their transactions and workflows.
@@ -111,6 +111,6 @@ A function needs to follow a few rules:
 Once you've written your functions, there are two basic ways to call them:
 
 1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](../tutorials/http-serving-tutorial.md) for details.
-2. Handlers and workflows can invoke other functions via their contexts' [invoke](..) method.
+2. Handlers and workflows can invoke other functions via their contexts' `invoke` ([workflow](../api-reference/contexts#workflowctxtinvoketargetclass), [handler](../api-reference/contexts#handlerctxtinvoketargetclass-workflowuuid)) method.
 
 To learn more about each individual type of function and what it can do, see our [tutorials](../category/tutorials/).

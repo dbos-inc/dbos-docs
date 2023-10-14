@@ -5,6 +5,8 @@ title: Programming Quickstart - Part 1
 
 Now that we have an application up and running, let's learn how to program in Operon!
 
+### Hello, World!
+
 Let's look at the code we have so far (in `src/operations.ts`).
 This simple "Hello, World!" program greets users and tracks the count of greetings per user:
 
@@ -47,6 +49,8 @@ It calls the `helloTransaction` function, which transactionally fetches and upda
 Both are registered with Operon via _decorators_: `@GetApi` declares an HTTP endpoint and `@OperonTransaction` declares a transaction.
 The database operations are written using [knex.js](https://knexjs.org/), a popular query builder, but Operon also supports raw SQL and the popular Typescript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
 
+### Adding a Transaction
+
 Let's make this program more interesting by giving users the ability to clear their greeting count.
 First, let's write a function clearing the greeting count for a user:
 
@@ -64,6 +68,8 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
 Add this function as a method of the `Hello` class.
 Like before, this function is declared a transaction via the `@OperonTransaction` decorator and accesses the database using  [knex.js](https://knexjs.org/).
 To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
+
+### Adding an Endpoint
 
 Now, let's add an HTTP endpoint from which to serve this function:
 
@@ -85,6 +91,8 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
 The `@PostApi` decorator we added tells Operon to execute this function in response to HTTP POST requests to the `clear` endpoint.
 The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
 To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
+
+### Trying it Out
 
 Now, let's see if this works!
 First, build and start the application:

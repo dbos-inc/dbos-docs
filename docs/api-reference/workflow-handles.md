@@ -1,13 +1,13 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Workflow Handles
-description: API documentation for workflow handles
+description: API reference for workflow handles
 ---
 
 # Workflow Handles
 A workflow handle represents the state of a particular active or completed workflow execution.
-A workflow handle is obtained when [calling a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) from a handler or another workflow with [`ctxt.invoke`](..) or [`ctxt.childWorkflow`](..).
-Additionally, a handler can retrieve the handle of any workflow by calling [`ctxt.retrieveWorkflow`](..) on that workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
+A workflow handle is obtained when [calling a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) from a handler or another workflow with `ctxt.invoke()` ([workflow](./contexts#workflowctxtinvoketargetclass), [handler](./contexts#handlerctxtinvoketargetclass-workflowuuid)) or [`ctxt.childWorkflow`](./contexts#workflowctxtchildworkflowwf-args).
+Additionally, a handler can retrieve the handle of any workflow by calling [`ctxt.retrieveWorkflow`](./contexts#handlerctxtretrieveworkflowworkflowuuid) on that workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
 
 ---
 

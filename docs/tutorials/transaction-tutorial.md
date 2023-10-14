@@ -10,12 +10,12 @@ In Operon, your application's database is a first-class citizen.
 To perform operations on it, you use a _transaction_ function.
 As their name implies, these functions execute as [database transactions](https://en.wikipedia.org/wiki/Database_transaction).
 
-Transaction functions must be annotated with the [`@OperonTransaction`](../api-reference/decorators#operontransaction) decorator and must have a [`TransactionContext`](..) as their first argument.
+Transaction functions must be annotated with the [`@OperonTransaction`](../api-reference/decorators#operontransaction) decorator and must have a [`TransactionContext`](../api-reference/contexts#transactioncontextt) as their first argument.
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
-The [`TransactionContext`](..) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
+The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
 By default, this is a [Knex.js](https://knexjs.org/) client.
 We like Knex because it's lightweight and helps us write fast but type-safe queries.
-However, if you prefer a traditional ORM, we also support [Prisma](..) and [TypeORM](..).
+However, if you prefer a traditional ORM, we also support [Prisma](./using-prisma.md) and [TypeORM](./using-typeorm.md).
 
 Here's an example of a transaction function (from the [quickstart](../getting-started/quickstart)) written using Knex:
 
