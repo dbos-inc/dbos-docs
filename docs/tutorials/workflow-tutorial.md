@@ -16,7 +16,7 @@ Workflows must be annotated with the [`@OperonWorkflow`](../api-reference/decora
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow from our [programing quickstart](../getting-started/quickstart-programming-2).
+Here's an example workflow from our [quickstart](../getting-started/quickstart-programming-2).
 It increments a counter in the database, then sends an HTTP request.
 If the request fails, it rolls back the increment.
 By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server is interrupted.
@@ -26,34 +26,33 @@ class Hello {
 
   ... // Other function implementations
 
-  @GetApi('/greeting/:name')
+  @GetApi('/greeting/:user')
   @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
+  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
-      await wfCtxt.invoke(Hello).postmanFunction(greeting);
+      await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
-      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
+      ctxt.logger.error(e);
+      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      return `Greeting failed for ${user}\n`
     }
   }
-}
 ```
 
 ### Invoking Functions from Workflows
 
-Workflows can invoke transactions and communicators using their `context.invoke` method.
+Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoketargetclass) method.
 For example, this line from our above example invokes `helloTransaction`:
 
 ```javascript
-const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
+const greeting = await ctxt.invoke(Hello).helloTransaction(user);
 ```
 
-The syntax for invoking function `foo(args)` in class `Bar` is `context.invoke(Bar).foo(args)`.
+The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
 
-You can also invoke other workflows using the [context.childWorkflow](../api-reference/contexts#workflowctxtchildworkflowwf-args) method.
+You can also invoke other workflows using the [ctxt.childWorkflow()](../api-reference/contexts#workflowctxtchildworkflowwf-args) method.
 
 ### Reliability Guarantees
 
@@ -65,7 +64,7 @@ Workflows provide the following reliability guaranteees:
 
 ### Determinism
 
-For workflows to provide these guarantees, they must be deterministic.
+For workflows to provide reliability guarantees, they must be deterministic.
 In other words, a workflow function must always do the same thing given the same inputs.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
@@ -84,8 +83,8 @@ When you invoke a workflow from a handler or from another workflow, the invocati
 
 ```javascript
   @GetApi(...)
-  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
-    const workflowHandle = await handlerCtxt.invoke(Class).workflow(...);
+  static async exampleHandler(ctxt: HandlerContext, ...) {
+    const handle = await ctxt.invoke(Class).workflow(...);
   }
 ```
 
@@ -93,22 +92,22 @@ You can also retrieve another workflow's handle if you know its identity:
 
 ```javascript
   @GetApi(...)
-  static async exampleHandler(handlerCtxt: HandlerContext, workflowIdentity: string, ...) {
-    const workflowHandle = await handlerCtxt.retrieveWorkflow(workflowIdentity);
+  static async exampleHandler(ctxt: HandlerContext, workflowIdentity: string, ...) {
+    const handle = await ctxt.retrieveWorkflow(workflowIdentity);
   }
 ```
 
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
-const workflowHandle = await handlerCtxt.invoke(Class).workflow(...);
-const result = await workflowHandle.getResult();
+const handle = await ctxt.invoke(Class).workflow(...);
+const result = await handle.getResult();
 ```
 
 Or, more concisely:
 
 ```javascript
-const result = await handlerCtxt.invoke(Class).workflow(name).then(h => h.getResult());
+const result = await ctxt.invoke(Class).workflow(name).then(h => h.getResult());
 ```
 
 For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
