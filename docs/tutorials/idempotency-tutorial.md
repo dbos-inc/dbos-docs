@@ -7,7 +7,7 @@ description: Learn how to make operations idempotent.
 In this guide, you'll learn how to make operations idempotent.
 
 Operon allows users to send any request with an _idempotency key_ to guarantee it only executes once, even if the request is sent multiple times.
-This is especially useful if your operation have side effects like mutating database tables or creating resources in external APIs.
+This is especially useful if your operations have side effects like making a payment or sending an email.
 
 ### Setting Idempotency Keys
 
@@ -21,7 +21,7 @@ No matter how many times you send that request, as long as each request has the 
 :::info
 
 It's not a coincidence that both idempotency keys and [workflow identities](./workflow-tutorial#workflow-identity) are UUIDs.
-If you run a workflow with an idempotency key, the identity of that execution is set to that UUID.
+If you run a workflow with an idempotency key UUID, the identity of that execution is set to that UUID.
 
 :::
 
@@ -33,9 +33,9 @@ The syntax for invoking `Class.operation` with an idempotency key is:
 
 ```javascript
   @GetApi(...)
-  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
+  static async exampleHandler(ctxt: HandlerContext, ...) {
     const idempotencyKey = ...;
-    await handlerCtxt.invoke(Class, idempotencyKey).operation(...);
+    await ctxt.invoke(Class, idempotencyKey).operation(...);
   }
 ```
 
@@ -44,23 +44,23 @@ The syntax for invoking `Class.operation` with an idempotency key is:
 Let's look at this workflow endpoint from the final step of our [quickstart guide](../getting-started/quickstart-programming-2):
 
 ```javascript
-  @GetApi('/greeting/:name')
+  @GetApi('/greeting/:user')
   @OperonWorkflow()
-  static async helloWorkflow(wfCtxt: WorkflowContext, name: string) {
-    const greeting = await wfCtxt.invoke(Hello).helloTransaction(name);
+  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
-      await wfCtxt.invoke(Hello).postmanFunction(greeting);
+      await ctxt.invoke(Hello).greetPostman(greeting);
       return greeting;
     } catch (e) {
-      console.warn("Error sending request:", e);
-      await wfCtxt.invoke(Hello).rollbackHelloTransaction(name);
-      return `Greeting failed for ${name}\n`
+      ctxt.logger.error(e);
+      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      return `Greeting failed for ${user}\n`
     }
   }
 ```
 
 Each request to this endpoint has the side effect of incrementing a database counter.
-However, if we set the idempotency key, we can make many requests without side effects.
+However, if we set the idempotency key, we can resend a request multiple times without side effects:
 
 If we `curl` this endpoint normally multiple times, each request increments the counter:
 
@@ -68,7 +68,7 @@ If we `curl` this endpoint normally multiple times, each request increments the 
 curl http://localhost:3000/greeting/operon
 ```
 
-However, if we set the idempotency key in the header and send the request many times, each request returns the same response and the workflow only executes once:
+However, if we set the idempotency key in the header and resend the request many times, each request returns the same response and the workflow only executes once:
 
 ```bash
 curl -H "operon-workflowuuid: 123e4567-e89b-12d3-a456-426614174000" http://localhost:3000/greeting/operon
