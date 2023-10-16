@@ -10,7 +10,7 @@ To show you how to develop larger applications with Operon, we've built three de
 
 The E-Commerce demo is a toy web shop and payment processing system. Users can purchase expensive writing utensils 
 
-The E-Commerce Demo demonstrates:
+The E-Commerce demo demonstrates:
 * Operon transactions, workflows, and communicators for correct, Once And Only Once (aka *OAOO*) execution
 * [Knex.js](https://knexjs.org/) for database interaction, schema management and seed data
 * External communication via [events and messages](./workflow-communication-tutorial.md)
@@ -20,6 +20,18 @@ The E-Commerce Demo demonstrates:
 For more technical details, please see the [Under the Covers](https://github.com/dbos-inc/operon-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
 
 ## [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank)
+
+The Bank demo is a toy banking app. Users can deposit or withdraw "cash" or transfer money between accounts potentially in different banks.
+
+The Bank demo currently demonstrates:
+* Reliable orchestration of complex workflows involving multiple database transactions and communicators
+* [Prisma](https://www.prisma.io/) for database interaction and schema management
+* Setting an [idempotency key](./idempotency-tutorial.md) in HTTP header for exactly-once cross-bank transactions
+* JWT-based authentication through integration with an external [Keycloak](https://www.keycloak.org/) service
+* [Declarative security](./authentication-authorization.md) through Operon
+* Unit tests with [Operon testing runtime](./testing-tutorial.md)
+* Integration with an [Angular](https://angular.io/) frontend
+
 
 ## [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social)
 YKY Social is a toy social network app, which allows users to register, create profiles, follow friends, and post messages to each other.
