@@ -4,33 +4,29 @@ title: Authentication and Authorization
 description: Use declarative security and middleware in Operon
 ---
 
-# Authentication and Authorization
+This section covers declarative authentication and authorization in Operon.
 
-This section covers two aspects of declarative security in Operon: authentication and authorization.
+:::info note
+You can fully implement authentication and authorization using custom [HTTP middlewares](../tutorials/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms Operon provides to make it easier.
+:::
 
--   [Background Information](#background-information)
-    -   [Users And Roles](#users-and-roles)
-    -   [Declarative Security](#declarative-security)
--   [Authorization Decorators](#authorization-decorators)
--   [Authentication Middleware](#authentication-middleware)
-    -   [HTTP Registration](#http-registration)
--   [Example Code](#example-code)
-    -   [Bank](#bank)
-    -   [Social](#social)
+Operon supports modular, built-in declarative security: you can use the [`@Authentication`](../api-reference/decorators#authentication) class decorator to expose users' identity to Operon contexts. Further, you can associate operations with a list of permitted roles using the [`@RequiredRole`](../api-reference/decorators#requiredrole) API.
 
-## Background Information
-Operon APIs make it easy to add role-based security to a backend application, and to automatically make a map of functions and their required roles for security auditing purposes.
+## Authentication Middleware
+The [`@Authentication`](../api-reference/decorators#authentication) class decorator lets you register an HTTP middleware with your custom authentication and authorization logic (for example validating a [JSON Web Token](https://jwt.io/), retrieving user credentials from the decoded token and validated claimed permissions.) The decorator should return a structure containing identity and claimed roles:
 
-### Users And Roles
-In Operon, it is the job of a "middleware" to establish and authenticate the user associated with each inbound request.  The request should also be associated with the roles assigned to the user.  This authenticated user and roles are then passed around to each Operon function.
+```typescript
+return {
+    authenticatedUser: "Mary",
+    authenticatedRoles: ["user", "admin"],
+};
+```
 
-Before entry to any Operon function, the list of roles assigned to the current user is compared to the list of roles required to execute the function.  If the user has any of the required roles, execution proceeds; if not, an error is returned.
-
-### Declarative Security
-Programmers writing Operon functions list out the default roles required to execute functions in a class, and list required roles for any class methods that are exceptions from the class-level defaults.  Operon, with help from the authentication middleware, does the work of enforcing the declared authorization policy.
+This information will be made available to the operation context when a request enters the system, before the operation is run.
 
 ## Authorization Decorators
-A list of authorized roles is first provided at the class level with [`@DefaultRequiredRole`](../api-reference/decorators.md#defaultrequiredrole):
+You can declare a list of authorized roles at the class level with [`@DefaultRequiredRole`](../api-reference/decorators#defaultrequiredrole):
+
 ```typescript
 @DefaultRequiredRole(['user'])
 class Operations
@@ -39,7 +35,9 @@ class Operations
 }
 ```
 
-For exceptions, requiring more or less privilege than the default,  [`@RequiredRole`](../api-reference/decorators.md#requiredrole) is specified at the method level
+If roles have been declared, at runtime, Operon will verify that the operation context contains an `authenticatedUser` listed in the required roles.
+For exceptions, requiring more or less privilege than the default, [`@RequiredRole`](../api-reference/decorators#requiredrole) is specified at the method level
+
 ```typescript
 @DefaultRequiredRole(['user'])
 class Operations
@@ -56,19 +54,35 @@ class Operations
 }
 ```
 
-## Authentication Middleware
-The procedural details of identifying the user associated with an inbound request and validating any credentials varies from application to application.  A username+password may need to be checked against a database, a token or certificate may need to be decrypted and validated, etc.  This information may also be received in different ways.
+## Examples
+We demonstrate how to use Operon built-in declarative security with two examples: using JSON Web Tokens and ... (XXX not sure what is the alternative here. We don't have an actual database example.)
 
-For these reasons, Operon allows user-specified middleware functions to extract authentication information from requests.
+### JWT
 
-### HTTP Registration
-Operon can automatically register HTTP handlers based on endpoint decorators.  For this case, the [`@Authentication`](../api-reference/decorators.md#authentication) class decorator is used to provide the middleware function to validate the HTTP request and extract the user and roles.
+```javascript
+import jwt from "jsonwebtoken";
 
-## Example Code
-Each of the large Operon sample applications uses a different approach to authentication.  All of them use declarative role-based authorization.
+// Resolve request identity using Authorization header.
+// Error handling ommitted.
+const authenticationMiddleware = (ctx: MiddlewareContext) => {
+  const authHeader = ctx.koaContext?.header.authorization;
+  const parts = authHeader.trim().split(" ");
+  const token = parts[1]; // JWT
+  const decodedToken = jwt.verify(token, "secret");
+  const user = decodedToken["username"];
+  const roles = decodedToken["roles"];
+  // Identity and roles will be exposed to operations' context
+  return {
+    authenticatedUser: user,
+    authenticatedRoles: roles,
+  };
+};
 
-### Bank
-In Bank, authentication is performed in the front end via an external service, and passed to the back end via JWT tokens and HTTP headers.
+@Authentication(authenticationMiddleware)
+export class Hello {
+  ...
+}
+```
 
-### Social
+### Database (??)
 YKY Social uses its own backend database table to create and manage users.

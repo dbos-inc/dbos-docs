@@ -7,22 +7,16 @@ description: Learn how to write interactive workflows
 In this guide, you'll learn how to implement communication with and between workflows.
 
 Workflow communication is useful if you want to make your workflows _interactive_, for example if a long-running workflow needs to query a user for input or report intermediate results back to its caller.
-
-Operon provides two workflow communication APIs, the events API and the messages API:
-
-The events API:
-- Allows workflows to emit events, which are immutable key-value pairs.  Other operations can await and read these events.
-- Is useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
-
-The messages API:
-- Allows operations to send messages to a [workflow identity](./workflow-tutorial#workflow-identity), which reads them off a queue.
-- Is useful for sending information to a workflow or for communication between workflows.
+Operon provides two workflow communication APIs, the events API and the messages API.
 
 ### Events API
 
+This API allows workflows to emit and listen for events. Events are immutable key-value pairs. Operon guarantes immutability by transactionally inserting events in its system database, only once.
+Events are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
+
 #### setEvent
 
-Any workflow can call `ctxt.setEvent()` to immutably publish a key-value pair.
+Any workflow can call [`ctxt.setEvent`](../api-reference/contexts#workflowctxtseteventkey-value) to immutably publish a key-value pair.
 A workflow cannot set a key it has already set; doing so is an error.
 
 ```typescript
@@ -40,7 +34,7 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 
 #### Events Example
 
-Events are especially useful for writing interactive workflows that need to communicate information back to their caller.
+Events are especially useful for writing interactive workflows needing to communicate information back to their caller.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
@@ -76,6 +70,7 @@ The handler that originally invoked the workflow uses `getEvent()` to await this
 All events are persisted to the database and are immutable, so once an event it set, it is guaranteed to always be retrievable.
 
 ### Messages API
+This API allows operations to send messages to a specific [workflow identity](./workflow-tutorial#workflow-identity).
 
 #### Send
 
@@ -104,31 +99,32 @@ For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-ap
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
 ```javascript
-  @OperonWorkflow()
-  static async paymentWorkflow(ctxt: WorkflowContext, ...): Promise<void> {
-    ... // Validate the order, then redirect customers to a secure payments service.
-    const notification = await ctxt.recv<string>(checkout_complete_topic, timeout);
-    if (notification) {
-        ... // Handle the notification.
-    } else {
-        ... // Notification didn't arrive.  Query the payment provider to learn the state of the payment.
-    }
+@OperonWorkflow()
+static async paymentWorkflow(ctxt: WorkflowContext, ...): Promise<void> {
+  ... // Validate the order, then redirect customers to a secure payments service.
+  const notification = await ctxt.recv<string>(checkout_complete_topic, timeout);
+  if (notification) {
+      ... // Handle the notification.
+  } else {
+      ... // Notification did not arrive. Query payment state from the payment provider.
   }
+}
 ```
 
 A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```javascript
-  @PostApi('/payment_webhook')
-  static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
-    const notificationMessage = ... // Parse the notification.
-    const workflowIdentityUUID = ... // Retrieve the workflow identity from notification metadata.
-    await ctxt.send(workflowIdentityUUID, notificationMessage, checkout_complete_topic);
-  }
-  ```
+@PostApi('/payment_webhook')
+static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
+  const notificationMessage = ... // Parse the notification.
+  const workflowIdentityUUID = ... // Retrieve the workflow identity from notification metadata.
+  await ctxt.send(workflowIdentityUUID, notificationMessage, checkout_complete_topic);
+}
+```
 
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
 If you're sending a message from a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
 If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsenddestinationuuid-message-topic-idempotencykey) to guarantee exactly-once delivery.
+
