@@ -4,21 +4,21 @@ sidebar_position: 1
 
 # Introduction
 
-Welcome to Operon!
-
 ### What is Operon?
 
-Operon is a **Typescript framework for the backend**.
-Operon enables you to write backend applications that work right by default, providing native support for application database management, reliable workflow execution, OpenTelemetry-compatible tracing, authentication/authorization, and much more.
+Operon is the programming framework for DBOS, a revolutionary system software stack developed as a research prototype over the last three years at MIT and Stanford and now commercialized by DBOS, Inc.
+We're rolling out DBOS in two phases.
 
-Unlike with other backend frameworks, your application database is a _first-class citizen_ of Operon.
-Operon makes writing database operations painless for you, regardless of whether you prefer raw SQL or an ORM.
-Under the hood, Operon also leverages the database to give you _reliable workflows_, so your programs are guaranteed to run to completion despite failures and always resume where they left off when your application is restarted.
+Starting now, we're launching Operon, a **Typescript framework built for the database**.
+Operon fully embraces the power of your application database, helping you write applications that are reliable by default.
+It runs your Typescript functions as database transactions, guarantees they run "once and only once" for each request, and orchestrates them into workflows so reliable that if your server restarts, they resume exactly where they left off.
 
-Operon is also the **SDK for DBOS's upcoming serverless cloud platform**.
-In the near future, you'll be able to deploy any Operon application serverlessly to the cloud with the push of a button, running effortlessly at scale without worrying about managing infrastructure.
+In early 2024, we'll launch DBOS, a **cloud platform built on a revolutionary new operating system** that runs OS services on top of the DBMS instead of the other way around.
+This "upside-down" approach leverages the robustness and scalability of modern databases to make DBOS more secure, more resilient, and _simpler_ than current cloud infrastructure.
+It also enables powerful new capabilities, like a "time travel debugger" that uses database logs to step through any trace in your application's history to help you reproduce your most obscure bugs.
+Once we release DBOS, you'll be able to serverlessly deploy any Operon application to it with the push of a button.
 
-To get started with Operon in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
+To get started with Operon today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
 ### Main Features
 
@@ -27,13 +27,13 @@ Here are some of Operon's core features:
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | [HTTP Serving](./tutorials/transaction-tutorial)                              | Set up endpoints to serve requests from your application.
-| [Transactions](./tutorials/transaction-tutorial)                              | Easily query your application database, with support for raw SQL and popular ORMs.
-| [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;make sure your program runs to completion, no matter what happens.
+| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
+| [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Logging and Tracing](./tutorials/logging)                                    | Automatic OpenTelemetry-compatible tracing of all requests and built-in structured logging support with configurable exporters.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your functions and endpoints, compatible with Jest and other popular testing frameworks.
-| [Cloud Deployment with DBOS](https://dbos.dev)                                | Coming soon!
+| [Cloud Deployment with DBOS](https://dbos.dev)                                | Coming in early 2024!
 
 
 ### How to Use These Docs
