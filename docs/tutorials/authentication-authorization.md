@@ -55,37 +55,29 @@ class Operations
 ```
 
 ## Example
-We demonstrate how to use Operon built-in declarative security using JSON Web Tokens:
+We demonstrate how to use Operon built-in declarative security:
 
 ```javascript
-import jwt from "jsonwebtoken";
-
-// Resolve request identity using Authorization header.
-// Error handling ommitted.
+// Resolve request identity using HTTP headers.
+// You can replace this logic with robust methods such as JWT.
 const authenticationMiddleware = (ctx: MiddlewareContext) => {
-  const authHeader = ctx.koaContext?.header.authorization;
-  const parts = authHeader.trim().split(" ");
-  const token = parts[1]; // JWT
-  const decodedToken = jwt.verify(token, "secret");
-  const user = decodedToken["username"];
-  const roles = decodedToken["roles"];
-  // Identity and roles will be exposed to operations' context
   return {
-    authenticatedUser: user,
-    authenticatedRoles: roles,
+    // Extract username from headers
+    authenticatedUser: ctx.koaContext?.header.username,
+    // Attribute role "appUser" to incoming requests
+    authenticatedRoles: ["appUser"],
   };
 };
 
 @Authentication(authenticationMiddleware)
-@DefaultRequiredRole("admin")
+@DefaultRequiredRole("appUser")
 export class Hello {
   ...
 }
 ```
 
-In this example, we instruct the `Hello` class to interpose `authenticationMiddleware` between incoming requests and registered HTTP handlers. We also require users to have the role `admin` to be able to reach any HTTP handler declared in `Hello`.
-
-The authentication function expects HTTP requests to have a valid [Authorization header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization).
-You can use the popular [`jsonwebtoken`](https://www.npmjs.com/package/jsonwebtoken) library to verify and decode a token.
-After having identified the user and retrieved its claimed roles, you can return this information to Operon.
+In this example, we instruct the `Hello` class to interpose `authenticationMiddleware` between incoming requests and registered HTTP handlers. We also require users to have the role `admin` to reach any HTTP handler declared in `Hello`.
+The authentication function simply parse the username from the HTTP headers.
+You can replace this schema by robust ones, such as [JSON Web Token](https://jwt.io/).
+After having identified the user, you can return this information to Operon.
 
