@@ -30,10 +30,12 @@ The two most important files in an Operon project are `operon-config.yaml` and `
 `operon-config.yaml` defines the configuration of an Operon project, including database connection information, ORM configuration, and global logging configuration.
 All options are documented in our [configuration reference](../api-reference/configuration).
 
-`src/operations.ts` is where Operon looks for your code.
-At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their transactions and workflows.
+`src/operations.ts` is the Operon _entrypoint_, where Operon looks for your code.
+At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.
+More precisely, Operon assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere.
+You can also configure the entrypoint in our [configuration file](../api-reference/configuration).
 
 As for the rest of the directory:
 

@@ -77,14 +77,15 @@ telemetry:
 This runtime configuration is used to specify runtime parameters.
 
 - **port**: The port from which to serve the application. If the port is also specified on the command line by [`npx operon start`](./cli#npx-operon-start), use that port instead.
+- **entrypoint**: The compiled Javascript file where Operon looks for your application's code. At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  By default, this is `dist/operations.js`.
 
 **Example**:
 
 ```yaml
 runtimeConfig:
   port: 6000
+  entrypoint: dist/operations.js
 ```
-
 ---
 
 ### application
