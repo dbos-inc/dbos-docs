@@ -72,16 +72,16 @@ telemetry:
 
 ---
 
-### localRuntimeConfig
+### runtimeConfig
 
-This configuration is used to specify runtime parameters.
+This runtime configuration is used to specify runtime parameters.
 
 - **port**: The port from which to serve the application. If the port is also specified on the command line by [`npx operon start`](./cli#npx-operon-start), use that port instead.
 
 **Example**:
 
 ```yaml
-localRuntimeConfig:
+runtimeConfig:
   port: 6000
 ```
 
