@@ -42,4 +42,4 @@ Here are some of Operon's core features:
 - If you want to learn how to use Operon's powerful features, check out our [tutorials](./category/tutorials).
 - If you want a detailed reference for the Operon API, check out our [API reference](./category/api-reference).
 - If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations).
-- If you want to see more complex applications built with Operon, check out [our demos](./tutorials/demo-apps).
+- If you want to see more complex applications built with Operon, check out [our demo apps](./tutorials/demo-apps).
