@@ -46,16 +46,16 @@ database:
 ### Telemetry
 
 You can use the configuration file to tune the behavior of Operon logging and tracing facilities.
-Note all this options are optional and will, if not specified, use the default values indicated in the example bellow.
+Note all this options are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
 - **loglevel**: A filter on what logs should be printed to the standard output.
-- **addContextMetadata**: Enables the addition of contextual information, such as workflow UUID, to each log entries.
+- **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry.
 - **silent**: Silences the logger such that nothing is printed to the standard output.
 
 #### Traces
 - **enable**: Whether or not to export traces in [OTLP format](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md).
-- **endpoint**: The FQDN of a [Jaeger](https://Jaegertracing.io) endpoint.
+- **endpoint**: The fully-qualified domain name of a [Jaeger](https://Jaegertracing.io) endpoint.
 
 **Example**:
 
