@@ -6,11 +6,11 @@ description: Use declarative security and middleware in Operon
 
 This section covers declarative authentication and authorization in Operon.
 
-:::info note
-You can fully implement authentication and authorization using custom [HTTP middlewares](../tutorials/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms Operon provides to make it easier.
-:::
-
 Operon supports modular, built-in declarative security: you can use the [`@Authentication`](../api-reference/decorators#authentication) class decorator to expose users' identity to Operon contexts. Further, you can associate operations with a list of permitted roles using the [`@RequiredRole`](../api-reference/decorators#requiredrole) API.
+
+:::info note
+You can fully implement authentication and authorization using custom [HTTP middleware](../tutorials/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms Operon provides to make it easier.
+:::
 
 ## Authentication Middleware
 The [`@Authentication`](../api-reference/decorators#authentication) class decorator lets you register an HTTP middleware with your custom authentication and authorization logic (for example validating a [JSON Web Token](https://jwt.io/), retrieving user credentials from the decoded token and validated claimed permissions.) The decorator should return a structure containing identity and claimed roles:
