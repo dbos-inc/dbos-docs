@@ -54,10 +54,8 @@ class Operations
 }
 ```
 
-## Examples
-We demonstrate how to use Operon built-in declarative security with two examples: using JSON Web Tokens and ... (XXX not sure what is the alternative here. We don't have an actual database example.)
-
-### JWT
+## Example
+We demonstrate how to use Operon built-in declarative security using JSON Web Tokens:
 
 ```javascript
 import jwt from "jsonwebtoken";
@@ -79,10 +77,15 @@ const authenticationMiddleware = (ctx: MiddlewareContext) => {
 };
 
 @Authentication(authenticationMiddleware)
+@DefaultRequiredRole("admin")
 export class Hello {
   ...
 }
 ```
 
-### Database (??)
-YKY Social uses its own backend database table to create and manage users.
+In this example, we instruct the `Hello` class to interpose `authenticationMiddleware` between incoming requests and registered HTTP handlers. We also require users to have the role `admin` to be able to reach any HTTP handler declared in `Hello`.
+
+The authentication function expects HTTP requests to have a valid [Authorization header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization).
+You can use the popular [`jsonwebtoken`](https://www.npmjs.com/package/jsonwebtoken) library to verify and decode a token.
+After having identified the user and retrieved its claimed roles, you can return this information to Operon.
+
