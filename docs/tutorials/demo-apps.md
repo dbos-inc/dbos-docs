@@ -8,6 +8,17 @@ To show you how to develop larger applications with Operon, we've built three de
 
 ## [E-Commerce](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce)
 
+The E-Commerce demo is a toy web shop and payment processing system. Users can purchase expensive writing utensils 
+
+The E-Commerce Demo demonstrates:
+* Operon transactions, workflows, and communicators for correct, Once And Only Once (aka *OAOO*) execution
+* [Knex.js](https://knexjs.org/) for database interaction, schema management and seed data
+* External communication via [events and messages](./workflow-communication-tutorial.md)
+* Reliable collaborating workflows across systems
+* Implementing a webhook that connects to an existing workflow
+
+For more details, please see the [Under the Covers](https://github.com/dbos-inc/operon-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
+
 ## [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank)
 
 ## [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social)
