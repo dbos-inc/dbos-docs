@@ -17,7 +17,7 @@ The E-Commerce Demo demonstrates:
 * Reliable collaborating workflows across systems
 * Implementing a webhook that connects to an existing workflow
 
-For more details, please see the [Under the Covers](https://github.com/dbos-inc/operon-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
+For more technical details, please see the [Under the Covers](https://github.com/dbos-inc/operon-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
 
 ## [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank)
 
