@@ -25,7 +25,7 @@ ctxt.setEvent<T>(key: string, value: T): Promise<void>
 
 #### getEvent
 
-Workflows and handlers can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
+Handlers can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
 A call to `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ```typescript
