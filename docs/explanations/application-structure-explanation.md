@@ -97,12 +97,12 @@ A function needs to follow a few rules:
 
 - It must be a static class method.  For Operon to find it, that class must be exported from `src/operations.ts`.
 - It must have a decorator telling Operon what kind of function it is: [`@OperonTransaction`](../api-reference/decorators#operontransaction) for transactions, [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) for communicators, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for handlers.
-- Its first argument must be the appropriate kind of [Operon context](../api-reference/contexts). Contexts provide functions with useful methods, such as access to a database client for transactions.
+- Its first argument must be the appropriate kind of [Operon context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
 - Its input and return types must be serializable to JSON.
 
 Once you've written your functions, there are two basic ways to call them:
 
-1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](../tutorials/http-serving-tutorial.md) for details.
+1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](../tutorials/http-serving-tutorial) for details.
 2. Handlers and workflows can invoke other functions via their contexts' `invoke` ([workflow](../api-reference/contexts#workflowctxtinvoketargetclass), [handler](../api-reference/contexts#handlerctxtinvoketargetclass-workflowuuid)) method.
 
 To learn more about each individual type of function and what it can do, see our [tutorials](../category/tutorials/).
