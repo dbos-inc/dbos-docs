@@ -46,11 +46,11 @@ To do this, we'll write a new function that forwards the greeting to the Postman
 ```javascript
 import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
 
-  @OperonCommunicator() // Tell Operon this function accesses an external service or API.
-  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-    await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
-    ctxt.logger.info(`Greeting sent to postman!`);
-  }
+@OperonCommunicator() // Tell Operon this function accesses an external service or API.
+static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
+  await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
+  ctxt.logger.info(`Greeting sent to postman!`);
+}
 ```
 
 We annotate this function with a new decorator, `@OperonCommunicator`.
@@ -66,18 +66,18 @@ Here's what our workflow looks like:
 ```javascript
 import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
 
-  @GetApi('/greeting/:user')
-  @OperonWorkflow() // Run this function as a reliable workflow.
-  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      return `Greeting failed for ${user}\n`
-    }
+@GetApi('/greeting/:user')
+@OperonWorkflow() // Run this function as a reliable workflow.
+static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+  try {
+    await ctxt.invoke(Hello).greetPostman(greeting);
+    return greeting;
+  } catch (e) {
+    ctxt.logger.error(e);
+    return `Greeting failed for ${user}\n`
   }
+}
 ```
 
 This function is annotated with another decorator, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow).
