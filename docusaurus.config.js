@@ -113,6 +113,9 @@ const config = {
       prism: {
         theme: require('prism-react-renderer/themes/okaidia'),
       },
+      tableOfContents: {
+        maxHeadingLevel:5,
+      },
     }),
 };
 

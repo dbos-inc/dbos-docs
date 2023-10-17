@@ -4,45 +4,9 @@ title: Decorators
 description: API reference for Operon decorators.
 ---
 
-# Decorator Reference
--   [Background Information](#background-information)
-    -   [Decorator Implementations](#decorator-implementations)
-    -   [Typescript Compiler Flags](#typescript-compiler-flags)
--   [Decorator Locations](#decorator-locations)
-    -   [Class Decorators](#class-decorators)
-    -   [Method Decorators](#method-decorators)  
-    -   [Parameter Decorators](#parameter-decorators)  
--   [Decorators Reference](#decorators-reference)
-    -   [Operon Decorators](#operon-decorators)
-        -   [`@OperonWorkflow`](#operonworkflow)
-        -   [`@OperonTransaction`](#operontransaction)
-        -   [`@OperonCommunicator`](#operoncommunicator)
-    -   [HTTP API Registration Decorators](#http-api-registration-decorators)
-        -   [`@GetApi`](#getapi)
-        -   [`@PostApi`](#postapi)
-        -   [`@ArgSource`](#argsource)
-        -   [`@Authentication`](#authentication)
-        -   [`@KoaMiddleware`](#koamiddleware)
-    -   [Declarative Security Decorators](#declarative-security-decorators)
-        -   [`@RequiredRole`](#requiredrole)
-        -   [`@DefaultRequiredRole`](#defaultrequiredrole)
-    -   [Input Validation Decorators](#input-validation-decorators)
-        -   [`@ArgRequired`](#argrequired)
-        -   [`@DefaultArgRequired`](#defaultargrequired)
-        -   [`@ArgOptional`](#argoptional)
-        -   [`@DefaultArgOptional`](#defaultargoptional)
-        -   [`@ArgName`](#argname)
-        -   [`@ArgDate`](#argdate)
-        -   [`@ArgVarchar`](#argvarchar)
-    -   [Logging and Tracing Decorators](#logging-and-tracing-decorators)
-        -   [`@Debug`](#debug)
-        -   [`@SkipLogging`](#skiplogging)
-        -   [`@LogMask`](#logmask)
-    -   [Other Decorators](#other-decorators)
-        -   [TypeORM Decorators](#typeorm-decorators)
-            -   [`@OrmEntities`](#ormentities)
+# Operon Decorators
 
-## Background Information
+## Background
 
 [Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, methods, and parameters.  Decorators precede the decorated class, method, or parameter, and begin with '@':
 ```typescript
