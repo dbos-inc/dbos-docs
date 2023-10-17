@@ -107,4 +107,4 @@ type TypeORMTransactionContext = TransactionContext<EntityManager>;
 TODO: A TypeORM test using the test runtime
 
 ## TypeORM Example
-The YKY social network example uses TypeORM.
+The [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social) example uses TypeORM.
