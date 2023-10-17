@@ -220,7 +220,7 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Workflows use `invoke()` to invoke other functions, specifically transactions and communicators.
+Invoke transactions and communicators.
 To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflowwf-args).
 
 The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
@@ -229,7 +229,7 @@ The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
 workflowCtxt.invoke(Bar).foo(baz)
 ```
 
-You don't need to supply the context to an invoked function&#8212;the runtime does this for you.
+Note Operon runtime will supply a context to invoked functions.
 
 ### workflowCtxt.childWorkflow(wf, ...args)
 
@@ -237,7 +237,7 @@ You don't need to supply the context to an invoked function&#8212;the runtime do
 childWorkflow<T extends any[], R>(wf: OperonWorkflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
-Workflows use `childWorkflow()` to invoke another workflow.
+Invoke another workflow.
 This returns a [workflow handle](./workflow-handles) for the new workflow.
 
 The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
@@ -246,14 +246,14 @@ The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
 const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
 ```
 
-#### workflowCtxt.send(destinationUUID, message, \[topic\])
+### workflowCtxt.send(destinationUUID, message, \[topic\])
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string): Promise<void>
 ```
 
-This method sends a message to a destination workflow identity.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
+Sends a message to _destinationUUID_.
+Messages can optionally be associated with a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
 ### workflowCtxt.recv(\[topic, timeoutSeconds\])
@@ -262,9 +262,10 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 recv<T extends NonNullable<any>>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Workflows use `recv()` receive messages sent to their identity, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
-If the topic is not specified, this method only receives messages sent without a topic.
+Receive messages sent to the workflow, optionally for a particular topic.
+Messages are dequeued first-in, first-out, from a queue associated with the topic.
+Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
+If no topic is specified, `recv` can only access messages sent without a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
 ### workflowCtxt.setEvent(key, value)
@@ -273,9 +274,9 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 ```
 
-A workflow can call `setEvent()` to immutably emit a key-value pair.
-Any handler can read the event by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's identity UUID.
-If a workflow has already set an event for a particular key, setting it again is an error.
+Creates an immutable event named `key` with value `value`.
+HTTP handlers can read events by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's UUID.
+Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
 
 ---
@@ -287,7 +288,7 @@ Transactions use `TransactionContext` to interact with the database.
 ### Generic Type Parameter
 
 `TransactionContext` is typed generically based on the application database client in use.
-The application database client is configurable in a project's [configuration file (`user_dbclient`)](./configuration).
+The application database client is configurable in a project's [configuration file](./configuration) (`user_dbclient`).
 Operon currently supports the following clients:
 
 **[Knex](https://knexjs.org/guide/#typescript)**
@@ -321,7 +322,7 @@ static async exampleTransaction(ctxt: TransactionContext<Prisma>, ...)
 client: T; // One of [Knex, EntityManager, PrismaClient]
 ```
 
-The `client` property provides access to the chosen application database client.
+Provides access to the chosen application database client.
 A transaction function should only interact with the application database using this client.
 
 ---
@@ -341,8 +342,8 @@ Communicators use `CommunicatorContext` to retrieve information on communicator 
 readonly retriesAllowed: boolean;
 ```
 
-This property specifies whether the communicator is automatically retried on failure.
-Retries are configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Whether the communicator is automatically retried on failure.
+Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
 
 ### communicatorCtxt.maxAttempts
 
@@ -350,5 +351,5 @@ Retries are configurable through the [`@OperonCommunicator`](./decorators#operon
 readonly maxAttempts: number;
 ```
 
-This property specifies the maximum number of times the communicator is to be retried.
-Retries are configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Maximum number of retries for the communicator.
+Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
