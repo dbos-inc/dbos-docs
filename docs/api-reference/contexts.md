@@ -131,7 +131,7 @@ This property provides access to an [OpenTelemetry Span](https://opentelemetry.i
 You can assign custom trace attributes to this span.
 Please see our [tracing tutorial](../tutorials/logging.md#tracing) for more information.
 
-#### ctxt.getConfig(key)
+#### ctxt.getConfig(key, defaultValuet)
 
 ```typescript
 getConfig<T>(key: string): T | undefined;
