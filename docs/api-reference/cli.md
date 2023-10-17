@@ -27,7 +27,7 @@ Parameters set from the command line override parameters set in the [config file
 ### `npx operon init`
 
 **Description:**  
-This command initializes a new Operon application from a template into a target directory. By default, the instantiated application is the "Hello, world!" application using [knex.js](https://knexjs.org/) used in the [quickstart](../getting-started/quickstart).
+This command initializes a new Operon application from a template into a target directory. By default, the instantiated application is the "Hello, Database!" application using [knex.js](https://knexjs.org/) used in the [quickstart](../getting-started/quickstart).
 
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
