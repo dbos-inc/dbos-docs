@@ -75,12 +75,14 @@ static async helloWorkflow(ctxt: WorkflowContext, user: string) {
     return greeting;
   } catch (e) {
     ctxt.logger.error(e);
-    return `Greeting failed for ${user}\n`
+    return `Greeting failed for ${user}\n`;
   }
 }
 ```
 
-This function is annotated with another decorator, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow).
+This function is annotated with another decorator, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), which tells Operon to run the function as a reliable workflow.
+Operon supplies workflows with a [`WorkflowContext`](../api-reference/contexts#workflowcontext), which exposes methods to invoke other functions.
+
 Workflows are a powerful Operon concept that helps you reliably orchestrate other functions.
 When a workflow is interrupted (for example, because a server crashes and is restarted), Operon automatically resumes it from where it left off without re-executing any operation (like a transaction or communicator function) that already completed.
 Workflows make it easy to write reliable, fault-tolerant applications.
@@ -120,7 +122,7 @@ static async helloWorkflow(ctxt: WorkflowContext, user: string) {
   } catch (e) {
     ctxt.logger.error(e);
     await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-    return `Greeting failed for ${user}\n`
+    return `Greeting failed for ${user}\n`;
   }
 }
 ```
