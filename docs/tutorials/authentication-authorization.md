@@ -50,7 +50,7 @@ class Operations
   static async doRegister(ctx: OperonContext, firstName: string, lastName: string){}
 
   // Deleting a user requires escalated privilege
-  @RequiredRole(['admin])
+  @RequiredRole(['admin'])
   static async deleteOtherUser(ctx: OperonContext, otherUser: string){}
 }
 ```
