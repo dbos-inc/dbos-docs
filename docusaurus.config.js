@@ -111,8 +111,7 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc.`,
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
+        theme: require('prism-react-renderer/themes/okaidia'),
       },
     }),
 };
