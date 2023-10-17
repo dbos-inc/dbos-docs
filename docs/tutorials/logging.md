@@ -40,9 +40,9 @@ In the Operon [configuration file](../api-reference/configuration), you can conf
 ...
 telemetry:
   logs:
-    logLevel: info (default) | debug | warn | emerg | alert | crit | error
-    addContextMetadata: true (default) | false
-    silent: false (default) | true
+    logLevel: 'info' # info (default) | debug | warn | emerg | alert | crit | error
+    addContextMetadata: 'true' # true (default) | false
+    silent: 'false' # false (default) | true
 ```
 
 Context metadata includes the workflow identity UUID and the name of the user running the workflow.
@@ -86,7 +86,7 @@ Operon ships with a [Jaeger](https://jaegertracing.io/) exporter which you can e
 ...
 telemetry:
   traces:
-    enable: true (default) | false
-    endpoint: http://localhost:4318/v1/traces (default)
+    enable: 'true' # true (default) | false
+    endpoint: 'http://localhost:4318/v1/traces' # (default)
 ```
 
