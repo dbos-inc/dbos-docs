@@ -39,7 +39,7 @@ This function is annotated with two _decorators_, [`@GetApi`](../api-reference/d
 Decorators tell Operon to give a function special properties.
 
 - `@OperonTransaction()` tells Operon to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
-To make your Operon applications reliable, we require that all database operations run inside transactions.
+Operon supplies transactions with a [`TransactionContext`](../api-reference/contexts#transactioncontextt), which exposes a database client.
 To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
 - `@GetApi('/greeting/:user')` tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
 The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
