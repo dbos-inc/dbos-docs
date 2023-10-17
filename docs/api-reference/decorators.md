@@ -8,24 +8,26 @@ description: API reference for Operon decorators.
 
 ## Background
 
-[Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, methods, and parameters.  Decorators precede the decorated class, method, or parameter, and begin with '@':
+[Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, methods, and parameters. Decorators precede the decorated class, method, or parameter, and begin with `@`:
 ```typescript
   @Decorated
   class decorated {
+  ...
   }
 ```
-Decorators may or may not take arguments in parenthesis `()`.  However, each specific decorator either requires parenthesis, or requires their absence.  In the following, adding `()` after `@Required` will lead to an error, as will omitting the `()` after `@LogMask`.
+Decorators may or may not take arguments in parenthesis `()`.  However, each specific decorator either requires or refuses parenthesis. In the following, adding `()` after `@Required` will lead to an error, as will omitting `()` after `@LogMask`.
 ```
 @Required @LogMask(LogMasks.HASH) password: string
 ```
 
 This concept is not new to TypeScript.  Python is another popular language with decorators prefixed with `@`.  In other languages, such as Java, similar declarations are called "annotations".
- 
+
 While, in general, the order in which decorators are listed can affect the behavior, all decorators in the Operon API are order-independent.  So this:
 ```typescript
   @OperonTransaction()
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext, followUid: string) {
+  ...
   }
 ```
 
@@ -34,6 +36,7 @@ is the same as this:
   @PostApi("/follow")
   @OperonTransaction()
   static async doFollow(ctx: TransactionContext, followUid: string) {
+  ...
   }
 ```
 
@@ -93,32 +96,26 @@ Parameter decorators are affixed to a method parameter, just before its name.  O
 ### Operon Decorators
 
 #### `@OperonWorkflow`
-This decorator registers a method as an Operon workflow.
+Registers a method as an Operon workflow.
 
 ```typescript
 @OperonWorkflow()
 static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
+  ...
 }
 ```
 
 The first argument to an Operon workflow method must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
-`@OperonWorkflow()` takes an optional `WorkflowConfig` to configure the workflow, however there are currently no configuration items.
-
-```typescript
-interface WorkflowConfig {
-}
-```
-
 #### `@OperonTransaction`
-This decorator registers a method as an Operon transaction.
+Registers a method as an Operon transaction.
 
 The first argument of the decorated method must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
 
 ```typescript
 @OperonTransaction({readOnly: true})
 static async doLogin(ctx: TransactionContext, username: string, ) {
-    ...
+  ...
 }
 ```
 
@@ -137,10 +134,10 @@ Operon supports declaration of the following values for `IsolationLevel`:
 - `REPEATABLE READ`
 - `SERIALIZABLE`
 
-The precise transaction semantics of these levels may vary with the capabilities of the Operon user database.  For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
+The precise transaction semantics of these levels may vary with the capabilities of the Operon user database. For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@OperonCommunicator`
-This decorator registers a method as an Operon communicator.
+Registers a method as an Operon communicator.
 
 ```typescript
 @OperonCommunicator()
@@ -149,7 +146,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 }
 ```
 
-The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).  This provides the communicator with information about the current authenticated user and execution state.
+The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).
 
 `@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 
@@ -157,15 +154,15 @@ The first argument to an Operon communicator method must be a [`CommunicatorCont
 export interface CommunicatorConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default true)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
-  maxAttempts?: number; // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
-  backoffRate?: number; // The multiplier by which the retry interval increases after every retry attempt (default 2).
+  maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
+  backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
 }
 ```
 
 ### HTTP API Registration Decorators
 
 #### `@GetApi`
-This decorator associates a method with an endpoint name, such as an HTTP URL accessed with GET.
+Associates a method with an endpoint name, such as an HTTP URL accessed with GET.
 
 ```typescript
 @GetApi("/hello")
@@ -178,17 +175,18 @@ The first argument to a handler function must be an [`OperonContext`](contexts.m
 
 The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
-Registration endpoints may have placeholders, which are parts of the URL that are mapped to method arguments.  These are represented by a section of the endpoint name that is prefixed with a `:`, and which can be referred to by [`@ArgSource`](#argsource).
+Endpoints path may have placeholders, which are parts of the URL mapped to method arguments.
+These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
 @GetApi("/post/:id")
-static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
+static async getPost(ctx: TransactionContext, id: string) {
   ...
 }
 ```
 
 #### `@PostApi`
-This decorator associates a method with an endpoint name, such as an HTTP URL accessed with POST.
+Associates a method with an endpoint name, such as an HTTP URL accessed with POST.
 
 ```typescript
 @PostApi("/testpost")
@@ -202,7 +200,7 @@ The first argument to a handler function must be an [`OperonContext`](contexts.m
 The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
 
 #### `@ArgSource`
-The `@ArgSource` parameter decorator indicates where a method argument is to be sourced, when it could come from more than one place.
+Indicates where a method argument is to be sourced, when it could come from more than one place.
 
 In the example below, `@ArgSource` is used to indicate that the `name` argument comes from the URL query string, rather than the posted message body.
 
@@ -216,17 +214,16 @@ static async testWorkflow(wfCtxt: WorkflowContext, @ArgSource(ArgSources.QUERY) 
 ```
 
 The `@ArgSource` decorator takes one of the following values of `ArgSources`:
-- `DEFAULT`: For GET requests, this comes from the query string; for POST requests it comes from the request body
-- `BODY`: Indicates that the value is to be taken from the request body
-- `QUERY`: Indicates that the value is to be taken from the URL query string
-- `URL`: Indicates that the value is to be taken from a placeholder in the URL
+- `DEFAULT`: The default value. For GET requests, this means searching for query parameters; for POST requestsn, searching the request body.
+- `BODY`: Indicates to search the parameter in the request body.
+- `QUERY`: Indicates to search the parameter in the URL query string.
+- `URL`: Indicates to search the parameter in the endpoint path (requires a path placeholder).
 
 Arguments sourced from an HTTP request generally get the name given in the code for the method.  However, if the name in the HTTP query string or body is different, [`@ArgName`](#argname) may be used.
 
 #### `@Authentication`
-The `@Authentication()` class decorator configures the Operon HTTP server to perform authentication.  All methods in the decorated class will use the provided function to act as an authentication middleware.
-
-Example:
+Configures the Operon HTTP server to perform authentication. All methods in the decorated class will use the provided function to act as an authentication middleware.
+This middleware will make users' identity available to [Operon Contexts](./contexts). Here is an example:
 ```typescript
 async function exampleAuthMiddlware (ctx: MiddlewareContext) {
   if (ctx.requiredRole.length > 0) {
@@ -247,16 +244,14 @@ async function exampleAuthMiddlware (ctx: MiddlewareContext) {
       };
     }
   }
-  return;
 }
 
 @Authentication(exampleAuthMiddlware)
 class OperationEndpoints {
-  // eslint-disable-next-line @typescript-eslint/require-await
   @GetApi("/requireduser")
   @RequiredRole(['user'])
-  static async checkAuth(_ctxt: HandlerContext, name: string) {
-    return `Please say hello to ${name}`;
+  static async checkAuth(ctxt: HandlerContext) {
+    return `Please say hello to ${ctxt.authenticatedUser}`;
   }
 }
 ```
@@ -264,12 +259,9 @@ class OperationEndpoints {
 The interface for the authentication middleware is:
 ```typescript
 /**
- * Authentication middleware that executes before a request reaches a function.
- * This is expected to:
- *   - Validate the request found in the handler context and extract auth information from the request.
- *   - Map the HTTP request to the user identity and roles defined in Operon app.
- * If this succeeds, return the current authenticated user and a list of roles.
- * If any step fails, throw an error.
+ * Authentication middleware executing before requests reach functions.
+ * Can implement arbitrary authentication and authorization logic.
+ * Should throw an error or return an instance of `OperonHttpAuthReturn`
  */
 export type OperonHttpAuthMiddleware = (ctx: MiddlewareContext) => Promise<OperonHttpAuthReturn | void>;
 
@@ -280,18 +272,18 @@ export interface OperonHttpAuthReturn {
 
 export interface MiddlewareContext {
   koaContext: Koa.Context;
-  name: string; // Method (handler, transaction, workflow) name
-  requiredRole: string[]; // Role required for the invoked Operon operation, if empty perhaps auth is not required
+  name: string;             // Method (handler, transaction, workflow) name
+  requiredRole: string[];   // Role required for the invoked Operon operation, if empty perhaps auth is not required
 }
 ```
 
 #### `@KoaMiddleware`
-The `@KoaMiddleware()` class decorator configures the Operon HTTP server allow insertion of arbirtrary Koa middleware.  All methods in the decorated class will use the provided middleware list.
+Configures the Operon HTTP server allow insertion of arbitrary Koa middlewares. All methods in the decorated class will use the provided middleware list.
 
 ```typescript
 const exampleMiddleware: Koa.Middleware = async (ctx, next) => {
   await next();
-};  
+};
 
 @KoaMiddleware(exampleMiddleware)
 class OperationEndpoints{
