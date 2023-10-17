@@ -19,12 +19,31 @@ Transaction functions must be annotated with the [`@OperonTransaction`](../api-r
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
 The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
 By default, this is a [Knex.js](https://knexjs.org/) client.
-
 We like Knex because it's lightweight and helps us write fast and type-safe queries.
 However, if you prefer a traditional ORM, we also support [Prisma](./using-prisma.md) and [TypeORM](./using-typeorm.md).
 
-Here's an example of a transaction function (from the [quickstart](../getting-started/quickstart)) written using Knex.
-This function uses the Knex client to retrieve and increment `greet_count` for an input username:
+Here's an example of a transaction function (from the [quickstart](../getting-started/quickstart)) written using raw SQL (calling it with [knex.raw](https://knexjs.org/guide/raw.html)):
+
+```javascript
+export interface operon_hello {
+  name: string;
+  greet_count: number;
+}
+
+export class Hello {
+
+  @OperonTransaction()  // Run this function as a database transaction
+  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;"
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
+    const greet_count = rows[0].greet_count;
+    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+  }
+}
+```
+
+Here's the same function written using the Knex query builder:
 
 ```javascript
 
@@ -35,7 +54,7 @@ export interface operon_hello {
 
 export class Hello {
 
-  @OperonTransaction()  // Declare this function to be a transaction.
+  @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
     const rows = await ctxt.client<operon_hello>("operon_hello")
