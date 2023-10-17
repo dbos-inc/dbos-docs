@@ -104,7 +104,40 @@ type TypeORMTransactionContext = TransactionContext<EntityManager>;
 ```
 
 ### Unit Testing
-TODO: A TypeORM test using the test runtime
+Use of TypeORM in the testing runtime is quite similar to using TypeORM in development, with the addition of appropriate placement of calls to set up and tear down the database schema.
+
+In `jest`, to set up the database once at the beginning of the test and tear down at the end:
+```typescript
+beforeAll(async () => {
+  testRuntime = await createTestingRuntime([OperonAppClasses], "operon-config.yaml");
+  await testRuntime.dropUserSchema(); // Optional
+  await testRuntime.createUserSchema();
+});
+
+afterAll(async () => {
+  await testRuntime.dropUserSchema();
+  await testRuntime.destroy();
+});
+```
+
+This will create the testing runtime, load TypeORM, and register the entities according to the decorators in `OperonAppClasses`. The database will be configured according to the `database` section of the specified configuration `operon-config.yaml` file:
+```yaml
+database:
+  hostname: ${POSTGRES_HOST}
+  port: ${POSTGRES_PORT}
+  username: ${POSTGRES_USERNAME}
+  password: ${POSTGRES_PASSWORD}
+  user_database: ${POSTGRES_DATABASE}
+  system_database: 'opsys'
+  connectionTimeoutMillis: 3000
+  user_dbclient: 'typeorm'
+```
+
+The testing runtime can be used to invoke Operon methods directly, or exercise handlers:
+```typescript
+  testRuntime.invoke(KVController, readUUID).readTxn("oaootest"),
+  const response = await request(testRuntime.getHandlersCallback()).get('/');
+```
 
 ## TypeORM Example
 The [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social) example uses TypeORM.
