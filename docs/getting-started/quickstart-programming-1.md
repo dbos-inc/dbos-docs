@@ -11,7 +11,7 @@ Let's look at the code we have so far (in `src/operations.ts`).
 This "Hello, Database!" program greets users and tracks the count of greetings per user:
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
@@ -23,10 +23,6 @@ export interface operon_hello {
 export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
-  static async helloHandler(ctxt: HandlerContext, user: string) {
-    return ctxt.invoke(Hello).helloTransaction(user);
-  }
-
   @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
@@ -38,17 +34,33 @@ export class Hello {
   }
 }
 ```
-This starter code has two functions:
-- `helloHandler` serves the greeting via HTTP, calling `helloTransaction`.
-It's annotated with a [`@GetApi`](../api-reference/decorators#getapi) decorator, which tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
-- `helloTransaction` fetches and updates a user's greeting count. It's annotated with an [`@OperonTransaction`](../api-reference/decorators#operontransaction) decorator, which tells Operon to run the function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
 
-### Adding a Transaction
+This starter code has a single function, `helloTransaction`, which retrieves and updates a user's greeting count.
+This function is annotated with two _decorators_, [`@GetApi`](../api-reference/decorators#getapi) and [`@OperonTransaction`](../api-reference/decorators#operontransaction).
+Decorators tell Operon to give a function special properties.
+
+- `@OperonTransaction()` tells Operon to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
+To make your Operon applications reliable, we require that all database operations run inside transactions.
+To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
+- `@GetApi('/greeting/:user')` tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
+The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
+To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
+
+:::info
+
+In this quickstart, we write our database operations in raw SQL to make them easy to follow, but we also support the query builder [knex.js](https://knexjs.org/) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+
+:::
+
+### Adding Another Function
 
 Let's make this program more interesting by letting users clear their greeting count.
-First, let's write a function clearing the greeting count for a user:
+We'll write another function and annotate it with decorators:
 
 ```javascript
+import { PostApi } from '@dbos-inc/operon' // Add this to your imports.
+
+@PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
 @OperonTransaction() // Run this function as a database transaction
 static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
   // Delete the database entry for a user.
@@ -58,35 +70,9 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
 ```
 
 Add this function as a method of the `Hello` class.
-Like for `helloTransaction`, we annotate this function with [`@OperonTransaction`](../api-reference/decorators#operontransaction) to tell Operon to run it as a database transaction.
-To make your Operon applications reliable, we run all database operations inside transactions.
-To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
-
-:::info
-
-In this quickstart, we write our database operations in raw SQL to make them easy to follow, but we also support the query builder [knex.js](https://knexjs.org/) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
-
-:::
-
-### Adding an Endpoint
-
-Now, let's add an HTTP endpoint from which to serve this function:
-
-```javascript
-import { PostApi } from '@dbos-inc/operon' // Add this to your imports.
-
-// highlight-next-line
-@PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
-@OperonTransaction() // Run this function as a database transaction
-static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
-  // Delete the database entry for a user.
-  await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
-  return `Cleared greet_count for ${user}!\n`
-}
-```
-We annotate `clearTransaction` with a [`@PostApi`](../api-reference/decorators#postapi) decorator to tell Operon to use it to serve HTTP POST requests to the `clear` endpoint.
-The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
-To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
+This new function works similarly to `helloTransaction`.
+The  [`@OperonTransaction`](../api-reference/decorators#operontransaction) decorator tells Operon to run it as a database transaction.
+The [`@PostApi`](../api-reference/decorators#postapi) decorator tells Operon to serve this function from HTTP POST requests to the `/clear` endpoint.
 
 ### Trying it Out
 
@@ -113,5 +99,5 @@ curl http://localhost:3000/greeting/operon
 
 The greeting count should reset back to 1.
 
-If you've gotten this far, congratulations on writing your first few Operon functions!
+If you've gotten this far, congratulations on writing your first Operon function!
 Move on to the next part to learn how to use more complex Operon features, like reliable workflows.
