@@ -31,7 +31,7 @@ npx prisma init
 In the .env file, update the database URL if necessary: `DATABASE_URL="postgresql://postgres:${PGPASSWORD}@localhost:5432/helloprisma?schema=public"`.
 
 In the file `prisma/schema.prisma`, add a model:
-```tsx
+```typescript
 model OperonHello {
   @@map("operonhello")
   greeting_id Int @id @default(autoincrement())
@@ -65,7 +65,7 @@ Now, you can write an Operon application that uses Prisma to talk to the databas
 If you've configured Operon to use Prisma, you can access the Prisma client from the [`.client`](../api-reference/contexts#transactionctxtclient) property of [`TransactionContext`](../api-reference/contexts#transactioncontextt) in Operon [transactions](./transaction-tutorial).
 Here's an example of a transaction using Prisma to insert a row into the `operonhello` table:
 
-```tsx
+```javascript
 import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/operon';
 import { PrismaClient } from "@prisma/client";
 

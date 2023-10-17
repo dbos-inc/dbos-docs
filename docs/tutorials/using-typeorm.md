@@ -33,7 +33,7 @@ database:
 
 In Operon, TypeORM entities are [defined in the same way as any other TypeORM project](https://typeorm.io/entities), for example:
 
-```typescript
+```javascript
 import { Entity, Column, PrimaryColumn } from "typeorm";
 
 @Entity()
@@ -47,7 +47,7 @@ export class KV {
 ```
 
 Operon handles the entity registration that would otherwise be done in a TypeORM `DataSource` instantiation or configuration file.  To make Operon aware of the entities, a class-level decorator is used on each class containing Operon transaction methods:
-```typescript
+```javascript
 @OrmEntities([KV])
 class KVOperations {
 }
@@ -63,7 +63,7 @@ This may be invoked from an Operon user database instance:
 ```
 
 Or from the [testing runtime](..):
-```typescript
+```javascript
     await testRuntime.dropUserSchema();
     await testRuntime.createUserSchema();
 ```
@@ -77,7 +77,7 @@ Operon provides a wrapper around TypeORM's transaction functionality so that its
 
 First, Operon transactions are declared.  The easiest way is with a class method decorated with [`@OperonTransaction`](../api-reference/decorators.md#operontransaction), and the first argument will be an Operon [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
 
-```typescript
+```javascript
 @OrmEntities([KV])
 class KVOperations {
   @OperonTransaction()
@@ -99,7 +99,7 @@ class KVOperations {
 ```
 
 If preferred, it is possible to define a `type` to clean up the transaction method prototypes a little bit.
-```typescript
+```javascript
 type TypeORMTransactionContext = TransactionContext<EntityManager>;
 ```
 
@@ -107,7 +107,7 @@ type TypeORMTransactionContext = TransactionContext<EntityManager>;
 Use of TypeORM in the testing runtime is quite similar to using TypeORM in development, with the addition of appropriate placement of calls to set up and tear down the database schema.
 
 In `jest`, to set up the database once at the beginning of the test and tear down at the end:
-```typescript
+```javascript
 beforeAll(async () => {
   testRuntime = await createTestingRuntime([OperonAppClasses], "operon-config.yaml");
   await testRuntime.dropUserSchema(); // Optional
@@ -134,7 +134,7 @@ database:
 ```
 
 The testing runtime can be used to invoke Operon methods directly, or exercise handlers:
-```typescript
+```javascript
   testRuntime.invoke(KVController, readUUID).readTxn("oaootest"),
   const response = await request(testRuntime.getHandlersCallback()).get('/');
 ```
