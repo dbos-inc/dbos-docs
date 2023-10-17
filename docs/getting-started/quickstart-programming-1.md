@@ -54,7 +54,7 @@ In this quickstart, we write our database operations in raw SQL to make them eas
 
 ### Adding Another Function
 
-Let's make this program more interesting by letting users clear their greeting count.
+Let's add a new function that lets users clear their greeting count.
 We'll write another function and annotate it with decorators:
 
 ```javascript

@@ -99,7 +99,7 @@ Every time you send a request, the server should print that it was forwarded to 
 
 ### Guaranteeing Consistency with Workflows
 
-Now, let's say that we're concerned about the _consistency_ of our simple application.
+Let's say that we're concerned about the _consistency_ of our application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
 To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our workflow.
 After adding this code, our app will roll back the increment of `greet_count` if our Postman request fails.
