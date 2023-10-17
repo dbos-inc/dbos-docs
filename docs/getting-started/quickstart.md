@@ -25,7 +25,7 @@ This creates a folder for your project, configures its layout, and installs requ
 
 ### Getting Started
 
-By default, `operon init` instantiates a "Hello, World!" application.
+By default, `operon init` instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
 First, we'll show you how to build and run it, then we'll show you how to extend it with more powerful features.
 
 Before you can launch your app, you need a database.
