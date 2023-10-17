@@ -1,28 +1,16 @@
 ---
 sidebar_position: 3
-title: Contexts
+title: Operon Contexts
 description: API reference for Operon contexts
 ---
 
-# Operon Context Reference
+## Background
 
-- [Background Information](#background-information)
-- [Contexts Reference](#contexts-reference)
-  - [`OperonContext`](#operoncontext)
-  - [`HandlerContext`](#handlercontext)
-  - [`WorkflowContext`](#workflowcontext)
-  - [`TransactionContext<T>`](#transactioncontextt)
-  - [`CommunicatorContext`](#communicatorcontext)
+Operon automatically create a _context_ for each registered function.
+Functions use their context to call other Operon functions, interact with the runtime or the database, and access the logger.
+Each Operon function has a specific context:
 
----
-
-## Background Information
-
-Each Operon function has a _context_ it can use to call other functions, interact with the runtime, and interact with the database.
-Contexts are created by the runtime and always passed in as a function's first argument.
-Different types of functions use different types of contexts:
-
-- All contexts inherit from the base [`OperonContext`](#operoncontext).
+- All contexts inherit [`OperonContext`](#operoncontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
@@ -30,13 +18,11 @@ Different types of functions use different types of contexts:
 
 ---
 
-## Contexts Reference
-
-### `OperonContext`
+## `OperonContext`
 
 All contexts inherit from `OperonContext` and share its properties and methods.
 
-#### Properties
+### Properties
 
 - [request](#ctxtrequest)
 - [workflowUUID](#ctxtworkflowuuid)
@@ -47,18 +33,17 @@ All contexts inherit from `OperonContext` and share its properties and methods.
 - [span](#ctxtspan)
 
 
-#### Methods
+### Methods
 
-- [getConfig(key, defaultValue)](#ctxtgetconfigkey)
+- [getConfig(key, defaultValue)](#ctxtgetconfigkey-defaultvalue)
 
-#### ctxt.request
+### ctxt.request
 
 ```typescript
 readonly request: HTTPRequest
 ```
 
-This property exposes an HTTP request object, which contains details about the originating HTTP request that triggered this function, either directly or through its calling chain.
-It has the following structure:
+An object with information about the originating HTTP request that triggered, directly or not, this function.
 
 ```typescript
 interface HTTPRequest {
@@ -74,156 +59,154 @@ interface HTTPRequest {
 }
 ```
 
-#### ctxt.workflowUUID
+### ctxt.workflowUUID
 
 ```typescript
 readonly workflowUUID: string
 ```
 
-This property exposes the current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies that workflow's execution.
+The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow instance.
 In a transaction or communicator, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
-#### ctxt.authenticatedUser
+### ctxt.authenticatedUser
 
 ```typescript
 readonly authenticatedUser: string
 ```
 
-This property exposes the identity of the authenticated user who ran this function.
+The identity of the authenticated user who ran this function.
 Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
-#### ctxt.authenticatedRoles
+### ctxt.authenticatedRoles
 
 ```typescript
 readonly authenticatedRoles: string[];
 ```
 
-This property exposes a list of roles that the authenticated user has, if any.
+A list of roles the authenticated user has, if any.
 Authenticated roles are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
-#### ctxt.assumedRole
+### ctxt.assumedRole
 
 ```typescript
 readonly assumedRole: string;
 ```
 
-This property exposes the role used to run this current function.
+The role used to run this function.
 Empty string if authorization is not required.
-Operon's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function, and this property is *not* inherited through the calling chain.
+Operon's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
 
-#### ctxt.logger
+### ctxt.logger
 
 ```typescript
 readonly logger: OperonLogger
 ```
 
-This property provides access to Operon's logging functionality.
+A reference to Operon's logger.
 Please see our [logging tutorial](../tutorials/logging.md#logging) for more information.
 
-#### ctxt.span
+### ctxt.span
 
 ```typescript
 readonly span: Span
 ```
 
-This property provides access to an [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this function.
+An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this function.
 You can assign custom trace attributes to this span.
 Please see our [tracing tutorial](../tutorials/logging.md#tracing) for more information.
 
-#### ctxt.getConfig(key, defaultValuet)
+### ctxt.getConfig(key, defaultValue)
 
 ```typescript
 getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-This method retrieves a custom property value specified in [application configuration](./configuration.md#application-configuration).
-It take an optional default value, returned when the key cannot be found in the configuration.
+Retrieves an application property specified in the [application section of the configuration](./configuration.md#application-configuration).
+Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 ---
 
-### `HandlerContext`
+## `HandlerContext`
 
-Handlers use `HandlerContext` to invoke other functions, interact with active workflows, and interact directly with HTTP requests and resposes.
+Handlers use `HandlerContext` to invoke other functions, interact with active workflows, and interact directly with HTTP requests and responses.
 
-#### Properties
+### Properties
 
 - [koaContext](#handlerctxtkoacontext)
 
-#### Methods
+### Methods
 
 - [invoke(targetClass, \[workflowUUID\])](#handlerctxtinvoketargetclass-workflowuuid)
 - [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflowworkflowuuid)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgeteventworkflowuuid-key-timeoutseconds)
 
-#### handlerCtxt.koaContext
+### handlerCtxt.koaContext
 
 ```typescript
 koaContext: Koa.Context;
 ```
 
-This property exposes the [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) of the current request, giving handlers access to the raw HTTP request and response.
+The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) of the current request, giving handlers access to the raw HTTP request and response.
 
-#### handlerCtxt.invoke(targetClass, \[workflowUUID\])
+### handlerCtxt.invoke(targetClass, \[workflowUUID\])
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Handlers use `invoke()` to invoke other functions, specifically workflows, transactions, and communicators.
-
+Used to invoke workflows, transactions, and communicators.
 The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
 
 ```typescript
 handlerCtxt.invoke(Bar).foo(baz)
 ```
 
-You don't need to supply the context to an invoked function&#8212;the runtime does this for you.
-
 When calling transactions or communicators, `invoke()` asynchronously returns the function's output.
 When calling workflows, `invoke()` asynchronously returns a [`handle`](./workflow-handles) for the workflow.
 
+Note Operon runtime will supply the context to invoked functions.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
-#### handlerCtxt.retrieveWorkflow(workflowUUID)
+### handlerCtxt.retrieveWorkflow(workflowUUID)
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 ```
 
-This method returns a [workflow handle](./workflow-handles.md) for the workflow with the input [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
-The type `R` is the return type of the target workflow.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
+`R` is the return type of the target workflow.
 
-#### handlerCtxt.send(destinationUUID, message, \[topic, idempotencyKey\])
+### handlerCtxt.send(destinationUUID, message, \[topic, idempotencyKey\])
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
 ```
 
-This method sends a message to a destination workflow identity.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
-You can optionally provide an idempotency key to guarantee only a single message is sent even if `send` is called more than once.
+Sends a message to workflow _destinationUUID_.
+Messages can optionally be associated with a topic.
+You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### handlerCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
+### handlerCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-This method retrieves a value published by a workflow identity for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ---
 
-### `WorkflowContext`
+## `WorkflowContext`
 
 Workflows use `WorkflowContext` to invoke other functions and interact with other workflows.
 
-#### Methods
+### Methods
 
 - [invoke(targetClass)](#workflowctxtinvoketargetclass)
 - [childWorkflow(wf, ...args)](#workflowctxtchildworkflowwf-args)
@@ -231,7 +214,7 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecvtopic-timeoutseconds)
 - [setEvent(key, value)](#workflowctxtseteventkey-value)
 
-#### workflowCtxt.invoke(targetClass)
+### workflowCtxt.invoke(targetClass)
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
@@ -248,7 +231,7 @@ workflowCtxt.invoke(Bar).foo(baz)
 
 You don't need to supply the context to an invoked function&#8212;the runtime does this for you.
 
-#### workflowCtxt.childWorkflow(wf, ...args)
+### workflowCtxt.childWorkflow(wf, ...args)
 
 ```typescript
 childWorkflow<T extends any[], R>(wf: OperonWorkflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
@@ -273,7 +256,7 @@ This method sends a message to a destination workflow identity.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### workflowCtxt.recv(\[topic, timeoutSeconds\])
+### workflowCtxt.recv(\[topic, timeoutSeconds\])
 
 ```typescript
 recv<T extends NonNullable<any>>(topic?: string, timeoutSeconds?: number): Promise<T | null>
@@ -284,7 +267,7 @@ Each call to `recv()` waits for and consumes the next message to arrive in the q
 If the topic is not specified, this method only receives messages sent without a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### workflowCtxt.setEvent(key, value)
+### workflowCtxt.setEvent(key, value)
 
 ```typescript
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
@@ -297,11 +280,11 @@ For more information, see our [events API tutorial](../tutorials/workflow-commun
 
 ---
 
-### `TransactionContext<T>`
+## `TransactionContext<T>`
 
 Transactions use `TransactionContext` to interact with the database.
 
-#### Generic Type Parameter
+### Generic Type Parameter
 
 `TransactionContext` is typed generically based on the application database client in use.
 The application database client is configurable in a project's [configuration file (`user_dbclient`)](./configuration).
@@ -328,11 +311,11 @@ import { PrismaClient } from "@prisma/client";
 static async exampleTransaction(ctxt: TransactionContext<Prisma>, ...)
 ```
 
-#### Properties
+### Properties
 
 - [client](#transactionctxtclient)
 
-#### transactionCtxt.client
+### transactionCtxt.client
 
 ```typescript
 client: T; // One of [Knex, EntityManager, PrismaClient]
@@ -343,7 +326,7 @@ A transaction function should only interact with the application database using 
 
 ---
 
-### `CommunicatorContext`
+## `CommunicatorContext`
 
 Communicators use `CommunicatorContext` to retrieve information on communicator configuration.
 
@@ -352,7 +335,7 @@ Communicators use `CommunicatorContext` to retrieve information on communicator 
 - [retriesAllowed](#communicatorctxtretriesallowed)
 - [maxAttempts](#communicatorctxtmaxattempts)
 
-#### communicatorCtxt.retriesAllowed
+### communicatorCtxt.retriesAllowed
 
 ```typescript
 readonly retriesAllowed: boolean;
@@ -361,7 +344,7 @@ readonly retriesAllowed: boolean;
 This property specifies whether the communicator is automatically retried on failure.
 Retries are configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
 
-#### communicatorCtxt.maxAttempts
+### communicatorCtxt.maxAttempts
 
 ```typescript
 readonly maxAttempts: number;
