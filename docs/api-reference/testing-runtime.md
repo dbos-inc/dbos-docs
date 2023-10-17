@@ -6,7 +6,7 @@ description: API documentation for the Operon testing runtime
 
 # Operon Testing Runtime
 
-Operon provides a testing runtime to make it easier to write unit tests for Operon applications.
+Operon provides a testing runtime to facilitate writing unit tests for Operon applications.
 Before running your tests, [create and configure the runtime](#create-testing-runtime).
 In your tests, use [the runtime's methods](#methods) to invoke your application's functions.
 After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
@@ -20,18 +20,17 @@ If you use Knex or Prisma, you are responsible for setting up schemas/tables and
 
 ---
 
-### Create Testing Runtime
+## Create Testing Runtime
 
-#### createTestingRuntime(userClasses, \[configFilePath\])
+### createTestingRuntime(userClasses, \[configFilePath\])
 ```typescript
 async function createTestingRuntime(userClasses: object[], configFilePath: string = operonConfigFilePath): Promise<OperonTestingRuntime>
 ```
 
-This method creates a testing runtime and loads user functions from provided `userClasses`.
-You can also optionally provide a path to an Operon [configuration file](./configuration.md).
-If no path is provided, the runtime loads a configuration file from the default location (`operon-config.yaml` in the package root).
+Creates a testing runtime and loads user functions from provided `userClasses`.
+Accepts an optional path to an Operon [configuration file](./configuration.md), uses the default path (`operon-config.yaml` in the package root) otherwise.
 
-This example creates a runtime that loads functions from the `Hello` class and uses the config file `test-config.yaml`:
+For example, to create a runtime loading functions from the `Hello` class and using `test-config.yaml`:
 ```typescript
 testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 ```
@@ -42,19 +41,19 @@ This method *drops and re-creates* the Operon system database. You will lose all
 
 :::
 
-### Methods
+## Methods
 - [invoke(targetClass, \[workflowUUID, params\])](#runtimeinvoketargetclass-workflowuuid-params)
 - [retrieveWorkflow(workflowUUID)](#runtimeretrieveworkflowworkflowuuid)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
 - [getHandlersCallback()](#runtimegethandlerscallback)
-- [getConfig(key, defaultValue)](#runtimegetconfigkey)
+- [getConfig(key, defaultValue)](#runtimegetconfigkey-defaultvalue)
 - [queryUserDB(sql, ...params)](#runtimequeryuserdbsql-params)
 - [createUserSchema()](#runtimecreateuserschema)
 - [dropUserSchema()](#runtimedropuserschema)
 - [destroy()](#runtimedestroy)
 
-#### runtime.invoke(targetClass, \[workflowUUID, params\])
+### runtime.invoke(targetClass, \[workflowUUID, params\])
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string, params?: OperonInvokeParams): InvokeFuncs<T>
 ```
@@ -85,43 +84,43 @@ interface OperonInvokeParams {
 }
 ```
 
-#### runtime.retrieveWorkflow(workflowUUID)
+### runtime.retrieveWorkflow(workflowUUID)
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>;
 ```
 
-This method returns a [workflow handle](./workflow-handles.md) for the workflow with the input [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
-The type `R` is the return type of the target workflow.
+Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowUUID_](../tutorials/workflow-tutorial#workflow-identity).
+`R` is the return type of the target workflow.
 
-#### runtime.send(destinationUUID, message, \[topic, idempotencyKey\])
+### runtime.send(destinationUUID, message, \[topic, idempotencyKey\])
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
 ```
 
-This method sends a message to a destination workflow identity.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
-You can optionally provide an idempotency key to guarantee only a single message is sent even if `send` is called more than once.
+Sends _message_ to _destinationUUID_.
+Messages can optionally be associated with a topic.
+You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### runtime.getEvent(workflowUUID, key, \[timeoutSeconds\])
+### runtime.getEvent(workflowUUID, key, \[timeoutSeconds\])
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
 ```
 
-This method retrieves a value published by a workflow identity for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-A call to `getEvent` waits for the value to be published, returning `null` if the wait times out.
+Retrieves a value published by a _workflowUUID_ with identifier _key_ using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+A call to `getEvent` waits for the value to be published and returns `null` in case of time out.
 
-#### runtime.getHandlersCallback()
+### runtime.getHandlersCallback()
 
 ```typescript
-getHandlersCallback(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void>; 
+getHandlersCallback(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void>;
 ```
 
-This method returns a request handler callback for node's native [http/http2 server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
-You can use this callback function to test handlers, for example, with [supertest](https://www.npmjs.com/package/supertest):
+Returns a request handler callback for node's native [http/http2 server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
+You can use this callback function to test handlers, for example, using [supertest](https://www.npmjs.com/package/supertest) to send a `GET` request to `/greeting/operon` URL and verify the response:
 ```typescript
 import request from "supertest";
 
@@ -131,33 +130,32 @@ const res = await request(testRuntime.getHandlersCallback()).get(
 expect(res.statusCode).toBe(200);
 expect(res.text).toMatch("Hello, operon! You have been greeted");
 ```
-In this example, we send a `GET` request to our `/greeting/operon` URL and verify the response.
 
-#### runtime.getConfig(key, defaultValue)
+### runtime.getConfig(key, defaultValue)
 
 ```typescript
 getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-This method retrieves a custom property value specified in [application configuration](./configuration.md#application-configuration).
+Retrieves a property specified in the application section of the [configuration](./configuration.md#application-configuration).
 
-#### runtime.queryUserDB(sql, ...params)
+### runtime.queryUserDB(sql, ...params)
 
 ```typescript
 queryUserDB<R>(sql: string, ...params: any[]): Promise<R[]>;
 ```
 
-This methods executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
+Executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
 The type `R` is the return type of the database row.
 
-For example, we can query the [`operon_hello`](../getting-started/quickstart-programming-1.md) table in our tests and check the `greet_count` is as expected.
+For example, to query the [`operon_hello`](../getting-started/quickstart-programming-1.md) table and check `greet_count`, using [Jest](jestjs.io/):
 ```typescript
 const rows = await testRuntime.queryUserDB<operon_hello>("SELECT * FROM operon_hello WHERE name=$1", "operon");
 expect(rows[0].greet_count).toBe(1);
 ```
 
-#### runtime.createUserSchema()
+### runtime.createUserSchema()
 
 ```typescript
 createUserSchema(): Promise<void>;
@@ -165,13 +163,13 @@ createUserSchema(): Promise<void>;
 
 :::caution Warning
 
-Only use this method with TypeORM. It throws an error if you use other database clients.
+Only available with TypeORM. Throws an error with other database clients.
 
 :::
 
-This method creates schemas/tables in the user database based on the provided TypeORM entity classes.
+Creates schemas/tables in the user database based on the provided TypeORM entity classes.
 
-#### runtime.dropUserSchema()
+### runtime.dropUserSchema()
 
 ```typescript
 dropUserSchema(): Promise<void>;
@@ -179,17 +177,17 @@ dropUserSchema(): Promise<void>;
 
 :::caution Warning
 
-Only use this method with TypeORM. It throws an error if you use other database clients.
+Only available with TypeORM. Throws an error with other database clients.
 
 :::
 
-This method drops schemas/tables that are created by [`runtime.createUserSchema()`](#runtimecreateuserschema).
+Drops schemas/tables created by [`runtime.createUserSchema()`](#runtimecreateuserschema).
 
-#### runtime.destroy()
+### runtime.destroy()
 
 ```typescript
 destroy(): Promise<void>
 ```
 
-This method deconstructs the testing runtime and releases client connections to the database.
+Deconstructs the testing runtime and releases client connections to the database.
 Please remember to run this method after your tests!
