@@ -88,6 +88,12 @@ When a workflow is interrupted (for example, because a server crashes and is res
 Workflows make it easy to write reliable, fault-tolerant applications.
 You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
 
+In order to ensure workflows resume where they left off, transaction and communicator methods are called via `WorkflowContext.invoke`.
+This `invoke` method takes the class containing the Operon methods as a parameter and returns an object with all the transaction and communicator methods, wrapped by Operon to ensure fault-tolerance.
+Note, when invoking a transaction or communicator method, the caller doesn't provide the method context parameter.
+Operon manages the context and provides it to the method when called.
+The transaction and communicator methods exposed by `invoke` omit the context parameter by design.
+
 Additionally, note that we moved the `GetApi` decorator from `helloTransaction` to `helloWorkflow`.
 
 Now, try out your new workflow:
