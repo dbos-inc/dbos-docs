@@ -40,7 +40,7 @@ In the Operon [configuration file](../api-reference/configuration), you can conf
 ...
 telemetry:
   logs:
-    loglevel: info (default) | debug | warn | emerg | alert | crit | error
+    logLevel: info (default) | debug | warn | emerg | alert | crit | error
     addContextMetadata: true (default) | false
     silent: false (default) | true
 ```

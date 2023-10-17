@@ -19,8 +19,9 @@ Parameters set from the command line take precedence over parameters set in the 
 
 **Parameters:**  
 - `-p, --port <port-number>`: The port on which to serve your functions.
-- `-l, --logLevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-c, --configFile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
+- `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
+- `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
+- `-e, --entrypoint <entrypoint-file>`: The path to an [entrypoint file](./configuration) to use.
 
 ---
 
