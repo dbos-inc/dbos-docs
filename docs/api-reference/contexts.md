@@ -46,7 +46,7 @@ All contexts inherit from `OperonContext` and share its properties and methods.
 
 #### Methods
 
-- [getConfig(key)](#ctxtgetconfigkey)
+- [getConfig(key, defaultValue)](#ctxtgetconfigkey)
 
 #### ctxt.request
 
@@ -112,10 +112,12 @@ Please see our [tracing tutorial](../tutorials/logging.md#tracing) for more info
 #### ctxt.getConfig(key)
 
 ```typescript
-getConfig(key: string): any
+getConfig<T>(key: string): T | undefined;
+getConfig<T>(key: string, defaultValue: T): T;
 ```
 
 This method retrieves a custom property value specified in [application configuration](./configuration.md#application-configuration).
+It take an optional default value, returned when the key cannot be found in the configuration.
 
 ---
 
