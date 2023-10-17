@@ -131,7 +131,7 @@ However, Operon workflows automatically resume from where they left off when the
 
 ### Next Steps
 
-Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/api-reference).
+Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/reference).
 If you want to see more complex applications built with Operon, check out [our demo apps](../tutorials/demo-apps).
 
 Final code for the demo is available [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-extended).
