@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Quickstart - Part 2
 ---
 
-Now that we've written our first few functions, let's learn how to stitch them into powerful and reliable programs.
+In this guide, we'll learn how to build powerful and reliable programs with Operon.
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
@@ -19,10 +19,6 @@ export interface operon_hello {
 export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
-  static async helloHandler(ctxt: HandlerContext, user: string) {
-    return ctxt.invoke(Hello).helloTransaction(user);
-  }
-
   @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
@@ -45,40 +41,55 @@ export class Hello {
 
 ### Talking to Other Services
 
-To make this more interesting, let's say that when we greet someone, we also want to send the greeting to a third party, like the [Postman Echo](https://postman-echo.com/) testing service.
-To do this, let's write a new function that forwards the greeting to the Postman Echo server:
+Let's say that when we greet someone, we also want to send the greeting to a third party, like the [Postman Echo](https://postman-echo.com/) testing service.
+To do this, we'll write a new function that forwards the greeting to the Postman Echo server:
 
 ```javascript
 import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
 
-  @OperonCommunicator()
+  @OperonCommunicator() // Tell Operon this function accesses an external service or API.
   static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
     await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
     ctxt.logger.info(`Greeting sent to postman!`);
   }
 ```
 
-The `@OperonCommunicator` decorator registers this function so that Operon can manage its execution.
+We annotate this function with a new decorator, `@OperonCommunicator`.
+This decorator tells Operon the function accesses an external service or API.
 Communicators have useful built-in features such as configurable automatic retries.
 Learn more about communicators and communication with external services and APIs [here](../tutorials/communicator-tutorial).
 
-Now, let's update `helloHandler` to call this new function with some error handling:
+### Orchestrating Functions with Workflows
+
+Now, let's create a _workflow_ that first calls `helloTransaction`, then calls `greetPostman` (with error handling).
+Here's what our workflow looks like:
 
 ```javascript
-@GetApi('/greeting/:user')
-static async helloHandler(ctxt: HandlerContext, user: string) {
-  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-  try {
-    await ctxt.invoke(Hello).greetPostman(greeting);
-    return greeting;
-  } catch (e) {
-    ctxt.logger.error(e);
-    return `Greeting failed for ${user}\n`
+import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
+
+  @GetApi('/greeting/:user')
+  @OperonWorkflow() // Run this function as a reliable workflow.
+  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+    try {
+      await ctxt.invoke(Hello).greetPostman(greeting);
+      return greeting;
+    } catch (e) {
+      ctxt.logger.error(e);
+      return `Greeting failed for ${user}\n`
+    }
   }
-}
 ```
 
-Try it out:
+This function is annotated with another decorator, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow).
+Workflows are a powerful Operon concept that helps you reliably orchestrate other functions.
+When a workflow is interrupted (for example, because a server crashes and is restarted), Operon automatically resumes it from where it left off without re-executing any operation (like a transaction or communicator function) that already completed.
+Workflows make it easy to write reliable, fault-tolerant applications.
+You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
+
+Additionally, note that we moved the `GetApi` decorator from `helloTransaction` to `helloWorkflow`.
+
+Now, try out your new workflow:
 
 ```bash
 curl http://localhost:3000/greeting/operon
@@ -86,11 +97,11 @@ curl http://localhost:3000/greeting/operon
 
 Every time you send a request, the server should print that it was forwarded to Postman.
 
-### Making it Consistent
+### Guaranteeing Consistency with Workflows
 
 Now, let's say that we're concerned about the _consistency_ of our simple application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
-To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our handler.
+To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our workflow.
 After adding this code, our app will roll back the increment of `greet_count` if our Postman request fails.
 
 ```javascript
@@ -101,32 +112,7 @@ static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: stri
 }
 
 @GetApi('/greeting/:user')
-static async helloHandler(ctxt: HandlerContext, user: string) {
-  const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-  try {
-    await ctxt.invoke(Hello).greetPostman(greeting);
-    return greeting;
-  } catch (e) {
-    ctxt.logger.error(e);
-    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-    return `Greeting failed for ${user}\n`
-  }
-}
-```
-
-### Making it Reliable with Workflows
-
-One issue with this solution is that it isn't reliable: if our server crashes midway through sending a request to Postman, the rollback code never executes and a spurious greeting is persisted to the database.
-Luckily, Operon solves this problem with _workflows_, orchestration functions guaranteed to run to completion.
-Here's how we can use a workflow in our example:
-
-```javascript
-import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
-
-@GetApi('/greeting/:user')
-// highlight-next-line
 @OperonWorkflow()
-// highlight-next-line
 static async helloWorkflow(ctxt: WorkflowContext, user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
   try {
@@ -140,10 +126,9 @@ static async helloWorkflow(ctxt: WorkflowContext, user: string) {
 }
 ```
 
-You can see that we've transformed the handler into a workflow by adding the `@OperonWorkflow` decorator.
-When a workflow is interrupted and has to be restarted, Operon automatically resumes it from where it left off without re-executing any registered operation (like a transaction or communicator function) that already happened.
-Using workflows, we've made our little application resilient to failures: it never records a greeting unless it completed successfully.
-You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
+Because Operon workflows are reliable, this program maintains the consistency of `greet_count` even through serious failures like server crashes.
+Ordinarily, if a server were to crash midway through sending a request to Postman, the rollback code would never execute and a spurious greeting would be persisted to the database.
+However, Operon workflows automatically resume from where they left off when the server restarts, so our program would forward the greeting (or note the failure and roll back) as if nothing had happened.
 
 ### Next Steps
 
