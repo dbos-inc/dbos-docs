@@ -15,19 +15,19 @@ The Operon CLI helps you manage Operon applications.
 **Description:**  
 This command launches the Operon runtime and HTTP server to serve an application.
 It registers all functions and serves all endpoints in classes exported from `src/operations.ts`.
-Parameters set from the command line override parameters set in the [config file](./configuration).
+Parameters set from the command line override parameters set in the [configuration file](./configuration).
 
 **Parameters:**  
-- `-p, --port <port-number>`: The port on which to serve the application.
-- `-l, --logLevel <log-level>`: The log level at which to run the application. Must be one of `DEBUG`, `INFO`, `WARN`, `ERROR`.
-- `-c, --configFile <config-file>`: The path to an [Operon configuration file](./configuration) to use for this application.
+- `-p, --port <port-number>`: The port on which to serve your functions.
+- `-l, --logLevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
+- `-c, --configFile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
 
 ---
 
 ### `npx operon init`
 
 **Description:**  
-This command initializes a new Operon application from a template into a target directory. By default, the instantiated application is the "Hello, Database!" application using [knex.js](https://knexjs.org/) used in the [quickstart](../getting-started/quickstart).
+This command initializes a new Operon application from a template into a target directory. By default, it sets the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
 
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
