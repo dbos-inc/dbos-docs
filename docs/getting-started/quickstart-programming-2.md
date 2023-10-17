@@ -7,7 +7,7 @@ Now that we've written our first few functions, let's learn how to stitch them i
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
@@ -36,6 +36,16 @@ export class Hello {
       .returning("greet_count");               
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+  }
+
+  @PostApi('/clear/:user')
+  @OperonTransaction()
+  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Delete greet_count for a user.
+    await ctxt.client<operon_hello>("operon_hello")
+      .where({ name: user })
+      .delete()
+    return `Cleared greet_count for ${user}!\n`
   }
 }
 
