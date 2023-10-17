@@ -41,8 +41,11 @@ All contexts inherit from `OperonContext` and share its properties and methods.
 - [request](#ctxtrequest)
 - [workflowUUID](#ctxtworkflowuuid)
 - [authenticatedUser](#ctxtauthenticateduser)
+- [authenticatedRoles](#ctxtauthenticatedroles)
+- [assumedRole](#ctxtassumedrole)
 - [logger](#ctxtlogger)
 - [span](#ctxtspan)
+
 
 #### Methods
 
@@ -89,6 +92,25 @@ readonly authenticatedUser: string
 
 This property exposes the identity of the authenticated user who ran this function.
 Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
+
+#### ctxt.authenticatedRoles
+
+```typescript
+readonly authenticatedRoles: string[];
+```
+
+This property exposes a list of roles that the authenticated user has, if any.
+Authenticated roles are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
+
+#### ctxt.assumedRole
+
+```typescript
+readonly assumedRole: string;
+```
+
+This property exposes the role used to run this current function.
+Empty string if authorization is not required.
+Operon's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function, and this property is *not* inherited through the calling chain.
 
 #### ctxt.logger
 
