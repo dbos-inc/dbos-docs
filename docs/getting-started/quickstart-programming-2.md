@@ -155,6 +155,9 @@ When a workflow is interrupted and has to be restarted, Operon automatically res
 Using workflows, we've made our little application resilient to failures: it never records a greeting unless it completed successfully.
 You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
 
-### Final Code
+### Next Steps
 
-Final code for the demo is available [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-world-extended).
+Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/api-reference).
+If you want to see more complex applications built with Operon, check out [our demo apps](../tutorials/demo-apps).
+
+Final code for the demo is available [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-extended).
