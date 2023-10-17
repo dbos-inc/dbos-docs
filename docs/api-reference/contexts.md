@@ -80,7 +80,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-This property exposes the current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a 128-bit UUID in string format that uniquely identifies that workflow's execution.
+This property exposes the current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies that workflow's execution.
 In a transaction or communicator, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 

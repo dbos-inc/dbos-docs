@@ -71,7 +71,7 @@ Instead, you should do all database operations in [transactions](./transaction-t
 
 ### Workflow Identity
 
-Every time you execute a workflow, that execution is assigned a unique identity, represented as a 128-bit [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+Every time you execute a workflow, that execution is assigned a unique identity, represented as a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this UUID through the `context.workflowUUID` field.
 Workflow identities are important for communicating with workflows and developing interactive workflows.
 For more information on workflow communication, see [our guide](./workflow-communication-tutorial.md).

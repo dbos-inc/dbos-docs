@@ -35,4 +35,4 @@ This method waits for the workflow to complete then returns its output.
 
 #### `getWorkflowUUID() : string`
 
-This method retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a 128-bit UUID in string format that uniquely identifies that workflow's execution.
+This method retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies that workflow's execution.
