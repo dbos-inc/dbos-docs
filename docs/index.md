@@ -9,7 +9,7 @@ sidebar_position: 1
 Operon is the programming framework for DBOS, a revolutionary system software stack developed as a research prototype over the last three years at MIT and Stanford and now commercialized by DBOS, Inc.
 We're rolling out DBOS in two phases.
 
-Starting now, we're launching Operon, a **Typescript framework built for the database**.
+Starting now, we're releasing Operon, a **Typescript framework built for the database**.
 Operon fully embraces the power of your application database, helping you write applications that are reliable by default.
 It runs your Typescript functions as database transactions, guarantees they run "once and only once" for each request, and orchestrates them into workflows so reliable that if your server restarts, they resume exactly where they left off.
 
