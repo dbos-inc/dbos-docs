@@ -7,7 +7,7 @@ Now that we've written our first few functions, let's learn how to stitch them i
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
@@ -18,30 +18,26 @@ export interface operon_hello {
 
 export class Hello {
 
-  @GetApi('/greeting/:user') // Serve this function from the /greeting endpoint with 'user' as a path parameter
+  @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
   static async helloHandler(ctxt: HandlerContext, user: string) {
     return ctxt.invoke(Hello).helloTransaction(user);
   }
 
-  @OperonTransaction()  // Declare this function to be a transaction.
+  @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const rows = await ctxt.client<operon_hello>("operon_hello")
-      .insert({ name: user, greet_count: 1 })
-      .onConflict("name") // If user is already present, increment greet_count.
-        .merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      .returning("greet_count");
+    const query = `INSERT INTO operon_hello (name, greet_count) VALUES (?, 1)
+      ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;`
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
 
-  @PostApi('/clear/:user')
-  @OperonTransaction()
+  @PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
+  @OperonTransaction() // Run this function as a database transaction
   static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
-    // Delete greet_count for a user.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .delete()
+    // Delete the database entry for a user.
+    await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
     return `Cleared greet_count for ${user}!\n`
   }
 }
@@ -55,15 +51,11 @@ To do this, let's write a new function that forwards the greeting to the Postman
 ```javascript
 import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
 
-@OperonCommunicator()
-static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-  await axios.get("https://postman-echo.com/get", {
-    params: {
-      greeting: greeting
-    }
-  });
-  ctxt.logger.info(`Greeting sent to postman!`);
-}
+  @OperonCommunicator()
+  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
+    await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
+    ctxt.logger.info(`Greeting sent to postman!`);
+  }
 ```
 
 The `@OperonCommunicator` decorator registers this function so that Operon can manage its execution.
@@ -105,9 +97,7 @@ After adding this code, our app will roll back the increment of `greet_count` if
 @OperonTransaction()
 static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
   // Decrement greet_count.
-  await ctxt.client<operon_hello>("operon_hello")
-    .where({ name: user })
-    .decrement('greet_count', 1);
+  await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
 }
 
 @GetApi('/greeting/:user')
