@@ -25,7 +25,7 @@ Operon currently only supports Postgres-compatible databases.
 - **user_database**: Name of the application database.
 - **system_database** (optional): Name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
-- **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000``.
+- **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **user_dbclient** (optional): Client to use for connecting to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 
 **Example**:
@@ -96,5 +96,5 @@ telemetry:
     silent: false # false (default) | true
   traces:
     enabled: true # true | false (default)
-    endpoint: 'http://localhost:4318/v1/traces' # (default if enabled=true; no effect if enabled=false)
+    endpoint: 'http://localhost:4318/v1/traces' # (default; no effect if enabled=false)
 ```
