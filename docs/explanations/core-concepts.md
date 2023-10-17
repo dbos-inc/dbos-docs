@@ -16,8 +16,8 @@ Its two main principles are inspired by the [DBOS research project from Stanford
 
 - **It's simple**.  Write your business logic using only functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It works right by default**.  Reliability is built in, both [for workflows](../tutorials/workflow-tutorial#reliability-guarantees) and [for messaging](../tutorials/workflow-communication-tutorial#reliability-guarantees-1).  [Idempotency](../tutorials/idempotency-tutorial) is built in. [Authentication and authorization](../tutorials/authentication-authorization) are built in.  [Tracing](../tutorials/logging) is built in.
-- **It's built for the cloud**.  Operon is built to run on [DBOS's](https://www.dbos.dev) upcoming serverless cloud platform, so you can deploy your application to the cloud with a push of a button and run at scale without worrying about managing infrastructure.
 - **It's built on the tools you love**.  Operon leverages rock-solid infrastructure like Postgres and Typescript to build a simpler, more reliable framework for your applications.
+- **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on a revolutionary new operating system that runs OS services on top of the DBMS instead of the other way around. 
 
 ### Programming Model
 The Operon programming model is serverless and inspired by [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) principles.
@@ -30,6 +30,8 @@ There are four basic types of functions:
 - **[Handlers](../tutorials/http-serving-tutorial)** serve HTTP requests.
 
 When you launch an application, Operon automatically wires these functions together for you, setting up an HTTP server for you endpoints and a database connection pool for your transactions.
+
+### Reliable by Default
 
 A critical component of Operon's programming model is _reliability_, guaranteed by the database.
 Your transactions are always ACID.

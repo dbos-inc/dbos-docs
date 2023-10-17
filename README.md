@@ -14,7 +14,7 @@ npm install
 npm run start
 ```
 
-### Publish on Github 
+### Publish on Github
 
 Publishing is done automatically by a commit hook. You should never need to run this yourself:
 

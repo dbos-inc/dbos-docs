@@ -48,7 +48,7 @@ This method *drops and re-creates* the Operon system database. You will lose all
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
 - [getHandlersCallback()](#runtimegethandlerscallback)
-- [getConfig(key)](#runtimegetconfigkey)
+- [getConfig(key, defaultValue)](#runtimegetconfigkey)
 - [queryUserDB(sql, ...params)](#runtimequeryuserdbsql-params)
 - [createUserSchema()](#runtimecreateuserschema)
 - [dropUserSchema()](#runtimedropuserschema)
@@ -133,10 +133,11 @@ expect(res.text).toMatch("Hello, operon! You have been greeted");
 ```
 In this example, we send a `GET` request to our `/greeting/operon` URL and verify the response.
 
-#### runtime.getConfig(key)
+#### runtime.getConfig(key, defaultValue)
 
 ```typescript
-getConfig(key: string): any;
+getConfig<T>(key: string): T | undefined;
+getConfig<T>(key: string, defaultValue: T): T;
 ```
 
 This method retrieves a custom property value specified in [application configuration](./configuration.md#application-configuration).

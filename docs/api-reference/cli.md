@@ -13,7 +13,9 @@ The Operon CLI helps you manage Operon applications.
 ### `npx operon start`
 
 **Description:**  
-This command launches the Operon runtime and HTTP server to serve an application. It registers all functions and serves all endpoints in classes exported from `src/operations.ts`.
+This command launches the Operon runtime and HTTP server to serve an application.
+It registers all functions and serves all endpoints in classes exported from `src/operations.ts`.
+Parameters set from the command line override parameters set in the [config file](./configuration).
 
 **Parameters:**  
 - `-p, --port <port-number>`: The port on which to serve the application.

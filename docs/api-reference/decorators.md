@@ -185,7 +185,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 }
 ```
 
-The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).  This provides the communcator with information about the current authenticated user and execution state.
+The first argument to an Operon communicator method must be a [`CommunicatorContext`](contexts.md#communicatorcontext).  This provides the communicator with information about the current authenticated user and execution state.
 
 `@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 

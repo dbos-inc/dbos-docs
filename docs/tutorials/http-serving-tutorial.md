@@ -4,7 +4,7 @@ title: HTTP Serving
 description: Learn how to serve HTTP requests
 ---
 
-In this guide, you'll learn how to serve HTTP requests with Operon.
+In this guide, you'll learn how to make Operon workflows accessible through HTTP.
 
 Any Operon function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing Operon to use that function to serve that endpoint.
 You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@OperonTransaction`](../api-reference/decorators#operontransaction), [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), or [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator.
@@ -79,3 +79,18 @@ Operon uses [Koa](https://koajs.com/) for HTTP serving internally and the raw re
 
 Operon supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
 Middlewares are configured at the class level through the [`@KoaMiddleware`](../api-reference/decorators#koamiddleware) decorator.
+Here is an example of a simple middleware looking for an HTTP header:
+```javascript
+import { Middleware } from "koa";
+
+const middleware: Middleware = async (ctx, next) => {
+  const contentType = ctx.request.headers["Content-Type"];
+  await next();
+};
+
+@KoaMiddleware(middleware)
+class Hello {
+  ...
+}
+```
+

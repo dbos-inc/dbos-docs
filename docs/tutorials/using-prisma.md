@@ -93,3 +93,6 @@ export class Hello {
 ```
 
 The complete source code for this example is [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-prisma).
+
+### Prisma Example
+The [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank) demo app uses Prisma.

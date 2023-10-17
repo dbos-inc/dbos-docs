@@ -7,7 +7,7 @@ Now that we've written our first few functions, let's learn how to stitch them i
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
@@ -20,7 +20,6 @@ export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from the /greeting endpoint with 'user' as a path parameter
   static async helloHandler(ctxt: HandlerContext, user: string) {
-    // Invoke helloTransaction to greet the user and track how many times they've been greeted.
     return ctxt.invoke(Hello).helloTransaction(user);
   }
 
@@ -28,17 +27,24 @@ export class Hello {
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
     const rows = await ctxt.client<operon_hello>("operon_hello")
-      // Insert greet_count for this user.
       .insert({ name: user, greet_count: 1 })
-      // If already present, increment it instead.
-      .onConflict("name").merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      // Return the inserted or incremented value.
-      .returning("greet_count");               
+      .onConflict("name") // If user is already present, increment greet_count.
+        .merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
+      .returning("greet_count");
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
-}
 
+  @PostApi('/clear/:user')
+  @OperonTransaction()
+  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Delete greet_count for a user.
+    await ctxt.client<operon_hello>("operon_hello")
+      .where({ name: user })
+      .delete()
+    return `Cleared greet_count for ${user}!\n`
+  }
+}
 ```
 
 ### Talking to Other Services
@@ -151,75 +157,4 @@ You can learn more about workflows and their guarantees [here](../tutorials/work
 
 ### Final Code
 
-Here's our final code:
-
-```javascript
-import { TransactionContext, OperonTransaction, GetApi, PostApi, CommunicatorContext, OperonCommunicator, OperonWorkflow, WorkflowContext } from '@dbos-inc/operon'
-import { Knex } from 'knex';
-import axios from 'axios';
-
-interface operon_hello {
-  name: string;
-  greet_count: number;
-}
-
-export class Hello {
-
-  @GetApi('/greeting/:user')
-  @OperonWorkflow()
-  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
-    }
-  }
-
-  @OperonTransaction()  // Declare this function to be a transaction.
-  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
-    // Retrieve and increment the number of times this user has been greeted.
-    const rows = await ctxt.client<operon_hello>("operon_hello")
-      // Insert greet_count for this user.
-      .insert({ name: user, greet_count: 1 })
-      // If already present, increment it instead.
-      .onConflict("name").merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      // Return the inserted or incremented value.
-      .returning("greet_count");
-    const greet_count = rows[0].greet_count;
-    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
-  }
-
-  @OperonTransaction()
-  static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
-    // Decrement greet_count.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .decrement('greet_count', 1);
-  }
-
-  @OperonCommunicator()
-  static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
-    await axios.get("https://postman-echo.com/get", {
-      params: {
-        greeting: greeting
-      }
-    });
-    ctxt.logger.info(`Greeting sent to postman!`);
-  }
-
-  @PostApi('/clear/:user')
-  @OperonTransaction()
-  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
-    // Delete greet_count for a user.
-    await ctxt.client<operon_hello>("operon_hello")
-      .where({ name: user })
-      .delete()
-    return `Cleared greet_count for ${user}!\n`
-  }
-}
-
-```
+Final code for the demo is available [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-world-extended).

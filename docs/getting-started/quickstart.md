@@ -8,9 +8,9 @@ Here's how to get an Operon application up and running in less than five minutes
 
 ### System Requirements
 
-- [Node.js 18 or later](https://nodejs.org/en)
+- [Node.js 18 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
 - macOS, Windows (through WSL), and Linux are supported
-- This tutorial requires [Docker](https://www.docker.com/)
+- This tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/))
 
 ### Project Initialization
 
@@ -25,7 +25,7 @@ This creates a folder for your project, configures its layout, and installs requ
 
 ### Getting Started
 
-By default, `operon init` instantiates a "Hello, World!" application.
+By default, `operon init` instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
 First, we'll show you how to build and run it, then we'll show you how to extend it with more powerful features.
 
 Before you can launch your app, you need a database.

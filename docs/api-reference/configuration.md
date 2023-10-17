@@ -46,16 +46,16 @@ database:
 ### Telemetry
 
 You can use the configuration file to tune the behavior of Operon logging and tracing facilities.
-Note all this options are optional and will, if not specified, use the default values indicated in the example bellow.
+Note all this options are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
 - **loglevel**: A filter on what logs should be printed to the standard output.
-- **addContextMetadata**: Enables the addition of contextual information, such as workflow UUID, to each log entries.
+- **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry.
 - **silent**: Silences the logger such that nothing is printed to the standard output.
 
 #### Traces
 - **enable**: Whether or not to export traces in [OTLP format](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md).
-- **endpoint**: The FQDN of a [Jaeger](https://Jaegertracing.io) endpoint.
+- **endpoint**: The fully-qualified domain name of a [Jaeger](https://Jaegertracing.io) endpoint.
 
 **Example**:
 
@@ -72,19 +72,20 @@ telemetry:
 
 ---
 
-### localRuntimeConfig
+### runtimeConfig
 
-This configuration is used to specify runtime parameters.
+This runtime configuration is used to specify runtime parameters.
 
 - **port**: The port from which to serve the application. If the port is also specified on the command line by [`npx operon start`](./cli#npx-operon-start), use that port instead.
+- **entrypoint**: The compiled Javascript file where Operon looks for your application's code. At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  By default, this is `dist/operations.js`.
 
 **Example**:
 
 ```yaml
-localRuntimeConfig:
+runtimeConfig:
   port: 6000
+  entrypoint: dist/operations.js
 ```
-
 ---
 
 ### application
