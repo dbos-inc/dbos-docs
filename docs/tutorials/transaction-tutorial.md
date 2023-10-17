@@ -6,6 +6,12 @@ description: Learn how to perform database operations
 
 In this guide, you'll learn how to perform database operations in Operon.
 
+:::info
+
+Operon supports Postgres-compatible application databases.
+
+:::
+
 To perform operations on your application database in Operon, you use a _transaction_ function.
 As their name implies, these functions execute as [database transactions](https://en.wikipedia.org/wiki/Database_transaction).
 

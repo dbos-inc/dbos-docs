@@ -10,6 +10,7 @@ Here's how to get an Operon application up and running in less than five minutes
 
 - [Node.js 18 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
 - macOS, Windows (through WSL), and Linux are supported
+- Operon supports Postgres-compatible application databases.  We provide a Docker installation of Postgres to help you get started.
 - This tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/))
 
 ### Project Initialization
