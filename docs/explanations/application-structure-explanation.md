@@ -35,14 +35,14 @@ At startup, the Operon runtime automatically loads all classes exported from thi
 More precisely, Operon assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere.
-You can also configure the entrypoint in our [configuration file](../api-reference/configuration).
+You can also configure the entrypoint in our [configuration file](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
 
 - `knexfile.ts` is a configuration file for [Knex](https://knexjs.org), which we use as a query builder and migration tool.
 - `migrations` is initialized with a Knex database migration used in the [quickstart guide](../getting-started/quickstart).  If you're using Knex for schema management, you can create your own migrations here.
 - `node_modules`, `package-lock.json`, `package.json`, and `tsconfig.json` are needed by all Node/Typescript projects.
-- `start_postgres_docker.sh` is a convenience script that initializes a Docker-hosted Postgres database for use in the [quickstart](../getting-started/quickstart).  You can modify this script if you want to use Docker-hosted Postgres for local development.
+- `start_postgres_docker.sh` is a convenience script that initializes a Docker Postgres container for use in the [quickstart](../getting-started/quickstart). You can modify this script if you want to use Docker-hosted Postgres for local development.
 
 ### Code Structure
 
@@ -96,7 +96,7 @@ There are two more:
 A function needs to follow a few rules:
 
 - It must be a static class method.  For Operon to find it, that class must be exported from `src/operations.ts`.
-- It must have a decorator telling Operon what kind of function it is: [`@OperonTransaction`](../api-reference/decorators#operontransaction) for transactions, [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) for communicators, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for handlers.
+- It must have a decorator telling Operon what kind of function it is: [`@OperonTransaction`](../api-reference/decorators#operontransaction) for transactions, [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) for communicators, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for HTTP handlers.
 - Its first argument must be the appropriate kind of [Operon context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
 - Its input and return types must be serializable to JSON.
 

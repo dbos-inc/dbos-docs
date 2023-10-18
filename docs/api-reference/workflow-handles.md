@@ -5,17 +5,16 @@ description: API reference for workflow handles
 ---
 
 A workflow handle represents the state of a particular active or completed workflow execution.
-A workflow handle is obtained when [calling a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) from a handler or another workflow with `ctxt.invoke()` ([workflow](./contexts#workflowctxtinvoketargetclass), [handler](./contexts#handlerctxtinvoketargetclass-workflowuuid)) or [`ctxt.childWorkflow`](./contexts#workflowctxtchildworkflowwf-args).
-Additionally, a handler can retrieve the handle of any workflow by calling [`ctxt.retrieveWorkflow`](./contexts#handlerctxtretrieveworkflowworkflowuuid) on that workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
+A workflow handle is obtained when [calling a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) from a handler or another workflow with [`ctxt.invoke`](./contexts#handlerctxtinvoketargetclass-workflowuuid) or [`ctxt.childWorkflow`](./contexts#workflowctxtchildworkflowwf-args) respectively.
+Additionally, a handler can retrieve a workflow handle by calling [`ctxt.retrieveWorkflow`](./contexts#handlerctxtretrieveworkflowworkflowuuid) with the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
 
 ---
 
 ### Methods
 
-#### `getStatus() : Promise<WorkflowStatus>`
+#### `getStatus(): Promise<WorkflowStatus>`
 
-This method retrieves the status of a workflow.
-It returns a status object with the following structure:
+Retrieves the status of a workflow with the following structure:
 
 ```typescript
 export interface WorkflowStatus {
@@ -26,13 +25,12 @@ export interface WorkflowStatus {
   readonly authenticatedRoles: string[]; // All roles the authenticated user has, if any.
   readonly request: HTTPRequest; // The parent request for this workflow, if any.
 }
-
 ```
 
 #### `getResult(): Promise<R>`
 
-This method waits for the workflow to complete then returns its output.
+Waits for the workflow to complete then returns its output.
 
-#### `getWorkflowUUID() : string`
+#### `getWorkflowUUID(): string`
 
-This method retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a 128-bit UUID in string format that uniquely identifies that workflow's execution.
+Retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies this workflow's execution.

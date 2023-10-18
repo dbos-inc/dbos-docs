@@ -16,7 +16,7 @@ You can fully implement authentication and authorization using custom [HTTP midd
 To instruct Operon to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](../api-reference/decorators#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
 The decorator should return a structure containing identity and claimed roles:
 
-```typescript
+```javascript
 return {
     authenticatedUser: "Mary",
     authenticatedRoles: ["user", "admin"],
@@ -28,7 +28,7 @@ When serving a request from an HTTP endpoint, Operon runs the authentication mid
 ## Authorization Decorators
 To declare a list of roles that are authorized to run the methods in a class, use the [`@DefaultRequiredRole`](../api-reference/decorators#defaultrequiredrole) class decorator:
 
-```typescript
+```javascript
 @DefaultRequiredRole(['user'])
 class Operations
 {
@@ -39,7 +39,7 @@ class Operations
 At runtime, before running an operation, Operon verifies that the operation context contains an authenticated role listed in its required roles.
 For exceptions, requiring more or less privilege than the default, you can specify [`@RequiredRole`](../api-reference/decorators#requiredrole) at the method level
 
-```typescript
+```javascript
 @DefaultRequiredRole(['user'])
 class Operations
 {

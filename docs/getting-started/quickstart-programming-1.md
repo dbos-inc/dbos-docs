@@ -11,83 +11,67 @@ Let's look at the code we have so far (in `src/operations.ts`).
 This "Hello, Database!" program greets users and tracks the count of greetings per user:
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
-interface operon_hello {
+export interface operon_hello {
   name: string;
   greet_count: number;
 }
 
 export class Hello {
 
-  @GetApi('/greeting/:user') // Serve this function from the /greeting endpoint with 'user' as a path parameter
-  static async helloHandler(ctxt: HandlerContext, user: string) {
-    return ctxt.invoke(Hello).helloTransaction(user);
-  }
-
-  @OperonTransaction()  // Declare this function to be a transaction.
+  @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
+  @OperonTransaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const rows = await ctxt.client<operon_hello>("operon_hello")
-      .insert({ name: user, greet_count: 1 })
-      .onConflict("name") // If user is already present, increment greet_count.
-        .merge({ greet_count: ctxt.client.raw('operon_hello.greet_count + 1') })
-      .returning("greet_count");
+    const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;"
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
 }
 ```
 
-The `helloHandler` function serves the greeting via an HTTP request to the `greeting` endpoint.
-It calls the `helloTransaction` function, which transactionally fetches and updates a user's greeting count.
-Both are registered with Operon via _decorators_: `@GetApi` declares an HTTP endpoint and `@OperonTransaction` declares a transaction.
-The database operations are written using [knex.js](https://knexjs.org/), a popular query builder, but Operon also supports raw SQL and the popular Typescript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+This starter code has a single function, `helloTransaction`, which retrieves and updates a user's greeting count.
+This function is annotated with two _decorators_, [`@GetApi`](../api-reference/decorators#getapi) and [`@OperonTransaction`](../api-reference/decorators#operontransaction).
+Decorators tell Operon to give a function special properties.
 
-### Adding a Transaction
-
-Let's make this program more interesting by giving users the ability to clear their greeting count.
-First, let's write a function clearing the greeting count for a user:
-
-```javascript
-@OperonTransaction()
-static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
-  // Delete greet_count for a user.
-  await ctxt.client<operon_hello>("operon_hello")
-    .where({ name: user })
-    .delete()
-  return `Cleared greet_count for ${user}!\n`
-}
-```
-
-Add this function as a method of the `Hello` class.
-Like before, this function is declared a transaction via the `@OperonTransaction` decorator and accesses the database using  [knex.js](https://knexjs.org/).
+- `@OperonTransaction()` tells Operon to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
+Operon supplies transactions with a [`TransactionContext`](../api-reference/contexts#transactioncontextt), which exposes a database client.
 To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
+- `@GetApi('/greeting/:user')` tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
+The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
+To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
 
-### Adding an Endpoint
+:::info
 
-Now, let's add an HTTP endpoint from which to serve this function:
+In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+
+:::
+
+### Adding Another Function
+
+Let's add a new function that lets users clear their greeting count.
+We'll write another function and annotate it with decorators:
 
 ```javascript
 import { PostApi } from '@dbos-inc/operon' // Add this to your imports.
 
-// highlight-next-line
-@PostApi('/clear/:user')
-@OperonTransaction()
+@PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
+@OperonTransaction() // Run this function as a database transaction
 static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
-  // Delete greet_count for a user.
-  await ctxt.client<operon_hello>("operon_hello")
-    .where({ name: user })
-    .delete()
-  return `Cleared greet_count for ${user}!\n`
+  // Delete the database entry for a user.
+  await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
+  return `Cleared greet_count for ${user}!\n`;
 }
 ```
 
-The `@PostApi` decorator we added tells Operon to execute this function in response to HTTP POST requests to the `clear` endpoint.
-The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
-To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
+Add this function as a method of the `Hello` class.
+This new function works similarly to `helloTransaction`.
+The  [`@OperonTransaction`](../api-reference/decorators#operontransaction) decorator tells Operon to run it as a database transaction.
+The [`@PostApi`](../api-reference/decorators#postapi) decorator tells Operon to serve this function from HTTP POST requests to the `/clear` endpoint.
 
 ### Trying it Out
 
@@ -114,5 +98,5 @@ curl http://localhost:3000/greeting/operon
 
 The greeting count should reset back to 1.
 
-If you've gotten this far, congratulations on writing your first few Operon functions!
+If you've gotten this far, congratulations on writing your first Operon function!
 Move on to the next part to learn how to use more complex Operon features, like reliable workflows.

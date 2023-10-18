@@ -12,23 +12,20 @@ In the latter case, the order of the decorators doesn't matter.
 Here's an example of a new function with an endpoint decorator:
 
 ```javascript
-  @GetApi('/greeting/:name')
-  static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
-	  return `Greeting, ${name}`;
-  }
+@GetApi('/greeting/:name')
+static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
+  return `Greeting, ${name}`;
+}
 ```
 Here's an example applying an endpoint decorator to an existing transaction (from our [quickstart](../getting-started/quickstart-programming-1.md)):
 
 ```javascript
-  @PostApi('/clear/:name')
-  @OperonTransaction()
-  static async clearTransaction(txnCtxt: KnexTransactionContext, name: string) {
-    // Delete greet_count for a user.
-    await txnCtxt.client<operon_hello>("operon_hello")
-      .where({ name: name })
-      .delete()
-    return `Cleared greet_count for ${name}!\n`
-  }
+@PostApi('/clear/:user')
+@OperonTransaction()
+static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
+  return `Cleared greet_count for ${user}!\n`;
+}
 ```
 
 Operon currently supports two endpoint decorators, [`GetApi`](../api-reference/decorators#getapi) (HTTP `GET`) and [`PostApi`](../api-reference/decorators#postapi) (HTTP `POST`).
