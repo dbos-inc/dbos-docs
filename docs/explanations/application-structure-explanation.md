@@ -96,7 +96,7 @@ There are two more:
 A function needs to follow a few rules:
 
 - It must be a static class method.  For Operon to find it, that class must be exported from `src/operations.ts`.
-- It must have a decorator telling Operon what kind of function it is: [`@OperonTransaction`](../api-reference/decorators#operontransaction) for transactions, [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) for communicators, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for handlers.
+- It must have a decorator telling Operon what kind of function it is: [`@OperonTransaction`](../api-reference/decorators#operontransaction) for transactions, [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) for communicators, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for HTTP handlers.
 - Its first argument must be the appropriate kind of [Operon context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
 - Its input and return types must be serializable to JSON.
 
