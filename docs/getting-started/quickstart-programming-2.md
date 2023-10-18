@@ -66,7 +66,7 @@ Here's what our workflow looks like:
 ```javascript
 import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
 
-@GetApi('/greeting/:user')
+@GetApi('/greeting/:user') // Moved here from helloTransaction
 @OperonWorkflow() // Run this function as a reliable workflow.
 static async helloWorkflow(ctxt: WorkflowContext, user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
@@ -88,13 +88,14 @@ When a workflow is interrupted (for example, because a server crashes and is res
 Workflows make it easy to write reliable, fault-tolerant applications.
 You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
 
-In order to ensure workflows resume where they left off, transaction and communicator methods are called via `WorkflowContext.invoke`.
-This `invoke` method takes the class containing the Operon methods as a parameter and returns an object with all the transaction and communicator methods, wrapped by Operon to ensure fault-tolerance.
-Note, when invoking a transaction or communicator method, the caller doesn't provide the method context parameter.
-Operon manages the context and provides it to the method when called.
-The transaction and communicator methods exposed by `invoke` omit the context parameter by design.
+:::info
 
-Additionally, note that we moved the `GetApi` decorator from `helloTransaction` to `helloWorkflow`.
+You might notice our workflow calls transactions and communicators through the [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoketargetclass) method.
+We do this for two reasons.
+First, `invoke()` automatically supplies a context to the called function.
+Second, `invoke()` wraps the called function to ensure fault tolerance.
+
+:::
 
 Now, try out your new workflow:
 
