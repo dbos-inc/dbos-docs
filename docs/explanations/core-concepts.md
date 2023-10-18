@@ -17,7 +17,7 @@ Its two main principles are inspired by the [DBOS research project from Stanford
 - **It's simple**.  Write your business logic using only functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It works right by default**.  Reliability is built in, both [for workflows](../tutorials/workflow-tutorial#reliability-guarantees) and [for messaging](../tutorials/workflow-communication-tutorial#reliability-guarantees-1).  [Idempotency](../tutorials/idempotency-tutorial) is built in. [Authentication and authorization](../tutorials/authentication-authorization) are built in.  [Tracing](../tutorials/logging) is built in.
 - **It's built on the tools you love**.  Operon leverages rock-solid infrastructure like Postgres and Typescript to build a simpler, more reliable framework for your applications.
-- **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on a revolutionary new operating system that runs OS services on top of the DBMS instead of the other way around. 
+- **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on a revolutionary new operating system that runs OS services on top of the DBMS instead of the other way around.
 
 ### Programming Model
 The Operon programming model is serverless and inspired by [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) principles.
