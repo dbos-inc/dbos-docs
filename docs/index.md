@@ -14,7 +14,7 @@ It runs your Typescript functions as database transactions, guarantees they run 
 
 This initial release of Operon is just the first step.
 In early 2024, we'll launch a **cloud platform for Operon applications built on a revolutionary new software stack** that runs OS services on top of the DBMS instead of the other way around.
-This "upside-down" approach leverages the robustness and scalability of modern databases to be more secure, more resilient, and simpler than current cloud infrastructure.
+This "upside-down" approach rooted in research from MIT and Stanford is intrinsically simple, resilient, and secure because it leverages the robustness and scalability of modern databases.
 It also enables powerful new capabilities, like a "time travel debugger" which will set up and replay any scenario that occurred in production for analysis in the development environment.
 Once we release this platform, you'll be able to serverlessly deploy any Operon application to it with the push of a button.
 
