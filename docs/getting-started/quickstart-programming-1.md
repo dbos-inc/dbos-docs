@@ -64,7 +64,7 @@ import { PostApi } from '@dbos-inc/operon' // Add this to your imports.
 static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
   // Delete the database entry for a user.
   await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
-  return `Cleared greet_count for ${user}!\n`
+  return `Cleared greet_count for ${user}!\n`;
 }
 ```
 
