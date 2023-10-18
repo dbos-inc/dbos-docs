@@ -26,7 +26,7 @@ Here are some of Operon's core features:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [HTTP Serving](./tutorials/transaction-tutorial)                              | Set up endpoints to serve requests from your application.
+| [HTTP Serving](./tutorials/http-serving-tutorial)                              | Set up endpoints to serve requests from your application.
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
