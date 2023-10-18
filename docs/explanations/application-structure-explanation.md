@@ -42,7 +42,7 @@ As for the rest of the directory:
 - `knexfile.ts` is a configuration file for [Knex](https://knexjs.org), which we use as a query builder and migration tool.
 - `migrations` is initialized with a Knex database migration used in the [quickstart guide](../getting-started/quickstart).  If you're using Knex for schema management, you can create your own migrations here.
 - `node_modules`, `package-lock.json`, `package.json`, and `tsconfig.json` are needed by all Node/Typescript projects.
-- `start_postgres_docker.sh` is a convenience script that initializes a Docker-hosted Postgres database for use in the [quickstart](../getting-started/quickstart).  You can modify this script if you want to use Docker-hosted Postgres for local development.
+- `start_postgres_docker.sh` is a convenience script that initializes a Docker Postgres container for use in the [quickstart](../getting-started/quickstart). You can modify this script if you want to use Docker-hosted Postgres for local development.
 
 ### Code Structure
 
