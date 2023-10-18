@@ -35,7 +35,7 @@ At startup, the Operon runtime automatically loads all classes exported from thi
 More precisely, Operon assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere.
-You can also configure the entrypoint in our [configuration file](../api-reference/configuration).
+You can also configure the entrypoint in our [configuration file](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
 
