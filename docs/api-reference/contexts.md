@@ -198,7 +198,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 ```
 
 Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out:
+A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
 
@@ -213,6 +213,8 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [send(destinationUUID, message, \[topic\])](#workflowctxtsenddestinationuuid-message-topic)
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecvtopic-timeoutseconds)
 - [setEvent(key, value)](#workflowctxtseteventkey-value)
+- [getEvent()](#workflowctxtgeteventworkflowuuid-key-timeoutseconds)
+- [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflowworkflowuuid)
 
 ### workflowCtxt.invoke(targetClass)
 
@@ -278,6 +280,25 @@ Creates an immutable event named `key` with value `value`.
 HTTP handlers can read events by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's UUID.
 Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
+
+### workflowCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
+
+```typescript
+getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+```
+
+Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out.
+
+### workflowCtxt.retrieveWorkflow(workflowUUID)
+
+```typescript
+retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
+```
+
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
+`R` is the return type of the target workflow.
+
 
 ---
 
