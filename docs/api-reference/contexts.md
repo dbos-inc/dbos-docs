@@ -198,7 +198,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 ```
 
 Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out.
+Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
 
@@ -288,7 +288,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 ```
 
 Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-A call to `getEvent` waits for the workflow to publish the key, returning `null` if the wait times out.
+Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ### workflowCtxt.retrieveWorkflow(workflowUUID)
 
