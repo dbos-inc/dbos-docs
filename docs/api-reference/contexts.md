@@ -353,3 +353,12 @@ readonly maxAttempts: number;
 
 Maximum number of retries for the communicator.
 Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+
+---
+
+## `InitContext`
+
+Initialization and deployment functions are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
+```typescript
+// TODO final contents
+```
