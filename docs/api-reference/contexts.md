@@ -15,12 +15,13 @@ Each Operon function has a specific context:
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
+- Initialization and deployment functions use [`InitContext`](#initcontext).
 
 ---
 
 ## `OperonContext`
 
-All contexts inherit from `OperonContext` and share its properties and methods.
+Many contexts (`InitContext is the exception`) inherit from `OperonContext` and share its properties and methods.
 
 ### Properties
 
@@ -360,5 +361,18 @@ Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator
 
 Initialization and deployment functions are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
 ```typescript
-// TODO final contents
+export class InitContext {
+  // Log any interesting successes / failures to initialize using `logger`
+  readonly logger: Logger ;
+
+  // Create or drop the user database schema (TypeORM only)
+  createUserSchema(): Promise<void>;
+  dropUserSchema(): Promise<void>;
+
+  // Execute SQL against the user database
+  queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
+
+  // Retrieve configuration information (from .yaml config file / environment)
+  getConfig<T>(key: string, defaultValue?: T): T | undefined;
+}
 ```
