@@ -59,7 +59,7 @@ TypeORM can use the entity classes to create/migrate (synchronize) and drop the 
 This schema synchronization can be invoked as part of an `@OperonDeploy` deployment hook.  (Use of the `@OperonInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@OperonInitializer` hook is discouraged.)
 ```javascript
   @OperonDeploy()
-  static async init(_ctx: InitContext) {
+  static async init(ctx: InitContext) {
     await ctx.createUserSchema();
   }
 ```
