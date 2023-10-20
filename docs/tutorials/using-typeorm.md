@@ -56,9 +56,9 @@ class KVOperations {
 ### Setting Up The Schema
 TypeORM can use the entity classes to create/migrate (synchronize) and drop the database schema.  (This behavior is optional, for those hesitating to use such automation in production scenarios.)
 
-This schema synchronization can be invoked as part of an `@OperonDeploymentFunction` deployment hook.  (Use of the `@OperonInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@OperonInitializer` hook is discouraged.)
+This schema synchronization can be invoked as part of an `@OperonDeploy` deployment hook.  (Use of the `@OperonInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@OperonInitializer` hook is discouraged.)
 ```javascript
-  @OperonDeploymentFunction()
+  @OperonDeploy()
   static async init(_ctx: InitContext) {
     await ctx.createUserSchema();
   }
@@ -70,7 +70,7 @@ Or from the [testing runtime](../api-reference/testing-runtime.md):
     await testRuntime.createUserSchema();
 ```
 
-Additional options for triggering schema migration during the application deployment process are forthcoming.
+Additional options for triggering schema migration during the application deployment process may be available in the future.
 
 ### Invoking Transactions
 In TypeORM (and many other frameworks), the pattern is to run [transactions](https://typeorm.io/transactions) as callback functions.  (This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.)

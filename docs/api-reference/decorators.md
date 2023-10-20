@@ -467,7 +467,7 @@ Values of `LogMasks`:
 Operon allows applications to supply functions to be invoked at points in the deployment and initialization process.
 
 #### `@OperonInitializer`
-This decorator is used to specify functions to be run at application instance initialization time.  `@OperonInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@OnFunctionDeployment`](#OnFunctionDeployment).
+This decorator is used to specify functions to be run at application instance initialization time.  `@OperonInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@OperonDeploy`](#OperonDeploy).
 
 The argument to `@OperonInitializer` should be of type [`InitContext`](contexts.md#InitContext).
 
@@ -480,15 +480,15 @@ The argument to `@OperonInitializer` should be of type [`InitContext`](contexts.
 ```
 
 
-#### `@OnFunctionDeployment`
+#### `@OperonDeploy`
 
-This decorator is used to specify functions to be run at application deployment or redeployment time.  `@OnFunctionDeployment` is for uses where the Operon environment needs procedural initialization steps, such as installing or migrating the user database schema.
+This decorator is used to specify functions to be run at application deployment or redeployment time.  `@OperonDeploy` is for uses where the Operon environment needs procedural initialization steps, such as installing or migrating the user database schema.
 
-The argument to `@OnFunctionDeployment` should be of type [`InitContext`](contexts.md#InitContext).
+The argument to `@OperonDeploy` should be of type [`InitContext`](contexts.md#InitContext).
 
 ```typescript
 
-  @OnFunctionDeployment()
+  @OperonDeploy()
   static async init(ctx: InitContext) {
      // Use functions and config from ctx, report anything interesting with ctx.log
   }
