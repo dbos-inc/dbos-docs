@@ -1,11 +1,12 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
+  # push:  ### Temporarily disable auto deployment on push to main.
+  #   branches:
+  #     - main
     # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
+  workflow_dispatch:
 
 jobs:
   deploy:
