@@ -1,6 +1,9 @@
 name: Test deployment
 
 on:
+  push:  ### Temporarily enable test on main.
+    branches:
+      - main
   pull_request:
     branches:
       - main
