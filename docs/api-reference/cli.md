@@ -32,3 +32,11 @@ This command initializes a new Operon application from a template into a target 
 
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
+
+### `npx operon openapi`
+
+**Description:**  
+This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definitions file for an Operon application. For more information, please see the [OpenAPI Tutorial](../tutorials/openapi-tutorial.md).
+
+**Arguments:**  
+- `<entrypoint>`: Path to the application's TypeScript entrypoint (typically `src/operations.ts`)

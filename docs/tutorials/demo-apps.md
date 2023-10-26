@@ -1,5 +1,5 @@
 ---
-sidebar_position: 20
+sidebar_position: 21
 title: Demo Applications
 description: Learn how to build larger apps with Operon
 ---
