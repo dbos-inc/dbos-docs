@@ -420,3 +420,21 @@ export interface MiddlewareContext {
   query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
 }
 ```
+
+### Placing Database Queries From `MiddlewareContext`
+
+`MiddlewareContext` supports read-only database queries, via a method called `query`.  To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.  The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.  The provided `dbClient` will either be a `Knex`, `PrismaClient`, or TypeORM `EntityManager` depending on the application's choice of SQL access library.  This callback function may take arguments, and return a value.
+
+Example, for Prisma:
+```typescript
+  const u = await ctx.query(
+    (dbClient: PrismaClient, uname: string) => {
+      return dbClient.operon_test_user.findFirst({
+        where: {
+          username: uname,
+        },
+      });
+    },
+    user
+  );
+```
