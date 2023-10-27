@@ -8,7 +8,12 @@ You can configure an Operon runtime with a configuration file.
 By default, Operon looks for a file named `operon-config.yaml` at the project's root.
 You can provide the path to a custom configuration file using the [CLI](./cli).
 
-The configuration file should be valid [YAML](https://yaml.org/) and you can use environment variables using the syntax `key: ${VALUE}`.
+The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
+
+::::info
+You can use environment variables for configuration values by using the syntax `key: ${VALUE}`. 
+We strongly recommend using an environment variable for the database password field, as demonstrated below.
+::::
 
 ---
 
@@ -21,7 +26,7 @@ Operon currently only supports Postgres-compatible databases.
 - **hostname**: Hostname or IP address of the application database.
 - **port**: Database port.
 - **username**: Username with which to connect to the database.
-- **password**: Password with which to connect to the database.  We strongly recommend using an environment variable as shown below, instead of plain text.
+- **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
 - **user_database**: Name of the application database.
 - **system_database** (optional): Name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
@@ -97,4 +102,18 @@ telemetry:
   traces:
     enabled: true # true | false (default)
     endpoint: 'http://localhost:4318/v1/traces' # (default; no effect if enabled=false)
+```
+
+--- 
+
+### Configuration Schema File
+
+There is a schema file available for the Operon configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/operon/main/operon-config.schema.json).
+This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
+For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing Operon config files. 
+This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
+The easiest is to simply add a comment with a link to the schema at the top of the Operon config file:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/operon/main/operon-config.schema.json
 ```

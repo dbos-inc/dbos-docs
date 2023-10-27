@@ -22,7 +22,7 @@ Here's an example applying an endpoint decorator to an existing transaction (fro
 ```javascript
 @PostApi('/clear/:user')
 @OperonTransaction()
-static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
   await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
   return `Cleared greet_count for ${user}!\n`;
 }
@@ -57,7 +57,7 @@ Arguments are parsed from three places by default:
 2. For POST requests, from an HTTP body field.
 3. From an URL path parameter, if there are placeholders specified in the decorated URL.
 
-In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: String`.
+In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: string`.
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 
 By default, Operon automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 

@@ -85,7 +85,7 @@ export class Hello {
   };
 
   @GetApi('/greeting/:name')
-  static async helloHandler(handlerCtxt: HandlerContext, name: string) {
+  static async helloHandler(handlerCtxt: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
     return handlerCtxt.invoke(Hello).helloTransaction(name);
   }
 

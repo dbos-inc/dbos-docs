@@ -20,7 +20,7 @@ export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
   @OperonTransaction()  // Run this function as a database transaction
-  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  static async helloTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
     const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;"
     const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
@@ -30,7 +30,7 @@ export class Hello {
 
   @PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
   @OperonTransaction() // Run this function as a database transaction
-  static async clearTransaction(ctxt: TransactionContext<Knex>, user: string) {
+  static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
     // Delete the database entry for a user.
     await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
     return `Cleared greet_count for ${user}!\n`
@@ -68,7 +68,7 @@ import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these 
 
 @GetApi('/greeting/:user') // Moved here from helloTransaction
 @OperonWorkflow() // Run this function as a reliable workflow.
-static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
   try {
     await ctxt.invoke(Hello).greetPostman(greeting);
@@ -121,7 +121,7 @@ static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: stri
 
 @GetApi('/greeting/:user')
 @OperonWorkflow()
-static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
   try {
     await ctxt.invoke(Hello).greetPostman(greeting);
