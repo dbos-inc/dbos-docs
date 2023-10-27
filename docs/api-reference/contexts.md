@@ -16,7 +16,7 @@ Each Operon function has a specific context:
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
 - Initialization and deployment functions use [`InitContext`](#initcontext).
-- Middleware functions use [`InitContext`](#middlewarecontext).
+- Middleware functions use [`MiddlewareContext`](#middlewarecontext).
 
 ---
 
