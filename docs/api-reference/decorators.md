@@ -180,7 +180,7 @@ These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
 @GetApi("/post/:id")
-static async getPost(ctx: TransactionContext, id: string) {
+static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
   ...
 }
 ```

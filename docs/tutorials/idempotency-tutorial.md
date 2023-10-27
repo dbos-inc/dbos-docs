@@ -46,7 +46,7 @@ Let's look at this workflow endpoint from the final step of our [quickstart guid
 ```javascript
   @GetApi('/greeting/:user')
   @OperonWorkflow()
-  static async helloWorkflow(ctxt: WorkflowContext, user: string) {
+  static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
     const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {
       await ctxt.invoke(Hello).greetPostman(greeting);

@@ -61,7 +61,7 @@ export interface operon_hello {
 export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from the /greeting endpoint with 'user' as a path parameter
-  static async helloHandler(ctxt: HandlerContext, user: string) {
+  static async helloHandler(ctxt: HandlerContext, @ArgSource(ArgSources.URL) user: string) {
     // Invoke helloTransaction to greet the user and track how many times they've been greeted.
     return ctxt.invoke(Hello).helloTransaction(user);
   }

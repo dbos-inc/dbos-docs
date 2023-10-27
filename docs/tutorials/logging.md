@@ -14,7 +14,7 @@ The Operon runtime comes with a global logger you can access through any operati
 
 ```javascript
 @GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, name: string) {
+static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
     ctx.logger.info("Logging from the greeting handler");
     return `Greeting, ${name}`;
 }
@@ -26,7 +26,7 @@ All except `error()` accept a `string` argument and print it as-is.
 
 ```javascript
 @GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, name: string) {
+static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
     const err = new Error("an error!");
     ctx.logger.error(err);
     return `Greeting, ${name}`;
@@ -64,7 +64,7 @@ Here is an example accessing the `Span` to set custom trace attributes and event
 
 ```javascript
 @GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, name: string) {
+static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
   ctx.span.setAttributes({
     key1: "value1",
     key2: "value2",
