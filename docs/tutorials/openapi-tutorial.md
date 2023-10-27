@@ -48,7 +48,7 @@ Note, the shop and payment backend applications from the [Operon E-Commerce demo
 include generated OpenApi definition files if you want to try this without creating your own Operon application.
 ::::
 
-Then, copy and paste the contents of the generated `openapi.yaml` file into Swagger Editor at https://editor.swagger.io/.
+Then, copy and paste the contents of the generated `openapi.yaml` file into [Swagger Editor](https://editor.swagger.io/).
 Swagger Editor will validate the OpenAPI definitions and render a documentation page for the api.
 
 ::::info
@@ -60,7 +60,7 @@ At the top of the Swagger Editor, there is a "Generate Client" dropdown menu. Se
 This will download a zip file containing a TypeScript package with the code generated from the OpenAPI definition.
 
 The typescript-axios Swagger generator generates a full TypeScript package that supports `npm install` and `npm run build`.
-Typically, you would incorporate the generated code into an existing client projects that needs to call into the Operon application.
+Typically, you would incorporate the generated code into an existing client projects that needs to call into the Operon project.
 
 Here is some example code using the typescript-axios Swagger generator and the OpenAPI definition for the 
 [E-Commerce Demo Shop Operon application](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce/shop-backend).
