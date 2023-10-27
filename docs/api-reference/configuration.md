@@ -10,8 +10,8 @@ You can provide the path to a custom configuration file using the [CLI](./cli).
 
 The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
 
-The configuration file schema is available (link TBD) for developer tools that can leverage it to provide an improved YAML editing experience.
-For example, the [RedHat Yaml extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) for Visual Studio Code
+The configuration file schema is available ***(link TBD)*** to provide an improved YAML editing experience for developer tools that can leverage it.
+For example, the Visual Studio Code [RedHat Yaml extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
 provides tooltips, statement completion and real-time validation for editing Operon config files. 
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a schema link to the top of the Operon config file:
@@ -20,9 +20,10 @@ The easiest is to simply add a comment with a schema link to the top of the Oper
 # yaml-language-server: $schema=<TODO: correct link to schema>
 ```
 
-Note, you can use environment variables for configuration values by using the syntax `key: ${VALUE}`. 
+::::info
+You can use environment variables for configuration values by using the syntax `key: ${VALUE}`. 
 We strongly recommend using an environment variables for the database password field, as demonstrated below.
-
+::::
 ---
 
 ### Database
@@ -34,7 +35,7 @@ Operon currently only supports Postgres-compatible databases.
 - **hostname**: Hostname or IP address of the application database.
 - **port**: Database port.
 - **username**: Username with which to connect to the database.
-- **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field.
+- **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
 - **user_database**: Name of the application database.
 - **system_database** (optional): Name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
