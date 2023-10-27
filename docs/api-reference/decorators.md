@@ -223,7 +223,8 @@ Arguments sourced from an HTTP request generally get the name given in the code 
 
 #### `@Authentication`
 Configures the Operon HTTP server to perform authentication. All functions in the decorated class will use the provided function to act as an authentication middleware.
-This middleware will make users' identity available to [Operon Contexts](./contexts). Here is an example:
+This middleware will make users' identity available to [Operon Contexts](./contexts.md). Here is an example:
+
 ```typescript
 async function exampleAuthMiddlware (ctx: MiddlewareContext) {
   if (ctx.requiredRole.length > 0) {
@@ -269,13 +270,9 @@ export interface OperonHttpAuthReturn {
   authenticatedUser: string;
   authenticatedRoles: string[];
 }
-
-export interface MiddlewareContext {
-  koaContext: Koa.Context;
-  name: string;             // Function (handler, transaction, workflow) name
-  requiredRole: string[];   // Role required for the invoked Operon operation, if empty perhaps auth is not required
-}
 ```
+
+The authentication function is provided with a ['MiddlewareContext'](contexts.md#MiddlewareContext), which allows access to the request, system configuration, logging, and database access services.
 
 #### `@KoaMiddleware`
 Configures the Operon HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.

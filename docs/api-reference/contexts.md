@@ -16,6 +16,7 @@ Each Operon function has a specific context:
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
 - Initialization and deployment functions use [`InitContext`](#initcontext).
+- Middleware functions use [`InitContext`](#middlewarecontext).
 
 ---
 
@@ -395,5 +396,27 @@ export class InitContext {
 
   // Retrieve configuration information (from .yaml config file / environment)
   getConfig<T>(key: string, defaultValue?: T): T | undefined;
+}
+```
+
+---
+
+## `MiddlewareContext`
+
+`MiddlewareContext` is provided to functions that execute against a request before entry into Operon handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
+
+```typescript
+export interface MiddlewareContext {
+  readonly koaContext: Koa.Context; // Koa context, which contains the inbound HTTP request
+  readonly name: string;            // Method (handler, transaction, workflow) name
+  readonly requiredRole: string[];  // Roles required for the invoked Operon operation, if empty perhaps auth is not required
+
+  readonly logger: OperonLogger;    // Logger, for logging from middleware
+  readonly span: Span;              // Tracing pan from which middleware is called
+
+  getConfig<T>(key: string, deflt: T | undefined) : T | undefined; // Access to configuration information
+
+  // Database access - This is expected to be read-only
+  query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
 }
 ```
