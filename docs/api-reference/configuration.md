@@ -10,14 +10,15 @@ You can provide the path to a custom configuration file using the [CLI](./cli).
 
 The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
 
-The configuration file schema is available ***(link TBD)*** to provide an improved YAML editing experience for developer tools that can leverage it.
+The configuration file schema is available [in our GitHub repo](https://github.com/dbos-inc/operon/blob/main/operon-config.schema.json)
+to provide an improved YAML editing experience for developer tools that can leverage it.
 For example, the Visual Studio Code [RedHat Yaml extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
 provides tooltips, statement completion and real-time validation for editing Operon config files. 
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a schema link to the top of the Operon config file:
 
 ```yaml
-# yaml-language-server: $schema=<TODO: correct link to schema>
+# yaml-language-server: $schema=https://github.com/dbos-inc/operon/blob/main/operon-config.schema.json
 ```
 
 ::::info
