@@ -10,7 +10,7 @@ Operon automatically create a _context_ for each registered function.
 Functions use their context to call other Operon functions, interact with the runtime or the database, and access the logger.
 Each Operon function has a specific context:
 
-- All contexts inherit [`OperonContext`](#operoncontext).
+- Contexts used within Operon functions inherit from [`OperonContext`](#operoncontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
@@ -22,7 +22,7 @@ Each Operon function has a specific context:
 
 ## `OperonContext`
 
-Many contexts (`InitContext is the exception`) inherit from `OperonContext` and share its properties and methods.
+Many contexts inherit from `OperonContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of Operon functions.)
 
 ### Properties
 
