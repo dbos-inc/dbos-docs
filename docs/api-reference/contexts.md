@@ -10,18 +10,19 @@ Operon automatically create a _context_ for each registered function.
 Functions use their context to call other Operon functions, interact with the runtime or the database, and access the logger.
 Each Operon function has a specific context:
 
-- All contexts inherit [`OperonContext`](#operoncontext).
+- Contexts used within Operon functions inherit from [`OperonContext`](#operoncontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
 - Initialization and deployment functions use [`InitContext`](#initcontext).
+- Middleware functions use [`MiddlewareContext`](#middlewarecontext).
 
 ---
 
 ## `OperonContext`
 
-Many contexts (`InitContext is the exception`) inherit from `OperonContext` and share its properties and methods.
+Many contexts inherit from `OperonContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of Operon functions.)
 
 ### Properties
 
@@ -381,19 +382,140 @@ Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator
 ## `InitContext`
 
 Initialization and deployment functions are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
+
+#### Properties and Methods
+
+- [logger](#initcontextlogger)
+- [createUserSchema](#initcontextcreateuserschema)
+- [dropUserSchema](#initcontextdropuserschema)
+- [queryuserdb](#initcontextqueryuserdb)
+- [getconfig](#initcontextgetconfig)
+
+### InitContext.logger
+
 ```typescript
-export class InitContext {
-  // Log any interesting successes / failures to initialize using `logger`
-  readonly logger: Logger ;
+readonly logger: Logger;
+```
 
-  // Create or drop the user database schema (TypeORM only)
-  createUserSchema(): Promise<void>;
-  dropUserSchema(): Promise<void>;
+`logger` is available to record any interesting successes, failures, or diagnostic information that occur during initialization.
 
-  // Execute SQL against the user database
-  queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
+### InitContext.createUserSchema
 
-  // Retrieve configuration information (from .yaml config file / environment)
-  getConfig<T>(key: string, defaultValue?: T): T | undefined;
-}
+```typescript
+createUserSchema(): Promise<void>;
+```
+
+Creates the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
+
+### InitContext.dropUserSchema
+
+```typescript
+dropUserSchema(): Promise<void>;
+```
+Drops the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
+
+### InitContext.queryUserDB
+
+```typescript
+queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
+```
+
+Accesses the user database directly with SQL.  This approach is to be used with caution, as using a string to represent SQL is not fully database independent and careless formation of the string can lead to SQL injection vulnerabilities.
+
+### InitContext.getConfig
+
+```typescript
+getConfig<T>(key: string, defaultValue?: T): T | undefined;
+```
+ 
+`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
+
+---
+
+## `MiddlewareContext`
+
+`MiddlewareContext` is provided to functions that execute against a request before entry into Operon handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
+
+#### Properties and Methods
+
+- [logger](#middlewarecontextlogger)
+- [span](#middlewarecontextspan)
+- [koaContext](#middlewarecontextkoacontext)
+- [name](#middlewarecontextname)
+- [requiredRole](#middlewarecontextrequiredrole)
+- [getConfig](#middlewarecontextgetconfig)
+- [query](#middlewarecontextquery)
+
+### MiddlewareContext.logger
+
+```typescript
+readonly logger: OperonLogger;
+```
+
+`logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
+
+### MiddlewareContext.span
+
+```typescript
+readonly span: Span;
+```
+
+`span` is the tracing span in which the middleware is being executed.
+
+### MiddlewareContext.koaContext
+
+```typescript
+readonly koaContext: Koa.Context;
+```
+
+`koaContext` is the Koa context, which contains the inbound HTTP request associated with the middleware invocation.
+
+### MiddlewareContext.name
+
+```typescript
+readonly name: string;
+```
+
+`name` contains the name of the Operon function (handler, transaction, workflow) to be invoked after successful middleware processing.
+
+### MiddlewareContext.requiredRole
+
+```typescript
+readonly requiredRole: string[];
+```
+
+`requiredRole` contains the list of roles required for the invoked Operon operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
+
+### MiddlewareContext.getConfig
+
+```typescript
+getConfig<T>(key: string, deflt: T | undefined) : T | undefined
+```
+
+`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
+
+### MiddlewareContext.query
+
+```typescript
+  query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
+```
+
+The `query` fucntion provides read access to the database.  See [Placing Database Queries From `MiddlewareContext`](#placing-database-queries-from-middlewarecontext) below for more usage information.
+
+### Placing Database Queries From `MiddlewareContext`
+
+`MiddlewareContext` supports read-only database queries, via a method called `query`.  To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.  The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.  The provided `dbClient` will either be a `Knex`, `PrismaClient`, or TypeORM `EntityManager` depending on the application's choice of SQL access library.  This callback function may take arguments, and return a value.
+
+Example, for Prisma:
+```typescript
+  const u = await ctx.query(
+    (dbClient: PrismaClient, uname: string) => {
+      return dbClient.operon_test_user.findFirst({
+        where: {
+          username: uname,
+        },
+      });
+    },
+    user
+  );
 ```

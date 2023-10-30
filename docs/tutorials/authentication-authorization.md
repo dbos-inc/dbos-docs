@@ -82,3 +82,34 @@ We require requests to authenticate with the `appUser` role to reach any HTTP ha
 The authentication function simply parses the username from the HTTP headers.
 You can replace this with a more robust authentication method, such as [JSON Web Tokens](https://jwt.io/).
 
+For applications that manage their own users, it is possible to access the database in a read-only way from the `MiddlewareContext` (Knex shown):
+
+```typescript
+  static async authMiddlware(ctx: MiddlewareContext) {
+    if (!ctx.requiredRole || !ctx.requiredRole.length) {
+      return;
+    }
+    const {user} = ctx.koaContext.query;
+    if (!user) {
+      throw new OperonNotAuthorizedError("User not provided", 401);
+    }
+    const u = await ctx.query(
+      (dbClient: Knex, uname: string) => {
+        return dbClient<UserTable>(userTableName).select("username").where({ username: uname })
+      }, user as string);
+
+    if (!u || !u.length) {
+      throw new OperonNotAuthorizedError("User does not exist", 403);
+    }
+
+    // NOTE: Validate credentials against database
+
+    ctx.logger.info(`Allowed in user: ${u[0].username}`);
+    return {
+      authenticatedUser: u[0].username!,
+      authenticatedRoles: ["user"],
+    };
+  }
+
+```
+
