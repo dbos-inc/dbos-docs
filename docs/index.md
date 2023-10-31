@@ -15,7 +15,7 @@ It runs your Typescript functions as database transactions, guarantees they run 
 You should build your next backend application with Operon because:
 
 - **It's simple**.  Write your business logic using only functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
-- **It makes reliability easy**.  Even if you have to reboot your server, your workflows [will always resume where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
+- **It makes reliability easy**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
 - **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
 
 To get started with Operon today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
