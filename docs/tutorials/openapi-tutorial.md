@@ -38,6 +38,8 @@ Some of these tools include:
 * [Microsoft Kiota](https://learn.microsoft.com/en-us/openapi/kiota/overview)
 * [OpenAPI Generator](https://openapi-generator.tech/)
 * [Swagger CodeGen](https://swagger.io/tools/swagger-codegen/) and [Online Editor](https://editor.swagger.io/)
+* [openapi-typescript](https://openapi-ts.pages.dev/)
+* [oazapfts](https://github.com/oazapfts/oazapfts)
 
 We can't provide tutorials for all of these OpenAPI generator tools, but the Swagger Editor runs in the browser so is straightforward to use for a simple tutorial
 
