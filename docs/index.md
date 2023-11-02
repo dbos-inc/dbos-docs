@@ -9,14 +9,14 @@ Welcome to Operon by [DBOS, Inc.](https://dbos.dev)!
 ### What is Operon?
 
 Operon is a **Typescript framework built on the database** that helps you develop transactional backend applications.
-Operon fully embraces the power of your application database, helping you write backend applications that are reliable by default.
-It runs your Typescript functions as database transactions, guarantees they run "once and only once" for each request, and orchestrates them into workflows so reliable that if your server restarts, they resume exactly where they left off.
+Operon fully embraces the power of your application database, helping you write backend applications that are **reliable by default**.
+It runs your Typescript functions as database transactions, guarantees they run **once and only once** for each request, and orchestrates them into workflows so reliable that if your server restarts, they **resume exactly where they left off.**
 
-This initial release of Operon is just the first step.
-In early 2024, we'll launch a **cloud platform for Operon applications built on a revolutionary new software stack** that runs OS services on top of the DBMS instead of the other way around.
-This "upside-down" approach rooted in research from MIT and Stanford is intrinsically simple, resilient, and secure because it leverages the robustness and scalability of modern databases.
-It also enables powerful new capabilities, like a "time travel debugger" which will set up and replay any scenario that occurred in production for analysis in the development environment.
-Once we release this platform, you'll be able to serverlessly deploy any Operon application to it with the push of a button.
+You should build your next backend application with Operon because:
+
+- **It's simple**.  Write your business logic using serverless functions.  Do all your state management in Postgres&#8212;we'll manage the connections and transactions for you.
+- **It's reliable by default**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
+- **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
 
 To get started with Operon today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
@@ -26,9 +26,9 @@ Here are some of Operon's core features:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [HTTP Serving](./tutorials/http-serving-tutorial)                              | Set up endpoints to serve requests from your application.
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
+| [HTTP Serving](./tutorials/http-serving-tutorial)                              | Set up endpoints to serve requests from your application.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Logging and Tracing](./tutorials/logging)                                    | Automatic OpenTelemetry-compatible tracing of all requests and built-in structured logging support with configurable exporters.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.

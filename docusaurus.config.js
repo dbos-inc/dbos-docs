@@ -10,7 +10,7 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-test-site.com',
+  url: 'https://docs.dbos.dev',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -58,6 +58,7 @@ const config = {
         logo: {
           alt: 'DBOS Logo',
           src: 'img/dbos-logo.png',
+          href: 'https://dbos.dev',
         },
         items: [
           {
