@@ -491,6 +491,52 @@ The argument to `@OperonDeploy` should be of type [`InitContext`](contexts.md#In
   }
 ```
 
+### OpenAPI Decorators
+
+Operon can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) interface description for an Operon application.
+
+#### `@OpenApiSecurityScheme`
+
+This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the operations in a class.
+This decorator takes a single parameter defining the security scheme as per the OpenAPI specification.
+This decorator is purely declarative for the purpose of inclusion in the generated interface description.
+You still need to implement authentication as per the [Authentication and Authorization tutorial](../tutorials/authentication-authorization).
+
+::::info
+Operon does not support the `oauth2` OpenAPI security scheme at this time.
+::::
+
+```typescript
+@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
+@Authentication(authMiddleware)
+export class Operations {
+@GetApi("/post/:id")
+  static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
+    ...
+  }
+}
+```
+
+#### `@OpenApiAnonymous`
+
+This decorator is used to indicate a given Operon method does not require authentication. 
+By default, all methods in Operon class declaring an `@OpenApiSecurityScheme` will include a 
+[security requirement](https://spec.openapis.org/oas/v3.0.3#security-requirement-object)
+in the generated OpenAPI interface description.
+If `@OpenApiAnonymous` is specified on a method, no security requirement is generated for the associated OpenAPI path.
+
+```typescript
+
+@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
+export class Operations {
+  @PostApi('/api/login')
+  @OpenApiAnonymous()
+  static async login(ctx: HandlerContext, username: string, password: string) {
+    ...
+  }
+}
+```
+
 
 ### Other Decorators
 
