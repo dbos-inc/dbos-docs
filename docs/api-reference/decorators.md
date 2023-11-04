@@ -497,7 +497,7 @@ Operon can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) int
 
 #### `@OpenApiSecurityScheme`
 
-This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the operations in a class.
+This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the handler functions in a class.
 This decorator takes a single parameter defining the security scheme as per the OpenAPI specification.
 This decorator is purely declarative for the purpose of inclusion in the generated interface description.
 You still need to implement authentication as per the [Authentication and Authorization tutorial](../tutorials/authentication-authorization).

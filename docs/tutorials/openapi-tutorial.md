@@ -100,9 +100,9 @@ are mapped to OpenAPI [path items](https://spec.openapis.org/oas/v3.0.3#path-ite
 Path item operations optionally include security requirements, which map to security schemes defined centrally in the OpenAPI definition file.
 Some OpenAPI generators use this information to automatically manage user credentials in the generated client code. 
 
-[Authentication and Authorization](./authentication-authorization.md) in Operon is imperative rather than declarative.
-In order to enable the inclusion of security information in the generated definition file, you can declare your security scheme via the 
-`@OpenApiSecurityScheme` decorator.
+[Authentication](./authentication-authorization.md) in Operon is done via the middleware function passed to `@Authentication`.
+Parsing the authentication logic to determine the OpenAPI security scheme information is not feasible.
+To include authentication information in the OpenAPI file, declare the security scheme via the `@OpenApiSecurityScheme` class decorator.
 
 ```typescript
 @OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
