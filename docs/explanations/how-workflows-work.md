@@ -73,7 +73,7 @@ From a user's perspective, the workflow has resumed from where it failed last ti
 
 For workflow recovery to work, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism): all code in the workflow function must do the same thing given the same input.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
+Instead, you should do all database operations in [transactions](../tutorials/transaction-tutorial) and all other non-deterministic operations in [communicators](../tutorials/communicator-tutorial).
 That way, Operon can capture the output of the non-deterministic operation and avoid re-executing it.
 
 Additionally, for workflow recovery to work, no Operon function should have side effects in memory.
