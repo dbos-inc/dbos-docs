@@ -97,7 +97,8 @@ The server basePath must be included programmatically as in the code snippet abo
 
 Operon [handlers](http://localhost:3000/tutorials/http-serving-tutorial#handlers) (i.e. methods with `@GetApi` or `@PostApi`) 
 are mapped to OpenAPI [path items](https://spec.openapis.org/oas/v3.0.3#path-item-object).
-Path item operations optionally include security requirements, which map to security schemes defined centrally in the OpenAPI definition file.
+Path item operations optionally include security requirements, which map to security schemes defined in the 
+`components.securitySchemes` section of the  OpenAPI definition file.
 Some OpenAPI generators use this information to automatically manage user credentials in the generated client code. 
 
 [Authentication](./authentication-authorization.md) in Operon is done via the middleware function passed to `@Authentication`.
@@ -105,10 +106,11 @@ Parsing the authentication logic to determine the OpenAPI security scheme inform
 To include authentication information in the OpenAPI file, declare the security scheme via the `@OpenApiSecurityScheme` class decorator.
 
 ```typescript
-@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
 @Authentication(authMiddleware)
+@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
 export class Operations {
-@GetApi("/post/:id")
+  @GetApi("/post/:id")
+  @RequiredRoles(['user'])
   static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
     ...
   }
@@ -122,14 +124,19 @@ The `@OpenApiSecurityScheme` decorator takes a single parameter, matching a supp
 Operon does not support the `oauth2` OpenAPI security scheme at this time.
 ::::
 
-All handler methods on an Operon class use the same `@OpenApiSecurityScheme` in the generated OpenAPI definition.
-Security requirements for a given method can be suppressed via the `@OpenApiAnonymous` decorator.
+All handler methods on an Operon class use the same `@OpenApiSecurityScheme` in the generated OpenAPI definition,
+except for methods that have no specified [`@RequiredRoles`](./authentication-authorization#authorization-decorators).
+Operon does not check authentication or authorization info for methods without any required roles.
+Methods without any required roles do not emit security requirements in the generated OpenAPI definition file.
+
 
 ```typescript
+@Authentication(authMiddleware)
+@DefaultRequiredRoles(['user'])
 @OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
 export class Operations {
   @PostApi('/api/login')
-  @OpenApiAnonymous()
+  @RequiredRoles([])
   static async login(ctx: HandlerContext, username: string, password: string) {
     ...
   }

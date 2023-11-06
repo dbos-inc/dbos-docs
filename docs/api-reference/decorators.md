@@ -517,27 +517,6 @@ export class Operations {
 }
 ```
 
-#### `@OpenApiAnonymous`
-
-This decorator is used to indicate a given Operon method does not require authentication. 
-By default, all methods in Operon class declaring an `@OpenApiSecurityScheme` will include a 
-[security requirement](https://spec.openapis.org/oas/v3.0.3#security-requirement-object)
-in the generated OpenAPI interface description.
-If `@OpenApiAnonymous` is specified on a method, no security requirement is generated for the associated OpenAPI path.
-
-```typescript
-
-@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
-export class Operations {
-  @PostApi('/api/login')
-  @OpenApiAnonymous()
-  static async login(ctx: HandlerContext, username: string, password: string) {
-    ...
-  }
-}
-```
-
-
 ### Other Decorators
 
 #### TypeORM Decorators
