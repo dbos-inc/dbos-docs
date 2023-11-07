@@ -12,7 +12,7 @@ In this guide, we'll explain how Operon makes workflows reliable.
 
 To reiterate from our [workflow tutorial](../tutorials/workflow-tutorial), workflows provide the following reliability guaranteees:
 
-1.  They always run to completion.  If a server executing a workflow crashes and restarts, it resumes all incomplete workflows from where they left off.
+1.  They always run to completion.  If a server executing a workflow crashes and restarts, it resumes all incomplete workflows.
 2.  Transactions execute _exactly once_.  Regardless of what failures occur during a workflow's execution, it executes each of its transactions once and only once.
 3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, Operon guarantees it will never be re-executed regardless of what failures happen afterwards.
 
@@ -28,8 +28,7 @@ First, it finds all unfinished workflows: those with a recorded input, but no re
 Then, it restarts every unfinished workflow from the beginning, using its saved inputs.
 While re-executing an unfinished workflow, it checks before every function execution if the function has an output stored in the database, meaning it previously completed.
 If it finds a saved output, it skips re-executing that function and instead uses the saved output.
-When the workflow gets to the first function that _didn't_ previously complete and doesn't have a saved output, it executes normally, thus "resuming from where it left off."
-
+When the workflow gets to the first function that does not have a saved output and hence _didn't_ previously complete, it executes normally, thus "resuming from where it left off."
 Let's look at how this procedure gets us all three of our guarantees.
 
 1.  Any interrupted workflow is re-executed until it completes, so workflows always run to completion.
