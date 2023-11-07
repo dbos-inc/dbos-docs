@@ -7,7 +7,7 @@ In this guide, we'll learn how to build powerful and reliable programs with Oper
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
