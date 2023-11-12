@@ -4,7 +4,7 @@ title: OpenAPI Support
 description: Learn how to automatically generate clients for Operon applications.
 ---
 
-[Operon CLI](../api-reference/cli.md) v0.6 adds the `openapi` command that generates an [OpenAPI 3.0.3](https://www.openapis.org/) definition file for a Operon application.
+[Operon CLI](../api-reference/cli.md) v0.6 adds the `openapi` command that generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a Operon application.
 This definition file can be used to automatically generate strongly typed client code to invoke Operon application endpoints.
 
 ### Generate OpenAPI Definition File
