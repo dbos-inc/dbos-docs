@@ -1,8 +1,9 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
+import {themes as prismThemes} from 'prism-react-renderer';
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const lightCodeTheme = prismThemes.github;
+const darkCodeTheme = prismThemes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -112,7 +113,7 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc.`,
       },
       prism: {
-        theme: require('prism-react-renderer/themes/okaidia'),
+        theme: prismThemes.okaidia,
       },
       tableOfContents: {
         maxHeadingLevel:5,
