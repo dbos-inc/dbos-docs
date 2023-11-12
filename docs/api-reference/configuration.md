@@ -11,7 +11,7 @@ You can provide the path to a custom configuration file using the [CLI](./cli).
 The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
 
 ::::info
-You can use environment variables for configuration values by using the syntax `key: ${VALUE}`. 
+You can use environment variables for configuration values through the syntax `key: ${VALUE}`.
 We strongly recommend using an environment variable for the database password field, as demonstrated below.
 ::::
 
