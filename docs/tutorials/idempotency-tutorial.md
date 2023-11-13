@@ -53,7 +53,7 @@ Let's look at this workflow endpoint from the final step of our [quickstart guid
       return greeting;
     } catch (e) {
       ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      await ctxt.invoke(Hello).undoHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
   }

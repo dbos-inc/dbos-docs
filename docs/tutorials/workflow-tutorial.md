@@ -18,8 +18,8 @@ Additionally, workflows must be [deterministic](#determinism).
 
 Here's an example workflow from our [quickstart](../getting-started/quickstart-programming-2).
 It increments a counter in the database, then sends an HTTP request.
-If the request fails, it rolls back the increment.
-By making this a workflow, we guarantee that the rollback always happens if the request fails, even if the server is interrupted.
+If the request fails, it sends a compensating undo transaction to reverse the increment.
+By making this a workflow, we guarantee that the undo always happens if the request fails, even if the server is interrupted.
 
 ```javascript
 class Hello {
@@ -35,7 +35,7 @@ class Hello {
       return greeting;
     } catch (e) {
       ctxt.logger.error(e);
-      await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+      await ctxt.invoke(Hello).undoHelloTransaction(user);
       return `Greeting failed for ${user}\n`
     }
   }
