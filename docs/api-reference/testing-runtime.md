@@ -161,7 +161,7 @@ expect(rows[0].greet_count).toBe(1);
 createUserSchema(): Promise<void>;
 ```
 
-:::caution Warning
+:::warning
 
 Only available with TypeORM. Throws an error with other database clients.
 
@@ -175,7 +175,7 @@ Creates schemas/tables in the user database based on the provided TypeORM entity
 dropUserSchema(): Promise<void>;
 ```
 
-:::caution Warning
+:::warning
 
 Only available with TypeORM. Throws an error with other database clients.
 

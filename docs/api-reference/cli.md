@@ -36,8 +36,8 @@ This command initializes a new Operon application from a template into a target 
 ### `npx operon openapi`
 
 **Description:**  
-This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definitions file for an Operon application. 
-These definitions are saved to a file named `openapi.yaml` in the same folder as the TypeScript entrypoint file.
+This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for an Operon application.
+The generated file is named `openapi.yaml` and is saved to the same directory as the TypeScript entrypoint file.
 For more information, please see the [OpenAPI Tutorial](../tutorials/openapi-tutorial.md).
 
 **Arguments:**  

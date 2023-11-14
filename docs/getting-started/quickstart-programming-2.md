@@ -109,12 +109,12 @@ Every time you send a request, the server should print that it was forwarded to 
 
 Let's say that we're concerned about the _consistency_ of our application.
 We want to keep the `greet_count` in the database synchronized with the number of requests successfully sent to Postman.
-To do this, let's write a rollback transaction that decrements `greet_count` if the Postman request fails, then call it from our workflow.
-After adding this code, our app will roll back the increment of `greet_count` if our Postman request fails.
+To do this, let's write a compensating "undo" transaction that decrements `greet_count` if the Postman request fails, then call it from our workflow.
+After adding this code, our app will undo the increment of `greet_count` if our Postman request fails.
 
 ```javascript
 @OperonTransaction()
-static async rollbackHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+static async undoHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
   // Decrement greet_count.
   await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
 }
@@ -128,15 +128,15 @@ static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) use
     return greeting;
   } catch (e) {
     ctxt.logger.error(e);
-    await ctxt.invoke(Hello).rollbackHelloTransaction(user);
+    await ctxt.invoke(Hello).undoHelloTransaction(user);
     return `Greeting failed for ${user}\n`;
   }
 }
 ```
 
 Because Operon workflows are reliable, this program maintains the consistency of `greet_count` even through serious failures like server crashes.
-Ordinarily, if a server were to crash midway through sending a request to Postman, the rollback code would never execute and a spurious greeting would be persisted to the database.
-However, Operon workflows automatically resume from where they left off when the server restarts, so our program would forward the greeting (or note the failure and roll back) as if nothing had happened.
+Ordinarily, if a server were to crash midway through sending a request to Postman, the undo code would never execute and a spurious greeting would be persisted to the database.
+However, Operon workflows automatically resume from where they left off when the server restarts, so our program would forward the greeting (or note the failure and undo the increment) as if nothing had happened.
 
 ### Next Steps
 

@@ -15,7 +15,7 @@ description: API reference for Operon decorators.
   ...
   }
 ```
-Decorators may or may not take arguments in parenthesis `()`.  However, each specific decorator either requires or refuses parenthesis. In the following, adding `()` after `@Required` will lead to an error, as will omitting `()` after `@LogMask`.
+Decorators may or may not take arguments in parentheses `()`.  However, each specific decorator either requires or refuses parentheses. In the following, adding `()` after `@Required` will lead to an error, as will omitting `()` after `@LogMask`.
 ```
 @Required @LogMask(LogMasks.HASH) password: string
 ```

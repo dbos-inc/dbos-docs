@@ -11,7 +11,7 @@ Let's look at the code we have so far (in `src/operations.ts`).
 This "Hello, Database!" program greets users and tracks the count of greetings per user:
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi } from '@dbos-inc/operon'
+import { TransactionContext, OperonTransaction, GetApi, ArgSource, ArgSources } from '@dbos-inc/operon'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
@@ -35,14 +35,15 @@ export class Hello {
 ```
 
 This starter code has a single function, `helloTransaction`, which retrieves and updates a user's greeting count.
-This function is annotated with two _decorators_, [`@GetApi`](../api-reference/decorators#getapi) and [`@OperonTransaction`](../api-reference/decorators#operontransaction).
-Decorators tell Operon to give a function special properties.
+This function is annotated with three _decorators_: the method decorators [`@GetApi`](../api-reference/decorators#getapi) and  [`@OperonTransaction`](../api-reference/decorators#operontransaction), and the parameter decorator [`@ArgSource(ArgSources.URL)`](../api-reference/decorators#argsource).
+Decorators tell Operon to give a function or parameter special properties:
 
 - `@OperonTransaction()` tells Operon to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
 Operon supplies transactions with a [`TransactionContext`](../api-reference/contexts#transactioncontextt), which exposes a database client.
 To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
 - `@GetApi('/greeting/:user')` tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
-The `:user` syntax tells Operon to use the `user` path parameter from the URL as a parameter to the function.
+- `@ArgSource(ArgSources.URL)` tells Operon to parse this function's `user` parameter from the `:user` path parameter in the URL.
+
 To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
 
 :::info
