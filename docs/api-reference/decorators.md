@@ -1,10 +1,10 @@
 ---
 sidebar_position: 4
 title: Decorators
-description: API reference for Operon decorators.
+description: API reference for DBOS decorators.
 ---
 
-# Operon Decorators
+# DBOS Decorators
 
 ## Background
 
@@ -22,7 +22,7 @@ Decorators may or may not take arguments in parentheses `()`.  However, each spe
 
 This concept is not new to TypeScript.  Python is another popular language with decorators prefixed with `@`.  In other languages, such as Java, similar declarations are called "annotations".
 
-While, in general, the order in which decorators are listed can affect the behavior, all decorators in the Operon API are order-independent.  So this:
+While, in general, the order in which decorators are listed can affect the behavior, all decorators in the DBOS API are order-independent.  So this:
 ```typescript
   @Transaction()
   @PostApi("/follow")
@@ -44,15 +44,15 @@ is the same as this:
 
 Work to add decorators to the TypeScript language and standards is currently ongoing, leaving things in a state of flux.
 
-Whereas the most useful version of decorators implemented in the TypeScript compiler is "experimental" or "Stage 2" decorators, the language specifications have not caught up.  "Stage 3" decorators, which are specified and implemented, are missing two key features used in Operon:
+Whereas the most useful version of decorators implemented in the TypeScript compiler is "experimental" or "Stage 2" decorators, the language specifications have not caught up.  "Stage 3" decorators, which are specified and implemented, are missing two key features used in DBOS:
 - Parameter decorators
 - Metadata about function argument types
 
-It is expected that Operon will be moved from "experimental"/"Stage 2" decorators to a standards-based implementation once the standards have caught up.  It is hoped that user code would not be affected in this transition.
+It is expected that DBOS will move from "experimental"/"Stage 2" decorators to a standards-based implementation once the standards have caught up.  It is hoped that user code would not be affected in this transition.
 
 ### Typescript Compiler Flags
 
-In order to use the "Stage 2" experimental decorators implemented by Operon, the following configuration needs to be given to the TypeScript compiler (usually via the file `tsconfig.json`):
+In order to use the "Stage 2" experimental decorators implemented by DBOS, the following configuration needs to be given to the TypeScript compiler (usually via the file `tsconfig.json`):
 
 ```json
 {
@@ -65,17 +65,17 @@ In order to use the "Stage 2" experimental decorators implemented by Operon, the
 
 ## Decorator Locations
 
-Operon currently uses decorators at the class, function, or function parameter level.  (The language also supports decorators at the property or accessor level, but Operon currently doesn't use them.)
+DBOS currently uses decorators at the class, function, or function parameter level.  (The language also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)
 
 ### Class Decorators
 
-Class decorators are affixed to a class, just before the keyword `class`.  Operon decorators will be applied to all Operon functions in the class.
+Class decorators are affixed to a class, just before the keyword `class`.  Such decorators will be applied to all functions in the class.
 -   [`@Authentication`](#authentication)
 -   [`@DefaultRequiredRole`](#defaultrequiredrole)
 
 ### Function Decorators
 
-Function decorators are affixed to a function, just before its name and modifiers (such as `async` or `static`). Operon function decorators apply to the decorated function and its parameters.  Examples of function-level decorators:
+Function decorators are affixed to a function, just before its name and modifiers (such as `async` or `static`).  Function decorators apply to the decorated function and its parameters.  Examples of function-level decorators:
 -   [`@Workflow`](#workflow)
 -   [`@Transaction`](#transaction)
 -   [`@Communicator`](#communicator)
@@ -85,7 +85,7 @@ Function decorators are affixed to a function, just before its name and modifier
 
 ### Parameter Decorators
 
-Parameter decorators are affixed to a function parameter, just before its name.  Operon parameter decorators apply to the treatment of the parameter, and may affect how values are validated or logged.  Examples of parameter-level decorators:
+Parameter decorators are affixed to a function parameter, just before its name.  Parameter decorators apply to the treatment of the parameter, and may affect how values are validated or logged.  Examples of parameter-level decorators:
 -   [`@ArgName`](#argname)
 -   [`@ArgDate`](#argdate)
 -   [`@SkipLogging`](#skiplogging)
@@ -93,10 +93,10 @@ Parameter decorators are affixed to a function parameter, just before its name. 
 
 ## Decorators Reference
 
-### Operon Decorators
+### DBOS Typescript Decorators
 
 #### `@Workflow`
-Registers a function as an Operon workflow.
+Registers a function as a DBOS workflow.
 
 ```typescript
 @Workflow()
@@ -105,10 +105,10 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 }
 ```
 
-The first argument to an Operon workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
+The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
 #### `@Transaction`
-Registers a function as an Operon transaction.
+Registers a function as a DBOS transaction.
 
 The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
 
@@ -128,16 +128,16 @@ interface TransactionConfig {
 }
 ```
 
-Operon supports declaration of the following values for `IsolationLevel`:
+DBOS supports declaration of the following values for `IsolationLevel`:
 - `READ UNCOMMITTED`
 - `READ COMMITTED`
 - `REPEATABLE READ`
 - `SERIALIZABLE`
 
-The precise transaction semantics of these levels may vary with the capabilities of the Operon user database. For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
+The precise transaction semantics of these levels may vary with the capabilities of the user database. For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@Communicator`
-Registers a function as an Operon communicator.
+Registers a function as a DBOS communicator.
 
 ```typescript
 @Communicator()
@@ -146,7 +146,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 }
 ```
 
-The first argument to an Operon communicator function must be a [`CommunicatorContext`](contexts.md#communicatorcontext).
+The first argument to a communicator function must be a [`CommunicatorContext`](contexts.md#communicatorcontext).
 
 `@Communicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 
@@ -222,8 +222,8 @@ The `@ArgSource` decorator takes one of the following values of `ArgSources`:
 Arguments sourced from an HTTP request generally get the name given in the code for the function.  However, if the name in the HTTP query string or body is different, [`@ArgName`](#argname) may be used.
 
 #### `@Authentication`
-Configures the Operon HTTP server to perform authentication. All functions in the decorated class will use the provided function to act as an authentication middleware.
-This middleware will make users' identity available to [Operon Contexts](./contexts.md). Here is an example:
+Configures the DBOS HTTP server to perform authentication. All functions in the decorated class will use the provided function to act as an authentication middleware.
+This middleware will make users' identity available to [DBOS Contexts](./contexts.md). Here is an example:
 
 ```typescript
 async function exampleAuthMiddlware (ctx: MiddlewareContext) {
@@ -275,7 +275,7 @@ export interface DBOSHttpAuthReturn {
 The authentication function is provided with a ['MiddlewareContext'](contexts.md#MiddlewareContext), which allows access to the request, system configuration, logging, and database access services.
 
 #### `@KoaMiddleware`
-Configures the Operon HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.
+Configures the DBOS HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.
 
 ```typescript
 const exampleMiddleware: Koa.Middleware = async (ctx, next) => {
@@ -290,7 +290,7 @@ class OperationEndpoints{
 
 ### Declarative Security Decorators
 
-Operon supports declarative, role-based security. Functions can be decorated with a list of roles (as strings) and execution of the function is forbidden unless the authenticated user has at least one role in the list. A list of roles can also be provided as a class-level default with `@DefaultRequiredRole()`, in which case it applies to any Operon function in the class. Functions can override the defaults with `@RequiredRole()`.
+DBOS supports declarative, role-based security. Functions can be decorated with a list of roles (as strings) and execution of the function is forbidden unless the authenticated user has at least one role in the list. A list of roles can also be provided as a class-level default with `@DefaultRequiredRole()`, in which case it applies to any DBOS function in the class. Functions can override the defaults with `@RequiredRole()`.
 
 #### `@RequiredRole`
 List the required roles for the decorated function. In order to execute the function, the authenticated user must have at least one role on the specified list.
@@ -305,7 +305,7 @@ static async helloUser(_ctx: HandlerContext) {
 
 #### `@DefaultRequiredRole`
 
-List default required roles for all Operon functions in the class. This can be overridden at the function level with `@RequiredRole`.
+List default required roles for all functions in the class. This can be overridden at the function level with `@RequiredRole`.
 
 ```typescript
 @DefaultRequiredRole(['user'])
@@ -329,13 +329,13 @@ class OperationEndpoints {
 
 ### Input Validation Decorators
 
-A combination of Operon function and parameter decorators automatically provides rudimentary argument validation.
+A combination of function and parameter decorators automatically provides rudimentary argument validation.
 
-While the typescript compiler does some compile-time checks, it is possible (and likely) for programmers to pass user input directly through their code through the `any` type or a series of poorly-validated casts.  The Operon function argument validation logic is able to check arguments exist and are of the right data types (or are close enough to be coerced through reasonable means).
+While the typescript compiler does some compile-time checks, it is possible (and likely) for programmers to pass user input directly through their code through the `any` type or a series of poorly-validated casts.  The DBOS function argument validation logic is able to check arguments exist and are of the right data types (or are close enough to be coerced through reasonable means).
 
-Note that this validation is basic, and is not a substitute for the kind of input validation that conforms to your business logic.  For example, a policy that user passwords should be 8 characters, and contain at least an uppercase, lowercase, and numeric character should be implemented in the web UI (for immediate feedback) and double-checked in your backend code (for security), whereas the Operon decorators will simply ensure that a password string was provided prior to function entry.
+Note that this validation is basic, and is not a substitute for the kind of input validation that conforms to your business logic.  For example, a policy that user passwords should be 8 characters, and contain at least an uppercase, lowercase, and numeric character should be implemented in the web UI (for immediate feedback) and double-checked in your backend code (for security), whereas the DBOS decorators will simply ensure that a password string was provided prior to function entry.
 
-These decorators also serve a second purpose, which is to make the type information available to Operon.  Uses of this include creating a per-function schema for tracing logs, or automatically producing a description of the function for integration purposes.
+These decorators also serve a second purpose, which is to make the type information available to DBOS.  Uses of this include creating a per-function schema for tracing logs, or automatically producing a description of the function for integration purposes.
 
 In simple cases (such as `string` or `number` arguments), the programmer need not do any decorating to get the functionality.  However, where the data types have some options, such as maximum length, precision, etc., there are decorators to control the behavior.
 
@@ -359,7 +359,7 @@ export class User {}
 Allows the argument to have an undefined value.  See also [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
 
 :::info note
-TypeScript/Javascript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, Operon converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in TypeScript.)
+TypeScript/Javascript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, DBOS converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in TypeScript.)
 :::
 
 ```typescript
@@ -421,10 +421,10 @@ export class Operations
 }
 ```
 
-This decorator will ensure the function is registered with Operon and benefit from its [tracing subsystem](../tutorials/logging#tracing).
+This decorator will ensure the function is registered with DBOS and benefit from its [tracing subsystem](../tutorials/logging#tracing).
 
 :::info note
-In the future, a different decorator may be suggested for the purpose of simply registering an Operon function, with separate control over which functions are traced.
+In the future, a different decorator may be suggested for the purpose of simply registering a function, with separate control over which functions are traced.
 :::
 
 #### `@SkipLogging`
@@ -461,7 +461,7 @@ Values of `LogMasks`:
 
 ### Hook Functions
 
-Operon allows applications to supply functions to be invoked at points in the deployment and initialization process.
+DBOS allows applications to supply functions to be invoked at points in the deployment and initialization process.
 
 #### `@DBOSInitializer`
 This decorator is used to specify functions to be run at application instance initialization time.  `@DBOSInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@DBOSDeploy`](#DBOSDeploy).
@@ -479,7 +479,7 @@ The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md
 
 #### `@DBOSDeploy`
 
-This decorator is used to specify functions to be run at application deployment or redeployment time.  `@DBOSDeploy` is for uses where the Operon environment needs procedural initialization steps, such as installing or migrating the user database schema.
+This decorator is used to specify functions to be run at application deployment or redeployment time.  `@DBOSDeploy` is for uses where the DBOS environment needs procedural initialization steps, such as installing or migrating the user database schema.
 
 The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#InitContext).
 
@@ -493,7 +493,7 @@ The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#Init
 
 ### OpenAPI Decorators
 
-Operon can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) interface description for an Operon application.
+DBOS can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) interface description for an application.
 
 #### `@OpenApiSecurityScheme`
 
@@ -503,7 +503,7 @@ This decorator is purely declarative for the purpose of inclusion in the generat
 You still need to implement authentication as per the [Authentication and Authorization tutorial](../tutorials/authentication-authorization).
 
 ::::info
-Operon does not support the `oauth2` OpenAPI security scheme at this time.
+DBOS does not support the `oauth2` OpenAPI security scheme at this time.
 ::::
 
 ```typescript

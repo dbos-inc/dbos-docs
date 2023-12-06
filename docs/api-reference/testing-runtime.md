@@ -1,12 +1,12 @@
 ---
 sidebar_position: 5
 title: Testing Runtime
-description: API documentation for the Operon testing runtime
+description: API documentation for the DBOS testing runtime
 ---
 
-# Operon Testing Runtime
+# DBOS Testing Runtime
 
-Operon provides a testing runtime to facilitate writing unit tests for Operon applications.
+DBOS provides a testing runtime to facilitate writing unit tests for applications.
 Before running your tests, [create and configure the runtime](#create-testing-runtime).
 In your tests, use [the runtime's methods](#methods) to invoke your application's functions.
 After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
@@ -24,11 +24,11 @@ If you use Knex or Prisma, you are responsible for setting up schemas/tables and
 
 ### createTestingRuntime(userClasses, \[configFilePath\])
 ```typescript
-async function createTestingRuntime(userClasses: object[], configFilePath: string = operonConfigFilePath): Promise<TestingRuntime>
+async function createTestingRuntime(userClasses: object[], configFilePath: string = dbosConfigFilePath): Promise<TestingRuntime>
 ```
 
 Creates a testing runtime and loads user functions from provided `userClasses`.
-Accepts an optional path to an Operon [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
+Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
 
 For example, to create a runtime loading functions from the `Hello` class and using `test-config.yaml`:
 ```typescript
@@ -37,7 +37,7 @@ testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 
 :::warning
 
-This method *drops and re-creates* the Operon system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
+This method *drops and re-creates* the DBOS system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
 
 :::
 
@@ -128,7 +128,7 @@ const res = await request(testRuntime.getHandlersCallback()).get(
   "/greeting/dbos"
 );
 expect(res.statusCode).toBe(200);
-expect(res.text).toMatch("Hello, operon! You have been greeted");
+expect(res.text).toMatch("Hello, dbos! You have been greeted");
 ```
 
 ### runtime.getConfig(key, defaultValue)
@@ -151,7 +151,7 @@ The type `R` is the return type of the database row.
 
 For example, to query the [`dbos_hello`](../getting-started/quickstart-programming-1.md) table and check `greet_count`, using [Jest](https://jestjs.io/):
 ```typescript
-const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "operon");
+const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "dbos");
 expect(rows[0].greet_count).toBe(1);
 ```
 
