@@ -24,7 +24,7 @@ If you use Knex or Prisma, you are responsible for setting up schemas/tables and
 
 ### createTestingRuntime(userClasses, \[configFilePath\])
 ```typescript
-async function createTestingRuntime(userClasses: object[], configFilePath: string = operonConfigFilePath): Promise<OperonTestingRuntime>
+async function createTestingRuntime(userClasses: object[], configFilePath: string = operonConfigFilePath): Promise<TestingRuntime>
 ```
 
 Creates a testing runtime and loads user functions from provided `userClasses`.

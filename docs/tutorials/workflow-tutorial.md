@@ -13,7 +13,7 @@ For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps
 Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
 
 Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
-Like for other Operon functions, inputs and outputs must be serializable to JSON.
+Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
 Here's an example workflow from our [quickstart](../getting-started/quickstart-programming-2).
@@ -60,7 +60,7 @@ Workflows provide the following reliability guaranteees:
 
 1.  They always run to completion.  If a server executing a workflow fails and is restarted, it resumes all incomplete workflows from where they left off.
 2.  Transactions execute _exactly once_.  Regardless of what failures occur during a workflow's execution, it executes each of its transactions once and only once.
-3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, Operon guarantees it will never be re-executed regardless of what failures happen afterwards.
+3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, guarantees it will never be re-executed regardless of what failures happen afterwards.
 
 ### Determinism
 
@@ -78,7 +78,7 @@ For more information on workflow communication, see [our guide](./workflow-commu
 
 ### Asynchronous Workflows
 
-Because workflows are often long-running, Operon supports invoking workflows asynchronously.
+Because workflows are often long-running, DBOS supports invoking workflows asynchronously.
 When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](../api-reference/workflow-handles):
 
 ```javascript

@@ -7,15 +7,15 @@ description: Learn how to create and register TypeORM entities and perform trans
 ## TypeORM Overview
 [TypeORM](https://typeorm.io) is an ORM for TypeScript.  It is based on the idea of creating [`Entity`](https://typeorm.io/entities) classes to represent each database table, with the persistent and join key fields marked with [decorators](https://typeorm.io/decorator-reference).  Once entity classes are defined, TypeORM provides methods for storing, updating, and querying the entities via the [`EntityManager`](https://typeorm.io/working-with-entity-manager).  TypeORM can also be used to create and maintain the database schema.
 
-If you are using TypeORM, Operon needs to know about it for inserting workflow status updates along the transactions used for application code.
+If you are using TypeORM, DBOS needs to know about it for inserting workflow status updates along the transactions used for application code.
 
-Use of TypeORM is optional.  Operon supports several other libraries for transactional data management.
+Use of TypeORM is optional.  DBOS supports several other libraries for transactional data management.
 
 ## Usage
-Operon supports what is essentially direct use of TypeORM, but a few additional steps are necessary to inform Operon about the TypeORM entity list, provide the information for establishing the database connection, and use a transaction in the context of a workflow.
+DBOS supports what is essentially direct use of TypeORM, but a few additional steps are necessary to inform DBOS about the TypeORM entity list, provide the information for establishing the database connection, and use a transaction in the context of a workflow.
 
 ### Setting Up The Database Connection
-In order to set up the database connection ([`DataSource`](https://typeorm.io/data-source)), configuration information is provided to Operon instead of creating a separate configuration file or instantiating `DataSource` directly.  Of particular interest is the line `user_dbclient: 'typeorm'`, which indicates that TypeORM is to be loaded and a `DataSource` configured.
+In order to set up the database connection ([`DataSource`](https://typeorm.io/data-source)), configuration information is provided to DBOS instead of creating a separate configuration file or instantiating `DataSource` directly.  Of particular interest is the line `user_dbclient: 'typeorm'`, which indicates that TypeORM is to be loaded and a `DataSource` configured.
 
 ```yaml
 database:
@@ -31,7 +31,7 @@ database:
 
 ### Setting Up Entities
 
-In Operon, TypeORM entities are [defined in the same way as any other TypeORM project](https://typeorm.io/entities), for example:
+In DBOS, TypeORM entities are [defined in the same way as any other TypeORM project](https://typeorm.io/entities), for example:
 
 ```javascript
 import { Entity, Column, PrimaryColumn } from "typeorm";
@@ -46,7 +46,7 @@ export class KV {
 }
 ```
 
-Operon handles the entity registration that would otherwise be done in a TypeORM `DataSource` instantiation or configuration file.  To make Operon aware of the entities, a class-level decorator is used on each class containing Operon transaction methods:
+DBOS handles the entity registration that would otherwise be done in a TypeORM `DataSource` instantiation or configuration file.  To make DBOS aware of the entities, a class-level decorator is used on each class containing DBOS transaction methods:
 ```javascript
 @OrmEntities([KV])
 class KVOperations {
@@ -75,9 +75,9 @@ Additional options for triggering schema migration during the application deploy
 ### Invoking Transactions
 In TypeORM (and many other frameworks), the pattern is to run [transactions](https://typeorm.io/transactions) as callback functions.  (This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.)
 
-Operon provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
+DBOS provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
 
-First, Operon transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be an Operon [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
+First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
 
 ```javascript
 @OrmEntities([KV])
@@ -135,7 +135,7 @@ database:
   user_dbclient: 'typeorm'
 ```
 
-The testing runtime can be used to invoke Operon methods directly, or exercise handlers:
+The testing runtime can be used to invoke methods directly, or exercise handlers:
 ```javascript
   testRuntime.invoke(KVController, readUUID).readTxn("oaootest"),
   const response = await request(testRuntime.getHandlersCallback()).get('/');

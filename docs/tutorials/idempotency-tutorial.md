@@ -6,12 +6,12 @@ description: Learn how to make operations idempotent.
 
 In this guide, you'll learn how to make operations idempotent.
 
-Operon allows users to send any request with an _idempotency key_ to guarantee it only executes once, even if the request is sent multiple times.
+DBOS allows users to send any request with an _idempotency key_ to guarantee it only executes once, even if the request is sent multiple times.
 This is especially useful if your operations have side effects like making a payment or sending an email.
 
 ### Setting Idempotency Keys
 
-Operon idempotency keys are [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+DBOS idempotency keys are [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Idempotency keys are required to be globally unique for your application.
 There are many popular libraries for generating UUIDs in Typescript, such as [uuid.js](https://www.npmjs.com/package/uuid).
 

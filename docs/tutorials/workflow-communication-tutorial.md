@@ -7,11 +7,11 @@ description: Learn how to write interactive workflows
 In this guide, you'll learn how to implement communication with and between workflows.
 
 Workflow communication is useful if you want to make your workflows _interactive_, for example if a long-running workflow needs to query a user for input or report intermediate results back to its caller.
-Operon provides two workflow communication APIs, the events API and the messages API.
+DBOS provides two workflow communication APIs, the events API and the messages API.
 
 ### Events API
 
-This API allows workflows to emit and listen for events. Events are immutable key-value pairs. Operon guarantes immutability by transactionally inserting events in its system database, only once.
+This API allows workflows to emit and listen for events. Events are immutable key-value pairs. DBOS guarantes immutability by transactionally inserting events in its system database, only once.
 Events are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### setEvent

@@ -18,7 +18,7 @@ You should build your next backend application with Operon because:
 - **It's reliable by default**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
 - **It's made for DBOS**.  Starting early next year, you can deploy any Operon application to DBOS's new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
 
-To get started with Operon today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
+To get started with DBOS today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
 ### Main Features
 

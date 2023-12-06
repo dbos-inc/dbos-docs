@@ -4,19 +4,19 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-In this guide, you'll learn how to perform database operations in Operon.
+In this guide, you'll learn how to perform database operations in DBOS.
 
 :::info
 
-Operon supports Postgres-compatible application databases.
+DBOS supports Postgres-compatible application databases.
 
 :::
 
-To perform operations on your application database in Operon, you use a _transaction_ function.
+To perform operations on your application database in DBOS, you use a _transaction_ function.
 As their name implies, these functions execute as [database transactions](https://en.wikipedia.org/wiki/Database_transaction).
 
 Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext`](../api-reference/contexts#transactioncontextt) as their first argument.
-Like for other Operon functions, inputs and outputs must be serializable to JSON.
+As with other DBOS functions, inputs and outputs must be serializable to JSON.
 The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
 By default, this is a [Knex.js](https://knexjs.org/) client.
 We like Knex because it's lightweight and helps us write fast and type-safe queries.
@@ -67,6 +67,6 @@ export class Hello {
   }
 }
 ```
-Operon supports the full Knex Postgres API, but doesn't allow manually committing or aborting transactions.
+DBOS supports the full Knex Postgres API, but doesn't allow manually committing or aborting transactions.
 Instead, transactions automatically commit when the function successfully returns and abort and roll back if the function throws an exception.
 If you need to orchestrate multiple transactions, use a [workflow](./workflow-tutorial).
