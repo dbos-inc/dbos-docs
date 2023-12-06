@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Introduction
 
-Welcome to the DBOS SDK from [DBOS, Inc.](https://dbos.dev)!
+Welcome to DBOS!
 
 ### What is the DBOS SDK?
 
@@ -16,7 +16,7 @@ You should build your next backend application with DBOS because:
 
 - **It's simple**.  Write your business logic using serverless functions.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It's reliable by default**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
-- **It's made for DBOS**.  Starting early next year, you can deploy any application written for the DBOS SDK to DBOS's new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
+- **It's made for DBOS Cloud**.  Starting early next year, you can deploy any DBOS application to DBOS Cloud, our new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
 
 To get started with DBOS today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
@@ -28,12 +28,12 @@ Here are some of DBOS's core features:
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
-| [HTTP Serving](./tutorials/http-serving-tutorial)                              | Set up endpoints to serve requests from your application.
+| [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Logging and Tracing](./tutorials/logging)                                    | Automatic OpenTelemetry-compatible tracing of all requests and built-in structured logging support with configurable exporters.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your functions and endpoints, compatible with Jest and other popular testing frameworks.
-| [Cloud Deployment with DBOS](https://dbos.dev)                                | Coming in early 2024!
+| [Push-Button Deployment to DBOS Cloud](https://dbos.dev)                      | Coming in early 2024!
 
 
 ### How to Use These Docs
