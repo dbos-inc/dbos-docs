@@ -5,7 +5,7 @@ description: Operon configuration reference
 ---
 
 You can configure an Operon runtime with a configuration file.
-By default, Operon looks for a file named `operon-config.yaml` at the project's root.
+By default, Operon looks for a file named `dbos-config.yaml` at the project's root.
 You can provide the path to a custom configuration file using the [CLI](./cli).
 
 The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
@@ -28,7 +28,7 @@ Operon currently only supports Postgres-compatible databases.
 - **username**: Username with which to connect to the database.
 - **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
 - **user_database**: Name of the application database.
-- **system_database** (optional): Name of a database to which Operon can write system data.  Defaults to `operon_systemdb`.
+- **system_database** (optional): Name of a database to which Operon can write system data.  Defaults to `dbos_systemdb`.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **user_dbclient** (optional): Client to use for connecting to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
@@ -42,7 +42,7 @@ database:
   username: 'postgres'
   password: ${PGPASSWORD}
   user_database: 'hello'
-  system_database: 'hello_systemdb' # Optional, defaults to 'operon_systemdb'
+  system_database: 'hello_systemdb' # Optional, defaults to 'dbos_systemdb'
   user_dbclient: 'knex' # knex (default) | prisma | typeorm
 ```
 
@@ -52,8 +52,8 @@ database:
 
 This section is used to specify Operon runtime parameters.
 
-- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx operon start -p <port>`](./cli#npx-operon-start) overrides this config parameter.
-- **entrypoint** (optional): The compiled Javascript file where Operon looks for your application's code. At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  Defaults to `dist/operations.js`. Using [`npx operon start -e <entrypoint-file>`](./cli#npx-operon-start) overrides this config parameter.
+- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos-sdk start -p <port>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
+- **entrypoint** (optional): The compiled Javascript file where Operon looks for your application's code. At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  Defaults to `dist/operations.js`. Using [`npx dbos-sdk start -e <entrypoint-file>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
 
 **Example**:
 
@@ -83,7 +83,7 @@ You can use the configuration file to tune the behavior of Operon logging and tr
 Note all options in this section are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
-- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx operon start -l <logLevel>`](./cli#npx-operon-start) overrides this config parameter.
+- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx dbos-sdk start -l <logLevel>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
 - **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry. Defaults to `true`.
 - **silent**: Silences the logger. Defaults to `false`.
 
@@ -108,12 +108,12 @@ telemetry:
 
 ### Configuration Schema File
 
-There is a schema file available for the Operon configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/operon/main/operon-config.schema.json).
+There is a schema file available for the Operon configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
 This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
 For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing Operon config files. 
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a link to the schema at the top of the Operon config file:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/operon/main/operon-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json
 ```

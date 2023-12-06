@@ -6,7 +6,7 @@ description: Learn how to build larger apps with Operon
 
 To show you how to develop larger applications with Operon, we've built three demo applications, each highlighting a different set of Operon's powerful features.
 
-## [E-Commerce](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce)
+## [E-Commerce](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce)
 
 The E-Commerce demo is a toy web shop and payment processing system. Users can purchase expensive writing utensils 
 
@@ -17,9 +17,9 @@ The E-Commerce demo demonstrates:
 * Implementing a webhook that connects to an existing workflow
 * Integration with a [Next.js](https://nextjs.org/) front end
 
-For more technical details, please see the [Under the Covers](https://github.com/dbos-inc/operon-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
+For more technical details, please see the [Under the Covers](https://github.com/dbos-inc/dbos-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
 
-## [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank)
+## [Bank](https://github.com/dbos-inc/dbos-demo-apps/tree/main/bank)
 
 The Bank demo is a toy banking app. Users can deposit or withdraw "cash" or transfer money between accounts potentially in different banks.
 
@@ -33,7 +33,7 @@ The Bank demo demonstrates:
 * Integration with an [Angular](https://angular.io/) frontend
 
 
-## [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social)
+## [YKY Social](https://github.com/dbos-inc/dbos-demo-apps/tree/main/yky-social)
 YKY Social is a toy social network app, which allows users to register, create profiles, follow friends, and post messages to each other.
 
 YKY Social currently demonstrates:

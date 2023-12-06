@@ -10,7 +10,7 @@ The Operon CLI helps you manage Operon applications.
 
 ---
 
-### `npx operon start`
+### `npx dbos-sdk start`
 
 **Description:**  
 This command launches the Operon runtime and HTTP server to serve an application.
@@ -25,7 +25,7 @@ Parameters set from the command line take precedence over parameters set in the 
 
 ---
 
-### `npx operon init`
+### `npx dbos-sdk init`
 
 **Description:**  
 This command initializes a new Operon application from a template into a target directory. By default, it sets the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
@@ -33,7 +33,7 @@ This command initializes a new Operon application from a template into a target 
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
 
-### `npx operon openapi`
+### `npx dbos-sdk openapi`
 
 **Description:**  
 This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for an Operon application.

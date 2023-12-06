@@ -24,7 +24,7 @@ This concept is not new to TypeScript.  Python is another popular language with 
 
 While, in general, the order in which decorators are listed can affect the behavior, all decorators in the Operon API are order-independent.  So this:
 ```typescript
-  @OperonTransaction()
+  @Transaction()
   @PostApi("/follow")
   static async doFollow(ctx: TransactionContext, followUid: string) {
   ...
@@ -34,7 +34,7 @@ While, in general, the order in which decorators are listed can affect the behav
 is the same as this:
 ```typescript
   @PostApi("/follow")
-  @OperonTransaction()
+  @Transaction()
   static async doFollow(ctx: TransactionContext, followUid: string) {
   ...
   }
@@ -76,9 +76,9 @@ Class decorators are affixed to a class, just before the keyword `class`.  Opero
 ### Function Decorators
 
 Function decorators are affixed to a function, just before its name and modifiers (such as `async` or `static`). Operon function decorators apply to the decorated function and its parameters.  Examples of function-level decorators:
--   [`@OperonWorkflow`](#operonworkflow)
--   [`@OperonTransaction`](#operontransaction)
--   [`@OperonCommunicator`](#operoncommunicator)
+-   [`@Workflow`](#workflow)
+-   [`@Transaction`](#transaction)
+-   [`@Communicator`](#communicator)
 -   [`@RequiredRole`](#requiredrole)
 -   [`@GetApi`](#getapi)
 -   [`@PostApi`](#postapi)
@@ -95,11 +95,11 @@ Parameter decorators are affixed to a function parameter, just before its name. 
 
 ### Operon Decorators
 
-#### `@OperonWorkflow`
+#### `@Workflow`
 Registers a function as an Operon workflow.
 
 ```typescript
-@OperonWorkflow()
+@Workflow()
 static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
   ...
 }
@@ -107,19 +107,19 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 
 The first argument to an Operon workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
-#### `@OperonTransaction`
+#### `@Transaction`
 Registers a function as an Operon transaction.
 
 The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
 
 ```typescript
-@OperonTransaction({readOnly: true})
+@Transaction({readOnly: true})
 static async doLogin(ctx: TransactionContext, username: string, ) {
   ...
 }
 ```
 
-`@OperonTransaction()` takes an optional `TransactionConfig` to configure two aspects of the transaction: its isolation level and whether it is read only.
+`@Transaction()` takes an optional `TransactionConfig` to configure two aspects of the transaction: its isolation level and whether it is read only.
 
 ```typescript
 interface TransactionConfig {
@@ -136,11 +136,11 @@ Operon supports declaration of the following values for `IsolationLevel`:
 
 The precise transaction semantics of these levels may vary with the capabilities of the Operon user database. For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
 
-#### `@OperonCommunicator`
+#### `@Communicator`
 Registers a function as an Operon communicator.
 
 ```typescript
-@OperonCommunicator()
+@Communicator()
 static async doComms(commCtxt: CommunicatorContext) {
   ...
 }
@@ -148,7 +148,7 @@ static async doComms(commCtxt: CommunicatorContext) {
 
 The first argument to an Operon communicator function must be a [`CommunicatorContext`](contexts.md#communicatorcontext).
 
-`@OperonCommunicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
+`@Communicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
 
 ```typescript
 export interface CommunicatorConfig {
@@ -171,9 +171,9 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`DBOSContext`](contexts.md#dboscontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
-The `@GetApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
+The `@GetApi` decorator can be combined with `@Transaction` or `@Workflow` to invoke transactions and workflows.
 
 Endpoints path may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.
@@ -195,9 +195,9 @@ Associates a function with an endpoint name, such as an HTTP URL accessed with P
 }
 ```
 
-The first argument to a handler function must be an [`OperonContext`](contexts.md#operoncontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be an [`DBOSContext`](contexts.md#dboscontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
-The `@PostApi` decorator can be combined with `@OperonTransaction` or `@OperonWorkflow` to invoke transactions and workflows.
+The `@PostApi` decorator can be combined with `@Transaction` or `@Workflow` to invoke transactions and workflows.
 
 #### `@ArgSource`
 Indicates where a function argument is to be sourced, when it could come from more than one place.
@@ -206,7 +206,7 @@ In the example below, `@ArgSource` is used to indicate that the `name` argument 
 
 ```typescript
 @PostApi("/workflow")
-@OperonWorkflow()
+@Workflow()
 static async testWorkflow(wfCtxt: WorkflowContext, @ArgSource(ArgSources.QUERY) name: string) {
   const res = await wfCtxt.invoke(TestEndpoints).testTranscation(name);
   return res;
@@ -232,12 +232,12 @@ async function exampleAuthMiddlware (ctx: MiddlewareContext) {
     const uid = userid?.toString();
 
     if (!uid || uid.length === 0) {
-      const err = new OperonNotAuthorizedError("Not logged in.", 401);
+      const err = new DBOSNotAuthorizedError("Not logged in.", 401);
       throw err;
     }
     else {
       if (uid === 'bad_person') {
-        throw new OperonNotAuthorizedError("Go away.", 401);
+        throw new DBOSNotAuthorizedError("Go away.", 401);
       }
       return {
         authenticatedUser: uid,
@@ -262,11 +262,11 @@ The interface for the authentication middleware is:
 /**
  * Authentication middleware executing before requests reach functions.
  * Can implement arbitrary authentication and authorization logic.
- * Should throw an error or return an instance of `OperonHttpAuthReturn`
+ * Should throw an error or return an instance of `DBOSHttpAuthReturn`
  */
-export type OperonHttpAuthMiddleware = (ctx: MiddlewareContext) => Promise<OperonHttpAuthReturn | void>;
+export type DBOSHttpAuthMiddleware = (ctx: MiddlewareContext) => Promise<DBOSHttpAuthReturn | void>;
 
-export interface OperonHttpAuthReturn {
+export interface DBOSHttpAuthReturn {
   authenticatedUser: string;
   authenticatedRoles: string[];
 }
@@ -415,7 +415,7 @@ Marks a function for debug tracing.
 export class Operations
 {
   @Debug
-  static async doOperation(_ctx: OperonContext) {
+  static async doOperation(_ctx: DBOSContext) {
     ...
   }
 }
@@ -435,7 +435,7 @@ Prevents a function argument from being recorded in traces. This could be used i
 export class Operations
 {
   @Debug
-  static async doOperation(_ctx: OperonContext, @SkipLogging notToBeRecorded: unknown) {
+  static async doOperation(_ctx: DBOSContext, @SkipLogging notToBeRecorded: unknown) {
     ...
   }
 }
@@ -448,7 +448,7 @@ Prevents an argument from being recorded in traces in plain text. This could be 
 export class Operations
 {
   @Debug
-  static async doOperation(_ctx: OperonContext, @LogMask(LogMasks.HASH) toBeHashed: string) {
+  static async doOperation(_ctx: DBOSContext, @LogMask(LogMasks.HASH) toBeHashed: string) {
     ...
   }
 }
@@ -463,29 +463,29 @@ Values of `LogMasks`:
 
 Operon allows applications to supply functions to be invoked at points in the deployment and initialization process.
 
-#### `@OperonInitializer`
-This decorator is used to specify functions to be run at application instance initialization time.  `@OperonInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@OperonDeploy`](#OperonDeploy).
+#### `@DBOSInitializer`
+This decorator is used to specify functions to be run at application instance initialization time.  `@DBOSInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@DBOSDeploy`](#DBOSDeploy).
 
-The argument to `@OperonInitializer` should be of type [`InitContext`](contexts.md#InitContext).
+The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#InitContext).
 
 ```typescript
 
-  @OperonInitializer()
+  @DBOSInitializer()
   static async init(ctx: InitContext) {
      // Use functions and config from ctx, report anything interesting with ctx.log
   }
 ```
 
 
-#### `@OperonDeploy`
+#### `@DBOSDeploy`
 
-This decorator is used to specify functions to be run at application deployment or redeployment time.  `@OperonDeploy` is for uses where the Operon environment needs procedural initialization steps, such as installing or migrating the user database schema.
+This decorator is used to specify functions to be run at application deployment or redeployment time.  `@DBOSDeploy` is for uses where the Operon environment needs procedural initialization steps, such as installing or migrating the user database schema.
 
-The argument to `@OperonDeploy` should be of type [`InitContext`](contexts.md#InitContext).
+The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#InitContext).
 
 ```typescript
 
-  @OperonDeploy()
+  @DBOSDeploy()
   static async init(ctx: InitContext) {
      // Use functions and config from ctx, report anything interesting with ctx.log
   }

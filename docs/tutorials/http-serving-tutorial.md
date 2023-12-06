@@ -7,7 +7,7 @@ description: Learn how to serve HTTP requests
 In this guide, you'll learn how to make Operon workflows accessible through HTTP.
 
 Any Operon function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing Operon to use that function to serve that endpoint.
-You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@OperonTransaction`](../api-reference/decorators#operontransaction), [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), or [`@OperonCommunicator`](../api-reference/decorators#operoncommunicator) decorator.
+You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../api-reference/decorators#transaction), [`@Workflow`](../api-reference/decorators#workflow), or [`@Communicator`](../api-reference/decorators#communicator) decorator.
 In the latter case, the order of the decorators doesn't matter.
 Here's an example of a new function with an endpoint decorator:
 
@@ -21,9 +21,9 @@ Here's an example applying an endpoint decorator to an existing transaction (fro
 
 ```javascript
 @PostApi('/clear/:user')
-@OperonTransaction()
+@Transaction()
 static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
-  await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
+  await ctxt.client.raw("DELETE FROM dbos_hello WHERE NAME = ?", [user]);
   return `Cleared greet_count for ${user}!\n`;
 }
 ```
@@ -34,7 +34,7 @@ Each associates a function with an HTTP URL.
 :::info
 
 You might be wondering why we don't talk about setting up an HTTP server.
-That's because Operon is a _serverless_ framework: we launch and manage the server for you when you start your app with `npx operon start`, using the endpoints and configuration you specify with decorators.
+That's because Operon is a _serverless_ framework: we launch and manage the server for you when you start your app with `npx dbos-sdk start`, using the endpoints and configuration you specify with decorators.
 
 :::
 

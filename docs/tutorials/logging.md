@@ -49,7 +49,7 @@ Context metadata includes the workflow identity UUID and the name of the user ru
 
 You can also configure the logging level as a CLI argument to the Operon runtime:
 ```shell
-npx operon start --loglevel debug
+npx dbos-sdk start --loglevel debug
 ```
 
 ## Tracing

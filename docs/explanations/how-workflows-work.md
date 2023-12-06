@@ -42,7 +42,7 @@ It first reserves a ticket in the database, then calls out to a third-party plat
 If the payment doesn't go through, it releases the ticket.
 
 ```javascript
-  @OperonWorkflow()
+  @Workflow()
   static async checkoutWorkflow(ctxt: WorkflowContext, ticketInfo: TicketInfo, paymentInfo: PaymentInfo) {
     // Invoke a transaction to reserve the ticket
     const reserved = await ctxt.invoke(Ticket).reserveTicket(ticketInfo)

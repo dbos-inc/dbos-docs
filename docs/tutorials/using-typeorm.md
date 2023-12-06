@@ -56,9 +56,9 @@ class KVOperations {
 ### Setting Up The Schema
 TypeORM can use the entity classes to create/migrate (synchronize) and drop the database schema.  (This behavior is optional, for those hesitating to use such automation in production scenarios.)
 
-This schema synchronization can be invoked as part of an `@OperonDeploy` deployment hook.  (Use of the `@OperonInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@OperonInitializer` hook is discouraged.)
+This schema synchronization can be invoked as part of an `@DBOSDeploy` deployment hook.  (Use of the `@DBOSInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@DBOSInitializer` hook is discouraged.)
 ```javascript
-  @OperonDeploy()
+  @DBOSDeploy()
   static async init(ctx: InitContext) {
     await ctx.createUserSchema();
   }
@@ -77,12 +77,12 @@ In TypeORM (and many other frameworks), the pattern is to run [transactions](htt
 
 Operon provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
 
-First, Operon transactions are declared.  The easiest way is with a class method decorated with [`@OperonTransaction`](../api-reference/decorators.md#operontransaction), and the first argument will be an Operon [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
+First, Operon transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be an Operon [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
 
 ```javascript
 @OrmEntities([KV])
 class KVOperations {
-  @OperonTransaction()
+  @Transaction()
   static async writeTxn(txnCtxt: TransactionContext<EntityManager>, id: string, value: string) {
     const kv: KV = new KV();
     kv.id = id;
@@ -92,7 +92,7 @@ class KVOperations {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  @OperonTransaction({ readOnly: true })
+  @Transaction({ readOnly: true })
   static async readTxn(txnCtxt: TransactionContext<EntityManager>, id: string) {
     const kvp = await txnCtxt.client.findOneBy(KV, {id: id});
     return kvp?.value || "<Not Found>";
@@ -111,7 +111,7 @@ Use of TypeORM in the testing runtime is quite similar to using TypeORM in devel
 In `jest`, to set up the database once at the beginning of the test and tear down at the end:
 ```javascript
 beforeAll(async () => {
-  testRuntime = await createTestingRuntime([OperonAppClasses], "operon-config.yaml");
+  testRuntime = await createTestingRuntime([DBOSAppClasses], "dbos-config.yaml");
   await testRuntime.dropUserSchema(); // Optional
   await testRuntime.createUserSchema();
 });
@@ -122,7 +122,7 @@ afterAll(async () => {
 });
 ```
 
-This will create the testing runtime, load TypeORM, and register the entities according to the decorators in `OperonAppClasses`. The database will be configured according to the `database` section of the specified configuration `operon-config.yaml` file:
+This will create the testing runtime, load TypeORM, and register the entities according to the decorators in `DBOSAppClasses`. The database will be configured according to the `database` section of the specified configuration `dbos-config.yaml` file:
 ```yaml
 database:
   hostname: ${POSTGRES_HOST}
@@ -142,4 +142,4 @@ The testing runtime can be used to invoke Operon methods directly, or exercise h
 ```
 
 ## TypeORM Example
-The [YKY Social](https://github.com/dbos-inc/operon-demo-apps/tree/main/yky-social) example uses TypeORM.
+The [YKY Social](https://github.com/dbos-inc/dbos-demo-apps/tree/main/yky-social) example uses TypeORM.

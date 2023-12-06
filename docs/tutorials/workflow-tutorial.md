@@ -9,10 +9,10 @@ In this guide, you'll learn how to make your applications reliable using workflo
 Workflows orchestrate the execution of other functions, like transactions and communicators.
 They're useful because they're _reliable_: if a server is interruped for any reason (for example, it crashes and restarts), it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
 You can use workflows when you need to coordinate multiple operations that all need to complete for a program to be correct.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), we use a workflow to do payment processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), we use a workflow to do payment processing.
 Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
 
-Workflows must be annotated with the [`@OperonWorkflow`](../api-reference/decorators#operonworkflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
+Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
 Like for other Operon functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
@@ -27,7 +27,7 @@ class Hello {
   ... // Other function implementations
 
   @GetApi('/greeting/:user')
-  @OperonWorkflow()
+  @Workflow()
   static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
     const greeting = await ctxt.invoke(Hello).helloTransaction(user);
     try {

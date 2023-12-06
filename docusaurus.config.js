@@ -7,7 +7,7 @@ const darkCodeTheme = prismThemes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Operon',
+  title: 'DBOS SDK',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -19,7 +19,7 @@ const config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'dbos-inc', // Usually your GitHub org/user name.
-  projectName: 'operon-docs', // Usually your repo name.
+  projectName: 'dbos-docs', // Usually your repo name.
   deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
@@ -55,7 +55,7 @@ const config = {
       // Replace with your project's social card
       image: 'img/social-card.png',
       navbar: {
-        title: 'Operon',
+        title: 'DBOS SDK',
         logo: {
           alt: 'DBOS Logo',
           src: 'img/dbos-logo.png',
@@ -69,7 +69,7 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/dbos-inc/operon',
+            href: 'https://github.com/dbos-inc/dbos-ts',
             label: 'GitHub',
             position: 'right',
           },

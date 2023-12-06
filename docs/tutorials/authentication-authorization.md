@@ -29,7 +29,7 @@ return {
 };
 ```
 
-When serving a request from an HTTP endpoint, Operon runs the authentication middleware before running the requested operation and makes this information available in the operation's [context](../api-reference/contexts#operoncontext).
+When serving a request from an HTTP endpoint, Operon runs the authentication middleware before running the requested operation and makes this information available in the operation's [context](../api-reference/contexts#dboscontext).
 
 ## Authorization Decorators
 To declare a list of roles that are authorized to run the methods in a class, use the [`@DefaultRequiredRole`](../api-reference/decorators#defaultrequiredrole) class decorator:
@@ -53,11 +53,11 @@ class Operations
 
   // Registering a new user doesn't require privilege
   @RequiredRole([])
-  static async doRegister(ctx: OperonContext, firstName: string, lastName: string){}
+  static async doRegister(ctx: DBOSContext, firstName: string, lastName: string){}
 
   // Deleting a user requires escalated privilege
   @RequiredRole(['admin'])
-  static async deleteOtherUser(ctx: OperonContext, otherUser: string){}
+  static async deleteOtherUser(ctx: DBOSContext, otherUser: string){}
 }
 ```
 
@@ -97,7 +97,7 @@ For applications that manage their own users, it is possible to access the datab
     }
     const {user} = ctx.koaContext.query;
     if (!user) {
-      throw new OperonNotAuthorizedError("User not provided", 401);
+      throw new DBOSNotAuthorizedError("User not provided", 401);
     }
     const u = await ctx.query(
       (dbClient: Knex, uname: string) => {
@@ -105,7 +105,7 @@ For applications that manage their own users, it is possible to access the datab
       }, user as string);
 
     if (!u || !u.length) {
-      throw new OperonNotAuthorizedError("User does not exist", 403);
+      throw new DBOSNotAuthorizedError("User does not exist", 403);
     }
 
     // NOTE: Validate credentials against database

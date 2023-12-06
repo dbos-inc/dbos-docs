@@ -7,11 +7,11 @@ In this guide, we'll learn how to build powerful and reliable programs with Oper
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
-import { TransactionContext, OperonTransaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/operon'
+import { TransactionContext, Transaction, GetApi, PostApi, HandlerContext } from '@dbos-inc/dbos-sdk'
 import { Knex } from 'knex';
 
 // The schema of the database table used in this example.
-export interface operon_hello {
+export interface dbos_hello {
   name: string;
   greet_count: number;
 }
@@ -19,20 +19,20 @@ export interface operon_hello {
 export class Hello {
 
   @GetApi('/greeting/:user') // Serve this function from HTTP GET requests to the /greeting endpoint with 'user' as a path parameter
-  @OperonTransaction()  // Run this function as a database transaction
+  @Transaction()  // Run this function as a database transaction
   static async helloTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const query = "INSERT INTO operon_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = operon_hello.greet_count + 1 RETURNING greet_count;"
-    const { rows } = await ctxt.client.raw(query, [user]) as { rows: operon_hello[] };
+    const query = "INSERT INTO dbos_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = dbos_hello.greet_count + 1 RETURNING greet_count;"
+    const { rows } = await ctxt.client.raw(query, [user]) as { rows: dbos_hello[] };
     const greet_count = rows[0].greet_count;
     return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
   }
 
   @PostApi('/clear/:user') // Serve this function from HTTP POST requests to the /clear endpoint with 'user' as a path parameter
-  @OperonTransaction() // Run this function as a database transaction
+  @Transaction() // Run this function as a database transaction
   static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
     // Delete the database entry for a user.
-    await ctxt.client.raw("DELETE FROM operon_hello WHERE NAME = ?", [user]);
+    await ctxt.client.raw("DELETE FROM dbos_hello WHERE NAME = ?", [user]);
     return `Cleared greet_count for ${user}!\n`
   }
 }
@@ -44,16 +44,16 @@ Let's say that when we greet someone, we also want to send the greeting to a thi
 To do this, we'll write a new function that forwards the greeting to the Postman Echo server:
 
 ```javascript
-import { OperonCommunicator, CommunicatorContext } from '@dbos-inc/operon' // Add these to your imports
+import { Communicator, CommunicatorContext } from '@dbos-inc/dbos-sdk' // Add these to your imports
 
-@OperonCommunicator() // Tell Operon this function accesses an external service or API.
+@Communicator() // Tell Operon this function accesses an external service or API.
 static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
   await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
   ctxt.logger.info(`Greeting sent to postman!`);
 }
 ```
 
-We annotate this function with a new decorator, `@OperonCommunicator`.
+We annotate this function with a new decorator, `@Communicator`.
 This decorator tells Operon the function accesses an external service or API.
 Communicators have useful built-in features such as configurable automatic retries.
 Learn more about communicators and communication with external services and APIs [here](../tutorials/communicator-tutorial).
@@ -64,10 +64,10 @@ Now, let's create a _workflow_ that first calls `helloTransaction`, then calls `
 Here's what our workflow looks like:
 
 ```javascript
-import { OperonWorkflow, WorkflowContext } from '@dbos-inc/operon' // Add these to your imports
+import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk' // Add these to your imports
 
 @GetApi('/greeting/:user') // Moved here from helloTransaction
-@OperonWorkflow() // Run this function as a reliable workflow.
+@Workflow() // Run this function as a reliable workflow.
 static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
   try {
@@ -80,7 +80,7 @@ static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) use
 }
 ```
 
-This function is annotated with another decorator, [`@OperonWorkflow`](../api-reference/decorators#operonworkflow), which tells Operon to run the function as a reliable workflow.
+This function is annotated with another decorator, [`@Workflow`](../api-reference/decorators#workflow), which tells Operon to run the function as a reliable workflow.
 Operon supplies workflows with a [`WorkflowContext`](../api-reference/contexts#workflowcontext), which exposes methods to invoke other functions.
 
 Workflows are a powerful Operon concept that helps you reliably orchestrate other functions.
@@ -100,7 +100,7 @@ Second, `invoke()` wraps the called function to ensure fault tolerance.
 Now, try out your new workflow:
 
 ```bash
-curl http://localhost:3000/greeting/operon
+curl http://localhost:3000/greeting/dbos
 ```
 
 Every time you send a request, the server should print that it was forwarded to Postman.
@@ -113,14 +113,14 @@ To do this, let's write a compensating "undo" transaction that decrements `greet
 After adding this code, our app will undo the increment of `greet_count` if our Postman request fails.
 
 ```javascript
-@OperonTransaction()
+@Transaction()
 static async undoHelloTransaction(ctxt: TransactionContext<Knex>, user: string) {
   // Decrement greet_count.
-  await ctxt.client.raw("UPDATE operon_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
+  await ctxt.client.raw("UPDATE dbos_hello SET greet_count = greet_count - 1 WHERE name = ?", [user]);
 }
 
 @GetApi('/greeting/:user')
-@OperonWorkflow()
+@Workflow()
 static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
   const greeting = await ctxt.invoke(Hello).helloTransaction(user);
   try {
@@ -143,4 +143,4 @@ However, Operon workflows automatically resume from where they left off when the
 Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/reference).
 If you want to see more complex applications built with Operon, check out [our demo apps](../tutorials/demo-apps).
 
-Final code for the demo is available [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-extended).
+Final code for the demo is available [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-extended).

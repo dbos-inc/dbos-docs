@@ -21,7 +21,7 @@ testRuntime = await createTestingRuntime([Hello]);
 This function takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class.
 
 You can also optionally provide a path to an Operon [configuration file](../api-reference/configuration.md).
-If no path is provided, the runtime loads a configuration file from the default location (`operon-config.yaml` in the package root).
+If no path is provided, the runtime loads a configuration file from the default location (`dbos-config.yaml` in the package root).
 
 ### Testing Functions
 
@@ -42,12 +42,12 @@ The testing runtime provides a `getHandlersCallback()` function, which  returns 
 import request from "supertest";
  
 const res = await request(testRuntime.getHandlersCallback()).get(
-  "/greeting/operon"
+  "/greeting/dbos"
 );
 expect(res.statusCode).toBe(200);
 expect(res.text).toMatch("Hello, operon! You have been greeted");
 ```
-In this code, we send a `GET` request to our `/greeting/operon` URL and verify its response.
+In this code, we send a `GET` request to our `/greeting/dbos` URL and verify its response.
 
 ### Cleaning Up
 
@@ -85,4 +85,4 @@ Time:        1.247 s, estimated 2 s
 ### Further Reading
 
 To learn the full testing runtime interface, please see [our testing runtime references](../api-reference/testing-runtime.md).
-You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/operon/blob/main/examples/hello/src/operations.test.ts).
+You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-ts/blob/main/examples/hello/src/operations.test.ts).

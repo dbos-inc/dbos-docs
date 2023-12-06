@@ -6,7 +6,7 @@ description: Learn how to create and register Prisma entities and perform transa
 
 In this guide, you'll learn how to build an Operon application using [Prisma](https://www.prisma.io/), a popular open-source Typescript ORM.
 We'll show you how to build a "Hello, World!" application using Prisma.
-The source code for the complete application is [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-prisma).
+The source code for the complete application is [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-prisma).
 
 ### Prisma Setup
 
@@ -32,8 +32,8 @@ In the .env file, update the database URL if necessary: `DATABASE_URL="postgresq
 
 In the file `prisma/schema.prisma`, add a model:
 ```typescript
-model OperonHello {
-  @@map("operonhello")
+model dbosHello {
+  @@map("dbosHello")
   greeting_id Int @id @default(autoincrement())
   greeting String
 }
@@ -63,20 +63,20 @@ database:
 ### Coding a Transaction with Prisma
 Now, you can write an Operon application that uses Prisma to talk to the database.
 If you've configured Operon to use Prisma, you can access the Prisma client from the [`.client`](../api-reference/contexts#transactionctxtclient) property of [`TransactionContext`](../api-reference/contexts#transactioncontextt) in Operon [transactions](./transaction-tutorial).
-Here's an example of a transaction using Prisma to insert a row into the `operonhello` table:
+Here's an example of a transaction using Prisma to insert a row into the `dbosHello` table:
 
 ```javascript
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, Transaction, GetApi } from '@dbos-inc/dbos-sdk';
 import { PrismaClient } from "@prisma/client";
 
 export class Hello {
 
-  @OperonTransaction()
+  @Transaction()
   static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
     const p: PrismaClient = txnCtxt.client as PrismaClient;
-    const res = await p.operonHello.create({
+    const res = await p.dbosHello.create({
         data: {
         greeting: greeting,
         },
@@ -92,7 +92,7 @@ export class Hello {
 }
 ```
 
-The complete source code for this example is [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-prisma).
+The complete source code for this example is [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-prisma).
 
 ### Prisma Example
-The [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank) demo app uses Prisma.
+The [Bank](https://github.com/dbos-inc/dbos-demo-apps/tree/main/bank) demo app uses Prisma.

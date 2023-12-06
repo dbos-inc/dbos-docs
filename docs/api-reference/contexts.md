@@ -10,7 +10,7 @@ Operon automatically create a _context_ for each registered function.
 Functions use their context to call other Operon functions, interact with the runtime or the database, and access the logger.
 Each Operon function has a specific context:
 
-- Contexts used within Operon functions inherit from [`OperonContext`](#operoncontext).
+- Contexts used within Operon functions inherit from [`DBOSContext`](#dboscontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
@@ -20,9 +20,9 @@ Each Operon function has a specific context:
 
 ---
 
-## `OperonContext`
+## `DBOSContext`
 
-Many contexts inherit from `OperonContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of Operon functions.)
+Many contexts inherit from `DBOSContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of Operon functions.)
 
 ### Properties
 
@@ -102,7 +102,7 @@ Operon's [authorization](../tutorials/authentication-authorization#authorization
 ### ctxt.logger
 
 ```typescript
-readonly logger: OperonLogger
+readonly logger: DBOSLogger
 ```
 
 A reference to Operon's logger.
@@ -238,7 +238,7 @@ Note Operon runtime will supply a context to invoked functions.
 ### workflowCtxt.childWorkflow(wf, ...args)
 
 ```typescript
-childWorkflow<T extends any[], R>(wf: OperonWorkflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
 Invoke another workflow.
@@ -366,7 +366,7 @@ readonly retriesAllowed: boolean;
 ```
 
 Whether the communicator is automatically retried on failure.
-Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ### communicatorCtxt.maxAttempts
 
@@ -375,7 +375,7 @@ readonly maxAttempts: number;
 ```
 
 Maximum number of retries for the communicator.
-Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ---
 
@@ -449,7 +449,7 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 ### MiddlewareContext.logger
 
 ```typescript
-readonly logger: OperonLogger;
+readonly logger: DBOSLogger;
 ```
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
