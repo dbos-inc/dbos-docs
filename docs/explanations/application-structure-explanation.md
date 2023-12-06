@@ -1,14 +1,14 @@
 ---
 sidebar_position: 1
 title: Application Structure
-description: Learn about the structure of an Operon application
+description: Learn about the structure of a DBOS application
 ---
 
-In this guide, you'll learn about the structure of an Operon application.
+In this guide, you'll learn about the structure of a DBOS application.
 
 ### Directory Structure
 
-When you initialize an Operon project with `npx dbos-sdk init`, it has the following structure:
+When you initialize a DBOS project with `npx dbos-sdk init`, it has the following structure:
 
 ```bash
 dbos-hello-app/
@@ -25,14 +25,14 @@ dbos-hello-app/
 └── tsconfig.json
 ```
 
-The two most important files in an Operon project are `dbos-config.yaml` and `src/operations.ts`.
+The two most important files in a DBOS project are `dbos-config.yaml` and `src/operations.ts`.
 
-`dbos-config.yaml` defines the configuration of an Operon project, including database connection information, ORM configuration, and global logging configuration.
+`dbos-config.yaml` defines the configuration of a DBOS project, including database connection information, ORM configuration, and global logging configuration.
 All options are documented in our [configuration reference](../api-reference/configuration).
 
-`src/operations.ts` is the Operon _entrypoint_, where Operon looks for your code.
-At startup, the Operon runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.
-More precisely, Operon assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
+`src/operations.ts` is the _entrypoint_, where DBOS looks for your code.
+At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.
+More precisely, DBOS assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere.
 You can also configure the entrypoint in our [configuration file](../api-reference/configuration#runtime).
@@ -81,7 +81,7 @@ export class Hello {
   }
 }
 ```
-An Operon application like this one is made up of classes encapsulating _functions_, written as decorated static class methods.
+An application like this one is made up of classes encapsulating _functions_, written as decorated static class methods.
 There are four basic types of functions.
 This example contains two of them:
 
@@ -95,9 +95,9 @@ There are two more:
 
 A function needs to follow a few rules:
 
-- It must be a static class method.  For Operon to find it, that class must be exported from `src/operations.ts`.
-- It must have a decorator telling Operon what kind of function it is: [`@Transaction`](../api-reference/decorators#transaction) for transactions, [`@Communicator`](../api-reference/decorators#communicator) for communicators, [`@Workflow`](../api-reference/decorators#workflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for HTTP handlers.
-- Its first argument must be the appropriate kind of [Operon context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
+- It must be a static class method.  For DBOS to find it, that class must be exported from `src/operations.ts`.
+- It must have a decorator telling the framework what kind of function it is: [`@Transaction`](../api-reference/decorators#transaction) for transactions, [`@Communicator`](../api-reference/decorators#communicator) for communicators, [`@Workflow`](../api-reference/decorators#workflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for HTTP handlers.
+- Its first argument must be the appropriate kind of [context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
 - Its input and return types must be serializable to JSON.
 
 Once you've written your functions, there are two basic ways to call them:
