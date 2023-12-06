@@ -32,8 +32,8 @@ In the .env file, update the database URL if necessary: `DATABASE_URL="postgresq
 
 In the file `prisma/schema.prisma`, add a model:
 ```typescript
-model dbosHello {
-  @@map("dbosHello")
+model DBOSHello {
+  @@map("dboshello")
   greeting_id Int @id @default(autoincrement())
   greeting String
 }
@@ -63,7 +63,7 @@ database:
 ### Coding a Transaction with Prisma
 Now, you can write an application that uses Prisma to talk to the database.
 If you've configured DBOS to use Prisma, you can access the Prisma client from the [`.client`](../api-reference/contexts#transactionctxtclient) property of [`TransactionContext`](../api-reference/contexts#transactioncontextt) in DBOS [transactions](./transaction-tutorial).
-Here's an example of a transaction using Prisma to insert a row into the `dbosHello` table:
+Here's an example of a transaction using Prisma to insert a row into the `dboshello` table:
 
 ```javascript
 import { TransactionContext, HandlerContext, Transaction, GetApi } from '@dbos-inc/dbos-sdk';
@@ -76,7 +76,7 @@ export class Hello {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
     const p: PrismaClient = txnCtxt.client as PrismaClient;
-    const res = await p.dbosHello.create({
+    const res = await p.dBOSHello.create({
         data: {
         greeting: greeting,
         },
