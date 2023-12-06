@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Quickstart - Part 2
 ---
 
-In this guide, we'll learn how to build powerful and reliable programs with Operon.
+In this guide, we'll learn how to build powerful and reliable programs with DBOS.
 If you've been following along, here's the code you should have so far (in `src/operations.ts`):
 
 ```javascript
@@ -46,7 +46,7 @@ To do this, we'll write a new function that forwards the greeting to the Postman
 ```javascript
 import { Communicator, CommunicatorContext } from '@dbos-inc/dbos-sdk' // Add these to your imports
 
-@Communicator() // Tell Operon this function accesses an external service or API.
+@Communicator() // Tell DBOS this function accesses an external service or API.
 static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
   await fetch("https://postman-echo.com/get?greeting=" + encodeURIComponent(greeting));
   ctxt.logger.info(`Greeting sent to postman!`);
@@ -54,7 +54,7 @@ static async greetPostman(ctxt: CommunicatorContext, greeting: string) {
 ```
 
 We annotate this function with a new decorator, `@Communicator`.
-This decorator tells Operon the function accesses an external service or API.
+This decorator tells DBOS the function accesses an external service or API.
 Communicators have useful built-in features such as configurable automatic retries.
 Learn more about communicators and communication with external services and APIs [here](../tutorials/communicator-tutorial).
 
@@ -80,11 +80,11 @@ static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) use
 }
 ```
 
-This function is annotated with another decorator, [`@Workflow`](../api-reference/decorators#workflow), which tells Operon to run the function as a reliable workflow.
-Operon supplies workflows with a [`WorkflowContext`](../api-reference/contexts#workflowcontext), which exposes methods to invoke other functions.
+This function is annotated with another decorator, [`@Workflow`](../api-reference/decorators#workflow), which tells DBOS to run the function as a reliable workflow.
+DBOS supplies workflows with a [`WorkflowContext`](../api-reference/contexts#workflowcontext), which exposes methods to invoke other functions.
 
-Workflows are a powerful Operon concept that helps you reliably orchestrate other functions.
-When a workflow is interrupted (for example, because a server crashes and is restarted), Operon automatically resumes it from where it left off without re-executing any operation (like a transaction or communicator function) that already completed.
+Workflows are a powerful DBOS concept that helps you reliably orchestrate other functions.
+When a workflow is interrupted (for example, because a server crashes and is restarted), DBOS automatically resumes it from where it left off without re-executing any operation (like a transaction or communicator function) that already completed.
 Workflows make it easy to write reliable, fault-tolerant applications.
 You can learn more about workflows and their guarantees [here](../tutorials/workflow-tutorial).
 
@@ -134,13 +134,13 @@ static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) use
 }
 ```
 
-Because Operon workflows are reliable, this program maintains the consistency of `greet_count` even through serious failures like server crashes.
+Because DBOS workflows are reliable, this program maintains the consistency of `greet_count` even through serious failures like server crashes.
 Ordinarily, if a server were to crash midway through sending a request to Postman, the undo code would never execute and a spurious greeting would be persisted to the database.
-However, Operon workflows automatically resume from where they left off when the server restarts, so our program would forward the greeting (or note the failure and undo the increment) as if nothing had happened.
+However, DBOS workflows automatically resume from where they left off when the server restarts, so our program would forward the greeting (or note the failure and undo the increment) as if nothing had happened.
 
 ### Next Steps
 
 Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/reference).
-If you want to see more complex applications built with Operon, check out [our demo apps](../tutorials/demo-apps).
+If you want to see more complex applications built with DBOS, check out [our demo apps](../tutorials/demo-apps).
 
 Final code for the demo is available [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-extended).

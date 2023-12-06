@@ -2,19 +2,19 @@
 sidebar_position: 1
 ---
 
-# Operon Quickstart
+# DBOS SDK Quickstart
 
-Here's how to get an Operon application up and running in less than five minutes!
+Here's how to get a DBOS application up and running in less than five minutes!
 
 ### System Requirements
 
 - [Node.js 18 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
 - MacOS, Windows (through WSL), and Linux are supported
-- Operon supports Postgres-compatible application databases. We provide a script creating a Postgres Docker container to help you get started. Thus, this tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/)).
+- The DBOS SDK supports Postgres-compatible application databases. We provide a script creating a Postgres Docker container to help you get started. Thus, this tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/)).
 
 ### Project Initialization
 
-We recommend starting a new Operon app using `dbos-sdk init`, which sets up everything automatically for you.
+We recommend starting a new app using `dbos-sdk init`, which sets up everything automatically for you.
 To create a project, run:
 
 ```sh
@@ -29,7 +29,7 @@ By default, `dbos-sdk init` instantiates a "Hello, Database!" application which 
 First, we'll show you how to build and run it, then we'll show you how to extend it with more powerful features.
 
 Before you can launch your app, you need a database.
-Operon works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
+DBOS works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
 
 ```sh
 export PGPASSWORD=dbos
@@ -57,5 +57,5 @@ Finally, use curl to see that it's working:
 curl http://localhost:3000/greeting/dbos
 ```
 
-Congratulations!  You just launched your first Operon application.
-Next, we'll see how to use Operon to easily build powerful and reliable application backends.
+Congratulations!  You just launched your first DBOS application.
+Next, we'll see how to use DBOS to easily build powerful and reliable application backends.

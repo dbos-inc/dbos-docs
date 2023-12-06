@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Quickstart - Part 1
 ---
 
-Now that we have an application up and running, let's learn how to program in Operon!
+Now that we have an application up and running, let's learn how to program in DBOS!
 
 ### Hello, Database!
 
@@ -36,15 +36,15 @@ export class Hello {
 
 This starter code has a single function, `helloTransaction`, which retrieves and updates a user's greeting count.
 This function is annotated with three _decorators_: the method decorators [`@GetApi`](../api-reference/decorators#getapi) and  [`@Transaction`](../api-reference/decorators#transaction), and the parameter decorator [`@ArgSource(ArgSources.URL)`](../api-reference/decorators#argsource).
-Decorators tell Operon to give a function or parameter special properties:
+Decorators tell DBOS to give a function or parameter special properties:
 
-- `@Transaction()` tells Operon to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
-Operon supplies transactions with a [`TransactionContext`](../api-reference/contexts#transactioncontextt), which exposes a database client.
-To learn more about database operations and transactions in Operon, see [our guide](../tutorials/transaction-tutorial).
-- `@GetApi('/greeting/:user')` tells Operon to serve this function from HTTP GET requests to the `/greeting` endpoint.
-- `@ArgSource(ArgSources.URL)` tells Operon to parse this function's `user` parameter from the `:user` path parameter in the URL.
+- `@Transaction()` tells DBOS to run this function as a [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
+DBOS supplies transactions with a [`TransactionContext`](../api-reference/contexts#transactioncontextt), which exposes a database client.
+To learn more about database operations and transactions in DBOS, see [our guide](../tutorials/transaction-tutorial).
+- `@GetApi('/greeting/:user')` tells DBOS to serve this function from HTTP GET requests to the `/greeting` endpoint.
+- `@ArgSource(ArgSources.URL)` tells DBOS to parse this function's `user` parameter from the `:user` path parameter in the URL.
 
-To learn more about HTTP endpoints and handlers in Operon, see [our guide](../tutorials/http-serving-tutorial).
+To learn more about HTTP endpoints and handlers, see [our guide](../tutorials/http-serving-tutorial).
 
 :::info
 
@@ -71,8 +71,8 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSour
 
 Add this function as a method of the `Hello` class.
 This new function works similarly to `helloTransaction`.
-The  [`@Transaction`](../api-reference/decorators#transaction) decorator tells Operon to run it as a database transaction.
-The [`@PostApi`](../api-reference/decorators#postapi) decorator tells Operon to serve this function from HTTP POST requests to the `/clear` endpoint.
+The  [`@Transaction`](../api-reference/decorators#transaction) decorator tells DBOS to run it as a database transaction.
+The [`@PostApi`](../api-reference/decorators#postapi) decorator tells DBOS to serve this function from HTTP POST requests to the `/clear` endpoint.
 
 ### Trying it Out
 
@@ -99,5 +99,5 @@ curl http://localhost:3000/greeting/dbos
 
 The greeting count should reset back to 1.
 
-If you've gotten this far, congratulations on writing your first Operon function!
-Move on to the next part to learn how to use more complex Operon features, like reliable workflows.
+If you've gotten this far, congratulations on writing your first DBOS function!
+Move on to the next part to learn how to use more complex DBOS features, like reliable workflows.

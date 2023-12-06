@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
 title: CLI
-description: Operon CLI reference
+description: DBOS CLI reference
 ---
 
-The Operon CLI helps you manage Operon applications.
+The DBOS CLI helps you manage DBOS applications.
 
 ## Commands
 
@@ -13,7 +13,7 @@ The Operon CLI helps you manage Operon applications.
 ### `npx dbos-sdk start`
 
 **Description:**  
-This command launches the Operon runtime and HTTP server to serve an application.
+This command launches the DBOS runtime and HTTP server to serve an application.
 It registers all functions and serves all endpoints in classes exported from `src/operations.ts`.
 Parameters set from the command line take precedence over parameters set in the [configuration file](./configuration).
 
@@ -28,7 +28,7 @@ Parameters set from the command line take precedence over parameters set in the 
 ### `npx dbos-sdk init`
 
 **Description:**  
-This command initializes a new Operon application from a template into a target directory. By default, it sets the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
+This command initializes a new DBOS application from a template into a target directory. By default, it sets the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
 
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
@@ -36,7 +36,7 @@ This command initializes a new Operon application from a template into a target 
 ### `npx dbos-sdk openapi`
 
 **Description:**  
-This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for an Operon application.
+This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a DBOS application.
 The generated file is named `openapi.yaml` and is saved to the same directory as the TypeScript entrypoint file.
 For more information, please see the [OpenAPI Tutorial](../tutorials/openapi-tutorial.md).
 
