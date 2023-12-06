@@ -1,16 +1,16 @@
 ---
 sidebar_position: 3
-title: Operon Contexts
-description: API reference for Operon contexts
+title: DBOS Contexts
+description: API reference for DBOS contexts
 ---
 
 ## Background
 
-Operon automatically create a _context_ for each registered function.
-Functions use their context to call other Operon functions, interact with the runtime or the database, and access the logger.
-Each Operon function has a specific context:
+DBOS automatically create a _context_ for each registered function.
+Functions use their context to call other DBOS functions, interact with the runtime or the database, and access the logger.
+Each DBOS function has a specific context:
 
-- Contexts used within Operon functions inherit from [`OperonContext`](#operoncontext).
+- Contexts used within DBOS functions inherit from [`DBOSContext`](#dboscontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
@@ -20,9 +20,9 @@ Each Operon function has a specific context:
 
 ---
 
-## `OperonContext`
+## `DBOSContext`
 
-Many contexts inherit from `OperonContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of Operon functions.)
+Many contexts inherit from `DBOSContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of DBOS functions.)
 
 ### Properties
 
@@ -97,15 +97,15 @@ readonly assumedRole: string;
 
 The role used to run this function.
 Empty string if authorization is not required.
-Operon's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
+DBOS's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
 
 ### ctxt.logger
 
 ```typescript
-readonly logger: OperonLogger
+readonly logger: DBOSLogger
 ```
 
-A reference to Operon's logger.
+A reference to DBOS's logger.
 Please see our [logging tutorial](../tutorials/logging.md#logging) for more information.
 
 ### ctxt.span
@@ -169,7 +169,7 @@ handlerCtxt.invoke(Bar).foo(baz)
 When calling transactions or communicators, `invoke()` asynchronously returns the function's output.
 When calling workflows, `invoke()` asynchronously returns a [`handle`](./workflow-handles) for the workflow.
 
-Note Operon runtime will supply the context to invoked functions.
+Note that the DBOS runtime will supply the context to invoked functions.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
@@ -233,12 +233,12 @@ The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
 workflowCtxt.invoke(Bar).foo(baz)
 ```
 
-Note Operon runtime will supply a context to invoked functions.
+Note that the DBOS runtime will supply a context to invoked functions.
 
 ### workflowCtxt.childWorkflow(wf, ...args)
 
 ```typescript
-childWorkflow<T extends any[], R>(wf: OperonWorkflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
 Invoke another workflow.
@@ -312,7 +312,7 @@ Transactions use `TransactionContext` to interact with the database.
 
 `TransactionContext` is typed generically based on the application database client in use.
 The application database client is configurable in a project's [configuration file](./configuration) (`user_dbclient`).
-Operon currently supports the following clients:
+DBOS currently supports the following clients:
 
 **[Knex](https://knexjs.org/guide/#typescript)**
 
@@ -366,7 +366,7 @@ readonly retriesAllowed: boolean;
 ```
 
 Whether the communicator is automatically retried on failure.
-Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ### communicatorCtxt.maxAttempts
 
@@ -375,7 +375,7 @@ readonly maxAttempts: number;
 ```
 
 Maximum number of retries for the communicator.
-Configurable through the [`@OperonCommunicator`](./decorators#operoncommunicator) decorator.
+Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ---
 
@@ -434,7 +434,7 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 
 ## `MiddlewareContext`
 
-`MiddlewareContext` is provided to functions that execute against a request before entry into Operon handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
+`MiddlewareContext` is provided to functions that execute against a request before entry into handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
 
 #### Properties and Methods
 
@@ -449,7 +449,7 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 ### MiddlewareContext.logger
 
 ```typescript
-readonly logger: OperonLogger;
+readonly logger: DBOSLogger;
 ```
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
@@ -476,7 +476,7 @@ readonly koaContext: Koa.Context;
 readonly name: string;
 ```
 
-`name` contains the name of the Operon function (handler, transaction, workflow) to be invoked after successful middleware processing.
+`name` contains the name of the function (handler, transaction, workflow) to be invoked after successful middleware processing.
 
 ### MiddlewareContext.requiredRole
 
@@ -484,7 +484,7 @@ readonly name: string;
 readonly requiredRole: string[];
 ```
 
-`requiredRole` contains the list of roles required for the invoked Operon operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
+`requiredRole` contains the list of roles required for the invoked operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
 
 ### MiddlewareContext.getConfig
 
@@ -510,7 +510,7 @@ Example, for Prisma:
 ```typescript
   const u = await ctx.query(
     (dbClient: PrismaClient, uname: string) => {
-      return dbClient.operon_test_user.findFirst({
+      return dbClient.dbos_test_user.findFirst({
         where: {
           username: uname,
         },

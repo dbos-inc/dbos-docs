@@ -4,9 +4,9 @@ title: Using Prisma
 description: Learn how to create and register Prisma entities and perform transactional updates
 ---
 
-In this guide, you'll learn how to build an Operon application using [Prisma](https://www.prisma.io/), a popular open-source Typescript ORM.
+In this guide, you'll learn how to build a DBOS application using [Prisma](https://www.prisma.io/), a popular open-source Typescript ORM.
 We'll show you how to build a "Hello, World!" application using Prisma.
-The source code for the complete application is [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-prisma).
+The source code for the complete application is [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-prisma).
 
 ### Prisma Setup
 
@@ -32,8 +32,8 @@ In the .env file, update the database URL if necessary: `DATABASE_URL="postgresq
 
 In the file `prisma/schema.prisma`, add a model:
 ```typescript
-model OperonHello {
-  @@map("operonhello")
+model DBOSHello {
+  @@map("dboshello")
   greeting_id Int @id @default(autoincrement())
   greeting String
 }
@@ -44,9 +44,9 @@ Run this command in the database to create tables:
 npx prisma migrate dev --name init
 ```
 
-### Configuring Operon to use Prisma
+### Configuring DBOS to use Prisma
 
-Next, configure Operon to use Prisma by setting the `user_dbclient` property of the [configuration file](../api-reference/configuration) to "prisma".
+Next, configure DBOS to use Prisma by setting the `user_dbclient` property of the [configuration file](../api-reference/configuration) to "prisma".
 For example:
 
 ```yaml
@@ -61,22 +61,22 @@ database:
 ```
 
 ### Coding a Transaction with Prisma
-Now, you can write an Operon application that uses Prisma to talk to the database.
-If you've configured Operon to use Prisma, you can access the Prisma client from the [`.client`](../api-reference/contexts#transactionctxtclient) property of [`TransactionContext`](../api-reference/contexts#transactioncontextt) in Operon [transactions](./transaction-tutorial).
-Here's an example of a transaction using Prisma to insert a row into the `operonhello` table:
+Now, you can write an application that uses Prisma to talk to the database.
+If you've configured DBOS to use Prisma, you can access the Prisma client from the [`.client`](../api-reference/contexts#transactionctxtclient) property of [`TransactionContext`](../api-reference/contexts#transactioncontextt) in DBOS [transactions](./transaction-tutorial).
+Here's an example of a transaction using Prisma to insert a row into the `dboshello` table:
 
 ```javascript
-import { TransactionContext, HandlerContext, OperonTransaction, GetApi } from '@dbos-inc/operon';
+import { TransactionContext, HandlerContext, Transaction, GetApi } from '@dbos-inc/dbos-sdk';
 import { PrismaClient } from "@prisma/client";
 
 export class Hello {
 
-  @OperonTransaction()
+  @Transaction()
   static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
     const greeting = `Hello, ${name}!`;
     console.log(greeting);
     const p: PrismaClient = txnCtxt.client as PrismaClient;
-    const res = await p.operonHello.create({
+    const res = await p.dBOSHello.create({
         data: {
         greeting: greeting,
         },
@@ -92,7 +92,7 @@ export class Hello {
 }
 ```
 
-The complete source code for this example is [here](https://github.com/dbos-inc/operon-demo-apps/tree/main/hello-prisma).
+The complete source code for this example is [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-prisma).
 
 ### Prisma Example
-The [Bank](https://github.com/dbos-inc/operon-demo-apps/tree/main/bank) demo app uses Prisma.
+The [Bank](https://github.com/dbos-inc/dbos-demo-apps/tree/main/bank) demo app uses Prisma.

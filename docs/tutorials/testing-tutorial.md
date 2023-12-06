@@ -4,9 +4,9 @@ title: Testing and Debugging
 description: Learn how to use the testing runtime for unit tests.
 ---
 
-In this guide, you'll learn how to test your Operon applications.
+In this guide, you'll learn how to test your DBOS applications.
 
-Operon provides a [testing runtime](../api-reference/testing-runtime.md) to make it easier to write unit tests for Operon applications.
+DBOS provides a [testing runtime](../api-reference/testing-runtime.md) to make it easier to write unit tests for DBOS applications.
 Using the runtime, you can invoke and test your application's functions individually.
 
 We'll show you how to write unit tests for the `Hello` class we introduced in [Programming Quickstart: Part 1](../getting-started/quickstart-programming-1.md).
@@ -14,14 +14,14 @@ We use [Jest](https://jestjs.io/) in this example, but the testing runtime works
 
 ### Creating Testing Runtime
 
-First, let's create an `OperonTestingRuntime` object:
+First, let's create a `TestingRuntime` object:
 ```typescript
 testRuntime = await createTestingRuntime([Hello]);
 ```
 This function takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class.
 
-You can also optionally provide a path to an Operon [configuration file](../api-reference/configuration.md).
-If no path is provided, the runtime loads a configuration file from the default location (`operon-config.yaml` in the package root).
+You can also optionally provide a path to a [configuration file](../api-reference/configuration.md).
+If no path is provided, the runtime loads a configuration file from the default location (`dbos-config.yaml` in the package root).
 
 ### Testing Functions
 
@@ -30,24 +30,24 @@ The syntax for invoking function `foo(ctxt, args)` in class `Bar` is `testRuntim
 You don't need to supply the context to an invoked function&#8212;the testing runtime does this for you.
 For example:
 ```typescript
-const res = await testRuntime.invoke(Hello).helloTransaction("operon");
-expect(res).toMatch("Hello, operon! You have been greeted");
+const res = await testRuntime.invoke(Hello).helloTransaction("dbos");
+expect(res).toMatch("Hello, dbos! You have been greeted");
 ```
-In this code, we invoke `helloTransaction` with the input string `"operon"`, and verify its output is as expected.
+In this code, we invoke `helloTransaction` with the input string `"dbos"`, and verify its output is as expected.
 
 ### Testing HTTP Endpoints
 
-The testing runtime provides a `getHandlersCallback()` function, which  returns a callback function for node's native `http/http2` server. This allows you to test Operon handlers, for example, with [supertest](https://www.npmjs.com/package/supertest):
+The testing runtime provides a `getHandlersCallback()` function, which  returns a callback function for node's native `http/http2` server. This allows you to test HTTP handlers, for example, with [supertest](https://www.npmjs.com/package/supertest):
 ```typescript
 import request from "supertest";
  
 const res = await request(testRuntime.getHandlersCallback()).get(
-  "/greeting/operon"
+  "/greeting/dbos"
 );
 expect(res.statusCode).toBe(200);
-expect(res.text).toMatch("Hello, operon! You have been greeted");
+expect(res.text).toMatch("Hello, dbos! You have been greeted");
 ```
-In this code, we send a `GET` request to our `/greeting/operon` URL and verify its response.
+In this code, we send a `GET` request to our `/greeting/dbos` URL and verify its response.
 
 ### Cleaning Up
 
@@ -85,4 +85,4 @@ Time:        1.247 s, estimated 2 s
 ### Further Reading
 
 To learn the full testing runtime interface, please see [our testing runtime references](../api-reference/testing-runtime.md).
-You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/operon/blob/main/examples/hello/src/operations.test.ts).
+You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-ts/blob/main/examples/hello/src/operations.test.ts).

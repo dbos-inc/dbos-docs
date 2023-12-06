@@ -1,12 +1,12 @@
 ---
 sidebar_position: 5
 title: Testing Runtime
-description: API documentation for the Operon testing runtime
+description: API documentation for the DBOS testing runtime
 ---
 
-# Operon Testing Runtime
+# DBOS Testing Runtime
 
-Operon provides a testing runtime to facilitate writing unit tests for Operon applications.
+DBOS provides a testing runtime to facilitate writing unit tests for applications.
 Before running your tests, [create and configure the runtime](#create-testing-runtime).
 In your tests, use [the runtime's methods](#methods) to invoke your application's functions.
 After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
@@ -24,11 +24,11 @@ If you use Knex or Prisma, you are responsible for setting up schemas/tables and
 
 ### createTestingRuntime(userClasses, \[configFilePath\])
 ```typescript
-async function createTestingRuntime(userClasses: object[], configFilePath: string = operonConfigFilePath): Promise<OperonTestingRuntime>
+async function createTestingRuntime(userClasses: object[], configFilePath: string = dbosConfigFilePath): Promise<TestingRuntime>
 ```
 
 Creates a testing runtime and loads user functions from provided `userClasses`.
-Accepts an optional path to an Operon [configuration file](./configuration.md), uses the default path (`operon-config.yaml` in the package root) otherwise.
+Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
 
 For example, to create a runtime loading functions from the `Hello` class and using `test-config.yaml`:
 ```typescript
@@ -37,7 +37,7 @@ testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 
 :::warning
 
-This method *drops and re-creates* the Operon system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
+This method *drops and re-creates* the DBOS system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
 
 :::
 
@@ -55,7 +55,7 @@ This method *drops and re-creates* the Operon system database. You will lose all
 
 ### runtime.invoke(targetClass, \[workflowUUID, params\])
 ```typescript
-invoke<T>(targetClass: T, workflowUUID?: string, params?: OperonInvokeParams): InvokeFuncs<T>
+invoke<T>(targetClass: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 You can use `invoke()` to invoke workflows, transactions, and communicators.
@@ -77,7 +77,7 @@ For more information, see our [idempotency tutorial](../tutorials/idempotency-tu
 You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../tutorials/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
 
 ```typescript
-interface OperonInvokeParams {
+interface WorkflowInvokeParams {
   readonly authenticatedUser?: string;    // The user who ran the function.
   readonly authenticatedRoles?: string[]; // Roles the authenticated user has.
   readonly request?: HTTPRequest;         // The originating HTTP request.
@@ -120,15 +120,15 @@ getHandlersCallback(): (req: IncomingMessage | Http2ServerRequest, res: ServerRe
 ```
 
 Returns a request handler callback for node's native [http/http2 server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener).
-You can use this callback function to test handlers, for example, using [supertest](https://www.npmjs.com/package/supertest) to send a `GET` request to `/greeting/operon` URL and verify the response:
+You can use this callback function to test handlers, for example, using [supertest](https://www.npmjs.com/package/supertest) to send a `GET` request to `/greeting/dbos` URL and verify the response:
 ```typescript
 import request from "supertest";
 
 const res = await request(testRuntime.getHandlersCallback()).get(
-  "/greeting/operon"
+  "/greeting/dbos"
 );
 expect(res.statusCode).toBe(200);
-expect(res.text).toMatch("Hello, operon! You have been greeted");
+expect(res.text).toMatch("Hello, dbos! You have been greeted");
 ```
 
 ### runtime.getConfig(key, defaultValue)
@@ -149,9 +149,9 @@ queryUserDB<R>(sql: string, ...params: any[]): Promise<R[]>;
 Executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
 The type `R` is the return type of the database row.
 
-For example, to query the [`operon_hello`](../getting-started/quickstart-programming-1.md) table and check `greet_count`, using [Jest](https://jestjs.io/):
+For example, to query the [`dbos_hello`](../getting-started/quickstart-programming-1.md) table and check `greet_count`, using [Jest](https://jestjs.io/):
 ```typescript
-const rows = await testRuntime.queryUserDB<operon_hello>("SELECT * FROM operon_hello WHERE name=$1", "operon");
+const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "dbos");
 expect(rows[0].greet_count).toBe(1);
 ```
 

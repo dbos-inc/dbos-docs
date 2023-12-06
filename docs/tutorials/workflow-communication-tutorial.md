@@ -7,11 +7,11 @@ description: Learn how to write interactive workflows
 In this guide, you'll learn how to implement communication with and between workflows.
 
 Workflow communication is useful if you want to make your workflows _interactive_, for example if a long-running workflow needs to query a user for input or report intermediate results back to its caller.
-Operon provides two workflow communication APIs, the events API and the messages API.
+DBOS provides two workflow communication APIs, the events API and the messages API.
 
 ### Events API
 
-This API allows workflows to emit and listen for events. Events are immutable key-value pairs. Operon guarantes immutability by transactionally inserting events in its system database, only once.
+This API allows workflows to emit and listen for events. Events are immutable key-value pairs. DBOS guarantes immutability by transactionally inserting events in its system database, only once.
 Events are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### setEvent
@@ -35,13 +35,13 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 #### Events Example
 
 Events are especially useful for writing interactive workflows needing to communicate information back to their caller.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
 After validating an order, the payments workflow emits an event containing a payment link using `setEvent()`:
 
 ```javascript
-  @OperonWorkflow()
+  @Workflow()
   static async paymentWorkflow(ctxt: WorkflowContext, ...): Promise<void> {
     ... // Order validation
     const paymentsURL = ...
@@ -94,12 +94,12 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 #### Messages Example
 
 Messages are especially useful for communicating information or sending notifications to a running workflow.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/operon-demo-apps/tree/main/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
 ```javascript
-@OperonWorkflow()
+@Workflow()
 static async paymentWorkflow(ctxt: WorkflowContext, ...): Promise<void> {
   ... // Validate the order, then redirect customers to a secure payments service.
   const notification = await ctxt.recv<string>(checkout_complete_topic, timeout);
