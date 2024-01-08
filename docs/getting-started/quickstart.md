@@ -8,7 +8,7 @@ Here's how to get a DBOS application up and running in less than five minutes!
 
 ### System Requirements
 
-- [Node.js 18 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
+- [Node.js 20 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
 - MacOS, Windows (through WSL), and Linux are supported
 - The DBOS SDK supports Postgres-compatible application databases. We provide a script creating a Postgres Docker container to help you get started. Thus, this tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/)).
 
