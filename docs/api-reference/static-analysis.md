@@ -25,9 +25,7 @@ DBOS uses several techniques to ensure that static analysis is as productive as 
 
 [`eslint`](https://eslint.org/) is a popular tool for checking JavaScript and TypeScript code.  `eslint` is flexible, extensible, and comes with many standard and optional plugins.  Many editors and development tools provide integration with `eslint`, allowing bugs to be detected early in the development cycle.
 
-Many of DBOS suggested coding practices can be enforced with `eslint`  by a combination of plugins and rule configurations.
-
-### DBOS plugin
+Many DBOS=suggested coding practices can be enforced by a combination of `eslint` plugins and rule configurations.
 
 ### Installing And Configuring `eslint`
 
@@ -84,7 +82,7 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 
 * `dbosBaseConfig` - This configuration includes only rules required for security.  These rules will be enforced prior to deployment to the DBOS cloud.
 * `dbosRecommendedConfig` - This extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
-* `dbosExtendedConfig` - This configuration extenends the recommended configuration, and may include opinions on coding style.
+* `dbosExtendedConfig` - This configuration extenends the recommended configuration, and may include opinions on coding style.
 
 ### Suggested `eslint` Rules
 
@@ -102,13 +100,50 @@ The JavaScript facility for executing data as code is `eval`.  Use of `eval` in 
 
 Code should be rewritten to avoid `eval`.
 
-### Suggested `eslint` Community Plugins And Rules
+### Suggested `security` Plugins Rules
+
+[`eslint-plugin-security`](https://github.com/eslint-community/eslint-plugin-security) is recommended by DBOS and installed with `@dbos-inc/eslint-plugin`.  In particular, the following rules are suggested:
 
 #### `security/detect-unsafe-regex`
+This rule detects regular expressions that may take a long time to run, slowing the event loop.  It is enabled in all DBOS `eslint` configurations.
+
+For example, a regular expression that checks password complexity may be used as part of a registration process (and therefore available to the world at large).  If this regular expression involves significant "backtracking", it could take a long time to run on certain user inputs thereby forming a building block of a "denial of service" attack on the system.
+
+Consideration should also be given to the `detect-non-literal-regexp` rule.
+
+### Suggested `no-secrets` Plugin Rules
+
+[`eslint-plugin-no-secrets`](https://github.com/nickdeis/eslint-plugin-no-secrets) is recommended by DBOS and installed with `@dbos-inc/eslint-plugin`.  This plugin provides one rule:
+
 #### `no-secrets/no-secrets`
+This rule detects strings that may be security credentials or other secrets, perhaps inadvertently left in the code.  Such credentials may be leaked if the source code is exposed (by the version control system, a disgruntled employee, or generic server breach).   Hard-coded credentials are certainly difficult to track, change, and manage, and should be placed in the environment or other suitable storage.
 
 ### `@dbos-inc/eslint-plugin` Rules
 
+Some DBOS lint rules are provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.
+
 #### `@dbos-inc/detect-nondeterministic-calls`
+
+Calls to functions such as `Math.random()` are [nondeterministic](../tutorials/workflow-tutorial#determinism), and may interfere with consistent workflow results or the debugger.
+
+Such operations should use functions provided by the SDK, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
+
+This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
+
 #### `@dbos-inc/detect-new-date`
+
+Calls to functions such as `new Date()` are [nondeterministic](../tutorials/workflow-tutorial#determinism), and may interfere with transactional data, consistent workflow execution, or the debugger.
+
+Such operations should use functions provided by the SDK, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
+
+This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
+
 #### `@dbos-inc/detect-native-code`
+
+Code written in languages such as C/C++ that do not have automatic initialization, memory protection, etc., are at risk of a number of classes of bugs and security vulnerabilities that are not of concern in high-level languages like TypeScript.  C/C++ code must also be compiled for the target CPU architecture and Operating System.
+
+Libraries that contain such native code present deployment challenges at best, and have a higher risk of security holes at worst.  Hence, DBOS suggests use of libraries that do not rely on native code.  For example, `bcryptjs` should be used instead of `bcrypt`.
+
+While DBOS cloud deployment prevents use of native code, use of the `@dbos-inc/detect-native-code` lint rule can catch usage of some libraries early in the coding process and suggest alternatives.
+
+This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
