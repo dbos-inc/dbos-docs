@@ -110,7 +110,7 @@ The first argument to a workflow function must be a [`WorkflowContext`](contexts
 #### `@Transaction`
 Registers a function as a DBOS transaction.
 
-The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontext), which provides access to the database transaction.
+The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontextt), which provides access to the database transaction.
 
 ```typescript
 @Transaction({readOnly: true})
@@ -272,7 +272,7 @@ export interface DBOSHttpAuthReturn {
 }
 ```
 
-The authentication function is provided with a ['MiddlewareContext'](contexts.md#MiddlewareContext), which allows access to the request, system configuration, logging, and database access services.
+The authentication function is provided with a ['MiddlewareContext'](contexts.md#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
 
 #### `@KoaMiddleware`
 Configures the DBOS HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.
@@ -466,7 +466,7 @@ DBOS allows applications to supply functions to be invoked at points in the depl
 #### `@DBOSInitializer`
 This decorator is used to specify functions to be run at application instance initialization time.  `@DBOSInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@DBOSDeploy`](#DBOSDeploy).
 
-The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#InitContext).
+The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#initcontext).
 
 ```typescript
 
@@ -481,7 +481,7 @@ The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md
 
 This decorator is used to specify functions to be run at application deployment or redeployment time.  `@DBOSDeploy` is for uses where the DBOS environment needs procedural initialization steps, such as installing or migrating the user database schema.
 
-The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#InitContext).
+The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#initcontext).
 
 ```typescript
 

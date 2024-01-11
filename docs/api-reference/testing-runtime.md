@@ -138,7 +138,7 @@ getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-Retrieves a property specified in the application section of the [configuration](./configuration.md#application-configuration).
+Retrieves a property specified in the application section of the [configuration](./configuration.md#application).
 
 ### runtime.queryUserDB(sql, ...params)
 

@@ -77,7 +77,7 @@ In TypeORM (and many other frameworks), the pattern is to run [transactions](htt
 
 DBOS provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
 
-First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../api-reference/contexts.md#transactioncontext) with an `EntityManager` named `client` inside.
+First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../api-reference/contexts.md#transactioncontextt) with an `EntityManager` named `client` inside.
 
 ```javascript
 @OrmEntities([KV])
