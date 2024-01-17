@@ -20,8 +20,8 @@ static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) na
 }
 ```
 
-The logger supports `info()`, `debug()`, `warn()`, `emerg()`, `alert()`, `crit()` and `error()`.
-All except `error()` accept a `string` argument and print it as-is.
+The logger supports `info()`, `debug()`, `warn()` and `error()`.
+All except `error()` accept a `string` argument and print it as-is. If the argument is not of type string, DBOS SDK will attempt to `JSON.stringify` the input.
 `error()` accepts an argument of any type, wraps it in a Javascript `Error` object (if it isn't an `Error` already), and prints it with its stack trace.
 
 ```javascript
@@ -78,15 +78,17 @@ static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) na
 
 Under the hood, `ctx.span` is implemented by the [OpenTelemetry NodeJS SDK](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-base).
 
-### Jaeger exporter
+### Configuring OTLP exporters
 
-DBOS ships with a [Jaeger](https://jaegertracing.io/) exporter which you can enable in the configuration file:
+You can configure OTLP endpoints for logs and traces:
 
 ```yaml
 ...
 telemetry:
-  traces:
-    enable: 'true' # true (default) | false
-    endpoint: 'http://localhost:4318/v1/traces' # (default)
+  OTLPExporter:
+    tracesEndpoint: 'http://localhost:4318/v1/traces'
+    logsEndpoint: 'http://localhost:4318/v1/logs'
 ```
+
+Try it out with a local [Jaeger](https://jaegertracing.io/) instance!
 
