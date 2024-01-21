@@ -20,6 +20,12 @@ source ~/.bashrc # or start a new user session
 nvm install --lts # Should install nodejs v20.11.0 at the time of this edition
 ``
 
+Also ensure you have the latest version of `npm`:
+```bash
+npm uninstall -g npm
+curl -qL https://www.npmjs.com/install.sh | sh
+```
+
 ### Project Initialization
 
 We recommend starting a new app using `dbos-sdk init`, which sets up everything automatically for you.
