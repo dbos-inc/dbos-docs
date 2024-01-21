@@ -18,7 +18,7 @@ We suggest using the node version manager ([nvm](https://github.com/nvm-sh/nvm))
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc # or start a new user session
 nvm install --lts # Should install nodejs v20.11.0 at the time of this edition
-``
+```
 
 Also ensure you have the latest version of `npm`:
 ```bash
