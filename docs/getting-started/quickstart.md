@@ -12,6 +12,14 @@ Here's how to get a DBOS application up and running in less than five minutes!
 - MacOS, Windows (through WSL), and Linux are supported
 - The DBOS SDK supports Postgres-compatible application databases. We provide a script creating a Postgres Docker container to help you get started. Thus, this tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/)).
 
+### Nodejs installation
+We suggest using the node version manager ([nvm](https://github.com/nvm-sh/nvm)) to manage nodejs. For instance, on Ubuntu:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc # or start a new user session
+nvm install --lts # Should install nodejs v20.11.0 at the time of this edition
+``
+
 ### Project Initialization
 
 We recommend starting a new app using `dbos-sdk init`, which sets up everything automatically for you.
