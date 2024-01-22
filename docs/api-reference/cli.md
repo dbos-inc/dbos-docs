@@ -33,7 +33,7 @@ This command initializes a new DBOS application from a template into a target di
 **Parameters:**  
 - `-n, --appName <application-name>`: The name and directory to which to initialize the application.
 
-### `npx dbos-sdk openapi`
+### `npx dbos-openapi generate`
 
 **Description:**  
 This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a DBOS application.
