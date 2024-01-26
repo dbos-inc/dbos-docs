@@ -6,8 +6,7 @@ description: API reference for library of DBOS Communicators
 
 ## Background
 
-A DBOS application generally consists of purpose-built workflow and transaction logic, which is not particularly reusable from one project to the next.
-However, communicators represent interfaces to external systems, or wrap nondeterministic functions, and are often reusable.
+In DBOS, communicators represent interfaces to external systems, or wrap nondeterministic functions, and are often reusable.
 DBOS comes with a small library of communicators for common purposes.
 
 ---
@@ -29,7 +28,7 @@ Invoke the communicator from a `WorkflowContext`:
 const curDate = await wfCtx.invoke(CurrentTimeCommunicator).getCurrentDate();
 ```
 
-When using the DBOS testing runtime, it may be necessary to register the communcator class:
+When using the DBOS testing runtime, if you are explicitly providing the list of classes to register, it will be necessary to register any library communicator classes also:
 ```typescript
   testRuntime = await createTestingRuntime([Operations, CurrentTimeCommunicator], "dbos-config.yaml");
 ```
