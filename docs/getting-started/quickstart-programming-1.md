@@ -74,6 +74,16 @@ This new function works similarly to `helloTransaction`.
 The  [`@Transaction`](../api-reference/decorators#transaction) decorator tells DBOS to run it as a database transaction.
 The [`@PostApi`](../api-reference/decorators#postapi) decorator tells DBOS to serve this function from HTTP POST requests to the `/clear` endpoint.
 
+::::tip
+It is not necessary to put all DBOS functions in one `operations.ts` file; it is also possible to export them:
+```typescript
+// Placed in operations.ts:
+export { OperationClass1, OperationClass2 } from './FileA';
+export { OperationClass3 } from './operations/FileB';
+```
+::::
+
+
 ### Trying it Out
 
 Now, let's see if this works!
