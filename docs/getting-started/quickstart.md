@@ -2,15 +2,70 @@
 sidebar_position: 1
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+
 # DBOS SDK Quickstart
 
 Here's how to get a DBOS application up and running in less than five minutes!
 
 ### System Requirements
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed):
 
-- [Node.js 20 or later](https://nodejs.org/en) ([installation guide](https://nodejs.org/en/download/package-manager))
-- MacOS, Windows (through WSL), and Linux are supported
-- The DBOS SDK supports Postgres-compatible application databases. We provide a script creating a Postgres Docker container to help you get started. Thus, this tutorial requires [Docker](https://www.docker.com/) ([installation guide](https://www.docker.com/get-started/); [run Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/)).
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+  ```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+  ```
+  </TabItem>
+  <TabItem value="win" label="Windows (WSL)">
+  ```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+  ```
+  </TabItem>
+  <TabItem value="ubuntu" label="Ubuntu">
+  ```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+  ```
+  </TabItem>
+</Tabs>
+
+This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database.  To install (assuming you don't already have Docker installed):
+
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+  ```
+  TODO: Mac
+  ```
+  </TabItem>
+  <TabItem value="win" label="Windows (WSL)">
+  The easiest way to install Docker on Windows is through [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+  </TabItem>
+  <TabItem value="ubuntu" label="Ubuntu">
+  ```sh
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo groupadd docker
+sudo usermod -aG docker $USER
+# After running these commands, close and reopen your shell to apply their changes
+  ```
+  </TabItem>
+</Tabs>
+
 
 ### Project Initialization
 
@@ -18,7 +73,7 @@ We recommend starting a new app using `dbos-sdk init`, which sets up everything 
 To create a project, run:
 
 ```sh
-npx @dbos-inc/dbos-sdk init -n <project name>
+npx @dbos-inc/dbos-sdk init -n <project-name>
 ```
 
 This creates a folder for your project, configures its layout, and installs required dependencies.
@@ -32,6 +87,7 @@ Before you can launch your app, you need a database.
 DBOS works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
 
 ```sh
+cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
 ```
@@ -51,11 +107,7 @@ npm run build
 npx dbos-sdk start
 ```
 
-Finally, use curl to see that it's working:
-
-```sh
-curl http://localhost:3000/greeting/dbos
-```
+To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations!  You just launched your first DBOS application.
 Next, we'll see how to use DBOS to easily build powerful and reliable application backends.
