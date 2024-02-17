@@ -2,9 +2,6 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 import {themes as prismThemes} from 'prism-react-renderer';
 
-const lightCodeTheme = prismThemes.github;
-const darkCodeTheme = prismThemes.dracula;
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'DBOS SDK',

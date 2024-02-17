@@ -11,19 +11,22 @@ import TabItem from '@theme/TabItem';
 Here's how to get a DBOS application up and running in less than five minutes!
 
 ### System Requirements
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed):
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), run the following commands in your terminal window:
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
-  ```sh
+  ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
 nvm install 20
 nvm use 20
   ```
   </TabItem>
   <TabItem value="win" label="Windows (WSL)">
-  ```sh
+  ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 20
@@ -31,7 +34,7 @@ nvm use 20
   ```
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
-  ```sh
+  ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 20
@@ -44,15 +47,13 @@ This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres databa
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
-  ```
-  TODO: Mac
-  ```
+  The easiest way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
   </TabItem>
   <TabItem value="win" label="Windows (WSL)">
   The easiest way to install Docker on Windows is through [Docker Desktop](https://www.docker.com/products/docker-desktop/).
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
-  ```sh
+  ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -69,10 +70,10 @@ sudo usermod -aG docker $USER
 
 ### Project Initialization
 
-We recommend starting a new app using `dbos-sdk init`, which sets up everything automatically for you.
+We recommend starting a new app using the command-line interface, which sets up everything automatically for you.
 To create a project, run:
 
-```sh
+```bash
 npx @dbos-inc/dbos-sdk init -n <project-name>
 ```
 
@@ -86,7 +87,7 @@ First, we'll show you how to build and run it, then we'll show you how to extend
 Before you can launch your app, you need a database.
 DBOS works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
 
-```sh
+```bash
 cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
@@ -96,13 +97,13 @@ Then, create some database tables.
 In this quickstart, we use [knex.js](https://knexjs.org/) to manage database migrations.
 Run our provided migration to create a database table:
 
-```sh
+```bash
 npx knex migrate:latest
 ```
 
 Next, build and run the app:
 
-```sh
+```bash
 npm run build
 npx dbos-sdk start
 ```
