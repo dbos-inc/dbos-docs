@@ -50,7 +50,7 @@ This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres databa
   The easiest way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
   </TabItem>
   <TabItem value="win" label="Windows (WSL)">
-  The easiest way to install Docker on Windows is through [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+  The easiest way to install Docker on Windows is through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
   ```bash
@@ -62,12 +62,15 @@ sudo apt-get update
 sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo groupadd docker
 sudo usermod -aG docker $USER
-# After running these commands, close and reopen your shell to apply their changes
   ```
   </TabItem>
 </Tabs>
 
-After installing Docker, verify it is working by running `docker run hello-world`.
+After installing Docker, close and reopen your terminal to apply any changes. Then, verify Docker is working by running:
+
+```bash
+docker run hello-world
+```
 
 ### Project Initialization
 
@@ -102,6 +105,8 @@ Then, let's run a database migration to create some tables:
 npx dbos-sdk migrate
 ```
 
+If successful, the migration should print `Migration successful!`.
+
 Next, build and run the app:
 
 ```bash
@@ -112,4 +117,4 @@ npx dbos-sdk start
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations!  You just launched your first DBOS application.
-Next, we'll see how to use DBOS to easily build powerful and reliable application backends.
+Next, we'll learn how to build a new application ourselves.
