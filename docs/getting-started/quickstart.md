@@ -96,12 +96,10 @@ export PGPASSWORD=dbos
 
 If successful, the script should print `Database started successfully!`.
 
-Then, create some database tables.
-In this quickstart, we use [knex.js](https://knexjs.org/) to manage database migrations.
-Run our provided migration to create a database table:
+Then, let's run a database migration to create some tables:
 
 ```bash
-npx knex migrate:latest
+npx dbos-sdk migrate
 ```
 
 Next, build and run the app:
