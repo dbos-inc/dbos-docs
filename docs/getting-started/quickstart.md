@@ -67,17 +67,18 @@ sudo usermod -aG docker $USER
   </TabItem>
 </Tabs>
 
+After installing Docker, verify it is working by running `docker run hello-world`.
 
 ### Project Initialization
 
-We recommend starting a new app using the command-line interface, which sets up everything automatically for you.
-To create a project, run:
+To initialize a new DBOS application, run the following command, choosing a project name with no spaces or special characters:
 
 ```bash
 npx @dbos-inc/dbos-sdk init -n <project-name>
 ```
 
 This creates a folder for your project, configures its layout, and installs required dependencies.
+If successful, it should print `Application initialized successfully!`.
 
 ### Getting Started
 
@@ -92,6 +93,8 @@ cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
 ```
+
+If successful, the script should print `Database started successfully!`.
 
 Then, create some database tables.
 In this quickstart, we use [knex.js](https://knexjs.org/) to manage database migrations.
