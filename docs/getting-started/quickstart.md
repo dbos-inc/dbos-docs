@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 Here's how to get a DBOS application up and running in less than five minutes!
 
 ### System Requirements
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), run the following commands in your terminal window:
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), run the following commands in your terminal:
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
