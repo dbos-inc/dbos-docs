@@ -46,7 +46,7 @@ npx prisma migrate dev --name init
 
 ### Configuring DBOS to use Prisma
 
-Next, configure DBOS to use Prisma by setting the `user_dbclient` property of the [configuration file](../api-reference/configuration) to "prisma".
+Next, configure DBOS to use Prisma by setting the `app_db_client` property of the [configuration file](../api-reference/configuration) to "prisma".
 For example:
 
 ```yaml
@@ -54,10 +54,10 @@ database:
   hostname: 'localhost'
   port: 5432
   username: 'postgres'
-  user_database: 'helloprisma'
+  app_db_name: 'helloprisma'
   password: ${PGPASSWORD}
   connectionTimeoutMillis: 3000
-  user_dbclient: "prisma"
+  app_db_client: "prisma"
 ```
 
 ### Coding a Transaction with Prisma

@@ -20,7 +20,7 @@ As with other DBOS functions, inputs and outputs must be serializable to JSON.
 The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
 By default, this is a [Knex.js](https://knexjs.org/) client.
 We like Knex because it's lightweight and helps us write fast and type-safe queries.
-However, if you prefer a traditional ORM, we also support [Prisma](./using-prisma.md) and [TypeORM](./using-typeorm.md).
+However, if you prefer a traditional ORM, we also support [TypeORM](./using-typeorm.md).
 
 Here's an example of a transaction function (from the [quickstart](../getting-started/quickstart)) written using raw SQL (calling it with [knex.raw](https://knexjs.org/guide/raw.html)):
 
