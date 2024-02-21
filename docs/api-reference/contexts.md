@@ -311,7 +311,7 @@ Transactions use `TransactionContext` to interact with the database.
 ### Generic Type Parameter
 
 `TransactionContext` is typed generically based on the application database client in use.
-The application database client is configurable in a project's [configuration file](./configuration) (`user_dbclient`).
+The application database client is configurable in a project's [configuration file](./configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
 **[Knex](https://knexjs.org/guide/#typescript)**

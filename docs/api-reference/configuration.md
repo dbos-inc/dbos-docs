@@ -27,11 +27,12 @@ DBOS currently only supports Postgres-compatible databases.
 - **port**: Database port.
 - **username**: Username with which to connect to the database.
 - **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
-- **user_database**: Name of the application database.
-- **system_database** (optional): Name of a database to which DBOS can write system data.  Defaults to `dbos_systemdb`.
-- **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.  Defaults to not using SSL.
+- **app_db_name**: Name of the application database.
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
-- **user_dbclient** (optional): Client to use for connecting to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html) and [TypeORM](https://typeorm.io/migrations).
+- **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:
 
@@ -41,9 +42,10 @@ database:
   port: 5432
   username: 'postgres'
   password: ${PGPASSWORD}
-  user_database: 'hello'
-  system_database: 'hello_systemdb' # Optional, defaults to 'dbos_systemdb'
-  user_dbclient: 'knex' # knex (default) | prisma | typeorm
+  app_db_name: 'hello'
+  app_db_client: 'knex'
+  migrate: ['npx knex migrate:latest']
+  rollback: ['npx knex migrate:rollback']
 ```
 
 ---
