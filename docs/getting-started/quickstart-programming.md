@@ -3,21 +3,34 @@ sidebar_position: 2
 title: Programming Quickstart
 ---
 
-Let's learn how to program in DBOS! In this tutorial, we will modify the example hello application setup during [init](quickstart.md) to reliably send a greetings note to your friends. This simply application will cover all core DBOS concepts - serverless, transaction, communicators and workflows.
+Let's learn how to program in DBOS!
+In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
+Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a reliable and transactional application.
+First, you'll learn to create HTTP endpoints to serve requests.
+Then, you'll learn how to interact with a database and embed third party API calls to your application.
+Finally, you'll compose these steps in reliable workflows.
 
-First, you will learn to declare HTTP endpoints to serve applications. Then, how to interact with a database and embed third party API calls to your application. Finally, you will compose these steps in reliable workflows.
+This tutorial assumes you have finished our [quickstart](./quickstart.md).
+For convenience, we recommend initializing a new DBOS application and starting a database for it.
+Run the following commands, choosing a project name with no spaces or special characters:
 
-This tutorial assumes you have followed the SDK [quickstart](quickstart.md), have its database running and `PGPASSWORD` is available in your environment.
-For your convenience, you can erase the content of `src/operations.ts` and replace it with this guide's code.
+```
+npx @dbos-inc/dbos-sdk init -n <project-name>
+cd <project-name>
+export PGPASSWORD=dbos
+./start_postgres_docker.sh
+truncate -s 0 src/operations.ts
+```
 
-### Serverless applications
+### Serving Applications Serverlessly
 
 :::info what you will learn
-Declare an HTTP GET endpoint to serve your application.
+How to serve your application via HTTP.
 :::
 
 In DBOS, you focus on your business logic and leave the rest to us.
-Let's declare a simple GET handler to serving `/greeting/:friend`:
+Let's add an HTTP GET handler to your application so it can send greetings to your friends.
+Add this code to `src/operations.ts`:
 
 ```javascript
 import { HandlerContext, GetApi } from '@dbos-inc/dbos-sdk'
@@ -40,25 +53,25 @@ Rebuild with `npm run build` and start your application with `npx dbos-sdk start
 [info]: DBOS Admin Server is running at http://localhost:3001
 ```
 
-You can now send a request to your application, for instance, using `cURL`:
+To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike).
+You should see the message `Greetings, Mike!`.
+If you replace Mike with a different name, your application will greet that name instead.
 
-```shell
-> curl http://localhost:3000/greeting/Mary
-Greetings, Mary!
-```
+The key to this code is the [`@GetApi`](../api-reference/decorators#getapi) method decorator, which tells DBOS to serve the `Greet` function from HTTP GET requests to the `/greeting` endpoint.
+As you will see, the DBOS SDK relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience.
+To load these decorators, DBOS methods must be static class members.
+In this case, `Greet` is a static member of the `Greetings` class.
 
-The key element of this code is the method decorator [`@GetApi`](../api-reference/decorators#getapi), which automatically registers a GET endpoint and has `Hello()` serve it. As you will see, the DBOS SDK heavily relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience. To load these decorators, DBOS methods must be static class members. In this case, `Greet` is a static member of the `Greetings` class.
-
-To learn more about handlers, see [our guide](../tutorials/http-serving-tutorial).
+To learn more about HTTP serving in DBOS, see [our guide](../tutorials/http-serving-tutorial).
 
 ### Database transactions are baked in!
 
 :::info what you will learn
-Interact with the database.
+How to interact with the database.
 :::
 
 Let's augment the code to insert a new record in the database when we greet a friend.
-Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can provide your code with a managed database client handling the low level details for you:
+Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client handling the low-level details of connection management for you:
 
 ```javascript
 import { TransactionContext, Transaction, HandlerContext, GetApi } from '@dbos-inc/dbos-sdk'
@@ -84,19 +97,21 @@ The key element of this code are:
 - Inserting a row in the database with `ctxt.client.raw()`
 
 :::info
-In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and [TypeORM](https://typeorm.io/).
 :::
 
-The managed client provided in the transaction context (`ctxt.client`) handles the detail of beginning, committing or rolling back database transactions. Transactions can be configured, e.g., declared read only, through the [`@Transaction`](../api-reference/decorators#transaction) decorator.
+The managed client provided in the transaction context (`ctxt.client`) handles the details of beginning, committing or rolling back database transactions.
 
 ### Interacting with third party services
 
 :::info what you will learn
-Send a request over the network and checkpoint the response.
+How to safely send requests to third-party APIs
 :::
 
-Assume we want to trigger the sending of a greeting mail using a third party service which will handle the physical details for us and provide us with a unique identifier for the mail.
-With DBOS we can capture the response of such API calls using a [Communicator](../tutorials/communicator-tutorial). Let's update the code to first trigger the sending of the mail, then record its UUID alongside the note record in the database:
+Let's say we want to use a third-party client to send our greeting via e-mail.
+In DBOS, we strongly recommend wrapping calls to third-party APIs in [Communicators](../tutorials/communicator-tutorial).
+We'll see in the next section how communicators make your code more reliable.
+For now, add this code to `src/operations.ts`:
 
 ```javascript
 import {
@@ -108,11 +123,13 @@ import { Knex } from "knex";
 import axios from "axios";
 
 export class Greetings {
-  @Communicator()
-  static async SendGreetingMail(ctxt: CommunicatorContext) {
-    const res = await axios.get("https://www.uuidgenerator.net/api/guid");
-    return res.data;
-  }
+    @Communicator()
+    static async SendGreetingEmail(ctxt: CommunicatorContext) {
+        ctxt.log.info("Sending Email...")
+        // Code omitted for simplicity
+        ctxt.log.info("Email sent!")
+        return "uuid";
+    }
 
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string, uuid: string) {
@@ -125,7 +142,7 @@ export class Greetings {
   @GetApi("/greeting/:friend")
   static async Greet(ctxt: HandlerContext, friend: string) {
     const noteContent = `Thank you for being awesome, ${friend}!`;
-    const mailUUID = await ctxt.invoke(Greetings).SendGreetingMail();
+    const mailUUID = await ctxt.invoke(Greetings).SendGreetingMail(noteContent, friend);
     await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent, mailUUID);
     return { noteContent, mailUUID };
   }
@@ -133,17 +150,18 @@ export class Greetings {
 ```
 
 The key element of this code is the new `SendGreetingMail` method, invoked by the `Greet` handler.
-For the sake of simplicity, we use a public API generating UUIDs.
-[Communicators](../tutorials/communicator-tutorial) are key in building reliable DBOS workflows, as we will see next.
+For simplicity, we print the email instead of sending it.
 
-### Composing reliable workflows
+### Composing Reliable orkflows
 
 :::info what you will learn
-Compose operations in DBOS workflows to obtain exactly once guarantees.
+How to compose operations in DBOS workflows to obtain exactly once guarantees.
 :::
 
-We want to ensure a physical note is mailed only once even when we need to retry the action after a transient failure.
-DBOS provide a [Workflow](../tutorials/workflow-tutorial.md) abstraction to help you do exactly that. Workflows let you compose DBOS operations and do the heavy lifting to provide reliabity guarantees. Let us rewrite the code:
+To avoid spamming our friends, we want to make sure the email is only sent once if we retry it after a transient failure.
+DBOS provide a [Workflow](../tutorials/workflow-tutorial.md) abstraction to help you do exactly that.
+Workflows let you compose DBOS operations and do the heavy lifting to provide reliabity guarantees.
+To see them in action, add this code to `src/operations.ts`:
 
 ```javascript
 import {
@@ -160,8 +178,10 @@ export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        const res = await axios.get("https://www.uuidgenerator.net/api/guid");
-        return res.data;
+        ctxt.log.info("Sending Email...")
+        // Code omitted for simplicity
+        ctxt.log.info("Email sent!")
+        return "uuid";
     }
 
     @Transaction()
@@ -178,7 +198,6 @@ export class Greetings {
     static async SendGreetingNoteWorkflow(ctxt: WorkflowContext, friend: string) {
         const noteContent = `Thank you for being awesome, ${friend}!`;
         const shipNoteUUID = await ctxt.invoke(Greetings).SendGreetingEmail();
-        ctxt.logger.info(`Mail sent with UUID: ${shipNoteUUID}`);
 
         for (let i = 0; i < 5; i++) {
             ctxt.logger.info(
@@ -203,9 +222,17 @@ The key elements of this snippet are:
 - We composed the transaction and communicator in a workflow (`SendGreetingNoteWorkflow`)
 - We introduced a sleep allowing you to stop the program before the workflow can complete
 
-DBOS persists intermediate workflow state in your database. If we stop the application when prompted and restart, DBOS will detect the presence of a pending workflow and resume its execution. It will use the recorded output of `SendGreetingEmail` instead of calling again the third party service and resume the workflow execution.
+When executing a workflow, DBOS persists the output of each step in your database.
+That way, if a workflow is interrupted for any reason, DBOS can then restart it from exactly where it left off.
+To see this in action, build and start the application by running:
 
-Here is an example output when we start the program once, call the endpoint, terminate the program, then restart it:
+```
+npx dbos-sdk build
+npx dbos-sdk start
+```
+
+Then visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to the application.
+On your terminal, you should see an output like:
 
 ```shell
 > npx dbos-sdk start
@@ -219,8 +246,12 @@ Here is an example output when we start the program once, call the endpoint, ter
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
-^C
+```
+Press control + c when prompted to interrupt the workflow.
+Then, run `npx dbos-sdk start` to restart DBOS Cloud.
+You should see an output like:
 
+```
 > npx dbos-sdk start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
@@ -235,8 +266,7 @@ Here is an example output when we start the program once, call the endpoint, ter
 [info]: Press control + C to interrupt the workflow...
 ```
 
-The first time the workflow executed, we received a mail ID `27df0fb3-7897-4f79-b8ea-ae11dcbfa27c` from the third party service.
-When we resumed the program, DBOS detected the pending workflow and resumed it. Note it used the same unique identifier `27df0fb3-7897-4f79-b8ea-ae11dcbfa27c` to continue executing the workflow.
-
+Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
+This reliability is a core feature of DBOS: workflows always run to completion, but each of their operations executes once and only once.
 
 [TODO: tease the next part of the docs]
