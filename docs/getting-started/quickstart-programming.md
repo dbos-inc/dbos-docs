@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Quickstart
 ---
 
-Let's learn how to program in DBOS! In this tutorial, we will write a simple application featuring all core DBOS concepts - serverless, transaction, communicators and workflows. This application will reliably send a greetings note to your friends.
+Let's learn how to program in DBOS! In this tutorial, we will modify the example hello application setup during init to reliably send a greetings note to your friends. This simply application will cover all core DBOS concepts - serverless, transaction, communicators and workflows.
 
 First, you will learn to declare HTTP endpoints to serve applications. Then, how to interact with a database and embed third party API calls to your application. Finally, you will compose these steps in reliable workflows.
 
