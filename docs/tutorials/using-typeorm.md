@@ -15,7 +15,7 @@ Use of TypeORM is optional.  DBOS supports several other libraries for transacti
 DBOS supports what is essentially direct use of TypeORM, but a few additional steps are necessary to inform DBOS about the TypeORM entity list, provide the information for establishing the database connection, and use a transaction in the context of a workflow.
 
 ### Setting Up The Database Connection
-In order to set up the database connection ([`DataSource`](https://typeorm.io/data-source)), configuration information is provided to DBOS instead of creating a separate configuration file or instantiating `DataSource` directly.  Of particular interest is the line `user_dbclient: 'typeorm'`, which indicates that TypeORM is to be loaded and a `DataSource` configured.
+In order to set up the database connection ([`DataSource`](https://typeorm.io/data-source)), configuration information is provided to DBOS instead of creating a separate configuration file or instantiating `DataSource` directly.  Of particular interest is the line `app_db_client: 'typeorm'`, which indicates that TypeORM is to be loaded and a `DataSource` configured.
 
 ```yaml
 database:
@@ -23,10 +23,10 @@ database:
   port: ${POSTGRES_PORT}
   username: ${POSTGRES_USERNAME}
   password: ${POSTGRES_PASSWORD}
-  user_database: ${POSTGRES_DATABASE}
+  app_db_name: ${POSTGRES_DATABASE}
   system_database: 'opsys'
   connectionTimeoutMillis: 3000
-  user_dbclient: 'typeorm'
+  app_db_client: 'typeorm'
 ```
 
 ### Setting Up Entities
@@ -129,10 +129,10 @@ database:
   port: ${POSTGRES_PORT}
   username: ${POSTGRES_USERNAME}
   password: ${POSTGRES_PASSWORD}
-  user_database: ${POSTGRES_DATABASE}
+  app_db_name: ${POSTGRES_DATABASE}
   system_database: 'opsys'
   connectionTimeoutMillis: 3000
-  user_dbclient: 'typeorm'
+  app_db_client: 'typeorm'
 ```
 
 The testing runtime can be used to invoke methods directly, or exercise handlers:

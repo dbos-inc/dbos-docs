@@ -28,10 +28,26 @@ Parameters set from the command line take precedence over parameters set in the 
 ### `npx dbos-sdk init`
 
 **Description:**  
-This command initializes a new DBOS application from a template into a target directory. By default, it sets the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
+This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
 
 **Parameters:**  
-- `-n, --appName <application-name>`: The name and directory to which to initialize the application.
+- `-n, --appName <application-name>`: The name and directory to which to instantiate the application. Must not contain spaces or special characters.
+
+---
+
+### `npx dbos-sdk migrate`
+
+**Description:**
+Run all migration commands specified in your [configuration file](./configuration) to apply your application's schema to the database.
+
+---
+
+### `npx dbos-sdk rollback`
+
+**Description:**
+Run all rollback commands specified in your [configuration file](./configuration) to roll back the last batch of schema migrations.
+
+---
 
 ### `npx dbos-openapi generate`
 

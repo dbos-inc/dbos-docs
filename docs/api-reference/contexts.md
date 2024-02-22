@@ -311,7 +311,7 @@ Transactions use `TransactionContext` to interact with the database.
 ### Generic Type Parameter
 
 `TransactionContext` is typed generically based on the application database client in use.
-The application database client is configurable in a project's [configuration file](./configuration) (`user_dbclient`).
+The application database client is configurable in a project's [configuration file](./configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
 **[Knex](https://knexjs.org/guide/#typescript)**
@@ -328,13 +328,6 @@ import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
-**[Prisma](https://www.prisma.io/docs/concepts/components/prisma-client)**
-
-```typescript
-import { PrismaClient } from "@prisma/client";
-static async exampleTransaction(ctxt: TransactionContext<Prisma>, ...)
-```
-
 ### Properties
 
 - [client](#transactionctxtclient)
@@ -342,7 +335,7 @@ static async exampleTransaction(ctxt: TransactionContext<Prisma>, ...)
 ### transactionCtxt.client
 
 ```typescript
-client: T; // One of [Knex, EntityManager, PrismaClient]
+client: T; // One of [Knex, EntityManager]
 ```
 
 Provides access to the chosen application database client.
@@ -504,18 +497,15 @@ The `query` fucntion provides read access to the database.  See [Placing Databas
 
 ### Placing Database Queries From `MiddlewareContext`
 
-`MiddlewareContext` supports read-only database queries, via a method called `query`.  To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.  The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.  The provided `dbClient` will either be a `Knex`, `PrismaClient`, or TypeORM `EntityManager` depending on the application's choice of SQL access library.  This callback function may take arguments, and return a value.
+`MiddlewareContext` supports read-only database queries, via a method called `query`.  To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.  The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.  The provided `dbClient` will either be a `Knex` or TypeORM `EntityManager` depending on the application's choice of SQL access library.  This callback function may take arguments, and return a value.
 
-Example, for Prisma:
+Example, for Knex:
 ```typescript
   const u = await ctx.query(
-    (dbClient: PrismaClient, uname: string) => {
-      return dbClient.dbos_test_user.findFirst({
-        where: {
-          username: uname,
-        },
-      });
+    // The qry function that takes in a dbClient and a list of arguments (uname in this case)
+    (dbClient: Knex, uname: string) => {
+      return dbClient<UserTable>(userTableName).select("username").where({ username: uname })
     },
-    user
+    userName // Input value for the uname argument
   );
 ```
