@@ -142,7 +142,7 @@ For the sake of simplicity, we use a public API generating UUIDs.
 Compose operations in DBOS workflows to obtain exactly once guarantees.
 :::
 
-We want to ensure the mail is sent only once even when we retry the whole process in spite of a transient failure.
+We want to ensure a physical note is mailed only once even when we need to retry the action after a transient failure.
 DBOS provide a [Workflow](../tutorials/workflow-tutorial.md) abstraction to help you do exactly that. Workflows let you compose DBOS operations and do the heavy lifting to provide reliabity guarantees. Let us rewrite the code:
 
 ```javascript
@@ -201,9 +201,9 @@ export class Greetings {
 
 The key elements of this snippet are:
 - We composed the transaction and communicator in a workflow (`SendGreetingNoteWorkflow`)
-- We introduced a 5 seconds sleep allowing you to stop the program before the workflow can complete
+- We introduced a sleep allowing you to stop the program before the workflow can complete
 
-DBOS persists intermediate workflow state in your database. If we stop the application when prompted and restarts it, DBOS will detect the presence of a pending workflow and resume its execution. It will use the recorded output of `SendGreetingEmail` instead of calling again the third party service and resume the workflow execution.
+DBOS persists intermediate workflow state in your database. If we stop the application when prompted and restart, DBOS will detect the presence of a pending workflow and resume its execution. It will use the recorded output of `SendGreetingEmail` instead of calling again the third party service and resume the workflow execution.
 
 Here is an example output when we start the program once, call the endpoint, terminate the program, then restart it:
 
@@ -236,7 +236,7 @@ Here is an example output when we start the program once, call the endpoint, ter
 ```
 
 The first time the workflow executed, we received a mail ID `27df0fb3-7897-4f79-b8ea-ae11dcbfa27c` from the third party service.
-When we resumed the program, DBOS detected the pending workflow and resume it. Note it uses the same unique identifier `27df0fb3-7897-4f79-b8ea-ae11dcbfa27c` to continue executing the workflow. Check the `hello` database to see an entry in the `dbos_hello` table with this `greeting_note_uuid`!
+When we resumed the program, DBOS detected the pending workflow and resumed it. Note it used the same unique identifier `27df0fb3-7897-4f79-b8ea-ae11dcbfa27c` to continue executing the workflow.
 
 
 [TODO: tease the next part of the docs]
