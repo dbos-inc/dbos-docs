@@ -3,11 +3,11 @@ sidebar_position: 2
 title: Programming Quickstart
 ---
 
-Let's learn how to program in DBOS! In this tutorial, we will modify the example hello application setup during init to reliably send a greetings note to your friends. This simply application will cover all core DBOS concepts - serverless, transaction, communicators and workflows.
+Let's learn how to program in DBOS! In this tutorial, we will modify the example hello application setup during [init](quickstart.md) to reliably send a greetings note to your friends. This simply application will cover all core DBOS concepts - serverless, transaction, communicators and workflows.
 
 First, you will learn to declare HTTP endpoints to serve applications. Then, how to interact with a database and embed third party API calls to your application. Finally, you will compose these steps in reliable workflows.
 
-This tutorial assumes you have followed the SDK [quickstart](quickstart.md) and have its database running and `PGPASSWORD` is available in your environment.
+This tutorial assumes you have followed the SDK [quickstart](quickstart.md), have its database running and `PGPASSWORD` is available in your environment.
 For your convenience, you can erase the content of `src/operations.ts` and replace it with this guide's code.
 
 ### Serverless applications
@@ -30,7 +30,7 @@ export class Greetings {
 }
 ```
 
-In one terminal, start your application with `npx dbos-sdk start`. You should see an output similar to:
+Rebuild with `npm run build` and start your application with `npx dbos-sdk start`. You should see an output similar to:
 
 ```shell
 [info]: Workflow executor initialized
