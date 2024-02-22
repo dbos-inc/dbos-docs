@@ -8,10 +8,10 @@ import TabItem from '@theme/TabItem';
 
 # DBOS SDK Quickstart
 
-Here's how to get a DBOS application up and running in less than five minutes!
+Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes!
 
 ### System Requirements
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), run the following commands in your terminal:
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), copy and run the following commands in your terminal:
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
@@ -47,10 +47,10 @@ This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres databa
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
-  The easiest way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+  An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
   </TabItem>
   <TabItem value="win" label="Windows (WSL)">
-  The easiest way to install Docker on Windows is through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+  An easy way to install Docker on Windows is through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
   ```bash

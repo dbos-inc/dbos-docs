@@ -48,7 +48,7 @@ To learn more about HTTP endpoints and handlers, see [our guide](../tutorials/ht
 
 :::info
 
-In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
+In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and the popular TypeScript ORM [TypeORM](https://typeorm.io/).
 
 :::
 
