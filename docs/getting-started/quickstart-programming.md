@@ -134,6 +134,7 @@ export class Greetings {
 
 The key element of this code is the new `SendGreetingMail` method, invoked by the `Greet` handler.
 For the sake of simplicity, we use a public API generating UUIDs.
+[Communicators](../tutorials/communicator-tutorial) are key in building reliable DBOS workflows, as we will see next.
 
 ### Composing reliable workflows
 
