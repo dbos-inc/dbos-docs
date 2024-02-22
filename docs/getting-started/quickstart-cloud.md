@@ -70,3 +70,5 @@ Your application is now live at that URL!
 To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
 For example, if your username is `mike` and your app name is `hello`, visit `https://cloud.dbos.dev/apps/mike/hello/greeting/dbos`.
 Just like in the [quickstart](./quickstart.md), you should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
+
+Congratulations, you've sucessfully deployed your first application to DBOS Cloud!
