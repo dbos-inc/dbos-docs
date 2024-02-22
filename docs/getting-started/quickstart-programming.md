@@ -49,7 +49,7 @@ Greetings, Mary!
 
 The key element of this code is the method decorator [`@GetApi`](../api-reference/decorators#getapi), which automatically registers a GET endpoint and has `Hello()` serve it. As you will see, the DBOS SDK heavily relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience. To load these decorators, DBOS methods must be static class members. In this case, `Greet` is a static member of the `Greetings` class.
 
-To learn more about HTTP endpoints and handlers, see [our guide](../tutorials/http-serving-tutorial).
+To learn more about handlers, see [our guide](../tutorials/http-serving-tutorial).
 
 ### Database transactions are baked in!
 
@@ -80,8 +80,8 @@ export class Greetings {
 ```
 
 The key element of this code are:
-- Calling the transaction from the handler using `ctxt.invoke(Greetings).InsertGreeting(friend)`.
-- Inserting a row in the database using `ctxt.client.raw()`
+- Calling the transaction from the handler using the context: `ctxt.invoke(Greetings).InsertGreeting(friend)`.
+- Inserting a row in the database with `ctxt.client.raw()`
 
 :::info
 In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and the popular TypeScript ORMs [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/).
@@ -96,7 +96,7 @@ Send a request over the network and checkpoint the response.
 :::
 
 Assume we want to trigger the sending of a greeting mail using a third party service which will handle the physical details for us and provide us with a unique identifier for the mail.
-With DBOS we can capture the response of such third party calls using a [Communicator](../tutorials/communicator-tutorial). Let's update the code to first trigger the sending of the mail, then record its UUID alongside the note record in the database:
+With DBOS we can capture the response of such API calls using a [Communicator](../tutorials/communicator-tutorial). Let's update the code to first trigger the sending of the mail, then record its UUID alongside the note record in the database:
 
 ```javascript
 import {
@@ -116,7 +116,10 @@ export class Greetings {
 
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string, uuid: string) {
-    await ctxt.client.raw("INSERT INTO dbos_hello (name, greeting_note_content, greeting_note_uuid) VALUES (?, ?, ?)", [friend, content, uuid]);
+    await ctxt.client.raw(
+      "INSERT INTO dbos_hello (name, greeting_note_content, greeting_note_uuid) VALUES (?, ?, ?)",
+      [friend, content, uuid],
+    );
   }
 
   @GetApi("/greeting/:friend")
@@ -129,7 +132,7 @@ export class Greetings {
 }
 ```
 
-The key element of this code is the new `SendGreetingMail` method, invoked by the `ThankYou` handler.
+The key element of this code is the new `SendGreetingMail` method, invoked by the `Greet` handler.
 For the sake of simplicity, we use a public API generating UUIDs.
 
 ### Composing reliable workflows
