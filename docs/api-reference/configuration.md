@@ -28,7 +28,7 @@ DBOS currently only supports Postgres-compatible databases.
 - **username**: Username with which to connect to the database.
 - **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
 - **app_db_name**: Name of the application database.
-- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `prisma`, or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be either `knex` or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html) and [TypeORM](https://typeorm.io/migrations).
