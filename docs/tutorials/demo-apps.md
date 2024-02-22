@@ -4,7 +4,7 @@ title: Demo Applications
 description: Learn how to build larger apps with DBOS
 ---
 
-To show you how to develop larger applications with DBOS, we've built three demo applications, each highlighting a different set of DBOS's powerful features.
+To show you how to develop larger applications with DBOS, we've built two demo applications, each highlighting a different set of DBOS's powerful features.
 
 ## [E-Commerce](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce)
 
@@ -18,20 +18,6 @@ The E-Commerce demo demonstrates:
 * Integration with a [Next.js](https://nextjs.org/) front end
 
 For more technical details, please see the [Under the Covers](https://github.com/dbos-inc/dbos-demo-apps/blob/main/e-commerce/README.md#under-the-covers) section of the E-Commerce README.
-
-## [Bank](https://github.com/dbos-inc/dbos-demo-apps/tree/main/bank)
-
-The Bank demo is a toy banking app. Users can deposit or withdraw "cash" or transfer money between accounts potentially in different banks.
-
-The Bank demo demonstrates:
-* Reliable orchestration of complex workflows involving multiple database transactions and communicators
-* Using [Prisma](https://www.prisma.io/) for database interaction and schema management
-* Setting an [idempotency key](./idempotency-tutorial.md) in HTTP header for exactly-once cross-bank transactions
-* JWT-based authentication through integration with an external [Keycloak](https://www.keycloak.org/) service
-* [Declarative security](./authentication-authorization.md)
-* Unit tests with the [testing runtime](./testing-tutorial.md)
-* Integration with an [Angular](https://angular.io/) frontend
-
 
 ## [YKY Social](https://github.com/dbos-inc/dbos-demo-apps/tree/main/yky-social)
 YKY Social is a toy social network app, which allows users to register, create profiles, follow friends, and post messages to each other.

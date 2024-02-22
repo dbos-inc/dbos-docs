@@ -14,7 +14,7 @@ After your tests finish, [destroy the runtime](#runtimedestroy) to release resou
 ::::tip
 
 If you use TypeORM, you can use the testing runtime to [create](#runtimecreateuserschema) or [drop](#runtimedropuserschema) your schemas.
-If you use Knex or Prisma, you are responsible for setting up schemas/tables and cleaning them up.
+If you use Knex, you are responsible for setting up schemas/tables and cleaning them up, for example by using Knex migrations.
 
 ::::
 
