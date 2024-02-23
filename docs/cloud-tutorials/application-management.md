@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Application Management
+title: Cloud Application Management
 description: Learn how to manage DBOS Cloud applications
 ---
 
@@ -15,7 +15,7 @@ Then, in your application root directory, log in to DBOS Cloud by running:
 npx dbos-cloud login
 ```
 
-To deploy an application, you need a database to connect it to.
+To deploy an application, you need a database to connect to.
 You can use the database you created in the [cloud quickstart](../getting-started/quickstart-cloud.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
 Additionally, you must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
 
@@ -30,7 +30,7 @@ npx dbos-cloud application register -d <database-name>
 
 Your application is automatically registered under the name in its `package.json`.
 
-After you've registered your application, deploy it to run it in the cloud!
+After you've registered your application, deploy it to run it in the cloud.
 Run this command in your application root directory:
 
 ```
@@ -45,7 +45,7 @@ After your application is deployed, DBOS Cloud hosts it at this URL, which is al
 https://cloud.dbos.dev/apps/<username>/<app-name>
 ```
 
-If you edit your application or schema, simply run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version!
+If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
 
 :::tip
 You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically takes care of that for you, applying the connection information of your cloud database.

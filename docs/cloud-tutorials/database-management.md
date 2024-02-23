@@ -20,7 +20,7 @@ npx dbos-cloud login
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
 You should choose a database name and an administrator username and password for your database instance.
 Both the database instance name and the administrator username must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-To provision a database instance, run:
+To provision a database instance, run (this takes ~5-7 minutes):
 
 ```
 npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-password>
@@ -37,13 +37,25 @@ However, don't worry about setting the other database connection parameters like
 Remember your database administrator password! You need it to connect to our [time travel debugger](#).
 :::
 
+To see a list of all provisioned instances, run:
+
+```
+npx dbos-cloud database list
+```
+
+To retrieve the status of a particular instance, run:
+
+```
+npx dbos-cloud database status <database-name>
+```
+
 ### Database Schema Management
 
 To manage your applications' database schemas, you must define schema migrations.
 DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
 We recommend using a Typescript-based migration tool like [Knex](https://knexjs.org/guide/migrations.html) or [TypeORM](https://typeorm.io/migrations).
 
-You configure your schema migrations in the [`migrate`] field of your [`dbos-config.yaml`](../api-reference/configuration.md).
+You configure your schema migrations in the `migrate` field of your [`dbos-config.yaml`](../api-reference/configuration.md).
 You must supply a list of commands to run to migrate to your most recent schema version.
 For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), you might use:
 
