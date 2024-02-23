@@ -55,9 +55,9 @@ You don't have to edit your `dbos-config.yaml` to deploy an application to the c
 
 DBOS provides many tools to monitor and debug applications:
 
-- To get a high-level view of all your applications and their traces and logs, check out [our dashboard](#).
+- To get a high-level view of all your applications and their traces and logs, check out [our monitoring dashboard](./monitoring-dashboard).
 
-- To replay any past trace locally and figure out exactly what happened, check out our [time travel debugger](#).
+- To replay any past trace locally and figure out exactly what happened, check out our [time-travel debugger](./timetravel-debugging).
 
 - To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud application logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs). Note that new log entries take a few seconds to appear.
 
