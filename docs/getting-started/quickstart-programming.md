@@ -151,7 +151,7 @@ export class Greetings {
 The key element of this code is the new `SendGreetingEmail` method, invoked by the `Greet` handler.
 For simplicity, we print the email instead of sending it.
 
-### Composing Reliable orkflows
+### Composing Reliable workflows
 
 :::info what you will learn
 How to compose operations in DBOS workflows to obtain exactly once guarantees.
