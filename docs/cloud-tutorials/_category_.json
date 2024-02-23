@@ -1,6 +1,6 @@
 {
-  "label": "DBOS SDK Tutorials",
-  "position": 2,
+  "label": "DBOS Cloud Tutorials",
+  "position": 3,
   "link": {
     "type": "generated-index",
     "description": "These tutorials help you learn how to build powerful DBOS applications."
