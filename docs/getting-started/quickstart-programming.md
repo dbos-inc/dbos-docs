@@ -7,12 +7,11 @@ Let's learn how to program in DBOS!
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
 Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a reliable and transactional application.
 First, you'll learn to create HTTP endpoints to serve requests.
-Then, you'll learn how to interact with a database and embed third party API calls to your application.
+Then, you'll learn how to interact with a database and make third-party API calls from your application.
 Finally, you'll compose these steps in reliable workflows.
 
-This tutorial assumes you have finished our [quickstart](./quickstart.md).
-For convenience, we recommend initializing a new DBOS application and starting a database for it.
-Run the following commands, choosing a project name with no spaces or special characters:
+This tutorial assumes you've finished our [quickstart](./quickstart.md).
+For convenience, we recommend initializing a new DBOS application and starting a database for it:
 
 ```
 npx @dbos-inc/dbos-sdk init -n <project-name>
@@ -28,7 +27,6 @@ truncate -s 0 src/operations.ts
 How to serve your application via HTTP.
 :::
 
-In DBOS, you focus on your business logic and leave the rest to us.
 Let's add an HTTP GET handler to your application so it can send greetings to your friends.
 Add this code to `src/operations.ts`:
 
@@ -71,7 +69,8 @@ How to interact with the database.
 :::
 
 Let's augment the code to insert a new record in the database when we greet a friend.
-Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client handling the low-level details of connection management for you:
+Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client that automatically creates a database connection for you.
+To try it out, copy this code into `src/operations.ts`:
 
 ```javascript
 import { TransactionContext, Transaction, HandlerContext, GetApi } from '@dbos-inc/dbos-sdk'
@@ -92,15 +91,14 @@ export class Greetings {
 }
 ```
 
-The key element of this code are:
-- Calling the transaction from the handler using the context: `ctxt.invoke(Greetings).InsertGreeting(friend)`.
-- Inserting a row in the database with `ctxt.client.raw()`
+The key elements of this code are:
+- Using the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) that can access the database.
+- In the new function, inserting a row in the database with `ctxt.client.raw()`.
+- Calling the new function from the handler using the context: `ctxt.invoke(Greetings).InsertGreeting(friend)`.
 
 :::info
 In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and [TypeORM](https://typeorm.io/).
 :::
-
-The managed client provided in the transaction context (`ctxt.client`) handles the details of beginning, committing or rolling back database transactions.
 
 ### Interacting with third party services
 
@@ -148,7 +146,7 @@ export class Greetings {
 }
 ```
 
-The key element of this code is the new `SendGreetingEmail` method, invoked by the `Greet` handler.
+The key element of this code is the new `SendGreetingEmail` communicator method, invoked by the `Greet` handler.
 For simplicity, we print the email instead of sending it.
 
 ### Composing Reliable workflows
@@ -216,8 +214,9 @@ export class Greetings {
 ```
 
 The key elements of this snippet are:
-- We composed the transaction and communicator in a workflow (`SendGreetingNoteWorkflow`)
-- We introduced a sleep allowing you to stop the program before the workflow can complete
+- We created a [workflow function](../tutorials/workflow-tutorial.md) (`SendGreetingNoteWorkflow`) using the [`@Workflow`](../api-reference/decorators.md#workflow) decorator.
+- We composed the transaction and communicator in the workflow.
+- We introduced a sleep allowing you to stop the program midway through the workflow.
 
 When executing a workflow, DBOS persists the output of each step in your database.
 That way, if a workflow is interrupted for any reason, DBOS can then restart it from exactly where it left off.
@@ -228,7 +227,7 @@ npx dbos-sdk build
 npx dbos-sdk start
 ```
 
-Then visit [http://localhost:3000/greeting/Jim](http://localhost:3000/greeting/Jim) in your browser to send a request to the application.
+Then, visit [http://localhost:3000/greeting/Jim](http://localhost:3000/greeting/Jim) in your browser to send a request to the application.
 On your terminal, you should see an output like:
 
 ```shell
