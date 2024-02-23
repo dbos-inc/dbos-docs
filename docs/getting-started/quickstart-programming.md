@@ -124,9 +124,9 @@ import { Knex } from "knex";
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.logger.info("Sending Email...")
+        ctxt.logger.info("Sending Email...");
         // Code omitted for simplicity
-        ctxt.logger.info("Email sent!")
+        ctxt.logger.info("Email sent!");
     }
 
   @Transaction()
@@ -175,9 +175,9 @@ export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.logger.info("Sending Email...")
+        ctxt.logger.info("Sending Email...");
         // Code omitted for simplicity
-        ctxt.logger.info("Email sent!")
+        ctxt.logger.info("Email sent!");
     }
 
     @Transaction()
