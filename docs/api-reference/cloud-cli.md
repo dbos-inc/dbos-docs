@@ -12,7 +12,7 @@ The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud
 
 **Description:**  
 This command creates and registers a new DBOS Cloud account.
-It provides a URL to a secure login portal from which you can create an account from your browser.
+It provides a URL to a secure login portal you can use to create an account from your browser.
 
 **Parameters:**  
 - `-u, --username <string>`: Your DBOS Cloud username.
@@ -23,10 +23,7 @@ It provides a URL to a secure login portal from which you can create an account 
 
 **Description:**  
 This command logs you in to your DBOS Cloud account.
-It provides a URL to a secure login portal from which you can log in to your account from your browser.
-
-**Parameters:**  
-- `-u, --username <string>`: Your DBOS Cloud username.
+It provides a URL to a secure login portal you can use to authenticate from your browser.
 
 ---
 
