@@ -105,7 +105,7 @@ The managed client provided in the transaction context (`ctxt.client`) handles t
 ### Interacting with third party services
 
 :::info what you will learn
-How to safely send requests to third-party APIs
+How to safely send requests to third-party APIs.
 :::
 
 Let's say we want to use a third-party client to send our greeting via e-mail.
@@ -125,31 +125,30 @@ import axios from "axios";
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.log.info("Sending Email...")
+        ctxt.logger.info("Sending Email...")
         // Code omitted for simplicity
-        ctxt.log.info("Email sent!")
-        return "uuid";
+        ctxt.logger.info("Email sent!")
     }
 
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string, uuid: string) {
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
     await ctxt.client.raw(
-      "INSERT INTO dbos_hello (name, greeting_note_content, greeting_note_uuid) VALUES (?, ?, ?)",
-      [friend, content, uuid],
+      "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+      [friend, content],
     );
   }
 
   @GetApi("/greeting/:friend")
   static async Greet(ctxt: HandlerContext, friend: string) {
     const noteContent = `Thank you for being awesome, ${friend}!`;
-    const mailUUID = await ctxt.invoke(Greetings).SendGreetingMail(noteContent, friend);
-    await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent, mailUUID);
-    return { noteContent, mailUUID };
+    await ctxt.invoke(Greetings).SendGreetingEmail();
+    await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
+    return noteContent;
   }
 }
 ```
 
-The key element of this code is the new `SendGreetingMail` method, invoked by the `Greet` handler.
+The key element of this code is the new `SendGreetingEmail` method, invoked by the `Greet` handler.
 For simplicity, we print the email instead of sending it.
 
 ### Composing Reliable orkflows
@@ -178,26 +177,23 @@ export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export class Greetings {
     @Communicator()
     static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.log.info("Sending Email...")
+        ctxt.logger.info("Sending Email...")
         // Code omitted for simplicity
-        ctxt.log.info("Email sent!")
-        return "uuid";
+        ctxt.logger.info("Email sent!")
     }
 
     @Transaction()
-    static async InsertGreeting(
-        ctxt: TransactionContext<Knex>, friend: string, content: string, noteUUID: string,
-    ) {
+    static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
         await ctxt.client.raw(
-            "INSERT INTO dbos_hello (name, greeting_note_content, greeting_note_uuid) VALUES (?, ?, ?)",
-            [friend, content, noteUUID]
+            "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+            [friend, content]
         );
     }
 
     @Workflow()
     static async SendGreetingNoteWorkflow(ctxt: WorkflowContext, friend: string) {
         const noteContent = `Thank you for being awesome, ${friend}!`;
-        const shipNoteUUID = await ctxt.invoke(Greetings).SendGreetingEmail();
+        await ctxt.invoke(Greetings).SendGreetingEmail();
 
         for (let i = 0; i < 5; i++) {
             ctxt.logger.info(
@@ -206,8 +202,9 @@ export class Greetings {
             await sleep(1000);
         }
 
-        await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent, shipNoteUUID);
-        return { message: noteContent, uuid: shipNoteUUID };
+        await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
+        ctxt.logger.info("Workflow done!");
+        return noteContent;
     }
 
     @GetApi("/greeting/:friend")
@@ -231,7 +228,7 @@ npx dbos-sdk build
 npx dbos-sdk start
 ```
 
-Then visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to the application.
+Then visit [http://localhost:3000/greeting/Jim](http://localhost:3000/greeting/Jim) in your browser to send a request to the application.
 On your terminal, you should see an output like:
 
 ```shell
@@ -241,10 +238,8 @@ On your terminal, you should see an output like:
 [info]:     GET   :  /greeting/:friend
 [info]: DBOS Server is running at http://localhost:3000
 [info]: DBOS Admin Server is running at http://localhost:3001
-[info]: Mail sent with UUID: 27df0fb3-7897-4f79-b8ea-ae11dcbfa27c
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
+[info]: Sending Email...
+[info]: Email sent!
 [info]: Press control + C to interrupt the workflow...
 ```
 Press control + c when prompted to interrupt the workflow.
@@ -258,15 +253,15 @@ You should see an output like:
 [info]:     GET   :  /greeting/:friend
 [info]: DBOS Server is running at http://localhost:3000
 [info]: DBOS Admin Server is running at http://localhost:3001
-[info]: Mail sent with UUID: 27df0fb3-7897-4f79-b8ea-ae11dcbfa27c
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
 [info]: Press control + C to interrupt the workflow...
+[info]: Workflow done!
 ```
 
 Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
-This reliability is a core feature of DBOS: workflows always run to completion, but each of their operations executes once and only once.
+This reliability is a core feature of DBOS: workflows always run to completion and each of their operation executes once and only once.
 
 [TODO: tease the next part of the docs]
