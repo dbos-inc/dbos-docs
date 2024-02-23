@@ -80,7 +80,7 @@ import { Knex } from 'knex';
 export class Greetings {
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+    await ctxt.client.raw('INSERT INTO dbos_hello (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
   }
 
   @GetApi('/greeting/:friend')
@@ -133,7 +133,7 @@ export class Greetings {
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
     await ctxt.client.raw(
-      "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+      "INSERT INTO dbos_hello (greeting_name, greeting_note_content) VALUES (?, ?)",
       [friend, content],
     );
   }
@@ -185,7 +185,7 @@ export class Greetings {
     @Transaction()
     static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
         await ctxt.client.raw(
-            "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+            "INSERT INTO dbos_hello (greeting_name, greeting_note_content) VALUES (?, ?)",
             [friend, content]
         );
     }
