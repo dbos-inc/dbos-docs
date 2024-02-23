@@ -120,7 +120,6 @@ import {
   CommunicatorContext, Communicator,
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
-import axios from "axios";
 
 export class Greetings {
     @Communicator()
@@ -170,7 +169,6 @@ import {
     WorkflowContext, Workflow,
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
-import axios from "axios";
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
