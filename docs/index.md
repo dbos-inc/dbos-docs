@@ -16,7 +16,7 @@ You should build your next backend application with DBOS because:
 
 - **It's simple**.  Write your business logic using serverless functions.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It's reliable by default**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
-- **It's made for DBOS Cloud**.  Starting early next year, you can deploy any DBOS application to DBOS Cloud, our new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
+- **It's made for DBOS Cloud**.  Starting early 2024, you can deploy any DBOS application to DBOS Cloud, our new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
 
 To get started with DBOS today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
