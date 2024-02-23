@@ -127,6 +127,7 @@ export class Greetings {
         ctxt.logger.info("Sending Email...");
         // Code omitted for simplicity
         ctxt.logger.info("Email sent!");
+        await sleep(10);
     }
 
   @Transaction()
@@ -178,6 +179,7 @@ export class Greetings {
         ctxt.logger.info("Sending Email...");
         // Code omitted for simplicity
         ctxt.logger.info("Email sent!");
+        await sleep(10);
     }
 
     @Transaction()
