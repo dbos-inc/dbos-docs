@@ -34,7 +34,7 @@ However, don't worry about setting the other database connection parameters like
 :::
 
 :::tip
-Remember your database administrator password! You need it to connect to our [time travel debugger](.).
+Remember your database administrator password! You need it to connect to our [time travel debugger](#).
 :::
 
 ### Database Schema Management

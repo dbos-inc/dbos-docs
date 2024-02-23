@@ -140,7 +140,7 @@ However, DBOS workflows automatically resume from where they left off when the s
 
 ### Next Steps
 
-Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/tutorials) or [API reference](../category/reference).
+Congratulations on finishing the quickstart!  To learn more, check out our detailed [tutorials](../category/dbos-sdk-tutorials) or [API reference](../category/reference).
 If you want to see more complex applications built with DBOS, check out [our demo apps](../tutorials/demo-apps).
 
 Final code for the demo is available [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/hello-extended).

@@ -16,13 +16,13 @@ npx dbos-cloud login
 ```
 
 To deploy an application, you need a database to connect it to.
-You can use the database you created in the [cloud quickstart](../getting-started/quickstart-cloud.md) or [provision](.) a new one.
-Additionally, you must define [schema migrations](.) to create your application's tables.
+You can use the database you created in the [cloud quickstart](../getting-started/quickstart-cloud.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
+Additionally, you must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
 
 ### Registering and Deploying Applications
 
 The first step in deploying an application to DBOS Cloud is registering it.
-To register an application, run the following command in your application root directory, where `database-name` is the name of a Postgres database instance you've [provisioned](.).:
+To register an application, run the following command in your application root directory, where `database-name` is the name of a Postgres database instance you've [provisioned](./database-management.md#provisioning-database-instances):
 
 ```
 npx dbos-cloud application register -d <database-name>
@@ -39,6 +39,11 @@ npx dbos-cloud application deploy
 
 When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
 It then starts your application.
+After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
+
+```
+https://cloud.dbos.dev/apps/<username>/<app-name>
+```
 
 If you edit your application or schema, simply run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version!
 
@@ -50,9 +55,9 @@ You don't have to edit your `dbos-config.yaml` to deploy an application to the c
 
 DBOS provides many tools to monitor and debug applications:
 
-- To get a high-level view of all your applications and their traces and logs, check out [our dashboard](.).
+- To get a high-level view of all your applications and their traces and logs, check out [our dashboard](#).
 
-- To replay any past trace locally and figure out exactly what happened, check out our [time travel debugger](.).
+- To replay any past trace locally and figure out exactly what happened, check out our [time travel debugger](#).
 
 - To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud application logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs). Note that new log entries take a few seconds to appear.
 

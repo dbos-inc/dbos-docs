@@ -39,7 +39,7 @@ Here are some of DBOS's core features:
 ### How to Use These Docs
 
 - If you're encountering DBOS for the first time, try our [quickstart](./getting-started/quickstart) and get an application up and running in less than five minutes.
-- If you want to learn how to use DBOS's powerful features, check out our [tutorials](./category/tutorials).
+- If you want to learn how to use DBOS's powerful features, check out our [tutorials](./category/dbos-sdk-tutorials).
 - If you want a detailed reference for the DBOS API, check out our [API reference](./category/reference).
 - If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations).
 - If you want to see more complex applications built with DBOS, check out [our demo apps](./tutorials/demo-apps).
