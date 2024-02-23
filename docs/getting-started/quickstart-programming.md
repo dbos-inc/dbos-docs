@@ -263,5 +263,3 @@ You should see an output like:
 
 Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
 This reliability is a core feature of DBOS: workflows always run to completion and each of their operation executes once and only once.
-
-[TODO: tease the next part of the docs]
