@@ -4,13 +4,12 @@ sidebar_position: 5
 
 # DBOS Cloud Quickstart
 
-Here's how to deploy a DBOS application to the cloud in a few button presses!
+Here's how to deploy a DBOS application to the cloud in a few minutes!
 
 ### Preliminaries
 
 We assume you've already completed the [quickstart](./quickstart.md).
-Before starting this tutorial, instantiate a new DBOS application and `cd` into it by running the following commands.
-Your project name must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+Before starting this tutorial, instantiate a new DBOS application and `cd` into it by running the following commands:
 
 ```bash
 npx -y @dbos-inc/dbos-sdk init -n <project-name>
@@ -20,7 +19,7 @@ cd <project-name>
 ### Registration
 
 Let's start by creating a DBOS Cloud account.
-From your DBOS application directory, run the following command, picking a username with only lowercase letters and numbers, dashes (`-`), and underscores (`_`):
+From your DBOS application directory, run the following command:
 
 ```
 npx dbos-cloud register -u <username>
