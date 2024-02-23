@@ -16,7 +16,7 @@ Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#w
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow from our [quickstart](../getting-started/quickstart-programming-2).
+Here's an example workflow.
 It increments a counter in the database, then sends an HTTP request.
 If the request fails, it sends a compensating undo transaction to reverse the increment.
 By making this a workflow, we guarantee that the undo always happens if the request fails, even if the server is interrupted.
