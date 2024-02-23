@@ -17,7 +17,7 @@ static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) na
   return `Greeting, ${name}`;
 }
 ```
-Here's an example applying an endpoint decorator to an existing transaction (from our [quickstart](../getting-started/quickstart-programming-1.md)):
+Here's an example applying an endpoint decorator to an existing transaction:
 
 ```javascript
 @PostApi('/clear/:user')
