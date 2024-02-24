@@ -197,6 +197,7 @@ export class Greetings {
             ctxt.logger.info(
                 "Press control + C to interrupt the workflow..."
             );
+            // Sleep 1 second
             await ctxt.sleep(1);
         }
 
