@@ -18,6 +18,7 @@ npx @dbos-inc/dbos-sdk init -n <project-name>
 cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
+npx dbos-sdk migrate
 truncate -s 0 src/operations.ts
 ```
 
