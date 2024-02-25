@@ -80,7 +80,7 @@ import { Knex } from 'knex';
 export class Greetings {
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+    await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
   }
 
   @GetApi('/greeting/:friend')
@@ -96,8 +96,6 @@ The key elements of this code are:
 - Using the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) that can access the database.
 - In the new function, inserting a row in the database with `ctxt.client.raw()`.
 - Calling the new function from the handler using the context: `ctxt.invoke(Greetings).InsertGreeting(friend)`.
-
-Note that `name` is the primary key for `dbos_hello`. In this tutorial, greet each friend only once!
 
 :::info
 In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)) to make them easy to follow, but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and [TypeORM](https://typeorm.io/).
@@ -134,7 +132,7 @@ export class Greetings {
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
     await ctxt.client.raw(
-      "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+      "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
       [friend, content],
     );
   }
@@ -184,7 +182,7 @@ export class Greetings {
     @Transaction()
     static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
         await ctxt.client.raw(
-            "INSERT INTO dbos_hello (name, greeting_note_content) VALUES (?, ?)",
+            "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
             [friend, content]
         );
     }
