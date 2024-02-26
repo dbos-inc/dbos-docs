@@ -12,7 +12,7 @@ Encapsulating these calls in communicators is especially important if you're usi
 
 Communicators must be annotated with the [`@Communicator`](../api-reference/decorators#communicator) decorator and must have a [`CommunicatorContext`](../api-reference/contexts#communicatorcontext) as their first argument.
 As with other DBOS functions, communicator inputs and outputs must be serializable to JSON.
-Here's a simple example from the [quickstart](../getting-started/quickstart-programming-2.md) using [Axios](https://axios-http.com/docs/intro) to call the [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/):
+Here's a simple example using [Axios](https://axios-http.com/docs/intro) to call the [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/):
 
 
 ```javascript
