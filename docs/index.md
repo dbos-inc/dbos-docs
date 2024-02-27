@@ -6,23 +6,22 @@ sidebar_position: 1
 
 Welcome to DBOS!
 
-### What is the DBOS SDK?
+### What is DBOS?
 
-The DBOS SDK is a **Typescript framework built on the database** that helps you develop transactional backend applications.
-DBOS fully embraces the power of your application database, helping you write backend applications that are **reliable by default**.
-It runs your Typescript functions as database transactions, guarantees they run **once and only once** for each request, and orchestrates them into workflows so reliable that if your server restarts, they **resume exactly where they left off.**
+DBOS is a transactional serverless platform that helps you develop and deploy database-backed applications.
+You develop your applications in Typescript and PostgreSQL with our [open-source SDK](https://github.com/dbos-inc/dbos-ts) then deploy them with a push of a button to DBOS Cloud.
 
-You should build your next backend application with DBOS because:
+You want to build your next database-backed application with DBOS because:
 
-- **It's simple**.  Write your business logic using serverless functions.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
-- **It's reliable by default**.  Even if you have to reboot your server, your workflows [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
-- **It's made for DBOS Cloud**.  Starting early 2024, you can deploy any DBOS application to DBOS Cloud, our new cloud platform built on our revolutionary, scalable, and secure [cloud-native operating system](https://dbos.dev).
+- **It's simple**.  Write your business logic using serverless functions and deploy them to the cloud with the push of a button.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
+- **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
+- **It makes debugging a joy**.  With our [time travel debugger](./cloud-tutorials/timetravel-debugging.md), you can "rewind time" and replay any DBOS Cloud trace locally on your computer, exactly as it originally happened. Whatever the issue is, we'll help you reproduce it.
 
 To get started with DBOS today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
 ### Main Features
 
-Here are some of DBOS's core features:
+Here are some of the core features of the DBOS Typescript SDK:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -30,16 +29,24 @@ Here are some of DBOS's core features:
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
-| [Logging and Tracing](./tutorials/logging)                                    | Automatic OpenTelemetry-compatible tracing of all requests and built-in structured logging support with configurable exporters.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
-| [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your functions and endpoints, compatible with Jest and other popular testing frameworks.
-| [Push-Button Deployment to DBOS Cloud](https://dbos.dev)                      | Coming in early 2024!
+| [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
+
+And DBOS Cloud:
+
+| Feature                                                                       | Description
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [Serverless App Deployment](./cloud-tutorials/application-management.md)      | Deploy apps to DBOS Cloud with the push of a button
+| [Time Travel Debugging](./cloud-tutorials/timetravel-debugging.md)            | Replay any DBOS Cloud trace locally on your computer.
+| [Cloud Database Management](./cloud-tutorials/database-management.md)         | Provision cloud Postgres instances for your applications.
+| [Built-in Observability](./cloud-tutorials/monitoring-dashboard.md)           | Built-in log capture, request tracing, and dashboards.
 
 
 ### How to Use These Docs
 
 - If you're encountering DBOS for the first time, try our [quickstart](./getting-started/quickstart) and get an application up and running in less than five minutes.
-- If you want to learn how to use DBOS's powerful features, check out our [tutorials](./category/dbos-sdk-tutorials).
-- If you want a detailed reference for the DBOS API, check out our [API reference](./category/reference).
+- If you want to learn how to use DBOS's powerful features, check out our [SDK tutorials](./category/dbos-sdk-tutorials).
+- If you want to learn how to deploy applications to DBOS Cloud, check our our [cloud tutorials](./category/dbos-cloud-tutorials).
+- If you want a detailed reference for the DBOS SDK and DBOS Cloud APIs, check out our [API reference](./category/reference).
 - If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations).
 - If you want to see more complex applications built with DBOS, check out [our demo apps](./tutorials/demo-apps).
