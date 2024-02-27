@@ -14,7 +14,7 @@ This tutorial assumes you've finished our [quickstart](./quickstart.md).
 For convenience, we recommend initializing a new DBOS application and starting a database for it:
 
 ```
-npx @dbos-inc/dbos-sdk init -n <project-name>
+npx -y @dbos-inc/dbos-sdk init -n <project-name>
 cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
@@ -122,11 +122,10 @@ import { Knex } from "knex";
 
 export class Greetings {
     @Communicator()
-    static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.logger.info("Sending Email...");
+    static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
+        ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
         // Code omitted for simplicity
         ctxt.logger.info("Email sent!");
-        await new Promise((resolve) => resolve("Email sent!"));
     }
 
   @Transaction()
@@ -140,7 +139,7 @@ export class Greetings {
   @GetApi("/greeting/:friend")
   static async Greet(ctxt: HandlerContext, friend: string) {
     const noteContent = `Thank you for being awesome, ${friend}!`;
-    await ctxt.invoke(Greetings).SendGreetingEmail();
+    await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
     await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
     return noteContent;
   }
@@ -148,12 +147,11 @@ export class Greetings {
 ```
 
 The key element of this code is the new `SendGreetingEmail` communicator method, invoked by the `Greet` handler.
-For simplicity, we print the email instead of sending it.
 
-### Composing Reliable workflows
+### Composing Reliable Workflows
 
 :::info what you will learn
-How to compose operations in DBOS workflows to obtain exactly once guarantees.
+How to make your applications reliable using DBOS workflows.
 :::
 
 To avoid spamming our friends, we want to make sure the email is only sent once if we retry it after a transient failure.
@@ -172,11 +170,10 @@ import { Knex } from "knex";
 
 export class Greetings {
     @Communicator()
-    static async SendGreetingEmail(ctxt: CommunicatorContext) {
-        ctxt.logger.info("Sending Email...");
+    static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
+        ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
         // Code omitted for simplicity
         ctxt.logger.info("Email sent!");
-        await new Promise((resolve) => resolve("Email sent!"));
     }
 
     @Transaction()
@@ -188,33 +185,27 @@ export class Greetings {
     }
 
     @Workflow()
+    @GetApi("/greeting/:friend")
     static async SendGreetingNoteWorkflow(ctxt: WorkflowContext, friend: string) {
         const noteContent = `Thank you for being awesome, ${friend}!`;
-        await ctxt.invoke(Greetings).SendGreetingEmail();
+        await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
 
         for (let i = 0; i < 5; i++) {
             ctxt.logger.info(
                 "Press control + C to interrupt the workflow..."
             );
-            // Sleep 1 second
             await ctxt.sleep(1);
         }
 
         await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
-        ctxt.logger.info("Workflow done!");
+        ctxt.logger.info(`Greeting sent to ${friend}!`);
         return noteContent;
-    }
-
-    @GetApi("/greeting/:friend")
-    static async Greet(ctxt: HandlerContext, friend: string) {
-        const workflow_handle = await ctxt.invoke(Greetings).SendGreetingNoteWorkflow(friend);
-        return await workflow_handle.getResult();
     }
 }
 ```
 
 The key elements of this snippet are:
-- We created a [workflow function](../tutorials/workflow-tutorial.md) (`SendGreetingNoteWorkflow`) using the [`@Workflow`](../api-reference/decorators.md#workflow) decorator.
+- We created a [workflow function](../tutorials/workflow-tutorial.md) (`SendGreetingNoteWorkflow`) using the [`@Workflow`](../api-reference/decorators.md#workflow) decorator. We moved the `@GetApi` decorator to this function to serve HTTP requests from it.
 - We composed the transaction and communicator in the workflow.
 - We introduced a sleep allowing you to stop the program midway through the workflow.
 
