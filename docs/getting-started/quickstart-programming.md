@@ -93,9 +93,9 @@ export class Greetings {
 ```
 
 The key elements of this code are:
-- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) that can access the database.
-- In the new function, we insert a row in the database with `ctxt.client.raw()`.
-- We call the new function from the handler using its context: `ctxt.invoke(Greetings).InsertGreeting(friend, noteContent)`.
+- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that can access the database.
+- Inside `InsertGreeting`, we insert a row in the database with `ctxt.client.raw()`.
+- We call `InsertGreeting` from `Greeting` using its context: `ctxt.invoke(Greetings).InsertGreeting(friend, noteContent)`.
 
 To learn more about accessing the database in DBOS, see [our guide](../tutorials/transaction-tutorial.md).
 
@@ -149,8 +149,8 @@ export class Greetings {
 ```
 
 The key elements of this code are:
-- We use the [`@Communicator`](../api-reference/decorators#transaction) decorator to define a [communicator function](../tutorials/communicator-tutorial.md) to access a third-party email service.
-- We call the new function from the handler using its context: `ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent)`.
+- We use the [`@Communicator`](../api-reference/decorators#transaction) decorator to define a [communicator function](../tutorials/communicator-tutorial.md) (`SendGreetingEmail`) to access a third-party email service.
+- We call `SendGreetingEmail` from `Greeting` using its context: `ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent)`.
 
 To learn more about communication with external services and APIs in DBOS, see [our guide](../tutorials/communicator-tutorial).
 
