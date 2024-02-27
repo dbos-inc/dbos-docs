@@ -1,6 +1,6 @@
 ---
-sidebar_position: 4
-title: Programming reliable checkout workflows
+sidebar_position: 3
+title: Reliable workflows
 ---
 
 # Programming reliable checkout workflows
