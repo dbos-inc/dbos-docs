@@ -27,9 +27,12 @@ This guide comes with a provided [library](https://github.com/dbos-inc/dbos-demo
 ## Overview
 
 You will write an application triggering payment workflows upon receiving user requests.
-The payment workflow will start in the background, prompting the user to follow a link to a third party payment service.
-The payment service, upon validation or failure of the payment, will callback your application.
-The payment workflow will be waiting for this callback, and, upon reception, signal the request handler it can respond to the user's request.
+The payment workflow will start in the background, and create a payment session.
+The payment service will respond with a session ID, which our application will use to direct the user to a payment link.
+The user will be able to proceed with the payment - or cancel it.
+The payment service, after processing the payment, will callback your application.
+
+![](shop-guide-diagram.svg)
 
 ## The HTTP handler
 
