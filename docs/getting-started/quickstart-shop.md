@@ -46,7 +46,7 @@ static async webCheckout(ctxt: HandlerContext): Promise<void> {
   }
 
   // Display links to submit/cancel the payment
-  printPaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
+  generatePaymentUrls(handle.getWorkflowUUID(), session_id);
 }
 ```
 
@@ -56,14 +56,14 @@ The key elements of this snippet are:
 
 ## The payment workflow
 
-The workflow's responsibility is two-folds: ensure the state of the shop's inventory is consistent and initiate a payment session with a third party provider.
+The workflow's responsibility is two-folds: initiate a payment session with a third party provider and ensure the state of the shop's inventory is consistent.
 First, it substracts a `product` from the inventory.
-Second, it calls a [communicator](.../tutorials/communicator-tutorial), `createPaymentSession` to initiate a payment session with the payment service.
-If this second step fails, it will revert the inventory change.
+Second, it calls a [communicator](.../tutorials/communicator-tutorial), `createPaymentSession`, to initiate a payment session with the payment service.
 
-Once a payment session is created, the workflow will share session ID with the handler.
-It will now be time for the user to proceed with the payment. The workflow will be waiting for a notification from the payment provider.
-In case the payment fails, the workflow will revert changes to the inventory.
+Once a payment session is created, the workflow will share the payment session ID with the handler, which will direct the user to an endpoint at the payment service.
+The workflow will then be waiting for a notification from the payment provider.
+
+The workflow will revert changes to the inventory in case of failure at any point in the process.
 
 :::info
 Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce) for a more complete example.
@@ -105,4 +105,47 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
   }
 }
 ```
+
+The key elements of this snippet are:
+- Starting the payment session: `ctxt.invoke(ShopUtilities).createPaymentSession(product);`.
+- Signaling the request handler with the session ID: `await ctxt.setEvent(checkout_url_topic, paymentSession.session_id);`.
+- Waiting for a notification from the payment service: `ctxt.recv<string>(checkout_complete_topic, 30);`, with a 30 seconds timeout.
+
+
+Let's build and run the application (make sure you have the full code as provided in the [guide's repository](https://github.com/dbos-inc/dbos-demo-apps).)
+
+```shell
+npm run build
+npx dbos-sdk start
+```
+
+The output should look like:
+
+```shell
+[info]: Workflow executor initialized
+[info]: HTTP endpoints supported:
+[info]:     POST  :  /payment_webhook
+[info]:     POST  :  /api/checkout_session
+[info]: DBOS Server is running at http://localhost:8082
+[info]: DBOS Admin Server is running at http://localhost:8083
+```
+
+And send a request to initiate a checkout: `curl -X POST http://localhost:8082/api/checkout_session`.
+The response will include two links, one for validating the payment and one for cancelling it:
+```shell
+Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
+Cancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
+```
+
+You can take three actions: submit the payment, cancel it, or do nothing. Here are example outputs from the application in these three cases:
+```shell
+# Submit the payment
+[info]: Checkout payment notification received
+# Cancel the payment or do nothing
+[warn]: Checkout payment failed or timed out
+```
+
+In the two last cases, the shop's inventory will be rolled back.
+
+
 
