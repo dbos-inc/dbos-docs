@@ -60,11 +60,10 @@ Now, deploy your application to run it in the cloud!
 ```
 npx dbos-cloud application deploy
 ```
-
-This command will build your application, then deploy it to our serverless cloud platform.
-If successful, it will print `Successfully deployed <app-name>! Access your application at <URL>`
+If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`
 The URL should look like `https://cloud.dbos.dev/apps/<username>/<app-name>`
 Your application is now live at that URL!
+If you ever forget the URL, you can retrieve it (and some other information) by running `npx dbos-cloud application status`.
 
 To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
 For example, if your username is `mike` and your app name is `hello`, visit `https://cloud.dbos.dev/apps/mike/hello/greeting/dbos`.
