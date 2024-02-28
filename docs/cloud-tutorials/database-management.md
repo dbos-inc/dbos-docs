@@ -41,13 +41,13 @@ Remember your database administrator password! You need it to connect to our [ti
 To see a list of all provisioned instances, run:
 
 ```
-npx dbos-cloud database list
+npx dbos-cloud db list
 ```
 
 To retrieve the status of a particular instance, run:
 
 ```
-npx dbos-cloud database status <database-name>
+npx dbos-cloud db status <database-name>
 ```
 
 ### Database Schema Management
@@ -78,4 +78,6 @@ To destroy a database instance, run:
 npx dbos-cloud database destroy <database-name>
 ```
 
+:::warning
 Take care&#8212;this irreversibly delete all data on the instance.
+:::
