@@ -42,7 +42,7 @@ If it obtains a valid session ID, it will respond the user with links to submit 
 ### Registering the handler
 ```javascript
 @PostApi('/checkout/:key?')
-static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<void> {
+static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
 ```
 The handler serves `/checkout/:key?` with the function `webCheckout`.
 The route accepts an optional path parameter `key`, used as an [idempotency key](../tutorials/idempotency-tutorial).
@@ -58,7 +58,7 @@ The workflow will start in the background. You can use the handle to inquire on 
 Note how we invoke the workflow using the idempotency key so DBOS can resume an existing workflow or simply handle common cases like "the user clicked twice on the buy button".
 
 ### Waiting for a payment session ID
-The handler uses the [events API](../tutorials/workflow-communication-tutorial#events-api) to wait for a payment session ID.
+The handler uses DBOS [events API](../tutorials/workflow-communication-tutorial#events-api) to wait for a payment session ID.
 We will see in the next section how the payment workflow can notify the handler using the topic `session_topic`.
 ```javascript
 // Block until the payment session is ready
@@ -117,7 +117,7 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
 
 ### Update the shop's inventory
 The workflow first subtract an item from the inventory using the `subtractInventory` transaction.
-If this step fails, the workflow immediately signals the handler using `setEvent` and returns.
+If this step fails, the workflow immediately signals the handler using [setEvent](../tutorials/workflow-communication-tutorial#setevent) and returns.
 ```javascript
 // Attempt to update the inventory. Signal the handler if it fails.
 try {
@@ -135,7 +135,7 @@ If this fails, it undo changes to the inventory using the `undoSubtractInventory
 ```javascript
 // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
 const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
-if (!paymentSession?.url) {
+if (!paymentSession.url) {
   ctxt.logger.error("Failed to create payment session");
   await ctxt.invoke(ShopUtilities).undoSubtractInventory();
   await ctxt.setEvent(session_topic, null);
@@ -145,7 +145,7 @@ if (!paymentSession?.url) {
 Under the hood, `createPaymentSession` registers a callback with the payment service, which will signal the workflow when the payment is completed.
 
 ### Waiting for a payment
-Now, the workflow must do two things: notify the handler the payment session is ready&horbar;using `setEvent`&horbar;and wait for the outcome of the payment&horbar;using `recv`.
+Now, the workflow must do two things: notify the handler the payment session is ready&horbar;using [setEvent](../tutorials/workflow-communication-tutorial#setevent)&horbar;and wait for the outcome of the payment&horbar;using `recv`.
 ```javascript
 // Notify the handler and share the payment session ID.
 await ctxt.setEvent(session_topic, paymentSession.session_id);
@@ -178,7 +178,6 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
   try {
     await ctxt.invoke(ShopUtilities).subtractInventory();
   } catch (error) {
-      console.log(error);
     ctxt.logger.error("Failed to update inventory");
     await ctxt.setEvent(session_topic, null);
     return;
@@ -186,7 +185,7 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
 
   // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
   const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
-  if (!paymentSession?.url) {
+  if (!paymentSession.url) {
     ctxt.logger.error("Failed to create payment session");
     await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
     await ctxt.setEvent(session_topic, null);
@@ -198,7 +197,6 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
 
   // Wait for a notification from the payment service.
   const notification = await ctxt.recv<string>(payment_complete_topic, 30);
-  console.log(notification);
 
   if (notification && notification === 'paid') {
     // If the payment succeeds, fulfill the order (code omitted for clarity.)
