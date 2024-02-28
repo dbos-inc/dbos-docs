@@ -7,46 +7,42 @@ description: Learn how to make applications reliable using workflows.
 In this guide, you'll learn how to make your applications reliable using workflows.
 
 Workflows orchestrate the execution of other functions, like transactions and communicators.
-They're useful because they're _reliable_: if a server is interruped for any reason (for example, it crashes and restarts), it automatically resumes all incomplete workflows and runs them to completion without re-executing any operation that already completed.
-You can use workflows when you need to coordinate multiple operations that all need to complete for a program to be correct.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), we use a workflow to do payment processing.
-Workflow reliability guarantees are especially valuable when some operations are long-running, like waiting for user inputs.
+Workflows are _reliable_: if their execution is interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
+You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), we use a workflow for payment processing.
 
 Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow incrementing a counter in the database and sending an HTTP request.
-If the request fails, it sends a compensating undo transaction to reverse the increment.
-By making this a workflow, we guarantee that the undo always happens if the request fails, even if the server is interrupted.
+Here's an example workflow (from the [programming quickstart](../getting-started/quickstart-programming.md)) sending an email then recording it in the database.
+By using a workflow, we guarantee that every email is recorded in the database, even if execution is interrupted.
 
 ```javascript
-class Hello {
+class Greetings {
 
-  ... // Other function implementations
+  // Other function implementations
 
-  @GetApi('/greeting/:user')
-  @Workflow()
-  static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      await ctxt.invoke(Hello).undoHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
+    @Workflow()
+    @GetApi("/greeting/:friend")
+    static async GreetingWorkflow(ctxt: WorkflowContext, friend: string) {
+        const noteContent = `Thank you for being awesome, ${friend}!`;
+        await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
+        await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
+        ctxt.logger.info(`Greeting sent to ${friend}!`);
+        return noteContent;
     }
-  }
+
+}
 ```
 
 ### Invoking Functions from Workflows
 
 Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoketargetclass) method.
-For example, this line from our above example invokes `helloTransaction`:
+For example, this line from our above example invokes the transaction `InsertGreeting`:
 
 ```javascript
-const greeting = await ctxt.invoke(Hello).helloTransaction(user);
+await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 ```
 
 The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
@@ -57,7 +53,7 @@ You can also invoke other workflows using the [ctxt.childWorkflow()](../api-refe
 
 Workflows provide the following reliability guaranteees:
 
-1.  They always run to completion.  If a server executing a workflow fails and is restarted, it resumes all incomplete workflows from where they left off.
+1.  They always run to completion.  If execution of a workflow is interrupted, DBOS resumes it from where it left off.
 2.  Transactions execute _exactly once_.  Regardless of what failures occur during a workflow's execution, it executes each of its transactions once and only once.
 3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, guarantees it will never be re-executed regardless of what failures happen afterwards.
 
