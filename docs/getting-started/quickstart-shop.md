@@ -28,19 +28,12 @@ cd dbos-demo-apps/shop-guide
 We will also be using [cURL](https://curl.se/dlwiz/?type=bin) which is likely already installed on your system.
 
 ## Overview
-This diagram presents a high level view of the checkout process we will implement in this guide.
+
+In this guide, we'll be implementing two functions: the checkout workflow and its HTTP handler.
+These interact with an external payment service modelled on [Stripe](https://stripe.com).
+Here's a diagram of what the checkout flow looks like:
 
 ![](shop-guide-diagram.svg)
-
-1. A user sends a request to the application.
-2. The application's request handler starts a payment workflow and waits for a payment session.
-3. The payment workflow initiates a payment session with the payment service.
-4. The payment service responds with the session details and waits for the user to complete the payment.
-5. The payment workflow notifies the handler with the session details.
-6. The handler responds the request with a payment link.
-7. The user proceeds with the payment.
-8. The payment service notify the payment workflow of the transaction outcome.
-9. The payment workflow fulfills the order of the payment is successful.
 
 ## The HTTP handler
 
