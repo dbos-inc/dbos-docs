@@ -9,7 +9,7 @@ In this guide, we will follow-up on the reliable workflow concept from [programm
 The workflow will maintain three properties:
 1. Never charge a customer without fulfilling an order.
 2. Never charge a customer twice for the same order.
-3. Maintain product inventory properly.
+3. Maintain product inventory correctly.
 
 Without DBOS, maintaining these properties is hard: users can click the buy button twice, the program can crash in the middle of the transaction, the payment service can fail, etc.
 
