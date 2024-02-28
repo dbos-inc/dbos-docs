@@ -108,16 +108,6 @@ readonly logger: DBOSLogger
 A reference to DBOS's logger.
 Please see our [logging tutorial](../tutorials/logging.md#logging) for more information.
 
-### ctxt.span
-
-```typescript
-readonly span: Span
-```
-
-An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this function.
-You can assign custom trace attributes to this span.
-Please see our [tracing tutorial](../tutorials/logging.md#tracing) for more information.
-
 ### ctxt.getConfig(key, defaultValue)
 
 ```typescript
@@ -446,14 +436,6 @@ readonly logger: DBOSLogger;
 ```
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
-
-### MiddlewareContext.span
-
-```typescript
-readonly span: Span;
-```
-
-`span` is the tracing span in which the middleware is being executed.
 
 ### MiddlewareContext.koaContext
 
