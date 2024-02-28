@@ -421,7 +421,7 @@ export class Operations
 }
 ```
 
-This decorator will ensure the function is registered with DBOS and benefit from its [tracing subsystem](../tutorials/logging#tracing).
+This decorator will ensure the function is registered with DBOS and benefit from its [logging subsystem](../tutorials/logging).
 
 :::info note
 In the future, a different decorator may be suggested for the purpose of simply registering a function, with separate control over which functions are traced.

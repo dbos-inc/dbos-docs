@@ -43,7 +43,7 @@ nvm use 20
   </TabItem>
 </Tabs>
 
-This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database.  To install (assuming you don't already have Docker installed):
+This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).  To install (assuming you don't already have Docker installed):
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">

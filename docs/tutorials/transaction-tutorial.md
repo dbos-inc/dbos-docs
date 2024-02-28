@@ -22,7 +22,7 @@ By default, this is a [Knex.js](https://knexjs.org/) client.
 We like Knex because it's lightweight and helps us write fast and type-safe queries.
 However, if you prefer a traditional ORM, we also support [TypeORM](./using-typeorm.md).
 
-Here's an example of a transaction function (from the example code coming with [npx @dbos-inc/dbos-sdk init](../getting-started/quickstart)) written using raw SQL (calling it with [knex.raw](https://knexjs.org/guide/raw.html)):
+Here's an example of a transaction function written using raw SQL (calling it with [knex.raw](https://knexjs.org/guide/raw.html)):
 
 ```javascript
 export interface dbos_hello {
