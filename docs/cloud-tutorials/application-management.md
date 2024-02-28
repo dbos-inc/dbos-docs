@@ -29,12 +29,13 @@ npx dbos-cloud application register -d <database-name>
 ```
 
 Your application is automatically registered under the name in its `package.json`.
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 After you've registered your application, deploy it to run it in the cloud.
 Run this command in your application root directory:
 
 ```
-npx dbos-cloud application deploy
+npx dbos-cloud app deploy
 ```
 
 When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
@@ -68,5 +69,5 @@ DBOS provides many tools to monitor and debug applications:
 If you want to delete an application, run in its root directory:
 
 ```
-npx dbos-cloud application delete
+npx dbos-cloud app delete
 ```
