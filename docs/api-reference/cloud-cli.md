@@ -112,10 +112,6 @@ It registers that application with DBOS Cloud.
 **Description:**  
 This command must be run from an application root directory.
 It deploys the application to DBOS Cloud and emits the URL at which the application is hosted, which is `https://cloud.dbos.dev/apps/<username>/<application-name>`.
-By default, it builds the application using Docker before deployment to guarantee compatibility with our cloud environment.
-
-**Parameters:**  
-- `--no-docker`: Do not build the application with Docker. If using this option, you must install dependencies and build your application locally before deploying.
 
 ---
 
@@ -143,6 +139,7 @@ For each registered application, emit:
 - `ApplicationDatabaseName`: The database on this instance on which this application stores data.
 - `Status`: The current status of this application (available or unavailable).
 - `Version`: The currently deployed version of this application.
+- `AppURL`: The URL at which the application is hosted.
 ---
 
 ### `npx dbos-cloud application status`
@@ -161,6 +158,7 @@ It retrieves that application's status.
 - `ApplicationDatabaseName`: The database on this instance on which this application stores data.
 - `Status`: The current status of this application (available or unavailable).
 - `Version`: The currently deployed version of this application.
+- `AppURL`: The URL at which the application is hosted.
 ---
 
 ### `npx dbos-cloud application logs`
