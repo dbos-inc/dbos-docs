@@ -31,7 +31,7 @@ We will also be using [cURL](https://curl.se/dlwiz/?type=bin) which is likely al
 
 In this guide, we'll be implementing two functions: the checkout workflow and its HTTP handler.
 These interact with an external payment service modelled on [Stripe](https://stripe.com).
-Here's a diagram of what the checkout flow looks like:
+Here's a diagram of what the end-to-end checkout flow looks like:
 
 ![](shop-guide-diagram.svg)
 
