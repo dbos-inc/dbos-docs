@@ -16,6 +16,7 @@ npx -y @dbos-inc/dbos-sdk init -n <project-name>
 cd <project-name>
 ```
 
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 ### Registration
 
 Let's start by creating a DBOS Cloud account.
@@ -25,17 +26,19 @@ From your DBOS application directory, run the following command:
 npx dbos-cloud register -u <username>
 ```
 
+User names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+
 When you run the command, it will ask you for some information, then redirect you to a secure login portal.
 Open the login portal in your browser and click `Confirm`, then create a new account.
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
-
 
 ### Provisioning a Database Instance
 
 Next, let's provision a Postgres database instance your applications can connect to!
 You should choose a database name and an administrator username and password for your database instance.
 Both the database instance name and the administrator username must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+The database instance name must be between 3 and 30 characters.
 Run this command (it should take ~5 minutes to provision):
 
 ```
