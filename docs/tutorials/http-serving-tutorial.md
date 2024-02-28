@@ -34,7 +34,8 @@ Each associates a function with an HTTP URL.
 :::info
 
 You might be wondering why we don't talk about setting up an HTTP server.
-That's because DBOS is a _serverless_ framework: we launch and manage the server for you when you start your app with `npx dbos-sdk start`, using the endpoints and configuration you specify with decorators.
+It's because DBOS is _serverless_.
+When you run an locally app with `npx dbos-sdk start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
 
 :::
 
@@ -55,7 +56,7 @@ Arguments are parsed from three places by default:
 
 1. For GET requests, from a URL query string parameter.
 2. For POST requests, from an HTTP body field.
-3. From an URL path parameter, if there are placeholders specified in the decorated URL.
+3. From a URL path parameter, if there are placeholders specified in the decorated URL.
 
 In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: string`.
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
