@@ -49,7 +49,7 @@ https://cloud.dbos.dev/apps/<username>/<app-name>
 If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
 
 :::tip
-You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically takes care of that for you, applying the connection information of your cloud database.
+You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database.
 :::
 
 ### Monitoring and Debugging Applications
