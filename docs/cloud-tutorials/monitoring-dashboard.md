@@ -42,4 +42,4 @@ In the top-right corner of the app, there are filtering selectors:
 When turning on the filtering selectors, the time window selection stays the same. Note that you may see more data for your selection if you "zoom out" in time. Note also that the Application Name choices are set once when the dashboard is loaded. To refresh, simply reload your browser.
 
 For much faster filtering, you can set the Trace ID or Workflow UUID simply by clicking on the respective value in the bottom traces table. For Workflow UUID you can also open the selected workflow in the debugger. Click once to see the choices and confirm with another click:
-<img width="1728" alt="image" src="https://github.com/dbos-inc/dbos-docs/assets/2708498/4a9a19f5-3016-4145-9767-eb484e1cbfab">
+<img width="1728" alt="image" src="https://github.com/dbos-inc/dbos-docs/assets/2708498/4a9a19f5-3016-4145-9767-eb484e1cbfab"></img>
