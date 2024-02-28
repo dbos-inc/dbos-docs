@@ -55,20 +55,25 @@ Workflows provide the following reliability guaranteees:
 
 1.  They always run to completion.  If execution of a workflow is interrupted, DBOS resumes it from where it left off.
 2.  Transactions execute _exactly once_.  Regardless of what failures occur during a workflow's execution, it executes each of its transactions once and only once.
-3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, guarantees it will never be re-executed regardless of what failures happen afterwards.
+3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
 ### Determinism
 
-For workflows to provide reliability guarantees, they must be deterministic.
-In other words, a workflow function must always do the same thing given the same inputs.
+Workflows must be deterministic: if called multiple times with the same inputs, they should always do the same thing.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
+You can safely [invoke](../api-reference/contexts.md#workflowctxtinvoketargetclass) these methods from a workflow.
+
+:::warning
+It's important to call non-deterministic operations (particularly third-party APIs) from [communicators](./communicator-tutorial) so DBOS knows to retry them safely.
+:::
 
 ### Workflow Identity
 
 Every time you execute a workflow, that execution is assigned a unique identity, represented as a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this UUID through the `context.workflowUUID` field.
 Workflow identities are important for communicating with workflows and developing interactive workflows.
+They are also used to uniquely identify an execution to [time travel debug](../cloud-tutorials/timetravel-debugging.md) it.
 For more information on workflow communication, see [our guide](./workflow-communication-tutorial.md).
 
 ### Asynchronous Workflows
