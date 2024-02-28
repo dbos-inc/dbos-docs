@@ -20,27 +20,27 @@ Without DBOS, maintaining these properties is hard: users can click the buy butt
 :::
 
 ## Resources
-This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps). In addition, you will be using a [sample payment service hosted on DBOS cloud](https://cloud.dbos.dev/dbos-instructor/apps/payment).
-
-[TODO: setup instructions (repo + cURL]
+This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps). Let's clone it:
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps
+cd dbos-demo-apps/shop-guide
+```
+We will also be using [cURL](https://curl.se/dlwiz/?type=bin) which is likely already installed on your system.
 
 ## Overview
-This diagram presents a high level view of the checkout process.
-
-[TODO: update diagram to break down handler & workflow]
-
-[TODO: update diagram to occupy the width of the page]
+This diagram presents a high level view of the checkout process we will implement in this guide.
 
 ![](shop-guide-diagram.svg)
 
 1. A user sends a request to the application.
-2. The application's request handler triggers a payment workflow and wait for a signal.
-3. The payment workflow updates the inventory.
-4. The payment workflow initiates a payment session and shares its ID with the handler.
-5. The handler responds the request with a link to submit or cancel the payment.
-6. The user submits or cancel the payment.
-7. The payment service notify the payment workflow of the transaction outcome
-8. The payment workflow commits or rollback the checkout.
+2. The application's request handler starts a payment workflow and waits for a payment session.
+3. The payment workflow initiates a payment session with the payment service.
+4. The payment service responds with the session details and waits for the user to complete the payment.
+5. The payment workflow notifies the handler with the session details.
+6. The handler responds the request with a payment link.
+7. The user proceeds with the payment.
+8. The payment service notify the payment workflow of the transaction outcome.
+9. The payment workflow fulfills the order of the payment is successful.
 
 ## The HTTP handler
 
@@ -244,6 +244,12 @@ export class Shop {
 ## Building and running
 Let's build and run the application (make sure you have the full code as provided in the [guide's repository](https://github.com/dbos-inc/dbos-demo-apps).)
 
+First we will start the payment service in the background. In one terminal, run:
+```shell
+./start_payment_service.sh
+```
+
+Then we will start the shop application itself. In another terminal, run:
 ```shell
 npm run build
 npx dbos-sdk start
