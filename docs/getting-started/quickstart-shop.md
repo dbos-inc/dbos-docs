@@ -95,7 +95,7 @@ static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promis
 
 The workflow initiates a payment session with a third party service and manages the shop's inventory.
 Specifically, it:
-- Wraps interactions with the payment service in a [communicator](.../tutorials/communicator-tutorial), so customers cannot be charged twice for the same order.
+- Wraps interactions with the payment service in a [communicator](../tutorials/communicator-tutorial), so customers cannot be charged twice for the same order.
 - Undo inventory modifications on failure.
 - Always fulfill orders if payments succeed.
 
