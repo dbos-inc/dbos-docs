@@ -81,17 +81,13 @@ application:
 
 ### Telemetry
 
-You can use the configuration file to tune the behavior of DBOS logging and tracing facilities.
+You can use the configuration file to tune the behavior of DBOS logging facility.
 Note all options in this section are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
 - **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx dbos-sdk start -l <logLevel>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
 - **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry. Defaults to `true`.
 - **silent**: Silences the logger. Defaults to `false`.
-
-#### Traces
-- **enable**: Whether or not to export traces in [OTLP format](https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md). Defaults to `true`.
-- **endpoint**: The fully-qualified domain name of a [Jaeger](https://Jaegertracing.io) endpoint. 
 
 **Example**:
 
@@ -101,9 +97,6 @@ telemetry:
     logLevel: 'info' # info (default) | debug | warn | emerg | alert | crit | error
     addContextMetadata: true # true (default) | false
     silent: false # false (default) | true
-  traces:
-    enabled: true # true | false (default)
-    endpoint: 'http://localhost:4318/v1/traces' # (default; no effect if enabled=false)
 ```
 
 --- 

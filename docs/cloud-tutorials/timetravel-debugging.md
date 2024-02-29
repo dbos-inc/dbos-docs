@@ -1,32 +1,47 @@
 ---
 sidebar_position: 3
-title: Time-Travel Debugging
-description: Learn how to time-travel debug DBOS Cloud applications
+title: Time Travel Debugging
+description: Learn how to time travel debug DBOS Cloud applications
 ---
 
-In this guide, you'll learn how to time-travel debug your production applications deployed on DBOS Cloud.
+In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud.
 
-### Preliminaries
 
-TODO: VSCode extension installation.
+### CLI Debug Mode (Non-VS Code Users)
 
-### Launching a Debug Session
+For non-VS Code users, you can run the time-travel debugger manually through the DBOS SDK CLI.
 
-TODO: either manually through VSCode or using the link from the monitoring dashboard.
+#### Manual Setup
 
-### Replaying Workflows and Transactions
+The time travel debugger requires our debug proxy to transform database queries so that it can "travel" back in time.
+You can download the pre-compiled debug proxy using the following link. Please choose the one based on your operating system and hardware platform:
 
-TODO: use an example to explain how we can set break points and single step into workflows and transactions.
+- [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-x64-0.8.15-preview.zip)
+- [Download for macOS (Apple Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-arm64-0.8.15-preview.zip)
+- [Download for Linux (x86_64)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-x64-0.8.15-preview.zip)
+- [Download for Linux (arm)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-arm64-0.8.15-preview.zip)
 
-### Time-Travel Database Queries
+After downloading the file, unzip it and make the `debug-proxy` file executable:
+```bash
+cd <Your Download Folder>/
+chmod +x debug-proxy
+./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
+```
 
-TODO: explain how we can allow developers to retroactively add new (read-only) queries over old versions of data as if the queries "time-traveled" to the past.
-This is a really unique and cool feature of DBOS, because we allow you to modify your code and run it against the past!
+::::tip
 
-### Configurations
+For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
 
-TODO: explain how we can tweak settings of the debugger.
-For more information, please read the [debugger extension reference](../api-reference/timetravel-debugger-extension).
+::::
 
-### Limitations
-TODO: Explain that we use recorded output for communicators and transactions that threw database errors, because they may be caused by locks and other non-deterministic factors.
+#### Replay a Workflow
+
+Open another terminal window, enter your application folder, compile your code, and replay a workflow using the following commands:
+```bash
+cd <Your App Folder>/
+npm run build
+npx dbos-sdk debug -u <workflow UUID>
+```
+
+Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
+For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-sdk-debug).

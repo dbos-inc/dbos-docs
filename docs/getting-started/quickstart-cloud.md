@@ -33,6 +33,12 @@ Open the login portal in your browser and click `Confirm`, then create a new acc
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
 
+:::tip
+
+If you register with an email and password, you'll also need to verify your email through a link we email you.
+
+:::
+
 ### Provisioning a Database Instance
 
 Next, let's provision a Postgres database instance your applications can connect to!
