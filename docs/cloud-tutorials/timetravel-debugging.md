@@ -72,6 +72,10 @@ This is a really unique and cool feature of DBOS, because we allow you to modify
 
 For more information, please read the [debugger extension reference](../api-reference/timetravel-debugger-extension).
 
-### Limitations
 
-TODO: Explain that we use recorded output for communicators and transactions that threw database errors, because they may be caused by locks and other non-deterministic factors.
+### Dos and Don'ts
+
+Currently, the time travel debugger supports stepping through any past workflows and most transactions, but has a few limitations:
+- You can modify/add arbitrary read-only database queries to the replayed transactions, and you will get results as if they run in the past. However, do not change, add, or remove any statements that write to the database such as insert/delete/update SQL statements. In the future, we plan to support them.
+- We use recorded outputs for communicators instead of stepping through their code, because they may contain unexpected side effects. For example, this guarantees that we don't resend any emails during debugging sessions.
+- We use recorded errors for aborted transactions instead of executing their queries, because database errors can be caused by non-deterministic factors (e.g., database lock contentions). We are adding support to replay many common errors -- stay tuned!
