@@ -20,13 +20,11 @@ Decorators may or may not take arguments in parentheses `()`.  However, each spe
 @Required @LogMask(LogMasks.HASH) password: string
 ```
 
-This concept is not new to TypeScript.  Python is another popular language with decorators prefixed with `@`.  In other languages, such as Java, similar declarations are called "annotations".
-
 While, in general, the order in which decorators are listed can affect the behavior, all decorators in the DBOS API are order-independent.  So this:
 ```typescript
   @Transaction()
   @PostApi("/follow")
-  static async doFollow(ctx: TransactionContext, followUid: string) {
+  static async hello(ctx: TransactionContext) {
   ...
   }
 ```
@@ -35,24 +33,16 @@ is the same as this:
 ```typescript
   @PostApi("/follow")
   @Transaction()
-  static async doFollow(ctx: TransactionContext, followUid: string) {
+  static async hello(ctx: TransactionContext) {
   ...
   }
 ```
 
-### Decorator Implementations
+### Enabling Decorators
 
-Work to add decorators to the TypeScript language and standards is currently ongoing, leaving things in a state of flux.
-
-Whereas the most useful version of decorators implemented in the TypeScript compiler is "experimental" or "Stage 2" decorators, the language specifications have not caught up.  "Stage 3" decorators, which are specified and implemented, are missing two key features used in DBOS:
-- Parameter decorators
-- Metadata about function argument types
-
-It is expected that DBOS will move from "experimental"/"Stage 2" decorators to a standards-based implementation once the standards have caught up.  It is hoped that user code would not be affected in this transition.
-
-### Typescript Compiler Flags
-
-In order to use the "Stage 2" experimental decorators implemented by DBOS, the following configuration needs to be given to the TypeScript compiler (usually via the file `tsconfig.json`):
+DBOS uses [Typescript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
+If you initialize your project with [`npx @dbos-inc/dbos-sdk init`](../api-reference/cli.md#npx-dbos-sdk-init), these are automatically enabled.
+Otherwise, you must enable them by supplying the following configuration to the Typescript compiler (usually via the file `tsconfig.json`):
 
 ```json
 {
@@ -65,7 +55,7 @@ In order to use the "Stage 2" experimental decorators implemented by DBOS, the f
 
 ## Decorator Locations
 
-DBOS currently uses decorators at the class, function, or function parameter level.  (The language also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)
+DBOS currently uses decorators at the class, function, or function parameter level.  (Typescript also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)
 
 ### Class Decorators
 
@@ -108,7 +98,7 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
 #### `@Transaction`
-Registers a function as a DBOS transaction.
+Registers a function as a [DBOS transaction](../tutorials/transaction-tutorial.md).
 
 The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontextt), which provides access to the database transaction.
 
@@ -119,7 +109,7 @@ static async doLogin(ctx: TransactionContext, username: string, ) {
 }
 ```
 
-`@Transaction()` takes an optional `TransactionConfig` to configure two aspects of the transaction: its isolation level and whether it is read only.
+`@Transaction()` takes an optional `TransactionConfig` object:
 
 ```typescript
 interface TransactionConfig {
@@ -134,10 +124,10 @@ DBOS supports declaration of the following values for `IsolationLevel`:
 - `REPEATABLE READ`
 - `SERIALIZABLE`
 
-The precise transaction semantics of these levels may vary with the capabilities of the user database. For example, see [isolation levels in PostgreSQL](https://www.postgresql.org/docs/current/transaction-iso.html).
+The transaction semantics of these levels are defined for PostgreSQL [here](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@Communicator`
-Registers a function as a DBOS communicator.
+Registers a function as a [DBOS communicator](../tutorials/communicator-tutorial.md).
 
 ```typescript
 @Communicator()
@@ -162,7 +152,7 @@ export interface CommunicatorConfig {
 ### HTTP API Registration Decorators
 
 #### `@GetApi`
-Associates a function with an endpoint name, such as an HTTP URL accessed with GET.
+Associates a function with an HTTP URL accessed with GET.
 
 ```typescript
 @GetApi("/hello")
@@ -171,11 +161,11 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The first argument to a handler function must be an [`DBOSContext`](contexts.md#dboscontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The `@GetApi` decorator can be combined with `@Transaction` or `@Workflow` to serve transactions and workflows via HTTP.
+It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
+The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
-The `@GetApi` decorator can be combined with `@Transaction` or `@Workflow` to invoke transactions and workflows.
-
-Endpoints path may have placeholders, which are parts of the URL mapped to function arguments.
+Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
@@ -195,9 +185,9 @@ Associates a function with an endpoint name, such as an HTTP URL accessed with P
 }
 ```
 
-The first argument to a handler function must be an [`DBOSContext`](contexts.md#dboscontext), but may more specifically be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
-
-The `@PostApi` decorator can be combined with `@Transaction` or `@Workflow` to invoke transactions and workflows.
+The `@PostApi` decorator can be combined with `@Transaction` or `@Workflow` to serve transactions and workflows via HTTP.
+It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
+The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
 
 #### `@ArgSource`
 Indicates where a function argument is to be sourced, when it could come from more than one place.
@@ -471,21 +461,6 @@ The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md
 ```typescript
 
   @DBOSInitializer()
-  static async init(ctx: InitContext) {
-     // Use functions and config from ctx, report anything interesting with ctx.log
-  }
-```
-
-
-#### `@DBOSDeploy`
-
-This decorator is used to specify functions to be run at application deployment or redeployment time.  `@DBOSDeploy` is for uses where the DBOS environment needs procedural initialization steps, such as installing or migrating the user database schema.
-
-The argument to `@DBOSDeploy` should be of type [`InitContext`](contexts.md#initcontext).
-
-```typescript
-
-  @DBOSDeploy()
   static async init(ctx: InitContext) {
      // Use functions and config from ctx, report anything interesting with ctx.log
   }
