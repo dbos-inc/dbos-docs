@@ -34,7 +34,7 @@ TODO: Explain that we use recorded output for communicators and transactions tha
 
 ### CLI Debug Mode (Non-VSCode Users)
 
-For non-VSCode users, you can start the debug proxy manually and replay workflows through DBOS  CLI.
+For non-VSCode users, you can start the debug proxy manually and replay workflows through DBOS SDK CLI.
 
 #### Start Debug Proxy Manually
 
@@ -52,7 +52,7 @@ chmod +x debug-proxy
 ./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
 ```
 
-::::warning
+::::info
 
 For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
 
@@ -67,3 +67,4 @@ npx dbos-sdk debug -u <workflow UUID>
 ```
 
 Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
+For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-sdk-debug).
