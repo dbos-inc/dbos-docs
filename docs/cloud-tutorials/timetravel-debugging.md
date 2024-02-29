@@ -28,7 +28,7 @@ chmod +x debug-proxy
 ./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
 ```
 
-::::info
+::::tip
 
 For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
 
