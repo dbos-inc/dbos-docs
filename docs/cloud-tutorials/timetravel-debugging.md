@@ -37,7 +37,7 @@ and [communicator](../tutorials/communicator-tutorial) function in your DBOS app
 
 ![DBOS Time Travel CodeLens Screenshot](./assets/ttdbg-code-lens.png)
 
-When you click on the Time Travel Debug CodeLens, you are provided a list of recent executions of that function to debug.
+When you click on the Time Travel Debug CodeLens, you are provided with a list of recent executions of that function to debug.
 
 :::warning
 Time travel debug information is only kept for a few days.
