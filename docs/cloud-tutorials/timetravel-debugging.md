@@ -138,7 +138,7 @@ Currently, the time travel debugger supports stepping through any past workflows
 
 ### Configurations
 
-For more information, please read the [debugger extension reference](../api-reference/timetravel-debugger-extension).
+For more information, please read the [debugger extension reference](../api-reference/time-travel-debugger).
 
 ## Time Travel with DBOS SDK CLI (Non-VS Code Users)
 
