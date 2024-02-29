@@ -451,10 +451,12 @@ Values of `LogMasks`:
 
 ### Hook Functions
 
-DBOS allows applications to supply functions to be invoked at points in the deployment and initialization process.
+DBOS allows applications to supply functions to be invoked at points in the application initialization process.
 
 #### `@DBOSInitializer`
-This decorator is used to specify functions to be run at application instance initialization time.  `@DBOSInitializer` is intended for uses such as validating configuration, establish connections to external (non-database) services, and so on.  It is not a good place for application deployment steps, for those see [`@DBOSDeploy`](#DBOSDeploy).
+This decorator is used to specify functions to be run at application instance initialization time.
+`@DBOSInitializer` is intended for uses such as validating configuration, establishing connections to external (non-database) services, and so on.
+It is not a good place for database schema migration, for that see our [migration commands](cli.md#npx-dbos-sdk-migrate).
 
 The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#initcontext).
 

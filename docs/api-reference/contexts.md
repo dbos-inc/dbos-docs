@@ -6,8 +6,8 @@ description: API reference for DBOS contexts
 
 ## Background
 
-DBOS automatically create a _context_ for each registered function.
-Functions use their context to call other DBOS functions, interact with the runtime or the database, and access the logger.
+DBOS automatically supplies a _context_ to each registered function.
+A function can use its context to call other DBOS functions, interact with the runtime or the database, and access the logger.
 Each DBOS function has a specific context:
 
 - Contexts used within DBOS functions inherit from [`DBOSContext`](#dboscontext).
@@ -15,7 +15,7 @@ Each DBOS function has a specific context:
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
-- Initialization and deployment functions use [`InitContext`](#initcontext).
+- Initialization functions use [`InitContext`](#initcontext).
 - Middleware functions use [`MiddlewareContext`](#middlewarecontext).
 
 ---
@@ -45,7 +45,7 @@ Many contexts inherit from `DBOSContext` and share its properties and methods.  
 readonly request: HTTPRequest
 ```
 
-An object with information about the originating HTTP request that triggered, directly or not, this function.
+An object with information about the originating HTTP request that triggered this function (directly or indirectly).
 
 ```typescript
 interface HTTPRequest {
@@ -67,7 +67,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow instance.
+The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
 In a transaction or communicator, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
@@ -169,7 +169,7 @@ For more information, see our [idempotency tutorial](../tutorials/idempotency-tu
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowUUID`.
 `R` is the return type of the target workflow.
 
 ### handlerCtxt.send(destinationUUID, message, \[topic, idempotencyKey\])
@@ -178,7 +178,7 @@ Returns a [workflow handle](./workflow-handles.md) to the workflow with [identit
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
 ```
 
-Sends a message to workflow _destinationUUID_.
+Sends a message to workflow `destinationUUID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
@@ -189,7 +189,7 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
@@ -246,7 +246,7 @@ const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string): Promise<void>
 ```
 
-Sends a message to _destinationUUID_.
+Sends a message to `destinationUUID`.
 Messages can optionally be associated with a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
@@ -269,7 +269,7 @@ setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 ```
 
 Creates an immutable event named `key` with value `value`.
-HTTP handlers can read events by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's UUID.
+Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's UUID.
 Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
 
@@ -279,7 +279,7 @@ For more information, see our [events API tutorial](../tutorials/workflow-commun
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by _workflowUUID_ for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ### workflowCtxt.retrieveWorkflow(workflowUUID)
@@ -364,7 +364,7 @@ Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ## `InitContext`
 
-Initialization and deployment functions are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
+[Initialization functions](./decorators.md#dbosinitializer) are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
 
 #### Properties and Methods
 
