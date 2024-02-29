@@ -6,6 +6,8 @@ description: Learn how to time travel debug DBOS Cloud applications
 
 In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud.
 
+## Time Travel with Visual Studio Code
+
 ### Preliminaries
 
 Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management).
@@ -79,3 +81,43 @@ Currently, the time travel debugger supports stepping through any past workflows
 - You can modify/add arbitrary read-only database queries to the replayed transactions, and you will get results as if they run in the past. However, do not change, add, or remove any statements that write to the database such as insert/delete/update SQL statements. In the future, we plan to support them.
 - We use recorded outputs for communicators instead of stepping through their code, because they may contain unexpected side effects. For example, this guarantees that we don't resend any emails during debugging sessions.
 - We use recorded errors for aborted transactions instead of executing their queries, because database errors can be caused by non-deterministic factors (e.g., database lock contentions). We are adding support to replay many common errors -- stay tuned!
+
+
+## Time Travel with DBOS SDK CLI (Non-VS Code Users)
+
+For non-VS Code users, you can run the time-travel debugger manually through the DBOS SDK CLI.
+
+### Manual Setup
+
+The time travel debugger requires our debug proxy to transform database queries so that it can "travel" back in time.
+You can download the pre-compiled debug proxy using the following link. Please choose the one based on your operating system and hardware platform:
+
+- [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-x64-0.8.15-preview.zip)
+- [Download for macOS (Apple Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-arm64-0.8.15-preview.zip)
+- [Download for Linux (x86_64)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-x64-0.8.15-preview.zip)
+- [Download for Linux (arm)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-arm64-0.8.15-preview.zip)
+
+After downloading the file, unzip it and make the `debug-proxy` file executable:
+```bash
+cd <Your Download Folder>/
+chmod +x debug-proxy
+./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
+```
+
+::::tip
+
+For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
+
+::::
+
+### Replay a Workflow
+
+Open another terminal window, enter your application folder, compile your code, and replay a workflow using the following commands:
+```bash
+cd <Your App Folder>/
+npm run build
+npx dbos-sdk debug -u <workflow UUID>
+```
+
+Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
+For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-sdk-debug)
