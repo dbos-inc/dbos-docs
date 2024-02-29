@@ -121,7 +121,7 @@ If this step fails, the workflow immediately signals the handler using [setEvent
 ```javascript
 // Attempt to update the inventory. Signal the handler if it fails.
 try {
-  await ctxt.invoke(ShopUtilities).subtractInventory(product);
+  await ctxt.invoke(ShopUtilities).subtractInventory();
 } catch (error) {
   ctxt.logger.error("Failed to update inventory");
   await ctxt.setEvent(session_topic, null);
@@ -144,12 +144,18 @@ if (!paymentSession.url) {
 ```
 Under the hood, `createPaymentSession` registers a callback with the payment service, which will signal the workflow when the payment is completed.
 
-### Waiting for a payment
-Now, the workflow must do two things: notify the handler the payment session is ready&horbar;using [setEvent](../tutorials/workflow-communication-tutorial#setevent)&horbar;and wait for the outcome of the payment&horbar;using `recv`.
+### Notifying the handler
+Now, the workflow must notify the handler the payment session is ready.
+We will use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to publish the payment session ID on the `session_topic`, on which the handler is waiting for a notification.
 ```javascript
 // Notify the handler and share the payment session ID.
 await ctxt.setEvent(session_topic, paymentSession.session_id);
+```
 
+### Waiting for a payment
+As the handler has been notified and will direct the user to the payment service, the payment workflow must wait until it learns from the payment outcome.
+We will use [recv](../tutorials/workflow-communication-tutorial#recv) to wait on a signal from the callback registed by `createPaymentSession`.
+```javascript
 // Wait for a notification from the payment service with a 30 seconds timeout.
 const notification = await ctxt.recv<string>(payment_complete_topic, 30);
 ```
@@ -166,7 +172,7 @@ if (notification && notification === 'paid') {
   // Otherwise, either the payment failed or timed out.
   // Code to check the payment status with the payment service omitted for brevity.
   ctxt.logger.warn(`Payment failed or timed out`);
-  await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
+  await ctxt.invoke(ShopUtilities).undoSubtractInventory();
 }
 ```
 
@@ -187,7 +193,7 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
   const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
   if (!paymentSession.url) {
     ctxt.logger.error("Failed to create payment session");
-    await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
+    await ctxt.invoke(ShopUtilities).undoSubtractInventory();
     await ctxt.setEvent(session_topic, null);
     return;
   }
@@ -205,7 +211,7 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
     // Otherwise, either the payment failed or timed out.
     // Code to check the latest session status with the payment service omitted for clarity.
     ctxt.logger.warn(`Payment failed or timed out`);
-    await ctxt.invoke(ShopUtilities).undoSubtractInventory(product);
+    await ctxt.invoke(ShopUtilities).undoSubtractInventory();
   }
 }
 ```
@@ -252,5 +258,9 @@ You can take three actions: submit the payment, cancel it, or do nothing. Here a
 
 In the two last cases, the shop's inventory will be rolled back, which you can check in the database.
 
-If you call the endpoint again with the idempotency key provided&horbar;the `dbos-workflowuuid` in the output above&horbar;the application will reuse the same payment session. Check it out with `curl -X POST http://localhost:8082/checkout/f5103e9f-e78a-4aab-9801-edd45a933d6a` (replacing the key with the `dbos-workflowuuid` value printed in the handler's response.)
+## Using idempotency keys
+
+If you call the endpoint again with the idempotency key provided&horbar;the `dbos-workflowuuid` in the output above&horbar;the application will reuse the same payment session.
+For instance, if you call the application once and see the idempotency key `f5103e9f-e78a-4aab-9801-edd45a933d6a` in the response, try calling the endpoint againt with the key: `curl -X POST http://localhost:8082/checkout/f5103e9f-e78a-4aab-9801-edd45a933d6a`.
+Note the new response's `session_id` is unchanged.
 
