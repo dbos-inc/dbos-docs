@@ -106,7 +106,7 @@ readonly logger: DBOSLogger
 ```
 
 A reference to DBOS's logger.
-Please see our [logging tutorial](../tutorials/logging.md#logging) for more information.
+Please see our [logging tutorial](../tutorials/logging.md) for more information.
 
 #### `ctxt.getConfig(key, [defaultValue])`
 
