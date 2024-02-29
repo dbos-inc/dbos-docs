@@ -34,7 +34,7 @@ However, this command can also be executed explicitly.
 
 The time travel debugger needs your DBOS database name and password in order to access your database history.
 The first time a DBOS application is time travel debugged, the developer is asked for the database password.
-The provided database password is saved in VS Code's secrets storage so the developer doesn't have to enter it every time they time travel debug.
+The provided database password is saved in VS Code's secrets storage so you don't have to enter it every time you time travel debug.
 This command deletes any stored DBOS database passwords associated with the current workspace.
 
 :::note
