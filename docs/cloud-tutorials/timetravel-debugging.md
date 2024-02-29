@@ -64,7 +64,7 @@ Developers can modify or even add database read queries in DBOS application tran
 When these updated applications are run with the time travel debugger, they return results as if they run in the past!
 
 :::warning
-Do not add or modify database queries that write to the database such as insert/delete/update SQL statements.
+Do not add or modify database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
 DBOS will support time travel debugging functions that change how they write database state in the future.
 :::
 
