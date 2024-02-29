@@ -16,7 +16,7 @@ The extension can be installed from the link above or by searching the
 [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
 inside VS Code for "DBOS"
 
-![Installing the DBOS Time Travel Extension Screenshot](./ttdbg-ext-install.png)
+![Installing the DBOS Time Travel Extension Screenshot](./assets/ttdbg-ext-install.png)
 
 Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
 
@@ -29,7 +29,7 @@ to every DBOS [workflow](../tutorials/workflow-tutorial),
 [transaction](../tutorials/transaction-tutorial)
 and [communicator](../tutorials/communicator-tutorial) method in your DBOS application.
 
-![DBOS Time Travel CodeLens Screenshot](./ttdbg-code-lens.png)
+![DBOS Time Travel CodeLens Screenshot](./assets/ttdbg-code-lens.png)
 
 When you click on the Time Travel Debug CodeLens, you are provided a list of recent executions of that method to debug.
 
@@ -37,7 +37,7 @@ When you click on the Time Travel Debug CodeLens, you are provided a list of rec
 Time travel debug information is only kept for three days.
 :::
 
-![DBOS Time Travel Workflow ID picker](./ttdbg-wfid-quick-pick.png)
+![DBOS Time Travel Workflow ID picker](./assets/ttdbg-wfid-quick-pick.png)
 
 After selecting a recent execution of your function, the DBOS Time Travel Debugger will launch the DBOS debug runtime 
 and VS Code TypeScript debugger. This allows you to debug your DBOS application against the database as it existed 
@@ -47,7 +47,7 @@ You can [set breakpoints](https://code.visualstudio.com/docs/editor/debugging#_b
 [inspect variables](https://code.visualstudio.com/docs/editor/debugging#_data-inspection) and 
 [step through your code](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) as you would expect.
 
-![DBOS Time Travel Debugging](./ttdbg-debugging.png)
+![DBOS Time Travel Debugging](./assets/ttdbg-debugging.png)
 
 ### Time Travel Database Queries
 
