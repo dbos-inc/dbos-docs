@@ -6,38 +6,14 @@ description: Learn how to time travel debug DBOS Cloud applications
 
 In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud.
 
-### Preliminaries
 
-TODO: VSCode extension installation.
+### CLI Debug Mode (Non-VS Code Users)
 
-### Launching a Debug Session
+For non-VS Code users, you can run the time-travel debugger manually through the DBOS SDK CLI.
 
-TODO: either manually through VSCode or using the link from the monitoring dashboard.
+#### Manual Setup
 
-### Replaying Workflows and Transactions
-
-TODO: use an example to explain how we can set break points and single step into workflows and transactions.
-
-### Time Travel Database Queries
-
-TODO: explain how we can allow developers to retroactively add new (read-only) queries over old versions of data as if the queries "time traveled" to the past.
-This is a really unique and cool feature of DBOS, because we allow you to modify your code and run it against the past!
-
-### Configurations
-
-TODO: explain how we can tweak settings of the debugger.
-For more information.
-
-### Limitations
-TODO: Explain that we use recorded output for communicators and transactions that threw database errors, because they may be caused by locks and other non-deterministic factors.
-
-
-### CLI Debug Mode (Non-VSCode Users)
-
-For non-VSCode users, you can start the debug proxy manually and replay workflows through DBOS SDK CLI.
-
-#### Start Debug Proxy Manually
-
+The time travel debugger requires our debug proxy to transform database queries so that it can "travel" back in time.
 You can download the pre-compiled debug proxy using the following link. Please choose the one based on your operating system and hardware platform:
 
 - [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-x64-0.8.15-preview.zip)
@@ -60,8 +36,9 @@ For macOS users, you may see a pop-up window: "“debug-proxy” is an app downl
 
 #### Replay a Workflow
 
-In your application folder, compile your code and replay a workflow:
+Open another terminal window, enter your application folder, compile your code, and replay a workflow using the following commands:
 ```bash
+cd <Your App Folder>/
 npm run build
 npx dbos-sdk debug -u <workflow UUID>
 ```
