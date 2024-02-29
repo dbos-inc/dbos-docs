@@ -87,7 +87,7 @@ export class Hello {
 ```
 
 We can add queries to the function to retrieve past database states. 
-For example, the follow code block adds queries to retrieve the user's greet count before and after it gets updated.
+For example, the following code block adds queries to retrieve the user's greet count before and after it gets updated.
 
 :::tip
 Don't forget to rebuild your DBOS application with `npm run build` before running it in the debugger.
