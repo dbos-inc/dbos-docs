@@ -15,7 +15,7 @@ DBOS idempotency keys are [UUIDs](https://en.wikipedia.org/wiki/Universally_uniq
 Idempotency keys are required to be globally unique for your application.
 There are many popular libraries for generating UUIDs in Typescript, such as [uuid.js](https://www.npmjs.com/package/uuid).
 
-To make a request idempotent, generate a UUID and set the request's `dbos-workflowuuid` header field to that UUID.
+To make a request idempotent, generate a UUID and set the request's `dbos-idempotency-key` header field to that UUID.
 No matter how many times you send that request, as long as each request has the idempotency key set, the operation will only execute once (if the request is for a [communicator](./communicator-tutorial.md), it may be retried multiple times, but will not re-execute after successfully completing).
 
 :::info
@@ -71,5 +71,5 @@ curl http://localhost:3000/greeting/dbos
 However, if we set the idempotency key in the header and resend the request many times, each request returns the same response and the workflow only executes once:
 
 ```bash
-curl -H "dbos-workflowuuid: 123e4567-e89b-12d3-a456-426614174000" http://localhost:3000/greeting/dbos
+curl -H "dbos-idempotency-key: 123e4567-e89b-12d3-a456-426614174000" http://localhost:3000/greeting/dbos
 ```
