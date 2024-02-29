@@ -26,7 +26,7 @@ This is a really unique and cool feature of DBOS, because we allow you to modify
 ### Configurations
 
 TODO: explain how we can tweak settings of the debugger.
-For more information, please read the [debugger extension reference](../api-reference/timetravel-debugger-extension).
+For more information.
 
 ### Limitations
 TODO: Explain that we use recorded output for communicators and transactions that threw database errors, because they may be caused by locks and other non-deterministic factors.
