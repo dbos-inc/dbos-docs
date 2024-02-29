@@ -1,10 +1,10 @@
 ---
 sidebar_position: 3
-title: Time-Travel Debugging
-description: Learn how to time-travel debug DBOS Cloud applications
+title: Time Travel Debugging
+description: Learn how to time travel debug DBOS Cloud applications
 ---
 
-In this guide, you'll learn how to time-travel debug your production applications deployed on DBOS Cloud.
+In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud.
 
 ### Preliminaries
 
@@ -18,9 +18,9 @@ TODO: either manually through VSCode or using the link from the monitoring dashb
 
 TODO: use an example to explain how we can set break points and single step into workflows and transactions.
 
-### Time-Travel Database Queries
+### Time Travel Database Queries
 
-TODO: explain how we can allow developers to retroactively add new (read-only) queries over old versions of data as if the queries "time-traveled" to the past.
+TODO: explain how we can allow developers to retroactively add new (read-only) queries over old versions of data as if the queries "time traveled" to the past.
 This is a really unique and cool feature of DBOS, because we allow you to modify your code and run it against the past!
 
 ### Configurations
