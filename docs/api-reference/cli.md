@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
-title: CLI
+title: SDK CLI
 description: DBOS CLI reference
 ---
 
-The DBOS CLI helps you manage DBOS applications.
+The DBOS SDK CLI helps you run DBOS applications locally.
 
 ## Commands
 

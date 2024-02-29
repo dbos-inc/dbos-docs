@@ -36,7 +36,7 @@ This command logs you out of your DBOS Cloud account.
 
 ## Database Instance Management Commands
 
-### `npx dbos-cloud database provision <database-instance-name>`
+### `npx dbos-cloud database provision`
 
 **Description:**  
 This command provisions a Postgres database instance to which your applications can connect.
@@ -66,7 +66,7 @@ For each provisioned Postgres database instance, emit:
 
 ---
 
-### `npx dbos-cloud database status <database-instance-name>`
+### `npx dbos-cloud database status`
 
 **Description:**  
 This command retrieves the status of a Postgres database instance
@@ -84,7 +84,7 @@ This command retrieves the status of a Postgres database instance
 
 ---
 
-### `npx dbos-cloud database destroy <database-instance-name>`
+### `npx dbos-cloud database destroy`
 
 **Description:**  
 This command destroys a previously-provisioned Postgres database instance.
