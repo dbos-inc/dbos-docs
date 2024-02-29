@@ -39,7 +39,7 @@ Many contexts inherit from `DBOSContext` and share its properties and methods.  
 
 - [getConfig(key, defaultValue)](#ctxtgetconfigkey-defaultvalue)
 
-### ctxt.request
+#### `ctxt.request`
 
 ```typescript
 readonly request: HTTPRequest
@@ -61,7 +61,7 @@ interface HTTPRequest {
 }
 ```
 
-### ctxt.workflowUUID
+#### `ctxt.workflowUUID`
 
 ```typescript
 readonly workflowUUID: string
@@ -71,7 +71,7 @@ The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-i
 In a transaction or communicator, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
-### ctxt.authenticatedUser
+#### `ctxt.authenticatedUser`
 
 ```typescript
 readonly authenticatedUser: string
@@ -80,7 +80,7 @@ readonly authenticatedUser: string
 The identity of the authenticated user who ran this function.
 Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
-### ctxt.authenticatedRoles
+#### `ctxt.authenticatedRoles`
 
 ```typescript
 readonly authenticatedRoles: string[];
@@ -89,7 +89,7 @@ readonly authenticatedRoles: string[];
 A list of roles the authenticated user has, if any.
 Authenticated roles are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
 
-### ctxt.assumedRole
+#### `ctxt.assumedRole`
 
 ```typescript
 readonly assumedRole: string;
@@ -99,7 +99,7 @@ The role used to run this function.
 Empty string if authorization is not required.
 DBOS's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
 
-### ctxt.logger
+#### `ctxt.logger`
 
 ```typescript
 readonly logger: DBOSLogger
@@ -108,7 +108,7 @@ readonly logger: DBOSLogger
 A reference to DBOS's logger.
 Please see our [logging tutorial](../tutorials/logging.md#logging) for more information.
 
-### ctxt.getConfig(key, defaultValue)
+#### `ctxt.getConfig(key, [defaultValue])`
 
 ```typescript
 getConfig<T>(key: string): T | undefined;
@@ -135,7 +135,7 @@ Handlers use `HandlerContext` to invoke other functions, interact with active wo
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgeteventworkflowuuid-key-timeoutseconds)
 
-### handlerCtxt.koaContext
+#### `handlerCtxt.koaContext`
 
 ```typescript
 koaContext: Koa.Context;
@@ -143,7 +143,7 @@ koaContext: Koa.Context;
 
 The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) of the current request, giving handlers access to the raw HTTP request and response.
 
-### handlerCtxt.invoke(targetClass, \[workflowUUID\])
+#### `handlerCtxt.invoke(targetClass, [workflowUUID])`
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
@@ -163,7 +163,7 @@ Note that the DBOS runtime will supply the context to invoked functions.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
-### handlerCtxt.retrieveWorkflow(workflowUUID)
+#### `handlerCtxt.retrieveWorkflow(workflowUUID)`
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
@@ -172,7 +172,7 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowUUID`.
 `R` is the return type of the target workflow.
 
-### handlerCtxt.send(destinationUUID, message, \[topic, idempotencyKey\])
+#### `handlerCtxt.send(destinationUUID, message, [topic, idempotencyKey])`
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
@@ -183,7 +183,7 @@ Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-### handlerCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
+#### `handlerCtxt.getEvent(workflowUUID, key, [timeoutSeconds])`
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -209,7 +209,7 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflowworkflowuuid)
 - [sleep(durationSec)](#workflowctxtsleepdurationsec)
 
-### workflowCtxt.invoke(targetClass)
+#### `workflowCtxt.invoke(targetClass)`
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
@@ -226,7 +226,7 @@ workflowCtxt.invoke(Bar).foo(baz)
 
 Note that the DBOS runtime will supply a context to invoked functions.
 
-### workflowCtxt.childWorkflow(wf, ...args)
+#### `workflowCtxt.childWorkflow(wf, ...args)`
 
 ```typescript
 childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
@@ -241,7 +241,7 @@ The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
 const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
 ```
 
-### workflowCtxt.send(destinationUUID, message, \[topic\])
+#### `workflowCtxt.send(destinationUUID, message, [topic])`
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string): Promise<void>
@@ -251,7 +251,7 @@ Sends a message to `destinationUUID`.
 Messages can optionally be associated with a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-### workflowCtxt.recv(\[topic, timeoutSeconds\])
+#### `workflowCtxt.recv([topic, timeoutSeconds])`
 
 ```typescript
 recv<T extends NonNullable<any>>(topic?: string, timeoutSeconds?: number): Promise<T | null>
@@ -263,7 +263,7 @@ Calls to `recv()` wait for the next message in the queue, returning `null` if th
 If no topic is specified, `recv` can only access messages sent without a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-### workflowCtxt.setEvent(key, value)
+#### `workflowCtxt.setEvent(key, value)`
 
 ```typescript
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
@@ -274,7 +274,7 @@ Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxt
 Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
 
-### workflowCtxt.getEvent(workflowUUID, key, \[timeoutSeconds\])
+#### `workflowCtxt.getEvent(workflowUUID, key, [timeoutSeconds])`
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -283,7 +283,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
-### workflowCtxt.retrieveWorkflow(workflowUUID)
+#### `workflowCtxt.retrieveWorkflow(workflowUUID)`
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
@@ -292,7 +292,7 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
 `R` is the return type of the target workflow.
 
-### workflowCtxt.sleep(durationSec)
+#### `workflowCtxt.sleep(durationSec)`
 
 ```typescript
 sleep(durationSec: number): Promise<void>
@@ -331,7 +331,7 @@ static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 
 - [client](#transactionctxtclient)
 
-### transactionCtxt.client
+#### `transactionCtxt.client`
 
 ```typescript
 client: T; // One of [Knex, EntityManager]
@@ -351,7 +351,7 @@ Communicators use `CommunicatorContext` to retrieve information on communicator 
 - [retriesAllowed](#communicatorctxtretriesallowed)
 - [maxAttempts](#communicatorctxtmaxattempts)
 
-### communicatorCtxt.retriesAllowed
+#### `communicatorCtxt.retriesAllowed`
 
 ```typescript
 readonly retriesAllowed: boolean;
@@ -360,7 +360,7 @@ readonly retriesAllowed: boolean;
 Whether the communicator is automatically retried on failure.
 Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
-### communicatorCtxt.maxAttempts
+#### `communicatorCtxt.maxAttempts`
 
 ```typescript
 readonly maxAttempts: number;
@@ -383,7 +383,7 @@ Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 - [queryuserdb](#initcontextqueryuserdb)
 - [getconfig](#initcontextgetconfig)
 
-### InitContext.logger
+#### `InitContext.logger`
 
 ```typescript
 readonly logger: Logger;
@@ -391,7 +391,7 @@ readonly logger: Logger;
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during initialization.
 
-### InitContext.createUserSchema
+#### `InitContext.createUserSchema`
 
 ```typescript
 createUserSchema(): Promise<void>;
@@ -399,14 +399,14 @@ createUserSchema(): Promise<void>;
 
 Creates the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
 
-### InitContext.dropUserSchema
+#### `InitContext.dropUserSchema`
 
 ```typescript
 dropUserSchema(): Promise<void>;
 ```
 Drops the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
 
-### InitContext.queryUserDB
+#### `InitContext.queryUserDB`
 
 ```typescript
 queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
@@ -414,7 +414,7 @@ queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
 
 Accesses the user database directly with SQL.  This approach is to be used with caution, as using a string to represent SQL is not fully database independent and careless formation of the string can lead to SQL injection vulnerabilities.
 
-### InitContext.getConfig
+#### `InitContext.getConfig`
 
 ```typescript
 getConfig<T>(key: string, defaultValue?: T): T | undefined;
@@ -438,7 +438,7 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 - [getConfig](#middlewarecontextgetconfig)
 - [query](#middlewarecontextquery)
 
-### MiddlewareContext.logger
+#### `MiddlewareContext.logger`
 
 ```typescript
 readonly logger: DBOSLogger;
@@ -446,7 +446,7 @@ readonly logger: DBOSLogger;
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
 
-### MiddlewareContext.koaContext
+#### `MiddlewareContext.koaContext`
 
 ```typescript
 readonly koaContext: Koa.Context;
@@ -454,7 +454,7 @@ readonly koaContext: Koa.Context;
 
 `koaContext` is the Koa context, which contains the inbound HTTP request associated with the middleware invocation.
 
-### MiddlewareContext.name
+#### `MiddlewareContext.name`
 
 ```typescript
 readonly name: string;
@@ -462,7 +462,7 @@ readonly name: string;
 
 `name` contains the name of the function (handler, transaction, workflow) to be invoked after successful middleware processing.
 
-### MiddlewareContext.requiredRole
+#### `MiddlewareContext.requiredRole`
 
 ```typescript
 readonly requiredRole: string[];
@@ -470,7 +470,7 @@ readonly requiredRole: string[];
 
 `requiredRole` contains the list of roles required for the invoked operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
 
-### MiddlewareContext.getConfig
+#### `MiddlewareContext.getConfig`
 
 ```typescript
 getConfig<T>(key: string, deflt: T | undefined) : T | undefined
@@ -478,17 +478,17 @@ getConfig<T>(key: string, deflt: T | undefined) : T | undefined
 
 `getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
 
-### MiddlewareContext.query
+#### `MiddlewareContext.query`
 
 ```typescript
   query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
 ```
 
-The `query` fucntion provides read access to the database.  See [Placing Database Queries From `MiddlewareContext`](#placing-database-queries-from-middlewarecontext) below for more usage information.
-
-### Placing Database Queries From `MiddlewareContext`
-
-`MiddlewareContext` supports read-only database queries, via a method called `query`.  To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.  The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.  The provided `dbClient` will either be a `Knex` or TypeORM `EntityManager` depending on the application's choice of SQL access library.  This callback function may take arguments, and return a value.
+The `query` function provides read access to the database.
+To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.
+The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.
+The provided `dbClient` will either be a `Knex` or TypeORM `EntityManager` depending on the application's choice of SQL access library.
+This callback function may take arguments, and return a value.
 
 Example, for Knex:
 ```typescript
