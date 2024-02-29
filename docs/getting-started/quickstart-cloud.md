@@ -32,7 +32,7 @@ If everything's working, the command should succeed and print `<username> succes
 
 :::tip
 
-If you register with an email and password, you'll also need to verify your email through a link we automatically send.
+If you register with an email and password, you'll also need to verify your email through a link we email you.
 
 :::
 

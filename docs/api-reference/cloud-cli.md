@@ -19,7 +19,7 @@ It provides a URL to a secure login portal you can use to create an account from
 
 :::tip
 
-If you register with an email and password, you'll also need to verify your email through a link we automatically send.
+If you register with an email and password, you'll also need to verify your email through a link we email you.
 
 :::
 
