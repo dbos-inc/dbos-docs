@@ -11,13 +11,14 @@ DBOS provides two workflow communication APIs, the events API and the messages A
 
 ### Events API
 
-This API allows workflows to emit and listen for events. Events are immutable key-value pairs. DBOS guarantes immutability by transactionally inserting events in its system database, only once.
-Events are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
+This API allows workflows to emit and listen for events.
+Events are immutable key-value pairs.
+They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### setEvent
 
 Any workflow can call [`ctxt.setEvent`](../api-reference/contexts#workflowctxtseteventkey-value) to immutably publish a key-value pair.
-A workflow cannot set a key it has already set; doing so is an error.
+A workflow cannot set a key it has already set.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
@@ -25,7 +26,7 @@ ctxt.setEvent<T>(key: string, value: T): Promise<void>
 
 #### getEvent
 
-Handlers can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
+[Handlers](../tutorials/http-serving-tutorial.md#handlers) can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
 A call to `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ```typescript
@@ -34,7 +35,7 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 
 #### Events Example
 
-Events are especially useful for writing interactive workflows needing to communicate information back to their caller.
+Events are especially useful for writing interactive workflows that communicate information to their caller.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
@@ -93,7 +94,7 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 
 #### Messages Example
 
-Messages are especially useful for communicating information or sending notifications to a running workflow.
+Messages are especially useful for sending notifications to a workflow.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:

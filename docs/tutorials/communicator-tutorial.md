@@ -8,7 +8,7 @@ In this guide, you'll learn how to communicate with external APIs and services f
 
 We recommend that all communication with external services be done in _communicator_ functions.
 For example, you can use communicators to serve a file from [AWS S3](https://aws.amazon.com/s3/), call an external API like [Stripe](https://stripe.com/) or access a non-Postgres data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
-Encapsulating these calls in communicators is especially important if you're using [workflows](./workflow-tutorial) as it lets the workflow know to make their results persistent through interruptions.
+Encapsulating these calls in communicators is especially important if you're using [workflows](./workflow-tutorial) so the workflow knows to execute them only once.
 
 Communicators must be annotated with the [`@Communicator`](../api-reference/decorators#communicator) decorator and must have a [`CommunicatorContext`](../api-reference/contexts#communicatorcontext) as their first argument.
 As with other DBOS functions, communicator inputs and outputs must be serializable to JSON.
