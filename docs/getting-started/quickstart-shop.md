@@ -1,9 +1,9 @@
 ---
 sidebar_position: 3
-title: Reliable workflows
+title: Advanced Programming Tutorial
 ---
 
-# Programming a reliable checkout workflow
+# Building a Reliable Checkout Workflow
 
 In this guide, we will follow-up on the reliable workflow concept from [programming quickstart](quickstart-programming) and write the checkout workflow of a shopping cart app.
 The workflow will maintain three properties:
@@ -25,7 +25,6 @@ This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-
 git clone https://github.com/dbos-inc/dbos-demo-apps
 cd dbos-demo-apps/shop-guide
 ```
-We will also be using [cURL](https://curl.se/dlwiz/?type=bin) which is likely already installed on your system.
 
 ## Overview
 In this guide, we'll be implementing two functions: the checkout workflow and its request handler.
@@ -35,27 +34,31 @@ Here's a diagram of what the end-to-end checkout flow looks like:
 ![](shop-guide-diagram.svg)
 
 Upon receiving a request, the handler starts a payment workflow and waits for a payment session ID.
-If it obtains a valid session ID, it will respond the user with links to submit or cancel the payment.
+If it obtains a valid session ID, it responds to the user with links to submit or cancel the payment.
+After the user has paid, the workflow fulfills the user's order.
 
 ## The request handler
+
+We'll start by building the checkout request handler, which initiates checkout in response to user HTTP requests.
 
 ### Registering the handler
 ```javascript
 @PostApi('/checkout/:key?')
 static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
 ```
-The handler serves `/checkout/:key?` with the function `webCheckout`.
+
+The handler is implemented in this function `webCheckout` which is served from HTTP POST requests to the URL `/checkout/:key?`.
 The route accepts an optional path parameter `key`, used as an [idempotency key](../tutorials/idempotency-tutorial).
-Note we must specify the `key` parameter of `webCheckout` is optional using the [@ArgOptional](../api-reference/decorators#argoptional) decorator.
+We specify the `key` parameter is optional using the [@ArgOptional](../api-reference/decorators#argoptional) decorator.
 
 ### Invoking the payment workflow
-Once a request is received, the handler invokes a `paymentWorkflow` and retrieves a [workflow handle](../api-reference/workflow-handles):
+Once a request is received, the handler invokes `paymentWorkflow` asynchronously, obtaining its [workflow handle](../api-reference/workflow-handles):
 ```javascript
 // A workflow handle is immediately returned. The workflow continues in the background.
 const handle = await ctxt.invoke(Shop, key).paymentWorkflow();`
 ```
-The workflow will start in the background. You can use the handle to inquire on the workflow status, get the workflow UUID, and wait for a result.
-Note how we invoke the workflow using the idempotency key so DBOS can resume an existing workflow or simply handle common cases like "the user clicked twice on the buy button".
+
+Note that we invoke the workflow using an [idempotency key](../tutorials/idempotency-tutorial.md) so we don't pay multiple times if the user clicks twice on the buy button.
 
 ### Waiting for a payment session ID
 The handler uses DBOS [events API](../tutorials/workflow-communication-tutorial#events-api) to wait for a payment session ID.
