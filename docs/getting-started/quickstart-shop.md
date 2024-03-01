@@ -9,9 +9,13 @@ In this guide, we will follow-up on the reliable workflow concept from [programm
 The workflow will maintain three properties:
 1. Never charge a customer without fulfilling an order.
 2. Never charge a customer twice for the same order.
-3. Maintain product inventory correctly.
+3. Reserve inventory for an order if and only if the order is fulfilled.
 
-Without DBOS, maintaining these properties is hard: users can click the buy button twice, the program can crash in the middle of the transaction, the payment service can fail, etc.
+Without DBOS, maintaining these properties is hard.
+For example, if the checkout service is interrupted after a customer pays, we have to fulfill their order.
+If a customer clicks the buy button twice, we have to make sure they aren't charged twice.
+If the payment doesn't go through, we have to return any reserved inventory.
+As we'll show, DBOS makes it much easier to write programs that do these correctly.
 
 :::info what you will learn
 - Handle asynchronous interactions with third party services
@@ -47,7 +51,7 @@ We'll start by building the checkout request handler, which initiates checkout i
 static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
 ```
 
-The handler is implemented in this function `webCheckout` which is served from HTTP POST requests to the URL `/checkout/:key?`.
+The handler is implemented in this `webCheckout` function which is served from HTTP POST requests to the URL `<host>/checkout/:key?`.
 The route accepts an optional path parameter `key`, used as an [idempotency key](../tutorials/idempotency-tutorial).
 We specify the `key` parameter is optional using the [@ArgOptional](../api-reference/decorators#argoptional) decorator.
 
@@ -61,8 +65,8 @@ const handle = await ctxt.invoke(Shop, key).paymentWorkflow();`
 Note that we invoke the workflow using an [idempotency key](../tutorials/idempotency-tutorial.md) so we don't pay multiple times if the user clicks twice on the buy button.
 
 ### Waiting for a payment session ID
-The handler uses DBOS [events API](../tutorials/workflow-communication-tutorial#events-api) to wait for a payment session ID.
-We will see in the next section how the payment workflow can notify the handler using the topic `session_topic`.
+The handler uses the DBOS [events API](../tutorials/workflow-communication-tutorial#events-api) to wait for the payment workflow to send it a payment session ID.
+We will see in the next section how the payment workflow can notify the handler.
 ```javascript
 // Block until the payment session is ready
 const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), session_topic);
@@ -96,14 +100,8 @@ static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promis
 
 ## The payment workflow
 
-The workflow initiates a payment session with a third party service and manages the shop's inventory.
-Specifically, it:
-- Wraps interactions with the payment service in a [communicator](../tutorials/communicator-tutorial), so customers cannot be charged twice for the same order.
-- Undo inventory modifications on failure.
-- Always fulfill orders if payments succeed.
-
-Once a payment session is initiated, the workflow shares the payment session ID with the handler.
-The handler will direct the user to a payment endpoint and the workflow be waiting to hear from the payment service.
+The payment workflow reserves inventory for an order, attempts to process its payment, and fufills it if the payment is successful.
+As we'll show, it's _reliable_: it always fulfills orders if payments succeed, never chages customers twice for the same order, and always undoes inventory modifications on failure.
 
 :::info
 Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce) for a more elaborate example.
@@ -118,9 +116,10 @@ Let's declare a simple workflow:
 static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
 ```
 
-### Update the shop's inventory
-The workflow first subtract an item from the inventory using the `subtractInventory` transaction.
-If this step fails, the workflow immediately signals the handler using [setEvent](../tutorials/workflow-communication-tutorial#setevent) and returns.
+### Reserving inventory
+The workflow first reserves an item from inventory using the `subtractInventory` transaction.
+If this fails (likely because the item is out of stock), the workflow signals the handlers using [setEvent](../tutorials/workflow-communication-tutorial#setevent) to tell it checkout cannot proceed.
+
 ```javascript
 // Attempt to update the inventory. Signal the handler if it fails.
 try {
@@ -134,7 +133,7 @@ try {
 
 ### Initiating a payment session
 Next, the workflow initiates a payment session using the `createPaymentSession` [communicator](../tutorials/communicator-tutorial).
-If this fails, it undo changes to the inventory using the `undoSubtractInventory` transaction, signals the handler, and exits.
+If this fails, it returns reserved items to the inventory using the `undoSubtractInventory` transaction, signals the handler, and exits.
 ```javascript
 // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
 const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
@@ -149,15 +148,15 @@ Under the hood, `createPaymentSession` registers a callback with the payment ser
 
 ### Notifying the handler
 Now, the workflow must notify the handler the payment session is ready.
-We will use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to publish the payment session ID on the `session_topic`, on which the handler is waiting for a notification.
+We use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to publish the payment session ID on the `session_topic`, on which the handler is waiting for a notification.
 ```javascript
 // Notify the handler and share the payment session ID.
 await ctxt.setEvent(session_topic, paymentSession.session_id);
 ```
 
 ### Waiting for a payment
-As the handler has been notified and will direct the user to the payment service, the payment workflow must wait until it learns from the payment outcome.
-We will use [recv](../tutorials/workflow-communication-tutorial#recv) to wait on a signal from the callback registed by `createPaymentSession`.
+As the handler has been notified to direct the user to the payment service, the payment workflow must wait until the payment service notifies it whether the payment succeeded or failed.
+We use [recv](../tutorials/workflow-communication-tutorial#recv) to wait on a signal from the callback registed by `createPaymentSession`.
 ```javascript
 // Wait for a notification from the payment service with a 30 seconds timeout.
 const notification = await ctxt.recv<string>(payment_complete_topic, 30);
@@ -165,8 +164,8 @@ const notification = await ctxt.recv<string>(payment_complete_topic, 30);
 
 ### Handling payment outcomes
 Finally, the workflow must handle three situations: the payment succeeds, fails, or times out.
-For brevity, we will write logic to consider the payment invalid both if it times out or failed and undo changes to the inventory using `undoSubtractInventory`.
-In a real application, you will want to check with the payment provider in case of time out, to verify the status of the payment.
+For simplicity, if it fails or times out, we consider the payment failed and return reserved inventory using `undoSubtractInventory`.
+In a real application, you will want to check with the payment provider in case of a time out, to verify the status of the payment.
 ```javascript
 if (notification && notification === 'paid') {
   // If the payment succeeds, fulfill the order (code omitted for brevity.)
@@ -222,12 +221,12 @@ static async paymentWorkflow(ctxt: WorkflowContext): Promise<void> {
 ## Building and running
 Let's build and run the application (make sure you have the full code as provided in the [guide's repository](https://github.com/dbos-inc/dbos-demo-apps).)
 
-First we will start the payment service in the background. In one terminal, run:
+First we start the payment service in the background. In one terminal, run:
 ```shell
 ./start_payment_service.sh
 ```
 
-Then we will start the shop application itself. In another terminal, run:
+Then we start the shop application. In another terminal, run:
 ```shell
 npm run build
 npx dbos-sdk start
@@ -247,8 +246,8 @@ The output should look like:
 Let's send a request to initiate a checkout: `curl -X POST http://localhost:8082/checkout`.
 The response will include two links, one for validating the payment and one for cancelling it:
 ```shell
-Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-workflowuuid: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
-Cancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-workflowuuid: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
+Submit payment: curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-idmpotency-key: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
+Cancel payment: curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-idempotency-key: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
 ```
 
 You can take three actions: submit the payment, cancel it, or do nothing. Here are example outputs from the application in these three cases:
@@ -263,7 +262,11 @@ In the two last cases, the shop's inventory will be rolled back, which you can c
 
 ## Using idempotency keys
 
-If you call the endpoint again with the idempotency key provided&horbar;the `dbos-workflowuuid` in the output above&horbar;the application will reuse the same payment session.
+If you call the endpoint again with the idempotency key provided&horbar;the `dbos-idempotency-key` in the output above&horbar;the application will reuse the same payment session.
 For instance, if you call the application once and see the idempotency key `f5103e9f-e78a-4aab-9801-edd45a933d6a` in the response, try calling the endpoint againt with the key: `curl -X POST http://localhost:8082/checkout/f5103e9f-e78a-4aab-9801-edd45a933d6a`.
 Note the new response's `session_id` is unchanged.
+
+<!---
+TODO: Flesh this out more.
+-->
 
