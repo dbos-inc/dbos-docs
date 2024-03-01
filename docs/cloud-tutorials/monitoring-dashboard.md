@@ -20,6 +20,12 @@ This command will output the URL of your dashboard. Log in with the same credent
 You only need to run the "launch" command once after user registration. The dashboard will automatically display data for new apps as they are added. If you accidentally run the "launch" command again, log out of the dashboard and log back in to continue using it.
 :::
 
+If you forget your dashboard URL you can run
+```
+npx dbos-cloud dashboard url
+```
+to retrieve it again.
+
 ### Exploring Your Dashboard
 
 In the top-right corner, the dashboard provides a time selector, defaulting to the last hour. You can change this setting to navigate to a different window of time. All of the panels are filtered for the selected time interval.
