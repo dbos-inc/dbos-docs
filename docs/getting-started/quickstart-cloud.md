@@ -30,6 +30,12 @@ Open the login portal in your browser and click `Confirm`, then create a new acc
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
 
+:::tip
+
+If you register with an email and password, you'll also need to verify your email through a link we email you.
+
+:::
+
 
 ### Provisioning a Database Instance
 
@@ -69,4 +75,4 @@ To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
 For example, if your username is `mike` and your app name is `hello`, visit `https://cloud.dbos.dev/apps/mike/hello/greeting/dbos`.
 Just like in the [quickstart](./quickstart.md), you should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
-Congratulations, you've sucessfully deployed your first application to DBOS Cloud!
+Congratulations, you've successfully deployed your first application to DBOS Cloud!

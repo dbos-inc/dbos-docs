@@ -1,32 +1,206 @@
 ---
 sidebar_position: 3
-title: Time-Travel Debugging
-description: Learn how to time-travel debug DBOS Cloud applications
+title: Time Travel Debugging
+description: Learn how to time travel debug DBOS Cloud applications
 ---
 
-In this guide, you'll learn how to time-travel debug your production applications deployed on DBOS Cloud.
+In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud.
+
+## Time Travel with Visual Studio Code
 
 ### Preliminaries
 
-TODO: VSCode extension installation.
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management).
+
+Time travel debugging uses [Visual Studio Code](https://code.visualstudio.com/) and the
+[DBOS Time Travel Debugger Extension](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg). 
+The extension can be installed from the link above or by searching the 
+[Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
+inside VS Code for "DBOS"
+
+![Installing the DBOS Time Travel Extension Screenshot](./assets/ttdbg-ext-install.png)
+
+Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
+
+:::note
+If you're not a VS Code user, please see the section below on [Time Travel Debugging with the DBOS SDK CLI](#time-travel-with-dbos-sdk-cli-non-vs-code-users) below.
+:::
 
 ### Launching a Debug Session
 
-TODO: either manually through VSCode or using the link from the monitoring dashboard.
+Open your DBOS application in VS Code. 
+The DBOS Time Travel Debugger extension inserts a "⏳ Time Travel Debug" 
+[CodeLens](https://code.visualstudio.com/blogs/2017/02/12/code-lens-roundup)
+to every DBOS [workflow](../tutorials/workflow-tutorial),
+[transaction](../tutorials/transaction-tutorial)
+and [communicator](../tutorials/communicator-tutorial) function in your DBOS application.
 
-### Replaying Workflows and Transactions
+![DBOS Time Travel CodeLens Screenshot](./assets/ttdbg-code-lens.png)
 
-TODO: use an example to explain how we can set break points and single step into workflows and transactions.
+When you click on the Time Travel Debug CodeLens, you are provided with a list of recent executions of that function to debug.
 
-### Time-Travel Database Queries
+:::warning
+For Free Tier DBOS Apps, time travel debug information is only kept for 3 days.
+:::
 
-TODO: explain how we can allow developers to retroactively add new (read-only) queries over old versions of data as if the queries "time-traveled" to the past.
-This is a really unique and cool feature of DBOS, because we allow you to modify your code and run it against the past!
+![DBOS Time Travel Workflow ID picker](./assets/ttdbg-wfid-quick-pick.png)
+
+:::note
+In the upper right hand corner of the workflow picker, there are buttons to manually enter a workflow ID or to 
+select a workflow to debug via your [monitoring Dashboard](./monitoring-dashboard). 
+More details on those options below.
+:::
+
+After selecting a recent execution of your function, the DBOS Time Travel Debugger will launch the DBOS debug runtime 
+and VS Code TypeScript debugger. This allows you to debug your DBOS application against the database as it existed 
+at the time the selected workflow originally executed.
+Other than using time travel database state, the debugging experience for your DBOS application is just like debugging any other TypeScript application in VS Code.
+You can [set breakpoints](https://code.visualstudio.com/docs/editor/debugging#_breakpoints),
+[inspect variables](https://code.visualstudio.com/docs/editor/debugging#_data-inspection) and 
+[step through your code](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) as you would expect.
+
+![DBOS Time Travel Debugging](./assets/ttdbg-debugging.png)
+
+#### Debugging from the Monitoring Dashboard
+
+You can launch the Time Travel Debugger directly from the [Monitoring Dashboard](./monitoring-dashboard#time-travel-debugging).
+Clicking on the dashboard button in the workflow picker brings you directly to the Monitoring Dashboard. From there, you 
+can use the dashboard's filtering capabilities to find the workflow you want to time travel debug. Once you find the 
+desired workflow execution, click on the value in the workflow uuid column and select "Debug this Workflow" from the menu.
+
+![Debug this workflow menu](./assets/dash-debug-wf.png)
+
+#### Manually entering the Workflow ID to debug
+
+If you already know the workflow ID of the execution you want to debug, press the edit button in the workflow picker
+and you are provided a place to enter that workflow ID directly.
+
+![Debug this workflow menu](./assets/ttdbg-wfid-manual.png)
+
+
+### Time Travel Database Queries
+
+DBOS [records](../explanations/how-workflows-work#reliability-through-recording-and-safe-re-execution) every step 
+a DBOS application takes in the database so that it can safely re-execute the application if it is interrupted. 
+The Time Travel Debugger uses this information to project database state as it existed when a selected workflow ran.
+Developers can modify or even add database read queries in DBOS application transaction functions. 
+When these updated applications are run with the time travel debugger, they return results as if they run in the past!
+
+:::warning
+Do not add or modify database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
+DBOS will support time travel debugging functions that change how they write database state in the future.
+:::
+
+For example, here is an transaction function from the [Transactions tutorial](../tutorials/transaction-tutorial)
+
+```javascript
+export class Hello {
+  @Transaction()  // Run this function as a database transaction
+  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+    // Retrieve and increment the number of times this user has been greeted.
+    const rows = await ctxt.client<dbos_hello>("dbos_hello")
+      .insert({ name: user, greet_count: 1 })
+      .onConflict("name") // If user is already present, increment greet_count.
+        .merge({ greet_count: ctxt.client.raw('dbos_hello.greet_count + 1') })
+      .returning("greet_count");
+    const greet_count = rows[0].greet_count;
+    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+  }
+}
+```
+
+We can add queries to the function to retrieve past database states. 
+For example, the following code block adds queries to retrieve the user's greet count before and after it gets updated.
+
+:::tip
+Don't forget to rebuild your DBOS application with `npm run build` before running it in the debugger.
+:::
+
+```javascript
+export class Hello {
+
+  @Transaction()  // Run this function as a database transaction
+  static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
+
+    const before = await ctxt.client<dbos_hello>("dbos_hello")
+        .select("greet_count")
+        .where("name", user)
+        .first();
+
+    // Retrieve and increment the number of times this user has been greeted.
+    const rows = await ctxt.client<dbos_hello>("dbos_hello")
+      .insert({ name: user, greet_count: 1 })
+      .onConflict("name") // If user is already present, increment greet_count.
+        .merge({ greet_count: ctxt.client.raw('dbos_hello.greet_count + 1') })
+      .returning("greet_count");
+    const greet_count = rows[0].greet_count;
+
+    const after = await ctxt.client<dbos_hello>("dbos_hello")
+        .select("greet_count")
+        .where("name", user)
+        .first();
+
+    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+  }
+}
+```
+
+When this updated code is run in the debugger, we can inspect the new before and after variables to see past database state.
+
+### Dos and Don'ts
+
+Currently, the time travel debugger supports stepping through any past workflows and most transactions, but has a few limitations:
+
+- DBOS uses recorded outputs for communicators instead of stepping through their code, because they may contain unexpected side effects. 
+  For example, this guarantees that we don't resend any emails during debugging sessions.
+- DBOS currently uses recorded errors for aborted transactions instead of executing their queries,
+  because database errors can be caused by non-deterministic factors (e.g., database lock contentions). 
+  We will be adding support for replaying many common errors in the future -- stay tuned!
+- DBOS will compare debug function output to the function's originally recorded output. 
+  If they do not match, the debug session will halt with an error.
 
 ### Configurations
 
-TODO: explain how we can tweak settings of the debugger.
-For more information, please read the [debugger extension reference](../api-reference/timetravel-debugger-extension).
+For more information, please read the [debugger extension reference](../api-reference/time-travel-debugger).
 
-### Limitations
-TODO: Explain that we use recorded output for communicators and transactions that threw database errors, because they may be caused by locks and other non-deterministic factors.
+## Time Travel with DBOS SDK CLI (Non-VS Code Users)
+
+For non-VS Code users, you can run the time-travel debugger manually through the DBOS SDK CLI.
+
+### Manual Setup
+
+The time travel debugger requires our debug proxy to transform database queries so that it can "travel" back in time.
+You can download the pre-compiled debug proxy using the following link. Please choose the one based on your operating system and hardware platform:
+
+- [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-x64-0.8.15-preview.zip)
+- [Download for macOS (Apple Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-arm64-0.8.15-preview.zip)
+- [Download for Linux (x86_64)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-x64-0.8.15-preview.zip)
+- [Download for Linux (arm)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-arm64-0.8.15-preview.zip)
+
+After downloading the file, unzip it and make the `debug-proxy` file executable:
+
+```bash
+cd <Your Download Folder>/
+chmod +x debug-proxy
+./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
+```
+
+::::note
+For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
+::::
+
+### Replay a Workflow
+
+Open another terminal window, enter your application folder, compile your code, and replay a workflow using the following commands:
+
+```bash
+cd <Your App Folder>/
+npm run build
+npx dbos-sdk debug -u <workflow UUID>
+```
+
+:::tip
+Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
+:::
+
+For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-sdk-debug)

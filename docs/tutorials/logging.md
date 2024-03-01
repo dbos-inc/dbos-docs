@@ -5,9 +5,6 @@ description: Learn to use logging in DBOS
 ---
 
 In this section we will learn to use DBOS's built-in logging system.
-
-## Logging
-
 The DBOS runtime comes with a global logger you can access through any operation's [context](../api-reference/contexts.md).
 
 ### Usage
@@ -20,18 +17,22 @@ static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) na
 }
 ```
 
-The logger supports `info()`, `debug()`, `warn()` and `error()`.
-All except `error()` accept a `string` argument and print it as-is. If the argument is not of type string, DBOS SDK will attempt to `JSON.stringify` the input.
-`error()` accepts an argument of any type, wraps it in a Javascript `Error` object (if it isn't an `Error` already), and prints it with its stack trace.
+The logger provides four logging levels: `info()`, `debug()`, `warn()` and `error()`.
+Each accepts and logs any output that can be serialized to JSON.
+`error()` additionally logs a stack trace.
 
-```javascript
-@GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
-    const err = new Error("an error!");
-    ctx.logger.error(err);
-    return `Greeting, ${name}`;
-}
+### Viewing Logs in DBOS Cloud
+
+You can view your applications' logs in DBOS Cloud through our [monitoring dashboard](../cloud-tutorials/monitoring-dashboard.md). It allows you to filter for particular applications or time ranges.
+
+You can also retrieve logs through the [`application logs`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs) command.
+In your package root directory, run:
+
+```shell
+npx dbos-cloud application logs
 ```
+
+
 
 ### Configuration
 
