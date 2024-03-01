@@ -8,8 +8,13 @@ In this guide, you'll learn how to manage database instances in DBOS Cloud.
 
 ### Preliminaries
 
-Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account.
-Then, in your application root directory, log in to DBOS Cloud by running:
+Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
+
+```
+npx dbos-cloud register -u [username]
+```
+
+If you did already, simply log in to DBOS Cloud by running:
 
 ```
 npx dbos-cloud login
@@ -20,7 +25,8 @@ npx dbos-cloud login
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
 You should choose a database name and an administrator username and password for your database instance.
 Both the database instance name and the administrator username must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-To provision a database instance, run (this takes ~5-7 minutes):
+The database instance name should be between 3 and 30 characters.
+To provision a database instance, run (this takes ~5 minutes):
 
 ```
 npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-password>
@@ -40,13 +46,13 @@ Remember your database administrator password! You need it to connect to our [ti
 To see a list of all provisioned instances, run:
 
 ```
-npx dbos-cloud database list
+npx dbos-cloud db list
 ```
 
 To retrieve the status of a particular instance, run:
 
 ```
-npx dbos-cloud database status <database-name>
+npx dbos-cloud db status <database-name>
 ```
 
 ### Database Schema Management
@@ -77,4 +83,6 @@ To destroy a database instance, run:
 npx dbos-cloud database destroy <database-name>
 ```
 
+:::warning
 Take care&#8212;this irreversibly delete all data on the instance.
+:::

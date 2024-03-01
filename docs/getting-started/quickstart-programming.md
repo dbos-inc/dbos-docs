@@ -259,4 +259,4 @@ You should see an output like:
 Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
 This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes once and only once.
 
-The code for this guide is available on [github](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails)
+The code for this guide is available on [github](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).

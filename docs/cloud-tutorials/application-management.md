@@ -8,8 +8,13 @@ In this guide, you'll learn how to manage applications in DBOS Cloud.
 
 ### Preliminaries
 
-Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account.
-Then, in your application root directory, log in to DBOS Cloud by running:
+Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
+
+```
+npx dbos-cloud register -u [username]
+```
+
+If you did already, simply log in to DBOS Cloud by running:
 
 ```
 npx dbos-cloud login
@@ -29,12 +34,13 @@ npx dbos-cloud application register -d <database-name>
 ```
 
 Your application is automatically registered under the name in its `package.json`.
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 After you've registered your application, deploy it to run it in the cloud.
 Run this command in your application root directory:
 
 ```
-npx dbos-cloud application deploy
+npx dbos-cloud app deploy
 ```
 
 When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
@@ -48,7 +54,7 @@ https://cloud.dbos.dev/apps/<username>/<app-name>
 If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
 
 :::tip
-You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically takes care of that for you, applying the connection information of your cloud database.
+You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database.
 :::
 
 ### Monitoring and Debugging Applications
@@ -68,5 +74,5 @@ DBOS provides many tools to monitor and debug applications:
 If you want to delete an application, run in its root directory:
 
 ```
-npx dbos-cloud application delete
+npx dbos-cloud app delete
 ```
