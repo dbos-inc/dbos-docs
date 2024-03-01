@@ -40,7 +40,7 @@ and [communicator](../tutorials/communicator-tutorial) function in your DBOS app
 When you click on the Time Travel Debug CodeLens, you are provided with a list of recent executions of that function to debug.
 
 :::warning
-Time travel debug information is only kept for a few days.
+For Free Tier DBOS Apps, time travel debug information is only kept for 3 days.
 :::
 
 ![DBOS Time Travel Workflow ID picker](./assets/ttdbg-wfid-quick-pick.png)

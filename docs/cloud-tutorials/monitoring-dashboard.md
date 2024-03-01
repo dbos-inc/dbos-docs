@@ -14,7 +14,17 @@ In order to launch the dashboard you need to first login and register your appli
 npx dbos-cloud dashboard launch
 ```
 
-This command will output the URL of your dashboard. Log in with the same credentials you used to register your app.
+This command will output the URL of your dashboard. Log in with the same credentials you used to register your app. 
+
+:::tip 
+You only need to run the "launch" command once after user registration. The dashboard will automatically display data for new apps as they are added. If you accidentally run the "launch" command again, log out of the dashboard and log back in to continue using it.
+:::
+
+If you forget your dashboard URL you can run
+```
+npx dbos-cloud dashboard url
+```
+to retrieve it again.
 
 ### Exploring Your Dashboard
 
@@ -41,15 +51,15 @@ In the top-right corner of the app, there are filtering selectors:
 2. you can copy-paste a specific `Trace ID` to only view logs and traces for that Trace. To clear the field, erase the text and press "return."
 3. similar to Trace ID you can copy-paste a specific `Workflow UUID` to filter by that. It is cleared the same way as Trace ID.
 
-When turning on the filtering selectors, the time window selection stays the same. Note that you may see more data for your selection if you "zoom out" in time. Note also that the Application Name choices are set once when the dashboard is loaded. To refresh, simply reload your browser.
+:::tip
+When turning on these filters, the time window filter also still applies. You may see more data for your selection if you "zoom out" in time. Also note that the Application Name choices are set once when you open the dashboard. To refresh the choices for a new app, simply reload your browser.
+:::
 
 For much faster filtering, you can set the Trace ID or Workflow UUID simply by clicking on the respective value in the bottom traces table. For Workflow UUID you can also open the selected workflow in the debugger. Click once to see the choices and confirm with another click:
 ![Traces](./assets/traces.png)
 
 ### Time Travel Debugging
 
-As per the previous section, clicking on a value in the Workflow UUID column allows you to [filter](#filtering) your view to a single workflow execution or 
-to execute the selected workflow in the Time Travel Debugger. Please see the 
-[Time Travel Debugger Tutorial](./timetravel-debugging#debugging-from-the-monitoring-dashboard) for more information
+As per the previous section, clicking on a value in the Workflow UUID column allows you to [filter](#filtering) your view to a single workflow execution or to execute the selected workflow in the Time Travel Debugger. Please see the [Time Travel Debugger Tutorial](./timetravel-debugging#debugging-from-the-monitoring-dashboard) for more information
 
 ![Debug this workflow menu](./assets/dash-debug-wf.png)
