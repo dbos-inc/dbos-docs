@@ -48,7 +48,7 @@ For much faster filtering, you can set the Trace ID or Workflow UUID simply by c
 
 ### Time Travel Debugging
 
-As per the previous section, clicking on value the Workflow UUID column allows you to [filter](#filtering) your view to a single workflow execution or 
+As per the previous section, clicking on a value in the Workflow UUID column allows you to [filter](#filtering) your view to a single workflow execution or 
 to execute the selected workflow in the Time Travel Debugger. Please see the 
 [Time Travel Debugger Tutorial](./timetravel-debugging#debugging-from-the-monitoring-dashboard) for more information
 
