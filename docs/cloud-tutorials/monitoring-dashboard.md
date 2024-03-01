@@ -45,3 +45,11 @@ When turning on the filtering selectors, the time window selection stays the sam
 
 For much faster filtering, you can set the Trace ID or Workflow UUID simply by clicking on the respective value in the bottom traces table. For Workflow UUID you can also open the selected workflow in the debugger. Click once to see the choices and confirm with another click:
 ![Traces](./assets/traces.png)
+
+### Time Travel Debugging
+
+As per the previous section, clicking on value the Workflow UUID column allows you to [filter](#filtering) your view to a single workflow execution or 
+to execute the selected workflow in the Time Travel Debugger. Please see the 
+[Time Travel Debugger Tutorial](./timetravel-debugging#debugging-from-the-monitoring-dashboard) for more information
+
+![Debug this workflow menu](./assets/dash-debug-wf.png)
