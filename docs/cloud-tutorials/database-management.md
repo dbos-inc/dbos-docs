@@ -8,8 +8,13 @@ In this guide, you'll learn how to manage database instances in DBOS Cloud.
 
 ### Preliminaries
 
-Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account.
-Then, in your application root directory, log in to DBOS Cloud by running:
+Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
+
+```
+npx dbos-cloud register -u [username]
+```
+
+If you did already, simply log in to DBOS Cloud by running:
 
 ```
 npx dbos-cloud login
