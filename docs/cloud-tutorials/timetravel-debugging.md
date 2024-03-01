@@ -45,6 +45,12 @@ Time travel debug information is only kept for a few days.
 
 ![DBOS Time Travel Workflow ID picker](./assets/ttdbg-wfid-quick-pick.png)
 
+:::note
+In the upper right hand corner of the workflow picker, there are buttons to manually enter a workflow ID or to 
+select a workflow to debug via your [monitoring Dashboard](./monitoring-dashboard). 
+More details on those options below.
+:::
+
 After selecting a recent execution of your function, the DBOS Time Travel Debugger will launch the DBOS debug runtime 
 and VS Code TypeScript debugger. This allows you to debug your DBOS application against the database as it existed 
 at the time the selected workflow originally executed.
@@ -54,6 +60,23 @@ You can [set breakpoints](https://code.visualstudio.com/docs/editor/debugging#_b
 [step through your code](https://code.visualstudio.com/docs/editor/debugging#_debug-actions) as you would expect.
 
 ![DBOS Time Travel Debugging](./assets/ttdbg-debugging.png)
+
+#### Debugging from the Monitoring Dashboard
+
+You can launch the Time Travel Debugger directly from the [Monitoring Dashboard](./monitoring-dashboard#time-travel-debugging).
+Clicking on the dashboard button in the workflow picker brings you directly to the Monitoring Dashboard. From there, you 
+can use the dashboard's filtering capabilities to find the workflow you want to time travel debug. Once you find the 
+desired workflow execution, click on the value in the workflow uuid column and select "Debug this Workflow" from the menu.
+
+![Debug this workflow menu](./assets/dash-debug-wf.png)
+
+#### Manually entering the Workflow ID to debug
+
+If you already know the workflow ID of the execution you want to debug, press the edit button in the workflow picker
+and you are provided a place to enter that workflow ID directly.
+
+![Debug this workflow menu](./assets/ttdbg-wfid-manual.png)
+
 
 ### Time Travel Database Queries
 
