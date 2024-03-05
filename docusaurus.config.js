@@ -4,7 +4,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'DBOS SDK',
+  title: 'DBOS Docs',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -52,7 +52,7 @@ const config = {
       // Replace with your project's social card
       image: 'img/social-card.png',
       navbar: {
-        title: 'DBOS SDK',
+        title: 'DBOS',
         logo: {
           alt: 'DBOS Logo',
           src: 'img/dbos-logo.png',
