@@ -21,12 +21,12 @@ We strongly recommend using an environment variable for the database password fi
 
 The database section is used to set up the connection to the database.
 DBOS currently only supports Postgres-compatible databases.
-*Every field is required unless specified otherwise.*
+Every field is required unless otherwise specified.
 
-- **hostname**: Hostname or IP address of the application database.
-- **port**: Database port.
-- **username**: Username with which to connect to the database.
-- **password**: Password with which to connect to the database.  We strongly recommend using an environment variable for this field, instead of plain text.
+- **hostname**: Database server hostname. For local deployment only, not used in DBOS Cloud.
+- **port**: Database server port. For local deployment only, not used in DBOS Cloud.
+- **username**: Username with which to connect to the database server. For local deployment only, not used in DBOS Cloud.
+- **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: Name of the application database.
 - **app_db_client** (optional): Client to use for connecting to the application database. Must be either `knex` or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.

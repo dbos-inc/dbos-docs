@@ -58,13 +58,18 @@ The database instance name must be between 3 and 30 characters.
 Run this command (it should take ~5 minutes to provision):
 
 ```
-npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-password>
+npx dbos-cloud database provision <database-instance-name> -a <admin-username> -W <admin-password>
 ```
 
 If successful, the command should print `Database successfully provisioned!`.
+For more information on cloud database management, check out [our guide](../cloud-tutorials/database-management.md).
 
-:::tip
-You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database.
+:::info
+The Postgres database instance you just provisioned is a physical server that can host multiple independent databases for different applications.
+You can define which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
+DBOS Cloud automatically creates your application database and applies your schema migrations when you deploy an application.
+
+In this documentation, we use "database instance" or "database server" to refer to the physical server and "database" to refer to the application database.
 :::
 
 ### Registering and Deploying an Application
@@ -73,7 +78,7 @@ Now, we're ready to register and deploy your application to DBOS Cloud!
 First, register your application by running this command, using your database instance name from the last step:
 
 ```
-npx dbos-cloud application register -d <database-name>
+npx dbos-cloud application register -d <database-instance-name>
 ```
 
 If successful, the command should print `Successfully registered <app-name>!`
@@ -93,6 +98,10 @@ For example, if your username is `mike` and your app name is `hello`, visit `htt
 Just like in the [quickstart](./quickstart.md), you should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations, you've successfully deployed your first application to DBOS Cloud!
+
+:::tip
+You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
+:::
 
 ### Going Back to Square One
 

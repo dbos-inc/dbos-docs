@@ -34,9 +34,9 @@ npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-
 
 :::tip
 Each Postgres database instance is a physical server that can host multiple independent Postgres databases for different applications.
-You can define which Postgres database your application connects to through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
-
-However, don't worry about setting the other database connection parameters like `hostname` or `password` for cloud deployment&#8212;DBOS automatically takes care of that for you, applying the connection information of your cloud database when you deploy an application.
+You can define which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
+DBOS Cloud automatically creates your application database and applies your schema migrations when you deploy an application.
+In this documentation, we use "database instance" or "database server" to refer to the physical server and "database" to refer to the application database.
 :::
 
 :::tip
