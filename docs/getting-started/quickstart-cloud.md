@@ -13,11 +13,20 @@ We assume you've already completed the [quickstart](./quickstart.md).
 Before starting this tutorial, instantiate a new DBOS application and `cd` into it by running the following commands:
 
 ```bash
-npx -y @dbos-inc/dbos-sdk init -n <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
 cd <project-name>
 ```
 
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+
+:::info
+
+The DBOS Cloud CLI uses the [`dbos-cloud`](https://www.npmjs.com/package/@dbos-inc/dbos-cloud) npm package.
+To install the latest version, run `npm install @dbos-inc/dbos-cloud@latest` in your package root.
+For a complete Cloud CLI API reference, see [here](../api-reference/cloud-cli.md).
+
+:::
+
 ### Registration
 
 Let's start by creating a DBOS Cloud account.
@@ -27,7 +36,7 @@ From your DBOS application directory, run the following command:
 npx dbos-cloud register -u <username>
 ```
 
-User names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+User names should be between 3 and 30 characters and must contain only lowercase letters, numbers, and underscores (`_`).
 
 When you run the command, it will ask you for some information, then redirect you to a secure login portal.
 Open the login portal in your browser and click `Confirm`, then create a new account.
@@ -54,6 +63,10 @@ npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-
 
 If successful, the command should print `Database successfully provisioned!`.
 
+:::tip
+You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database.
+:::
+
 ### Registering and Deploying an Application
 
 Now, we're ready to register and deploy your application to DBOS Cloud!
@@ -71,12 +84,12 @@ Now, deploy your application to run it in the cloud!
 npx dbos-cloud application deploy
 ```
 If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`
-The URL should look like `https://cloud.dbos.dev/apps/<username>/<app-name>`
+The URL should look like `https://<username>-<app-name>.cloud.dbos.dev/`
 Your application is now live at that URL!
 If you ever forget the URL, you can retrieve it (and some other information) by running `npx dbos-cloud application status`.
 
 To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
-For example, if your username is `mike` and your app name is `hello`, visit `https://cloud.dbos.dev/apps/mike/hello/greeting/dbos`.
+For example, if your username is `mike` and your app name is `hello`, visit `https://mike-hello.cloud.dbos.dev/greeting/dbos`.
 Just like in the [quickstart](./quickstart.md), you should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations, you've successfully deployed your first application to DBOS Cloud!

@@ -48,7 +48,7 @@ It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
 ```
-https://cloud.dbos.dev/apps/<username>/<app-name>
+https://<username>-<app-name>.cloud.dbos.dev/
 ```
 
 If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
