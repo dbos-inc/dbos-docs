@@ -77,7 +77,7 @@ docker run hello-world
 To initialize a new DBOS application, run the following command, choosing a project name with no spaces or special characters:
 
 ```bash
-npx -y @dbos-inc/dbos-sdk init -n <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
 ```
 
 This creates a folder for your project, configures its layout, and installs required dependencies.

@@ -48,13 +48,13 @@ It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
 ```
-https://cloud.dbos.dev/apps/<username>/<app-name>
+https://<username>-<app-name>.cloud.dbos.dev/
 ```
 
 If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
 
 :::tip
-You don't have to edit your `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database.
+You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 :::
 
 ### Monitoring and Debugging Applications

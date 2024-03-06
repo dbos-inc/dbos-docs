@@ -14,7 +14,7 @@ This tutorial assumes you've finished our [quickstart](./quickstart.md).
 For convenience, we recommend initializing a new DBOS application and starting a database for it:
 
 ```
-npx -y @dbos-inc/dbos-sdk init -n <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
 cd <project-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh

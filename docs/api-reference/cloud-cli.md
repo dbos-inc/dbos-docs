@@ -4,7 +4,15 @@ title: Cloud CLI
 description: DBOS Cloud CLI reference
 ---
 
-The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud
+The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud.
+
+## Installation
+
+To install the latest Cloud CLI version for your application, run the following command in your package root:
+
+```
+npm install @dbos-inc/dbos-cloud@latest
+```
 
 ## User Management Commands
 
@@ -15,7 +23,7 @@ This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.
 
 **Parameters:**  
-- `-u, --username <string>`: Your DBOS Cloud username.
+- `-u, --username <string>`: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (`_`).
 
 :::tip
 
