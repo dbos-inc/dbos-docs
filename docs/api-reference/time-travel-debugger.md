@@ -48,6 +48,33 @@ The time travel debugger relies on Debug Proxy utility to project the state of t
 The extension automatically launches the Debug Proxy the first time a DBOS application is time travel debugged. 
 The debug proxy process is automatically shut down when VS Code shuts down, but this command can be used to shut down the debug proxy process manually.
 
+## Command Variables
+
+VS Code supports using [extension commands as variables](https://code.visualstudio.com/docs/editor/variables-reference#_command-variables)
+in launch and task configuration files. The following commands are designed to be used as configuration file variables.
+
+The default DBOS launch configuration includes both of these commands in the Time Travel Debug configuration.
+
+```js
+{
+    "type": "node-terminal",
+    "request": "launch",
+    "name": "Time Travel Debug",
+    "command": "npx dbos-sdk debug -x ${command:dbos-ttdbg.get-proxy-url} -u ${command:dbos-ttdbg.pick-workflow-id}",
+    "preLaunchTask": "npm: build"
+}
+```
+
+### dbos-ttdbg.get-proxy-url
+
+This command retrieves the url of the Debug Proxy. By default, this is `http://localhost:2345`, but the port can be configured
+via the ['debug_proxy_port'](#dbos-ttdbgdebug_proxy_port) setting.
+
+### dbos-ttdbg.pick-workflow-id
+
+This command prompts the user to choose a select a workflow to debug. For more information, please see the 
+[Time Travel Debugger tutorial](../cloud-tutorials/timetravel-debugging).
+
 ## Configuration
 
 Some behavior of the extension can be controlled via [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings).
@@ -55,6 +82,20 @@ Some behavior of the extension can be controlled via [VS Code Settings](https://
 ### dbos-ttdbg.debug_proxy_port
 
 The Debug Proxy listens on port 2345 by default. This port can be changed via the `dbos-ttdbg.debug_proxy_port` configuration setting.
+
+### dbos-ttdbg.debug_pre_launch_task
+
+By default, the [Time Travel Debugging CodeLens](http://localhost:3000/cloud-tutorials/timetravel-debugging#launching-a-debug-session) will use
+the settings from the first [VS Code launch configuration](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations)
+that includes `npx dbos-cloud debug` in the command string. If there are no such launch configurations, the extension will create
+a launch configuration from scratch. The `dbos-ttdbg.debug_pre_launch_task` configuration setting is used as the 
+[`preLaunchTask`](https://code.visualstudio.com/Docs/editor/debugging#:~:text=Debug%20quick%20pick.-,preLaunchTask,-%2D%20to%20launch%20a)
+value of the generated launch configuration.
+
+:::warning
+This configuration setting is ignored if you have a launch configuration with `npx dbos-cloud debug` in the command string,
+even if that launch configuration does not specify a `preLaunchTask`.
+:::
 
 ### DBOS Cloud Database Connection
 
