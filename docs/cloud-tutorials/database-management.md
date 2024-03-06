@@ -84,5 +84,5 @@ npx dbos-cloud database destroy <database-name>
 ```
 
 :::warning
-Take care&#8212;this irreversibly delete all data on the instance.
+Take care&#8212;this will irreversibly delete all data in the database instance.
 :::

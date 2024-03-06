@@ -105,3 +105,7 @@ After deleting your app, if you'd like to erase your database instance, run:
 ```
 npx dbos-cloud database destroy <database-name>
 ```
+
+:::warning
+Take care&#8212;this will irreversibly delete all data in the database instance.
+:::
