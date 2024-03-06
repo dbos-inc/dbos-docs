@@ -80,3 +80,15 @@ For example, if your username is `mike` and your app name is `hello`, visit `htt
 Just like in the [quickstart](./quickstart.md), you should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations, you've successfully deployed your first application to DBOS Cloud!
+
+### Going Back to Square One
+
+To stop and delete your application, you can run the following command:
+```
+npx dbos-cloud applications delete
+```
+
+After deleting your app, if you'd like to erase your database instance, run:
+```
+npx dbos-cloud database destroy <database-name>
+```
