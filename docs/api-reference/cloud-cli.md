@@ -18,11 +18,11 @@ npm install @dbos-inc/dbos-cloud@latest
 
 ### `npx dbos-cloud register`
 
-**Description:**  
+**Description:**
 This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.
 
-**Parameters:**  
+**Parameters:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (`_`).
 
 :::info
@@ -33,7 +33,7 @@ If you register with an email and password, you also need to verify your email t
 
 ### `npx dbos-cloud login`
 
-**Description:**  
+**Description:**
 This command logs you in to your DBOS Cloud account.
 It provides a URL to a secure login portal you can use to authenticate from your browser.
 
@@ -41,7 +41,7 @@ It provides a URL to a secure login portal you can use to authenticate from your
 
 ### `npx dbos-cloud logout`
 
-**Description:**  
+**Description:**
 This command logs you out of your DBOS Cloud account.
 
 ---
@@ -50,10 +50,10 @@ This command logs you out of your DBOS Cloud account.
 
 ### `npx dbos-cloud db provision`
 
-**Description:**  
+**Description:**
 This command provisions a Postgres database instance to which your applications can connect.
 
-**Parameters:**  
+**Parameters:**
 - `<database-instance-name>`: The name of the database instance to provision.
 - `-a, --admin <string>`: The administrator username for this database instance.
 - `-W, --password <string>`: The administrator password for this database instance.
@@ -62,10 +62,10 @@ This command provisions a Postgres database instance to which your applications 
 
 ### `npx dbos-cloud db list`
 
-**Description:**  
+**Description:**
 This command lists all Postgres database instances provisioned by your account.
 
-**Parameters:**  
+**Parameters:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -80,10 +80,10 @@ For each provisioned Postgres database instance, emit:
 
 ### `npx dbos-cloud db status`
 
-**Description:**  
+**Description:**
 This command retrieves the status of a Postgres database instance
 
-**Parameters:**  
+**Parameters:**
 - `<database-instance-name>`: The name of the database instance whose status to retrieve.
 - `--json`: Emit JSON output
 
@@ -98,10 +98,10 @@ This command retrieves the status of a Postgres database instance
 
 ### `npx dbos-cloud db destroy`
 
-**Description:**  
+**Description:**
 This command destroys a previously-provisioned Postgres database instance.
 
-**Parameters:**  
+**Parameters:**
 - `<database-instance-name>`: The name of the database instance whose status to retrieve.
 
 ---
@@ -110,18 +110,18 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ### `npx dbos-cloud app register`
 
-**Description:**  
+**Description:**
 This command must be run from an application root directory.
 It registers that application with DBOS Cloud.
 
-**Parameters:**  
+**Parameters:**
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect.
 
 ---
 
 ### `npx dbos-cloud app deploy`
 
-**Description:**  
+**Description:**
 This command must be run from an application root directory.
 It deploys the application to DBOS Cloud and emits the URL at which the application is hosted, which is `https://cloud.dbos.dev/apps/<username>/<application-name>`.
 
@@ -129,18 +129,21 @@ It deploys the application to DBOS Cloud and emits the URL at which the applicat
 
 ### `npx dbos-cloud app delete`
 
-**Description:**  
-This command must be run from an application root directory.
-It deletes the application from DBOS Cloud.
+**Parameters:**
+- `[application-name]`: The name of the application to delete.
+
+**Description:**
+Delete an application from DBOS Cloud.
+If run in an application root directory with no application name provided, delete the local application.
 
 ---
 
 ### `npx dbos-cloud app list`
 
-**Description:**  
+**Description:**
 List all applications you have registered with DBOS Cloud.
 
-**Parameters:**  
+**Parameters:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -156,11 +159,15 @@ For each registered application, emit:
 
 ### `npx dbos-cloud app status`
 
-**Description:**  
-This command must be run from an application root directory.
-It retrieves that application's status.
+**Parameters:**
+- `[application-name]`: The name of the application to retrieve.
 
-**Parameters:**  
+**Description:**
+Retrieve an application's status.
+If run in an application root directory with no application name provided, retrieve the local application's status.
+
+
+**Parameters:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -175,9 +182,9 @@ It retrieves that application's status.
 
 ### `npx dbos-cloud app logs`
 
-**Description:**  
+**Description:**
 This command must be run from an application root directory.
 It retrieves that application's logs.
 
-**Parameters:**  
+**Parameters:**
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
