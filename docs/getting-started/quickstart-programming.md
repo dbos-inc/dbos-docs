@@ -5,7 +5,7 @@ title: Programming Quickstart
 
 Let's learn how to program in DBOS!
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
-Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a reliable and transactional application.
+Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a transactional and reliable application.
 First, you'll learn to create HTTP endpoints to serve requests.
 Then, you'll learn how to interact with a database and make third-party API calls from your application.
 Finally, you'll compose these steps in reliable workflows.

@@ -118,4 +118,6 @@ npx dbos-sdk start
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations!  You just launched your first DBOS application.
-Next, we'll learn how to build a new application ourselves.
+
+From here, if you want to deploy your application to DBOS Cloud, visit our [cloud quickstart](./quickstart-cloud.md).
+If you want to learn how to build your own application, check out our [programming quickstart](./quickstart-programming.md).
