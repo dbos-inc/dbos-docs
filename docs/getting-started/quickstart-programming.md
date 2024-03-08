@@ -95,7 +95,7 @@ export class Greetings {
 The key elements of this code are:
 - We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that can access the database.
 - Inside `InsertGreeting`, we insert a row in the database with `ctxt.client.raw()`.
-- We call `InsertGreeting` from `Greeting` using its context: `ctxt.invoke(Greetings).InsertGreeting(friend, noteContent)`.
+- We invoke `InsertGreeting` from `Greeting` using its context: `ctxt.invoke(Greetings).InsertGreeting(friend, noteContent)`.
 
 To learn more about accessing the database in DBOS, see [our guide](../tutorials/transaction-tutorial.md).
 
@@ -150,7 +150,7 @@ export class Greetings {
 
 The key elements of this code are:
 - We use the [`@Communicator`](../api-reference/decorators#transaction) decorator to define a [communicator function](../tutorials/communicator-tutorial.md) (`SendGreetingEmail`) to access a third-party email service.
-- We call `SendGreetingEmail` from `Greeting` using its context: `ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent)`.
+- We invoke `SendGreetingEmail` from `Greeting` using its context: `ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent)`.
 
 To learn more about communication with external services and APIs in DBOS, see [our guide](../tutorials/communicator-tutorial).
 
@@ -219,7 +219,7 @@ That way, if a workflow is interrupted, DBOS can restart it from where it left o
 To see this in action, build and start the application by running:
 
 ```
-npx dbos-sdk build
+npm run build
 npx dbos-sdk start
 ```
 
@@ -259,4 +259,6 @@ You should see an output like:
 Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
 This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes once and only once.
 
-The code for this guide is available on [github](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
+The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
+
+Next, to learn how to build more complex workflows, check out our [advanced programming guide](./quickstart-shop.md).
