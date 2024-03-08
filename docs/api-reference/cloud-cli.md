@@ -25,10 +25,8 @@ It provides a URL to a secure login portal you can use to create an account from
 **Parameters:**  
 - `-u, --username <string>`: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (`_`).
 
-:::tip
-
-If you register with an email and password, you'll also need to verify your email through a link we email you.
-
+:::info
+If you register with an email and password, you also need to verify your email through a link we email you.
 :::
 
 ---
