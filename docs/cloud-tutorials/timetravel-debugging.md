@@ -184,7 +184,7 @@ Currently, the time travel debugger supports stepping through any past workflows
   database errors that were caused by non-deterministic factors (e.g., database lock contentions). 
 - DBOS debugger exclusively uses recorded outputs for communicators without providing an opportunity to step through the code, 
   because communicators may contain unexpected side effects. 
-  For example, if we had a communicator that sent an email to the user, this guarantees we don't resend any emails during debugging sessions.
+  For example, if a communicator sent an email to the user at run time, an email would not be sent out during debugging sessions.
 
 ### Configurations
 
