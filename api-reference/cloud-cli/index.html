@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.1.1">
 <title data-rh="true">Cloud CLI | DBOS Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.dbos.dev/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.dbos.dev/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.dbos.dev/api-reference/cloud-cli"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Cloud CLI | DBOS Docs"><meta data-rh="true" name="description" content="DBOS Cloud CLI reference"><meta data-rh="true" property="og:description" content="DBOS Cloud CLI reference"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.dbos.dev/api-reference/cloud-cli"><link data-rh="true" rel="alternate" href="https://docs.dbos.dev/api-reference/cloud-cli" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.dbos.dev/api-reference/cloud-cli" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://UY2VKOMIL2-dsn.algolia.net" crossorigin="anonymous"><link rel="search" type="application/opensearchdescription+xml" title="DBOS Docs" href="/opensearch.xml"><link rel="stylesheet" href="/assets/css/styles.ab575d36.css">
-<script src="/assets/js/runtime~main.4ecdff3e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0a0a39ee.js" defer="defer"></script>
 <script src="/assets/js/main.620ff77f.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -14,28 +14,28 @@
 <div class="codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token plain">npm install @dbos-inc/dbos-cloud@latest</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="user-management-commands">User Management Commands<a href="#user-management-commands" class="hash-link" aria-label="Direct link to User Management Commands" title="Direct link to User Management Commands">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-register"><code>npx dbos-cloud register</code><a href="#npx-dbos-cloud-register" class="hash-link" aria-label="Direct link to npx-dbos-cloud-register" title="Direct link to npx-dbos-cloud-register">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command creates and registers a new DBOS Cloud account.
+<p><strong>Description:</strong>
+This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>-u, --username &lt;string&gt;</code>: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (<code>_</code>).</li>
 </ul>
-<div class="theme-admonition theme-admonition-tip admonition_xJq3 alert alert--success"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5zm3.64 7.48c-.25.44-.47.8-.67 1.11-.86 1.41-1.25 2.06-1.45 3.23-.02.05-.02.11-.02.17H5c0-.06 0-.13-.02-.17-.2-1.17-.59-1.83-1.45-3.23-.2-.31-.42-.67-.67-1.11C2.44 6.78 2 5.65 2 5c0-2.2 2.02-4 4.5-4 1.22 0 2.36.42 3.22 1.19C10.55 2.94 11 3.94 11 5c0 .66-.44 1.78-.86 2.48zM4 14h5c-.23 1.14-1.3 2-2.5 2s-2.27-.86-2.5-2z"></path></svg></span>tip</div><div class="admonitionContent_BuS1"><p>If you register with an email and password, you&#x27;ll also need to verify your email through a link we email you.</p></div></div>
+<div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>info</div><div class="admonitionContent_BuS1"><p>If you register with an email and password, you also need to verify your email through a link we email you.</p></div></div>
 <hr>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-login"><code>npx dbos-cloud login</code><a href="#npx-dbos-cloud-login" class="hash-link" aria-label="Direct link to npx-dbos-cloud-login" title="Direct link to npx-dbos-cloud-login">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command logs you in to your DBOS Cloud account.
+<p><strong>Description:</strong>
+This command logs you in to your DBOS Cloud account.
 It provides a URL to a secure login portal you can use to authenticate from your browser.</p>
 <hr>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-logout"><code>npx dbos-cloud logout</code><a href="#npx-dbos-cloud-logout" class="hash-link" aria-label="Direct link to npx-dbos-cloud-logout" title="Direct link to npx-dbos-cloud-logout">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command logs you out of your DBOS Cloud account.</p>
+<p><strong>Description:</strong>
+This command logs you out of your DBOS Cloud account.</p>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="database-instance-management-commands">Database Instance Management Commands<a href="#database-instance-management-commands" class="hash-link" aria-label="Direct link to Database Instance Management Commands" title="Direct link to Database Instance Management Commands">​</a></h2>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-database-provision"><code>npx dbos-cloud database provision</code><a href="#npx-dbos-cloud-database-provision" class="hash-link" aria-label="Direct link to npx-dbos-cloud-database-provision" title="Direct link to npx-dbos-cloud-database-provision">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command provisions a Postgres database instance to which your applications can connect.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-provision"><code>npx dbos-cloud db provision</code><a href="#npx-dbos-cloud-db-provision" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-provision" title="Direct link to npx-dbos-cloud-db-provision">​</a></h3>
+<p><strong>Description:</strong>
+This command provisions a Postgres database instance to which your applications can connect.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>&lt;database-instance-name&gt;</code>: The name of the database instance to provision.</li>
@@ -43,9 +43,9 @@ It provides a URL to a secure login portal you can use to authenticate from your
 <li><code>-W, --password &lt;string&gt;</code>: The administrator password for this database instance.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-database-list"><code>npx dbos-cloud database list</code><a href="#npx-dbos-cloud-database-list" class="hash-link" aria-label="Direct link to npx-dbos-cloud-database-list" title="Direct link to npx-dbos-cloud-database-list">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command lists all Postgres database instances provisioned by your account.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-list"><code>npx dbos-cloud db list</code><a href="#npx-dbos-cloud-db-list" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-list" title="Direct link to npx-dbos-cloud-db-list">​</a></h3>
+<p><strong>Description:</strong>
+This command lists all Postgres database instances provisioned by your account.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>--json</code>: Emit JSON output</li>
@@ -60,9 +60,9 @@ For each provisioned Postgres database instance, emit:</p>
 <li><code>AdminUsername</code>: The administrator username for this database instance.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-database-status"><code>npx dbos-cloud database status</code><a href="#npx-dbos-cloud-database-status" class="hash-link" aria-label="Direct link to npx-dbos-cloud-database-status" title="Direct link to npx-dbos-cloud-database-status">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command retrieves the status of a Postgres database instance</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-status"><code>npx dbos-cloud db status</code><a href="#npx-dbos-cloud-db-status" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-status" title="Direct link to npx-dbos-cloud-db-status">​</a></h3>
+<p><strong>Description:</strong>
+This command retrieves the status of a Postgres database instance</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>&lt;database-instance-name&gt;</code>: The name of the database instance whose status to retrieve.</li>
@@ -77,37 +77,41 @@ For each provisioned Postgres database instance, emit:</p>
 <li><code>AdminUsername</code>: The administrator username for the database instance.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-database-destroy"><code>npx dbos-cloud database destroy</code><a href="#npx-dbos-cloud-database-destroy" class="hash-link" aria-label="Direct link to npx-dbos-cloud-database-destroy" title="Direct link to npx-dbos-cloud-database-destroy">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command destroys a previously-provisioned Postgres database instance.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-destroy"><code>npx dbos-cloud db destroy</code><a href="#npx-dbos-cloud-db-destroy" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-destroy" title="Direct link to npx-dbos-cloud-db-destroy">​</a></h3>
+<p><strong>Description:</strong>
+This command destroys a previously-provisioned Postgres database instance.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>&lt;database-instance-name&gt;</code>: The name of the database instance whose status to retrieve.</li>
 </ul>
 <hr>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="application-management-commands">Application Management Commands<a href="#application-management-commands" class="hash-link" aria-label="Direct link to Application Management Commands" title="Direct link to Application Management Commands">​</a></h2>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-register"><code>npx dbos-cloud application register</code><a href="#npx-dbos-cloud-application-register" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-register" title="Direct link to npx-dbos-cloud-application-register">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command must be run from an application root directory.
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-register"><code>npx dbos-cloud app register</code><a href="#npx-dbos-cloud-app-register" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-register" title="Direct link to npx-dbos-cloud-app-register">​</a></h3>
+<p><strong>Description:</strong>
+This command must be run from an application root directory.
 It registers that application with DBOS Cloud.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>-d, --database &lt;string&gt;</code>: The name of the Postgres database instance to which this application will connect.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-deploy"><code>npx dbos-cloud application deploy</code><a href="#npx-dbos-cloud-application-deploy" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-deploy" title="Direct link to npx-dbos-cloud-application-deploy">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command must be run from an application root directory.
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-deploy"><code>npx dbos-cloud app deploy</code><a href="#npx-dbos-cloud-app-deploy" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-deploy" title="Direct link to npx-dbos-cloud-app-deploy">​</a></h3>
+<p><strong>Description:</strong>
+This command must be run from an application root directory.
 It deploys the application to DBOS Cloud and emits the URL at which the application is hosted, which is <code>https://cloud.dbos.dev/apps/&lt;username&gt;/&lt;application-name&gt;</code>.</p>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-delete"><code>npx dbos-cloud application delete</code><a href="#npx-dbos-cloud-application-delete" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-delete" title="Direct link to npx-dbos-cloud-application-delete">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command must be run from an application root directory.
-It deletes the application from DBOS Cloud.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-delete"><code>npx dbos-cloud app delete</code><a href="#npx-dbos-cloud-app-delete" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-delete" title="Direct link to npx-dbos-cloud-app-delete">​</a></h3>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>[application-name]</code>: The name of the application to delete.</li>
+</ul>
+<p><strong>Description:</strong>
+Delete an application from DBOS Cloud.
+If run in an application root directory with no application name provided, delete the local application.</p>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-list"><code>npx dbos-cloud application list</code><a href="#npx-dbos-cloud-application-list" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-list" title="Direct link to npx-dbos-cloud-application-list">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->List all applications you have registered with DBOS Cloud.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-list"><code>npx dbos-cloud app list</code><a href="#npx-dbos-cloud-app-list" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-list" title="Direct link to npx-dbos-cloud-app-list">​</a></h3>
+<p><strong>Description:</strong>
+List all applications you have registered with DBOS Cloud.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>--json</code>: Emit JSON output</li>
@@ -124,10 +128,14 @@ For each registered application, emit:</p>
 <li><code>AppURL</code>: The URL at which the application is hosted.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-status"><code>npx dbos-cloud application status</code><a href="#npx-dbos-cloud-application-status" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-status" title="Direct link to npx-dbos-cloud-application-status">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command must be run from an application root directory.
-It retrieves that application&#x27;s status.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-status"><code>npx dbos-cloud app status</code><a href="#npx-dbos-cloud-app-status" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-status" title="Direct link to npx-dbos-cloud-app-status">​</a></h3>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>[application-name]</code>: The name of the application to retrieve.</li>
+</ul>
+<p><strong>Description:</strong>
+Retrieve an application&#x27;s status.
+If run in an application root directory with no application name provided, retrieve the local application&#x27;s status.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>--json</code>: Emit JSON output</li>
@@ -143,13 +151,13 @@ It retrieves that application&#x27;s status.</p>
 <li><code>AppURL</code>: The URL at which the application is hosted.</li>
 </ul>
 <hr>
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-application-logs"><code>npx dbos-cloud application logs</code><a href="#npx-dbos-cloud-application-logs" class="hash-link" aria-label="Direct link to npx-dbos-cloud-application-logs" title="Direct link to npx-dbos-cloud-application-logs">​</a></h3>
-<p><strong>Description:</strong><br>
-<!-- -->This command must be run from an application root directory.
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-app-logs"><code>npx dbos-cloud app logs</code><a href="#npx-dbos-cloud-app-logs" class="hash-link" aria-label="Direct link to npx-dbos-cloud-app-logs" title="Direct link to npx-dbos-cloud-app-logs">​</a></h3>
+<p><strong>Description:</strong>
+This command must be run from an application root directory.
 It retrieves that application&#x27;s logs.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>-l, --last &lt;integer&gt;</code>: How far back to query, in seconds from current time. By default, retrieve all data.</li>
-</ul></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/api-reference/cli"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">SDK CLI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/api-reference/configuration"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Configuration</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#installation" class="table-of-contents__link toc-highlight">Installation</a></li><li><a href="#user-management-commands" class="table-of-contents__link toc-highlight">User Management Commands</a><ul><li><a href="#npx-dbos-cloud-register" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud register</code></a></li><li><a href="#npx-dbos-cloud-login" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud login</code></a></li><li><a href="#npx-dbos-cloud-logout" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud logout</code></a></li></ul></li><li><a href="#database-instance-management-commands" class="table-of-contents__link toc-highlight">Database Instance Management Commands</a><ul><li><a href="#npx-dbos-cloud-database-provision" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud database provision</code></a></li><li><a href="#npx-dbos-cloud-database-list" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud database list</code></a></li><li><a href="#npx-dbos-cloud-database-status" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud database status</code></a></li><li><a href="#npx-dbos-cloud-database-destroy" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud database destroy</code></a></li></ul></li><li><a href="#application-management-commands" class="table-of-contents__link toc-highlight">Application Management Commands</a><ul><li><a href="#npx-dbos-cloud-application-register" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application register</code></a></li><li><a href="#npx-dbos-cloud-application-deploy" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application deploy</code></a></li><li><a href="#npx-dbos-cloud-application-delete" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application delete</code></a></li><li><a href="#npx-dbos-cloud-application-list" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application list</code></a></li><li><a href="#npx-dbos-cloud-application-status" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application status</code></a></li><li><a href="#npx-dbos-cloud-application-logs" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud application logs</code></a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Learn</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/">Docs</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://discord.gg/fMwQjeW5zg" target="_blank" rel="noopener noreferrer" class="footer__link-item">Discord<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/dbos-inc" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://www.linkedin.com/company/dbos-inc/" target="_blank" rel="noopener noreferrer" class="footer__link-item">LinkedIn<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 DBOS, Inc.</div></div></div></footer></div>
+</ul></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/api-reference/cli"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">SDK CLI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/api-reference/configuration"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Configuration</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#installation" class="table-of-contents__link toc-highlight">Installation</a></li><li><a href="#user-management-commands" class="table-of-contents__link toc-highlight">User Management Commands</a><ul><li><a href="#npx-dbos-cloud-register" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud register</code></a></li><li><a href="#npx-dbos-cloud-login" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud login</code></a></li><li><a href="#npx-dbos-cloud-logout" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud logout</code></a></li></ul></li><li><a href="#database-instance-management-commands" class="table-of-contents__link toc-highlight">Database Instance Management Commands</a><ul><li><a href="#npx-dbos-cloud-db-provision" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud db provision</code></a></li><li><a href="#npx-dbos-cloud-db-list" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud db list</code></a></li><li><a href="#npx-dbos-cloud-db-status" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud db status</code></a></li><li><a href="#npx-dbos-cloud-db-destroy" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud db destroy</code></a></li></ul></li><li><a href="#application-management-commands" class="table-of-contents__link toc-highlight">Application Management Commands</a><ul><li><a href="#npx-dbos-cloud-app-register" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app register</code></a></li><li><a href="#npx-dbos-cloud-app-deploy" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app deploy</code></a></li><li><a href="#npx-dbos-cloud-app-delete" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app delete</code></a></li><li><a href="#npx-dbos-cloud-app-list" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app list</code></a></li><li><a href="#npx-dbos-cloud-app-status" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app status</code></a></li><li><a href="#npx-dbos-cloud-app-logs" class="table-of-contents__link toc-highlight"><code>npx dbos-cloud app logs</code></a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Learn</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/">Docs</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://discord.gg/fMwQjeW5zg" target="_blank" rel="noopener noreferrer" class="footer__link-item">Discord<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/dbos-inc" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://www.linkedin.com/company/dbos-inc/" target="_blank" rel="noopener noreferrer" class="footer__link-item">LinkedIn<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 DBOS, Inc.</div></div></div></footer></div>
 </body>
 </html>
