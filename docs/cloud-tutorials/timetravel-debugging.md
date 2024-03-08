@@ -173,17 +173,18 @@ export class Hello {
 
 When this updated code is run in the debugger, we can inspect the new before and after variables to see past database state.
 
-### Dos and Don'ts
+### Limitations
 
 Currently, the time travel debugger supports stepping through any past workflows and most transactions, but has a few limitations:
 
-- DBOS uses recorded outputs for communicators instead of stepping through their code, because they may contain unexpected side effects. 
-  For example, this guarantees that we don't resend any emails during debugging sessions.
-- DBOS currently uses recorded errors for aborted transactions instead of executing their queries,
-  because database errors can be caused by non-deterministic factors (e.g., database lock contentions). 
-  We will be adding support for replaying many common errors in the future -- stay tuned!
 - DBOS will compare debug function output to the function's originally recorded output. 
   If they do not match, the debug session will halt with an error.
+- DBOS will allow you to step thru transaction functions that aborted when originally executed, but will always throw their recorded errors
+  regardless of what the function returned during debugging. This allows consistent execution under the debugger for 
+  database errors that were caused by non-deterministic factors (e.g., database lock contentions). 
+- DBOS debugger exclusively uses recorded outputs for communicators without providing an opportunity to step through the code, 
+  because communicators may contain unexpected side effects. 
+  For example, if a communicator sent an email to the user at run time, an email would not be sent out during debugging sessions.
 
 ### Configurations
 
