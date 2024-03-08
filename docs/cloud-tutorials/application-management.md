@@ -30,7 +30,7 @@ The first step in deploying an application to DBOS Cloud is registering it.
 To register an application, run the following command in your application root directory, where `database-name` is the name of a Postgres database instance you've [provisioned](./database-management.md#provisioning-database-instances):
 
 ```
-npx dbos-cloud application register -d <database-name>
+npx dbos-cloud app register -d <database-name>
 ```
 
 Your application is automatically registered under the name in its `package.json`.
@@ -51,7 +51,7 @@ After your application is deployed, DBOS Cloud hosts it at this URL, which is al
 https://<username>-<app-name>.cloud.dbos.dev/
 ```
 
-If you edit your application or schema, run `npx dbos-cloud application deploy` again to apply the latest migration and re-deploy the latest version.
+If you edit your application or schema, run `npx dbos-cloud app deploy` again to apply the latest migration and re-deploy the latest version.
 
 :::tip
 You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
@@ -65,9 +65,9 @@ DBOS provides many tools to monitor and debug applications:
 
 - To replay any past trace locally and figure out exactly what happened, check out our [time travel debugger](./timetravel-debugging).
 
-- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud application logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs). Note that new log entries take a few seconds to appear.
+- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud app logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs). Note that new log entries take a few seconds to appear.
 
-- To retrieve the status of a particular application, run in its root directory [`npx dbos-cloud application status`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-status). To retrieve the statuses of all applications, run [`npx dbos-cloud application list`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-list).
+- To retrieve the status of a particular application, run in its root directory [`npx dbos-cloud app status`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-list).
 
 ### Deleting Applications
 

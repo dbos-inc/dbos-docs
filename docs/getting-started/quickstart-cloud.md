@@ -56,7 +56,7 @@ The database instance name must be between 3 and 30 characters.
 Run this command (it should take ~5 minutes to provision):
 
 ```
-npx dbos-cloud database provision <database-instance-name> -a <admin-username> -W <admin-password>
+npx dbos-cloud db provision <database-instance-name> -a <admin-username> -W <admin-password>
 ```
 
 If successful, the command should print `Database successfully provisioned!`.
@@ -76,7 +76,7 @@ Now, we're ready to register and deploy your application to DBOS Cloud!
 First, register your application by running this command, using your database instance name from the last step:
 
 ```
-npx dbos-cloud application register -d <database-instance-name>
+npx dbos-cloud app register -d <database-instance-name>
 ```
 
 If successful, the command should print `Successfully registered <app-name>!`
@@ -84,12 +84,13 @@ If successful, the command should print `Successfully registered <app-name>!`
 Now, deploy your application to run it in the cloud!
 
 ```
-npx dbos-cloud application deploy
+npx dbos-cloud app deploy
 ```
+
 If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`
 The URL should look like `https://<username>-<app-name>.cloud.dbos.dev/`
 Your application is now live at that URL!
-If you ever forget the URL, you can retrieve it (and some other information) by running `npx dbos-cloud application status`.
+If you ever forget the URL, you can retrieve it (and some other information) by running `npx dbos-cloud app status`.
 
 To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
 For example, if your username is `mike` and your app name is `hello`, visit `https://mike-hello.cloud.dbos.dev/greeting/dbos`.
@@ -105,12 +106,12 @@ You don't have to worry about changing database server connection parameters lik
 
 To stop and delete your application, you can run the following command:
 ```
-npx dbos-cloud applications delete
+npx dbos-cloud app delete
 ```
 
 After deleting your app, if you'd like to erase your database instance, run:
 ```
-npx dbos-cloud database destroy <database-name>
+npx dbos-cloud db destroy <database-name>
 ```
 
 :::warning

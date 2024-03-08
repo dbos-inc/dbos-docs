@@ -29,7 +29,7 @@ The database instance name should be between 3 and 30 characters.
 To provision a database instance, run (this takes ~5 minutes):
 
 ```
-npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-password>
+npx dbos-cloud db provision <database-name> -a <admin-username> -W <admin-password>
 ```
 
 :::info
@@ -80,7 +80,7 @@ When you [deploy](./application-management.md#registering-and-deploying-applicat
 To destroy a database instance, run:
 
 ```
-npx dbos-cloud database destroy <database-name>
+npx dbos-cloud db destroy <database-name>
 ```
 
 :::warning
