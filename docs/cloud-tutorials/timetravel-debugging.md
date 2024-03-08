@@ -6,11 +6,9 @@ description: Learn how to time travel debug DBOS Cloud applications
 
 In this guide, you'll learn how to time travel debug your production applications deployed on DBOS Cloud. 
 
-DBOS Cloud [records](../explanations/how-workflows-work#reliability-through-recording-and-safe-re-execution) every step 
-a DBOS application takes in the database so that it can safely re-execute the application if it is interrupted. 
-The Time Travel Debugger uses this information to project database state as it existed when a selected workflow ran.
-Developers can modify or even add database read queries in DBOS application transaction functions. 
-When these updated applications are run with the time travel debugger, they return results as if they run in the past!
+DBOS Cloud automatically records every step a DBOS application takes and every change it makes in the database.
+The Time Travel Debugger uses this information to "rewind time" and project database state as it existed when a selected workflow originally ran.
+Developers can step through past executions and add print statements or database read queries to them and they'll return results as if they ran in the past!
 
 :::warning
 For Free Tier DBOS applications, time travel debug information is only kept for 3 days.
@@ -32,7 +30,7 @@ inside VS Code for "DBOS"
 
 Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
 
-:::note
+:::info
 If you're not a VS Code user, please see the section below on [Time Travel Debugging with the DBOS SDK CLI](#time-travel-with-dbos-sdk-cli-non-vs-code-users) below.
 :::
 
@@ -43,7 +41,7 @@ configuration files to time travel debug your DBOS application. The time travel 
 [Run and Debug View](https://code.visualstudio.com/docs/editor/debugging#_run-and-debug-view) or via a custom 
 [CodeLens](https://code.visualstudio.com/blogs/2017/02/12/code-lens-roundup) provided by the DBOS Time Travel Debugger Extension.
 
-:::tip
+:::info
 The scaffold project also includes local debugging configuration that can be used during initial development.
 Time Travel debugging is only supported for applications that have been deployed to DBOS cloud.
 :::
@@ -61,7 +59,7 @@ When you click on the Time Travel Debug CodeLens, you are provided with a list o
 
 ![DBOS Time Travel Workflow ID picker](./assets/ttdbg-wfid-quick-pick.png)
 
-:::note
+:::info
 In the upper right hand corner of the workflow picker, there are buttons to manually enter a workflow ID or to 
 select a workflow to debug via your [monitoring Dashboard](./monitoring-dashboard). 
 More details on those options below.
@@ -106,15 +104,13 @@ and you are provided a place to enter that workflow ID directly.
 
 ### Time Travel Database Queries
 
-DBOS [records](../explanations/how-workflows-work#reliability-through-recording-and-safe-re-execution) every step 
-a DBOS application takes in the database so that it can safely re-execute the application if it is interrupted. 
-The Time Travel Debugger uses this information to project database state as it existed when a selected workflow ran.
-Developers can modify or even add database read queries in DBOS application transaction functions. 
-When these updated applications are run with the time travel debugger, they return results as if they run in the past!
+DBOS Cloud automatically records every step a DBOS application takes and every change it makes in the database.
+The Time Travel Debugger uses this information to "rewind time" and project database state as it existed when a selected workflow originally ran.
+Developers can step through past executions and add print statements or database read queries to them and they'll return results as if they ran in the past!
 
 :::warning
-Do not add or modify database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
-DBOS will support time travel debugging functions that change how they write database state in the future.
+When time travel debugging, you can freely add read queries to your application and observe their results when run against past database state, but do not add or modify database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
+DBOS will support such changes in the future.
 :::
 
 For example, here is an transaction function from the [Transactions tutorial](../tutorials/transaction-tutorial)
@@ -138,7 +134,7 @@ export class Hello {
 We can add queries to the function to retrieve past database states. 
 For example, the following code block adds queries to retrieve the user's greet count before and after it gets updated.
 
-:::tip
+:::info
 Don't forget to rebuild your DBOS application with `npm run build` before running it in the debugger.
 :::
 
@@ -171,7 +167,7 @@ export class Hello {
 }
 ```
 
-When this updated code is run in the debugger, we can inspect the new before and after variables to see past database state.
+When this updated code is run in the debugger, we can inspect the new `before` and `after` variables to see past database state.
 
 ### Dos and Don'ts
 
@@ -211,7 +207,7 @@ chmod +x debug-proxy
 ./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
 ```
 
-::::note
+::::info
 For macOS users, you may see a pop-up window: "“debug-proxy” is an app downloaded from the Internet. Are you sure you want to open it?" Please click `Open`.
 ::::
 
@@ -225,7 +221,7 @@ npm run build
 npx dbos-sdk debug -u <workflow UUID>
 ```
 
-:::tip
+:::info
 Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
 :::
 
