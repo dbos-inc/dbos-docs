@@ -74,10 +74,11 @@ docker run hello-world
 
 ### Project Initialization
 
-To initialize a new DBOS application, run the following command, choosing a project name with no spaces or special characters:
+To initialize a new DBOS application, run the following command.
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 ```bash
-npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
 ```
 
 This creates a folder for your project, configures its layout, and installs required dependencies.
@@ -117,4 +118,6 @@ npx dbos-sdk start
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
 Congratulations!  You just launched your first DBOS application.
-Next, we'll learn how to build a new application ourselves.
+
+From here, if you want to deploy your application to DBOS Cloud, visit our [cloud quickstart](./quickstart-cloud.md).
+If you want to learn how to build your own application, check out our [programming quickstart](./quickstart-programming.md).

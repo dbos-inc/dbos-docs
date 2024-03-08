@@ -11,7 +11,7 @@ In this guide, you'll learn how to manage database instances in DBOS Cloud.
 Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
 
 ```
-npx dbos-cloud register -u [username]
+npx dbos-cloud register -u <username>
 ```
 
 If you did already, simply log in to DBOS Cloud by running:
@@ -23,23 +23,22 @@ npx dbos-cloud login
 ### Provisioning Database Instances
 
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
-You should choose a database name and an administrator username and password for your database instance.
-Both the database instance name and the administrator username must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-The database instance name should be between 3 and 30 characters.
+You should choose a name for the instance as well as as an administrator username and password for it.
+Both the database instance name and the administrator username should be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`)
 To provision a database instance, run (this takes ~5 minutes):
 
 ```
-npx dbos-cloud database provision <database-name> -a <admin-username> -W <admin-password>
+npx dbos-cloud db provision <database-name> -a <admin-username> -W <admin-password>
 ```
 
-:::tip
+:::info
 Each Postgres database instance is a physical server that can host multiple independent Postgres databases for different applications.
 You can define which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
 DBOS Cloud automatically creates your application database and applies your schema migrations when you deploy an application.
 In this documentation, we use "database instance" or "database server" to refer to the physical server and "database" to refer to the application database.
 :::
 
-:::tip
+:::info
 Remember your database administrator password! You need it to connect to our [time travel debugger](#).
 :::
 
@@ -52,7 +51,7 @@ npx dbos-cloud db list
 To retrieve the status of a particular instance, run:
 
 ```
-npx dbos-cloud db status <database-name>
+npx dbos-cloud db status <database-instance-name>
 ```
 
 ### Database Schema Management
@@ -80,7 +79,7 @@ When you [deploy](./application-management.md#registering-and-deploying-applicat
 To destroy a database instance, run:
 
 ```
-npx dbos-cloud database destroy <database-name>
+npx dbos-cloud db destroy <database-name>
 ```
 
 :::warning
