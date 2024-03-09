@@ -50,13 +50,12 @@ If you register with an email and password, you also need to verify your email t
 ### Provisioning a Database Instance
 
 Next, let's provision a Postgres database instance your applications can connect to!
-You should choose a database name and an administrator username and password for your database instance.
-Both the database instance name and the administrator username must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-The database instance name must be between 3 and 30 characters.
-Run this command (it should take ~5 minutes to provision):
+You should choose a database instance name, username and password.
+Both the database instance name and username must be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 
 ```
-npx dbos-cloud db provision <database-instance-name> -a <admin-username> -W <admin-password>
+npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 If successful, the command should print `Database successfully provisioned!`.

@@ -55,8 +55,8 @@ This command provisions a Postgres database instance to which your applications 
 
 **Parameters:**
 - `<database-instance-name>`: The name of the database instance to provision.
-- `-a, --admin <string>`: The administrator username for this database instance.
-- `-W, --password <string>`: The administrator password for this database instance.
+- `-U, --username <string>`: Your username for this database instance.
+- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
 ---
 
@@ -93,6 +93,17 @@ This command retrieves the status of a Postgres database instance
 - `Port`: The connection port for the database instance.
 - `Status`: The current status of the database instance (available or unavailable).
 - `AdminUsername`: The administrator username for the database instance.
+
+---
+
+### `npx dbos-cloud db reset-password`
+
+**Description:**
+This command resets your password for a Postgres database instance.
+
+**Parameters:**
+- `<database-instance-name>`: The name of the database instance to provision.
+- `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line.
 
 ---
 
