@@ -52,10 +52,11 @@ const config = {
       // Replace with your project's social card
       image: 'img/social-card.png',
       navbar: {
-        title: 'DBOS',
+        title: '',
         logo: {
           alt: 'DBOS Logo',
           src: 'img/dbos-logo.png',
+          srcDark: 'img/dbos-logo-dark.png',
           href: 'https://dbos.dev',
         },
         items: [
