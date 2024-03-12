@@ -45,7 +45,7 @@ After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
 
 :::info
-When you log in to DBOS Cloud from an application, a token with your login information is stored in the `.dbos/` directory.
+When you log in to DBOS Cloud from an application, a token with your login information is stored in the `.dbos/` directory in your application package root.
 :::
 
 :::info

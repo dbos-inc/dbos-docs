@@ -37,6 +37,10 @@ If you register with an email and password, you also need to verify your email t
 This command logs you in to your DBOS Cloud account.
 It provides a URL to a secure login portal you can use to authenticate from your browser.
 
+:::info
+When you log in to DBOS Cloud from an application, a token with your login information is stored in the `.dbos/` directory in your application package root.
+:::
+
 ---
 
 ### `npx dbos-cloud logout`
