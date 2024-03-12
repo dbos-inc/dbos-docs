@@ -23,7 +23,7 @@ This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.
 
 **Parameters:**
-- `-u, --username <string>`: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (`_`).
+- `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
 
 :::info
 If you register with an email and password, you also need to verify your email through a link we email you.
@@ -54,9 +54,9 @@ This command logs you out of your DBOS Cloud account.
 This command provisions a Postgres database instance to which your applications can connect.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance to provision.
-- `-U, --username <string>`: Your username for this database instance.
-- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
+- `<database-instance-name>`: The name of the database instance to provision. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
+- `-U, --username <string>`: Your username for this database instance.  Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
+- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---
 
@@ -103,7 +103,7 @@ This command resets your password for a Postgres database instance.
 
 **Parameters:**
 - `<database-instance-name>`: The name of the database instance to provision.
-- `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line.
+- `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---
 

@@ -13,10 +13,11 @@ We assume you've already completed the [quickstart](./quickstart.md).
 Before starting this tutorial, instantiate a new DBOS application and `cd` into it by running the following commands:
 
 ```bash
-npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
-cd <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
+cd <app-name>
 ```
 
+This command creates a new DBOS application with your chosen application name in the `<app-name>` directory.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 :::info
@@ -52,6 +53,7 @@ If you register with an email and password, you also need to verify your email t
 Next, let's provision a Postgres database instance your applications can connect to!
 You should choose a database instance name, username and password.
 Both the database instance name and username must be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+The database password must contain 8 or more characters.
 Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 
 ```
@@ -105,7 +107,7 @@ You don't have to worry about changing database server connection parameters lik
 
 To stop and delete your application, you can run the following command:
 ```
-npx dbos-cloud app delete
+npx dbos-cloud app delete <app-name>
 ```
 
 After deleting your app, if you'd like to erase your database instance, run:

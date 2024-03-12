@@ -32,7 +32,7 @@ You must compile your code (`npm run build`) before running this command.
 This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
 
 **Parameters:**  
-- `-n, --appName <application-name>`: The name and directory to which to instantiate the application. Must not contain spaces or special characters.
+- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 ---
 
