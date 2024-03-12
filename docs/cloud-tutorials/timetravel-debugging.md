@@ -195,10 +195,10 @@ For non-VS Code users, you can run the time-travel debugger manually through the
 The time travel debugger requires our debug proxy to transform database queries so that it can "travel" back in time.
 You can download the pre-compiled debug proxy using the following link. Please choose the one based on your operating system and hardware platform:
 
-- [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-x64-0.8.15-preview.zip)
-- [Download for macOS (Apple Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-macos-arm64-0.8.15-preview.zip)
-- [Download for Linux (x86_64)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-x64-0.8.15-preview.zip)
-- [Download for Linux (arm)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/0.8.15-preview/debug-proxy-linux-arm64-0.8.15-preview.zip)
+- [Download for macOS (Intel Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/1.0.2/debug-proxy-macos-x64-1.0.2.zip)
+- [Download for macOS (Apple Chip)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/1.0.2/debug-proxy-macos-arm64-1.0.2.zip)
+- [Download for Linux (x86_64)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/1.0.2/debug-proxy-linux-x64-1.0.2.zip)
+- [Download for Linux (arm)](https://dbos-releases.s3.us-east-2.amazonaws.com/debug-proxy/1.0.2/debug-proxy-linux-arm64-1.0.2.zip)
 
 After downloading the file, unzip it and make the `debug-proxy` file executable:
 

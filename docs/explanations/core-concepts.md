@@ -1,11 +1,11 @@
 ---
 sidebar_position: 2
-description: Learn the core ideas underlying DBOS
+description: Learn the core ideas underlying the DBOS SDK
 ---
 
-# Core Concepts
+# SDK Core Concepts
 
-DBOS is a Typescript framework built for the database that helps you develop backend applications that work right by default.
+The DBOS SDK is a transactional serverless TypeScript framework that helps you develop stateful applications that work right by default.
 Its two main principles are inspired by the [DBOS research project from Stanford and MIT](https://dbos-project.github.io/):
 
 1. **Store all application state in the database.** By managing database connections and transactions, DBOS makes it easy for you to store all your app state in the database so it can be safe, consistent, and durable.  Under the hood, we use the database to manage the state of workflow execution as well as all [messages](../tutorials/workflow-communication-tutorial#messages-api) and [events](../tutorials/workflow-communication-tutorial#events-api).
@@ -27,7 +27,7 @@ When you launch an application, DBOS automatically wires these functions togethe
 ### Reliable by Default
 
 A critical component of DBOS's programming model is _reliability_, guaranteed by the database.
-Your transactions are always ACID.
-Your workflows always run to completion, even when interrupted by a server crash&#8212;when the server is restarted, they resume from where they left off and don't repeat any operation they previously completed.
+Your [transactions](../tutorials/transaction-tutorial.md) are always ACID.
+Your [workflows](../tutorials/workflow-tutorial.md) always run to completion, even when interrupted by a server crash&#8212;when the server is restarted, they resume from where they left off and don't repeat any operation they previously completed.
 Your [messages](../tutorials/workflow-communication-tutorial) come with guaranteed exactly-once delivery.
 Our goal is to make your app work the way you think it should.
