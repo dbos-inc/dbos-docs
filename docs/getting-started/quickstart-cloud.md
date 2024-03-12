@@ -13,10 +13,11 @@ We assume you've already completed the [quickstart](./quickstart.md).
 Before starting this tutorial, instantiate a new DBOS application and `cd` into it by running the following commands:
 
 ```bash
-npx -y @dbos-inc/dbos-sdk@latest init -n <project-name>
-cd <project-name>
+npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
+cd <app-name>
 ```
 
+This command creates a new DBOS application with your chosen application name in the `<app-name>` directory.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 :::info
@@ -39,9 +40,13 @@ npx dbos-cloud register -u <username>
 User names should be between 3 and 30 characters and must contain only lowercase letters, numbers, and underscores (`_`).
 
 When you run the command, it will ask you for some information, then redirect you to a secure login portal.
-Open the login portal in your browser and click `Confirm`, then create a new account.
+Open the login portal in your browser and click `Confirm`, then create a new account (or log in to your account if you've already created one through our [website](https://dbos.dev)).
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
+
+:::info
+When you log in to DBOS Cloud from an application, a token with your login information is stored in the `.dbos/` directory in your application package root.
+:::
 
 :::info
 If you register with an email and password, you also need to verify your email through a link we email you.
@@ -52,6 +57,7 @@ If you register with an email and password, you also need to verify your email t
 Next, let's provision a Postgres database instance your applications can connect to!
 You should choose a database instance name, username and password.
 Both the database instance name and username must be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+The database password must contain 8 or more characters.
 Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 
 ```
@@ -105,7 +111,7 @@ You don't have to worry about changing database server connection parameters lik
 
 To stop and delete your application, you can run the following command:
 ```
-npx dbos-cloud app delete
+npx dbos-cloud app delete <app-name>
 ```
 
 After deleting your app, if you'd like to erase your database instance, run:
