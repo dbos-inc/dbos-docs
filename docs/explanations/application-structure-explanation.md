@@ -91,7 +91,6 @@ There are two more:
 - [**Communicators**](../tutorials/communicator-tutorial) manage communication with external services and APIs.
 - [**Workflows**](../tutorials/workflow-tutorial) reliably orchestrate other functions.
 
-
 A function needs to follow a few rules:
 
 - It must be a static class method.  For DBOS to find it, that class must be exported from `src/operations.ts`.
