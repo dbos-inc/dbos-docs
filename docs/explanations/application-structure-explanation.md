@@ -81,15 +81,15 @@ export class Hello {
 ```
 An application like this one is made up of classes encapsulating _functions_, written as decorated static class methods.
 There are four basic types of functions.
-This example contains one of them:
+This example contains two of them:
 
 - [**Transactions**](../tutorials/transaction-tutorial), like `helloTransaction` perform database operations.
+- [**Handlers**](../tutorials/http-serving-tutorial) serve HTTP requests. Here, `helloTransaction` also acts as a handler, serving HTTP requests from the `greeting/:user` endpoint.
 
-There are three more:
+There are two more:
 
 - [**Communicators**](../tutorials/communicator-tutorial) manage communication with external services and APIs.
 - [**Workflows**](../tutorials/workflow-tutorial) reliably orchestrate other functions.
-- [**Handlers**](../tutorials/http-serving-tutorial) serve HTTP requests (though other functions may also serve HTTP requests, like `helloTransaction` in this example).
 
 
 A function needs to follow a few rules:

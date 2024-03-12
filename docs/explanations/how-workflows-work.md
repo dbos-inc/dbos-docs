@@ -92,7 +92,7 @@ If you need to perform a non-deterministic operation like accessing the database
 Instead, you should do all database operations in [transactions](../tutorials/transaction-tutorial) and all other non-deterministic operations in [communicators](../tutorials/communicator-tutorial).
 That way, DBOS can capture the output of the non-deterministic operation and avoid re-executing it.
 
-**Second, DBOS functions should not have side effects in memory**.
+**Second, DBOS functions should not have side effects in memory outside of their own scope**.
 For example, they shouldn't modify global variables.
 If they do, we cannot guarantee those side effects are persisted during recovery for later functions in the same workflow.
 Instead, functions should return any values they want later functions to be aware of and should store all persistent state in the database.
