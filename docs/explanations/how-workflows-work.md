@@ -87,12 +87,12 @@ From a user's perspective, the workflow has resumed from where it failed last ti
 
 For workflow recovery to work, they must meet two requirements.
 
-**First, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism)**: all code in the workflow function must do the same thing if called multiple times with the same input.
+**First, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism)**: All code in the workflow function must do the same thing if called multiple times with the same input.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](../tutorials/transaction-tutorial) and all other non-deterministic operations in [communicators](../tutorials/communicator-tutorial).
 That way, DBOS can capture the output of the non-deterministic operation and avoid re-executing it.
 
-**Second, DBOS function should not have side effects in memory**.
+**Second, DBOS functions should not have side effects in memory**.
 For example, they shouldn't modify global variables.
 If they do, we cannot guarantee those side effects are persisted during recovery for later functions in the same workflow.
 Instead, functions should return any values they want later functions to be aware of and should store all persistent state in the database.
