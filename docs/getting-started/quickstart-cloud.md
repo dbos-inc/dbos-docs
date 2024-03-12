@@ -40,9 +40,13 @@ npx dbos-cloud register -u <username>
 User names should be between 3 and 30 characters and must contain only lowercase letters, numbers, and underscores (`_`).
 
 When you run the command, it will ask you for some information, then redirect you to a secure login portal.
-Open the login portal in your browser and click `Confirm`, then create a new account.
+Open the login portal in your browser and click `Confirm`, then create a new account (or log in to your account if you've already created one through our [website](https://dbos.dev)).
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
+
+:::info
+When you log in to DBOS Cloud from an application, a token with your login information is stored in the `.dbos/` directory.
+:::
 
 :::info
 If you register with an email and password, you also need to verify your email through a link we email you.
