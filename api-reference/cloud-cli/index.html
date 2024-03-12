@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.1.1">
 <title data-rh="true">Cloud CLI | DBOS Docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.dbos.dev/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.dbos.dev/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.dbos.dev/api-reference/cloud-cli"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Cloud CLI | DBOS Docs"><meta data-rh="true" name="description" content="DBOS Cloud CLI reference"><meta data-rh="true" property="og:description" content="DBOS Cloud CLI reference"><link data-rh="true" rel="icon" href="/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://docs.dbos.dev/api-reference/cloud-cli"><link data-rh="true" rel="alternate" href="https://docs.dbos.dev/api-reference/cloud-cli" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.dbos.dev/api-reference/cloud-cli" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://UY2VKOMIL2-dsn.algolia.net" crossorigin="anonymous"><link rel="search" type="application/opensearchdescription+xml" title="DBOS Docs" href="/opensearch.xml"><link rel="stylesheet" href="/assets/css/styles.4d71359e.css">
-<script src="/assets/js/runtime~main.14b1e3fb.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.bb69c47e.js" defer="defer"></script>
 <script src="/assets/js/main.0a4f01aa.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -19,7 +19,7 @@ This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>-u, --username &lt;string&gt;</code>: Your DBOS Cloud username. Must contain only lowercase letters, numbers, and underscores (<code>_</code>).</li>
+<li><code>-u, --username &lt;string&gt;</code>: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (<code>_</code>).</li>
 </ul>
 <div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>info</div><div class="admonitionContent_BuS1"><p>If you register with an email and password, you also need to verify your email through a link we email you.</p></div></div>
 <hr>
@@ -27,6 +27,7 @@ It provides a URL to a secure login portal you can use to create an account from
 <p><strong>Description:</strong>
 This command logs you in to your DBOS Cloud account.
 It provides a URL to a secure login portal you can use to authenticate from your browser.</p>
+<div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>info</div><div class="admonitionContent_BuS1"><p>When you log in to DBOS Cloud from an application, a token with your login information is stored in the <code>.dbos/</code> directory in your application package root.</p></div></div>
 <hr>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-logout"><code>npx dbos-cloud logout</code><a href="#npx-dbos-cloud-logout" class="hash-link" aria-label="Direct link to npx-dbos-cloud-logout" title="Direct link to npx-dbos-cloud-logout">​</a></h3>
 <p><strong>Description:</strong>
@@ -38,9 +39,9 @@ This command logs you out of your DBOS Cloud account.</p>
 This command provisions a Postgres database instance to which your applications can connect.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>&lt;database-instance-name&gt;</code>: The name of the database instance to provision.</li>
-<li><code>-U, --username &lt;string&gt;</code>: Your username for this database instance.</li>
-<li><code>-W, --password [string]</code>: Your password for this database instance. If not provided, will be prompted on the command line.</li>
+<li><code>&lt;database-instance-name&gt;</code>: The name of the database instance to provision. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.</li>
+<li><code>-U, --username &lt;string&gt;</code>: Your username for this database instance.  Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.</li>
+<li><code>-W, --password [string]</code>: Your password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.</li>
 </ul>
 <hr>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-list"><code>npx dbos-cloud db list</code><a href="#npx-dbos-cloud-db-list" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-list" title="Direct link to npx-dbos-cloud-db-list">​</a></h3>
@@ -83,7 +84,7 @@ This command resets your password for a Postgres database instance.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>&lt;database-instance-name&gt;</code>: The name of the database instance to provision.</li>
-<li><code>-W, --password [string]</code>: Your new password for this database instance. If not provided, will be prompted on the command line.</li>
+<li><code>-W, --password [string]</code>: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.</li>
 </ul>
 <hr>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="npx-dbos-cloud-db-destroy"><code>npx dbos-cloud db destroy</code><a href="#npx-dbos-cloud-db-destroy" class="hash-link" aria-label="Direct link to npx-dbos-cloud-db-destroy" title="Direct link to npx-dbos-cloud-db-destroy">​</a></h3>
