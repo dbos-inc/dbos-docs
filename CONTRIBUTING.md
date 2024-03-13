@@ -29,6 +29,8 @@ In the PR description please include:
 * Description of the fix/feature.
 * Brief description of implementation.
 
+By submitting a pull request, you represent that you have the right to license your contribution to DBOS and the community, and agree by submitting the patch that your contributions are licensed under the MIT license.
+
 ## Requesting features
 
 If you have a feature request or an idea for an enhancement, feel free to open an issue on GitHub. Describe the feature or enhancement you'd like to see and why it would be valuable. Discuss it with the community on the [Discord](https://discord.gg/fMwQjeW5zg) channel.
