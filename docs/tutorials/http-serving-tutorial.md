@@ -83,7 +83,7 @@ Here is an example of a simple middleware looking for an HTTP header:
 import { Middleware } from "koa";
 
 const middleware: Middleware = async (ctx, next) => {
-  const contentType = ctx.request.headers["Content-Type"];
+  const contentType = ctx.request.headers["content-type"];
   await next();
 };
 
@@ -92,4 +92,3 @@ class Hello {
   ...
 }
 ```
-
