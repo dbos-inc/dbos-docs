@@ -29,7 +29,7 @@ You can also retrieve logs through the [`app logs`](../api-reference/cloud-cli.m
 In your package root directory, run:
 
 ```shell
-npx dbos-cloud app logs
+npx @dbos-inc/dbos-cloud app logs
 ```
 
 

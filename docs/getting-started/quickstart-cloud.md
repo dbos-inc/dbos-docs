@@ -34,7 +34,7 @@ Let's start by creating a DBOS Cloud account.
 From your DBOS application directory, run the following command:
 
 ```
-npx dbos-cloud register -u <username>
+npx @dbos-inc/dbos-cloud register -u <username>
 ```
 
 User names should be between 3 and 30 characters and must contain only lowercase letters, numbers, and underscores (`_`).
@@ -61,7 +61,7 @@ The database password must contain 8 or more characters.
 Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 
 ```
-npx dbos-cloud db provision <database-instance-name> -U <database-username>
+npx @dbos-inc/dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 If successful, the command should print `Database successfully provisioned!`.
@@ -81,7 +81,7 @@ Now, we're ready to register and deploy your application to DBOS Cloud!
 First, register your application by running this command, using your database instance name from the last step:
 
 ```
-npx dbos-cloud app register -d <database-instance-name>
+npx @dbos-inc/dbos-cloud app register -d <database-instance-name>
 ```
 
 If successful, the command should print `Successfully registered <app-name>!`
@@ -89,13 +89,13 @@ If successful, the command should print `Successfully registered <app-name>!`
 Now, deploy your application to run it in the cloud!
 
 ```
-npx dbos-cloud app deploy
+npx @dbos-inc/dbos-cloud app deploy
 ```
 
 If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`
 The URL should look like `https://<username>-<app-name>.cloud.dbos.dev/`
 Your application is now live at that URL!
-If you ever forget the URL, you can retrieve it (and some other information) by running `npx dbos-cloud app status`.
+If you ever forget the URL, you can retrieve it (and some other information) by running `npx @dbos-inc/dbos-cloud app status`.
 
 To see that your app is working, visit `<URL>/greeting/dbos` in your browser.
 For example, if your username is `mike` and your app name is `hello`, visit `https://mike-hello.cloud.dbos.dev/greeting/dbos`.
@@ -111,12 +111,12 @@ You don't have to worry about changing database server connection parameters lik
 
 To stop and delete your application, you can run the following command:
 ```
-npx dbos-cloud app delete <app-name>
+npx @dbos-inc/dbos-cloud app delete <app-name>
 ```
 
 After deleting your app, if you'd like to erase your database instance, run:
 ```
-npx dbos-cloud db destroy <database-name>
+npx @dbos-inc/dbos-cloud db destroy <database-name>
 ```
 
 :::warning

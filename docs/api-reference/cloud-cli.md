@@ -16,7 +16,7 @@ npm install @dbos-inc/dbos-cloud@latest
 
 ## User Management Commands
 
-### `npx dbos-cloud register`
+### `npx @dbos-inc/dbos-cloud register`
 
 **Description:**
 This command creates and registers a new DBOS Cloud account.
@@ -31,7 +31,7 @@ If you register with an email and password, you also need to verify your email t
 
 ---
 
-### `npx dbos-cloud login`
+### `npx @dbos-inc/dbos-cloud login`
 
 **Description:**
 This command logs you in to your DBOS Cloud account.
@@ -43,7 +43,7 @@ When you log in to DBOS Cloud from an application, a token with your login infor
 
 ---
 
-### `npx dbos-cloud logout`
+### `npx @dbos-inc/dbos-cloud logout`
 
 **Description:**
 This command logs you out of your DBOS Cloud account.
@@ -52,7 +52,7 @@ This command logs you out of your DBOS Cloud account.
 
 ## Database Instance Management Commands
 
-### `npx dbos-cloud db provision`
+### `npx @dbos-inc/dbos-cloud db provision`
 
 **Description:**
 This command provisions a Postgres database instance to which your applications can connect.
@@ -64,7 +64,7 @@ This command provisions a Postgres database instance to which your applications 
 
 ---
 
-### `npx dbos-cloud db list`
+### `npx @dbos-inc/dbos-cloud db list`
 
 **Description:**
 This command lists all Postgres database instances provisioned by your account.
@@ -82,7 +82,7 @@ For each provisioned Postgres database instance, emit:
 
 ---
 
-### `npx dbos-cloud db status`
+### `npx @dbos-inc/dbos-cloud db status`
 
 **Description:**
 This command retrieves the status of a Postgres database instance
@@ -100,7 +100,7 @@ This command retrieves the status of a Postgres database instance
 
 ---
 
-### `npx dbos-cloud db reset-password`
+### `npx @dbos-inc/dbos-cloud db reset-password`
 
 **Description:**
 This command resets your password for a Postgres database instance.
@@ -111,7 +111,7 @@ This command resets your password for a Postgres database instance.
 
 ---
 
-### `npx dbos-cloud db destroy`
+### `npx @dbos-inc/dbos-cloud db destroy`
 
 **Description:**
 This command destroys a previously-provisioned Postgres database instance.
@@ -123,7 +123,7 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ## Application Management Commands
 
-### `npx dbos-cloud app register`
+### `npx @dbos-inc/dbos-cloud app register`
 
 **Description:**
 This command must be run from an application root directory.
@@ -134,7 +134,7 @@ It registers that application with DBOS Cloud.
 
 ---
 
-### `npx dbos-cloud app deploy`
+### `npx @dbos-inc/dbos-cloud app deploy`
 
 **Description:**
 This command must be run from an application root directory.
@@ -142,7 +142,7 @@ It deploys the application to DBOS Cloud and emits the URL at which the applicat
 
 ---
 
-### `npx dbos-cloud app delete`
+### `npx @dbos-inc/dbos-cloud app delete`
 
 **Parameters:**
 - `[application-name]`: The name of the application to delete.
@@ -153,7 +153,7 @@ If run in an application root directory with no application name provided, delet
 
 ---
 
-### `npx dbos-cloud app list`
+### `npx @dbos-inc/dbos-cloud app list`
 
 **Description:**
 List all applications you have registered with DBOS Cloud.
@@ -172,7 +172,7 @@ For each registered application, emit:
 - `AppURL`: The URL at which the application is hosted.
 ---
 
-### `npx dbos-cloud app status`
+### `npx @dbos-inc/dbos-cloud app status`
 
 **Parameters:**
 - `[application-name]`: The name of the application to retrieve.
@@ -195,7 +195,7 @@ If run in an application root directory with no application name provided, retri
 - `AppURL`: The URL at which the application is hosted.
 ---
 
-### `npx dbos-cloud app logs`
+### `npx @dbos-inc/dbos-cloud app logs`
 
 **Description:**
 This command must be run from an application root directory.
