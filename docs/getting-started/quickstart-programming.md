@@ -18,7 +18,7 @@ npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
 cd <app-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
-npx dbos-sdk migrate
+npx @dbos-inc/dbos-sdk migrate
 truncate -s 0 src/operations.ts
 ```
 
@@ -42,7 +42,7 @@ export class Greetings {
 }
 ```
 
-Rebuild with `npm run build` and start your application with `npx dbos-sdk start`. You should see an output similar to:
+Rebuild with `npm run build` and start your application with `npx @dbos-inc/dbos-sdk start`. You should see an output similar to:
 
 ```shell
 [info]: Workflow executor initialized
@@ -220,14 +220,14 @@ To see this in action, build and start the application by running:
 
 ```
 npm run build
-npx dbos-sdk start
+npx @dbos-inc/dbos-sdk start
 ```
 
 Then, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to the application.
 On your terminal, you should see an output like:
 
 ```shell
-> npx dbos-sdk start
+> npx @dbos-inc/dbos-sdk start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
@@ -238,11 +238,11 @@ On your terminal, you should see an output like:
 [info]: Press control + C to interrupt the workflow...
 ```
 Press control + c when prompted to interrupt the workflow.
-Then, run `npx dbos-sdk start` to restart DBOS Cloud.
+Then, run `npx @dbos-inc/dbos-sdk start` to restart DBOS Cloud.
 You should see an output like:
 
 ```
-> npx dbos-sdk start
+> npx @dbos-inc/dbos-sdk start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend

@@ -242,8 +242,8 @@ In another terminal, run:
 ```shell
 npm ci
 npm run build
-npx dbos-sdk migrate
-npx dbos-sdk start
+npx @dbos-inc/dbos-sdk migrate
+npx @dbos-inc/dbos-sdk start
 ```
 
 The output should look like:

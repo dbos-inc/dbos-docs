@@ -70,9 +70,9 @@ database:
   migrate: ['npx knex migrate:latest']
 ```
 
-To run your migrations locally, run `npx dbos-sdk migrate`.
+To run your migrations locally, run `npx @dbos-inc/dbos-sdk migrate`.
 
-When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud, it runs `npx dbos-sdk migrate` to apply all schema changes before starting your application.
+When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud, it runs `npx @dbos-inc/dbos-sdk migrate` to apply all schema changes before starting your application.
 
 ### Destroying Database Instances
 

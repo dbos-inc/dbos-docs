@@ -54,8 +54,8 @@ database:
 
 This section is used to specify DBOS runtime parameters.
 
-- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos-sdk start -p <port>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
-- **entrypoint** (optional): The compiled Javascript file where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  Defaults to `dist/operations.js`. Using [`npx dbos-sdk start -e <entrypoint-file>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
+- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx @dbos-inc/dbos-sdk start -p <port>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
+- **entrypoint** (optional): The compiled Javascript file where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  Defaults to `dist/operations.js`. Using [`npx @dbos-inc/dbos-sdk start -e <entrypoint-file>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
 
 **Example**:
 
@@ -85,7 +85,7 @@ You can use the configuration file to tune the behavior of DBOS logging facility
 Note all options in this section are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
-- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx dbos-sdk start -l <logLevel>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
+- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx @dbos-inc/dbos-sdk start -l <logLevel>`](./cli#npx-dbos-sdk-start) overrides this config parameter.
 - **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry. Defaults to `true`.
 - **silent**: Silences the logger. Defaults to `false`.
 

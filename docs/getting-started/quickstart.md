@@ -103,7 +103,7 @@ If successful, the script should print `Database started successfully!`.
 Then, let's run a database migration to create some tables:
 
 ```bash
-npx dbos-sdk migrate
+npx @dbos-inc/dbos-sdk migrate
 ```
 
 If successful, the migration should print `Migration successful!`.
@@ -112,7 +112,7 @@ Next, build and run the app:
 
 ```bash
 npm run build
-npx dbos-sdk start
+npx @dbos-inc/dbos-sdk start
 ```
 
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!

@@ -10,7 +10,7 @@ The DBOS SDK CLI helps you run DBOS applications locally.
 
 ---
 
-### `npx dbos-sdk start`
+### `npx @dbos-inc/dbos-sdk start`
 
 **Description:**  
 This command launches the DBOS runtime and HTTP server to serve an application.
@@ -26,7 +26,7 @@ You must compile your code (`npm run build`) before running this command.
 
 ---
 
-### `npx dbos-sdk init`
+### `npx @dbos-inc/dbos-sdk init`
 
 **Description:**  
 This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
@@ -36,21 +36,21 @@ This command initializes a new DBOS application from a template into a target di
 
 ---
 
-### `npx dbos-sdk migrate`
+### `npx @dbos-inc/dbos-sdk migrate`
 
 **Description:**
 Run all migration commands specified in your [configuration file](./configuration) to apply your application's schema to the database.
 
 ---
 
-### `npx dbos-sdk rollback`
+### `npx @dbos-inc/dbos-sdk rollback`
 
 **Description:**
 Run all rollback commands specified in your [configuration file](./configuration) to roll back the last batch of schema migrations.
 
 ---
 
-### `npx dbos-sdk debug`
+### `npx @dbos-inc/dbos-sdk debug`
 
 **Description:**
 This command launches the DBOS runtime in debug mode to replay a specified workflow.

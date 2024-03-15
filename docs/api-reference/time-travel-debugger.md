@@ -60,7 +60,7 @@ The default DBOS launch configuration includes both of these commands in the Tim
     "type": "node-terminal",
     "request": "launch",
     "name": "Time Travel Debug",
-    "command": "npx dbos-sdk debug -x ${command:dbos-ttdbg.get-proxy-url} -u ${command:dbos-ttdbg.pick-workflow-id}",
+    "command": "npx @dbos-inc/dbos-sdk debug -x ${command:dbos-ttdbg.get-proxy-url} -u ${command:dbos-ttdbg.pick-workflow-id}",
     "preLaunchTask": "npm: build"
 }
 ```

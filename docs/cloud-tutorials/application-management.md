@@ -43,7 +43,7 @@ Run this command in your application root directory:
 npx @dbos-inc/dbos-cloud app deploy
 ```
 
-When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
+When you deploy an application, DBOS Cloud first runs [`npx @dbos-inc/dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
 It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 

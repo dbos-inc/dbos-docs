@@ -219,7 +219,7 @@ Open another terminal window, enter your application folder, compile your code, 
 ```bash
 cd <Your App Folder>/
 npm run build
-npx dbos-sdk debug -u <workflow UUID>
+npx @dbos-inc/dbos-sdk debug -u <workflow UUID>
 ```
 
 :::info
