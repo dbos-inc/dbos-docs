@@ -30,12 +30,16 @@ on your behalf from inside VS Code.
 Typically, the time travel debugger will automatically prompt you to login to DBOS cloud if you're not logged in or your credentials have expired.
 However, this command can also be executed explicitly.
 
-### DBOS: Delete Stored Application Database Passwords
+### DBOS: Delete Stored Passwords
 
-The time travel debugger needs your DBOS database name and password in order to access your database history.
-The first time a DBOS application is time travel debugged, the developer is asked for the database password.
-The provided database password is saved in VS Code's secrets storage so you don't have to enter it every time you time travel debug.
-This command deletes any stored DBOS database passwords associated with the current workspace.
+:::note
+This command was originally named "Delete Stored Application Database Passwords"
+:::
+
+The time travel debugger needs your DBOS Cloud credentials as well as DBOS database password in order to access your database history.
+The extension will prompt the user to login to DBOS Cloud and for the DBOS database password when needed.
+Credentials are saved in VS Code's secrets storage so you don't have to enter it every time you use the time travel debugger.
+This command deletes any stored passwords saved in VS Code's secrets storage.
 
 :::note
 The database password is different from the DBOS Cloud login credentials. 
