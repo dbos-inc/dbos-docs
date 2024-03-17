@@ -30,6 +30,10 @@ const config = {
     locales: ['en'],
   },
 
+  plugins: [
+    'docusaurus-plugin-matomo',
+  ],
+
   presets: [
     [
       'classic',
@@ -145,6 +149,12 @@ const config = {
 
         //... other Algolia params
       },
+    matomo: {
+      matomoUrl: 'https://dbosdev.matomo.cloud/',
+      siteId: '1',
+      phpLoader: 'matomo.php',
+      jsLoader: 'matomo.js',
+    },
     }),
 };
 
