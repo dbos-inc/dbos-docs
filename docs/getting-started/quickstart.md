@@ -5,7 +5,6 @@ sidebar_position: 1
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-
 # DBOS SDK Quickstart
 
 Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes, once System requirements are met!
@@ -48,7 +47,7 @@ nvm use 20
 
   Copy and run the following commands in your terminal to install Docker:
   
-    ```bash
+   ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -154,7 +153,7 @@ We now need to switch to Ubuntu terminal prompt by running:
    wsi
    ```
  
-We can now creae the Postgres database by running:  
+We can now create the Postgres database by running:  
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
