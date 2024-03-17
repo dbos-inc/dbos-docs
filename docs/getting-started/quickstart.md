@@ -8,14 +8,19 @@ import TabItem from '@theme/TabItem';
 
 # DBOS SDK Quickstart
 
-Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes!
+Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes, once System requirements are met!
 
-### System Requirements
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).  To install (assuming you don't already have Node.js installed), copy and run the following commands in your terminal:
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en) and this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
+
+To install both Node.js and Docker (assuming you don't already have them installed):
+
+### Choose Operating System for System Requirements and Instructions
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
-  ```bash
+Copy and run the following commands in your terminal to install Node.js:
+
+   ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
 export NVM_DIR="$HOME/.nvm"
@@ -23,37 +28,22 @@ export NVM_DIR="$HOME/.nvm"
 
 nvm install 20
 nvm use 20
-  ```
+   ```
+   An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+   Download and install.
+   
   </TabItem>
-  <TabItem value="win" label="Windows (WSL)">
-  ```bash
+  <TabItem value="ubuntu" label="Ubuntu">
+  Copy and run the following commands in your terminal to install Node.js:
+  
+   ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 20
 nvm use 20
-  ```
-  </TabItem>
-  <TabItem value="ubuntu" label="Ubuntu">
-  ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-nvm install 20
-nvm use 20
-  ```
-  </TabItem>
-</Tabs>
-
-This tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).  To install (assuming you don't already have Docker installed):
-
-<Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-  An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-  </TabItem>
-  <TabItem value="win" label="Windows (WSL)">
-  An easy way to install Docker on Windows is through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-  </TabItem>
-  <TabItem value="ubuntu" label="Ubuntu">
-  ```bash
+```
+  Copy and run the following commands in your terminal to install Docker:
+    ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -62,8 +52,38 @@ sudo apt-get update
 sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo groupadd docker
 sudo usermod -aG docker $USER
-  ```
+   ```
   </TabItem>
+  <TabItem value="win" label="Windows 10/11 64 (WSL)">
+	Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
+	
+  The following directories will be created:
+	C:\Program Files\nodejs
+	C:\PythonXXX (XXX is the Python version)
+	C:\ProgramData\Chocolatey
+	C:\ProgramData\ChocolateyHttpCache
+
+  Windows 10/11 requires [WSL]{https://learn.microsoft.com/en-us/windows/wsl/install}.  Download and install
+  A Linux environment will be created:
+  
+  ![](WSI-Linux.png)
+ 
+	The following directory will be created
+	C:\Program Files\WSL
+	
+  Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
+
+  The following directories will be created:
+	C:\Program Files\Docker
+	Linux\docker-desktop
+	Linux\docker-desktop-data
+	
+	Manually create the following npm folder:
+	C:\Users\%user%\AppData\Roaming\npm
+	%user% is the Windows user you are logged in under
+
+   It is recommend to use an elevated Windows Command Prompt over PowerShell.  There seems to be an issue later in the guide when using the export function to set the Postgres database password.
+   </TabItem>
 </Tabs>
 
 After installing Docker, close and reopen your terminal to apply any changes. Then, verify Docker is working by running:
@@ -74,14 +94,14 @@ docker run hello-world
 
 ### Project Initialization
 
-To initialize a new DBOS application, run the following command.
+From your project folder initialize a new DBOS application, run the following command.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 ```bash
 npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
 ```
 
-This creates a folder for your project, configures its layout, and installs required dependencies.
+This creates a folder for your application, configures its layout, and installs required dependencies.
 If successful, it should print `Application initialized successfully!`.
 
 ### Getting Started
@@ -92,11 +112,49 @@ First, we'll show you how to build and run it, then we'll show you how to extend
 Before you can launch your app, you need a database.
 DBOS works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
 
-```bash
-cd <project-name>
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+   ```bash
+cd <application-folder>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
-```
+   ```
+  </TabItem>
+    <TabItem value="ubuntu" label="Ubuntu">
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+./start_postgres_docker.sh
+   ```
+  </tabitem>
+  <TabItem value="win" label="Windows 10/11 64 (WSL)">
+  The WSL installion installs and sets the default Linux distribution to docker-desktop.  For commands to work correctly we need to install Ubuntu by running:
+
+   ```bash
+cd <application-folder>
+wsl --install
+   ```
+To confirm the list of Linux distributions run:   
+   ```bash
+  wsl -l
+    ```
+	To change to the Ubuntu distribution run:
+   ```bash
+   wsl -s
+   ```
+We now need to switch to Ubuntu terminal prompt by running:
+   ```bash
+   wsi
+   ```
+ 
+We can now creae the Postgres database by running:  
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+. start_postgres_docker.sh
+   ```  
+  </TabItem>
+</tabs>
 
 If successful, the script should print `Database started successfully!`.
 
