@@ -77,10 +77,11 @@ sudo usermod -aG docker $USER
   A Linux environment will be created:
   
   ![](WSI-Linux.png)
- 
-	The following directory will be created
-	C:\Program Files\WSL
 	
+ The following directory will be created:
+ 
+	C:\Program Files\WSL
+
   Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
 
   The following directories will be created:
