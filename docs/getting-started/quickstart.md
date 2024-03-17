@@ -65,11 +65,14 @@ sudo usermod -aG docker $USER
 	
   The following directories will be created:
 	C:\Program Files\nodejs
+ 
 	C:\PythonXXX (XXX is the Python version)
+ 
 	C:\ProgramData\Chocolatey
+ 
 	C:\ProgramData\ChocolateyHttpCache
 
-  Windows 10/11 requires [WSL]{https://learn.microsoft.com/en-us/windows/wsl/install}.  Download and install
+  Windows 10/11 requires [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).  Download and install
   A Linux environment will be created:
   
   ![](WSI-Linux.png)
@@ -81,7 +84,9 @@ sudo usermod -aG docker $USER
 
   The following directories will be created:
 	C:\Program Files\Docker
+ 
 	Linux\docker-desktop
+ 
 	Linux\docker-desktop-data
 	
 	Manually create the following npm folder:
