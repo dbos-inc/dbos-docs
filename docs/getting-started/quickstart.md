@@ -13,7 +13,7 @@ The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en) and this tuto
 
 To install both Node.js and Docker (assuming you don't already have them installed):
 
-### Choose Operating System for System Requirements and Instructions
+### Choose your Operating System for the System Requirements and Instructions
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
