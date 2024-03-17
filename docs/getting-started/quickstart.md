@@ -149,20 +149,26 @@ export PGPASSWORD=dbos
 cd <application-folder>
 wsl --install
    ```
-To confirm the list of Linux distributions run:   
+To confirm the list of Linux distributions run:
+
    ```bash
   wsl -l
-    ```
-To change to the Ubuntu distribution run:
-   ```bash
-   wsl -s
    ```
-We now need to switch to Ubuntu terminal prompt by running:
+
+To change to the Ubuntu distribution run:
+
    ```bash
-   wsi
+   wsl -s Ubuntu
+   ```
+
+We now need to switch to Ubuntu terminal prompt by running:
+
+   ```bash
+   wsl
    ```
  
-We can now create the Postgres database by running:  
+We can now create the Postgres database by running:
+
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
