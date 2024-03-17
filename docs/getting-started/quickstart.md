@@ -18,6 +18,7 @@ To install both Node.js and Docker (assuming you don't already have them install
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
+	  
 Copy and run the following commands in your terminal to install Node.js:
 
    ```bash
@@ -29,11 +30,13 @@ export NVM_DIR="$HOME/.nvm"
 nvm install 20
 nvm use 20
    ```
+
    An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
    Download and install.
    
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
+	  
   Copy and run the following commands in your terminal to install Node.js:
   
    ```bash
@@ -41,8 +44,10 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 20
 nvm use 20
-```
+   ```
+
   Copy and run the following commands in your terminal to install Docker:
+  
     ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -53,8 +58,10 @@ sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plu
 sudo groupadd docker
 sudo usermod -aG docker $USER
    ```
+
   </TabItem>
   <TabItem value="win" label="Windows 10/11 64 (WSL)">
+
 	Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
 	
   The following directories will be created:
@@ -138,7 +145,7 @@ To confirm the list of Linux distributions run:
    ```bash
   wsl -l
     ```
-	To change to the Ubuntu distribution run:
+To change to the Ubuntu distribution run:
    ```bash
    wsl -s
    ```
@@ -154,7 +161,7 @@ export PGPASSWORD=dbos
 . start_postgres_docker.sh
    ```  
   </TabItem>
-</tabs>
+</Tabs>
 
 If successful, the script should print `Database started successfully!`.
 
