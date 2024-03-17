@@ -88,18 +88,18 @@ sudo usermod -aG docker $USER
 
 After installing Docker, close and reopen your terminal to apply any changes. Then, verify Docker is working by running:
 
-```bash
+   ```bash
 docker run hello-world
-```
+   ```
 
 ### Project Initialization
 
 From your project folder initialize a new DBOS application, run the following command.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
-```bash
+   ```bash
 npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
-```
+   ```
 
 This creates a folder for your application, configures its layout, and installs required dependencies.
 If successful, it should print `Application initialized successfully!`.
@@ -126,7 +126,7 @@ cd <application-folder>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
    ```
-  </tabitem>
+  </TabItem>
   <TabItem value="win" label="Windows 10/11 64 (WSL)">
   The WSL installion installs and sets the default Linux distribution to docker-desktop.  For commands to work correctly we need to install Ubuntu by running:
 
@@ -160,18 +160,18 @@ If successful, the script should print `Database started successfully!`.
 
 Then, let's run a database migration to create some tables:
 
-```bash
+   ```bash
 npx dbos-sdk migrate
-```
+   ```
 
 If successful, the migration should print `Migration successful!`.
 
 Next, build and run the app:
 
-```bash
+   ```bash
 npm run build
 npx dbos-sdk start
-```
+   ```
 
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one!
 
