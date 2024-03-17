@@ -61,7 +61,7 @@ sudo usermod -aG docker $USER
   </TabItem>
   <TabItem value="win" label="Windows 10/11 64 (WSL)">
 
-	Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
+Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
 	
   The following directories will be created:
   
