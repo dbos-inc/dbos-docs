@@ -127,6 +127,7 @@ DBOS works with any Postgres database, but to make things easier, we've provided
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
+	  
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
@@ -134,6 +135,7 @@ export PGPASSWORD=dbos
    ```
   </TabItem>
     <TabItem value="ubuntu" label="Ubuntu">
+	    
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
