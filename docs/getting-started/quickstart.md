@@ -64,6 +64,7 @@ sudo usermod -aG docker $USER
 	Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
 	
   The following directories will be created:
+  
 	C:\Program Files\nodejs
  
 	C:\PythonXXX (XXX is the Python version)
@@ -83,6 +84,7 @@ sudo usermod -aG docker $USER
   Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
 
   The following directories will be created:
+  
 	C:\Program Files\Docker
  
 	Linux\docker-desktop
