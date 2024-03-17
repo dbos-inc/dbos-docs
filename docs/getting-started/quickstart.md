@@ -92,7 +92,8 @@ Download [Node.js 20 or later](https://nodejs.org/en) and install with "Addition
  
 	Linux\docker-desktop-data
 	
-	Manually create the following npm folder:
+Manually create the following npm folder:
+ 
 	C:\Users\%user%\AppData\Roaming\npm
 	%user% is the Windows user you are logged in under
 
