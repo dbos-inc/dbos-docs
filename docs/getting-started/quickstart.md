@@ -123,14 +123,6 @@ sudo usermod -aG docker $USER
 	
   <TabItem value="win-wsl" label="Windows(WSL)">
 	
-  ### Download [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and install.  
-  A Linux environment will be created:
-  
-  ![](WSI-Linux.png)
-	
-  The following directory will be created:
-	- C:\Program Files\WSL
-
   ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
 	
   The following directories will be created:
@@ -225,32 +217,7 @@ start_postgres_docker.bat
   </TabItem>
   
   <TabItem value="win-wsl" label="Windows(WSL)">
-  The WSL installion installs and sets the default Linux distribution to docker-desktop.  For commands to work correctly we need to install Ubuntu by running:
-
-   ```bash
-cd <application-folder>
-wsl --install
-   ```
-To confirm the list of Linux distributions run:
-
-   ```bash
-  wsl -l
-   ```
-
-To change to the Ubuntu distribution run:
-
-   ```bash
-   wsl -s Ubuntu
-   ```
-
-We now need to switch to Ubuntu terminal prompt by running:
-
-   ```bash
-   wsl
-   ```
  
-We can now create the Postgres database by running:
-
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
