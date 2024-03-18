@@ -13,7 +13,7 @@ The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en) and this tuto
 
 To install both Node.js and Docker (assuming you don't already have them installed):
 
-### Choose your Operating System for the System Requirements and Instructions
+### Choose your Operating System
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
@@ -59,46 +59,106 @@ sudo usermod -aG docker $USER
    ```
 
   </TabItem>
-  <TabItem value="win" label="Windows 10/11 64 (WSL)">
+  <TabItem value="win-ps" label="Windows(PS)">
 
-Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
+  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
 	
   The following directories will be created:
   
-	C:\Program Files\nodejs
+  - C:\Program Files\nodejs
  
-	C:\PythonXXX (XXX is the Python version)
+  - C:\PythonXXX (XXX is the Python version)
  
-	C:\ProgramData\Chocolatey
+  - C:\ProgramData\Chocolatey
  
-	C:\ProgramData\ChocolateyHttpCache
-
-  Windows 10/11 requires [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).  Download and install
-  A Linux environment will be created:
-  
-  ![](WSI-Linux.png)
+  - C:\ProgramData\ChocolateyHttpCache
 	
- The following directory will be created:
- 
-	C:\Program Files\WSL
-
-  Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
+  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
 
   The following directories will be created:
   
-	C:\Program Files\Docker
+  - C:\Program Files\Docker
  
-	Linux\docker-desktop
+  - Linux\docker-desktop
  
-	Linux\docker-desktop-data
+  - Linux\docker-desktop-data
 	
-Manually create the following npm folder:
+  ### Manually create the following npm folder:
  
 	C:\Users\%user%\AppData\Roaming\npm
 	%user% is the Windows user you are logged in under
 
-   It is recommend to use an elevated Windows Command Prompt over PowerShell.  There seems to be an issue later in the guide when using the export function to set the Postgres database password.
-   </TabItem>
+  </TabItem>
+ 
+	<TabItem value="win-cmd" label="Windows(CMD)">
+	
+  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
+	
+  The following directories will be created:
+  
+  - C:\Program Files\nodejs
+ 
+  - C:\PythonXXX (XXX is the Python version)
+ 
+  - C:\ProgramData\Chocolatey
+ 
+  - C:\ProgramData\ChocolateyHttpCache
+	
+  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
+
+  The following directories will be created:
+  
+  - C:\Program Files\Docker
+ 
+  - Linux\docker-desktop
+ 
+  - Linux\docker-desktop-data
+	
+  ### Manually create the following npm folder:
+ 
+	C:\Users\%user%\AppData\Roaming\npm
+	%user% is the Windows user you are logged in under
+	
+  </TabItem>
+	
+  <TabItem value="win-wsl" label="Windows(WSL)">
+	
+  ### Download [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and install.  
+  A Linux environment will be created:
+  
+  ![](WSI-Linux.png)
+	
+  The following directory will be created:
+	- C:\Program Files\WSL
+
+  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
+	
+  The following directories will be created:
+  
+  - C:\Program Files\nodejs
+ 
+  - C:\PythonXXX (XXX is the Python version)
+ 
+  - C:\ProgramData\Chocolatey
+ 
+  - C:\ProgramData\ChocolateyHttpCache
+	
+  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
+
+  The following directories will be created:
+  
+  - C:\Program Files\Docker
+ 
+  - Linux\docker-desktop
+ 
+  - Linux\docker-desktop-data
+	
+  ### Manually create the following npm folder:
+ 
+ - C:\Users\%user%\AppData\Roaming\npm ('%user%' is the Windows user you are logged in under)
+  
+  </TabItem>
+   
 </Tabs>
 
 After installing Docker, close and reopen your terminal to apply any changes. Then, verify Docker is working by running:
@@ -144,7 +204,27 @@ export PGPASSWORD=dbos
 ./start_postgres_docker.sh
    ```
   </TabItem>
-  <TabItem value="win" label="Windows 10/11 64 (WSL)">
+  
+  <TabItem value="win-ps" label="Windows(PS)">
+  
+     ```bash
+cd <application-folder>
+$env:PGPASSWORD = "dbos"
+.\start_postgres_docker.bat
+   ```
+  
+  </TabItem>
+  
+  <TabItem value="win-cmd" label="Windows(CMD)">
+     ```bash
+cd <application-folder>
+set PGPASSWORD=dbos
+start_postgres_docker.bat
+   ```
+  
+  </TabItem>
+  
+  <TabItem value="win-wsl" label="Windows(WSL)">
   The WSL installion installs and sets the default Linux distribution to docker-desktop.  For commands to work correctly we need to install Ubuntu by running:
 
    ```bash
