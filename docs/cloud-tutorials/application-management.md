@@ -57,7 +57,7 @@ If you edit your application or schema, run `npx dbos-cloud app deploy` again to
 You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 :::
 
-When you deploy a new version of your application to DBOS cloud, pending workflows executing the current version of your application will run to completion.
+When you deploy a new version of your application to DBOS cloud, currently running workflows will still run to completion. This means database schema migrations must be backward compatible with these running workflows.
 
 ### Rolling back applications
 
