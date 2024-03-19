@@ -57,6 +57,13 @@ If you edit your application or schema, run `npx dbos-cloud app deploy` again to
 You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 :::
 
+When you deploy a new version of your application to DBOS cloud, pending workflows executing the current version of your application will run to completion.
+
+### Rolling back applications
+
+To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger your database rollback commands, rather than the migrate commands.
+Note that schema migration must be backward compatible with the database schema your currently pending workflows are expecting.
+
 ### Monitoring and Debugging Applications
 
 DBOS provides many tools to monitor and debug applications:
