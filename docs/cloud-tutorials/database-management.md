@@ -73,7 +73,7 @@ database:
 
 To run your migrations locally, run `npx dbos-sdk migrate` or `npx dbos-sdk rollback`.
 
-When you [deploy](./application-management.md#registering-and-deploying-applications) or [rollback](./application-management.md#rolling-back-applications) an application to DBOS Cloud, it runs `npx dbos-sdk migrate` or `npx dbos-sdk rollback`, respectively, to apply all schema changes before starting your application.
+When you [deploy](./application-management.md#registering-and-deploying-applications) or [rollback](./application-management.md#rolling-back-applications) a DBOS Cloud application, it runs `npx dbos-sdk migrate` or `npx dbos-sdk rollback`, respectively, to apply all schema changes before starting your application.
 Note that database schema migration should be backward compatible with the schema used by your currently running workflows.
 
 ### Destroying Database Instances
