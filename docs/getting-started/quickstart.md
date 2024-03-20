@@ -7,13 +7,14 @@ import TabItem from '@theme/TabItem';
 
 # DBOS SDK Quickstart
 
-Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes, once System requirements are met!
+Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes.
 
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en) and this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
+### System Requirements
+
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).
+Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
 
 To install both Node.js and Docker (assuming you don't already have them installed):
-
-### Choose your Operating System
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
@@ -31,7 +32,6 @@ nvm use 20
    ```
 
    An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-   Download and install.
    
   </TabItem>
   <TabItem value="ubuntu" label="Ubuntu">
@@ -59,96 +59,13 @@ sudo usermod -aG docker $USER
    ```
 
   </TabItem>
-  <TabItem value="win-ps" label="Windows(PS)">
+  <TabItem value="win-ps" label="Windows">
 
-  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
-	
-  The following directories will be created:
-  
-  - C:\Program Files\nodejs
- 
-  - C:\PythonXXX (XXX is the Python version)
- 
-  - C:\ProgramData\Chocolatey
- 
-  - C:\ProgramData\ChocolateyHttpCache
-	
-  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
+   First, download and install [Node.js 20 or later](https://nodejs.org/en).
+   After installing Node.js, manually create the following folder required by `npm`: `C:\Users\%user%\AppData\Roaming\npm`
+   (`%user%` is the Windows user on which you are logged in).
 
-  The following directories will be created:
-  
-  - C:\Program Files\Docker
- 
-  - Linux\docker-desktop
- 
-  - Linux\docker-desktop-data
-	
-  ### Manually create the following npm folder:
- 
-	C:\Users\%user%\AppData\Roaming\npm
-	%user% is the Windows user you are logged in under
-
-  </TabItem>
- 
-	<TabItem value="win-cmd" label="Windows(CMD)">
-	
-  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
-	
-  The following directories will be created:
-  
-  - C:\Program Files\nodejs
- 
-  - C:\PythonXXX (XXX is the Python version)
- 
-  - C:\ProgramData\Chocolatey
- 
-  - C:\ProgramData\ChocolateyHttpCache
-	
-  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
-
-  The following directories will be created:
-  
-  - C:\Program Files\Docker
- 
-  - Linux\docker-desktop
- 
-  - Linux\docker-desktop-data
-	
-  ### Manually create the following npm folder:
- 
-	C:\Users\%user%\AppData\Roaming\npm
-	%user% is the Windows user you are logged in under
-	
-  </TabItem>
-	
-  <TabItem value="win-wsl" label="Windows(WSL)">
-	
-  ### Download [Node.js 20 or later](https://nodejs.org/en) and install with "Additional Tools" selected.
-	
-  The following directories will be created:
-  
-  - C:\Program Files\nodejs
- 
-  - C:\PythonXXX (XXX is the Python version)
- 
-  - C:\ProgramData\Chocolatey
- 
-  - C:\ProgramData\ChocolateyHttpCache
-	
-  ### Download and install [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).  
-
-  The following directories will be created:
-  
-  - C:\Program Files\Docker
- 
-  - Linux\docker-desktop
- 
-  - Linux\docker-desktop-data
-	
-  ### Manually create the following npm folder:
- 
- - C:\Users\%user%\AppData\Roaming\npm ('%user%' is the Windows user you are logged in under)
-  
+   Then, download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/).
   </TabItem>
    
 </Tabs>
@@ -161,7 +78,7 @@ docker run hello-world
 
 ### Project Initialization
 
-From your project folder initialize a new DBOS application, run the following command.
+To initialize a new DBOS application, run the following command.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
    ```bash
@@ -170,14 +87,13 @@ npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
 
 This creates a folder for your application, configures its layout, and installs required dependencies.
 If successful, it should print `Application initialized successfully!`.
+By default, `init` instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
+
 
 ### Getting Started
 
-By default, `dbos-sdk init` instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
-First, we'll show you how to build and run it, then we'll show you how to extend it with more powerful features.
-
 Before you can launch your app, you need a database.
-DBOS works with any Postgres database, but to make things easier, we've provided a nifty script that starts a Docker Postgres container and creates a database:
+DBOS works with any Postgres database, but to make things easier, we've provided a script that launches Postgres in a Docker container:
 
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
@@ -197,7 +113,7 @@ export PGPASSWORD=dbos
    ```
   </TabItem>
   
-  <TabItem value="win-ps" label="Windows(PS)">
+  <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
 cd <application-folder>
@@ -207,22 +123,13 @@ $env:PGPASSWORD = "dbos"
   
   </TabItem>
   
-  <TabItem value="win-cmd" label="Windows(CMD)">
+  <TabItem value="win-cmd" label="Windows (cmd)">
      ```bash
 cd <application-folder>
 set PGPASSWORD=dbos
 start_postgres_docker.bat
    ```
   
-  </TabItem>
-  
-  <TabItem value="win-wsl" label="Windows(WSL)">
- 
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-. start_postgres_docker.sh
-   ```  
   </TabItem>
 </Tabs>
 
