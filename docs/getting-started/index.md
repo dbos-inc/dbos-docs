@@ -1,13 +1,9 @@
 # Getting Started
 
-Welcome to DBOS! To get started, follow these tutorials to create and deploy your first DBOS application in minutes:
+Welcome to DBOS! Here's how you should get started:
 
-- Download the SDK and run a "Hello, Database!" application on your computer: [SDK Quickstart](./quickstart)
+- First, follow our [quickstart](./quickstart.md) to set up a DBOS application, build and run it locally, then serverlessly deploy it to DBOS Cloud.
+- Then, follow our [programming quickstart](./quickstart-programming.md) to build your own application and see how DBOS makes it reliable.
 
-Then, check out these guides to learn how to build complex fault-tolerant applications in DBOS:
-
-- Learn the core application building blocks: [Programming Quickstart](./quickstart-programming)
-- Learn how to create an advanced workflow: [Advanced Programming Tutorial](./quickstart-shop.md)
-
-After completing these steps, visit the [Cloud Tutorials](/category/dbos-cloud-tutorials/) to learn about the time-travel debugger, monitoring dashboards, and advanced application management.
-Read the [SDK Tutorials](/category/dbos-sdk-tutorials/) to learn more about SDK features and common application workflow patterns and to see some example DBOS applications.
+After completing these steps, read the [SDK Tutorials](/category/dbos-sdk-tutorials/) to learn how to build more complex DBOS applications and use advanced features like [idempotency](../tutorials/idempotency-tutorial.md) and [reliable messaging](../tutorials/workflow-communication-tutorial.md).
+Also, visit the [Cloud Tutorials](/category/dbos-cloud-tutorials/) to learn about the [time-travel debugger](../cloud-tutorials/timetravel-debugging.md), [monitoring dashboards](../cloud-tutorials/monitoring-dashboard.md), and [advanced application management](../cloud-tutorials/application-management.md).
