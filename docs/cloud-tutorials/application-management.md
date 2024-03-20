@@ -64,9 +64,9 @@ When you deploy a new version of an application, DBOS cloud allows currently run
 Thus, you should be careful making breaking schema changes (such as deleting or renaming a column) that are not compatible with the previous application version. For example, if your application is currently running workflows expecting a specific database column, removing this column while they are running can cause the workflows to fail.
 :::
 
-### Rolling back applications
+### Rolling back application databases
 
-To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger your database rollback commands, rather than the migrate commands.
+To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger the database rollback commands declared in your [dbos-config.yaml]((../api-reference/configuration.md)) file. Note that your application code is also updated, so you can deploy the changes associated with your rollback commands.
 
 :::info
 Similarly to a deploy, DBOS allows running workflows to complete. Be mindful rolling back database schemas while workflows are running.
