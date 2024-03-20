@@ -59,10 +59,18 @@ You don't have to worry about changing database server connection parameters lik
 
 When you deploy a new version of your application to DBOS cloud, currently running workflows will still run to completion. This means database schema migrations must be backward compatible with these running workflows.
 
+:::info
+When you deploy a new version of an application, DBOS cloud allows currently running workflows (using the current version of the code) to run to completion.
+Thus, you should be careful making breaking schema changes (such as deleting or renaming a column) that are not compatible with the previous application version. For example, if your application is currently running workflows expecting a specific database column, removing this column while they are running can cause the workflows to fail.
+:::
+
 ### Rolling back applications
 
 To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger your database rollback commands, rather than the migrate commands.
-Note that schema migration must be backward compatible with the database schema your currently pending workflows are expecting.
+
+:::info
+Similarly to a deploy, DBOS allows running workflows to complete. Be mindful rolling back database schemas while workflows are running.
+:::
 
 ### Monitoring and Debugging Applications
 
