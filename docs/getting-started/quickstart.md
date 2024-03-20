@@ -11,7 +11,8 @@ Here's how to get a simple DBOS "Hello, Database!" application up and running in
 
 ### System Requirements
 
-The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en) and this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
+The DBOS SDK requires [Node.js 20 or later](https://nodejs.org/en).
+Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
 
 To install both Node.js and Docker (assuming you don't already have them installed):
 
@@ -61,8 +62,8 @@ sudo usermod -aG docker $USER
   <TabItem value="win-ps" label="Windows">
 
    First, download and install [Node.js 20 or later](https://nodejs.org/en).
-   After installing Node.js, manually create the following folder required by `npm`: `C:\Users\%user%\AppData\Roaming\npm`.
-   `%user%` is the Windows user on which you are logged in.
+   After installing Node.js, manually create the following folder required by `npm`: `C:\Users\%user%\AppData\Roaming\npm`
+   (`%user%` is the Windows user on which you are logged in).
 
    Then, download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/).
   </TabItem>
