@@ -8,12 +8,12 @@ Welcome to DBOS!
 
 ### What is DBOS?
 
-DBOS is a transactional serverless platform that helps you develop and deploy database-backed applications.
+DBOS is a transactional serverless framework and platform that helps you develop and deploy database-backed applications.
 You develop your applications in TypeScript and PostgreSQL with our [open-source SDK](https://github.com/dbos-inc/dbos-ts) then deploy them in minutes to DBOS Cloud.
 
 You want to build your next database-backed application with DBOS because:
 
-- **It's simple**.  Write your business logic using serverless functions, test them locally, and deploy them to the cloud in minutes.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
+- **It's simple**.  Write your business logic using serverless functions, run them locally, and deploy them to the cloud in minutes.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
 - **It makes debugging easy**.  With our [time travel debugger](./cloud-tutorials/timetravel-debugging.md), you can "rewind time" and replay any DBOS Cloud trace locally on your computer, exactly as it originally happened.
 
