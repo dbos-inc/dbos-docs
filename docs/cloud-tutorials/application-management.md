@@ -43,7 +43,7 @@ Run this command in your application root directory:
 npx dbos-cloud app deploy
 ```
 
-When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) against your cloud database to apply all schema migrations you've defined.
+When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) on your application database to apply all schema migrations you've defined.
 It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
@@ -53,20 +53,19 @@ https://<username>-<app-name>.cloud.dbos.dev/
 
 If you edit your application or schema, run `npx dbos-cloud app deploy` again to apply the latest migrations and upgrade to the latest version.
 
-:::tip
+:::info
 You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 :::
 
-When you deploy a new version of your application to DBOS cloud, currently running workflows will still run to completion. This means database schema migrations must be backward compatible with these running workflows.
-
 :::info
-DBOS workflows always run to completion on the version of the code they started with.
-Thus, you should be careful making breaking schema changes (such as deleting or renaming a column) that are not compatible with the previous application version.
+Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
-### Rolling back application databases
+### Rolling Back Application Databases
 
-To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger the database rollback commands declared in your [dbos-config.yaml](../api-reference/configuration.md) file. Note that your application code is also updated, so you can deploy the changes associated with your rollback commands. Be mindful rolling back database schemas while workflows are running.
+To [roll back your application database](./database-management.md#database-schema-management), run `npx dbos-cloud app rollback`.
+This command works analagously to `deploy`, but instead of running `npx dbos-sdk migrate`, it runs [`npx dbos-sdk rollback`](../api-reference/cli.md#npx-dbos-sdk-rollback) to execute the rollback commands defined in your [configuration file](../api-reference/configuration.md#database).
+It then updates your application code.
 
 ### Monitoring and Debugging Applications
 

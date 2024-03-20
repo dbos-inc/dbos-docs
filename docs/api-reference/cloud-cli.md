@@ -138,7 +138,7 @@ It registers that application with DBOS Cloud.
 
 **Description:**
 This command must be run from an application root directory.
-It deploys the application to DBOS Cloud, executes the [migrate commands declared in dbos-config.yaml](./configuration#database), and emits the URL at which the application is hosted, which is `https://cloud.dbos.dev/apps/<username>/<application-name>`.
+It executes the [migration commands declared in dbos-config.yaml](./configuration#database), deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
 ---
 
@@ -146,7 +146,7 @@ It deploys the application to DBOS Cloud, executes the [migrate commands declare
 
 **Description:**
 This command must be run from an application root directory.
-It deploys the application to DBOS Cloud, executes the [rollback commands declared in dbos-config.yaml](./configuration#database), and emits the URL at which the application is hosted, which is `https://cloud.dbos.dev/apps/<username>/<application-name>`.
+It executes the [rollback commands declared in dbos-config.yaml](./configuration#database), updates the deployed application's code, and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
 ---
 
