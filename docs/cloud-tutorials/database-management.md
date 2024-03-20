@@ -60,7 +60,7 @@ To manage your applications' database schemas, you must define schema migrations
 DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
 We recommend using a Typescript-based migration tool like [Knex](https://knexjs.org/guide/migrations.html) or [TypeORM](https://typeorm.io/migrations).
 
-You configure your schema migrations in the `migrate` field of your [`dbos-config.yaml`](../api-reference/configuration.md).
+You configure your schema migrations in the `migrate` and `rollback` fields of your [`dbos-config.yaml`](../api-reference/configuration.md).
 You must supply a list of commands to run to migrate to your most recent schema version.
 For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), you might use:
 
@@ -68,11 +68,17 @@ For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), 
 database:
   # Other fields omitted
   migrate: ['npx knex migrate:latest']
+  rollback: ['npx knex migrate:down']
 ```
 
-To run your migrations locally, run `npx dbos-sdk migrate`.
+To run your migrations locally, run `npx dbos-sdk migrate` or `npx dbos-sdk rollback`.
 
-When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud, it runs `npx dbos-sdk migrate` to apply all schema changes before starting your application.
+When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud it runs `npx dbos-sdk migrate` to apply all schema changes before starting your application or updating its code.
+When you [roll back](./application-management.md#rolling-back-applications) an application on DBOS Cloud, it runs `npx dbos-sdk rollback` to roll back schema changes before updating your application's code.
+
+:::info
+Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
+:::
 
 ### Destroying Database Instances
 
