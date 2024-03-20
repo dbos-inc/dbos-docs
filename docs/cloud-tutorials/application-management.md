@@ -66,7 +66,7 @@ Thus, you should be careful making breaking schema changes (such as deleting or 
 
 ### Rolling back application databases
 
-To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger the database rollback commands declared in your [dbos-config.yaml]((../api-reference/configuration.md)) file. Note that your application code is also updated, so you can deploy the changes associated with your rollback commands.
+To trigger the execution of [database rollback commands](./database-management.md#database-schema-management), simply run `npx dbos-cloud app rollback`. DBOS cloud will re-deploy your application and trigger the database rollback commands declared in your [dbos-config.yaml](../api-reference/configuration.md) file. Note that your application code is also updated, so you can deploy the changes associated with your rollback commands.
 
 :::info
 Similarly to a deploy, DBOS allows running workflows to complete. Be mindful rolling back database schemas while workflows are running.
