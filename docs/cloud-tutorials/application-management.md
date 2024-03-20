@@ -21,7 +21,7 @@ npx dbos-cloud login
 ```
 
 To deploy an application, you need a database to connect to.
-You can use the database you created in the [cloud quickstart](../getting-started/quickstart-cloud.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
+You can use the database you created in the [quickstart](../getting-started/quickstart.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
 Additionally, you must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
 
 ### Registering and Deploying Applications

@@ -3,7 +3,6 @@
 Welcome to DBOS! To get started, follow these tutorials to create and deploy your first DBOS application in minutes:
 
 - Download the SDK and run a "Hello, Database!" application on your computer: [SDK Quickstart](./quickstart)
-- Deploy your application to the cloud: [Cloud Quickstart](./quickstart-cloud)
 
 Then, check out these guides to learn how to build complex fault-tolerant applications in DBOS:
 

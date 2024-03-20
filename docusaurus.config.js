@@ -32,6 +32,18 @@ const config = {
 
   plugins: [
     'docusaurus-plugin-matomo',
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          // /docs/oldDoc -> /docs/newDoc
+          {
+            to: '/getting-started/quickstart',
+            from: '/getting-started/quickstart-cloud',
+          },
+        ],
+      },
+    ],
   ],
 
   presets: [
