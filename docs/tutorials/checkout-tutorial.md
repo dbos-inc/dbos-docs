@@ -1,6 +1,7 @@
 ---
-sidebar_position: 4
-title: Advanced Programming Tutorial
+sidebar_position: 19
+title: Checkout Workflow Tutorial
+description: Learn how to implement the checkout button for an online store with DBOS
 ---
 
 # Building a Reliable Checkout Workflow
@@ -34,7 +35,7 @@ In this guide, we'll be implementing two functions: the checkout workflow and it
 These interact with an external payment service modelled on [Stripe](https://stripe.com).
 Here's a diagram of what the end-to-end checkout flow looks like:
 
-![](shop-guide-diagram.svg)
+![](./assets/shop-guide-diagram.svg)
 
 When a customer sends a checkout request, it's intercepted by the handler, which starts a checkout workflow, which initiates a session in the payment service.
 After the session is initiated, the workflow notifies the handler, which responds to the customer with a link to submit payment.

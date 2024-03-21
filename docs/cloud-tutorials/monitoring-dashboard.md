@@ -8,7 +8,7 @@ In this guide, you'll learn how to use the monitoring dashboard to visualize the
 
 ### Preliminaries
 
-In order to launch the dashboard you need to first login and register your application, as described in [cloud quickstart](../getting-started/quickstart-cloud.md). Having done so, from your application directory, run:
+In order to launch the dashboard you must first deploy an application, as described in [quickstart](../getting-started/quickstart.md). Having done so, from your application directory, run:
 
 ```
 npx dbos-cloud dashboard launch

@@ -59,7 +59,7 @@ This command provisions a Postgres database instance to which your applications 
 
 **Parameters:**
 - `<database-instance-name>`: The name of the database instance to provision. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
-- `-U, --username <string>`: Your username for this database instance.  Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
+- `-U, --username <string>`: Your username for this database instance.  Must be between 3 and 16 characters and contain only lowercase letters, numbers, and underscores.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---

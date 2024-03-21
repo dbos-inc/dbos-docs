@@ -32,8 +32,6 @@ Many contexts inherit from `DBOSContext` and share its properties and methods.  
 - [authenticatedRoles](#ctxtauthenticatedroles)
 - [assumedRole](#ctxtassumedrole)
 - [logger](#ctxtlogger)
-- [span](#ctxtspan)
-
 
 ### Methods
 
@@ -431,7 +429,6 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 #### Properties and Methods
 
 - [logger](#middlewarecontextlogger)
-- [span](#middlewarecontextspan)
 - [koaContext](#middlewarecontextkoacontext)
 - [name](#middlewarecontextname)
 - [requiredRole](#middlewarecontextrequiredrole)

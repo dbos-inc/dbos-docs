@@ -261,4 +261,5 @@ This reliability is a core feature of DBOS: workflows always run to completion a
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
 
-Next, to learn how to build more complex workflows, check out our [advanced programming guide](./quickstart-shop.md).
+Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-sdk-tutorials).
+To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).

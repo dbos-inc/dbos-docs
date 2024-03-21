@@ -24,22 +24,20 @@ npx dbos-cloud login
 
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
 You must choose a database instance name, username and password.
-Both the database instance name and username should be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
 The database password must contain 8 or more characters.
-Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
+Run this command and choose your database password when prompted (it should take up to 5 minutes to provision):
 
 ```
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 :::info
-Each Postgres database instance is a physical server that can host multiple independent Postgres databases for different applications.
-You can define which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
-DBOS Cloud automatically creates your application database and applies your schema migrations when you deploy an application.
-In this documentation, we use "database instance" or "database server" to refer to the physical server and "database" to refer to the application database.
+A Postgres database instance can host multiple independent databases for different applications.
+You can configure which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
 :::
 
 :::info
-Remember your database administrator password! You need it to connect to our [time travel debugger](#).
+If you forget your database password, you can always [reset it](../api-reference/cloud-cli.md#npx-dbos-cloud-db-reset-password).
 :::
 
 To see a list of all provisioned instances, run:
@@ -74,7 +72,7 @@ database:
 To run your migrations locally, run `npx dbos-sdk migrate` or `npx dbos-sdk rollback`.
 
 When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud it runs `npx dbos-sdk migrate` to apply all schema changes before starting your application or updating its code.
-When you [roll back](./application-management.md#rolling-back-applications) an application on DBOS Cloud, it runs `npx dbos-sdk rollback` to roll back schema changes before updating your application's code.
+When you [roll back](./application-management.md#rolling-back-application-databases) an application on DBOS Cloud, it runs `npx dbos-sdk rollback` to roll back schema changes before updating your application's code.
 
 :::info
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.

@@ -21,7 +21,7 @@ npx dbos-cloud login
 ```
 
 To deploy an application, you need a database to connect to.
-You can use the database you created in the [cloud quickstart](../getting-started/quickstart-cloud.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
+You can use the database you created in the [quickstart](../getting-started/quickstart.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
 Additionally, you must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
 
 ### Registering and Deploying Applications
@@ -75,9 +75,9 @@ DBOS provides many tools to monitor and debug applications:
 
 - To replay DBOS Cloud execution traces locally, check out our [time travel debugger](./timetravel-debugging).
 
-- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud app logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-logs). Note that new log entries take a few seconds to appear.
+- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud app logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
 
-- To retrieve the status of a particular application, run [`npx dbos-cloud app status <app-name>`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../api-reference/cloud-cli.md#npx-dbos-cloud-application-list).
+- To retrieve the status of a particular application, run [`npx dbos-cloud app status <app-name>`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-list).
 
 ### Deleting Applications
 
