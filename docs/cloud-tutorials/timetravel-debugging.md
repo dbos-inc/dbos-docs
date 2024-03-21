@@ -31,7 +31,7 @@ inside VS Code for "DBOS"
 Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
 
 :::info
-If you're not a VS Code user, please see the section below on [Time Travel Debugging with the DBOS SDK CLI](#time-travel-with-dbos-sdk-cli-non-vs-code-users) below.
+If you're not a VS Code user, please see the section below on [Time Travel Debugging with the DBOS CLI](#time-travel-with-dbos-cli-non-vs-code-users) below.
 :::
 
 ### Launching a Debug Session
@@ -186,9 +186,9 @@ Currently, the time travel debugger supports stepping through any past workflows
 
 For more information, please read the [debugger extension reference](../api-reference/time-travel-debugger).
 
-## Time Travel with DBOS SDK CLI (Non-VS Code Users)
+## Time Travel with DBOS CLI (Non-VS Code Users)
 
-For non-VS Code users, you can run the time-travel debugger manually through the DBOS SDK CLI.
+For non-VS Code users, you can run the time-travel debugger manually through the DBOS CLI.
 
 ### Manual Setup
 

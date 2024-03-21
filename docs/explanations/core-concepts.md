@@ -1,11 +1,11 @@
 ---
 sidebar_position: 2
-description: Learn the core ideas underlying the DBOS SDK
+description: Learn the core ideas underlying DBOS Transact
 ---
 
-# SDK Core Concepts
+# DBOS Transact Core Concepts
 
-The DBOS SDK is a transactional serverless TypeScript framework that helps you develop stateful applications that work right by default.
+DBOS Transact is a transactional serverless TypeScript framework that helps you develop stateful applications that work right by default.
 Its two main principles are inspired by the [DBOS research project from Stanford and MIT](https://dbos-project.github.io/):
 
 1. **Store all application state in the database.** By managing database connections and transactions, DBOS makes it easy for you to store all your app state in the database so it can be safe, consistent, and durable.  Under the hood, we use the database to manage the state of workflow execution as well as all [messages](../tutorials/workflow-communication-tutorial#messages-api) and [events](../tutorials/workflow-communication-tutorial#events-api).

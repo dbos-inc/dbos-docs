@@ -3,7 +3,7 @@ sidebar_position: 3
 title: Programming Quickstart
 ---
 
-Let's learn how to program in DBOS!
+Let's learn how to program with DBOS!
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
 Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a transactional and reliable application.
 First, you'll learn to create HTTP endpoints to serve requests.
@@ -57,7 +57,7 @@ You should see the message `Greetings, Mike!`.
 If you replace Mike with a different name, your application will greet that name instead.
 
 The key to this code is the [`@GetApi`](../api-reference/decorators#getapi) decorator, which tells DBOS to serve the `Greeting` function from HTTP GET requests to the `/greeting` endpoint.
-As you will see, the DBOS SDK relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience.
+As you will see, DBOS relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience.
 To load these decorators, DBOS methods must be static class members.
 In this case, `Greeting` is a static member of the `Greetings` class.
 
@@ -261,5 +261,5 @@ This reliability is a core feature of DBOS: workflows always run to completion a
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
 
-Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-sdk-tutorials).
+Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-transact-tutorials).
 To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).
