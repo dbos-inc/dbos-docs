@@ -179,7 +179,7 @@ If you register with an email and password, you also need to verify your email t
 
 Next, let's provision a Postgres database instance your applications can connect to!
 You should choose a database instance name, username and password.
-Both the database instance name and username must be 3 to 30 characters long and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
 The database password must contain at least 8 characters.
 Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 

@@ -24,7 +24,7 @@ npx dbos-cloud login
 
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
 You must choose a database instance name, username and password.
-Both the database instance name and username should be between 3 and 30 characters and contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
 The database password must contain 8 or more characters.
 Run this command and choose your database password when prompted (it should take ~5 minutes to provision):
 
