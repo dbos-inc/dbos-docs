@@ -38,7 +38,7 @@ const config = {
         redirects: [
           // /docs/oldDoc -> /docs/newDoc
           {
-            to: '/getting-started/quickstart',
+            to: '/getting-started/quickstart#deploying-to-dbos-cloud',
             from: '/getting-started/quickstart-cloud',
           },
         ],
