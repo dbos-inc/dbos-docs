@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to DBOS! Here's how you should get started:
+Welcome to DBOS! Here's the easiest path to get started:
 
 - First, follow our [quickstart](./quickstart.md) to set up a DBOS application, build and run it locally, then serverlessly deploy it to DBOS Cloud.
 - Then, follow our [programming quickstart](./quickstart-programming.md) to build your own application and see how DBOS makes it reliable.

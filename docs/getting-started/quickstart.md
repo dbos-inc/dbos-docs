@@ -92,7 +92,7 @@ By default, `init` instantiates a "Hello, Database!" application which greets us
 
 ## Running Locally
 
-Before you can run your app, you need a database.
+DBOS applications can run anywhere, but they always need to connect to a database.
 DBOS works with any Postgres database, but to make things easier, we've provided a script that launches Postgres in a Docker container:
 
 <Tabs groupId="operating-systems">
