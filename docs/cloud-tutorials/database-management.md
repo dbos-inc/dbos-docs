@@ -32,14 +32,12 @@ Run this command and choose your database password when prompted (it should take
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 :::info
-Each Postgres database instance is a physical server that can host multiple independent Postgres databases for different applications.
-You can define which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
-DBOS Cloud automatically creates your application database and applies your schema migrations when you deploy an application.
-In this documentation, we use "database instance" or "database server" to refer to the physical server and "database" to refer to the application database.
+A Postgres database instance can host multiple independent databases for different applications.
+You can configure which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
 :::
 
 :::info
-Remember your database administrator password! You need it to connect to our [time travel debugger](#).
+If you forget your database password, you can always [reset it](../api-reference/cloud-cli.md#npx-dbos-cloud-db-reset-password).
 :::
 
 To see a list of all provisioned instances, run:
