@@ -5,12 +5,12 @@ description: Learn how to self-host DBOS Transact applications
 ---
 
 You can run DBOS applications anywhere as long as they have a Postgres database to connect to.
-In this guide, we'll describe tools that make it easier to self-host DBOS applications in a production setting.
+This guide describes tools that make it easy to self-host DBOS applications in production.
 
 ## Admin API
 
-DBOS applications provide an admin API to more easily manage them.
-By default, this API is hosted on port 3001.
+DBOS Transact exposes an admin, by default on port 3001.
+The admin port is not configurable and is always +1 of the main DBOS Transact port (3000 by default).
 
 ### Health Check
 
@@ -22,12 +22,15 @@ By default, this API is hosted on port 3001.
 
 ### Workflow Recovery
 
+This endpoint allows you to schedule the recovery of pending workflows after their origin execution environment terminated.
+Of course, pending workflows will resume where they left off!
+
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recovers all pending workflows associated with input executor IDs. Returns the UUIDs of all workflows recovered.
+- **Description**: Recovers all pending workflows associated with input executor IDs (e.g., a virtual machine ID). Returns the UUIDs of all workflows recovered.
 - **Request Body Format**: JSON
   - **Attributes**:
-    - `executors`: A list of ID strings representing the executors whose pending workflows to recover.
+    - `executors`: A list of ID strings representing the executors (e.g., virtual machines) whose pending workflows to recover.
   - **Example**:
     ```json
     {
@@ -62,13 +65,34 @@ By default, this API is hosted on port 3001.
     }
     ```
 
-
 ## Managing Workflow Recovery
 
-TODO:
+At the core if DBOS Transact is state management for workflows, to provide [reliability guarantees](./workflow-tutorial#reliability-guarantees).
+When the execution environment hosting a DBOS Transact application is terminated (for any reason), a new instance can take over pending workflows and resume their execution exactly where they left off. A common scenario for workflow recovery are maintainance windows where you need to drain all your nodes. You can restart execution environments and instruct them to resume pending workflows.
 
 ## Configuring OTLP Telemetry
 
-TODO: @Max can you help write this?
+DBOS Transact operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace.
 
+Traces are periodically exported from a DBOS Transact application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
+You can configure an exporter in the telemetry section of the [configuration file](../api-reference/configuration). For example:
+```yaml
+telemetry:
+    OTLPExporter:
+        logsEndpoint: http://localhost:4318/v1/logs
+        tracesEndpoint: http://localhost:4318/v1/traces
+```
 
+You can export traces, out of the box, to any OTLP compliant receiver. Try it out with [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)!
+
+DBOS Transact uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
+You can access trace objects using DBOS Transact [contexts](../api-reference/contexts). For example, to add a custom event to a workflow span:
+```javascript
+  @Transaction()
+  static async txn(ctxt: TransactionContext) {
+    ...
+    ctxt.span.addEvent("An important event")
+    ...
+  }
+}
+```
