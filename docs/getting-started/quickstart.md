@@ -16,7 +16,7 @@ DBOS requires [Node.js 20 or later](https://nodejs.org/en).
 Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database.
 
 :::info
-DBOS doesn't need Docker, but this tutorial uses it as a convenience.
+DBOS doesn't need Docker, but this tutorial uses it to host Postgres as a convenience.
 :::
 
 To install both Node.js and Docker (assuming you don't already have them installed):
