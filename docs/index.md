@@ -5,7 +5,7 @@ sidebar_position: 1
 # Welcome to DBOS!
 
 DBOS Transact is an open source framework for developing database-backed applications in Typescript and PostgreSQL.
-You can host DBOS applications yourself or deploy them in minutes to DBOS Cloud.
+You can host DBOS Transact applications yourself or deploy them in minutes to DBOS Cloud.
 
 You want to build your next database-backed application with DBOS Transact because:
 
