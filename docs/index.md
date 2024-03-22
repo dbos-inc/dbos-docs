@@ -2,12 +2,12 @@
 sidebar_position: 1
 ---
 
-# Welcome to DBOS!
+# Welcome to the Docs!
 
-DBOS is a transactional serverless framework and platform that helps you develop and deploy database-backed applications.
-You develop your applications in TypeScript and PostgreSQL with our open-source framework [DBOS Transact](https://github.com/dbos-inc/dbos-ts), then either self-host them or deploy them in minutes to DBOS Cloud.
+DBOS Transact is an open source framework for developing database-backed applications in Typescript and PostgreSQL.
+You can host the applications yourself or deploy them in minutes to DBOS Cloud.
 
-You want to build your next database-backed application with DBOS because:
+You want to build your next database-backed application with DBOS Transact because:
 
 - **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or deploy them to the cloud in minutes.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
 - **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
@@ -41,9 +41,9 @@ And DBOS Cloud:
 
 ### How to Use These Docs
 
-- If you're encountering DBOS for the first time, try our [quickstart](./getting-started/quickstart) and get an application up and running in less than five minutes.
-- If you want to learn how to use DBOS Transact's powerful features, check out its [tutorials](./category/dbos-transact-tutorials).
-- If you want to learn how to deploy applications to DBOS Cloud, check our our [cloud tutorials](./category/dbos-cloud-tutorials).
-- If you want detailed API references for DBOS Transact and DBOS Cloud, check out our [reference material](./category/reference).
-- If you want to learn how things work under the hood, check out our [explanation guides](./category/concepts-and-explanations).
-- If you want to see more complex applications built with DBOS, check out [our demo apps](./tutorials/demo-apps).
+- Check out our [quickstart](./getting-started/quickstart) to get an application up and running in less than five minutes.
+- Check out our [tutorials](./category/dbos-transact-tutorials) for detailed guides on building applications with DBOS Transact.
+- Check out our [cloud tutorials](./category/dbos-cloud-tutorials) to learn how to serverlessly deploy applications to DBOS Cloud.
+- Check out our [reference material](./category/reference) for detailed DBOS Transact and DBOS Cloud API references.
+- Check out our [concepts and explanations](./category/concepts-and-explanations) to learn how things work under the hood.
+- Check out our [demo apps](./tutorials/demo-apps) to see more complex applications built with DBOS.
