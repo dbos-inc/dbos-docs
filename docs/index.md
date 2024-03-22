@@ -5,7 +5,7 @@ sidebar_position: 1
 # Welcome to DBOS!
 
 DBOS Transact is an open source framework for developing database-backed applications in Typescript and PostgreSQL.
-You can host the applications yourself or deploy them in minutes to DBOS Cloud.
+You can host DBOS applications yourself or deploy them in minutes to DBOS Cloud.
 
 You want to build your next database-backed application with DBOS Transact because:
 
@@ -24,6 +24,7 @@ Here are some of the core features of DBOS Transact:
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
+| [Communicators](./tutorials/http-serving-tutorial)                            | Reliably communicate with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
@@ -37,13 +38,3 @@ And DBOS Cloud:
 | [Time Travel Debugging](./cloud-tutorials/timetravel-debugging.md)            | Replay any DBOS Cloud trace locally on your computer.
 | [Cloud Database Management](./cloud-tutorials/database-management.md)         | Provision cloud Postgres instances for your applications.
 | [Built-in Observability](./cloud-tutorials/monitoring-dashboard.md)           | Built-in log capture, request tracing, and dashboards.
-
-
-### How to Use These Docs
-
-- Check out our [quickstart](./getting-started/quickstart) to get an application up and running in less than five minutes.
-- Check out our [tutorials](./category/dbos-transact-tutorials) for detailed guides on building applications with DBOS Transact.
-- Check out our [cloud tutorials](./category/dbos-cloud-tutorials) to learn how to serverlessly deploy applications to DBOS Cloud.
-- Check out our [reference material](./category/reference) for detailed DBOS Transact and DBOS Cloud API references.
-- Check out our [concepts and explanations](./category/concepts-and-explanations) to learn how things work under the hood.
-- Check out our [demo apps](./tutorials/demo-apps) to see more complex applications built with DBOS.
