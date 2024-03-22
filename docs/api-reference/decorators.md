@@ -41,7 +41,7 @@ is the same as this:
 ### Enabling Decorators
 
 DBOS uses [Typescript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
-If you initialize your project with [`npx @dbos-inc/dbos-sdk init`](../api-reference/cli.md#npx-dbos-sdk-init), these are automatically enabled.
+If you initialize your project with [`npm -y create @dbos-inc`](../api-reference/cli.md#npx-dbos-inccreate), these are automatically enabled.
 Otherwise, you must enable them by supplying the following configuration to the Typescript compiler (usually via the file `tsconfig.json`):
 
 ```json

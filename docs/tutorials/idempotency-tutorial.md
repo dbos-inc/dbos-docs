@@ -41,7 +41,7 @@ The syntax for invoking `Class.operation` with an idempotency key is:
 
 ### Idempotency Example
 
-Let's look at this workflow endpoint (from the example code coming with [npx @dbos-inc/dbos-sdk init](../getting-started/quickstart)):
+Let's look at this workflow endpoint (from the example code coming with [npm create @dbos-inc](../getting-started/quickstart)):
 
 ```javascript
   @GetApi('/greeting/:user')
