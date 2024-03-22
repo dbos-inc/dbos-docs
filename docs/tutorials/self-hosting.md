@@ -9,8 +9,8 @@ This guide describes tools that make it easy to self-host DBOS applications in p
 
 ## Admin API
 
-DBOS Transact exposes an admin, by default on port 3001.
-The admin port is not configurable and is always +1 of the main DBOS Transact port (3000 by default).
+DBOS applications expose an admin API, fixed at one above the main DBOS application port (the main port defaults to port 3000, so the admin API defaults to port 3001).
+It provides the following endpoints:
 
 ### Health Check
 
@@ -22,20 +22,14 @@ The admin port is not configurable and is always +1 of the main DBOS Transact po
 
 ### Workflow Recovery
 
-This endpoint allows you to schedule the recovery of pending workflows after their origin execution environment terminated.
-Of course, pending workflows will resume where they left off!
 
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recovers all pending workflows associated with input executor IDs (e.g., a virtual machine ID). Returns the UUIDs of all workflows recovered.
-- **Request Body Format**: JSON
-  - **Attributes**:
-    - `executors`: A list of ID strings representing the executors (e.g., virtual machines) whose pending workflows to recover.
+- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](./workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
+- **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json
-    {
-      "executors": ["executor-id-1", "executor-id-2", "..."]
-    }
+      ["executor-id-1", "executor-id-2", "..."]
 - **Response**:
   - **Status Code**: 200 OK on successful recovery initiation; otherwise, appropriate error codes.
   - **Body Format**: JSON list of UUIDs representing the workflows that were successfully queued for recovery.
@@ -67,14 +61,20 @@ Of course, pending workflows will resume where they left off!
 
 ## Managing Workflow Recovery
 
-At the core if DBOS Transact is state management for workflows, to provide [reliability guarantees](./workflow-tutorial#reliability-guarantees).
-When the execution environment hosting a DBOS Transact application is terminated (for any reason), a new instance can take over pending workflows and resume their execution exactly where they left off. A common scenario for workflow recovery are maintainance windows where you need to drain all your nodes. You can restart execution environments and instruct them to resume pending workflows.
+By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](./workflow-tutorial.md#reliability-guarantees).
+This behavior works well when you're only running a single instance of an application, as it guarantees that every time the server is restarted, it resumes all workflows from where they left off.
+However, it is less ideal for a distributed setting where you're running many instances of an application on different servers.
+
+To manage recovery in a distributed setting, you can assign each instance of an application an executor ID by setting the `DBOS__VMID` environment variable.
+This causes the application instance to assign every workflow it executes to that executor ID.
+When an application instance with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
+You can also instruct it to recover workflows assigned to other executor IDs through the [admin API](#managing-workflow-recovery).
 
 ## Configuring OTLP Telemetry
 
-DBOS Transact operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace.
+DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace.
 
-Traces are periodically exported from a DBOS Transact application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
+Traces are periodically exported from a DBOS application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
 You can configure an exporter in the telemetry section of the [configuration file](../api-reference/configuration). For example:
 ```yaml
 telemetry:
@@ -85,8 +85,8 @@ telemetry:
 
 You can export traces, out of the box, to any OTLP compliant receiver. Try it out with [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)!
 
-DBOS Transact uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
-You can access trace objects using DBOS Transact [contexts](../api-reference/contexts). For example, to add a custom event to a workflow span:
+DBOS uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
+You can access trace objects using DBOS [contexts](../api-reference/contexts). For example, to add a custom event to a workflow span:
 ```javascript
   @Transaction()
   static async txn(ctxt: TransactionContext) {
