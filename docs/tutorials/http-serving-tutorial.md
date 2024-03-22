@@ -4,7 +4,7 @@ title: HTTP Serving
 description: Learn how to serve HTTP requests
 ---
 
-In this guide, you'll learn how to make DBOS workflows accessible through HTTP.
+In this guide, you'll learn how to make DBOS applications accessible through HTTP.
 
 Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
 You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../api-reference/decorators#transaction), [`@Workflow`](../api-reference/decorators#workflow), or [`@Communicator`](../api-reference/decorators#communicator) decorator.

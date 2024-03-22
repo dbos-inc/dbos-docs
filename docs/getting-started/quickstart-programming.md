@@ -3,7 +3,7 @@ sidebar_position: 3
 title: Programming Quickstart
 ---
 
-Let's learn how to program with DBOS!
+Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts), the open-source TypeScript framework for DBOS.
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
 Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a transactional and reliable application.
 First, you'll learn to create HTTP endpoints to serve requests.
@@ -11,7 +11,7 @@ Then, you'll learn how to interact with a database and make third-party API call
 Finally, you'll compose these steps in reliable workflows.
 
 This tutorial assumes you've finished our [quickstart](./quickstart.md).
-For convenience, we recommend initializing a new DBOS application and starting a database for it:
+For convenience, we recommend initializing a new application and starting a database for it:
 
 ```
 npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
