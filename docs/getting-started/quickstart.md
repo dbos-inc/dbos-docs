@@ -74,7 +74,7 @@ docker run hello-world
 
 To initialize a new DBOS application, run the following command:
    ```bash
-npm create -y @dbos-inc -- -n <app-name>
+npx -y @dbos-inc/create -n <app-name>
    ```
 
 Application names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.

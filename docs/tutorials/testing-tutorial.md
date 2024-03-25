@@ -9,7 +9,7 @@ In this guide, you'll learn how to test your DBOS applications.
 DBOS provides a [testing runtime](../api-reference/testing-runtime.md) to make it easier to write unit tests for DBOS applications.
 Using the runtime, you can invoke and test your application's functions individually.
 
-We'll show you how to write unit tests for the `Hello` example class shipped by [`npm create @dbos-inc`](../api-reference/cli.md#npx-dbos-inccreate).
+We'll show you how to write unit tests for the `Hello` example class shipped by [`npx @dbos-inc/create`](../api-reference/cli.md#npx-dbos-inccreate).
 We use [Jest](https://jestjs.io/) in this example, but the testing runtime works with any testing framework.
 
 ### Creating Testing Runtime
