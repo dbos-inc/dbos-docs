@@ -50,5 +50,5 @@ Context metadata includes the workflow identity UUID and the name of the user ru
 
 You can also configure the logging level as a CLI argument to the runtime:
 ```shell
-npx dbos-sdk start --loglevel debug
+npx dbos start --loglevel debug
 ```

@@ -10,7 +10,7 @@ The DBOS CLI helps you run DBOS applications locally.
 
 ---
 
-### `npx dbos-sdk start`
+### `npx dbos start`
 
 **Description:**  
 This command launches the DBOS runtime and HTTP server to serve an application.
@@ -40,25 +40,25 @@ This command initializes a new DBOS application from a template into a target di
 
 ---
 
-### `npx dbos-sdk migrate`
+### `npx dbos migrate`
 
 **Description:**
 Run all migration commands specified in your [configuration file](./configuration) to apply your application's schema to the database.
 
 ---
 
-### `npx dbos-sdk rollback`
+### `npx dbos rollback`
 
 **Description:**
 Run all rollback commands specified in your [configuration file](./configuration) to roll back the last batch of schema migrations.
 
 ---
 
-### `npx dbos-sdk debug`
+### `npx dbos debug`
 
 **Description:**
 This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos-sdk start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
+It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
 You must compile your code (`npm run build`) and start the debug proxy before running this command.
 
 **Parameters:**

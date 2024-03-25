@@ -219,11 +219,11 @@ Open another terminal window, enter your application folder, compile your code, 
 ```bash
 cd <Your App Folder>/
 npm run build
-npx dbos-sdk debug -u <workflow UUID>
+npx dbos debug -u <workflow UUID>
 ```
 
 :::info
-Every time you modify your code, you need to recompile it before running the `dbos-sdk debug` command again.
+Every time you modify your code, you need to recompile it before running the `dbos debug` command again.
 :::
 
-For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-sdk-debug)
+For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-debug)
