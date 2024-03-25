@@ -72,12 +72,12 @@ docker run hello-world
 
 ## Project Initialization
 
-To initialize a new DBOS application, run the following command.
-Application names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
-
+To initialize a new DBOS application, run the following command:
    ```bash
-npx -y @dbos-inc/dbos-sdk@latest init -n <app-name>
+npx -y @dbos-inc/create -n <app-name>
    ```
+
+Application names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
 
 This creates a folder for your application, configures its layout, and installs required dependencies.
 If successful, it should print `Application initialized successfully!`.
