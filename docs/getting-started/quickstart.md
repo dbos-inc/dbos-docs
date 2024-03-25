@@ -13,7 +13,11 @@ First we'll show you how to run it locally, then we'll show you how to deploy it
 ## System Requirements
 
 DBOS requires [Node.js 20 or later](https://nodejs.org/en).
-Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database (DBOS doesn't need Docker, but this tutorial uses it as a convenience).
+Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database.
+
+:::info
+DBOS doesn't need Docker, but this tutorial uses it to host Postgres as a convenience.
+:::
 
 To install both Node.js and Docker (assuming you don't already have them installed):
 
@@ -35,7 +39,7 @@ nvm use 20
    An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
    
   </TabItem>
-  <TabItem value="ubuntu" label="Ubuntu">
+  <TabItem value="linux" label="Linux">
 	  
   Copy and run the following commands in your terminal to install Node.js:
   
@@ -46,18 +50,7 @@ nvm install 20
 nvm use 20
    ```
 
-  Copy and run the following commands in your terminal to install Docker:
-  
-   ```bash
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo groupadd docker
-sudo usermod -aG docker $USER
-   ```
+  To install Docker, visit their [installation page](https://docs.docker.com/engine/install/) for instructions specific to your distro.
 
   </TabItem>
   <TabItem value="win-ps" label="Windows">
@@ -104,7 +97,7 @@ export PGPASSWORD=dbos
 ./start_postgres_docker.sh
    ```
   </TabItem>
-    <TabItem value="ubuntu" label="Ubuntu">
+    <TabItem value="linux" label="Linux">
 	    
    ```bash
 cd <application-folder>
