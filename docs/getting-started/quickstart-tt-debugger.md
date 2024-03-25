@@ -1,9 +1,9 @@
 ---
 sidebar_position: 3
-title: Time Travel Debugging Quickstart
+title: Time Travel Debugger Quickstart
 ---
 
-Now that we've learned a little about programming DBOS, let's learn how to use the DBOS Time Travel Sebugger!
+Now that we've learned a little about programming DBOS, let's learn how to use the DBOS Time Travel Debugger!
 
 This tutorial assumes you have [Visual Studio Code](https://code.visualstudio.com/) installed.
 Please see the VS Code documentation for [installation instructions](https://code.visualstudio.com/docs/setup/setup-overview) if necessary. 
