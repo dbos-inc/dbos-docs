@@ -33,26 +33,57 @@ inside VS Code (default keybinding: Ctrl+Shift+X / ⇧⌘X) and searching for "D
 
 ### Deploy the Programming Quickstart App to DBOS Cloud
 
-This tutorial uses with the application you built for the [Programming Quickstart](./quickstart-programming). 
-If you didn't finish that tutorial, the code is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
+In this tutorial, you will time travel debug the `greeting-emails` application you built in the [Programming Quickstart](./quickstart-programming). 
 
-First, let's remove the sleep code that we added to `GreetingWorkflow` to test reliability. 
+If you finished that tutorial, remove the sleep logic from `GreetingWorkflow`. 
 We're not going to need that sleep code for this tutorial.
-The `GreetingWorkflow` function should look like this after removing the sleep code:
+
+If you did not finished the Programming Quickstart, create a new DBOS application using `@dbos-inc/create`.
+
+```
+npx -y @dbos-inc/create -n <app-name>
+```
+
+And replace the logic in `src/operations.ts` with the following.
 
 ```ts
-@Workflow()
-@GetApi("/greeting/:friend")
-static async GreetingWorkflow(ctxt: WorkflowContext, friend: string) {
-    const noteContent = `Thank you for being awesome, ${friend}!`;
-    await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
-    await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
-    ctxt.logger.info(`Greeting sent to ${friend}!`);
-    return noteContent;
+import {
+  TransactionContext, Transaction,
+  HandlerContext, GetApi,
+  CommunicatorContext, Communicator,
+  WorkflowContext, Workflow,
+} from "@dbos-inc/dbos-sdk";
+import { Knex } from "knex";
+
+export class Greetings {
+  @Communicator()
+  static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
+      ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
+      // Code omitted for simplicity
+      ctxt.logger.info("Email sent!");
+  }
+
+  @Transaction()
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
+      await ctxt.client.raw(
+          "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
+          [friend, content]
+      );
+  }
+
+  @Workflow()
+  @GetApi("/greeting/:friend")
+  static async GreetingWorkflow(ctxt: WorkflowContext, friend: string) {
+      const noteContent = `Thank you for being awesome, ${friend}!`;
+      await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
+      await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
+      ctxt.logger.info(`Greeting sent to ${friend}!`);
+      return noteContent;
+  }
 }
 ```
 
-Next, we need to deploy this app to DBOS Cloud.
+Next, we are going to deploy this application to DBOS Cloud.
 Currently, Time Travel Debugging is only supported for applications that have been deployed to DBOS Cloud.
 
 If you finished the [DBOS quickstart](./quickstart), you should already have a DBOS Cloud account and database instance.
