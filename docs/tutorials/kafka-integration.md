@@ -11,14 +11,14 @@ First, define your transaction or workflow. It must take in the Kafka topic, par
 ```javascript
 class KafkaExample{
   @Workflow()
-  static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+  static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
     ctxt.logger.info(`Message received: ${message.value?.toString()}`)
   }
 }
 ```
 
-Then, annotate your method with an [`@KafkaConsume`](../api-reference/decorators.md#kafka-consume) decorator specifiying which topic to consume from.
-Additionally, annotate your class with an [`@Kafka`] decorator defining which brokers to connect to.
+Then, annotate your method with a [`@KafkaConsume`](../api-reference/decorators.md#kafka-consume) decorator specifiying which topic to consume from.
+Additionally, annotate your class with a [`@Kafka`](../api-reference/decorators.md#kafka) decorator defining which brokers to connect to.
 DBOS invokes your method exactly-once for each message sent to the topic.
 
 ```javascript
@@ -33,7 +33,7 @@ class KafkaExample{
 
   @KafkaConsume("example-topic")
   @Workflow()
-  static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+  static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
     ctxt.logger.info(`Message received: ${message.value?.toString()}`)
   }
 }
@@ -48,7 +48,7 @@ For example, you can specify a custom consumer group ID:
 
 @KafkaConsume("example-topic", { groupId: "custom-group-id" })
 @Workflow()
-static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
   ctxt.logger.info(`Message received: ${message.value?.toString()}`)
 }
 ```
