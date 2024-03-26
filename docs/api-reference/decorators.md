@@ -470,17 +470,34 @@ The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md
 
 ### Kafka Integration Decorators
 
-#### `@KafkaConsume`
-Executes a workflow or transaction exactly-once in response to Kafka messages.
-This decorator must take in a [KafkaJS](https://kafka.js.org/) [consumer](https://kafka.js.org/docs/consuming) which is connected to a Kafka cluster and subscribed to some topics.
-The decorated method will be executed exactly-once for each message published to those topics.
+#### `@Kafka(kafkaConfig: KafkaConfig)` {#kafka}
 
-```typescript
-@KafkaConsume(consumer)
-@Workflow()
-static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
-  // This workflow executes exactly once for each message received by the Kafka consumer.
-  // All methods annotated with Kafka decorators must take in the topic, partition, and message as inputs just like this method.
+Class-level decorator defining a Kafka configuration to use in all class methods.
+Uses a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
+
+
+#### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
+Executes a workflow or transaction exactly-once in response to Kafka messages.
+Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
+Can only be used in a class decorated with [`@Kafka`](#kafka).
+The decorated method must take as input a Kafka topic, partition, and message as in the example below.
+
+```javascript
+import { KafkaConfig, KafkaMessage} from "kafkajs";
+
+const kafkaConfig: KafkaConfig = {
+    brokers: ['localhost:9092']
+}
+
+@Kafka(kafkaConfig)
+class KafkaExample{
+
+  @KafkaConsume("example-topic")
+  @Workflow()
+  static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+    // This workflow executes exactly once for each message sent to the topic.
+    // All methods annotated with Kafka decorators must take in the topic, partition, and message as inputs just like this method.
+  }
 }
 ```
 

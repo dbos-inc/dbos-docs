@@ -6,58 +6,53 @@ description: Learn how to integrate DBOS and Kafka.
 
 In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
 
-To use Kafka with DBOS, you must first create a [Kafka consumer](https://kafka.js.org/docs/consuming) using [KafkaJS](https://kafka.js.org/) and subscribe to at least one topic.
-We recommend connecting and subscribing in an [initializer function](../api-reference/decorators.md#dbosinitializer):
+First, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
 
 ```javascript
-import { Kafka} from "kafkajs";
-
-const kafka = new Kafka({
-    // Settings
-})
-const consumer = kafka.consumer({
-    // Settings
-});
-
 class KafkaExample{
-  @DBOSInitializer()
-  static async init(ctx: InitContext) {
-    await consumer.connect()
-    await consumer.subscribe({ topic: exampleTopic })
-  }
-}
-```
-
-Then, annotate a transaction or workflow with [`@KafkaConsume(consumer)`](../api-reference/decorators.md#kafkaconsume).
-The transaction or workflow must take as arguments the Kafka topic, partition, and message, as in the example below.
-DBOS invokes this transaction or workflow exactly-once for each message received by the consumer.
-
-```javascript
-import { Kafka, KafkaMessage} from "kafkajs";
-
-const kafka = new Kafka({
-    // Settings
-})
-const consumer = kafka.consumer({
-    // Settings
-});
-
-class KafkaExample{
-  @DBOSInitializer()
-  static async init(ctx: InitContext) {
-    await consumer.connect()
-    await consumer.subscribe({ topic: exampleTopic })
-  }
-
-  @KafkaConsume(consumer)
   @Workflow()
   static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
-    // This workflow executes exactly once for each message sent to the topic.
-    // All methods annotated with Kafka decorators must take in the topic, partition, and message as inputs just like this method.
+    ctxt.logger.info(`Message received: ${message.value?.toString()}`)
   }
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into the workflow or transaction.
+Then, annotate your method with an [`@KafkaConsume`](../api-reference/decorators.md#kafka-consume) decorator specifiying which topic to consume from.
+Additionally, annotate your class with an [`@Kafka`] decorator defining which brokers to connect to.
+DBOS invokes your method exactly-once for each message sent to the topic.
+
+```javascript
+import { KafkaConfig, KafkaMessage} from "kafkajs";
+
+const kafkaConfig: KafkaConfig = {
+    brokers: ['localhost:9092']
+}
+
+@Kafka(kafkaConfig)
+class KafkaExample{
+
+  @KafkaConsume("example-topic")
+  @Workflow()
+  static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+    ctxt.logger.info(`Message received: ${message.value?.toString()}`)
+  }
+}
+```
+
+If you need more control, you can pass detailed configurations to both the `@Kafka` and `@KafkaConsume` decorators.
+The `@Kafka` decorator takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration) used to configure Kafka for all methods in its class.
+The `@KafkaConsume` decorator takes in a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) as an optional second argument.
+For example, you can specify a custom consumer group ID:
+
+```javascript
+
+@KafkaConsume("example-topic", { groupId: "custom-group-id" })
+@Workflow()
+static async exampleWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+  ctxt.logger.info(`Message received: ${message.value?.toString()}`)
+}
+```
+
+Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if the message is delivered multiple times (e.g., due to transient network failures or application interruptions), the transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
