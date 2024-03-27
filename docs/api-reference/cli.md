@@ -1,10 +1,10 @@
 ---
 sidebar_position: 1
-title: DBOS CLI
-description: DBOS CLI reference
+title: DBOS Transact CLI
+description: DBOS Transact CLI reference
 ---
 
-The DBOS CLI helps you run DBOS applications locally.
+The DBOS Transact CLI helps you run applications locally.
 
 ## Commands
 
@@ -13,7 +13,7 @@ The DBOS CLI helps you run DBOS applications locally.
 ### `npx dbos start`
 
 **Description:**  
-This command launches the DBOS runtime and HTTP server to serve an application.
+This command launches the DBOS Transact runtime and HTTP server to serve an application.
 It registers all functions and serves all endpoints in classes exported from the specified entrypoint file (typically `src/operations.ts`).
 Parameters set from the command line take precedence over parameters set in the [configuration file](./configuration).
 You must compile your code (`npm run build`) before running this command.
