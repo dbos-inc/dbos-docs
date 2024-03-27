@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-With these DBOS offerings, you can easily build scalable, reliable, and secure TypeScript applications:
+With these DBOS solutions, you can easily build scalable, reliable, and secure TypeScript applications:
 
 - **DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for developing transactional applications with built-in once-and-only-once code execution.
 
