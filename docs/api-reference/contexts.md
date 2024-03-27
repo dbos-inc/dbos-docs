@@ -115,7 +115,7 @@ readonly span: Span
 
 An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this context.
 You can assign custom trace attributes to this span.
-Please see our [self-hosting tutorial](../tutorials/self-hosting.md#configuring-otlp-telemetry) for more information.
+Please see the [Span API](https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/span.ts) for more information.
 
 #### `ctxt.getConfig(key, [defaultValue])`
 
