@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Quickstart
 ---
 
-Let's learn how to program in DBOS!
+Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts), the open-source TypeScript framework for DBOS.
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
 Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a transactional and reliable application.
 First, you'll learn to create HTTP endpoints to serve requests.
@@ -11,14 +11,14 @@ Then, you'll learn how to interact with a database and make third-party API call
 Finally, you'll compose these steps in reliable workflows.
 
 This tutorial assumes you've finished our [quickstart](./quickstart.md).
-For convenience, we recommend initializing a new DBOS application and starting a database for it:
+For convenience, we recommend initializing a new application and starting a database for it:
 
 ```
 npx -y @dbos-inc/create -n <app-name>
 cd <app-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh
-npx dbos-sdk migrate
+npx dbos migrate
 truncate -s 0 src/operations.ts
 ```
 
@@ -42,7 +42,7 @@ export class Greetings {
 }
 ```
 
-Rebuild with `npm run build` and start your application with `npx dbos-sdk start`. You should see an output similar to:
+Rebuild with `npm run build` and start your application with `npx dbos start`. You should see an output similar to:
 
 ```shell
 [info]: Workflow executor initialized
@@ -57,7 +57,7 @@ You should see the message `Greetings, Mike!`.
 If you replace Mike with a different name, your application will greet that name instead.
 
 The key to this code is the [`@GetApi`](../api-reference/decorators#getapi) decorator, which tells DBOS to serve the `Greeting` function from HTTP GET requests to the `/greeting` endpoint.
-As you will see, the DBOS SDK relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience.
+As you will see, DBOS relies on [decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) to simplify your programming experience.
 To load these decorators, DBOS methods must be static class members.
 In this case, `Greeting` is a static member of the `Greetings` class.
 
@@ -220,14 +220,14 @@ To see this in action, build and start the application by running:
 
 ```
 npm run build
-npx dbos-sdk start
+npx dbos start
 ```
 
 Then, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to the application.
 On your terminal, you should see an output like:
 
 ```shell
-> npx dbos-sdk start
+> npx dbos start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
@@ -238,11 +238,11 @@ On your terminal, you should see an output like:
 [info]: Press control + C to interrupt the workflow...
 ```
 Press control + c when prompted to interrupt the workflow.
-Then, run `npx dbos-sdk start` to restart DBOS Cloud.
+Then, run `npx dbos start` to restart DBOS Cloud.
 You should see an output like:
 
 ```
-> npx dbos-sdk start
+> npx dbos start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
@@ -261,5 +261,5 @@ This reliability is a core feature of DBOS: workflows always run to completion a
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
 
-Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-sdk-tutorials).
+Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-transact-tutorials).
 To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).

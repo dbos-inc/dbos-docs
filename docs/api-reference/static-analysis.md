@@ -15,9 +15,8 @@ While the list of "gotchas" is long and easily neglected, the good news is that 
 DBOS recommends using static analysis as an ingredient in a comprehensive security strategy.  As adding rule enforcement to a large, established codebase can be a hassle, DBOS recommends using tools from the beginning of a project, and therefore includes tool configuration in its [demo applications](https://github.com/dbos-inc/dbos-demo-apps) and [quickstart templates](../getting-started/quickstart.md).
 
 DBOS uses several techniques to ensure that static analysis is as productive as possible, with minimal hassle:
-* DBOS builds on popular frameworks, thereby leveraging community best-practices and tools integration.
+* DBOS Transact builds on popular frameworks, thereby leveraging community best-practices and tools integration.
 * DBOS focuses on analysis rules that detect incorrect API usage and potential security vulnerabilities, rather than nitpicking on coding style.
-* The DBOS SDK is designed for straightforward analysis, reporting, and suggestion of superior alternatives.
 
 ---
 
@@ -30,7 +29,7 @@ Many DBOS=suggested coding practices can be enforced by a combination of `eslint
 ### Installing And Configuring `eslint`
 
 ::::tip
-If you got started with the [DBOS SDK Quickstart](../getting-started/quickstart.md), `eslint` and required plugins are already installed.
+If you got started with the [quickstart](../getting-started/quickstart.md), `eslint` and required plugins are already installed.
 Plugins to support TypeScript and detect common vulerabilities are automatically installed with `@dbos-inc/eslint-plugin` as dependencies and do not need to be installed separately.
 ::::
 
@@ -91,7 +90,7 @@ Many programmers use `console` statements during the development and debugging p
 
 The `no-console` rule, provided by the primary `eslint` package, is automatically enabled in all configs of the DBOS plugin.
 
-Use of `console` should be removed from code prior to use in production.  Activities such as logging should use [SDK logging facilities](../tutorials/logging.md), so that data remains structured and can be automatically collected in a central database.
+Use of `console` should be removed from code prior to use in production.  Activities such as logging should use [DBOS Transact logging facilities](../tutorials/logging.md), so that data remains structured and can be automatically collected in a central database.
 
 #### `no-eval`
 Interpreted languages like JavaScript support the ability to treat data directly as executable code.  If arbitrary user data can become code, many of the negative security implications are obvious.
@@ -126,7 +125,7 @@ Some DBOS lint rules are provided in the [`@dbos-inc/eslint-plugin`](https://git
 
 Calls to functions such as `Math.random()` are [nondeterministic](../tutorials/workflow-tutorial#determinism), and may interfere with consistent workflow results or the debugger.
 
-Such operations should use functions provided by the SDK, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
+Such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
 
 This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
 
@@ -134,7 +133,7 @@ This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
 
 Calls to functions such as `new Date()` are [nondeterministic](../tutorials/workflow-tutorial#determinism), and may interfere with transactional data, consistent workflow execution, or the debugger.
 
-Such operations should use functions provided by the SDK, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
+Such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [Communicator](../tutorials/communicator-tutorial).
 
 This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
 

@@ -1,4 +1,4 @@
-# DBOS SDK Documentation
+# DBOS Documentation
 
 ### Local Development
 

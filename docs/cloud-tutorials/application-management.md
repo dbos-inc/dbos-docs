@@ -43,7 +43,7 @@ Run this command in your application root directory:
 npx dbos-cloud app deploy
 ```
 
-When you deploy an application, DBOS Cloud first runs [`npx dbos-sdk migrate`](../api-reference/cli.md#npx-dbos-sdk-migrate) on your application database to apply all schema migrations you've defined.
+When you deploy an application, DBOS Cloud first runs [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
 It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
@@ -64,7 +64,7 @@ Be careful making breaking schema changes such as deleting or renaming a column&
 ### Rolling Back Application Databases
 
 To [roll back your application database](./database-management.md#database-schema-management), run `npx dbos-cloud app rollback`.
-This command works analagously to `deploy`, but instead of running `npx dbos-sdk migrate`, it runs [`npx dbos-sdk rollback`](../api-reference/cli.md#npx-dbos-sdk-rollback) to execute the rollback commands defined in your [configuration file](../api-reference/configuration.md#database).
+This command works analagously to `deploy`, but instead of running `npx dbos migrate`, it runs [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) to execute the rollback commands defined in your [configuration file](../api-reference/configuration.md#database).
 It then updates your application code.
 
 ### Monitoring and Debugging Applications

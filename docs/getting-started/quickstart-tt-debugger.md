@@ -9,7 +9,7 @@ This tutorial assumes you have [Visual Studio Code](https://code.visualstudio.co
 Please see the VS Code documentation for [installation instructions](https://code.visualstudio.com/docs/setup/setup-overview) if necessary. 
 
 :::info
-If you're not a VS Code user, there is an advanced tutorial for [Time Travel Debugging with DBOS CLI](../cloud-tutorials/timetravel-debugging#time-travel-with-dbos-sdk-cli-non-vs-code-users).
+If you're not a VS Code user, there is an advanced tutorial for [Time Travel Debugging with DBOS CLI](../cloud-tutorials/timetravel-debugging#time-travel-with-dbos-cli-non-vs-code-users).
 :::
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
@@ -213,6 +213,6 @@ However, you cannot change code that updates database state (i.e. insert/delete/
 a workflow or transaction function.
 :::
 
-Now that you know the basics of DBOS Time Travel Debugging, please check out our [tutorials](../category/dbos-sdk-tutorials).
+Now that you know the basics of DBOS Time Travel Debugging, please check out our [tutorials](../category/dbos-transact-tutorials).
 To learn more about the Time Travel Debugger, check out our Time Travel Debugger [tutorial](../cloud-tutorials/timetravel-debugging)
 and [reference](../api-reference/time-travel-debugger).
