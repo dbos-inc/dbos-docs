@@ -113,7 +113,7 @@ Please see our [logging tutorial](../tutorials/logging.md) for more information.
 readonly span: Span
 ```
 
-An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this function.
+An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this context.
 You can assign custom trace attributes to this span.
 Please see our [self-hosting tutorial](../tutorials/self-hosting.md#configuring-otlp-telemetry) for more information.
 
