@@ -30,6 +30,7 @@ It provides the following endpoints:
   - **Example**:
     ```json
       ["executor-id-1", "executor-id-2", "..."]
+    ```
 - **Response**:
   - **Status Code**: 200 OK on successful recovery initiation; otherwise, appropriate error codes.
   - **Body Format**: JSON list of UUIDs representing the workflows that were successfully queued for recovery.
