@@ -89,7 +89,6 @@ Currently, Time Travel Debugging is only supported for applications that have be
 If you finished the [DBOS quickstart](./quickstart), you should already have a DBOS Cloud account and database instance.
 If you didn't finish the [Deploying to DBOS Cloud](./quickstart#deploying-to-dbos-cloud) section of that tutorial, 
 please create an account and provision a cloud database instance by running the `npx dbos-cloud` commands shown below from project's root folder.
-Note, it can take up to 5 minutes to provision a database instance
 
 ```
 npx dbos-cloud register -u <username>
