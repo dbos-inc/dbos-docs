@@ -32,6 +32,7 @@ Many contexts inherit from `DBOSContext` and share its properties and methods.  
 - [authenticatedRoles](#ctxtauthenticatedroles)
 - [assumedRole](#ctxtassumedrole)
 - [logger](#ctxtlogger)
+- [span](#ctxtspan)
 
 ### Methods
 
@@ -105,6 +106,16 @@ readonly logger: DBOSLogger
 
 A reference to DBOS's logger.
 Please see our [logging tutorial](../tutorials/logging.md) for more information.
+
+#### `ctxt.span`
+
+```typescript
+readonly span: Span
+```
+
+An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#spans) associated with this function.
+You can assign custom trace attributes to this span.
+Please see our [self-hosting tutorial](../tutorials/self-hosting.md#configuring-otlp-telemetry) for more information.
 
 #### `ctxt.getConfig(key, [defaultValue])`
 
@@ -429,6 +440,7 @@ getConfig<T>(key: string, defaultValue?: T): T | undefined;
 #### Properties and Methods
 
 - [logger](#middlewarecontextlogger)
+- [span](#middlewarecontextspan)
 - [koaContext](#middlewarecontextkoacontext)
 - [name](#middlewarecontextname)
 - [requiredRole](#middlewarecontextrequiredrole)
@@ -442,6 +454,12 @@ readonly logger: DBOSLogger;
 ```
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
+
+#### `MiddlewareContext.span`
+```typescript
+readonly span: Span;
+```
+`span` is the tracing span in which the middleware is being executed.
 
 #### `MiddlewareContext.koaContext`
 
