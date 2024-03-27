@@ -29,7 +29,7 @@ It provides the following endpoints:
 - **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json
-      ["executor-id-1", "executor-id-2", "..."]
+    ["executor-id-1", "executor-id-2", "..."]
     ```
 - **Response**:
   - **Status Code**: 200 OK on successful recovery initiation; otherwise, appropriate error codes.
