@@ -4,16 +4,19 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-DBOS Transact is an open source framework for developing database-backed applications in Typescript and PostgreSQL.
-You can host DBOS Transact applications yourself or deploy them in minutes to DBOS Cloud.
+With these DBOS offerings, you can easily build scalable, reliable, and secure TypeScript applications:
 
-You want to build your next database-backed application with DBOS Transact because:
+- **DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for creating transactional applications with built-in once-and-only-once code execution.
 
-- **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to the cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes.  Store all your data in Postgres&#8212;we'll manage the connections and transactions for you.
+- **DBOS Cloud** - A transactional serverless platform for deploying DBOS Transact applications to the cloud with built-in high performance, scalability, fault tolerance, and database time travel.
+
+You want to build your next database-backed application with DBOS because:
+
 - **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
+- **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to the cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes.  State management and transactionality are all handled for you.
 - **It makes debugging easy**.  With our [time travel debugger](./cloud-tutorials/timetravel-debugging.md), you can "rewind time" and replay any DBOS Cloud trace locally on your computer, exactly as it originally happened.
 
-To get started with DBOS today in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
+To get started in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
 ### Main Features
 
@@ -24,13 +27,13 @@ Here are some of the core features of DBOS Transact:
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
-| [Communicators](./tutorials/http-serving-tutorial)                            | Reliably communicate with external services and third-party APIs.
+| [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
 | [Self-Hosting](./tutorials/self-hosting)                                      | Host your applications anywhere, as long as they have a Postgres database to connect to.
 
-And DBOS Cloud:
+Here are some of the core features of DBOS Cloud:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
