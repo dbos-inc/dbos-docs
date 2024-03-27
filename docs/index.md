@@ -6,7 +6,7 @@ sidebar_position: 1
 
 With these DBOS offerings, you can easily build scalable, reliable, and secure TypeScript applications:
 
-- **DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for creating transactional applications with built-in once-and-only-once code execution.
+- **DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for developing transactional applications with built-in once-and-only-once code execution.
 
 - **DBOS Cloud** - A transactional serverless platform for deploying DBOS Transact applications to the cloud with built-in high performance, scalability, fault tolerance, and database time travel.
 
