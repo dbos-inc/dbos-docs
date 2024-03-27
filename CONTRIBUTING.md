@@ -7,7 +7,7 @@ Thank you for considering contributing to the DBOS Documentation. We welcome con
 To get started with DBOS-Docs, please read the [README](README.md).
 
 You can contribute in many ways. Some simple ways are:
-* Open issues to report any bugs, questions, concern with the SDK, samples or documentation.
+* Open issues to report any bugs, questions, concern with DBOS Transact, samples or documentation.
 * Respond to issues with advice or suggestions.
 * Participate in discussions in our [Discord](https://discord.gg/fMwQjeW5zg) channel.
 * Contribute fixes and improvement to code, samples or documentation.
