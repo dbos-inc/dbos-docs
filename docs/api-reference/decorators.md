@@ -456,7 +456,7 @@ DBOS allows applications to supply functions to be invoked at points in the appl
 #### `@DBOSInitializer`
 This decorator is used to specify functions to be run at application instance initialization time.
 `@DBOSInitializer` is intended for uses such as validating configuration, establishing connections to external (non-database) services, and so on.
-It is not a good place for database schema migration, for that see our [migration commands](cli.md#npx-dbos-sdk-migrate).
+It is not a good place for database schema migration, for that see our [migration commands](cli.md#npx-dbos-migrate).
 
 The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#initcontext).
 

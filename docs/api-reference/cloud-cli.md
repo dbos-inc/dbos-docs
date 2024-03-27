@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: Cloud CLI
+title: DBOS Cloud CLI
 description: DBOS Cloud CLI reference
 ---
 

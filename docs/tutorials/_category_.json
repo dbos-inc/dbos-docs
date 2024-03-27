@@ -1,8 +1,8 @@
 {
-  "label": "DBOS SDK Tutorials",
+  "label": "DBOS Transact Tutorials",
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "These tutorials help you learn how to build powerful DBOS applications."
+    "description": "These tutorials help you build reliable applications with DBOS Transact."
   }
 }

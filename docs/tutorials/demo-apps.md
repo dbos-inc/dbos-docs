@@ -1,5 +1,5 @@
 ---
-sidebar_position: 21
+sidebar_position: 30
 title: Demo Applications
 description: Learn how to build larger apps with DBOS
 ---

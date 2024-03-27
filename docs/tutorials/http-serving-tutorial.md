@@ -4,7 +4,7 @@ title: HTTP Serving
 description: Learn how to serve HTTP requests
 ---
 
-In this guide, you'll learn how to make DBOS workflows accessible through HTTP.
+In this guide, you'll learn how to make DBOS applications accessible through HTTP.
 
 Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
 You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../api-reference/decorators#transaction), [`@Workflow`](../api-reference/decorators#workflow), or [`@Communicator`](../api-reference/decorators#communicator) decorator.
@@ -35,7 +35,7 @@ Each associates a function with an HTTP URL.
 
 You might be wondering why we don't talk about setting up an HTTP server.
 It's because DBOS is _serverless_.
-When you run an locally app with `npx dbos-sdk start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
+When you run an locally app with `npx dbos start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
 
 :::
 
