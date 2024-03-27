@@ -72,7 +72,7 @@ You can also instruct it to recover workflows assigned to other executor IDs thr
 
 ## Configuring OTLP Telemetry
 
-DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace.
+DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace. Handlers will inject a trace context to responses.
 
 Traces are periodically exported from a DBOS application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
 You can configure an exporter in the telemetry section of the [configuration file](../api-reference/configuration). For example:
