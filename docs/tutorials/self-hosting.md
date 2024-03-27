@@ -67,7 +67,7 @@ This behavior works well when you're only running a single instance of an applic
 However, it is less ideal for a distributed setting where you're running many instances of an application on different servers.
 
 To manage recovery in a distributed setting, you can assign each instance of an application an executor ID by setting the `DBOS__VMID` environment variable.
-This causes the application instance to assign every workflow it executes to that executor ID.
+This causes the application instance to associate every workflow it executes with that executor ID.
 When an application instance with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
 You can also instruct it to recover workflows assigned to other executor IDs through the [admin API](#managing-workflow-recovery).
 
