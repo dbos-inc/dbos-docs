@@ -13,7 +13,7 @@ With these DBOS offerings, you can easily build scalable, reliable, and secure T
 You want to build your next database-backed application with DBOS because:
 
 - **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
-- **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to the cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes.  State management and transactionality are all handled for you.
+- **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to the cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes.  Store your data in Postgres&mdash;state management and transactionality are handled for you.
 - **It makes debugging easy**.  With our [time travel debugger](./cloud-tutorials/timetravel-debugging.md), you can "rewind time" and replay any DBOS Cloud trace locally on your computer, exactly as it originally happened.
 
 To get started in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
