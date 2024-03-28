@@ -4,8 +4,8 @@ title: Self-Hosting
 description: Learn how to self-host DBOS Transact applications
 ---
 
-You can run DBOS applications anywhere with `npx dbos start` as long as they have a Postgres database to connect to.
-This guide describes tools you can use in your hosting environment to make the most of DBOS transact.
+You can run DBOS Transact applications anywhere with [`npx dbos start`](../api-reference/cli.md#npx-dbos-start) as long as they have a Postgres database to connect to.
+This guide describes tools you can use in your hosting environment to make the most of DBOS Transact.
 
 ## Admin API
 

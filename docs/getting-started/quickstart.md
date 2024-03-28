@@ -174,7 +174,7 @@ Next, let's provision a Postgres database instance your applications can connect
 You should choose a database instance name, username and password.
 Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
 The database password must contain at least 8 characters.
-Run this command and choose your database password when prompted (it should take up to 5 minutes to provision):
+Run this command and choose your database password when prompted:
 
 ```
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
