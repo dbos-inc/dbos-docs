@@ -62,9 +62,9 @@ It applies changes to your [configuration file](./configuration).
 If parameters are not specified, it prompts for them.
 
 **Parameters:**
-- `-h, --host <string>`: Your Postgres server hostname.
-- `-p, --port <number>`: Your Postgres port.
-- `-U, --username <string>`: Your Postgres username.
+- `-h, --host <string>`: Your Postgres server hostname (Default: `localhost`).
+- `-p, --port <number>`: Your Postgres server port (Default: `5432`).
+- `-U, --username <string>`: Your Postgres username (Default: `postgres`).
 
 ---
 
