@@ -6,9 +6,17 @@ description: Learn how to integrate DBOS and Kafka.
 
 In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
 
-First, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
+First, install [KafkaJS](https://kafka.js.org/) in your application:
+
+```
+npm install kafkajs
+```
+
+Then, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
 
 ```javascript
+import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
+
 class KafkaExample{
   @Workflow()
   static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
@@ -23,6 +31,7 @@ DBOS invokes your method exactly-once for each message sent to the topic.
 
 ```javascript
 import { KafkaConfig, KafkaMessage} from "kafkajs";
+import { Workflow, WorkflowContext, Kafka, KafkaConsume } from '@dbos-inc/dbos-sdk';
 
 const kafkaConfig: KafkaConfig = {
     brokers: ['localhost:9092']
