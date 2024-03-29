@@ -54,6 +54,20 @@ Run all rollback commands specified in your [configuration file](./configuration
 
 ---
 
+### `npx dbos configure`
+
+**Description:**
+This command configures which database server your application connects to.
+It applies changes to your [configuration file](./configuration).
+If parameters are not specified, it prompts for them.
+
+**Parameters:**
+- `-h, --host <string>`: Your Postgres server hostname.
+- `-p, --port <number>`: Your Postgres port.
+- `-U, --username <string>`: Your Postgres username.
+
+---
+
 ### `npx dbos debug`
 
 **Description:**
