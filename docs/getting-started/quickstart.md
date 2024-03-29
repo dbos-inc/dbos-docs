@@ -203,7 +203,7 @@ If successful, the script should print `Database started successfully!`.
 </TabItem>
 </Tabs>
 
-Next, let's create some tables in our database by running a schema migration:
+Next, let's create some tables in your database by running a schema migration:
 
    ```bash
 npx dbos migrate
