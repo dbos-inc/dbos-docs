@@ -7,23 +7,23 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-Here's how to get a simple DBOS "Hello, Database!" application up and running in less than five minutes.
+Here's how to get a simple "Hello, Database!" application up and running in less than five minutes.
 First we'll show you how to run it locally, then we'll show you how to deploy it serverlessly to DBOS Cloud!
 
 ## System Requirements
 
-DBOS requires [Node.js 20 or later](https://nodejs.org/en).
-Additionally, this tutorial uses [Docker](https://www.docker.com/) to launch a Postgres database.
+DBOS Transact requires:
 
-:::info
-DBOS doesn't need Docker, but this tutorial uses it to host Postgres as a convenience.
-:::
+- [Node.js 20 or later](https://nodejs.org/en).
+- A [PostgreSQL](https://www.postgresql.org/) database to connect to.
 
-To install both Node.js and Docker (assuming you don't already have them installed):
+To install these requirements (assuming you don't already have them installed):
 
 <Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-	  
+<TabItem value="mac" label="macOS">
+
+<h3>Installing Node.js</h3>
+
 Copy and run the following commands in your terminal to install Node.js:
 
    ```bash
@@ -35,14 +35,25 @@ export NVM_DIR="$HOME/.nvm"
 nvm install 20
 nvm use 20
    ```
+<h3> Installing Postgres </h3>
 
-   An easy way to install Docker on MacOS is through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-   
+You can install Postgres locally or launch it in a Docker container.
+
+<Tabs groupId="postgres-or-docker">
+  <TabItem value="postgres" label="Install Postgres Locally">
+      Follow [this official guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
   </TabItem>
-  <TabItem value="linux" label="Linux">
-	  
+    <TabItem value="docker" label="Launch Postgres with Docker">
+      You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+      Later in this guide, we'll provide instructions on launching Postgres with Docker.
+   </TabItem>
+</Tabs>
+   
+</TabItem>
+<TabItem value="linux" label="Linux">
+<h3>Installing Node.js</h3>
   Copy and run the following commands in your terminal to install Node.js:
-  
+
    ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
@@ -50,25 +61,44 @@ nvm install 20
 nvm use 20
    ```
 
-  To install Docker, visit their [installation page](https://docs.docker.com/engine/install/) for instructions specific to your distro.
+<h3> Installing Postgres </h3>
+You can install Postgres locally or launch it in a Docker container.
 
+<Tabs groupId="postgres-or-docker">
+  <TabItem value="postgres" label="Install Postgres Locally">
+      Follow these [official guides](https://www.postgresql.org/download/linux/) to install Postgres on several popular Linux distributions.
   </TabItem>
-  <TabItem value="win-ps" label="Windows">
-
-   First, download and install [Node.js 20 or later](https://nodejs.org/en).
-   After installing Node.js, manually create the following folder required by `npm`: `C:\Users\%user%\AppData\Roaming\npm`
-   (`%user%` is the Windows user on which you are logged in).
-
-   Then, download and install [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/).
-  </TabItem>
-   
+    <TabItem value="docker" label="Launch Postgres with Docker">
+      Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
+      Later in this guide, we'll provide instructions on launching Postgres with Docker.
+   </TabItem>
 </Tabs>
 
-After installing Docker, close and reopen your terminal to apply any changes. Then, verify Docker is working by running:
+</TabItem>
+<TabItem value="win-ps" label="Windows">
 
-   ```bash
-docker run hello-world
-   ```
+<h3>Installing Node.js</h3>
+
+Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
+After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
+(`%user%` is the Windows user on which you are logged in).
+
+<h3> Installing Postgres </h3>
+
+You can install Postgres locally or launch it in a Docker container.
+
+<Tabs groupId="postgres-or-docker">
+  <TabItem value="postgres" label="Install Postgres Locally">
+      Follow [this official guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
+  </TabItem>
+    <TabItem value="docker" label="Launch Postgres with Docker">
+      You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+      Later in this guide, we'll provide instructions on launching Postgres with Docker.
+   </TabItem>
+</Tabs>
+
+</TabItem>   
+</Tabs>
 
 ## Project Initialization
 
@@ -81,20 +111,66 @@ Application names should be 3 to 30 characters long and contain only lowercase l
 
 This creates a folder for your application, configures its layout, and installs required dependencies.
 If successful, it should print `Application initialized successfully!`.
-By default, `init` instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
+By default, it instantiates a "Hello, Database!" application which greets users and tracks the count of greetings per user.
 
 ## Running Locally
 
-DBOS applications can run anywhere, but they always need to connect to a database.
-DBOS works with any Postgres database, but to make things easier, we've provided a script that launches Postgres in a Docker container:
+DBOS applications can run anywhere, but they always need to connect to a Postgres database.
+You can connect to a Postgres database you installed or launch Postgres in a Docker container.
 
+<Tabs groupId="postgres-or-docker">
+<TabItem value="postgres" label="Use Installed Postgres">
+
+In your terminal, change to your application directory and run this command to connect your application to your Postgres database:
+
+```
+cd <application-folder>
+npx dbos configure
+```
+
+The command will prompt you for your Postgres server hostname and port and for your Postgres username.
+If you locally installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
+
+Then, set the `PGPASSWORD` environment variable to your Postgres password:
+
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+	  
+   ```bash
+export PGPASSWORD=<your-postgres-password>
+   ```
+  </TabItem>
+    <TabItem value="linux" label="Linux">
+	    
+   ```bash
+export PGPASSWORD=<your-postgres-password>
+   ```
+  </TabItem>
+  <TabItem value="win-ps" label="Windows (PowerShell)">
+  
+     ```bash
+$env:PGPASSWORD = "<your-postgres-password>"
+   ```
+  </TabItem>
+  <TabItem value="win-cmd" label="Windows (cmd)">
+
+     ```bash
+set PGPASSWORD=<your-postgres-password>
+   ```
+  </TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem value="docker" label="Launch Postgres with Docker">
+
+Run this script to launch Postgres in a Docker container:
 <Tabs groupId="operating-systems">
   <TabItem value="mac" label="macOS">
 	  
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
-./start_postgres_docker.sh
+node start_postgres_docker.js
    ```
   </TabItem>
     <TabItem value="linux" label="Linux">
@@ -102,31 +178,30 @@ export PGPASSWORD=dbos
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
-./start_postgres_docker.sh
+node start_postgres_docker.js
    ```
   </TabItem>
-  
   <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
 cd <application-folder>
 $env:PGPASSWORD = "dbos"
-.\start_postgres_docker.bat
+node start_postgres_docker.js
    ```
-  
   </TabItem>
-  
   <TabItem value="win-cmd" label="Windows (cmd)">
+
      ```bash
 cd <application-folder>
 set PGPASSWORD=dbos
-start_postgres_docker.bat
+node start_postgres_docker.js
    ```
-  
   </TabItem>
 </Tabs>
 
 If successful, the script should print `Database started successfully!`.
+</TabItem>
+</Tabs>
 
 Next, let's create some tables in our database by running a schema migration:
 
