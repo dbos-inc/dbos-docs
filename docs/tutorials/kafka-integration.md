@@ -54,7 +54,6 @@ The `@KafkaConsume` decorator takes in a [KafkaJS consumer configuration](https:
 For example, you can specify a custom consumer group ID:
 
 ```javascript
-
 @KafkaConsume("example-topic", { groupId: "custom-group-id" })
 @Workflow()
 static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
