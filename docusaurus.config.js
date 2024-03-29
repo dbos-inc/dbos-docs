@@ -13,6 +13,8 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
+  trailingSlash: false,
+
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'dbos-inc', // Usually your GitHub org/user name.
@@ -161,12 +163,12 @@ const config = {
 
         //... other Algolia params
       },
-    matomo: {
-      matomoUrl: 'https://dbosdev.matomo.cloud/',
-      siteId: '1',
-      phpLoader: 'matomo.php',
-      jsLoader: 'matomo.js',
-    },
+      matomo: {
+        matomoUrl: 'https://dbosdev.matomo.cloud/',
+        siteId: '1',
+        phpLoader: 'matomo.php',
+        jsLoader: 'matomo.js',
+      },
     }),
 };
 
