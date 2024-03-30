@@ -14,7 +14,7 @@ This tutorial assumes you've finished our [quickstart](./quickstart.md).
 For convenience, we recommend initializing a new application and starting a database for it:
 
 ```
-npx -y @dbos-inc/create -n <app-name>
+npx -y @dbos-inc/create@latest -n <app-name>
 cd <app-name>
 export PGPASSWORD=dbos
 ./start_postgres_docker.sh

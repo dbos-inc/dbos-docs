@@ -104,7 +104,7 @@ You can install Postgres locally or launch it in a Docker container.
 
 To initialize a new DBOS application, run the following command:
    ```bash
-npx -y @dbos-inc/create -n <app-name>
+npx -y @dbos-inc/create@latest -n <app-name>
    ```
 
 Application names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
