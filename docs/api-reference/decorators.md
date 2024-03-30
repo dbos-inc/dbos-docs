@@ -468,6 +468,39 @@ The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md
   }
 ```
 
+### Kafka Integration Decorators
+
+#### `@Kafka(kafkaConfig: KafkaConfig)` {#kafka}
+
+Class-level decorator defining a Kafka configuration to use in all class methods.
+Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
+
+
+#### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
+Run a transaction or workflow exactly-once for each message received on the specified topic.
+Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
+Requires class to be decorated with [`@Kafka`](#kafka).
+The decorated method must take as input a Kafka topic, partition, and message as in the example below:
+
+```javascript
+import { KafkaConfig, KafkaMessage} from "kafkajs";
+
+const kafkaConfig: KafkaConfig = {
+    brokers: ['localhost:9092']
+}
+
+@Kafka(kafkaConfig)
+class KafkaExample{
+
+  @KafkaConsume("example-topic")
+  @Workflow()
+  static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
+    // This workflow executes exactly once for each message sent to "example-topic".
+    // All methods annotated with Kafka decorators must take in the topic, partition, and message as inputs just like this method.
+  }
+}
+```
+
 ### OpenAPI Decorators
 
 DBOS can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) interface description for an application.
