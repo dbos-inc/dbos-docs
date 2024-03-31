@@ -30,6 +30,7 @@ Here are some of the core features of DBOS Transact:
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
+| [Kafka Integration](./tutorials/kafka-integration)                            | Consume Kafka message exactly-once with transactions or workflows.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
 | [Self-Hosting](./tutorials/self-hosting)                                      | Host your applications anywhere, as long as they have a Postgres database to connect to.
 
