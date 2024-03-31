@@ -41,7 +41,7 @@ We're not going to need that sleep code for this tutorial.
 If you did not finished the Programming Quickstart, create a new DBOS application using `@dbos-inc/create`.
 
 ```
-npx -y @dbos-inc/create -n <app-name>
+npx -y @dbos-inc/create@latest -n <app-name>
 ```
 
 And replace the logic in `src/operations.ts` with the following.
