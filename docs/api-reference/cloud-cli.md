@@ -160,7 +160,7 @@ It executes the [rollback commands declared in dbos-config.yaml](./configuration
 Delete an application from DBOS Cloud.
 If run in an application root directory with no application name provided, delete the local application.
 
-By default, this command does not drop your application's database. You can use the `--dropdb` parameter to drop your application's database (not the Postgres instance) and deleting all application data.
+By default, this command does not drop your application's database. You can use the `--dropdb` parameter to drop your application's database (not the Postgres instance) and delete all application data.
 To destroy the previously-provisioned Postgres instance, please use [`npx dbos-cloud db destroy`](#npx-dbos-cloud-db-destroy).
 
 ---
