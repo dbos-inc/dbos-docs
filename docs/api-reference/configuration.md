@@ -66,6 +66,26 @@ runtimeConfig:
 ```
 ---
 
+### HTTP
+
+This section is used to specify DBOS HTTP parameters.
+
+- **cors_middleware** (optional): Whether to allow cross-origin requests (via CORS middleware).  Default is `true`.
+- **credentials** (optional): If `cors_middleware` is enabled, whether to allow cross-origin requests that include credentials.  Default is `true`.
+- **allowed_origins** (optional): If `cors_middleware` is enabled, a list of origins/domains that are permitted to make cross-origin requests.  Default is to allow any origin.
+
+**Example**:
+
+```yaml
+http:
+  cors_middleware: true
+  credentials: false
+  allowed_origins:
+    'https://partner.com'
+    'http://app.internal.com'
+```
+---
+
 ### Application
 
 Applications can optionally use the application configuration to define custom properties as key-value pairs.
