@@ -62,6 +62,9 @@ DBOS currently uses decorators at the class, function, or function parameter lev
 Class decorators are affixed to a class, just before the keyword `class`.  Such decorators will be applied to all functions in the class.
 -   [`@Authentication`](#authentication)
 -   [`@DefaultRequiredRole`](#defaultrequiredrole)
+-   [`@KoaBodyParser`](#koabodyparser)
+-   [`@KoaCors`](#koacors)
+-   [`@KoaMiddleware`](#koamiddleware)
 
 ### Function Decorators
 
@@ -263,6 +266,46 @@ export interface DBOSHttpAuthReturn {
 ```
 
 The authentication function is provided with a ['MiddlewareContext'](contexts.md#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
+
+#### `@KoaBodyParser`
+By default, the DBOS HTTP server uses a [`@koa/bodyparser`](https://github.com/koajs/bodyparser) middlware for parsing JSON message bodies.
+To specify a different middleware for the body parser, use the `@KoaBodyParser` decorator at the class level.
+
+```typescript
+import { bodyParser } from "@koa/bodyparser";
+
+@KoaBodyParser(bodyParser({
+  extendTypes: {
+    json: ["application/json", "application/custom-content-type"],
+  },
+  encoding: "utf-8"
+}))
+class OperationEndpoints {
+}
+```
+
+#### `@KoaCors`
+[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients.
+
+By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) middleware with a configuration from [`dbos-config.yaml`](../api-reference/configuration#http).  (The defaults in this file are, in turn, extremely permissive, allowing all cross-origin requests, including those with credentials.)  If your application needs only a coarse configuration of CORS, such as disabling CORS, or enabling CORS only on whitelisted origins, the config file offers a simple option.
+
+If more complex logic is needed, or if the CORS configuration differs between operation classes, the `@KoaCors` class-level decorator can be used to specify the CORS middleware in full.
+
+```typescript
+import cors from "@koa/cors";
+
+@KoaCors(cors({
+  credentials: true,
+  origin:
+    (o: Context)=>{
+      const whitelist = ['https://us.com','https://partner.com'];
+      const origin = o.request.header.origin ?? '*';
+      return (whitelist.includes(origin) ? origin : '');
+    }
+}))
+class EndpointsWithSpecialCORS {
+}
+```
 
 #### `@KoaMiddleware`
 Configures the DBOS HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.

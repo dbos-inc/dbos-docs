@@ -74,6 +74,17 @@ If the error contains a `status` field, the handler uses that status code instea
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
 DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../api-reference/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
 
+### Body Parser
+By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator can be used.
+
+### CORS
+[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients, preventing unintended information sharing across origins/domains.
+By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a configuration that is extremely permissive of cross-origin requests.
+
+If your DBOS application will be accessed from web browsers, some thought should be put into configuring CORS.  This can be adjusted in two main ways:
+* The [`dbos-config.yaml`](../api-reference/configuration#http) file
+* The [`@KoaCors`](../api-reference/decorators#koacors) class decorator
+
 ### Middleware
 
 DBOS supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
