@@ -88,7 +88,7 @@ http:
   credentials: false
   allowed_origins:
     'https://partner.com'
-    'http://app.internal.com'
+    'https://app.internal.com'
 ```
 ---
 
@@ -100,7 +100,20 @@ These properties can be retrieved from any [context](./contexts) via the [`getCo
 **Example**:
 ```yaml
 application:
-  PAYMENTS_SERVICE: 'http://stripe.com/payment'
+  PAYMENTS_SERVICE: 'https://stripe.com/payment'
+```
+
+### Environment Variables
+
+Applications can optionally use the `env` configuration to define environment variables.
+These are set in your application before its code is initialized and can be retrieved from `process.env` like any other environment variables.
+For example, the `WEB_PORTAL` variable set below could be retrieved from an application as `process.env.WEB_PORTAL`.
+Environment variables configured here are automatically exported to and set in DBOS Cloud.
+
+**Example**:
+```yaml
+env:
+  WEB_PORTAL: 'https://example.com'
 ```
 
 ---
