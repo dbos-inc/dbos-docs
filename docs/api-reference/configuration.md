@@ -28,6 +28,7 @@ Every field is required unless otherwise specified.
 - **username**: Username with which to connect to the database server. For local deployment only, not used in DBOS Cloud.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: Name of the application database.
+- **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.
 - **app_db_client** (optional): Client to use for connecting to the application database. Must be either `knex` or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
@@ -47,6 +48,11 @@ database:
   migrate: ['npx knex migrate:latest']
   rollback: ['npx knex migrate:rollback']
 ```
+
+::::info
+The role with which DBOS connects to Postgres must have [`CREATE`](https://www.postgresql.org/docs/current/ddl-priv.html#DDL-PRIV-CREATE) privileges on both the application database and system database if they already exist.
+If either does not exist, the Postgres role must have the [`CREATEDB`](https://www.postgresql.org/docs/current/sql-createdatabase.html) privilege to create them.
+::::
 
 ---
 
