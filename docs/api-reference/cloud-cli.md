@@ -140,6 +140,9 @@ It registers that application with DBOS Cloud.
 This command must be run from an application root directory.
 It executes the [migration commands declared in dbos-config.yaml](./configuration#database), deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
+**Parameters:**
+- `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
+
 ---
 
 ### `npx dbos-cloud app rollback`
