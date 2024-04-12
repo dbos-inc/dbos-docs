@@ -219,7 +219,7 @@ Open another terminal window, enter your application folder, compile your code, 
 ```bash
 cd <Your App Folder>/
 npm run build
-npx dbos debug -u <workflow UUID>
+npx dbos debug -u <workflow UUID> -x <proxy URL, default at postgresql://localhost:2345>
 ```
 
 :::info

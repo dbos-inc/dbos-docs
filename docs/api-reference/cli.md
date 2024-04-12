@@ -71,13 +71,14 @@ If parameters are not specified, it prompts for them.
 ### `npx dbos debug`
 
 **Description:**
-This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
-You must compile your code (`npm run build`) and start the debug proxy before running this command.
+This command launches the DBOS runtime in debug mode to replay a specified workflow using recorded operation outputs.
+It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow.
+You can optionally provide the URL for a DBOS [time travel debug proxy](../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users) to replay past workflow executions from DBOS Cloud.
+You must compile your code (`npm run build`) before running this command.
 
 **Parameters:**
-- `-u, --uuid <string>`: The workflow identity to replay.
-- `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
+- `-u, --uuid <string>`: The workflow identity to replay (required).
+- `-x, --proxy <string>`: The time travel debug proxy URL (optional).
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
 - `-e, --entrypoint <entrypoint-file>`: The path to an [entrypoint file](./configuration) to use.
