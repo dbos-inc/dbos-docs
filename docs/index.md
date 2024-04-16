@@ -10,7 +10,7 @@ With these DBOS solutions, you can easily build scalable, reliable, and secure T
 
 - **DBOS Cloud** - A transactional serverless platform for deploying DBOS Transact applications to the cloud with built-in high performance, scalability, fault tolerance, and database time travel.
 
-You want to build your next database-backed application with DBOS because:
+You want to build your next backend application with DBOS because:
 
 - **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
 - **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to DBOS cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes. Store your data in Postgres&mdash;we'll manage the transactions for you.
@@ -30,7 +30,7 @@ Here are some of the core features of DBOS Transact:
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
-| [Kafka Integration](./tutorials/kafka-integration)                            | Consume Kafka message exactly-once with transactions or workflows.
+| [Kafka Integration](./tutorials/kafka-integration)                            | Consume Kafka messages exactly-once with transactions or workflows.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
 | [Self-Hosting](./tutorials/self-hosting)                                      | Host your applications anywhere, as long as they have a Postgres database to connect to.
 
