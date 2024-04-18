@@ -33,7 +33,7 @@ You can now register and deploy applications with this database instance as norm
 
 :::tip
 DBOS Cloud is currently hosted in AWS us-east-1.
-For maximum performance, we recommend bringing a database instance hosted there.
+For maximum performance, we recommend linking a database instance hosted there.
 :::
 
 
@@ -43,11 +43,11 @@ DBOS Cloud uses [Postgres logical replication](https://www.postgresql.org/docs/c
 To enable logical replication, you must configure the PostgreSQL [`wal_level`](https://www.postgresql.org/docs/current/runtime-config-wal.html#GUC-WAL-LEVEL) to `logical` and increase [`max_replication_slots`](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-MAX-REPLICATION-SLOTS) to ensure your database has **at least three** open replication slots per DBOS application you intend to deploy:
 
 <Tabs groupId="rds-or-postgres">
-  <TabItem value="rds" label="AWS RDS">
+  <TabItem value="rds" label="AWS RDS PostgreSQL">
 Create or edit your database instance's parameter group to set:
 ```
 rds.logical_replication = 1
-max_replication_slots = 10 # At least three open replication slots per DBOS application
+max_replication_slots = 30 # At least three open replication slots per DBOS application
 ```
   </TabItem>
     <TabItem value="postgres" label="PostgreSQL">
@@ -55,7 +55,7 @@ Edit your [`postgresql.conf`](https://www.postgresql.org/docs/current/config-set
 
 ```
 wal_level = logical
-max_replication_slots = 10 # At least three open replication slots per DBOS application
+max_replication_slots = 30 # At least three open replication slots per DBOS application
 ```
 Additionally, you must install the [wal2json](https://github.com/eulerto/wal2json) PostgreSQL extension. Follow [this installation guide](https://github.com/eulerto/wal2json/tree/master?tab=readme-ov-file#build-and-install) to enable it for your database.
     </TabItem>
@@ -63,10 +63,10 @@ Additionally, you must install the [wal2json](https://github.com/eulerto/wal2jso
 
 You need to restart your database after changing these parameters for the changes to take effect.
 
-For DBOS Cloud to automatically capture changes and enable time travel, you must grant the `dbosadmin` role permissions to manage replication slots and subscriptions:
+Additionally, you must grant the `dbosadmin` role permissions to manage replication slots and subscriptions:
 
 <Tabs groupId="rds-or-postgres">
-  <TabItem value="rds" label="AWS RDS">
+  <TabItem value="rds" label="AWS RDS PostgreSQL">
 ```sql
 CREATE ROLE dbosadmin WITH LOGIN CREATEDB CREATEROLE PASSWORD <password>;
 GRANT rds_replication to dbosadmin;
