@@ -1,6 +1,6 @@
 ---
 sidebar_position: 5
-title: Bringing Your Own Database
+title: Bring Your Own Database
 description: Learn how to bring your own PostgreSQL database to DBOS Cloud
 ---
 
@@ -13,20 +13,17 @@ In this guide, you'll learn how to bring your own PostgreSQL database instance t
 This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
 :::
 
-### Link Your Database to DBOS Cloud
+### Linking Your Database to DBOS Cloud
 
-DBOS Cloud works with any Postgres database as long as it is accessible and properly set up.
-First, DBOS Cloud uses a `dbosadmin` role to manage your application deployments and schema migrations.
-You need to create a `dbosadmin` role in your Postgres instance that has the `LOGIN`, `CREATEDB` and `CREATEROLE` privileges:
+To bring your own PostgreSQL database instance to DBOS Cloud, you must first create a role DBOS Cloud can use to deploy and manage your apps.
+This role must be named `dbosadmin` and must have the `LOGIN`, `CREATEDB` and `CREATEROLE` privileges:
 
 ```sql
 CREATE ROLE dbosadmin WITH LOGIN CREATEDB CREATEROLE PASSWORD <password>;
 ```
 
-Next, link your Postgres instance to DBOS Cloud.
-You must choose a database instance name which is 3 to 16 characters long and contains only lowercase letters, numbers and underscores.
-You will need this database instance name when you register applications.
-Run this command and enter the password for the `dbosadmin` role when prompted.
+Next, link your database instance to DBOS Cloud, entering the password for the `dbosadmin` role when prompted.
+You must choose a database instance name that is 3 to 16 characters long and contains only lowercase letters, numbers and underscores.
 
 ```shell
 npx dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port>
@@ -40,14 +37,9 @@ For maximum performance, we recommend bringing a database instance hosted there.
 :::
 
 
-### Enable Time Travel
+### Enabling Time Travel
 
 DBOS Cloud uses [Postgres logical replication](https://www.postgresql.org/docs/current/logical-replication.html) to capture database history information used in time travel.
-For time travel to work with your Postgres instance, you need to enable logical replication and install [wal2json](https://github.com/eulerto/wal2json).
-
-Postgres instances managed by AWS RDS should already have wal2json installed.
-Otherwise, you can follow [wal2json installation guide](https://github.com/eulerto/wal2json/tree/master?tab=readme-ov-file#build-and-install) to enable this on your database.
-
 To enable logical replication, you must configure the PostgreSQL [`wal_level`](https://www.postgresql.org/docs/current/runtime-config-wal.html#GUC-WAL-LEVEL) to `logical` and increase [`max_replication_slots`](https://www.postgresql.org/docs/current/runtime-config-replication.html#GUC-MAX-REPLICATION-SLOTS) to ensure your database has **at least three** open replication slots per DBOS application you intend to deploy:
 
 <Tabs groupId="rds-or-postgres">
@@ -65,6 +57,7 @@ Edit your [`postgresql.conf`](https://www.postgresql.org/docs/current/config-set
 wal_level = logical
 max_replication_slots = 10 # At least three open replication slots per DBOS application
 ```
+Additionally, you must install the [wal2json](https://github.com/eulerto/wal2json) PostgreSQL extension. Follow [this installation guide](https://github.com/eulerto/wal2json/tree/master?tab=readme-ov-file#build-and-install) to enable it for your database.
     </TabItem>
 </Tabs>
 
@@ -88,7 +81,7 @@ GRANT pg_create_subscription TO dbosadmin;
     </TabItem>
 </Tabs>
 
-:::tip
+:::info
 The `pg_create_subscription` role is added in PostgreSQL version 16. For earlier PostgreSQL versions, you may grant `dbosadmin` a superuser role or [contact us](https://www.dbos.dev/contact) for help.
 :::
 
