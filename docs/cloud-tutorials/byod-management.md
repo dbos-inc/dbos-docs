@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 In this guide, you'll learn how to bring your own PostgreSQL database instance to DBOS Cloud and deploy your applications to it.
 
 :::info
-This feature is currently only available to [DBOS Pro/Custom plan](https://www.dbos.dev/pricing) subscribers.
+This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
 :::
 
 ### Link Your Database to DBOS Cloud
@@ -24,12 +24,12 @@ CREATE ROLE dbosadmin WITH LOGIN CREATEDB CREATEROLE PASSWORD <password>;
 ```
 
 Next, link your Postgres instance to DBOS Cloud.
-You must choose a database instance name which is 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
+You must choose a database instance name which is 3 to 16 characters long and contains only lowercase letters, numbers and underscores.
 You will need this database instance name when you register applications.
 Run this command and enter the password for the `dbosadmin` role when prompted.
 
 ```shell
-npx dbos-cloud db link <database-instance-name> -H <database-hostname> 
+npx dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port>
 ```
 
 You can now register and deploy applications with this database instance as normal!  Check out our [applications management](./application-management.md) guide for details.
@@ -55,7 +55,7 @@ To enable logical replication, you must configure the PostgreSQL [`wal_level`](h
 Create or edit your database instance's parameter group to set:
 ```
 rds.logical_replication = 1
-max_replication_slots = 10 # Configure as needed (minimum three per DBOS application)
+max_replication_slots = 10 # At least three open replication slots per DBOS application
 ```
   </TabItem>
     <TabItem value="postgres" label="PostgreSQL">
@@ -63,14 +63,14 @@ Edit your [`postgresql.conf`](https://www.postgresql.org/docs/current/config-set
 
 ```
 wal_level = logical
-max_replication_slots = 10 # Configure as needed (minimum three per DBOS application)
+max_replication_slots = 10 # At least three open replication slots per DBOS application
 ```
     </TabItem>
 </Tabs>
 
 You need to restart your database after changing these parameters for the changes to take effect.
 
-For DBOS Cloud to automatically capture changes and enable time travel, you must give the `dbosadmin` permission to manage replication slots and subscriptions:
+For DBOS Cloud to automatically capture changes and enable time travel, you must grant the `dbosadmin` role permissions to manage replication slots and subscriptions:
 
 <Tabs groupId="rds-or-postgres">
   <TabItem value="rds" label="AWS RDS">
@@ -89,13 +89,13 @@ GRANT pg_create_subscription TO dbosadmin;
 </Tabs>
 
 :::tip
-The `pg_created_subscription` role is added in PostgreSQL version 16. If you wish to use an earlier version, you may grant `dbosadmin` a super user role or [contact us](https://www.dbos.dev/contact) for help.
+The `pg_create_subscription` role is added in PostgreSQL version 16. For earlier PostgreSQL versions, you may grant `dbosadmin` a superuser role or [contact us](https://www.dbos.dev/contact) for help.
 :::
 
 Finally, link your database instance to DBOS Cloud with time travel enabled, entering the password for the `dbosadmin` role when prompted:
 
 ```shell
-npx dbos-cloud db link <database-instance-name> -H <database-hostname> --enable-timetravel
+npx dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port> --enable-timetravel
 ```
 
 You can now register and deploy applications with this database instance as normal and make full use of time travel!  Check out our [applications management](./application-management.md) and [time travel](./timetravel-debugging.md) guides for details.
