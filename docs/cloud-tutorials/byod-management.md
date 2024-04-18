@@ -40,7 +40,7 @@ For maximum performance, we recommend bringing a database instance hosted there.
 :::
 
 
-### Enabling Time Travel
+### Enable Time Travel
 
 DBOS Cloud uses [Postgres logical replication](https://www.postgresql.org/docs/current/logical-replication.html) to capture database history information used in time travel.
 For time travel to work with your Postgres instance, you need to enable logical replication and install [wal2json](https://github.com/eulerto/wal2json).
