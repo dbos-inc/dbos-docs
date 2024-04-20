@@ -123,12 +123,12 @@ import {
 import { Knex } from "knex";
 
 export class Greetings {
-    @Communicator()
-    static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
-        ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
-        // Code omitted for simplicity
-        ctxt.logger.info("Email sent!");
-    }
+  @Communicator()
+  static async SendGreetingEmail(ctxt: CommunicatorContext, friend: string, content: string) {
+    ctxt.logger.info(`Sending email "${content}" to ${friend}...`);
+    // Code omitted for simplicity
+    ctxt.logger.info("Email sent!");
+  }
 
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
