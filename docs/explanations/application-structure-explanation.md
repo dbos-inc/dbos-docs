@@ -35,6 +35,13 @@ All options are documented in our [configuration reference](../api-reference/con
 `src/operations.ts` is the _entrypoint_, where DBOS looks for your code.
 At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.
 More precisely, DBOS assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
+If you're writing a small application, you can write all your code directly in this file.
+In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere:
+```typescript
+// Placed in operations.ts:
+export { OperationClass1, OperationClass2 } from './FileA';
+export { OperationClass3 } from './operations/FileB';
+```
 You can also configure a list of entrypoints using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
