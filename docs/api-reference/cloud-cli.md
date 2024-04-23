@@ -117,7 +117,36 @@ This command resets your password for a Postgres database instance.
 This command destroys a previously-provisioned Postgres database instance.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance whose status to retrieve.
+- `<database-instance-name>`: The name of the database instance to destroy.
+
+---
+
+### `npx dbos-cloud db link`
+
+**Description:**
+This command links your own Postgres database instance to DBOS Cloud.
+Before running this command, please first follow our [tutorial](../cloud-tutorials/byod-management) to set up your Postgres database.
+
+:::info
+This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
+:::
+
+**Parameters:**
+- `<database-instance-name>`: The name of the database instance to link. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
+- `-H, --hostname <string>`: The hostname for your Postgres database instance (required).
+- `-p, --port [number]`: The connection port for your Postgres database instance (default: `5432`).
+- `-W, --password [string]`: The password for the `dbosadmin` role. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
+- `--enable-timetravel`: Enable time travel for your database instance. Please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
+
+---
+
+### `npx dbos-cloud db unlink`
+
+**Description:**
+This command unlinks a previously linked Postgres database instance.
+
+**Parameters:**
+- `<database-instance-name>`: The name of the database instance to unlink.
 
 ---
 
