@@ -61,14 +61,15 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 This section is used to specify DBOS runtime parameters.
 
 - **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./cli#npx-dbos-start) overrides this config parameter.
-- **entrypoint** (optional): The compiled Javascript file where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.  Defaults to `dist/operations.js`. Using [`npx dbos start -e <entrypoint-file>`](./cli#npx-dbos-start) overrides this config parameter.
+- **entrypoints** (optional): The compiled Javascript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
 
 **Example**:
 
 ```yaml
 runtimeConfig:
-  port: 6000 # Optional, defaults to 3000
-  entrypoint: 'dist/operations.js' # (default)
+  port: 3000 # (default)
+  entrypoints:
+    - 'dist/operations.js' # (default)
 ```
 ---
 
