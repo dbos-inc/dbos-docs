@@ -227,7 +227,7 @@ Congratulations!  You just launched your first DBOS application.
 Now, let's serverlessly deploy your application to DBOS Cloud.
 First, you need an account.
 
-<Tabs groupId="postgres-or-docker">
+<Tabs groupId="web-or-cli">
   <TabItem value="existing" label="Use An Existing Account">
 If you already have a DBOS Cloud account (for example, you signed up for one on our [website](https://www.dbos.dev)), you can log in to it.
 From your DBOS application directory, run the following command:
