@@ -42,7 +42,7 @@ In a larger application, you can write your code wherever you want, but should u
 export { OperationClass1, OperationClass2 } from './FileA';
 export { OperationClass3 } from './operations/FileB';
 ```
-You can also configure the entrypoint in our [configuration file](../api-reference/configuration#runtime).
+You can also configure a list of entrypoints using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
 

@@ -12,17 +12,16 @@ The DBOS Transact CLI helps you run applications locally.
 
 ### `npx dbos start`
 
-**Description:**  
+**Description:**
 This command launches the DBOS Transact runtime and HTTP server to serve an application.
-It registers all functions and serves all endpoints in classes exported from the specified entrypoint file (typically `src/operations.ts`).
+It registers all functions and serves all endpoints in classes exported by the [declared entrypoint files](./configuration#runtime) (`dist/operations.js` by default).
 Parameters set from the command line take precedence over parameters set in the [configuration file](./configuration).
 You must compile your code (`npm run build`) before running this command.
 
-**Parameters:**  
+**Parameters:**
 - `-p, --port <port-number>`: The port on which to serve your functions.
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
-- `-e, --entrypoint <entrypoint-file>`: The path to an [entrypoint file](./configuration) to use.
 
 ---
 
@@ -31,10 +30,10 @@ You must compile your code (`npm run build`) before running this command.
 **Synonyms**
 `npm create @dbos-inc` and `npm init @dbos-inc` are synonyms for `npx @dbos-inc/create`.  When using `npm create @dbos-inc` with any of the command line switches below, be sure to use `--` to separate `npm` arguments from the arguments intended for `@dbos-inc/create`.
 
-**Description:**  
+**Description:**
 This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
 
-**Parameters:**  
+**Parameters:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 - `-t, --templateName <template>`: The template to use for project creation, such as 'hello'.
 
@@ -80,16 +79,15 @@ You must compile your code (`npm run build`) and start the debug proxy before ru
 - `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
-- `-e, --entrypoint <entrypoint-file>`: The path to an [entrypoint file](./configuration) to use.
 
 ---
 
 ### `npx dbos-openapi generate`
 
-**Description:**  
+**Description:**
 This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a DBOS application.
 The generated file is named `openapi.yaml` and is saved to the same directory as the TypeScript entrypoint file.
 For more information, please see the [OpenAPI Tutorial](../tutorials/openapi-tutorial.md).
 
-**Arguments:**  
-- `<entrypoint>`: Path to the application's TypeScript entrypoint (typically `src/operations.ts`)
+**Arguments:**
+- `<entrypoints>`: Path to the application's TypeScript entrypoints (for example, `src/a.ts src/b.ts`)
