@@ -14,7 +14,7 @@ The DBOS Transact CLI helps you run applications locally.
 
 **Description:**
 This command launches the DBOS Transact runtime and HTTP server to serve an application.
-It registers all functions and serves all endpoints in classes exported by the [declared entrypoint files](./configuration#runtime) (`src/operations.ts` by default).
+It registers all functions and serves all endpoints in classes exported by the [declared entrypoint files](./configuration#runtime) (`dist/operations.js` by default).
 Parameters set from the command line take precedence over parameters set in the [configuration file](./configuration).
 You must compile your code (`npm run build`) before running this command.
 
