@@ -225,7 +225,19 @@ Congratulations!  You just launched your first DBOS application.
 ## Deploying to DBOS Cloud
 
 Now, let's serverlessly deploy your application to DBOS Cloud.
-We'll start by creating a DBOS Cloud account.
+First, you need an account.
+
+<Tabs groupId="postgres-or-docker">
+  <TabItem value="existing" label="Use An Existing Account">
+If you already have a DBOS Cloud account (for example, you signed up for one on our [website](https://www.dbos.dev)), you can log in to it.
+From your DBOS application directory, run the following command:
+
+```
+npx dbos-cloud login
+```
+  </TabItem>
+    <TabItem value="new" label="Create a New Account">
+If you don't have a DBOS Cloud account, you can create one.
 From your DBOS application directory, run the following command:
 
 ```
@@ -235,13 +247,13 @@ npx dbos-cloud register -u <username>
 User names should be 3 to 30 characters long and contain only lowercase letters, numbers, and underscores.
 
 When you run this command, it will redirect you to a secure login portal.
-Open the login portal in your browser and click `Confirm`, then create a new account (or log in to your account if you've already created one through our [website](https://dbos.dev)).
+Open the login portal in your browser and click `Confirm`, then create a new account.
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
 
-:::info
-If you register with an email and password, you also need to verify your email through a link we email you.
-:::
+   </TabItem>
+</Tabs>
+
 
 ### Provisioning a Cloud Database Instance
 
