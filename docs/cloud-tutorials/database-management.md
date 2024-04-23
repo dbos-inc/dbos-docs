@@ -6,20 +6,6 @@ description: Learn how to manage DBOS Cloud database instances
 
 In this guide, you'll learn how to manage database instances in DBOS Cloud.
 
-### Preliminaries
-
-Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
-
-```
-npx dbos-cloud register -u <username>
-```
-
-If you did already, simply log in to DBOS Cloud by running:
-
-```
-npx dbos-cloud login
-```
-
 ### Provisioning Database Instances
 
 Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.

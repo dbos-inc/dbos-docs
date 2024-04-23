@@ -8,18 +8,6 @@ In this guide, you'll learn how to manage applications in DBOS Cloud.
 
 ### Preliminaries
 
-Before following any of the steps in this guide, make sure you've created and registered a DBOS Cloud account, which you can do by running:
-
-```
-npx dbos-cloud register -u <username>
-```
-
-If you did already, simply log in to DBOS Cloud by running:
-
-```
-npx dbos-cloud login
-```
-
 To deploy an application, you need a database to connect to.
 You can use the database you created in the [quickstart](../getting-started/quickstart.md) or [provision](./database-management.md#provisioning-database-instances) a new one.
 Additionally, you must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
