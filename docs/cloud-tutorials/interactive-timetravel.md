@@ -7,7 +7,7 @@ description: Learn how to run interactive time-travelled queries on your databas
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-In this guide, you'll learn how to interactively time travel with your DBOS Cloud database: how to query it as of any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
+In this guide, you'll learn how to interactively time travel with DBOS Cloud: how to query your application's database as of any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
 
 ### Preliminaries
 
