@@ -8,9 +8,12 @@ In this guide, you'll learn how to query your DBOS Cloud database interactively 
 
 ### Preliminaries
 
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management).
+
 You need to run our time travel debug proxy locally to transform database queries to view past state.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
 You must make sure the proxy is running through either VSCode or your terminal and is connected to your application database.
+**TODO: need better instructions on how to start the proxy**
 
 In this tutorial, we use [psql](https://www.postgresql.org/docs/current/app-psql.html), a terminal program that allows you to query your database interactively.
 Connect to your local debug proxy through `psql`:
@@ -24,50 +27,34 @@ You are now connected to your application database through our debug proxy! Note
 ### Running Time Travel Queries
 
 By default, any queries you run in `psql` through the debug proxy will show you the latest state of your database.
-As a running example, we deployed a [DBOS Widget Store](https://github.com/dbos-inc/dbos-demo-apps/tree/main/widget-store) app to DBOS Cloud, which contains a `product` table that shows the inventory of products and an `orders` table to show placed orders.
-If you run the following query, you'll get the latest state of the product table:
+As a running example, let's deploy a ["Hello, Database"](../getting-started/quickstart) app to DBOS Cloud, which contains a `dbos_hello` table that shows how many time a person is greeted.
+You can access the greeting endpoint `<YOUR-APP-URL>/greeting/dbos` to generate some data in your database.
+If you run the following query, you'll get the latest state of the `dbos_hello` table, where a person named "dbos" gets greeted 8 times.
 
 ```sql
-postgres=> select product_id, product, inventory from products;
- product_id |        product         | inventory
-------------+------------------------+-----------
-          1 | Premium Quality Widget |         2
+postgres=> select greet_count from dbos_hello where name = 'dbos';
+ greet_count
+-------------
+           8
 ```
 
-If you run the next query, you'll get how many orders are placed so far:
-
-```sql
-postgres=> select count(*) from orders;
- count
--------
-    10
-```
 
 To view your database at a past point in time, you can set the timestamp through a special `DBOS TS <timestamp>` command. We support any timestamp string in [RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339).
 
 ```sql
-postgres=> DBOS TS '2024-04-24T10:00:00-07:00';
+postgres=> DBOS TS '2024-04-26T16:00:00-07:00';
 ```
 
-Now, run the same queries again, you'll see the results as if they ran at 10 AM PDT, 2024/04/24.
-
-For example, we can see there were 7 items left back then:
+Now, run the same query again, you'll see the results as if it ran at 4 PM PDT 2024/04/26.
+We can see the person named "dbos" got 4 greetings back then:
 ```sql
-postgres=> select product_id, product, inventory from products;
- product_id |        product         | inventory
-------------+------------------------+-----------
-          1 | Premium Quality Widget |         7
+postgres=> select greet_count from dbos_hello where name = 'dbos';
+ greet_count
+-------------
+           4
 ```
 
-We can also see that only 5 orders were placed:
-```sql
-postgres=> select count(*) from orders;
- count
--------
-    5
-```
-
-You can run any number of queries to view other tables in the database, and they will all return results as if they ran at 10 AM PDT, 2024/04/24.
+You can run any number of queries to view other rows or tables in the database, and they will all return results as if they ran at the same past point in time.
 
 :::warning
 You should only run any read queries against past database state, but not database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
