@@ -1,24 +1,25 @@
 ---
 sidebar_position: 4
-title: Interactive Time Travel Queries
-description: Learn how to run interactive time travel queries on your database
+title: Interactive Time Travel
+description: Learn how to run interactive time-travelled queries on your database
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-In this guide, you'll learn how to query your DBOS Cloud database interactively and view your application database state at any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
+In this guide, you'll learn how to do interactive time travel on your DBOS Cloud database: how to query it as of any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
 
 ### Preliminaries
 
 Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management).
 
-You need to run our time travel debug proxy locally to transform database queries to view past state.
+In order to time travel, you need to locally install our time travel proxy.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
-You must make sure the proxy is running and connecting to your application database:
+Then, start your proxy and connect it to your application database instance:
+
 <Tabs groupId="environment">
   <TabItem value="VSCode" label="VSCode">
-	  Open your VSCode in your app folder, and click the "⏳ Time Travel Debug" CodeLens to select any workflow to debug. This should automatically launch a debug proxy that connects to your application database.
+	  Open VSCode to your application folder and click the "⏳ Time Travel Debug" CodeLens to select any workflow to debug. This automatically launches the time travel proxy and connects it to your application database instance.
   </TabItem>
   <TabItem value="CLI" label="CLI">
 	  Open a terminal window and navigate to the folder where you downloaded the pre-compiled debug proxy binary file (`debug-proxy`).
@@ -30,22 +31,24 @@ chmod +x debug-proxy
   </TabItem>
 </Tabs>
 
+:::info
+The time travel proxy securely connects to the provenance database, an append-only replica of your application database maintained by DBOS Cloud.
+It uses the historical information in this database to run time-travelled queries without modifying your application database.
+:::
 
-In this tutorial, we use [psql](https://www.postgresql.org/docs/current/app-psql.html), a terminal program that allows you to query your database interactively.
-Open a new terminal window, use the following command to connect to your local debug proxy through `psql`:
+### Running Time Travel Queries
+
+In this tutorial, we interactively run time-travelled queries on your application database using [psql](https://www.postgresql.org/docs/current/app-psql.html).
+First, connect `psql` to your local time travel proxy:
 
 ```bash
 psql -h localhost -p 2345 -U postgres
 ```
 
-You are now connected to your application database through our debug proxy! Note that you don't need any additional authentication between `psql` and the local debug proxy.
-
-### Running Time Travel Queries
-
-By default, any queries you run in `psql` through the debug proxy will show you the latest state of your database.
-As a running example, let's deploy a ["Hello, Database"](../getting-started/quickstart) app to DBOS Cloud, which contains a `dbos_hello` table that shows how many time a person is greeted.
-You can access the greeting endpoint `<YOUR-APP-URL>/greeting/dbos` to generate some data in your database.
-If you run the following query, you'll get the latest state of the `dbos_hello` table, where a person named "dbos" gets greeted 8 times.
+By default, any queries you run will reflect the current state of your database.
+Let's assume you've deployed the ["Hello, Database" quickstart](../getting-started/quickstart) application to DBOS Cloud.
+The application's `dbos_hello` table tracks how many times each person has been greeted.
+The following query tells you how many times Mike has been greeted:
 
 ```sql
 postgres=> select greet_count from dbos_hello where name = 'dbos';
@@ -54,29 +57,20 @@ postgres=> select greet_count from dbos_hello where name = 'dbos';
            8
 ```
 
-
-To view your database at a past point in time, you can set the timestamp through a special `DBOS TS <timestamp>` command. We support any timestamp string in [RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339).
+Now, let's time travel!
+To view your database at a past point in time, you can set the timestamp through the special `DBOS TS <timestamp>` command.
+We support any timestamp string in [RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339).
+For example, to view your database at 4:00:00 PM UTC on 2024-04-26, and see how many times Mike had been greeted as of then, run:
 
 ```sql
-postgres=> DBOS TS '2024-04-26T16:00:00-07:00';
-```
-
-Now, run the same query again, you'll see the results as if it ran at 4 PM PDT 2024/04/26.
-We can see the person named "dbos" got 4 greetings back then:
-```sql
+postgres=> DBOS TS '2024-04-26T16:00:00';
 postgres=> select greet_count from dbos_hello where name = 'dbos';
  greet_count
 -------------
            4
 ```
 
-You can run any number of queries to view other rows or tables in the database, and they will all return results as if they ran at the same past point in time.
-
-:::warning
-You should only run any read queries against past database state, but not database queries that write to the database such as insert/delete/update SQL statements; otherwise, the query results may be incorrect.
-:::
-
-Once you finish inspecting your database at a certain timestamp, you can run `DBOS TS <timestamp>` command again to reset the view of your database to another point in time.
-
-Under the hood, the `DBOS TS <timestamp>` command communicates with the debug proxy to run subsequent queries from your `psql` session at a certain point in time.
-Therefore, time travel queries from multiple `psql` sessions are completely separated and read-only, and running time travel queries doesn't actually restore/change your database.
+You can run any `SELECT` query on the database to query its state as of the timestamp you chose.
+Statements that modify schemas or data (`INSERT`, `UPDATE`, `DROP TABLE`, etc.) will not have any effect.
+At any time, you can run `DBOS TS <timestamp>` again to choose a different timestamp.
+You can also run `DBOS SNAPSHOT RESET` to return to the present.
