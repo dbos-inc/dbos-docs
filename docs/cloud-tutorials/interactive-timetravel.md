@@ -38,7 +38,7 @@ It uses the historical information in this database to run time-travelled querie
 
 ### Running Time Travel Queries
 
-In this tutorial, we interactively run time-travelled queries on your application database using [psql](https://www.postgresql.org/docs/current/app-psql.html).
+In this tutorial, we interactively run time-travelled queries on your application database using [`psql`](https://www.postgresql.org/docs/current/app-psql.html).
 First, connect `psql` to your local time travel proxy:
 
 ```bash
@@ -72,5 +72,5 @@ postgres=> select greet_count from dbos_hello where name = 'dbos';
 
 You can run any `SELECT` query on the database to query its state as of the timestamp you chose.
 Statements that modify schemas or data (`INSERT`, `UPDATE`, `DROP TABLE`, etc.) will not have any effect.
-At any time, you can run `DBOS TS <timestamp>` again to choose a different timestamp.
+At any time, you can run `DBOS TS <timestamp>` again to travel to a different time.
 You can also run `DBOS SNAPSHOT RESET` to return to the present.
