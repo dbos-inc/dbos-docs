@@ -4,6 +4,9 @@ title: Interactive Time Travel Queries
 description: Learn how to run interactive time travel queries on your database
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 In this guide, you'll learn how to query your DBOS Cloud database interactively and view your application database state at any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
 
 ### Preliminaries
@@ -12,11 +15,24 @@ Before following the steps in this guide, make sure you've [deployed an applicat
 
 You need to run our time travel debug proxy locally to transform database queries to view past state.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
-You must make sure the proxy is running through either VSCode or your terminal and is connected to your application database.
-**TODO: need better instructions on how to start the proxy**
+You must make sure the proxy is running and connecting to your application database:
+<Tabs groupId="environment">
+  <TabItem value="VSCode" label="VSCode">
+	  Open your VSCode in your app folder, and click the "⏳ Time Travel Debug" CodeLens to select any workflow to debug. This should automatically launch a debug proxy that connects to your application database.
+  </TabItem>
+  <TabItem value="CLI" label="CLI">
+	  Open a terminal window and navigate to the folder where you downloaded the pre-compiled debug proxy binary file (`debug-proxy`).
+   ```bash
+cd <Your Download Folder>/
+chmod +x debug-proxy
+./debug-proxy -db <app database name>_dbos_prov -host <app cloud database hostname>  -password <database password> -user <database username>
+   ```
+  </TabItem>
+</Tabs>
+
 
 In this tutorial, we use [psql](https://www.postgresql.org/docs/current/app-psql.html), a terminal program that allows you to query your database interactively.
-Connect to your local debug proxy through `psql`:
+Open a new terminal window, use the following command to connect to your local debug proxy through `psql`:
 
 ```bash
 psql -h localhost -p 2345 -U postgres
