@@ -32,11 +32,11 @@ chmod +x debug-proxy
 </Tabs>
 
 :::info
-The time travel proxy securely connects to the provenance database, an append-only replica of your application database maintained by DBOS Cloud.
+DBOS time travel proxy securely connects to the provenance database, an append-only replica of your application database maintained by DBOS Cloud.
 It uses the historical information in this database to run time-travelled queries without modifying your application database.
 :::
 
-### Running Time Travel Queries
+### Running Time-Travelled Queries
 
 In this tutorial, we interactively run time-travelled queries on your application database using [`psql`](https://www.postgresql.org/docs/current/app-psql.html).
 First, connect `psql` to your local time travel proxy:
@@ -51,7 +51,7 @@ The application's `dbos_hello` table tracks how many times each person has been 
 The following query tells you how many times Mike has been greeted:
 
 ```sql
-postgres=> select greet_count from dbos_hello where name = 'dbos';
+postgres=> select greet_count from dbos_hello where name = 'Mike';
  greet_count
 -------------
            8
@@ -64,13 +64,13 @@ For example, to view your database at 4:00:00 PM UTC on 2024-04-26, and see how 
 
 ```sql
 postgres=> DBOS TS '2024-04-26T16:00:00';
-postgres=> select greet_count from dbos_hello where name = 'dbos';
+postgres=> select greet_count from dbos_hello where name = 'Mike';
  greet_count
 -------------
            4
 ```
 
-You can run any `SELECT` query on the database to query its state as of the timestamp you chose.
+You can run any `SELECT` statement on the database to query its state as of the timestamp you chose.
 Statements that modify schemas or data (`INSERT`, `UPDATE`, `DROP TABLE`, etc.) will not have any effect.
 At any time, you can run `DBOS TS <timestamp>` again to travel to a different time.
-You can also run `DBOS SNAPSHOT RESET` to return to the present.
+You can also run `DBOS SNAPSHOT RESET` to return to the present time.
