@@ -66,7 +66,7 @@ As per the previous section, clicking on a value in the Workflow UUID column all
 
 ### Execution Seconds
 
-The dashboard tracks and continuously updates the total execution time for all of your apps. Execution seconds are calculated as the sum of the durations of all the traces. The duration of a trace is defined as the interval from the earliest span start time to the latest span end time, across all spans in the trace. These totals are updated every time the dashboard is refreshed. They are applied against your DBOS Pricing tier's [execution time limit](https://www.dbos.dev/pricing).
+The dashboard tracks and continuously updates the total execution time for all of your apps. Execution seconds are calculated as the sum of the durations of all the traces. The duration of a trace is defined as the wall-clock interval from start to completion. In other words, it is the interval from the earliest span start time to the latest span end time, across all spans in the trace. These totals are updated every time you refresh your dashboard. They are applied against your DBOS Pricing tier's [execution time limit](https://www.dbos.dev/pricing).
 
 The dashboard presents the total number of execution seconds since the start of the month, in orange, and the total for the selected data in green. You can use the above filtering controls to navigate to any particular app, time interval, group of traces or a specific trace and use the green number to view its contribution. 
 
