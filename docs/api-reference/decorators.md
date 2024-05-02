@@ -527,7 +527,7 @@ The decorated method must take as input a Kafka topic, partition, and message as
 
 ```javascript
 import { KafkaConfig, KafkaMessage} from "kafkajs";
-import { Kafka, Workflow, WorkflowContext } from "@dbos-inc/dbos-sdk";
+import { Kafka, KafkaConsume, Workflow, WorkflowContext } from "@dbos-inc/dbos-sdk";
 
 const kafkaConfig: KafkaConfig = {
     brokers: ['localhost:9092']
