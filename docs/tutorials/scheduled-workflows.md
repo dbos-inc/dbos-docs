@@ -1,0 +1,59 @@
+---
+sidebar_position: 19
+title: Scheduling Workflows
+description: Learn how to run DBOS workflows on a schedule.
+---
+
+In this guide, you'll learn how to execute DBOS workflows exactly once per time interval.
+
+### Defining A Workflow Function For Scheduling
+First, define your workflow.  Its parameters must be:
+- The `WorkflowContext`
+- The time that the run was scheduled (as a `Date`).
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow was started behind schedule.
+- The number of instances of the workflow function currently running across the application (as a `number`).  This can be used, for example, to limit the number of running workflows to 1.
+- The number of instances of the workflow function currently running on the local VM (as a `number`).
+
+```typescript
+import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
+
+class ScheduledExample{
+  @Workflow()
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+    ctxt.logger.info(`
+        Running a workflow every 5 seconds -
+          scheduled time: ${schedTime.toISOString()} /
+          actual start time: ${startTime.toISOString()},
+          number running application-wide: ${nRunning}
+          number running on this microvm: ${nRunningHere}
+    `);
+  }
+}
+```
+
+### Scheduling The Workflow
+Then, annotate your method with a [`@Scheduled`](../api-reference/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run evey 30 seconds:
+
+```typescript
+import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
+
+class ScheduledExample{
+  @Workflow()
+  @Scheduled({crontab: '*/30 * * * * *'})
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+    ctxt.logger.info(``);
+  }
+}
+```
+
+The DBOS crontab format supports some common extensions, as seen in the following examples:
+- `* * * * *`: Every minute of every day
+- `* 5 * * 1`: Every minute during the hour of 05:00 on Mondays.
+- `30 * * * * *`: 30 seconds after the beginning of every minute
+- `0 12 * * Sun`: At noon on sundays
+- `0 9-17 * * *`: At the top of the hour, from 9am to 5pm
+- `*/30 * * * * *`: Every 30 seconds (seconds is evenly divisible by 30)
+- `10-19/2 * * January,Feb *`: At 10, 12, 14, 16, and 18 minutes into each hour of every day, only in the months of January and February
+
+### How Scheduling Works
+Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs at most once.  The DBOS system database tracks the last time that the workflow was known to have started; this implementation ensures that the workflow is started at least once.  The combination of mechanisms can therefore ensure that the scheduled workflow occurs exactly once per time interval.

@@ -553,7 +553,7 @@ Runs a workflow function on a specified schedule, with guarantees such as execut
 
 By default, the workflow is executed exactly once per scheduled interval.  This means executions will be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  Tracking of execution history is implemented using system database records.  An workflow key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
 
-The schedule is specified in a format similar to a traditional [`crontab`], with the following notes:
+The schedule is specified in a format similar to a traditional [`crontab`](https://en.wikipedia.org/wiki/Cron), with the following notes:
 . The 5\- and 6\-field versions are supported, if the optional 6th field is prepended it indicates second-level granularity, otherwise it is minute\-level.
 . ',' is supported to indicate a list of values, so '0 0,12 \* \* \*' executes at midnight and noon every day.
 . '/' is supported to indicate divisibility, so '\*/5 \* \* \* \*' indicates every 5 minutes.
@@ -570,7 +570,7 @@ export class SchedulerConfig {
 
 The decorated method must take a Workflow context argument, and the following 4 additional parameters:
 - The time that the run was scheduled (as a `Date`).
-- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow is an old run.
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow is was started behind schedule.
 - The number of instances of the workflow function currently running across the application (as a `number`).  This can be used, for example, to limit the number of running workflows to 1.
 - The number of instances of the workflow function currently running on the local VM (as a `number`).
 
