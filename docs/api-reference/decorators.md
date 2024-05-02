@@ -520,13 +520,14 @@ Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuratio
 
 
 #### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
-Run a transaction or workflow exactly-once for each message received on the specified topic.
+Runs a transaction or workflow exactly-once for each message received on the specified topic.
 Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
 
 ```javascript
 import { KafkaConfig, KafkaMessage} from "kafkajs";
+import { Kafka, Workflow, WorkflowContext } from "@dbos-inc/dbos-sdk";
 
 const kafkaConfig: KafkaConfig = {
     brokers: ['localhost:9092']
@@ -540,6 +541,54 @@ class KafkaExample{
   static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
     // This workflow executes exactly once for each message sent to "example-topic".
     // All methods annotated with Kafka decorators must take in the topic, partition, and message as inputs just like this method.
+  }
+}
+```
+
+### Scheduled Workflow Decorators
+
+#### `@Scheduled(schedulerConfig: SchedulerConfig)` {#scheduled}
+
+Runs a workflow function on a specified schedule, with guarantees such as executing exactly once per scheduled interval.
+
+By default, the workflow is executed exactly once per scheduled interval.  This means executions will be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  Tracking of execution history is implemented using system database records.  An workflow key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
+
+The schedule is specified in a format similar to a traditional [`crontab`], with the following notes:
+. The 5\- and 6\-field versions are supported, if the optional 6th field is prepended it indicates second-level granularity, otherwise it is minute\-level.
+. ',' is supported to indicate a list of values, so '0 0,12 \* \* \*' executes at midnight and noon every day.
+. '/' is supported to indicate divisibility, so '\*/5 \* \* \* \*' indicates every 5 minutes.
+. '\-' is supported to indicate ranges, so '0 9\-17 \* \* \*' indicates every hour (on the hour) from 9am to 5pm.
+. Long and short month and weekday names are supported \(in English\).
+
+The `@Scheduled` decorator's configuration object is:
+```typescript
+export class SchedulerConfig {
+    crontab ?: string = '* * * * *'; // Every minute by default
+    mode ?: SchedulerConcurrencyMode = SchedulerConcurrencyMode.ExactlyOncePerInterval; // How to treat intervals
+}
+```
+
+The decorated method must take a Workflow context argument, and the following 4 additional parameters:
+- The time that the run was scheduled (as a `Date`).
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow is an old run.
+- The number of instances of the workflow function currently running across the application (as a `number`).  This can be used, for example, to limit the number of running workflows to 1.
+- The number of instances of the workflow function currently running on the local VM (as a `number`).
+
+Example:
+```typescript
+import { Scheduled } from "@dbos-inc/dbos-sdk";
+
+class ScheduledExample{
+  @Scheduled({crontab: '*/5 * * * * *'})
+  @Workflow()
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+    ctxt.logger.info(`
+        Running a workflow every 5 seconds -
+          scheduled time: ${schedTime.toISOString()} /
+          actual start time: ${startTime.toISOString()},
+          number running application-wide: ${nRunning}
+          number running on this microvm: ${nRunningHere}
+    `);
   }
 }
 ```
