@@ -563,7 +563,7 @@ The schedule is specified in a format similar to a traditional [`crontab`](https
 The `@Scheduled` decorator's configuration object is:
 ```typescript
 export class SchedulerConfig {
-    crontab ?: string = '* * * * *'; // Every minute by default
+    crontab : string = '* * * * *'; // Every minute by default
     mode ?: SchedulerConcurrencyMode = SchedulerConcurrencyMode.ExactlyOncePerInterval; // How to treat intervals
 }
 ```
