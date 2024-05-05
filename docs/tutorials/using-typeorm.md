@@ -5,29 +5,31 @@ description: Learn how to create and register TypeORM entities and perform trans
 ---
 
 ## TypeORM Overview
-[TypeORM](https://typeorm.io) is an ORM for TypeScript.  It is based on the idea of creating [`Entity`](https://typeorm.io/entities) classes to represent each database table, with the persistent and join key fields marked with [decorators](https://typeorm.io/decorator-reference).  Once entity classes are defined, TypeORM provides methods for storing, updating, and querying the entities via the [`EntityManager`](https://typeorm.io/working-with-entity-manager).  TypeORM can also be used to create and maintain the database schema.
-
-If you are using TypeORM, DBOS needs to know about it for inserting workflow status updates along the transactions used for application code.
-
-Use of TypeORM is optional.  DBOS supports several other libraries for transactional data management.
+[TypeORM](https://typeorm.io) is a popular TypeScript ORM.
+DBOS supports it as an alternative to [Knex](https://knexjs.org/) for transactional data management.
 
 ## Usage
-DBOS supports what is essentially direct use of TypeORM, but a few additional steps are necessary to inform DBOS about the TypeORM entity list, provide the information for establishing the database connection, and use a transaction in the context of a workflow.
+DBOS supports essentially direct use of TypeORM, but a few additional steps are necessary to inform DBOS about the TypeORM entity list, manage database schemas, and use a transaction in the context of a workflow.
 
-### Setting Up The Database Connection
-In order to set up the database connection ([`DataSource`](https://typeorm.io/data-source)), configuration information is provided to DBOS instead of creating a separate configuration file or instantiating `DataSource` directly.  Of particular interest is the line `app_db_client: 'typeorm'`, which indicates that TypeORM is to be loaded and a `DataSource` configured.
+### Getting Started
 
-```yaml
-database:
-  hostname: ${POSTGRES_HOST}
-  port: ${POSTGRES_PORT}
-  username: ${POSTGRES_USERNAME}
-  password: ${POSTGRES_PASSWORD}
-  app_db_name: ${POSTGRES_DATABASE}
-  system_database: 'opsys'
-  connectionTimeoutMillis: 3000
-  app_db_client: 'typeorm'
+An easy way to get started with TypeORM is to bootstrap your application with our TypeORM template.
+This is similar to the template used in the [quickstart](../getting-started/quickstart.md), but built with TypeORM instead of Knex.
+To download it, run:
+
+```bash
+npx -y @dbos-inc/create@latest -t hello-typeorm -n <app-name>
 ```
+
+Then, build it, run schema migrations, and start the TypeORM sample app:
+
+```bash
+npm run build
+npx dbos migrate
+npx dbos start
+```
+
+To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Greeting 1: Hello, dbos!` Each time you refresh the page, the counter should go up by one.
 
 ### Setting Up Entities
 
@@ -53,24 +55,25 @@ class KVOperations {
 }
 ```
 
-### Setting Up The Schema
-TypeORM can use the entity classes to create/migrate (synchronize) and drop the database schema.  (This behavior is optional, for those hesitating to use such automation in production scenarios.)
+### Schema Management
 
-This schema synchronization can be invoked as part of an `@DBOSDeploy` deployment hook.  (Use of the `@DBOSInitializer` hook may also work, but the initialization hook is invoked each time an instance starts, which is far more often than necessary.  The database credentials used on runtime instances may not have privileges to update the schema.   Thus, synchronizing the schema in the `@DBOSInitializer` hook is discouraged.)
-```javascript
-  @DBOSDeploy()
-  static async init(ctx: InitContext) {
-    await ctx.createUserSchema();
-  }
+In production scenarios or when using DBOS Cloud, we strongly recommend you manage your database schema using migrations.
+TypeORM provides rich native migration support, with documentation [here](https://typeorm.io/migrations).
+
+You can [create a new migration](https://typeorm.io/migrations#creating-a-new-migration) by running:
+
+```bash
+npx typeorm migration:create migrations/<migration-name>
 ```
 
-Or from the [testing runtime](../api-reference/testing-runtime.md):
-```javascript
-    await testRuntime.dropUserSchema();
-    await testRuntime.createUserSchema();
+TypeORM can also [automatically generate migration files from changes to your entity files](https://typeorm.io/migrations#generating-migrations).
+Assuming you started with our template, you can use this capability by running:
+
+```bash
+npx typeorm migration:generate -d dist/datasource.js migrations/<migration-name>
 ```
 
-Additional options for triggering schema migration during the application deployment process may be available in the future.
+This automatically generates a migration file containing commands to transition your database from its current schema to the schema defined in your entity files.
 
 ### Invoking Transactions
 In TypeORM (and many other frameworks), the pattern is to run [transactions](https://typeorm.io/transactions) as callback functions.  (This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.)
@@ -105,41 +108,66 @@ If preferred, it is possible to define a `type` to clean up the transaction meth
 type TypeORMTransactionContext = TransactionContext<EntityManager>;
 ```
 
-### Unit Testing
-Use of TypeORM in the testing runtime is quite similar to using TypeORM in development, with the addition of appropriate placement of calls to set up and tear down the database schema.
+### Configuring TypeORM
 
-In `jest`, to set up the database once at the beginning of the test and tear down at the end:
-```javascript
-beforeAll(async () => {
-  testRuntime = await createTestingRuntime([DBOSAppClasses], "dbos-config.yaml");
-  await testRuntime.dropUserSchema(); // Optional
-  await testRuntime.createUserSchema();
-});
+:::info
+If you are using the [TypeORM template](#getting-started), this is done for you.
+:::
 
-afterAll(async () => {
-  await testRuntime.dropUserSchema();
-  await testRuntime.destroy();
-});
-```
+To enable TypeORM, you must set the `app_db_client` field in the [DBOS configuration file](../api-reference/configuration.md) to `typeorm`.
+You should also configure TypeORM migration commands.
+Here is an example of a configuration file set up for TypeORM:
 
-This will create the testing runtime, load TypeORM, and register the entities according to the decorators in `DBOSAppClasses`. The database will be configured according to the `database` section of the specified configuration `dbos-config.yaml` file:
 ```yaml
 database:
-  hostname: ${POSTGRES_HOST}
-  port: ${POSTGRES_PORT}
-  username: ${POSTGRES_USERNAME}
-  password: ${POSTGRES_PASSWORD}
-  app_db_name: ${POSTGRES_DATABASE}
-  system_database: 'opsys'
+  hostname: 'localhost'
+  port: 5432
+  username: 'postgres'
+  app_db_name: 'hello_typeorm'
+  password: ${PGPASSWORD}
   connectionTimeoutMillis: 3000
-  app_db_client: 'typeorm'
+  app_db_client: typeorm
+  migrate:
+    - npx typeorm migration:run -d dist/datasource.js
+  rollback:
+    - npx typeorm migration:revert -d dist/datasource.js
+runtimeConfig:
+  entrypoints:
+    - dist/src/operations.js
 ```
 
-The testing runtime can be used to invoke methods directly, or exercise handlers:
-```javascript
-  testRuntime.invoke(KVController, readUUID).readTxn("oaootest"),
-  const response = await request(testRuntime.getHandlersCallback()).get('/');
+Many TypeORM commands, such as those for [schema migration](#schema-management), require a TypeORM datasource file.
+To avoid managing your configuration in two places, we recommend this file use your DBOS configuration file as a source.
+Here is an example of a datasource file that does this:
+
+```typescript
+import { parseConfigFile } from '@dbos-inc/dbos-sdk/dist/src/dbos-runtime/config';
+import { TlsOptions } from 'tls';
+import { DataSource } from "typeorm";
+
+const [dbosConfig, ] = parseConfigFile();
+
+const AppDataSource = new DataSource({
+    type: 'postgres',
+    host: dbosConfig.poolConfig.host,
+    port: dbosConfig.poolConfig.port,
+    username: dbosConfig.poolConfig.user,
+    password: dbosConfig.poolConfig.password as string,
+    database: dbosConfig.poolConfig.database,
+    ssl: dbosConfig.poolConfig.ssl as TlsOptions,
+    entities: ['dist/entities/*.js'],
+    migrations: ['dist/migrations/*.js'],
+});
+
+AppDataSource.initialize()
+    .then(() => {
+        console.log("Data Source has been initialized!");
+    })
+    .catch((err) => {
+        console.error("Error during Data Source initialization", err);
+    });
+
+export default AppDataSource;
 ```
 
-## TypeORM Example
-The [YKY Social](https://github.com/dbos-inc/dbos-demo-apps/tree/main/yky-social) example uses TypeORM.
+When referencing this file in commands, use the compiled JavaScript (`dist/datasource.js`) instead of the original TypeScript source (`datasource.ts`).
