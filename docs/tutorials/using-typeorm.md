@@ -67,7 +67,7 @@ npx typeorm migration:create migrations/<migration-name>
 ```
 
 TypeORM can also [automatically generate migration files from changes to your entity files](https://typeorm.io/migrations#generating-migrations).
-Assuming you started with our template, you can use this capability by running:
+This requires a datasource file, which is included in our template and [documented below](#configuring-typeorm).
 
 ```bash
 npx typeorm migration:generate -d dist/datasource.js migrations/<migration-name>
