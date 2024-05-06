@@ -19,7 +19,12 @@ Then, start your proxy and connect it to your application database instance:
 
 <Tabs groupId="environment">
   <TabItem value="VSCode" label="VSCode">
-	  Open VSCode to your application folder and click the "⏳ Time Travel Debug" CodeLens to select any workflow to debug. This automatically launches the time travel proxy and connects it to your application database instance.
+	  Open VSCode to your application folder. In the DBOS Cloud View, hover over the application you want to debug and select the `Launch Debug Proxy` menu item.
+    This automatically launches the time travel proxy and connects it to your application database instance.
+    
+![DBOS Time Travel Launch Debug Proxy Screenshot](./assets/ttdbg-launch-proxy.png)
+
+    For more information, please see the [Time Travel Debugger reference](../api-reference/time-travel-debugger.md)
   </TabItem>
   <TabItem value="CLI" label="CLI">
 	  Open a terminal window and navigate to the folder where you downloaded the pre-compiled debug proxy binary file (`debug-proxy`).
