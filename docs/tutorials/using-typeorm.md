@@ -6,7 +6,9 @@ description: Learn how to create and register TypeORM entities and perform trans
 
 ## TypeORM Overview
 [TypeORM](https://typeorm.io) is a popular TypeScript ORM.
-DBOS supports it as an alternative to [Knex](https://knexjs.org/) for transactional data management.
+It is based on the idea of creating [`Entity`](https://typeorm.io/entities) classes to represent each database table, with the persistent and join key fields marked with [decorators](https://typeorm.io/decorator-reference).
+Once entity classes are defined, TypeORM provides methods for storing, updating, and querying the entities via the [`EntityManager`](https://typeorm.io/working-with-entity-manager).
+DBOS supports TypeORM as an alternative to [Knex](https://knexjs.org/) for transactional data management.
 
 ## Usage
 DBOS supports essentially direct use of TypeORM, but a few additional steps are necessary to inform DBOS about the TypeORM entity list, manage database schemas, and use a transaction in the context of a workflow.
