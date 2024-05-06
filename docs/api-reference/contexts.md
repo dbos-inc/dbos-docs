@@ -387,8 +387,6 @@ Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 #### Properties and Methods
 
 - [logger](#initcontextlogger)
-- [createUserSchema](#initcontextcreateuserschema)
-- [dropUserSchema](#initcontextdropuserschema)
 - [queryuserdb](#initcontextqueryuserdb)
 - [getconfig](#initcontextgetconfig)
 
@@ -399,21 +397,6 @@ readonly logger: Logger;
 ```
 
 `logger` is available to record any interesting successes, failures, or diagnostic information that occur during initialization.
-
-#### `InitContext.createUserSchema`
-
-```typescript
-createUserSchema(): Promise<void>;
-```
-
-Creates the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
-
-#### `InitContext.dropUserSchema`
-
-```typescript
-dropUserSchema(): Promise<void>;
-```
-Drops the user database schema.  This currently works in TypeORM only, as in this case the `@Entity` decorations provide enough information for the schema and table DDL to be generated automatically.
 
 #### `InitContext.queryUserDB`
 

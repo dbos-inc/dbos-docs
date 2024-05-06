@@ -12,10 +12,7 @@ In your tests, use [the runtime's methods](#methods) to invoke your application'
 After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
 
 ::::tip
-
-If you use TypeORM, you can use the testing runtime to [create](#runtimecreateuserschema) or [drop](#runtimedropuserschema) your schemas.
-If you use Knex, you are responsible for setting up schemas/tables and cleaning them up, for example by using Knex migrations.
-
+When writing tests, you are responsible for setting up and cleaning up your database schema, for example through migrations.
 ::::
 
 ---
@@ -49,8 +46,6 @@ This method *drops and re-creates* the DBOS system database. You will lose all p
 - [getHandlersCallback()](#runtimegethandlerscallback)
 - [getConfig(key, defaultValue)](#runtimegetconfigkey-defaultvalue)
 - [queryUserDB(sql, ...params)](#runtimequeryuserdbsql-params)
-- [createUserSchema()](#runtimecreateuserschema)
-- [dropUserSchema()](#runtimedropuserschema)
 - [destroy()](#runtimedestroy)
 
 ### runtime.invoke(targetClass, \[workflowUUID, params\])
@@ -154,34 +149,6 @@ For example, to query the `dbos_hello` table created during [`quickstart`](../ge
 const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "dbos");
 expect(rows[0].greet_count).toBe(1);
 ```
-
-### runtime.createUserSchema()
-
-```typescript
-createUserSchema(): Promise<void>;
-```
-
-:::warning
-
-Only available with TypeORM. Throws an error with other database clients.
-
-:::
-
-Creates schemas/tables in the user database based on the provided TypeORM entity classes.
-
-### runtime.dropUserSchema()
-
-```typescript
-dropUserSchema(): Promise<void>;
-```
-
-:::warning
-
-Only available with TypeORM. Throws an error with other database clients.
-
-:::
-
-Drops schemas/tables created by [`runtime.createUserSchema()`](#runtimecreateuserschema).
 
 ### runtime.destroy()
 
