@@ -16,7 +16,73 @@ or by searching the
 [VS Code Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
 for "DBOS".
 
-## Commands
+## Views
+
+As of v1.2 of the DBOS Time Travel Debugger Extension, you can view your DBOS Cloud applications
+and database instances directly inside VSCode. Hovering over a cloud resource provides additional
+information in a tooltip.
+
+![DBOS Cloud resources](./assets/ttdbg-proxy-terminal.png)
+
+## Menu Items
+
+### Launch Debug Proxy
+
+The time travel debugger relies on Debug Proxy utility to project the state of the database as it existed when a selected workflow started.
+When debugging a DBOS application in VSCode, the Debug Proxy is launched automatically. 
+You can launch the Debug Proxy manually in order to  use `psql` for running [interactive time-traveled queries](../cloud-tutorials/interactive-timetravel.md).
+
+When the Debug Proxy is running, its output appears in a [VSCode terminal window](https://code.visualstudio.com/docs/terminal/basics).
+You cannot interact with the Debug Proxy via this window, but you can shut it down with Ctrl-C.
+
+### Launch DBOS Dashboard
+
+This menu item launches the [Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md) in a new browser instance.
+
+## Interactive Time Travel Commands
+
+When interactively querying your DBOS Cloud database, the following additional commands can be invoked from the 
+[`psql`](https://www.postgresql.org/docs/current/app-psql.html) command prompt. 
+As is typical for SQL commands, the interactive time travel commands are case insensitive.
+
+### DBOS TIMESTAMP
+
+::::info
+Can be shortened to `DBOS TS`
+::::
+
+Sets the time travel debugger to a specific point in time for time travel queries. Timestamp can be specified in 
+[RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339) (example: `2024-04-22T14:56:56-07:00`)
+or as an integer indicating the Unix epoch in milliseconds. RFC 3339 formatted timestamps
+must be enclosed in quotes.
+
+Examples:
+
+* `DBOS TIMESTAMP "2024-04-22T14:56:56-07:00"`
+* `DBOS TS "2024-04-22T14:56:56-07:00"`
+* `DBOS TIMESTAMP 1234567890`
+
+### DBOS WORKFLOW
+
+::::info
+Can be shortened to `DBOS WF`
+::::
+
+Sets the time travel debugger to the specific point in time when a specified workflow started. 
+Workflows are identified by their workflow uuid, which can be found in the 
+[Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md).
+The workflow uuid must be enclosed in quotes when using this command.
+
+Examples:
+
+* `DBOS WORKFLOW "7eb0968a-fbf0-4af2-909f-51d8516e7351"`
+* `DBOS WF "7eb0968a-fbf0-4af2-909f-51d8516e7351"`
+
+### DBOS SNAPSHOT RESET
+
+Resets the time travel snapshot to the current time.
+
+## VSCode Commands
 
 These commands can be invoked via the [VS Code Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette).
 
