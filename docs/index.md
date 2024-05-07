@@ -39,7 +39,7 @@ Here are some of the core features of DBOS Cloud:
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | [Serverless App Deployment](./cloud-tutorials/application-management.md)      | Deploy apps to DBOS Cloud in minutes.
-| [Interactive Time Travel](./cloud-tutorials/timetravel-debugging.md)          | Query your application database as of any past point in time.
+| [Interactive Time Travel](./cloud-tutorials/interactive-timetravel.md)        | Query your application database as of any past point in time.
 | [Time Travel Debugging](./cloud-tutorials/timetravel-debugging.md)            | Replay any DBOS Cloud trace locally on your computer.
 | [Cloud Database Management](./cloud-tutorials/database-management.md)         | Provision cloud Postgres instances for your applications.
 | [Built-in Observability](./cloud-tutorials/monitoring-dashboard.md)           | Built-in log capture, request tracing, and dashboards.
