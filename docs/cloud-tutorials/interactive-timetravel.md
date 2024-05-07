@@ -68,7 +68,7 @@ We support any timestamp string in [RFC 3339 format](https://datatracker.ietf.or
 For example, to view your database at 4:00:00 PM UTC on 2024-04-26, and see how many times Mike had been greeted as of then, run:
 
 ```sql
-postgres=> DBOS TS '2024-04-26T16:00:00';
+postgres=> DBOS TS '2024-04-26T16:00:00Z';
 postgres=> select greet_count from dbos_hello where name = 'Mike';
  greet_count
 -------------
@@ -77,5 +77,5 @@ postgres=> select greet_count from dbos_hello where name = 'Mike';
 
 You can run any `SELECT` statement on the database to query its state as of the timestamp you chose.
 Statements that modify schemas or data (`INSERT`, `UPDATE`, `DROP TABLE`, etc.) will not have any effect.
-At any time, you can run `DBOS TS <timestamp>` again to travel to a different time.
-You can also run `DBOS SNAPSHOT RESET` to return to the present time.
+At any time, you can run `DBOS TS <timestamp>;` again to travel to a different time.
+You can also run `DBOS SNAPSHOT RESET;` to return to the present time.
