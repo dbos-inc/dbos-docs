@@ -65,10 +65,10 @@ postgres=> select greet_count from dbos_hello where name = 'Mike';
 Now, let's time travel!
 To view your database at a past point in time, you can set the timestamp through the special `DBOS TS <timestamp>` command.
 We support any timestamp string in [RFC 3339 format](https://datatracker.ietf.org/doc/html/rfc3339).
-For example, to view your database at 4:00:00 PM UTC on 2024-04-26, and see how many times Mike had been greeted as of then, run:
+For example, to view your database at 4:00:00 PM PDT (UTC-07:00) on 2024-04-26, and see how many times Mike had been greeted as of then, run:
 
 ```sql
-postgres=> DBOS TS '2024-04-26T16:00:00Z';
+postgres=> DBOS TS '2024-04-26T16:00:00-07:00';
 postgres=> select greet_count from dbos_hello where name = 'Mike';
  greet_count
 -------------
