@@ -10,7 +10,7 @@ In this guide, you'll learn how to execute DBOS workflows exactly once per time 
 First, define your workflow.  Its parameters must be:
 - The `WorkflowContext`
 - The time that the run was scheduled (as a `Date`).
-- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow was started behind schedule.
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow was started behind schedule.
 
 ```typescript
 import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';

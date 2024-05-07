@@ -570,7 +570,7 @@ export class SchedulerConfig {
 
 The decorated method must take a Workflow context argument, and the following additional parameters:
 - The time that the run was scheduled (as a `Date`).
-- The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow is was started behind schedule.
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow is was started behind schedule.
 
 Example:
 ```typescript
