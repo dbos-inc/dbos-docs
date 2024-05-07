@@ -568,11 +568,9 @@ export class SchedulerConfig {
 }
 ```
 
-The decorated method must take a Workflow context argument, and the following 4 additional parameters:
+The decorated method must take a Workflow context argument, and the following additional parameters:
 - The time that the run was scheduled (as a `Date`).
 - The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow is was started behind schedule.
-- The number of instances of the workflow function currently running across the application (as a `number`).  This can be used, for example, to limit the number of running workflows to 1.
-- The number of instances of the workflow function currently running on the local VM (as a `number`).
 
 Example:
 ```typescript
@@ -581,13 +579,11 @@ import { Scheduled } from "@dbos-inc/dbos-sdk";
 class ScheduledExample{
   @Scheduled({crontab: '*/5 * * * * *'})
   @Workflow()
-  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
     ctxt.logger.info(`
         Running a workflow every 5 seconds -
           scheduled time: ${schedTime.toISOString()} /
-          actual start time: ${startTime.toISOString()},
-          number running application-wide: ${nRunning}
-          number running on this microvm: ${nRunningHere}
+          actual start time: ${startTime.toISOString()}
     `);
   }
 }

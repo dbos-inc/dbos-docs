@@ -11,21 +11,17 @@ First, define your workflow.  Its parameters must be:
 - The `WorkflowContext`
 - The time that the run was scheduled (as a `Date`).
 - The time that the run was actually started (as a `Date`).  This can be used to tell if an exacty-once workflow was started behind schedule.
-- The number of instances of the workflow function currently running across the application (as a `number`).  This can be used, for example, to limit the number of running workflows to 1.
-- The number of instances of the workflow function currently running on the local VM (as a `number`).
 
 ```typescript
 import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 
 class ScheduledExample{
   @Workflow()
-  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
     ctxt.logger.info(`
         Running a workflow every 5 seconds -
           scheduled time: ${schedTime.toISOString()} /
-          actual start time: ${startTime.toISOString()},
-          number running application-wide: ${nRunning}
-          number running on this microvm: ${nRunningHere}
+          actual start time: ${startTime.toISOString()}
     `);
   }
 }
@@ -40,7 +36,7 @@ import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 class ScheduledExample{
   @Workflow()
   @Scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date, nRunning: number, nRunningHere: number) {
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
     ctxt.logger.info(``);
   }
 }
