@@ -28,7 +28,7 @@ class ScheduledExample{
 ```
 
 ### Scheduling The Workflow
-Then, annotate your method with a [`@Scheduled`](../api-reference/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run evey 30 seconds:
+Then, annotate your method with a [`@Scheduled`](../api-reference/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run every 30 seconds:
 
 ```typescript
 import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
