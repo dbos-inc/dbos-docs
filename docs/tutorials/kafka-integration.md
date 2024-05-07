@@ -17,7 +17,7 @@ Then, define your transaction or workflow. It must take in the Kafka topic, part
 ```javascript
 import { Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
 
-class KafkaExample{
+export class KafkaExample{
   @Workflow()
   static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: number, message: KafkaMessage) {
     ctxt.logger.info(`Message received: ${message.value?.toString()}`)
@@ -38,7 +38,7 @@ const kafkaConfig: KafkaConfig = {
 }
 
 @Kafka(kafkaConfig)
-class KafkaExample{
+export class KafkaExample{
 
   @KafkaConsume("example-topic")
   @Workflow()

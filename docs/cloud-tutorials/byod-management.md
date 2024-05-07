@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Bring Your Own Database
 description: Learn how to bring your own PostgreSQL database to DBOS Cloud
 ---
