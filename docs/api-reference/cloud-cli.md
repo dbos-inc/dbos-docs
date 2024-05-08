@@ -183,7 +183,7 @@ It executes the [migration commands declared in dbos-config.yaml](./configuratio
 
 **Parameters:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
-- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas&mdash;to roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback). You can list previous versions and their IDs with the [versions command](#npx-dbos-cloud-app-versions).
+- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas&mdash;to roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback) instead. You can list previous versions and their IDs with the [versions command](#npx-dbos-cloud-app-versions).
 
 ---
 
