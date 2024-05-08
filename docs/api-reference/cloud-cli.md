@@ -121,6 +121,18 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ---
 
+### `npx dbos-cloud db restore`
+
+**Description:**
+This command performs [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to create a new database instance containing the state of your database instance at a previous point in time.
+After restoration is complete, we recommend using [`change-database-instance`](#npx-dbos-cloud-app-change-database-instance) to redeploy your applications to the new database instance, then [destroying](#npx-dbos-cloud-db-destroy) the original.
+
+**Parameters:**
+- `<database-instance-name>`: The name of the database instance to restore from.
+- `-t, --restore-time <string>`: The timestamp to restore from, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339). Must be within the backup retention period of your database (24 hours for free-tier users).
+- `-n, --target-name <string>`: The name of the new database instance to create.
+---
+
 ### `npx dbos-cloud db link`
 
 **Description:**
@@ -171,6 +183,7 @@ It executes the [migration commands declared in dbos-config.yaml](./configuratio
 
 **Parameters:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
+- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas&mdash;to roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback). You can list previous versions and their IDs with the [versions command](#npx-dbos-cloud-app-versions).
 
 ---
 
@@ -239,6 +252,25 @@ If run in an application root directory with no application name provided, retri
 - `AppURL`: The URL at which the application is hosted.
 ---
 
+### `npx dbos-cloud app versions`
+
+**Parameters:**
+- `[application-name]`: The name of the application to retrieve.
+
+**Description:**
+Retrieve a list of an application's past versions.
+A new version is created each time an application is deployed.
+
+**Parameters:**
+- `--json`: Emit JSON output
+
+**Output:**
+For each previous version of this application, emit:
+- `ApplicationName`: The name of this application.
+- `Version`: The ID of this version.
+- `CreationTime`: The timestamp (in UTC with [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format) at which this version was created.
+---
+
 ### `npx dbos-cloud app logs`
 
 **Description:**
@@ -247,3 +279,17 @@ It retrieves that application's logs.
 
 **Parameters:**
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
+
+### `npx dbos-cloud app change-database-instance`
+
+**Description:**
+This command must be run from an application root directory.
+It redeploys the application to a new database instance.
+It is meant to be used with [`database restore`](#npx-dbos-cloud-db-restore) during disaster recovery to transfer applications to the restored database instance.
+
+**Parameters:**
+- `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
+- `-d, --database <string>` The name of the new database instance for this application.
+- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. During restoration, we recommend deploying to the version active at the timestamp to which you recovered. You can list previous versions and their IDs and timestamps with the [versions command](#npx-dbos-cloud-app-versions).
+
+---
