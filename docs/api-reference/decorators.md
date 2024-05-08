@@ -560,11 +560,15 @@ The schedule is specified in a format similar to a traditional [`crontab`](https
 . '\-' is supported to indicate ranges, so '0 9\-17 \* \* \*' indicates every hour (on the hour) from 9am to 5pm.
 . Long and short month and weekday names are supported \(in English\).
 
+Two scheduling modes are currently supported:
+- *SchedulerMode.ExactlyOncePerInterval*: The workflow execution schedule begins when the decorated function is first deployed and activated.  If the application is deactivated, missed executions will be started when the application is reactivated, such that the workflow is executed exactly once per scheduled interval (starting from when the function is first deployed).
+- *SchedulerMode.ExactlyOncePerIntervalWhenActive*: Similar to `ExactlyOncePerInterval`, except that any workflow executions that would have occurred when the application is inactive are not made up.
+
 The `@Scheduled` decorator's configuration object is:
 ```typescript
 export class SchedulerConfig {
     crontab : string = '* * * * *'; // Every minute by default
-    mode ?: SchedulerConcurrencyMode = SchedulerConcurrencyMode.ExactlyOncePerInterval; // How to treat intervals
+    mode ?: SchedulerMode = SchedulerMode.ExactlyOncePerInterval; // How to treat intervals
 }
 ```
 
@@ -577,7 +581,7 @@ Example:
 import { Scheduled } from "@dbos-inc/dbos-sdk";
 
 class ScheduledExample{
-  @Scheduled({crontab: '*/5 * * * * *'})
+  @Scheduled({crontab: '*/5 * * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive})
   @Workflow()
   static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
     ctxt.logger.info(`

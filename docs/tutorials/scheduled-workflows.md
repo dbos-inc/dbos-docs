@@ -55,9 +55,12 @@ The DBOS crontab format supports some common extensions, as seen in the followin
 Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs at most once.  The DBOS system database tracks the last time that the workflow was known to have started; this implementation ensures that the workflow is started at least once.  The combination of mechanisms can therefore ensure that the scheduled workflow occurs exactly once per time interval.
 
 ### Skipping scheduled workflows
-By default, scheduled workflows are executed exactly once per interval.  This means that, if an application is stopped for an extended period, DBOS Transact could initiate a significant number of workflows upon restart.  This would be particularly noticeable in a development setting.
+By default, scheduled workflows are executed exactly once per interval.  This means that, if an application is stopped for an extended period, DBOS Transact could initiate a significant number of workflows upon restart.  If it is known by the application developer that "makeup work" should not be scheduled for a given workflow function, the mode for that function should be changed in its configuration:
+```typescript
+    @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '...'})
+```
 
-To override this behavior, a flag can be set in `dbos-config.yaml`:
+This would be particularly noticeable during development, or special deployment settings.  To override this behavior globally, a flag can be set in `dbos-config.yaml`:
 ```yaml
 skip_missed_scheduled_workflows: true
 ```
