@@ -21,7 +21,7 @@ You must compile your code (`npm run build`) before running this command.
 **Parameters:**
 - `-p, --port <port-number>`: The port on which to serve your functions.
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
 
 ---
 
@@ -78,7 +78,7 @@ You must compile your code (`npm run build`) and start the debug proxy before ru
 - `-u, --uuid <string>`: The workflow identity to replay.
 - `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-c, --configfile <config-file>`: The path to a YAML [configuration file](./configuration) to use.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
 
 ---
 
