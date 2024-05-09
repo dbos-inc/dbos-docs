@@ -1,6 +1,6 @@
 ---
 sidebar_position: 18
-title: Scheduling Workflows
+title: Scheduled Workflows
 description: Learn how to run DBOS workflows on a schedule.
 ---
 
