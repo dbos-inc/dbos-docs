@@ -77,13 +77,13 @@ npx dbos-cloud app versions <app-name>
 ```
 
 You can redeploy a previous version of your application by passing `--previous-version <version-id>` to the [`app deploy`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-deploy) command.
-However, this will fail if the previous and current versions have different database schemas.
-To roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback) instead.
 
 ```
 npx dbos-cloud app deploy --previous-version <version-id>
 ```
 
+However, this will fail if the previous and current versions have different database schemas.
+To roll back your schema, use the [rollback command](#rolling-back-application-databases) instead.
 
 ### Deleting Applications
 

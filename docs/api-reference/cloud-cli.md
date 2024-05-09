@@ -260,6 +260,7 @@ If run in an application root directory with no application name provided, retri
 **Description:**
 Retrieve a list of an application's past versions.
 A new version is created each time an application is deployed.
+If run in an application root directory with no application name provided, retrieve versions of the local application.
 
 **Parameters:**
 - `--json`: Emit JSON output
@@ -285,7 +286,7 @@ It retrieves that application's logs.
 **Description:**
 This command must be run from an application root directory.
 It redeploys the application to a new database instance.
-It is meant to be used with [`database restore`](#npx-dbos-cloud-db-restore) during disaster recovery to transfer applications to the restored database instance.
+It is meant to be used with [`database restore`](#npx-dbos-cloud-db-restore) during disaster recovery to transfer the application to the restored database instance.
 
 **Parameters:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
