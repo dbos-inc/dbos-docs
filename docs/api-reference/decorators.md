@@ -441,25 +441,6 @@ static async checkStringG(_ctx: HandlerContext, @ArgVarchar(10) v: string) {
 
 ### Logging and Tracing Decorators
 
-#### `@Debug`
-Marks a function for debug tracing.
-
-```typescript
-export class Operations
-{
-  @Debug
-  static async doOperation(_ctx: DBOSContext) {
-    ...
-  }
-}
-```
-
-This decorator will ensure the function is registered with DBOS and benefit from its [logging subsystem](../tutorials/logging).
-
-:::info note
-In the future, a different decorator may be suggested for the purpose of simply registering a function, with separate control over which functions are traced.
-:::
-
 #### `@SkipLogging`
 
 Prevents a function argument from being recorded in traces. This could be used if the argument is an opaque object, context, connection, service, or of sensitive nature. See also [`@LogMask`](#logmask).
@@ -467,8 +448,8 @@ Prevents a function argument from being recorded in traces. This could be used i
 ```typescript
 export class Operations
 {
-  @Debug
-  static async doOperation(_ctx: DBOSContext, @SkipLogging notToBeRecorded: unknown) {
+  @Transaction()
+  static async doOperation(ctx: TransactionContext, @SkipLogging notToBeRecorded: unknown) {
     ...
   }
 }
@@ -480,8 +461,8 @@ Prevents an argument from being recorded in traces in plain text. This could be 
 ```typescript
 export class Operations
 {
-  @Debug
-  static async doOperation(_ctx: DBOSContext, @LogMask(LogMasks.HASH) toBeHashed: string) {
+  @Transaction()
+  static async doOperation(ctx: TransactionContext, @LogMask(LogMasks.HASH) toBeHashed: string) {
     ...
   }
 }
@@ -563,7 +544,7 @@ DBOS does not support the `oauth2` OpenAPI security scheme at this time.
 @OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
 @Authentication(authMiddleware)
 export class Operations {
-@GetApi("/post/:id")
+  @GetApi("/post/:id")
   static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
     ...
   }
