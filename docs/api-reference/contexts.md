@@ -158,19 +158,44 @@ The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) 
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Used to invoke workflows, transactions, and communicators.
-The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
+Used to invoke transactions and communicators.
+To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`startWorkflow`](#handlerctxtstartworkflow) instead.
+The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-handlerCtxt.invoke(Bar).foo(baz)
+const output = handlerCtxt.invoke(Cls).fn(arg)
 ```
 
-When calling transactions or communicators, `invoke()` asynchronously returns the function's output.
-When calling workflows, `invoke()` asynchronously returns a [`handle`](./workflow-handles) for the workflow.
-
-Note that the DBOS runtime will supply the context to invoked functions.
+The DBOS Transact runtime will automatically supply the invoked function its context.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
+
+#### `handlerCtxt.invokeWorkflow`
+
+```typescript
+invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+```
+
+Invoke a workflow and wait for it to complete, returning its result.
+The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg)
+```
+
+#### `handlerCtxt.startWorkflow`
+
+```typescript
+invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+```
+
+Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg)
+```
 
 #### `handlerCtxt.retrieveWorkflow`
 
@@ -227,10 +252,10 @@ invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 Invoke transactions and communicators.
 To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflow).
 
-The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
+The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-workflowCtxt.invoke(Bar).foo(baz)
+const output = workflowCtxt.invoke(Cls).fn(arg)
 ```
 
 Note that the DBOS runtime will supply a context to invoked functions.
@@ -241,13 +266,12 @@ Note that the DBOS runtime will supply a context to invoked functions.
 childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
-Invoke another workflow.
-This returns a [workflow handle](./workflow-handles) for the new workflow.
-
-The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
+Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
+const workflowHandle = await workflowCtxt.childWorkflow(Cls).wf(arg)
 ```
 
 #### `workflowCtxt.send`
