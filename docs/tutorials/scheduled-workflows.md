@@ -60,9 +60,4 @@ By default, scheduled workflows are executed exactly once per interval.  This me
     @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '...'})
 ```
 
-This would be particularly noticeable during development, or special deployment settings.  To override this behavior globally, a flag can be set in `dbos-config.yaml`:
-```yaml
-skip_missed_scheduled_workflows: true
-```
-
-If the flag is set, DBOS Transact will not consult the system database to figure out if scheduled workflows were missed, but will instead start the schedule at the current time.
+If the mode is set to `ExactlyOncePerIntervalWhenActive` , DBOS Transact will not consult the system database to figure out if scheduled workflows were missed, but will instead start the schedule at the current time.

@@ -139,17 +139,6 @@ telemetry:
     silent: false # false (default) | true
 ```
 
----
-
-### Scheduled Workflows
-
-By default, DBOS Transact will initiate scheduled workflows that should have occurred in the past, but were not executed because the application was inactive.
-
-This "makeup work" can be suppressed by setting the following configuration item:
-```yaml
-skip_missed_scheduled_workflows: true
-```
-
 --- 
 
 ### Configuration Schema File
