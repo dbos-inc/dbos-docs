@@ -4,11 +4,11 @@ title: Configuration
 description: DBOS configuration reference
 ---
 
-You can configure a DBOS runtime with a configuration file.
-By default, DBOS looks for a file named `dbos-config.yaml` at the project's root.
-You can provide the path to a custom configuration file using the [CLI](./cli).
-
-The configuration file must be valid [YAML](https://yaml.org/) conforming to the schema described below.
+You can configure the DBOS Transact runtime with a configuration file.
+Valid configuration files must be:
+- Named `dbos-config.yaml`
+- Located at the application package root.
+- Valid [YAML](https://yaml.org/) conforming to the schema described below.
 
 ::::info
 You can use environment variables for configuration values through the syntax `key: ${VALUE}`.
