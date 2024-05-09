@@ -551,7 +551,7 @@ class KafkaExample{
 
 Runs a workflow function on a specified schedule, with guarantees such as executing exactly once per scheduled interval.
 
-By default, the workflow is executed exactly once per scheduled interval while the application is active.  This means executions might be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  Tracking of execution history is implemented using system database records.  A workflow idempotency key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
+By default, the workflow is executed exactly once per scheduled interval.  This means executions might be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  Tracking of execution history is implemented using system database records.  A workflow idempotency key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
 
 The schedule is specified in a format similar to a traditional [`crontab`](https://en.wikipedia.org/wiki/Cron), with the following notes:
 . The 5\- and 6\-field versions are supported, if the optional 6th field is prepended it indicates second-level granularity, otherwise it is minute\-level.
