@@ -36,10 +36,11 @@ Here are some of the core features of DBOS Transact:
 
 Here are some of the core features of DBOS Cloud:
 
-| Feature                                                                       | Description
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Serverless App Deployment](./cloud-tutorials/application-management.md)      | Deploy apps to DBOS Cloud in minutes.
-| [Interactive Time Travel](./cloud-tutorials/interactive-timetravel.md)        | Query your application database as of any past point in time.
-| [Time Travel Debugging](./cloud-tutorials/timetravel-debugging.md)            | Replay any DBOS Cloud trace locally on your computer.
-| [Cloud Database Management](./cloud-tutorials/database-management.md)         | Provision cloud Postgres instances for your applications.
-| [Built-in Observability](./cloud-tutorials/monitoring-dashboard.md)           | Built-in log capture, request tracing, and dashboards.
+| Feature                                                                          | Description
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [Serverless App Deployment](./cloud-tutorials/application-management.md)         | Deploy apps to DBOS Cloud in minutes.
+| [Interactive Time Travel](./cloud-tutorials/interactive-timetravel.md)           | Query your application database as of any past point in time.
+| [Time Travel Debugging](./cloud-tutorials/timetravel-debugging.md)               | Replay any DBOS Cloud trace locally on your computer.
+| [Cloud Database Management](./cloud-tutorials/database-management.md)            | Provision cloud Postgres instances for your applications.
+| [Disaster Recovery](./cloud-tutorials/database-management.md#database-recovery)  | Automatically recover your database and applications to a past point in time.
+| [Built-in Observability](./cloud-tutorials/monitoring-dashboard.md)              | Built-in log capture, request tracing, and dashboards.
