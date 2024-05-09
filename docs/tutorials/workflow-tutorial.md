@@ -38,7 +38,7 @@ class Greetings {
 
 ### Invoking Functions from Workflows
 
-Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoketargetclass) method.
+Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoke) method.
 For example, this line from our above example invokes the transaction `InsertGreeting`:
 
 ```javascript
@@ -47,7 +47,7 @@ await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 
 The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
 
-You can also invoke other workflows using the [ctxt.childWorkflow()](../api-reference/contexts#workflowctxtchildworkflowwf-args) method.
+You can also invoke other workflows using the [ctxt.childWorkflow()](../api-reference/contexts#workflowctxtchildworkflow) method.
 
 ### Reliability Guarantees
 
@@ -62,7 +62,7 @@ Workflows provide the following reliability guaranteees:
 Workflows must be deterministic: if called multiple times with the same inputs, they should always do the same thing.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
-You can safely [invoke](../api-reference/contexts.md#workflowctxtinvoketargetclass) these methods from a workflow.
+You can safely [invoke](../api-reference/contexts.md#workflowctxtinvoke) these methods from a workflow.
 
 :::warning
 It's important to call non-deterministic operations (particularly third-party APIs) from [communicators](./communicator-tutorial) so DBOS knows to retry them safely.

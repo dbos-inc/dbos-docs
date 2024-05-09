@@ -96,7 +96,7 @@ http:
 ### Application
 
 Applications can optionally use the application configuration to define custom properties as key-value pairs.
-These properties can be retrieved from any [context](./contexts) via the [`getConfig`](../api-reference/contexts#ctxtgetconfigkey-defaultvalue) method.
+These properties can be retrieved from any [context](./contexts) via the [`getConfig`](../api-reference/contexts#ctxtgetconfig) method.
 
 **Example**:
 ```yaml
