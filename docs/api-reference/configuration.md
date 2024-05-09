@@ -5,10 +5,10 @@ description: DBOS configuration reference
 ---
 
 You can configure the DBOS Transact runtime with a configuration file.
-Valid configuration files must:
-- Be named `dbos-config.yaml`
-- Be located at the application package root.
-- Be valid [YAML](https://yaml.org/) conforming to the schema described below.
+Valid configuration files must be:
+- Named `dbos-config.yaml`
+- Located at the application package root.
+- Valid [YAML](https://yaml.org/) conforming to the schema described below.
 
 ::::info
 You can use environment variables for configuration values through the syntax `key: ${VALUE}`.
