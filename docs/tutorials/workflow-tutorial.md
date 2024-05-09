@@ -78,15 +78,18 @@ For more information on workflow communication, see [our guide](./workflow-commu
 
 ### Asynchronous Workflows
 
-Because workflows are often long-running, DBOS supports invoking workflows asynchronously.
-When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](../api-reference/workflow-handles):
+Because workflows are often long-running, DBOS supports starting workflows asynchronously without waiting for them to complete.
+When you start a workflow from a handler or another workflow with [`ctxt.startWorkflow`](./contexts#handlerctxtinvoke), the invocation returns a [workflow handle](../api-reference/workflow-handles):
 
 ```javascript
   @GetApi(...)
   static async exampleHandler(ctxt: HandlerContext, ...) {
-    const handle = await ctxt.invoke(Class).workflow(...);
+    const handle = await ctxt.startWorkflow(Class).workflow(...);
   }
 ```
+
+Calls to [`ctxt.startWorkflow`](./contexts#handlerctxtinvoke) resolve as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+This behavior is useful if you need to quickly acknowledge receipt of an event then process it asynchronously (for example, in a webhook).
 
 You can also retrieve another workflow's handle if you know its identity:
 
@@ -100,14 +103,8 @@ You can also retrieve another workflow's handle if you know its identity:
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
-const handle = await ctxt.invoke(Class).workflow(...);
+const handle = await ctxt.retrieveWorkflow(workflowIdentity)
 const result = await handle.getResult();
-```
-
-Or, more concisely:
-
-```javascript
-const result = await ctxt.invoke(Class).workflow(name).then(h => h.getResult());
 ```
 
 For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).

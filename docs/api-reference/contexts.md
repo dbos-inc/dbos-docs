@@ -271,7 +271,7 @@ This method resolves as soon as the handle is safely created; at this point the 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await workflowCtxt.childWorkflow(Cls).wf(arg)
+const workflowHandle = await ctxt.childWorkflow(Cls.wf, arg)
 ```
 
 #### `workflowCtxt.send`
