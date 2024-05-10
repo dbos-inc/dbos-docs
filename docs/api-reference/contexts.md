@@ -163,7 +163,7 @@ To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`sta
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = handlerCtxt.invoke(Cls).fn(arg)
+const output = await handlerCtxt.invoke(Cls).fn(arg)
 ```
 
 You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
