@@ -216,8 +216,8 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [setEvent(key, value)](#workflowctxtsetevent)
 - [getEvent()](#workflowctxtgetevent)
 - [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflow)
+- [sleep(durationSec)](#workflowcontextsleep)
 - [sleepms(durationMS)](#workflowcontextsleepms)
-- [sleepsecs(durationSec)](#workflowcontextsleepsecs)
 
 #### `workflowCtxt.invoke`
 
@@ -304,11 +304,14 @@ Returns a [workflow handle](./workflow-handles.md) to the workflow with [identit
 
 #### `WorkflowContext.sleep`
 
-This function is deprecated in favor of its equivalent, [`sleepsecs`](#workflowcontextsleepsecs).  Alternatively, [`sleepms`](#workflowcontextsleepms) is more precise.
-
 ```typescript
 sleep(durationSec: number): Promise<void>
 ```
+
+Sleep for `durationSec` seconds.
+The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
+
+Alternatively, [`sleepms`](#workflowcontextsleepms) is more precise.
 
 #### `WorkflowContext.sleepms`
 
@@ -318,16 +321,6 @@ sleepms(durationMS: number): Promise<void>
 
 Sleep for `durationMS` milliseconds.
 The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
-
-#### `WorkflowContext.sleepsecs`
-
-```typescript
-sleepsecs(durationSec: number): Promise<void>
-```
-
-Sleep for `durationSec` seconds.
-The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
-
 
 ---
 

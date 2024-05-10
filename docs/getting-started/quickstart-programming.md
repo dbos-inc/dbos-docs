@@ -199,7 +199,7 @@ export class Greetings {
             ctxt.logger.info(
                 "Press control + C to interrupt the workflow..."
             );
-            await ctxt.sleepsecs(1);
+            await ctxt.sleepms(1000);
         }
 
         await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
