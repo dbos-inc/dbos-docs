@@ -47,7 +47,7 @@ await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 
 The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
 
-You can also invoke other workflows using the [ctxt.childWorkflow()](../api-reference/contexts#workflowctxtchildworkflow) method.
+You can also invoke other workflows using the [ctxt.invokeWorkflow()](../api-reference/contexts#workflowctxtinvokeworkflow) method.
 
 ### Reliability Guarantees
 

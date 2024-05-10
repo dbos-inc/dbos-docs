@@ -235,7 +235,8 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 ### Methods
 
 - [invoke(targetClass)](#workflowctxtinvoke)
-- [childWorkflow(wf, ...args)](#workflowctxtchildworkflow)
+- [invokeWorkflow(wf, ...args)](#workflowctxtinvokeworkflow)
+- [startWorkflow(wf, ...args)](#workflowctxtstartworkflow)
 - [send(destinationUUID, message, \[topic\])](#workflowctxtsend)
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
 - [setEvent(key, value)](#workflowctxtsetevent)
@@ -250,7 +251,7 @@ invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflow).
+To invoke other workflows, use [`invokeWorkflow`](#workflowctxtinvokeworkflow) and [`startWorkflow`](#workflowctxtstartworkflow).
 
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
@@ -258,12 +259,24 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = workflowCtxt.invoke(Cls).fn(arg)
 ```
 
-Note that the DBOS runtime will supply a context to invoked functions.
-
-#### `workflowCtxt.childWorkflow`
+#### `workflowCtxt.invokeWorkflow`
 
 ```typescript
-childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+invokeWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
+```
+
+Invoke a workflow and wait for it to complete, returning its result.
+The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const output = await ctxt.invokeWorkflow(Cls.wf, arg)
+```
+
+
+#### `workflowCtxt.startWorkflow`
+
+```typescript
+startWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
 Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
@@ -271,7 +284,7 @@ This method resolves as soon as the handle is safely created; at this point the 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await ctxt.childWorkflow(Cls.wf, arg)
+const workflowHandle = await ctxt.startWorkflow(Cls.wf, arg)
 ```
 
 #### `workflowCtxt.send`
