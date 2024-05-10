@@ -45,7 +45,7 @@ For example, this line from our above example invokes the transaction `InsertGre
 await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 ```
 
-The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
+The syntax for invoking function `fn(args)` in class `Cls` is `ctxt.invoke(Cls).fn(args)`.
 
 You can also invoke other workflows with the [`ctxt.invokeChildWorkflow()`](../api-reference/contexts#workflowctxtinvokechildworkflow) method.
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
