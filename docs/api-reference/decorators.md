@@ -501,13 +501,14 @@ Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuratio
 
 
 #### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
-Run a transaction or workflow exactly-once for each message received on the specified topic.
+Runs a transaction or workflow exactly-once for each message received on the specified topic.
 Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
 
 ```javascript
 import { KafkaConfig, KafkaMessage} from "kafkajs";
+import { Kafka, KafkaConsume, Workflow, WorkflowContext } from "@dbos-inc/dbos-sdk";
 
 const kafkaConfig: KafkaConfig = {
     brokers: ['localhost:9092']
@@ -524,6 +525,153 @@ class KafkaExample{
   }
 }
 ```
+
+### Scheduled Workflow Decorators
+
+#### `@Scheduled(schedulerConfig: SchedulerConfig)` {#scheduled}
+
+Runs a workflow function on a specified schedule, with guarantees such as executing exactly once per scheduled interval.
+
+By default, the workflow is executed exactly once per scheduled interval.  This means executions might be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  A workflow idempotency key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
+
+The schedule is specified in a format similar to a traditional [`crontab`](https://en.wikipedia.org/wiki/Cron), with the following notes:
+. The 5\- and 6\-field versions are supported, if the optional 6th field is prepended it indicates second-level granularity, otherwise it is minute\-level.
+. ',' is supported to indicate a list of values, so '0 0,12 \* \* \*' executes at midnight and noon every day.
+. '/' is supported to indicate divisibility, so '\*/5 \* \* \* \*' indicates every 5 minutes.
+. '\-' is supported to indicate ranges, so '0 9\-17 \* \* \*' indicates every hour (on the hour) from 9am to 5pm.
+. Long and short month and weekday names are supported \(in English\).
+
+Two scheduling modes are currently supported:
+- *SchedulerMode.ExactlyOncePerInterval*: The workflow execution schedule begins when the decorated function is first deployed and activated.  If the application is deactivated, missed executions will be started when the application is reactivated, such that the workflow is executed exactly once per scheduled interval (starting from when the function is first deployed).
+- *SchedulerMode.ExactlyOncePerIntervalWhenActive*: Similar to `ExactlyOncePerInterval`, except that any workflow executions that would have occurred when the application is inactive are not made up.
+
+The `@Scheduled` decorator's configuration object is:
+```typescript
+export class SchedulerConfig {
+    crontab : string = '* * * * *'; // Every minute by default
+    mode ?: SchedulerMode = SchedulerMode.ExactlyOncePerInterval; // How to treat intervals
+}
+```
+
+The decorated method must take a Workflow context argument, and the following additional parameters:
+- The time that the run was scheduled (as a `Date`).
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow is was started behind schedule.
+
+Example:
+```typescript
+import { Scheduled } from "@dbos-inc/dbos-sdk";
+
+class ScheduledExample{
+  @Scheduled({crontab: '*/5 * * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive})
+  @Workflow()
+  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
+    ctxt.logger.info(`
+        Running a workflow every 5 seconds -
+          scheduled time: ${schedTime.toISOString()} /
+          actual start time: ${startTime.toISOString()}
+    `);
+  }
+}
+```
+
+#### `crontab` Specification
+The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.
+
+The crontab field contains 5 or 6 items, separated by spaces:
+
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
+
+#### Second Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [0-59].  The range of 'divisor' is [2-59].
+
+`*` is interpreted as [0-59].
+
+#### Minute Field Format:
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+
+Each 'number' is in the range [0-59].  The range of 'divisor' is [2-59].
+
+`*` is interpreted as [0-59].
+
+#### Hour Field Format:
+````
+*|number[-number][,number[-number]...][/divisor]
+````
+Each 'number' is in the range [0-23].  The range of 'divisor' is [2-23].
+
+`*` is interpreted as [0-23].
+
+#### Day Of Month Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [1-31].  The range of 'divisor' is [2-31].
+
+`*` is interpreted as [1-31].
+
+#### Month Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [1-12].  The range of 'divisor' is [2-12].
+
+`*` is interpreted as [1-12].
+
+The following symbolic names can be placed instead of numbers, and are case-insensitive:
+```
+'january',   'jan' -> 1
+'february',  'feb' -> 2
+'march',     'mar' -> 3
+'april',     'apr' -> 4
+'may',       'may' -> 5
+'june',      'jun' -> 6
+'july',      'jul' -> 7
+'august',    'aug' -> 8
+'september', 'sep' -> 9
+'october',   'oct' -> 10
+'november',  'nov' -> 11
+'december',  'dec' -> 12
+```
+
+#### Day Of Week Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [0-7], with 0 and 7 both corresponding to Sunday.  The range of 'divisor' is [2-7].
+
+`*` is interpreted as [0-6].
+
+The following symbolic names can be placed instead of numbers, and are case-insensitive:
+```
+'sunday',    'sun' -> 0
+'monday',    'mon' -> 1
+'tuesday',   'tue' -> 2
+'wednesday', 'wed' -> 3
+'thursday',  'thu' -> 4
+'friday',    'fri' -> 5
+'saturday'   'sat' -> 6
+```
+
+#### Matching
+For a scheduled workflow to run at a given time, the time must match the crontab pattern.
+A time matches the pattern if all fields of the time match the pattern.
+Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
+
 
 ### OpenAPI Decorators
 
