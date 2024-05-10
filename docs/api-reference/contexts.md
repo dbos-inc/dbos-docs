@@ -36,7 +36,7 @@ Many contexts inherit from `DBOSContext` and share its properties and methods.  
 
 ### Methods
 
-- [getConfig(key, defaultValue)](#ctxtgetconfigkey-defaultvalue)
+- [getConfig(key, defaultValue)](#ctxtgetconfig)
 
 #### `ctxt.request`
 
@@ -117,7 +117,7 @@ An [OpenTelemetry Span](https://opentelemetry.io/docs/concepts/signals/traces/#s
 You can assign custom trace attributes to this span.
 Please see the [Span API](https://github.com/open-telemetry/opentelemetry-js/blob/main/api/src/trace/span.ts) for more information.
 
-#### `ctxt.getConfig(key, [defaultValue])`
+#### `ctxt.getConfig`
 
 ```typescript
 getConfig<T>(key: string): T | undefined;
@@ -139,10 +139,10 @@ Handlers use `HandlerContext` to invoke other functions, interact with active wo
 
 ### Methods
 
-- [invoke(targetClass, \[workflowUUID\])](#handlerctxtinvoketargetclass-workflowuuid)
-- [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflowworkflowuuid)
-- [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsenddestinationuuid-message-topic-idempotencykey)
-- [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgeteventworkflowuuid-key-timeoutseconds)
+- [invoke(targetClass, \[workflowUUID\])](#handlerctxtinvoke)
+- [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflow)
+- [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsend)
+- [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgetevent)
 
 #### `handlerCtxt.koaContext`
 
@@ -152,7 +152,7 @@ koaContext: Koa.Context;
 
 The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) of the current request, giving handlers access to the raw HTTP request and response.
 
-#### `handlerCtxt.invoke(targetClass, [workflowUUID])`
+#### `handlerCtxt.invoke`
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
@@ -172,7 +172,7 @@ Note that the DBOS runtime will supply the context to invoked functions.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
-#### `handlerCtxt.retrieveWorkflow(workflowUUID)`
+#### `handlerCtxt.retrieveWorkflow`
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
@@ -181,7 +181,7 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowUUID`.
 `R` is the return type of the target workflow.
 
-#### `handlerCtxt.send(destinationUUID, message, [topic, idempotencyKey])`
+#### `handlerCtxt.send`
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
@@ -192,7 +192,7 @@ Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### `handlerCtxt.getEvent(workflowUUID, key, [timeoutSeconds])`
+#### `handlerCtxt.getEvent`
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -209,23 +209,23 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 
 ### Methods
 
-- [invoke(targetClass)](#workflowctxtinvoketargetclass)
-- [childWorkflow(wf, ...args)](#workflowctxtchildworkflowwf-args)
-- [send(destinationUUID, message, \[topic\])](#workflowctxtsenddestinationuuid-message-topic)
-- [recv(\[topic, timeoutSeconds\])](#workflowctxtrecvtopic-timeoutseconds)
-- [setEvent(key, value)](#workflowctxtseteventkey-value)
-- [getEvent()](#workflowctxtgeteventworkflowuuid-key-timeoutseconds)
-- [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflowworkflowuuid)
-- [sleep(durationSec)](#workflowctxtsleepdurationsec)
+- [invoke(targetClass)](#workflowctxtinvoke)
+- [childWorkflow(wf, ...args)](#workflowctxtchildworkflow)
+- [send(destinationUUID, message, \[topic\])](#workflowctxtsend)
+- [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
+- [setEvent(key, value)](#workflowctxtsetevent)
+- [getEvent()](#workflowctxtgetevent)
+- [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflow)
+- [sleep(durationSec)](#workflowctxtsleep)
 
-#### `workflowCtxt.invoke(targetClass)`
+#### `workflowCtxt.invoke`
 
 ```typescript
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflowwf-args).
+To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflow).
 
 The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
 
@@ -235,7 +235,7 @@ workflowCtxt.invoke(Bar).foo(baz)
 
 Note that the DBOS runtime will supply a context to invoked functions.
 
-#### `workflowCtxt.childWorkflow(wf, ...args)`
+#### `workflowCtxt.childWorkflow`
 
 ```typescript
 childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
@@ -250,7 +250,7 @@ The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
 const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
 ```
 
-#### `workflowCtxt.send(destinationUUID, message, [topic])`
+#### `workflowCtxt.send`
 
 ```typescript
 send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string): Promise<void>
@@ -260,7 +260,7 @@ Sends a message to `destinationUUID`.
 Messages can optionally be associated with a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### `workflowCtxt.recv([topic, timeoutSeconds])`
+#### `workflowCtxt.recv`
 
 ```typescript
 recv<T extends NonNullable<any>>(topic?: string, timeoutSeconds?: number): Promise<T | null>
@@ -272,18 +272,18 @@ Calls to `recv()` wait for the next message in the queue, returning `null` if th
 If no topic is specified, `recv` can only access messages sent without a topic.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
-#### `workflowCtxt.setEvent(key, value)`
+#### `workflowCtxt.setEvent`
 
 ```typescript
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 ```
 
 Creates an immutable event named `key` with value `value`.
-Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgeteventworkflowuuid-key-timeoutseconds) with the workflow's UUID.
+Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgetevent) with the workflow's UUID.
 Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
 
-#### `workflowCtxt.getEvent(workflowUUID, key, [timeoutSeconds])`
+#### `workflowCtxt.getEvent`
 
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -292,7 +292,7 @@ getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutS
 Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
-#### `workflowCtxt.retrieveWorkflow(workflowUUID)`
+#### `workflowCtxt.retrieveWorkflow`
 
 ```typescript
 retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
@@ -301,7 +301,7 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
 `R` is the return type of the target workflow.
 
-#### `workflowCtxt.sleep(durationSec)`
+#### `workflowCtxt.sleep`
 
 ```typescript
 sleep(durationSec: number): Promise<void>

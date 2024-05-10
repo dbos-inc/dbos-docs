@@ -17,7 +17,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### setEvent
 
-Any workflow can call [`ctxt.setEvent`](../api-reference/contexts#workflowctxtseteventkey-value) to immutably publish a key-value pair.
+Any workflow can call [`ctxt.setEvent`](../api-reference/contexts#workflowctxtsetevent) to immutably publish a key-value pair.
 A workflow cannot set a key it has already set.
 
 ```typescript
@@ -127,5 +127,5 @@ static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
 
 All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
 If you're sending a message from a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
-If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsenddestinationuuid-message-topic-idempotencykey) to guarantee exactly-once delivery.
+If you're sending a message from a handler, you can supply an [idempotency key](../api-reference/contexts#handlerctxtsend) to guarantee exactly-once delivery.
 

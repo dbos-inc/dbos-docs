@@ -42,7 +42,7 @@ When you run an locally app with `npx dbos start`, we manage the HTTP server for
 ### Handlers
 
 A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the first example above.
-Handlers can [invoke](../api-reference/contexts#handlerctxtinvoketargetclass-workflowuuid) other functions and directly access HTTP requests and responses.
+Handlers can [invoke](../api-reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
 However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
 You should use handlers when you need to access HTTP responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
