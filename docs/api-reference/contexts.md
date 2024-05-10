@@ -235,8 +235,8 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 ### Methods
 
 - [invoke(targetClass)](#workflowctxtinvoke)
-- [invokeWorkflow(wf, ...args)](#workflowctxtinvokeworkflow)
-- [startWorkflow(wf, ...args)](#workflowctxtstartworkflow)
+- [invokeChildWorkflow(wf, ...args)](#workflowctxtinvokechildworkflow)
+- [startChildWorkflow(wf, ...args)](#workflowctxtstartchildworkflow)
 - [send(destinationUUID, message, \[topic\])](#workflowctxtsend)
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
 - [setEvent(key, value)](#workflowctxtsetevent)
@@ -251,7 +251,7 @@ invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`invokeWorkflow`](#workflowctxtinvokeworkflow) and [`startWorkflow`](#workflowctxtstartworkflow).
+To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildworkflow) and [`startChildWorkflow`](#workflowctxtstartchildworkflow).
 
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
@@ -259,24 +259,23 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = workflowCtxt.invoke(Cls).fn(arg)
 ```
 
-#### `workflowCtxt.invokeWorkflow`
+#### `workflowCtxt.invokeChildWorkflow`
 
 ```typescript
-invokeWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
+invokeChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await ctxt.invokeWorkflow(Cls.wf, arg)
+const output = await ctxt.invokeChildWorkflow(Cls.wf, arg)
 ```
 
-
-#### `workflowCtxt.startWorkflow`
+#### `workflowCtxt.startChildWorkflow`
 
 ```typescript
-startWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+startChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
 Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
@@ -284,7 +283,7 @@ This method resolves as soon as the handle is safely created; at this point the 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await ctxt.startWorkflow(Cls.wf, arg)
+const workflowHandle = await ctxt.startChildWorkflow(Cls.wf, arg)
 ```
 
 #### `workflowCtxt.send`
