@@ -532,7 +532,7 @@ class KafkaExample{
 
 Runs a workflow function on a specified schedule, with guarantees such as executing exactly once per scheduled interval.
 
-By default, the workflow is executed exactly once per scheduled interval.  This means executions might be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  Tracking of execution history is implemented using system database records.  A workflow idempotency key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
+By default, the workflow is executed exactly once per scheduled interval.  This means executions might be started concurrently and can overlap, and that if the application is taken down and restarted, makeup work will be performed.  A workflow idempotency key (consisting of the workflow function name and scheduled time) is used to deduplicate any workflows that may inadvertently be initiated by the scheduler.
 
 The schedule is specified in a format similar to a traditional [`crontab`](https://en.wikipedia.org/wiki/Cron), with the following notes:
 . The 5\- and 6\-field versions are supported, if the optional 6th field is prepended it indicates second-level granularity, otherwise it is minute\-level.
@@ -573,6 +573,105 @@ class ScheduledExample{
   }
 }
 ```
+
+#### `crontab` Specification
+The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.
+
+The crontab field contains 5 or 6 items, separated by spaces:
+
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
+
+#### Second Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [0-59].  The range of 'divisor' is [2-59].
+
+`*` is interpreted as [0-59].
+
+#### Minute Field Format:
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+
+Each 'number' is in the range [0-59].  The range of 'divisor' is [2-59].
+
+`*` is interpreted as [0-59].
+
+#### Hour Field Format:
+````
+*|number[-number][,number[-number]...][/divisor]
+````
+Each 'number' is in the range [0-23].  The range of 'divisor' is [2-23].
+
+`*` is interpreted as [0-23].
+
+#### Day Of Month Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [1-31].  The range of 'divisor' is [2-31].
+
+`*` is interpreted as [1-31].
+
+#### Month Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [1-12].  The range of 'divisor' is [2-12].
+
+`*` is interpreted as [1-12].
+
+The following symbolic names can be placed instead of numbers, and are case-insensitive:
+```
+'january',   'jan' -> 1
+'february',  'feb' -> 2
+'march',     'mar' -> 3
+'april',     'apr' -> 4
+'may',       'may' -> 5
+'june',      'jun' -> 6
+'july',      'jul' -> 7
+'august',    'aug' -> 8
+'september', 'sep' -> 9
+'october',   'oct' -> 10
+'november',  'nov' -> 11
+'december',  'dec' -> 12
+```
+
+#### Day Of Week Field Format
+```
+*|number[-number][,number[-number]...][/divisor]
+```
+Each 'number' is in the range [0-7], with 0 and 7 both corresponding to Sunday.  The range of 'divisor' is [2-7].
+
+`*` is interpreted as [0-6].
+
+The following symbolic names can be placed instead of numbers, and are case-insensitive:
+```
+'sunday',    'sun' -> 0
+'monday',    'mon' -> 1
+'tuesday',   'tue' -> 2
+'wednesday', 'wed' -> 3
+'thursday',  'thu' -> 4
+'friday',    'fri' -> 5
+'saturday'   'sat' -> 6
+```
+
+#### Matching
+For a scheduled workflow to run at a given time, the time must match the crontab pattern.
+A time matches the pattern if all fields of the time match the pattern.
+Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
+
 
 ### OpenAPI Decorators
 
