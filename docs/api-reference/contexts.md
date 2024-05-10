@@ -251,7 +251,7 @@ invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildworkflow) and [`startChildWorkflow`](#workflowctxtstartchildworkflow).
+To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildworkflow) or [`startChildWorkflow`](#workflowctxtstartchildworkflow).
 
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
