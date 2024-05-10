@@ -265,7 +265,7 @@ const output = workflowCtxt.invoke(Cls).fn(arg)
 invokeChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
 ```
 
-Invoke a workflow and wait for it to complete, returning its result.
+Invoke a child workflow and wait for it to complete, returning its result.
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
@@ -278,7 +278,7 @@ const output = await ctxt.invokeChildWorkflow(Cls.wf, arg)
 startChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
-Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+Durably start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
 This method resolves as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
