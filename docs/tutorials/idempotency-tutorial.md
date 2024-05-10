@@ -41,21 +41,13 @@ The syntax for invoking `Class.operation` with an idempotency key is:
 
 ### Idempotency Example
 
-Let's look at this workflow endpoint (from the example code coming with [npx @dbos-inc/create](../getting-started/quickstart)):
+Let's look at this workflow endpoint:
 
 ```javascript
   @GetApi('/greeting/:user')
   @Workflow()
   static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
-    const greeting = await ctxt.invoke(Hello).helloTransaction(user);
-    try {
-      await ctxt.invoke(Hello).greetPostman(greeting);
-      return greeting;
-    } catch (e) {
-      ctxt.logger.error(e);
-      await ctxt.invoke(Hello).undoHelloTransaction(user);
-      return `Greeting failed for ${user}\n`
-    }
+    return await ctxt.invoke(Hello).helloTransaction(user);
   }
 ```
 
