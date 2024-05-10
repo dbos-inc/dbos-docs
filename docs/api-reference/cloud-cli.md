@@ -171,6 +171,7 @@ This command must be run from an application root directory.
 It registers that application with DBOS Cloud.
 
 **Parameters:**
+- `[application-name]`: The name of the application to register. By default we obtain the application name from package.json. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect.
 
 ---
@@ -182,6 +183,7 @@ This command must be run from an application root directory.
 It executes the [migration commands declared in dbos-config.yaml](./configuration#database), deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
 **Parameters:**
+- `[application-name]`: The name of the application to deploy. By default we obtain the application name from package.json. This argument overrides the package name.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas&mdash;to roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback) instead. You can list previous versions and their IDs with the [versions command](#npx-dbos-cloud-app-versions).
 
@@ -192,6 +194,9 @@ It executes the [migration commands declared in dbos-config.yaml](./configuratio
 **Description:**
 This command must be run from an application root directory.
 It executes the [rollback commands declared in dbos-config.yaml](./configuration#database), updates the deployed application's code, and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
+
+**Parameters:**
+- `[application-name]`: The name of the application to rollback. By default we obtain the application name from package.json. This argument overrides the package name.
 
 ---
 
@@ -275,10 +280,10 @@ For each previous version of this application, emit:
 ### `npx dbos-cloud app logs`
 
 **Description:**
-This command must be run from an application root directory.
-It retrieves that application's logs.
+It retrieves an application's logs.
 
 **Parameters:**
+- `[application-name]`: The name of the application. By default we obtain the application name from package.json. This argument overrides the package name.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
 
 ### `npx dbos-cloud app change-database-instance`
