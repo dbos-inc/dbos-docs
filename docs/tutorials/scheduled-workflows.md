@@ -63,6 +63,8 @@ By default, scheduled workflows are executed exactly once per interval.  This me
 If the mode is set to `ExactlyOncePerIntervalWhenActive` , DBOS Transact will not consult the system database to figure out if scheduled workflows were missed, but will instead start the schedule at the current time.
 
 ### `crontab` Specification
+The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.
+
 The crontab field contains 5 or 6 items, separated by spaces:
 
 ```
