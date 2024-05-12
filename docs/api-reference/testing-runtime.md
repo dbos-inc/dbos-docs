@@ -58,7 +58,7 @@ To invoke workflows, use [`invokeWorkflow`](#runtimeinvokeworkflowtargetclass-wo
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await runtime.invoke(Cls).fn(arg)
+const output = await runtime.invoke(Cls).fn(arg);
 ```
 
 You don't need to supply a context to an invoked function&#8212;the testing runtime does this for you.
@@ -86,7 +86,7 @@ Invoke a workflow and wait for it to complete, returning its result.
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await runtime.invokeWorkflow(Cls).wf(arg)
+const output = await runtime.invokeWorkflow(Cls).wf(arg);
 ```
 
 You don't need to supply a context to an invoked workflow&#8212;the testing runtime does this for you.
@@ -99,11 +99,11 @@ Like for [invoke](#runtimeinvoketargetclass-workflowuuid-params), you can option
 startWorkflow<T>(targetClass: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
-Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await runtime.startWorkflow(Cls).wf(arg)
+const workflowHandle = await runtime.startWorkflow(Cls).wf(arg);
 ```
 
 You don't need to supply a context to start a workflow&#8212;the testing runtime does this for you.

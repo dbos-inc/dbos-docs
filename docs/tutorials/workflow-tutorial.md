@@ -51,7 +51,7 @@ You can also invoke other workflows with the [`ctxt.invokeChildWorkflow()`](../a
 The syntax for invoking child workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await ctxt.invokeChildWorkflow(Cls.wf, arg)
+const output = await ctxt.invokeChildWorkflow(Cls.wf, arg);
 ```
 
 ### Reliability Guarantees
@@ -105,7 +105,7 @@ You can also retrieve another workflow's handle using its identity:
   }
 ```
 
-To wait for a workflow to complete and retrieve its result, use `handle.getResult()`:
+To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
 const handle = await ctxt.retrieveWorkflow(workflowIdentity)

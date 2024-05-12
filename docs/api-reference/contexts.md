@@ -163,7 +163,7 @@ To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`sta
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await handlerCtxt.invoke(Cls).fn(arg)
+const output = await handlerCtxt.invoke(Cls).fn(arg);
 ```
 
 You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
@@ -177,10 +177,11 @@ invokeWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
+To start a workflow without waiting it to complete, use [`startWorkflow`](#handlerctxtstartworkflow).
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg)
+const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg);
 ```
 
 You don't need to supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
@@ -191,12 +192,12 @@ You don't need to supply a context to the invoked workflow&#8212;the DBOS Transa
 startWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Durably start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
-This method resolves as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg)
+const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
 
 You don't need to supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
@@ -260,7 +261,7 @@ To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildw
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await workflowCtxt.invoke(Cls).fn(arg)
+const output = await workflowCtxt.invoke(Cls).fn(arg);
 ```
 
 You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
@@ -272,10 +273,11 @@ invokeChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise
 ```
 
 Invoke a child workflow and wait for it to complete, returning its result.
+To start a workflow without waiting it to complete, use [`startWorkflow`](#workflowctxtstartchildworkflow).
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await ctxt.invokeChildWorkflow(Cls.wf, arg)
+const output = await ctxt.invokeChildWorkflow(Cls.wf, arg);
 ```
 
 You don't need to supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
@@ -286,12 +288,12 @@ You don't need to supply a context to the invoked child workflow&#8212;the DBOS 
 startChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
 ```
 
-Durably start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
-This method resolves as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await ctxt.startChildWorkflow(Cls.wf, arg)
+const workflowHandle = await ctxt.startChildWorkflow(Cls.wf, arg);
 ```
 
 You don't need to supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
