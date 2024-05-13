@@ -216,7 +216,8 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [setEvent(key, value)](#workflowctxtsetevent)
 - [getEvent()](#workflowctxtgetevent)
 - [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflow)
-- [sleep(durationSec)](#workflowctxtsleep)
+- [sleep(durationSec)](#workflowcontextsleep)
+- [sleepms(durationMS)](#workflowcontextsleepms)
 
 #### `workflowCtxt.invoke`
 
@@ -301,13 +302,24 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
 `R` is the return type of the target workflow.
 
-#### `workflowCtxt.sleep`
+#### `WorkflowContext.sleep`
 
 ```typescript
 sleep(durationSec: number): Promise<void>
 ```
 
 Sleep for `durationSec` seconds.
+The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
+
+Alternatively, [`sleepms`](#workflowcontextsleepms) is more precise.
+
+#### `WorkflowContext.sleepms`
+
+```typescript
+sleepms(durationMS: number): Promise<void>
+```
+
+Sleep for `durationMS` milliseconds.
 The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
 
 ---
