@@ -45,9 +45,14 @@ For example, this line from our above example invokes the transaction `InsertGre
 await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 ```
 
-The syntax for invoking function `foo(args)` in class `Bar` is `ctxt.invoke(Bar).foo(args)`.
+The syntax for invoking function `fn(args)` in class `Cls` is `ctxt.invoke(Cls).fn(args)`.
 
-You can also invoke other workflows using the [ctxt.childWorkflow()](../api-reference/contexts#workflowctxtchildworkflow) method.
+You can also invoke other workflows with the [`ctxt.invokeChildWorkflow()`](../api-reference/contexts#workflowctxtinvokechildworkflow) method.
+The syntax for invoking child workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const output = await ctxt.invokeChildWorkflow(Cls.wf, arg);
+```
 
 ### Reliability Guarantees
 
@@ -78,17 +83,20 @@ For more information on workflow communication, see [our guide](./workflow-commu
 
 ### Asynchronous Workflows
 
-Because workflows are often long-running, DBOS supports invoking workflows asynchronously.
-When you invoke a workflow from a handler or from another workflow, the invocation returns a [workflow handle](../api-reference/workflow-handles):
+Because workflows are often long-running, DBOS supports starting workflows asynchronously without waiting for them to complete.
+When you start a workflow from a handler or another workflow with [`handlerCtxt.startWorkflow`](../api-reference/contexts.md#handlerctxtstartworkflow) or [`workflowCtxt.startChildWorkflow`](../api-reference/contexts.md#workflowctxtstartchildworkflow), the invocation returns a [workflow handle](../api-reference/workflow-handles):
 
 ```javascript
   @GetApi(...)
-  static async exampleHandler(ctxt: HandlerContext, ...) {
-    const handle = await ctxt.invoke(Class).workflow(...);
+  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
+    const handle = await handlerCtxt.startWorkflow(Class).workflow(...);
   }
 ```
 
-You can also retrieve another workflow's handle if you know its identity:
+Calls to start a workflow resolve as soon as the handle is safely created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+This behavior is useful if you need to quickly acknowledge receipt of an event then process it asynchronously (for example, in a webhook).
+
+You can also retrieve another workflow's handle using its identity:
 
 ```javascript
   @GetApi(...)
@@ -100,14 +108,8 @@ You can also retrieve another workflow's handle if you know its identity:
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
-const handle = await ctxt.invoke(Class).workflow(...);
+const handle = await ctxt.retrieveWorkflow(workflowIdentity)
 const result = await handle.getResult();
-```
-
-Or, more concisely:
-
-```javascript
-const result = await ctxt.invoke(Class).workflow(name).then(h => h.getResult());
 ```
 
 For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).

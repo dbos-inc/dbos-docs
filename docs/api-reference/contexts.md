@@ -158,19 +158,49 @@ The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) 
 invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Used to invoke workflows, transactions, and communicators.
-The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
+Invoke a transaction or communicator.
+To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`startWorkflow`](#handlerctxtstartworkflow) instead.
+The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-handlerCtxt.invoke(Bar).foo(baz)
+const output = await handlerCtxt.invoke(Cls).fn(arg);
 ```
 
-When calling transactions or communicators, `invoke()` asynchronously returns the function's output.
-When calling workflows, `invoke()` asynchronously returns a [`handle`](./workflow-handles) for the workflow.
-
-Note that the DBOS runtime will supply the context to invoked functions.
+You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 You can optionally provide a UUID idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
+
+#### `handlerCtxt.invokeWorkflow`
+
+```typescript
+invokeWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+```
+
+Invoke a workflow and wait for it to complete, returning its result.
+To start a workflow without waiting it to complete, use [`startWorkflow`](#handlerctxtstartworkflow).
+The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg);
+```
+
+You don't need to supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
+
+#### `handlerCtxt.startWorkflow`
+
+```typescript
+startWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+```
+
+Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
+```
+
+You don't need to supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `handlerCtxt.retrieveWorkflow`
 
@@ -210,13 +240,15 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 ### Methods
 
 - [invoke(targetClass)](#workflowctxtinvoke)
-- [childWorkflow(wf, ...args)](#workflowctxtchildworkflow)
+- [invokeChildWorkflow(wf, ...args)](#workflowctxtinvokechildworkflow)
+- [startChildWorkflow(wf, ...args)](#workflowctxtstartchildworkflow)
 - [send(destinationUUID, message, \[topic\])](#workflowctxtsend)
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
 - [setEvent(key, value)](#workflowctxtsetevent)
 - [getEvent()](#workflowctxtgetevent)
 - [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflow)
-- [sleep(durationSec)](#workflowctxtsleep)
+- [sleep(durationSec)](#workflowcontextsleep)
+- [sleepms(durationMS)](#workflowcontextsleepms)
 
 #### `workflowCtxt.invoke`
 
@@ -225,30 +257,47 @@ invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`childWorkflow`](#workflowctxtchildworkflow).
+To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildworkflow) or [`startChildWorkflow`](#workflowctxtstartchildworkflow).
 
-The syntax for invoking function `foo` in class `Bar` with argument `baz` is:
-
-```typescript
-workflowCtxt.invoke(Bar).foo(baz)
-```
-
-Note that the DBOS runtime will supply a context to invoked functions.
-
-#### `workflowCtxt.childWorkflow`
+The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
-childWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+const output = await workflowCtxt.invoke(Cls).fn(arg);
 ```
 
-Invoke another workflow.
-This returns a [workflow handle](./workflow-handles) for the new workflow.
+You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 
-The syntax for invoking workflow `foo` in class `Bar` with argument `baz` is:
+#### `workflowCtxt.invokeChildWorkflow`
 
 ```typescript
-const workflowHandle = await ctxt.childWorkflow(Bar.foo, baz)
+invokeChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
 ```
+
+Invoke a child workflow and wait for it to complete, returning its result.
+To start a workflow without waiting it to complete, use [`startWorkflow`](#workflowctxtstartchildworkflow).
+The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const output = await ctxt.invokeChildWorkflow(Cls.wf, arg);
+```
+
+You don't need to supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
+
+#### `workflowCtxt.startChildWorkflow`
+
+```typescript
+startChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+```
+
+Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
+
+```typescript
+const workflowHandle = await ctxt.startChildWorkflow(Cls.wf, arg);
+```
+
+You don't need to supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `workflowCtxt.send`
 
@@ -301,13 +350,24 @@ retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
 Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
 `R` is the return type of the target workflow.
 
-#### `workflowCtxt.sleep`
+#### `WorkflowContext.sleep`
 
 ```typescript
 sleep(durationSec: number): Promise<void>
 ```
 
 Sleep for `durationSec` seconds.
+The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
+
+Alternatively, [`sleepms`](#workflowcontextsleepms) is more precise.
+
+#### `WorkflowContext.sleepms`
+
+```typescript
+sleepms(durationMS: number): Promise<void>
+```
+
+Sleep for `durationMS` milliseconds.
 The wakeup time is set in the database when the function is first called, so if the workflow is re-executed, it will not oversleep.
 
 ---
