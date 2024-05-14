@@ -18,10 +18,6 @@ This command provides a URL to a secure login portal you can use to create an ac
 After registering, your credentials will be stored in `.dbos/credentials`.
 Credentials automatically expire after 24 hours, at which point you must log in again.
 
-:::info
-You can also create a DBOS Cloud account from our [main webpage](https://www.dbos.dev)
-:::
-
 ### Authenticating from the Command Line
 
 To log in from the command line, run:

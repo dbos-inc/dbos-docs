@@ -228,15 +228,7 @@ Now, let's serverlessly deploy your application to DBOS Cloud.
 First, you need an account.
 
 <Tabs groupId="web-or-cli">
-  <TabItem value="existing" label="Use An Existing Account">
-If you already have a DBOS Cloud account (for example, you signed up for one on our [website](https://www.dbos.dev)), you can log in to it.
-From your DBOS application directory, run the following command:
-
-```
-npx dbos-cloud login
-```
-  </TabItem>
-    <TabItem value="new" label="Create a New Account">
+  <TabItem value="new" label="Create a New Account">
 If you don't have a DBOS Cloud account, you can create one.
 From your DBOS application directory, run the following command:
 
@@ -250,8 +242,15 @@ When you run this command, it will redirect you to a secure login portal.
 Open the login portal in your browser and click `Confirm`, then create a new account.
 After you're done, go back to the terminal.
 If everything's working, the command should succeed and print `<username> successfully registered!`.
+  </TabItem>
+  <TabItem value="existing" label="Use An Existing Account">
+If you already have a DBOS Cloud account (for example, you registered through CLI before or signed up on our [website](https://www.dbos.dev)), you can log in to it.
+From your DBOS application directory, run the following command:
 
-   </TabItem>
+```
+npx dbos-cloud login
+```
+  </TabItem>
 </Tabs>
 
 
