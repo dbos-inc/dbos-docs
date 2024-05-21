@@ -120,11 +120,13 @@ application:
     aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES_A}
 ```
 
-The application code will then have to specify which configuration to use when invoking the communicator:
+The application code will then have to specify which configuration to use when initializing the communicator:
 ```typescript
-    const msgid = await worflowCtx.invoke(SendEmailCommunicator).sendTemplatedEmail(
+    // Initialize once ...
+    const sesCfg = initClassConfiguration(SendEmailCommunicator, 'default', {awscfgname: 'aws_config'});
+    // Use configured object ...
+    const msgid = await worflowCtx.invokeOnConfig(sesCfg).sendTemplatedEmail(
         mailMsg,
-        {configName: 'aws_config_ses_user'}
     );
 ```
 
