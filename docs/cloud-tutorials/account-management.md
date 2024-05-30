@@ -89,7 +89,7 @@ Using this organization secret, another user can register a new account in your 
 npx dbos-cloud register -u <username> -s <organization-secret>
 ```
 
-Alternatively, a user can join your organization by running:
+Alternatively, if a user has an existing account, they can join your organization by running:
 
 ```
 npx dbos-cloud org join <organization-name> <organization-secret>
