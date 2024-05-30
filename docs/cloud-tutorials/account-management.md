@@ -73,7 +73,7 @@ This feature is currently only available to [DBOS Pro or Enterprise](https://www
 :::
 
 Organizations allow multiple users to collaboratively manage applications.
-When a user creates an account, they are automatically added to an organization containing only them, with an organization name matching their username.
+When a user creates an account, they are automatically added to an organization containing only them, where the organization name is the same as their username.
 
 To invite a new user to your organization, run:
 
