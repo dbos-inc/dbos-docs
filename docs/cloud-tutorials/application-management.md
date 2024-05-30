@@ -40,7 +40,7 @@ https://<username>-<app-name>.cloud.dbos.dev/
 ```
 
 :::info
-If your account belongs to an organization, applications are hosted at `https://<organization-name>-<app-name>.cloud.dbos.dev/`
+If your account belongs to an [organization](./account-management.md#organization-management), applications are hosted at `https://<organization-name>-<app-name>.cloud.dbos.dev/`
 :::
 
 If you edit your application or schema, run `npx dbos-cloud app deploy` again to apply the latest migrations and upgrade to the latest version.

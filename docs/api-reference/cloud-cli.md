@@ -24,7 +24,7 @@ It provides a URL to a secure login portal you can use to create an account from
 
 **Parameters:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
-- `-s, --secret [string]`: (Optional) An organization secret given to you by an organization admin. If supplied, adds your newly registered account to the organization.
+- `-s, --secret [string]`: (Optional) An [organization secret](../cloud-tutorials/account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
 
 
 :::info
