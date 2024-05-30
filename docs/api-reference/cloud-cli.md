@@ -338,7 +338,7 @@ Join your account to an organization. This gives you full access to the organiza
 ### `npx dbos-cloud org rename`
 
 **Description:**
-Rename your organization. Only the organization admin (the original creator of the organization) can run this command. After running this command, log out and log back in to refresh your local context.
+Rename your organization. Only the organization admin (the original creator of the organization) can run this command. After running this command, [log out](#npx-dbos-cloud-logout) and [log back in](#npx-dbos-cloud-login) to refresh your local context.
 
 **Parameters:**
 - `<oldname>`: The current name of your organization.
