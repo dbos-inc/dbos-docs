@@ -345,6 +345,6 @@ Rename your organization. Only the organization admin (the original creator of t
 - `<newname>`: The new name for your organization.
 
 :::info
-Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs.
+Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs. The old URLs are no longer accessible.
 :::
 ---
