@@ -97,7 +97,7 @@ npx dbos-cloud org join <organization-name> <organization-secret>
 
 All users in an organization have full access to its resources, including databases and applications.
 
-You can rename your organization by running:
+An organization admin (the user who created the organization) can rename the organization by running:
 
 ```
 npx dbos-cloud org rename <current-org-name> <new-org-name>
