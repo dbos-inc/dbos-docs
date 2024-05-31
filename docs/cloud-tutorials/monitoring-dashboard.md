@@ -64,11 +64,11 @@ The dashboard presents the total number of execution seconds since the start of 
 
 ### Dashboards and Organizations
 
-If you are part of a multi-user organization, you can access dashboards deployed by other users in the same org. To view all the deployed dashboards you can access, click the "Dashboards" link in the top left:
+If you are part of a multi-user organization, you can access dashboards deployed by other users in the same org. To navigate to all the dashboards you can access, click the "Dashboards" link in the top left:
 
 ![Dashboards](./assets/dashboards_link.png)
 
-Each dashboard is named after a specific user and displays data only for the apps registered, deployed, or deleted by that user. The URL returned by `npx dbos-cloud dashboard url`, takes you to the dashboard for the user who ran the command. Every URL is accessible by every current user in the organization.
+Each dashboard is named after a specific user and displays data only for the apps registered, deployed, or deleted by that user. The URL returned by `npx dbos-cloud dashboard url`, takes you to the dashboard for the user who ran the command. Every dashboard URL is accessible by every user in the organization.
 
 :::tip
 Depending on the structure of your organization, you may not need to launch a dashboard for every user, but only the key account(s) that deploy and maintain production apps.
