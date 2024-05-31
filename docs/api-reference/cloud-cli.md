@@ -24,6 +24,8 @@ It provides a URL to a secure login portal you can use to create an account from
 
 **Parameters:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
+- `-s, --secret [string]`: (Optional) An [organization secret](../cloud-tutorials/account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
+
 
 :::info
 If you register with an email and password, you also need to verify your email through a link we email you.
@@ -285,6 +287,7 @@ It retrieves an application's logs.
 **Parameters:**
 - `[application-name]`: The name of the application. By default we obtain the application name from package.json. This argument overrides the package name.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
+---
 
 ### `npx dbos-cloud app change-database-instance`
 
@@ -298,4 +301,50 @@ It is meant to be used with [`database restore`](#npx-dbos-cloud-db-restore) dur
 - `-d, --database <string>` The name of the new database instance for this application.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. During restoration, we recommend deploying to the version active at the timestamp to which you recovered. You can list previous versions and their IDs and timestamps with the [versions command](#npx-dbos-cloud-app-versions).
 
+---
+
+## Organization Management Commands
+
+### `npx dbos-cloud org list`
+
+**Description:**
+List users in your organization
+
+**Parameters:**
+- `--json`: Emit JSON output
+
+---
+
+### `npx dbos-cloud org invite`
+
+**Description:**
+Generate an organization secret with which to invite another user into your organization. Organization secrets are single-use and expire after 24 hours.
+
+**Parameters:**
+- `--json`: Emit JSON output
+
+---
+
+### `npx dbos-cloud org join`
+
+**Description:**
+Join your account to an organization. This gives you full access to the organization's resources.
+
+**Parameters:**
+- `<organization>`: The name of the organization you intend to join.
+- `<secret>`: An organization secret given to you by an organization admin.
+---
+
+### `npx dbos-cloud org rename`
+
+**Description:**
+Rename your organization. Only the organization admin (the original creator of the organization) can run this command. After running this command, [log out](#npx-dbos-cloud-logout) and [log back in](#npx-dbos-cloud-login) to refresh your local context.
+
+**Parameters:**
+- `<oldname>`: The current name of your organization.
+- `<newname>`: The new name for your organization.
+
+:::info
+Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs. The old URLs are no longer accessible.
+:::
 ---
