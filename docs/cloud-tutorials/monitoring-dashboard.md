@@ -11,20 +11,10 @@ In this guide, you'll learn how to use the monitoring dashboard to visualize the
 In order to launch the dashboard you must first deploy an application, as described in [quickstart](../getting-started/quickstart.md). Having done so, from your application directory, run:
 
 ```
-npx dbos-cloud dashboard launch
+npx dbos-cloud dashboard url
 ```
 
 This command will output the URL of your dashboard. Log in with the same credentials you used to register your app. 
-
-:::tip 
-You only need to run the "launch" command once after user registration. The dashboard will automatically display data for new apps as they are added. If you accidentally run the "launch" command again, log out of the dashboard and log back in to continue using it.
-:::
-
-If you forget your dashboard URL you can retrieve it with:
-
-```
-npx dbos-cloud dashboard url
-```
 
 ### Exploring Your Dashboard
 
@@ -71,3 +61,15 @@ The dashboard tracks and continuously updates the total execution time for all o
 The dashboard presents the total number of execution seconds since the start of the month, in orange, and the total for the selected data in green. You can use the above filtering controls to navigate to any particular app, time interval, group of traces or a specific trace and use the green number to view its contribution. 
 
 ![Execution Seconds](./assets/execution-seconds.png)
+
+### Dashboards and Organizations
+
+If you are part of a multi-user organization, you can access dashboards deployed by other users in the same org. To navigate to all the dashboards you can access, click the "Dashboards" link in the top left:
+
+![Dashboards](./assets/dashboards_link.png)
+
+Each dashboard is named after a specific user and displays data only for the apps registered, deployed, or deleted by that user. The URL returned by `npx dbos-cloud dashboard url`, takes you to the dashboard for the user who ran the command. Every dashboard URL is accessible by every user in the organization.
+
+:::tip
+Depending on the structure of your organization, you may not need to launch a dashboard for every user, but only the key account(s) that deploy and maintain production apps.
+:::
