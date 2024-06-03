@@ -96,20 +96,19 @@ application:
 
 The default configuration section of `application.aws_config` is used for any communicator that has not been specifically configured.
 
-Individual AWS services can override this, for example the SES communicator uses `aws_ses_configurations` to specify the configuration(s) for use by SES:
+Individual AWS services can override this, for example the SES communicator uses `aws_ses_configuration` to specify the configuration(s) for use by SES:
 ```yaml
 application:
-  aws_ses_configurations: aws_config_ses
+  aws_ses_configuration: aws_config_ses
   aws_config_ses:
     aws_region: ${AWS_REGION}
     aws_access_key_id: ${AWS_ACCESS_KEY_ID_SES}
     aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES}
 ```
 
-In the event that there are multiple access keys for the same service, a list may be provided:
+In the event that there are multiple access keys for the same service, the application must be involved in determining the number and purpose of the configurations.  The application can do this with direct names, or indirect names.
 ```yaml
 application:
-  aws_ses_configurations: aws_config_ses_user,aws_config_ses_admin
   aws_config_ses_user:
     aws_region: ${AWS_REGION}
     aws_access_key_id: ${AWS_ACCESS_KEY_ID_SES_U}
@@ -123,9 +122,9 @@ application:
 The application code will then have to specify which configuration to use when initializing the communicator:
 ```typescript
     // Initialize once ...
-    const sesCfg = initClassConfiguration(SendEmailCommunicator, 'default', {awscfgname: 'aws_config'});
+    const sesCfg = configureInstance(SendEmailCommunicator, 'userSES', {awscfgname: 'aws_config_ses_user'});
     // Use configured object ...
-    const msgid = await worflowCtx.invokeOnConfig(sesCfg).sendTemplatedEmail(
+    const msgid = await worflowCtx.invoke(userSES).sendTemplatedEmail(
         mailMsg,
     );
 ```
