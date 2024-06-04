@@ -39,7 +39,9 @@ This method *drops and re-creates* the DBOS system database. You will lose all p
 :::
 
 ## Methods
-- [invoke(targetClass, \[workflowUUID, params\])](#runtimeinvoketargetclass-workflowuuid-params)
+- [invoke(target, \[workflowUUID, params\])](#runtimeinvoketarget-workflowuuid-params)
+- [invokeWorkflow(target, \[workflowUUID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
+- [startWorkflow(target, \[workflowUUID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
 - [retrieveWorkflow(workflowUUID)](#runtimeretrieveworkflowworkflowuuid)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
@@ -48,23 +50,20 @@ This method *drops and re-creates* the DBOS system database. You will lose all p
 - [queryUserDB(sql, ...params)](#runtimequeryuserdbsql-params)
 - [destroy()](#runtimedestroy)
 
-### runtime.invoke(targetClass, \[workflowUUID, params\])
+### runtime.invoke(target, \[workflowUUID, params\])
 ```typescript
-invoke<T>(targetClass: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+invoke<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 Invoke a transaction or communicator.
-To invoke workflows, use [`invokeWorkflow`](#runtimeinvokeworkflowtargetclass-workflowuuid-params) or [`startWorkflow`](#runtimestartworkflowtargetclass-workflowuuid-params) instead.
+To invoke workflows, use [`invokeWorkflow`](#runtimeinvokeworkflowtarget-workflowuuid-params) or [`startWorkflow`](#runtimestartworkflowtarget-workflowuuid-params) instead.
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
 ```typescript
 const output = await runtime.invoke(Cls).fn(arg);
 ```
 
-You don't need to supply a context to an invoked function&#8212;the testing runtime does this for you.
-
-You can optionally provide a UUID idempotency key to the invoked function.
-For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
+You aren't to supply a context to an invoked function&#8212;the testing runtime does this for you.
 
 You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../tutorials/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
 
@@ -76,10 +75,10 @@ interface WorkflowInvokeParams {
 }
 ```
 
-#### runtime.invokeWorkflow(targetClass, \[workflowUUID, params\])
+#### runtime.invokeWorkflow(target, \[workflowUUID, params\])
 
 ```typescript
-invokeWorkflow<T>(targetClass: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+invokeWorkflow<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
@@ -89,14 +88,14 @@ The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 const output = await runtime.invokeWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to an invoked workflow&#8212;the testing runtime does this for you.
+You aren't to supply a context to an invoked workflow&#8212;the testing runtime does this for you.
 
-Like for [invoke](#runtimeinvoketargetclass-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
+As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
 
-#### runtime.startWorkflow(targetClass, \[workflowUUID, params\])
+#### runtime.startWorkflow(target, \[workflowUUID, params\])
 
 ```typescript
-startWorkflow<T>(targetClass: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+startWorkflow<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
@@ -106,9 +105,9 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await runtime.startWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to start a workflow&#8212;the testing runtime does this for you.
+You aren't to supply a context to start a workflow&#8212;the testing runtime does this for you.
 
-Like for [invoke](#runtimeinvoketargetclass-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
+As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
 
 ### runtime.retrieveWorkflow(workflowUUID)
 
