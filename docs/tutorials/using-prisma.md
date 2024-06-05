@@ -6,8 +6,7 @@ description: Learn how to use Prisma schema and perform transactional updates
 
 ## Prisma Overview
 [Prisma](https://www.prisma.io/) is a popular open-source TypeScript ORM.
-The main idea is to use [Prisma Schema](https://www.prisma.io/docs/orm/prisma-schema/overview) to define your application data models (entities).
-Based on the schema definition, you can use Prisma to automatically generate [schema migrations](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) as well as the corresponding [Prisma Client](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/introduction) for you to manage your data.
+The main idea is to define your application data models (entities) in [Prisma Schema](https://www.prisma.io/docs/orm/prisma-schema/overview), and then use Prisma to automatically generate [schema migrations](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) as well as the corresponding [Prisma Client](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/introduction) for you to manage your data.
 DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeORM](https://typeorm.io) for transactional data management.
 
 ## Usage
