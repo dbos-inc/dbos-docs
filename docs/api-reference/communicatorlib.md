@@ -132,3 +132,9 @@ The application code will then have to specify which configuration to use when i
 ### Simple Email Service (SES)
 
 DBOS provides a communicator for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/communicator-email-ses](https://github.com/dbos-inc/dbos-transact/tree/main/packages/communicator-email-ses) package.
+
+## Simple Storage Service (S3)
+
+DBOS provides communicators for working with S3, and workflows for keeping a database table in sync with an S3 bucket.  For details of the functionality, see the documentation accompanying the [@dbos-inc/component-aws-s3](https://github.com/dbos-inc/dbos-transact/tree/main/packages/component-aws-s3) package.
+
+
