@@ -151,5 +151,5 @@ Therefore, we recommend that you set the build script in your `package.json` fil
 }
 ```
 
-### Known Issue
+### Known Issues
 - Currently we do not support [time travel debugging](../cloud-tutorials/timetravel-debugging.md) for cloud deployed Prisma applications. However, you can still perform [interactive time travel queries](../cloud-tutorials/interactive-timetravel.md).
