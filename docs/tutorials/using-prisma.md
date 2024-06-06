@@ -1,16 +1,12 @@
 ---
 sidebar_position: 12
 title: Using Prisma
-description: Learn how to use Prisma schema and perform transactional updates
+description: Learn how to use Prisma with DBOS
 ---
 
-## Prisma Overview
 [Prisma](https://www.prisma.io/) is a popular open-source TypeScript ORM.
-The main idea is to define your application data models (entities) in [Prisma Schema](https://www.prisma.io/docs/orm/prisma-schema/overview), and then use Prisma to automatically generate [schema migrations](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) as well as the corresponding [Prisma Client](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/introduction) for you to manage your data.
+The main idea is to define your application data models (entities) in the [Prisma Schema](https://www.prisma.io/docs/orm/prisma-schema/overview), and then use Prisma to automatically generate [schema migrations](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) as well as the corresponding [Prisma Client](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/introduction) for you to manage your data.
 DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeORM](https://typeorm.io) for transactional data management.
-
-## Usage
-DBOS supports essentially direct use of Prisma, but a few additional steps are necessary to generate schema migrations and the client, and use a transaction in the context of a workflow.
 
 ### Getting Started
 
@@ -34,9 +30,10 @@ To see that it's working, visit this URL in your browser: [http://localhost:3000
 
 ### Setting Up Prisma Schema
 
-In DBOS, Prisma Schema by default is located at `./prisma/schema.prisma` and is defined in [the same way as any other Prisma project](https://www.prisma.io/docs/orm/prisma-schema/overview), for example:
+In DBOS, the Prisma Schema is defined in [the same way as any other Prisma project](https://www.prisma.io/docs/orm/prisma-schema/overview).
+In this tutorial we assume it is located at the default path (`prisma/schema.prisma`), for example:
 
-```javascript
+```javascript title="prisma/schema.prisma"
 generator client {
   provider = "prisma-client-js"
 }
@@ -53,29 +50,28 @@ model DbosHello {
 }
 ```
 
-Note that the schema file requires a `$DATABASE_URL` environment variable to connect to a database. To make it easy, we include in our template a script to automatically generate a `.env` file under the `./prisma` folder with the correct database URL constructed from your `dbos-config.yaml` file, please see the [document below](#configuring-prisma).
+Note that the schema file requires a `$DATABASE_URL` environment variable to connect to a database. To make it easy, we include in our template [a script](#configuring-prisma) to automatically generate a `prisma/.env` file with the correct database URL constructed from your `dbos-config.yaml` file.
 
 
 ### Schema Management
 
-In production scenarios or when using DBOS Cloud, we strongly recommend you manage your database schema using migrations.
-[Prisma Migrate](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) provides plenty of support for generating and managing migrations.
-
-To update your database schema, you first need to edit your Prisma schema (the `./prisma/schema.prisma` file), and then [create a new migration](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#migrate-dev) by running:
+In production scenarios or when using DBOS Cloud, we strongly recommend you manage your database schema using [Prisma Migrate](https://www.prisma.io/docs/orm/prisma-migrate/getting-started).
+To update your database schema, you first need to edit your Prisma schema file, and then [create a new migration](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#migrate-dev) by running:
 
 
 ```bash
 npx prisma migrate dev --name <migration_name>
 ```
 
-This automatically generates a new migration (under `./prisma/migrations/`) containing SQL commands to transition your database from its current schema to the schema defined in your latest Prisma schema.
+This automatically generates a new migration (under `prisma/migrations/`) containing SQL commands to transition your database from its current schema to the schema defined in your latest Prisma schema.
 
-### Invoking Transactions
-In Prisma, to execute application logic in a transaction is to pass it in as an async callback function. This allows the framework to ensure that the transaction is opened and closed properly, and to ensure that all statements run on the same connection from the connection pool.
+### Using Prisma
 
-DBOS provides a wrapper around Prisma's [interactive transactions](https://www.prisma.io/docs/orm/prisma-client/queries/transactions#interactive-transactions) functionality so that its workflow state can be kept consistent with the application database.
+When using DBOS, database operations are performed in [transaction functions](./transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext<PrismaClient>`](../api-reference/contexts#transactioncontextt) as their first argument.
+Note that we specify `PrismaClient` in angle brackets.
 
-First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../api-reference/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../api-reference/contexts.md#transactioncontextt) with `PrismaClient` as the client type inside. Note that the `PrismaClient` is the generated client based on your schema.
+Within the transaction function, access your Prisma client from the `.client` field of your transaction context.
+For example:
 
 ```javascript
 import { PrismaClient } from "@prisma/client";
@@ -92,11 +88,6 @@ export class Hello {
     return `Greeting ${res.greeting_id}: ${greeting}`;
   }
 }
-```
-
-If preferred, it is possible to define a `type` to clean up the transaction method prototypes a little bit.
-```javascript
-type PrismaTransactionContext = TransactionContext<PrismaClient>;
 ```
 
 ### Configuring Prisma
@@ -123,13 +114,13 @@ database:
 ```
 
 :::info
-Prisma doesn't [support migration rollback](https://github.com/prisma/prisma/discussions/4617) for successfully applied migrations like other ORMs.
+Prisma doesn't [support schema migration rollback](https://github.com/prisma/prisma/discussions/4617) for successfully applied migrations like other ORMs.
 Therefore, we omit the `rollback` configuration here.
-To rollback a migration, please revert changes to your Prisma schema and generate a new migration from it.
+See the [Prisma documentation](https://www.prisma.io/docs/orm/prisma-migrate/workflows/generating-down-migrations) on rolling back schema changes.
 :::
 
 Many Prisma commands, such as those for [schema migrations](#schema-management), require a `DATABASE_URL` environment variable to be correctly set.
-To avoid managing your configuration in two places, we recommend using this script to automatically generate a `./prisma/.env` file with the correct `DATABASE_URL` string constructed from your DBOS config:
+To avoid managing your configuration in two places, we recommend using this script to automatically generate a `prisma/.env` file with the correct `DATABASE_URL` string constructed from your DBOS config:
 
 ```javascript title="generate_env.js"
 const { parseConfigFile } = require('@dbos-inc/dbos-sdk/dist/src/dbos-runtime/config');
