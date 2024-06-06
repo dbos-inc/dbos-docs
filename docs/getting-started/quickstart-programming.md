@@ -100,7 +100,7 @@ The key elements of this code are:
 To learn more about accessing the database in DBOS, see [our guide](../tutorials/transaction-tutorial.md).
 
 :::info
-In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)), but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html) and [TypeORM](https://typeorm.io/).
+In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)), but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
 :::
 
 ### Interacting with External Services

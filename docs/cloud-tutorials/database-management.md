@@ -42,7 +42,7 @@ npx dbos-cloud db status <database-instance-name>
 
 To manage your applications' database schemas, you must define schema migrations.
 DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
-We recommend using a Typescript-based migration tool like [Knex](https://knexjs.org/guide/migrations.html) or [TypeORM](https://typeorm.io/migrations).
+We recommend using a Typescript-based migration tool like [Knex](https://knexjs.org/guide/migrations.html), [TypeORM](https://typeorm.io/migrations), or [Prisma](https://www.prisma.io/docs/orm/prisma-migrate).
 
 You configure your schema migrations in the `migrate` and `rollback` fields of your [`dbos-config.yaml`](../api-reference/configuration.md).
 You must supply a list of commands to run to migrate to your most recent schema version.
@@ -65,6 +65,10 @@ Be careful making breaking schema changes such as deleting or renaming a column&
 :::
 
 ### Database Recovery
+
+:::info
+Database recovery is not available for [linked databases](./byod-management.md)
+:::
 
 DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
 First, run the [`database restore`](../api-reference/cloud-cli.md#npx-dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
