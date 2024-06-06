@@ -396,6 +396,13 @@ import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
+**[Prisma](https://www.prisma.io/docs/orm/prisma-client)**
+
+```typescript
+import { PrismaClient } from "@prisma/client";
+static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
+```
+
 ### Properties
 
 - [client](#transactionctxtclient)
@@ -545,7 +552,7 @@ getConfig<T>(key: string, deflt: T | undefined) : T | undefined
 The `query` function provides read access to the database.
 To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.
 The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.
-The provided `dbClient` will either be a `Knex` or TypeORM `EntityManager` depending on the application's choice of SQL access library.
+The provided `dbClient` will be a `Knex` or TypeORM `EntityManager` or `PrismaClient` depending on the application's choice of SQL access library.
 This callback function may take arguments, and return a value.
 
 Example, for Knex:
