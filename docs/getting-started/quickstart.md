@@ -170,6 +170,7 @@ Run this script to launch Postgres in a Docker container:
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
+# Docker may require sudo -E
 node start_postgres_docker.js
    ```
   </TabItem>
@@ -178,6 +179,7 @@ node start_postgres_docker.js
    ```bash
 cd <application-folder>
 export PGPASSWORD=dbos
+# Docker may require sudo -E
 node start_postgres_docker.js
    ```
   </TabItem>
