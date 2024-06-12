@@ -70,7 +70,7 @@ To make this easier, you can load your cloud database connection information int
 npx dbos-cloud db connect <database-name>
 ```
 
-You can then locally run any migration command such as [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli)  and it will execute on your cloud database.
+You can then locally run any migration command such as [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
 When you're done, you can restore your original database connection information with:
 
 ```
@@ -78,7 +78,7 @@ npx dbos-cloud db disconnect
 ```
 
 :::warning
-While it is sometimes necessary, be careful when manually running migration commands on a production database.
+While it is occasionally necessary, be careful when manually running migration commands on a production database.
 :::
 
 ### Database Recovery

@@ -126,7 +126,7 @@ This command destroys a previously-provisioned Postgres database instance.
 ### `npx dbos-cloud db connect`
 
 **Description:**
-This command loads cloud database connection information into `dbos-config.yaml`.
+This command loads your cloud database's connection parameters into your local [`dbos-config.yaml`](../api-reference/configuration.md).
 
 **Parameters:**
 - `<database-instance-name>`: The name of the database instance to which to connect.
@@ -137,7 +137,7 @@ This command loads cloud database connection information into `dbos-config.yaml`
 ### `npx dbos-cloud db disconnect`
 
 **Description:**
-This command resets database connection parameters in `dbos-config.yaml`, restoring them from a backup made when running [`npx dbos-cloud db connect`](#npx-dbos-cloud-db-connect).
+This command resets database connection parameters in `dbos-config.yaml`, restoring them from a backup made by [`npx dbos-cloud db connect`](#npx-dbos-cloud-db-connect).
 
 ---
 
