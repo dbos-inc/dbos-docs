@@ -123,6 +123,24 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ---
 
+### `npx dbos-cloud db connect`
+
+**Description:**
+This command loads cloud database connection information into `dbos-config.yaml`.
+
+**Parameters:**
+- `<database-instance-name>`: The name of the database instance to which to connect.
+- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
+
+---
+
+### `npx dbos-cloud db disconnect`
+
+**Description:**
+This command resets database connection parameters in `dbos-config.yaml`, restoring them from a backup made when running [`npx dbos-cloud db connect`](#npx-dbos-cloud-db-connect).
+
+---
+
 ### `npx dbos-cloud db restore`
 
 **Description:**
@@ -188,17 +206,6 @@ It executes the [migration commands declared in dbos-config.yaml](./configuratio
 - `[application-name]`: The name of the application to deploy. By default we obtain the application name from package.json. This argument overrides the package name.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas&mdash;to roll back your schema, use the [rollback command](#npx-dbos-cloud-app-rollback) instead. You can list previous versions and their IDs with the [versions command](#npx-dbos-cloud-app-versions).
-
----
-
-### `npx dbos-cloud app rollback`
-
-**Description:**
-This command must be run from an application root directory.
-It executes the [rollback commands declared in dbos-config.yaml](./configuration#database), updates the deployed application's code, and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
-
-**Parameters:**
-- `[application-name]`: The name of the application to rollback. By default we obtain the application name from package.json. This argument overrides the package name.
 
 ---
 
