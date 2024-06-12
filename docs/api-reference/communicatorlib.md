@@ -121,8 +121,10 @@ application:
 
 The application code will then have to specify which configuration to use when initializing the communicator:
 ```typescript
-    // Initialize once ...
-    const sesCfg = configureInstance(SendEmailCommunicator, 'userSES', {awscfgname: 'aws_config_ses_user'});
+    // Initialize once per config used...
+    const sesDef = configureInstance(SendEmailCommunicator, 'default'});
+    const userSES = configureInstance(SendEmailCommunicator, 'userSES', {awscfgname: 'aws_config_ses_user'});
+    const adminSES = configureInstance(SendEmailCommunicator, 'adminSES', {awscfgname: 'aws_config_ses_admin'});
     // Use configured object ...
     const msgid = await worflowCtx.invoke(userSES).sendTemplatedEmail(
         mailMsg,
