@@ -106,7 +106,7 @@ application:
     aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES}
 ```
 
-In the event that there are multiple access keys for the same service, the application must be involved in determining the number and purpose of the configurations.  The application can do this with direct names, or indirect names.
+In the event that there are multiple access keys for the same service, the application must be involved in determining the number and purpose of the configurations.
 ```yaml
 application:
   aws_config_ses_user:
