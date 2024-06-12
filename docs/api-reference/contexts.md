@@ -168,7 +168,7 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = await handlerCtxt.invoke(Cls).fn(arg);
 ```
 
-You aren't to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 You can optionally provide an idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
@@ -186,7 +186,7 @@ The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg);
 ```
 
-You aren't to supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `handlerCtxt.startWorkflow`
 
@@ -206,7 +206,7 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
 
-You aren't to supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `handlerCtxt.retrieveWorkflow`
 
@@ -271,7 +271,7 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = await workflowCtxt.invoke(Cls).fn(arg);
 ```
 
-You aren't to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 
 #### `workflowCtxt.invokeWorkflow`
 
@@ -287,7 +287,7 @@ The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 const output = await ctxt.invokeWorkflow(Cls).wf(arg);
 ```
 
-You aren't to supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `workflowCtxt.startWorkflow`
 
@@ -303,7 +303,7 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
 
-You aren't to supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `workflowCtxt.invokeChildWorkflow`
 
