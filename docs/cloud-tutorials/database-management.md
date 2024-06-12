@@ -63,19 +63,23 @@ When you [deploy](./application-management.md#registering-and-deploying-applicat
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
-Sometimes, it may be necessary to manually run migration commands like `npx dbos rollback` on a cloud database, for example to recover from a schema migration failure.
-To make this easier, you can load your cloud database connection information into your local `dbos-config.yaml`[configuration file](../api-reference/configuration.md) by running:
+Sometimes, it may be necessary to manually run migration commands such as `npx dbos rollback` on a cloud database, for example to recover from a schema migration failure.
+To make this easier, you can load your cloud database connection information into your local [`dbos-config.yaml`](../api-reference/configuration.md) configuration file by running:
 
 ```
-npx dbos-cloud db connect
+npx dbos-cloud db connect <database-name>
 ```
 
-You can then locally run any migration command such as `npx dbos rollback` or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) on your cloud database.
+You can then locally run any migration command such as [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli)  and it will execute on your cloud database.
 When you're done, you can restore your original database connection information with:
 
 ```
 npx dbos-cloud db disconnect
 ```
+
+:::warning
+While it is sometimes necessary, be careful when manually running migration commands on a production database.
+:::
 
 ### Database Recovery
 
