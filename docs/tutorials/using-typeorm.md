@@ -1,5 +1,5 @@
 ---
-sidebar_position: 11
+sidebar_position: 15
 title: Using TypeORM
 description: Learn how to create and register TypeORM entities and perform transactional updates
 ---
