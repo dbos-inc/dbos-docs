@@ -14,7 +14,7 @@ However, it is sometimes desirable to have configuration information available t
 If a function needs more than one configuration, such global settings are not adequate.  For example, an email-sending function may send email with one set of addresses and credentials for promotional materials to prospects, or another set of credentials for replies to support inquiries from existing customers.
 
 ### Instances
-Configured class instances are the DBOS Transact mechanism for creating multiple function configurations.  Rather than having `static` class member functions, configured instances are TypeScript object instances with non-static member functions that can access configuration information through `this`.
+Configured class instances are the DBOS Transact mechanism for creating multiple configurations for the same code.  Rather than having `static` class member functions, configured instances have non-static member functions that can access configuration information through `this`.
 
 ### Names
 Configured instances have names, which are simple strings identifying the configuration.  These names are used by DBOS Transact internally, but are also potentially useful for monitoring, tracing, and debugging.
