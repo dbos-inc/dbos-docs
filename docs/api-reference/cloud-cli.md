@@ -134,13 +134,6 @@ This command loads your cloud database's connection parameters into your local [
 
 ---
 
-### `npx dbos-cloud db disconnect`
-
-**Description:**
-This command resets database connection parameters in `dbos-config.yaml`, restoring them from a backup made by [`npx dbos-cloud db connect`](#npx-dbos-cloud-db-connect).
-
----
-
 ### `npx dbos-cloud db restore`
 
 **Description:**
