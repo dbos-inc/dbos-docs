@@ -5,22 +5,9 @@ title: Programming Quickstart
 
 Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts), the open-source TypeScript framework for DBOS.
 In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
-Along the way, we'll introduce you to core DBOS concepts and show how you can easily build a transactional and reliable application.
-First, you'll learn to create HTTP endpoints to serve requests.
-Then, you'll learn how to interact with a database and make third-party API calls from your application.
-Finally, you'll compose these steps in reliable workflows.
 
-This tutorial assumes you've finished our [quickstart](./quickstart.md).
-For convenience, we recommend initializing a new application and starting a database for it:
-
-```
-npx -y @dbos-inc/create@latest -n <app-name>
-cd <app-name>
-export PGPASSWORD=dbos
-./start_postgres_docker.sh
-npx dbos migrate
-truncate -s 0 src/operations.ts
-```
+Before starting this tutorial, we recommend finishing our [quickstart].
+You can use the application from the quickstart to complete this tutorial.
 
 ### Serving Your Applications
 
@@ -70,7 +57,7 @@ How to interact with the database.
 :::
 
 Let's augment the code to insert a new record in the database when we greet a friend.
-Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client that automatically creates a database connection for you.
+Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client.
 To try it out, copy this code into `src/operations.ts`:
 
 ```javascript
@@ -100,7 +87,7 @@ The key elements of this code are:
 To learn more about accessing the database in DBOS, see [our guide](../tutorials/transaction-tutorial.md).
 
 :::info
-In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)), but we also support [knex's query builder](https://knexjs.org/guide/query-builder.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
+In this quickstart, we write our database operations in raw SQL (using [knex.raw](https://knexjs.org/guide/raw.html)), but DBOS Transact also supports [knex's query builder](https://knexjs.org/guide/query-builder.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
 :::
 
 ### Interacting with External Services
