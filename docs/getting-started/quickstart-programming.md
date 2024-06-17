@@ -57,8 +57,8 @@ How to interact with the database.
 :::
 
 Let's augment the code to insert a new record in the database when we greet a friend.
-Using the [`@Transaction`](../api-reference/decorators#transaction) decorator, you can access a managed database client.
-To try it out, copy this code into `src/operations.ts`:
+We'll do this with a [transactional function](../tutorials/transaction-tutorial.md).
+Copy this code into `src/operations.ts`:
 
 ```javascript
 import { TransactionContext, Transaction, HandlerContext, GetApi } from '@dbos-inc/dbos-sdk'
@@ -68,6 +68,7 @@ export class Greetings {
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
     await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+    ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
   @GetApi('/greeting/:friend')
@@ -80,9 +81,9 @@ export class Greetings {
 ```
 
 The key elements of this code are:
-- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that can access the database.
+- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that can access the database from a managed client.
 - Inside `InsertGreeting`, we insert a row in the database with `ctxt.client.raw()`.
-- We invoke `InsertGreeting` from `Greeting` using its context: `ctxt.invoke(Greetings).InsertGreeting(friend, noteContent)`.
+- We add a line to `Greeting` invoking `InsertGreeting`.
 
 To learn more about accessing the database in DBOS, see [our guide](../tutorials/transaction-tutorial.md).
 
@@ -119,10 +120,8 @@ export class Greetings {
 
   @Transaction()
   static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw(
-      "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
-      [friend, content],
-    );
+    await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+    ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
   @GetApi("/greeting/:friend")
@@ -137,7 +136,7 @@ export class Greetings {
 
 The key elements of this code are:
 - We use the [`@Communicator`](../api-reference/decorators#transaction) decorator to define a [communicator function](../tutorials/communicator-tutorial.md) (`SendGreetingEmail`) to access a third-party email service.
-- We invoke `SendGreetingEmail` from `Greeting` using its context: `ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent)`.
+- We add a line to `Greeting` invoking `SendGreetingEmail`.
 
 To learn more about communication with external services and APIs in DBOS, see [our guide](../tutorials/communicator-tutorial).
 
@@ -147,14 +146,13 @@ To learn more about communication with external services and APIs in DBOS, see [
 How to make your applications reliable using DBOS workflows.
 :::
 
-To avoid spamming our friends, we want to make sure that if we retry a request after a transient failure or service interruption, the email is sent exactly once.
+Next, we want to make our app **reliable**: guarantee that it records every email in the database, even if there is a transient failure or service interruption.
 DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md).
 To see them in action, add this code to `src/operations.ts`:
 
 ```javascript
 import {
-    TransactionContext, Transaction,
-    HandlerContext, GetApi,
+    TransactionContext, Transaction, GetApi,
     CommunicatorContext, Communicator,
     WorkflowContext, Workflow,
 } from "@dbos-inc/dbos-sdk";
@@ -170,10 +168,8 @@ export class Greetings {
 
     @Transaction()
     static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-        await ctxt.client.raw(
-            "INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)",
-            [friend, content]
-        );
+        await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+        ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
     }
 
     @Workflow()
@@ -184,13 +180,12 @@ export class Greetings {
 
         for (let i = 0; i < 5; i++) {
             ctxt.logger.info(
-                "Press control + C to interrupt the workflow..."
+                "Press Control + C to interrupt the workflow..."
             );
             await ctxt.sleepms(1000);
         }
 
         await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
-        ctxt.logger.info(`Greeting sent to ${friend}!`);
         return noteContent;
     }
 }
@@ -202,8 +197,8 @@ The key elements of this snippet are:
 - We introduce a sleep allowing you to interrupt the program midway through the workflow.
 
 When executing a workflow, DBOS persists the output of each step in your database.
-That way, if a workflow is interrupted, DBOS can restart it from where it left off.
-To see this in action, build and start the application by running:
+That way, if a workflow is interrupted, DBOS can resume it from where it left off.
+To see this in action, build and start your application:
 
 ```
 npm run build
@@ -218,33 +213,39 @@ On your terminal, you should see an output like:
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
+[info]: Kafka endpoints supported:
+[info]: Scheduled endpoints:
 [info]: DBOS Server is running at http://localhost:3000
 [info]: DBOS Admin Server is running at http://localhost:3001
 [info]: Sending email "Thank you for being awesome, Mike!" to Mike...
 [info]: Email sent!
-[info]: Press control + C to interrupt the workflow...
+[info]: Press Control + C to interrupt the workflow...
 ```
-Press control + c when prompted to interrupt the workflow.
-Then, run `npx dbos start` to restart DBOS Cloud.
+Press Control + c when prompted to interrupt your application.
+Then, run `npx dbos start` to restart your application.
 You should see an output like:
 
-```
+```shell
 > npx dbos start
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
+[info]: Kafka endpoints supported:
+[info]: Scheduled endpoints:
 [info]: DBOS Server is running at http://localhost:3000
 [info]: DBOS Admin Server is running at http://localhost:3001
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
-[info]: Press control + C to interrupt the workflow...
-[info]: Greeting sent to Mike!
+[info]: Press Control + C to interrupt the workflow...
+[info]: Press Control + C to interrupt the workflow...
+[info]: Press Control + C to interrupt the workflow...
+[info]: Press Control + C to interrupt the workflow...
+[info]: Press Control + C to interrupt the workflow...
+[info]: Greeting to Mike recorded in the database!
 ```
 
-Notice how DBOS automatically restarted your program and ran it to completion, but didn't re-send the email.
-This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes once and only once.
+Notice how DBOS automatically resumes your workflow from where it left off.
+It doesn't re-send the greeting email, but does record the previously-sent greeting in the database.
+This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes exactly once.
+To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) or [explainer](../explanations/how-workflows-work.md).
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
 
