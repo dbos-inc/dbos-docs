@@ -10,11 +10,12 @@ In this guide, we'll explain how DBOS makes workflows reliable.
 
 ### Workflow Guarantees
 
-To reiterate from our [workflow tutorial](../tutorials/workflow-tutorial), workflows provide the following reliability guaranteees:
+To reiterate from our [workflow tutorial](../tutorials/workflow-tutorial), workflows provide the following reliability guaranteees.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
-1.  They always run to completion.  If a server executing a workflow crashes and restarts, it resumes all incomplete workflows.
-2.  Transactions execute _exactly once_.  Regardless of what failures occur during a workflow's execution, it executes each of its transactions once and only once.
-3.  Communicators execute _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed execution, DBOS guarantees it will never be re-executed regardless of what failures happen afterwards.
+1.  Workflows always run to completion.  If a DBOS process crashes and is restarted while executing a workflow, it resumes the workflow from where it left off.
+2.  Transactions execute _exactly once_.  Once a workflow commits a transaction, it will never re-execute that transaction.
+3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
 ### Reliability Through Recording and Safe Re-execution
 
@@ -23,17 +24,17 @@ Before a workflow starts, DBOS records its input.
 Each time a workflow executes a [transaction](../tutorials/transaction-tutorial) or [communicator](../tutorials/communicator-tutorial), DBOS records its output (or the exception it threw, if any).
 When a workflow finishes, DBOS records its output.
 
-If a DBOS server crashes and restarts, it uses the information saved in the database to resume all unfinished workflows from where they left off.
-First, it finds all unfinished workflows: those with a recorded input, but no recorded output.
-Then, it restarts every unfinished workflow from the beginning, using its saved inputs.
-While re-executing an unfinished workflow, it checks before every function execution if the function has an output stored in the database, meaning it previously completed.
+If a DBOS server crashes and restarts, it uses the information saved in the database to resume all pending workflows from where they left off.
+First, it finds all pending workflows: those with a recorded input, but no recorded output.
+Then, it restarts every pending workflow from the beginning, using its saved inputs.
+While re-executing an pending workflow, it checks before every function execution if the function has an output stored in the database, meaning it previously completed.
 If it finds a saved output, it skips re-executing that function and instead uses the saved output.
 When the workflow gets to the first function that does not have a saved output and hence _didn't_ previously complete, it executes normally, thus "resuming from where it left off."
-Let's look at how this procedure gets us all three of our guarantees.
+Let's look at how this procedure obtains all three guarantees above.
 
 1.  Any interrupted workflow is re-executed until it completes, so workflows always run to completion.
-2.  We record each transaction's output as part of the transaction and re-execute it only if and only if the output is not found, so transactions execute exactly once.
-3.  We record each communicator's output after it completes and re-execute it if and only if the output is not found, so communicators execute at least once but are never re-executed after their completion.
+2.  DBOS records each transaction's output as part of the transaction and re-executes it if and only if the output is not found, so transactions execute exactly once.
+3.  DBOS records each communicator's output after it completes and re-executes it if and only if the output is not found, so communicators are tried at least once but never re-execute after completion.
 
 ### Reliability by Example
 
@@ -76,7 +77,7 @@ Let's say a customer is trying to purchase a ticket and the following events hap
 2. Their payment fails.
 3. The server crashes while undoing the reservation (causing the database to automatically abort that transaction).
 
-It's business-critical that we resume this workflow, as otherwise the customer would have reserved a ticket they never paid for.
+It's business-critical that the workflow resume, as otherwise the customer would have reserved a ticket they never paid for.
 When the server restarts, DBOS re-executes the workflow from the beginning.
 When it gets to `reserveTicket`, it checks the database and finds it previously succeeded, so instead of re-executing the transaction (and potentially reserving a second ticket), it simply returns `true`.  
 When it gets to `payment`, it does the same thing, returning `false`.
@@ -87,7 +88,8 @@ From a user's perspective, the workflow has resumed from where it failed last ti
 
 For workflow recovery to work, they must meet two requirements.
 
-**First, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism)**: All code in the workflow function must do the same thing if called multiple times with the same input.
+**First, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism)**:
+A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](../tutorials/transaction-tutorial) and all other non-deterministic operations in [communicators](../tutorials/communicator-tutorial).
 That way, DBOS can capture the output of the non-deterministic operation and avoid re-executing it.
