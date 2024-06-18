@@ -500,9 +500,9 @@ Class-level decorator defining a Kafka configuration to use in all class methods
 Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
 
 
-#### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
-Runs a transaction or workflow exactly-once for each message received on the specified topic.
-Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
+#### `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig)` {#kafka-consume}
+Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+Takes in a Kafka topic or list of Kafka topics (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
 
