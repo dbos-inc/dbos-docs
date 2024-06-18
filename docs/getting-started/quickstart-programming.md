@@ -3,10 +3,10 @@ sidebar_position: 2
 title: Programming Quickstart
 ---
 
-Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts), the open-source TypeScript framework for DBOS.
-In this tutorial, we will modify the example application from our [quickstart](./quickstart.md) to reliably send a greeting note to your friends.
+Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts).
+In this tutorial, we'll modify the example application from our [quickstart](./quickstart.md) to reliably send greetings to your friends.
 
-Before starting this tutorial, we recommend finishing our [quickstart].
+Before starting this tutorial, we recommend finishing the [quickstart](./quickstart.md).
 You can use the application from the quickstart to complete this tutorial.
 
 ### Serving Your Applications
@@ -35,6 +35,8 @@ Rebuild with `npm run build` and start your application with `npx dbos start`. Y
 [info]: Workflow executor initialized
 [info]: HTTP endpoints supported:
 [info]:     GET   :  /greeting/:friend
+[info]: Kafka endpoints supported:
+[info]: Scheduled endpoints:
 [info]: DBOS Server is running at http://localhost:3000
 [info]: DBOS Admin Server is running at http://localhost:3001
 ```
@@ -81,7 +83,7 @@ export class Greetings {
 ```
 
 The key elements of this code are:
-- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that can access the database from a managed client.
+- We use the [`@Transaction`](../api-reference/decorators#transaction) decorator to define a [transactional function](../tutorials/transaction-tutorial.md) (`InsertGreeting`) that accesses the database from a managed client.
 - Inside `InsertGreeting`, we insert a row in the database with `ctxt.client.raw()`.
 - We add a line to `Greeting` invoking `InsertGreeting`.
 
@@ -146,7 +148,7 @@ To learn more about communication with external services and APIs in DBOS, see [
 How to make your applications reliable using DBOS workflows.
 :::
 
-Next, we want to make our app **reliable**: guarantee that it records every email in the database, even if there is a transient failure or service interruption.
+Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per greeting email sent, even if there are transient failures or service interruptions.
 DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md).
 To see them in action, add this code to `src/operations.ts`:
 
@@ -193,19 +195,17 @@ export class Greetings {
 
 The key elements of this snippet are:
 - We create a [workflow function](../tutorials/workflow-tutorial.md) (`GreetingWorkflow`) using the [`@Workflow`](../api-reference/decorators.md#workflow) decorator. We move the `@GetApi` decorator to this function to serve HTTP requests from it.
-- We invoke both `SendGreetingEmail` and `InsertGreeting` from this workflow.
+- We invoke both `SendGreetingEmail` and `InsertGreeting` from the workflow.
 - We introduce a sleep allowing you to interrupt the program midway through the workflow.
 
-When executing a workflow, DBOS persists the output of each step in your database.
-That way, if a workflow is interrupted, DBOS can resume it from where it left off.
-To see this in action, build and start your application:
+To see your workflow in action, build and start your application:
 
 ```
 npm run build
 npx dbos start
 ```
 
-Then, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to the application.
+Then, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to your application.
 On your terminal, you should see an output like:
 
 ```shell
@@ -221,7 +221,7 @@ On your terminal, you should see an output like:
 [info]: Email sent!
 [info]: Press Control + C to interrupt the workflow...
 ```
-Press Control + c when prompted to interrupt your application.
+Press Control + C when prompted to interrupt your application.
 Then, run `npx dbos start` to restart your application.
 You should see an output like:
 
@@ -245,7 +245,7 @@ You should see an output like:
 Notice how DBOS automatically resumes your workflow from where it left off.
 It doesn't re-send the greeting email, but does record the previously-sent greeting in the database.
 This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes exactly once.
-To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) or [explainer](../explanations/how-workflows-work.md).
+To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-emails).
 
