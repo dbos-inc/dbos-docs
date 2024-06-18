@@ -53,12 +53,6 @@ You don't have to worry about changing database server connection parameters lik
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
-### Rolling Back Application Databases
-
-To [roll back your application database](./database-management.md#database-schema-management), run `npx dbos-cloud app rollback`.
-This command works analagously to `deploy`, but instead of running `npx dbos migrate`, it runs [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) to execute the rollback commands defined in your [configuration file](../api-reference/configuration.md#database).
-It then updates your application code.
-
 ### Monitoring and Debugging Applications
 
 DBOS provides many tools to monitor and debug applications:
@@ -87,7 +81,7 @@ npx dbos-cloud app deploy --previous-version <version-id>
 ```
 
 However, this will fail if the previous and current versions have different database schemas.
-To roll back your schema, use the [rollback command](#rolling-back-application-databases) instead.
+For more information on schema management, see our [schema management guide](./database-management.md#database-schema-management).
 
 ### Deleting Applications
 

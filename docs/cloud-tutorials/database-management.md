@@ -58,10 +58,22 @@ database:
 To run your migrations locally, run `npx dbos migrate` or `npx dbos rollback`.
 
 When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
-When you [roll back](./application-management.md#rolling-back-application-databases) an application on DBOS Cloud, it runs `npx dbos rollback` to roll back schema changes before updating your application's code.
 
 :::info
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
+:::
+
+Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
+To make this easier, you can load your cloud database connection information into your local [`dbos-config.yaml`](../api-reference/configuration.md) configuration file by running:
+
+```
+npx dbos-cloud db connect <database-name>
+```
+
+You can then locally run any migration command such as [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
+
+:::warning
+While it is occasionally necessary, be careful when manually changing the schema on a production database.
 :::
 
 ### Database Recovery
