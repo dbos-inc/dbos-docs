@@ -4,11 +4,11 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-With these DBOS solutions, you can easily build scalable, reliable, and secure TypeScript applications:
+DBOS is a serverless platform that radically simplifies backend application development.
 
-- **DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for developing transactional applications with built-in once-and-only-once code execution.
+- **Build with DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for backend applications with built-in exactly-once code execution.
 
-- **DBOS Cloud** - A transactional serverless platform for deploying DBOS Transact applications to the cloud with built-in high performance, scalability, fault tolerance, and database time travel.
+- **Deploy to DBOS Cloud** - A serverless platform for DBOS Transact applications with built-in [high performance](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark), scalability, fault tolerance, and database time travel.
 
 You want to build your next backend application with DBOS because:
 
