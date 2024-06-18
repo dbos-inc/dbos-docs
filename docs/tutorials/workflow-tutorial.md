@@ -60,7 +60,7 @@ Workflows provide the following reliability guaranteees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
-2.  Transactions execute _exactly once_.  Once a workflow commits a transaction, it will never re-execute that transaction.
+2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
 ### Determinism

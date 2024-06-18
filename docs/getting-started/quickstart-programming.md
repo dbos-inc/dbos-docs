@@ -5,6 +5,7 @@ title: Programming Quickstart
 
 Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts).
 In this tutorial, we'll modify the example application from our [quickstart](./quickstart.md) to reliably send greetings to your friends.
+We'll show you how construct a reliable workflow that updates your database and calls third-party APIs.
 
 Before starting this tutorial, we recommend finishing the [quickstart](./quickstart.md).
 You can use the application from the quickstart to complete this tutorial.

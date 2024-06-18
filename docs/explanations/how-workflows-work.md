@@ -14,7 +14,7 @@ To reiterate from our [workflow tutorial](../tutorials/workflow-tutorial), workf
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
-2.  Transactions execute _exactly once_.  Once a workflow commits a transaction, it will never re-execute that transaction.
+2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
 ### Reliability Through Recording and Safe Re-execution
@@ -32,7 +32,7 @@ If it finds a saved output, it skips re-executing that function and instead uses
 When the workflow gets to the first function that does not have a saved output and hence _didn't_ previously complete, it executes normally, thus "resuming from where it left off."
 Let's look at how this procedure obtains all three guarantees above.
 
-1.  Any interrupted workflow is re-executed until it completes, so workflows always run to completion.
+1.  Any interrupted workflow is re-started and re-executed until it completes, so workflows always run to completion.
 2.  DBOS records each transaction's output as part of the transaction and re-executes it if and only if the output is not found, so transactions execute exactly once.
 3.  DBOS records each communicator's output after it completes and re-executes it if and only if the output is not found, so communicators are tried at least once but never re-execute after completion.
 
