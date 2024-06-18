@@ -77,7 +77,7 @@ Let's say a customer is trying to purchase a ticket and the following events hap
 2. Their payment fails.
 3. The server crashes while undoing the reservation (causing the database to automatically abort that transaction).
 
-It's business-critical that the workflow resume, as otherwise the customer would have reserved a ticket they never paid for.
+It's business-critical that the workflow resumes, as otherwise the customer would have reserved a ticket they never paid for.
 When the server restarts, DBOS re-executes the workflow from the beginning.
 When it gets to `reserveTicket`, it checks the database and finds it previously succeeded, so instead of re-executing the transaction (and potentially reserving a second ticket), it simply returns `true`.  
 When it gets to `payment`, it does the same thing, returning `false`.
