@@ -48,7 +48,7 @@ await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 The syntax for invoking function `fn(args)` in class `Cls` is `ctxt.invoke(Cls).fn(args)`.
 
 You can also invoke other workflows with the [`ctxt.invokeWorkflow()`](../api-reference/contexts#workflowctxtinvokeworkflow) method.
-The syntax for invoking child workflow `wf` in class `Cls` with argument `arg` is:
+The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
 const output = await ctxt.invokeWorkflow(Cls).wf(arg);
