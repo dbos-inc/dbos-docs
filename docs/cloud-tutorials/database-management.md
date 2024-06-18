@@ -63,7 +63,7 @@ When you [deploy](./application-management.md#registering-and-deploying-applicat
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
-Sometimes, it may be necessary to manually run migration commands such as `npx dbos rollback` on a cloud database, for example to recover from a schema migration failure.
+Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
 To make this easier, you can load your cloud database connection information into your local [`dbos-config.yaml`](../api-reference/configuration.md) configuration file by running:
 
 ```
