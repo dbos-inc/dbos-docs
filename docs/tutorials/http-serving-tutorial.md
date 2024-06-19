@@ -28,7 +28,7 @@ static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSour
 }
 ```
 
-DBOS currently supports two endpoint decorators, [`GetApi`](../api-reference/decorators#getapi) (HTTP `GET`) and [`PostApi`](../api-reference/decorators#postapi) (HTTP `POST`).
+DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@GetApi`](../api-reference/decorators#getapi), [`@PostApi`](../api-reference/decorators#postapi), [`@PutApi`](../api-reference/decorators.md#putapi), [`@PatchApi`](../api-reference/decorators.md#patchapi), and [`@DeleteApi`](../api-reference/decorators.md#deleteapi).
 Each associates a function with an HTTP URL.
 
 :::info
@@ -44,18 +44,16 @@ When you run an locally app with `npx dbos start`, we manage the HTTP server for
 A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the first example above.
 Handlers can [invoke](../api-reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
 However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
-You should use handlers when you need to access HTTP responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
+You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
 ### Inputs and HTTP Requests
 
-Any DBOS method invoked via HTTP request can access the raw request from its `context.request` field.
-
-When a function has arguments other than its context (e.g., `name: String` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if arguments were not provided.
+When a function has arguments other than its context (e.g., `name` or `user` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if arguments are not provided.
 
 Arguments are parsed from three places by default:
 
-1. For GET requests, from a URL query string parameter.
-2. For POST requests, from an HTTP body field.
+1. For `GET` and `DELETE` requests, from a URL query string parameter.
+2. For `POST`, `PUT`, and `PATCH` requests, from an HTTP body field.
 3. From a URL path parameter, if there are placeholders specified in the decorated URL.
 
 In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: string`.
@@ -65,9 +63,25 @@ For example, in the `greetingEndpoint` snippet above the `@ArgSource(ArgSources.
 By default, DBOS automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
 Validation can be turned off at the class level using [`@DefaultArgOptional`](../api-reference/decorators#defaultargoptional) or controlled at the parameter level using [`@ArgRequired`](../api-reference/decorators#argrequired) and [`@ArgOptional`](../api-reference/decorators#argoptional).
 
+Additionally, any DBOS method invoked via HTTP request can access request information from its `context.request` field. This returns the following information:
+
+```typescript
+interface HTTPRequest {
+  readonly headers?: IncomingHttpHeaders;  // A node's http.IncomingHttpHeaders object.
+  readonly rawHeaders?: string[];          // Raw headers.
+  readonly params?: unknown;               // Parsed path parameters from the URL.
+  readonly body?: unknown;                 // parsed HTTP body as an object.
+  readonly rawBody?: string;               // Unparsed raw HTTP body string.
+  readonly query?: ParsedUrlQuery;         // Parsed query string.
+  readonly querystring?: string;           // Unparsed raw query string.
+  readonly url?: string;                   // Request URL.
+  readonly ip?: string;                    // Request remote address.
+}
+```
+
 ### Outputs and HTTP Responses
 
-By default, if a function invoked via HTTP request returns successfuly, its return value is sent in the HTTP response body with status code `200` (or `204` if nothing is returned).
+By default, if a function invoked via HTTP request returns successfully, its return value is sent in the HTTP response body with status code `200` (or `204` if nothing is returned).
 If the function throws an exception, the error message is sent in the response body with a `400` or `500` status code.
 If the error contains a `status` field, the handler uses that status code instead.
 
