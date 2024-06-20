@@ -35,7 +35,7 @@ Each associates a function with an HTTP URL.
 
 You might be wondering why we don't talk about setting up an HTTP server.
 It's because DBOS is _serverless_.
-When you run an locally app with `npx dbos start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
+When you run an app locally with `npx dbos start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
 
 :::
 
