@@ -56,7 +56,7 @@ const output = await ctxt.invokeWorkflow(Cls).wf(arg);
 
 ### Reliability Guarantees
 
-Workflows provide the following reliability guaranteees.
+Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
