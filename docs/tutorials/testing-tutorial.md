@@ -16,9 +16,13 @@ We use [Jest](https://jestjs.io/) in this example, but the testing runtime works
 
 First, let's create a `TestingRuntime` object:
 ```typescript
+testRuntime = await createTestingRuntime();
+```
+
+This function optionally takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class, so we could have specified:
+```typescript
 testRuntime = await createTestingRuntime([Hello]);
 ```
-This function takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class.
 
 You can also optionally provide a path to a [configuration file](../api-reference/configuration.md).
 If no path is provided, the runtime loads a configuration file from the default location (`dbos-config.yaml` in the package root).
