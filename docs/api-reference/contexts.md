@@ -239,6 +239,38 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to publi
 
 ---
 
+#### `handlerCtxt.getWorkflows`
+
+```typescript
+getWorkflows(input: GetWorkflowsInput): Promise<GetWorkflowsOutput>
+```
+
+This function allows querying workflow history. It takes in as input an object describing which workflows to retrieve:
+
+```typescript
+export interface GetWorkflowsInput {
+  workflowName?: string; // The name of the workflow function
+  authenticatedUser?: string; // The user who ran the workflow.
+  startTime?: string; // Timestamp in RFC 3339 format
+  endTime?: string; // Timestamp in RFC 3339 format
+  status?: "PENDING" | "SUCCESS" | "ERROR"; // The status of the workflow.
+  applicationVersion?: string; // The application version that ran this workflow.
+  limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
+}
+```
+
+It returns as output an object containing a list of the [UUIDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows:
+
+```typescript
+export interface GetWorkflowsOutput {
+  workflowUUIDs: string[];
+}
+```
+
+To obtain further information about a particular workflow, call [`retrieveWorkflow`](#handlerctxtretrieveworkflow) on its UUID to obtain its [handle](./workflow-handles.md).
+
+---
+
 ## `WorkflowContext`
 
 Workflows use `WorkflowContext` to invoke other functions and interact with other workflows.
