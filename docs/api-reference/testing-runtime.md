@@ -32,7 +32,7 @@ For example, to create a runtime loading functions from the `Hello` class and us
 testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 ```
 
-However, the defaults are generally sufficient:
+However, the defaults are generally sufficient as long as classes at least indirectly referenced from the test file:
 ```typescript
 testRuntime = await createTestingRuntime();
 ```
