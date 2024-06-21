@@ -139,7 +139,9 @@ Handlers use `HandlerContext` to invoke other functions, interact with active wo
 
 ### Methods
 
-- [invoke(targetClass, \[workflowUUID\])](#handlerctxtinvoke)
+- [invoke(target)](#handlerctxtinvoke)
+- [invokeWorkflow(target, \[workflowUUID\])](#handlerctxtinvokeworkflow)
+- [startWorkflow(target, \[workflowUUID\])](#handlerctxtstartworkflow)
 - [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflow)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsend)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgetevent)
@@ -155,10 +157,10 @@ The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) 
 #### `handlerCtxt.invoke`
 
 ```typescript
-invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Invoke a transaction or communicator.
+Invoke a transaction or communicator on the `target` class or configured instance.
 To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`startWorkflow`](#handlerctxtstartworkflow) instead.
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
@@ -166,41 +168,45 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = await handlerCtxt.invoke(Cls).fn(arg);
 ```
 
-You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
-You can optionally provide a UUID idempotency key to the invoked function.
+You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
+You can optionally provide an idempotency key to the invoked function.
 For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
 
 #### `handlerCtxt.invokeWorkflow`
 
 ```typescript
-invokeWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+invokeWorkflow<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
-To start a workflow without waiting it to complete, use [`startWorkflow`](#handlerctxtstartworkflow).
+To start a workflow without waiting for it to complete, use [`startWorkflow`](#handlerctxtstartworkflow).
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
 const output = await handlerCtxt.invokeWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `handlerCtxt.startWorkflow`
 
 ```typescript
-startWorkflow<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+startWorkflow<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
-This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+Start a workflow and return a [handle](./workflow-handles.md) to it.
+This does not wait for the workflow to complete, though the resulting handle can be used to wait for the workflow result.
+To start a workflow and wait for the result, see [`invokeWorkflow`](#handlerctxtinvokeworkflow).
+The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+
+
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
 
 #### `handlerCtxt.retrieveWorkflow`
 
@@ -239,9 +245,9 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 
 ### Methods
 
-- [invoke(targetClass)](#workflowctxtinvoke)
-- [invokeChildWorkflow(wf, ...args)](#workflowctxtinvokechildworkflow)
-- [startChildWorkflow(wf, ...args)](#workflowctxtstartchildworkflow)
+- [invoke(target)](#workflowctxtinvoke)
+- [invokeWorkflow(target)](#workflowctxtinvokeworkflow)
+- [startWorkflow(target)](#workflowctxtstartworkflow)
 - [send(destinationUUID, message, \[topic\])](#workflowctxtsend)
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
 - [setEvent(key, value)](#workflowctxtsetevent)
@@ -253,11 +259,11 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 #### `workflowCtxt.invoke`
 
 ```typescript
-invoke<T>(targetClass: T, workflowUUID?: string): InvokeFuncs<T>
+invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and communicators.
-To invoke other workflows, use [`invokeChildWorkflow`](#workflowctxtinvokechildworkflow) or [`startChildWorkflow`](#workflowctxtstartchildworkflow).
+To invoke other workflows, use [`invokeWorkflow`](#workflowctxtinvokeworkflow) or [`startWorkflow`](#workflowctxtstartworkflow).
 
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
@@ -265,39 +271,47 @@ The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 const output = await workflowCtxt.invoke(Cls).fn(arg);
 ```
 
-You don't need to supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 
-#### `workflowCtxt.invokeChildWorkflow`
+#### `workflowCtxt.invokeWorkflow`
 
 ```typescript
-invokeChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<R>
+invokeWorkflow<T>(target: T)
 ```
 
 Invoke a child workflow and wait for it to complete, returning its result.
-To start a workflow without waiting it to complete, use [`startWorkflow`](#workflowctxtstartchildworkflow).
+To start a workflow without waiting it to complete, use [`startWorkflow`](#workflowctxtstartworkflow).
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const output = await ctxt.invokeChildWorkflow(Cls.wf, arg);
+const output = await ctxt.invokeWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the invoked child workflow&#8212;the DBOS Transact runtime does this for you.
 
-#### `workflowCtxt.startChildWorkflow`
+#### `workflowCtxt.startWorkflow`
 
 ```typescript
-startChildWorkflow<T extends any[], R>(wf: Workflow<T, R>, ...args: T): Promise<WorkflowHandle<R>>
+startWorkflow<T>(target: T).workflowFunction(args)
 ```
 
-Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
-This method resolves as soon as the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for the workflow to complete.
+This method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
-const workflowHandle = await ctxt.startChildWorkflow(Cls.wf, arg);
+const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
 
-You don't need to supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
+You don't supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
+
+#### `workflowCtxt.invokeChildWorkflow`
+
+Deprecated in favor of [`workflowCtxt.invokeWorkflow`](#workflowctxtinvokeworkflow), which is equivalent but syntactically simpler.
+
+#### `workflowCtxt.startChildWorkflow`
+
+Deprecated in favor of [`workflowCtxt.startWorkflow`](#workflowctxtstartworkflow), which is equivalent but syntactically simpler.
 
 #### `workflowCtxt.send`
 
@@ -396,6 +410,13 @@ import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
+**[Prisma](https://www.prisma.io/docs/orm/prisma-client)**
+
+```typescript
+import { PrismaClient } from "@prisma/client";
+static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
+```
+
 ### Properties
 
 - [client](#transactionctxtclient)
@@ -442,7 +463,7 @@ Configurable through the [`@Communicator`](./decorators#communicator) decorator.
 
 ## `InitContext`
 
-[Initialization functions](./decorators.md#dbosinitializer) are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
+[Class initialization functions](./decorators.md#dbosinitializer) and instance `initialize()` methods are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
 
 #### Properties and Methods
 
@@ -545,7 +566,7 @@ getConfig<T>(key: string, deflt: T | undefined) : T | undefined
 The `query` function provides read access to the database.
 To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.
 The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.
-The provided `dbClient` will either be a `Knex` or TypeORM `EntityManager` depending on the application's choice of SQL access library.
+The provided `dbClient` will be a `Knex` or TypeORM `EntityManager` or `PrismaClient` depending on the application's choice of SQL access library.
 This callback function may take arguments, and return a value.
 
 Example, for Knex:

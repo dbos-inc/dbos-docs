@@ -29,10 +29,10 @@ Every field is required unless otherwise specified.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: Name of the application database.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **app_db_client** (optional): Client to use for connecting to the application database. Must be either `knex` or `typeorm`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html) and [TypeORM](https://typeorm.io/migrations).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html), [TypeORM](https://typeorm.io/migrations), and [Prisma](https://www.prisma.io/docs/orm/prisma-migrate).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:

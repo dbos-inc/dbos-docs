@@ -4,25 +4,18 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-In this guide, you'll learn how to perform database operations in DBOS.
-
-:::info
-
-DBOS supports Postgres-compatible application databases.
-
-:::
-
-To perform operations on your application database in DBOS, you use a _transaction_ function.
+To perform operations on your application database in DBOS, you use _transaction functions_.
 As their name implies, these functions execute as [database transactions](https://en.wikipedia.org/wiki/Database_transaction).
 
 Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext`](../api-reference/contexts#transactioncontextt) as their first argument.
 As with other DBOS functions, inputs and outputs must be serializable to JSON.
-The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
-By default, this is a [Knex.js](https://knexjs.org/) client.
-We like Knex because it's lightweight and helps us write fast and type-safe queries.
-However, if you prefer a traditional ORM, we also support [TypeORM](./using-typeorm.md).
 
-Here's an example of a transaction function written using raw SQL (calling it with [knex.raw](https://knexjs.org/guide/raw.html)):
+The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
+By default, this is a [Knex.js](https://knexjs.org/) client backed by a connection pool.
+We like Knex because it's lightweight and helps us write fast and type-safe queries.
+However, if you prefer a traditional ORM, we also support [TypeORM](./using-typeorm.md) and [Prisma](./using-prisma.md).
+
+Here's an example of a transaction function written using raw SQL (with [knex.raw](https://knexjs.org/guide/raw.html)):
 
 ```javascript
 export interface dbos_hello {

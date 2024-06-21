@@ -72,3 +72,71 @@ This communicator is provided in the `@dbos-inc/communicator-random` package.
 
 ### `random()`
 `random` is a wrapper for `Math.random()` and similarly produces a `number` in the range from 0 to 1.
+
+## Amazon Web Services (AWS) Communicators
+
+### AWS Configuration
+Configuration of AWS services typically relies on access keys, which are needed by the application to make service API calls, but also are to be kept secret.
+
+There are multiple strategies used in AWS deployments, including the following:
+- Use one access key for the whole application; this generally is the key for an IAM role that is authorized to use all APIs that the application requires
+- Use one access key for each service used by the application
+- Use multiple access keys for each service, potentially with different permissions for roles within the application
+
+DBOS Transact is designed to make configuration with a single access key straightforward, while allowing more flexible configurations.
+
+First, AWS configuration sections are added to the `application` part of `dbos-config.yaml`:
+```yaml
+application:
+  aws_config:
+    aws_region: ${AWS_REGION}
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+```
+
+The default configuration section of `application.aws_config` is used for any communicator that has not been specifically configured.
+
+Individual AWS services can override this, for example the SES communicator uses `aws_ses_configuration` to specify the configuration(s) for use by SES:
+```yaml
+application:
+  aws_ses_configuration: aws_config_ses
+  aws_config_ses:
+    aws_region: ${AWS_REGION}
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID_SES}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES}
+```
+
+In the event that there are multiple access keys for the same service, the application must be involved in determining the number and purpose of the configurations.
+```yaml
+application:
+  aws_config_ses_user:
+    aws_region: ${AWS_REGION}
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID_SES_U}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES_U}
+  aws_config_ses_admin:
+    aws_region: ${AWS_REGION}
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID_SES_A}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY_SES_A}
+```
+
+The application code will then have to specify which configuration to use when initializing the communicator:
+```typescript
+    // Initialize once per config used...
+    const sesDef = configureInstance(SendEmailCommunicator, 'default'});
+    const userSES = configureInstance(SendEmailCommunicator, 'userSES', {awscfgname: 'aws_config_ses_user'});
+    const adminSES = configureInstance(SendEmailCommunicator, 'adminSES', {awscfgname: 'aws_config_ses_admin'});
+    // Use configured object ...
+    const msgid = await worflowCtx.invoke(userSES).sendTemplatedEmail(
+        mailMsg,
+    );
+```
+
+### Simple Email Service (SES)
+
+DBOS provides a communicator for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/communicator-email-ses](https://github.com/dbos-inc/dbos-transact/tree/main/packages/communicator-email-ses) package.
+
+## Simple Storage Service (S3)
+
+DBOS provides communicators for working with S3, and workflows for keeping a database table in sync with an S3 bucket.  For details of the functionality, see the documentation accompanying the [@dbos-inc/component-aws-s3](https://github.com/dbos-inc/dbos-transact/tree/main/packages/component-aws-s3) package.
+
+

@@ -155,7 +155,7 @@ export interface CommunicatorConfig {
 ### HTTP API Registration Decorators
 
 #### `@GetApi`
-Associates a function with an HTTP URL accessed with GET.
+Associates a function with an HTTP URL accessed via GET.
 
 ```typescript
 @GetApi("/hello")
@@ -164,33 +164,59 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The `@GetApi` decorator can be combined with `@Transaction` or `@Workflow` to serve transactions and workflows via HTTP.
+The `@GetApi` decorator can be combined with [`@Transaction`](#transaction), [`@Workflow`](#workflow), or [`@Communicator`](#communicator) to serve those operations via HTTP.
 It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
-The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and communicators.
 
 Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
-@GetApi("/post/:id")
-static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
-  ...
+@GetApi("/:id")
+static async exampleGet(ctxt: TransactionContext, id: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
 }
 ```
 
 #### `@PostApi`
-Associates a function with an endpoint name, such as an HTTP URL accessed with POST.
+Associates a function with an HTTP URL accessed via POST. Analogous to [`@GetApi`](#getapi), but may parse arguments from a request body.
 
 ```typescript
-@PostApi("/testpost")
-  static async testpost(_ctx: HandlerContext, name: string) {
-  return `hello ${name}`;
+@PostApi("/:id")
+  static async examplePost(ctxt: HandlerContext, id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
 }
 ```
 
-The `@PostApi` decorator can be combined with `@Transaction` or `@Workflow` to serve transactions and workflows via HTTP.
-It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
-The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request, and provides the ability to invoke workflows and transactions.
+#### `@PutApi`
+Associates a function with an HTTP URL accessed via PUT. Analogous to [`@GetApi`](#getapi), but may parse arguments from a request body.
+
+```typescript
+@PutApi("/:id")
+  static async examplePut(ctxt: HandlerContext, id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+}
+```
+
+#### `@PatchApi`
+Associates a function with an HTTP URL accessed via PATCH. Analogous to [`@GetApi`](#getapi), but may parse arguments from a request body.
+
+```typescript
+@PatchApi("/:id")
+  static async examplePatch(ctxt: HandlerContext, id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+}
+```
+
+#### `@DeleteApi`
+Associates a function with an HTTP URL accessed via DELETE. Analogous to [`@GetApi`](#getapi).
+
+```typescript
+@DeleteApi("/:id")
+static async exampleDelete(ctxt: TransactionContext, id: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+}
+```
 
 #### `@ArgSource`
 Indicates where a function argument is to be sourced, when it could come from more than one place.
@@ -207,7 +233,7 @@ static async testWorkflow(wfCtxt: WorkflowContext, @ArgSource(ArgSources.QUERY) 
 ```
 
 The `@ArgSource` decorator takes one of the following values of `ArgSources`:
-- `DEFAULT`: The default value. For GET requests, this means searching for query parameters; for POST requestsn, searching the request body.
+- `DEFAULT`: The default value. For GET requests, this means searching for query parameters; for POST requests, searching the request body.
 - `BODY`: Indicates to search the parameter in the request body.
 - `QUERY`: Indicates to search the parameter in the URL query string.
 - `URL`: Indicates to search the parameter in the endpoint path (requires a path placeholder).
@@ -500,9 +526,9 @@ Class-level decorator defining a Kafka configuration to use in all class methods
 Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
 
 
-#### `@KafkaConsume(topic: string, consumerConfig?: ConsumerConfig)` {#kafka-consume}
-Runs a transaction or workflow exactly-once for each message received on the specified topic.
-Takes in a Kafka topic (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
+#### `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig)` {#kafka-consume}
+Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+Takes in a Kafka topic or list of Kafka topics (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
 
