@@ -64,4 +64,4 @@ The dashboard presents the total number of execution seconds since the start of 
 
 ### Dashboards and Organizations
 
-If you are part of a multi-user organization, your dashboard will show data for all applications deployed by all users in the organization. The log entries for application lifetime events (labeled as `[APP REGISTER]`, `[APP DEPLOY]` and so on) are decorated with the email address of the user performing each action.
+If you are part of a multi-user organization, your dashboard will show data for all applications deployed by all users in the organization. The log entries for application lifetime events (labeled as `[APP REGISTER]`, `[APP DEPLOY]` and so on) are annotated with the email address of the user performing each action.
