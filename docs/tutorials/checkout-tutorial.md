@@ -27,7 +27,7 @@ If a payment doesn't go through, you have to return any reserved inventory.
 :::
 
 ## Resources
-This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps/shop-guide) containing all its code.
+This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps/tree/main/shop-guide) containing all its code.
 
 
 ## Overview
