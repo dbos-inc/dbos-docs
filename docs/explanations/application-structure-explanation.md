@@ -44,7 +44,7 @@ export { OperationClass1, OperationClass2 } from './FileA';
 export { OperationClass3 } from './operations/FileB';
 ```
 It is not necessary to export classes that are already referenced by the entrypoint file(s), as these will be loaded and decorated methods will be registered.
-You can configure a list of entrypoints using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
+You can also define multiple entrypoint files using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
 
