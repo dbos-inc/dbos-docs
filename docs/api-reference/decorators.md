@@ -245,7 +245,7 @@ Configures the DBOS HTTP server to perform authentication. All functions in the 
 This middleware will make users' identity available to [DBOS Contexts](./contexts.md). Here is an example:
 
 ```typescript
-async function exampleAuthMiddlware (ctx: MiddlewareContext) {
+async function exampleAuthMiddleware (ctx: MiddlewareContext) {
   if (ctx.requiredRole.length > 0) {
     const { userid } = ctx.koaContext.request.query;
     const uid = userid?.toString();
@@ -266,7 +266,7 @@ async function exampleAuthMiddlware (ctx: MiddlewareContext) {
   }
 }
 
-@Authentication(exampleAuthMiddlware)
+@Authentication(exampleAuthMiddleware)
 class OperationEndpoints {
   @GetApi("/requireduser")
   @RequiredRole(['user'])
@@ -294,7 +294,7 @@ export interface DBOSHttpAuthReturn {
 The authentication function is provided with a ['MiddlewareContext'](contexts.md#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
 
 #### `@KoaBodyParser`
-By default, the DBOS HTTP server uses a [`@koa/bodyparser`](https://github.com/koajs/bodyparser) middlware for parsing JSON message bodies.
+By default, the DBOS HTTP server uses a [`@koa/bodyparser`](https://github.com/koajs/bodyparser) middleware for parsing JSON message bodies.
 To specify a different middleware for the body parser, use the `@KoaBodyParser` decorator at the class level.
 
 ```typescript
