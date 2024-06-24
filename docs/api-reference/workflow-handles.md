@@ -34,3 +34,7 @@ Waits for the workflow to complete then returns its output.
 #### `getWorkflowUUID(): string`
 
 Retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies this workflow's execution.
+
+#### `getWorkflowInputs<T extends any []>(): Promise<T>`
+
+Retrieves the worklow's input argument array.
