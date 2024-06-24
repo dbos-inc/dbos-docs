@@ -22,7 +22,7 @@ There are four basic types of functions:
 - **[Workflows](../tutorials/workflow-tutorial)** reliably orchestrate other functions&#8212;if a workflow is ever interrupted for any reason (like a server crash), it always resumes from where it left off.
 - **[Handlers](../tutorials/http-serving-tutorial)** serve HTTP requests.
 
-When you launch an application, DBOS automatically wires these functions together for you, setting up an HTTP server for you endpoints and a database connection pool for your transactions.
+When you launch an application, DBOS automatically wires these functions together for you, setting up an HTTP server for your endpoints and a database connection pool for your transactions.
 
 ### Reliable by Default
 
