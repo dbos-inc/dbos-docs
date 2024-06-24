@@ -27,14 +27,14 @@ async function createTestingRuntime(userClasses: object[] | undefined = undefine
 Creates a testing runtime and loads user functions from provided `userClasses`.  By default, all classes and dependencies are loaded and registered.
 Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
 
-For example, to create a runtime loading functions from the `Hello` class and using `test-config.yaml`:
-```typescript
-testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
-```
-
-However, the defaults are generally sufficient as long as classes at least indirectly referenced from the test file:
+The defaults are generally sufficient as long as classes are at least indirectly referenced from the test file:
 ```typescript
 testRuntime = await createTestingRuntime();
+```
+
+However, to explicitly create a runtime loading functions from the `Hello` class and using `test-config.yaml`:
+```typescript
+testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 ```
 
 :::warning
