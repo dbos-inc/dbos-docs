@@ -24,7 +24,7 @@ When writing tests, you are responsible for setting up and cleaning up your data
 async function createTestingRuntime(userClasses: object[] | undefined = undefined, configFilePath: string = dbosConfigFilePath): Promise<TestingRuntime>
 ```
 
-Creates a testing runtime and loads user functions from provided `userClasses`.  By default, all classes and dependencies are loaded and registered.
+Creates a testing runtime and loads user functions from provided `userClasses`.  By default, all classes and dependencies from the test file are loaded and registered.
 Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
 
 The defaults are generally sufficient as long as classes are at least indirectly referenced from the test file:
