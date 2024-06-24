@@ -34,7 +34,7 @@ The two most important files in a DBOS project are `dbos-config.yaml` and `src/o
 All options are documented in our [configuration reference](../api-reference/configuration).
 
 `src/operations.ts` is the _entrypoint_, where DBOS looks for your code.
-At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions.
+At startup, the DBOS runtime automatically loads all classes that are exported or (directly and indirectly) referenced from this file, serving their endpoints and registering their decorated functions.
 More precisely, DBOS assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere:
@@ -43,7 +43,8 @@ In a larger application, you can write your code wherever you want, but should u
 export { OperationClass1, OperationClass2 } from './FileA';
 export { OperationClass3 } from './operations/FileB';
 ```
-You can also configure a list of entrypoints using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
+It is not necessary to export classes that are already referenced by the entrypoint file(s), as these will be loaded and decorated methods will be registered.
+You can also define multiple entrypoint files using the `runtimeConfig` section of the [configuration](../api-reference/configuration#runtime).
 
 As for the rest of the directory:
 
@@ -94,7 +95,7 @@ There are two more:
 
 A function needs to follow a few rules:
 
-- It must be a static class method.  For DBOS to find it, that class must be exported from `src/operations.ts`.
+- It must be a static class method.  For DBOS to find it, that class must be exported or referenced from `src/operations.ts` (or another file in the `runtimeConfig.entrypoints` list).
 - It must have a decorator telling the framework what kind of function it is: [`@Transaction`](../api-reference/decorators#transaction) for transactions, [`@Communicator`](../api-reference/decorators#communicator) for communicators, [`@Workflow`](../api-reference/decorators#workflow) for workflows, or [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) for HTTP handlers.
 - Its first argument must be the appropriate kind of [context](../api-reference/contexts). Contexts provide useful methods, such as access to a database client for transactions.
 - Its input and return types must be serializable to JSON.

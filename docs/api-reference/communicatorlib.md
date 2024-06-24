@@ -21,13 +21,6 @@ npm install --save @dbos-inc/communicator-datetime
 Import the communicator into your TypeScript code:
 ```typescript
 import { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
-export { CurrentTimeCommunicator }; // Currently necessary for registration to see the class
-```
-
-For DBOS to register the communicator functions, it is currently necessary for the communicator to be exported from your `operations.ts` file (as it would be for any other communicator).
-If the code using the communicator is not in `operations.ts`, add a line to export the communicator from `operations.ts` also.
-```typescript
-export { CurrentTimeCommunicator } from '@dbos-inc/communicator-datetime';
 ```
 
 Invoke the communicator from a `WorkflowContext`:
@@ -37,7 +30,8 @@ const curDate = await wfCtx.invoke(CurrentTimeCommunicator).getCurrentDate();
 
 When using the DBOS testing runtime, if you are explicitly providing the list of classes to register, it will be necessary to register any library communicator classes also:
 ```typescript
-  testRuntime = await createTestingRuntime([Operations, CurrentTimeCommunicator], "dbos-config.yaml");
+  testRuntime = await createTestingRuntime(); // No explicit registration, classes referenced by test will be registered
+  testRuntime = await createTestingRuntime([Operations, CurrentTimeCommunicator], "dbos-config.yaml"); // Specify everything
 ```
 
 ---

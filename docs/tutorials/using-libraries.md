@@ -18,18 +18,6 @@ Second, import the key classes from the library for use in your source files:
 import { SendEmailCommunicator } from "@dbos-inc/communicator-email-ses";
 ```
 
-### Exporting Library Classes
-:::tip
-Do not forget to export all classes containing handlers, transactions, workflows, and communicators from your main application file, otherwise DBOS Transact functions may not be registered with the runtime.
-:::
-
-To export the library from your `index.ts` file, add the following:
-```typescript title="index.ts"
-export { SendEmailCommunicator };
-// or
-export { SendEmailCommunicator } from "@dbos-inc/communicator-email-ses";
-```
-
 ### Calling Simple Functions
 Libraries such as `@dbos-inc/communicator-bcrypt` or `@dbos-inc/communicator-datetime` are comprised of functions that can be invoked from their classes.  Using the context (named `ctx` below), the `invoke` method can be used to call the library function:
 ```typescript
