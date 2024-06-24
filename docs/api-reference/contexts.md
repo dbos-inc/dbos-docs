@@ -259,7 +259,7 @@ export interface GetWorkflowsInput {
 }
 ```
 
-It returns as output an object containing a list of the [UUIDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows:
+It returns as output an object containing a list of the [UUIDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
