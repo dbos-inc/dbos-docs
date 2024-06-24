@@ -245,7 +245,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to publi
 getWorkflows(input: GetWorkflowsInput): Promise<GetWorkflowsOutput>
 ```
 
-This function allows querying workflow execution history. Its input is an object describing which workflows to retrieve:
+This function allows querying workflow execution history. Its input is an object describing which workflows to retrieve (by default, retrieve all workflows):
 
 ```typescript
 export interface GetWorkflowsInput {
