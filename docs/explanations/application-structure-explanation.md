@@ -34,7 +34,7 @@ The two most important files in a DBOS project are `dbos-config.yaml` and `src/o
 All options are documented in our [configuration reference](../api-reference/configuration).
 
 `src/operations.ts` is the _entrypoint_, where DBOS looks for your code.
-At startup, the DBOS runtime automatically loads all classes exported from this file, serving their endpoints and registering their decorated functions and dependencies.
+At startup, the DBOS runtime automatically loads all classes that are exported or (directly and indirectly) referenced from this file, serving their endpoints and registering their decorated functions.
 More precisely, DBOS assumes your compiled code is exported from `dist/operations.js`, the default location to which `src/operations.ts` is compiled.
 If you're writing a small application, you can write all your code directly in this file.
 In a larger application, you can write your code wherever you want, but should use `src/operations.ts` as an index file, exporting code written elsewhere:
