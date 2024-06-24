@@ -25,7 +25,7 @@ export class KafkaExample{
 }
 ```
 
-Then, annotate your method with a [`@KafkaConsume`](../api-reference/decorators.md#kafka-consume) decorator specifiying which topic to consume from.
+Then, annotate your method with a [`@KafkaConsume`](../api-reference/decorators.md#kafka-consume) decorator specifying which topic to consume from.
 Additionally, annotate your class with a [`@Kafka`](../api-reference/decorators.md#kafka) decorator defining which brokers to connect to.
 DBOS invokes your method exactly-once for each message sent to the topic.
 
