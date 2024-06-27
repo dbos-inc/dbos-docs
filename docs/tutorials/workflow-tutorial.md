@@ -141,6 +141,17 @@ const result = await handle.getResult();
 
 For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
 
+### Workflow Management
+
+You can use the [DBOS Transact CLI](../api-reference/cli.md) to manage your application's workflows.
+It provides the following commands:
+
+- [`npx dbos workflow list`](../api-reference/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
+- [`npx dbos workflow get <uuid>`](../api-reference/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
+- [`npx dbos workflow cancel <uuid>`](../api-reference/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
+- [`npx dbos workflow retry <uuid>`](../api-reference/cli.md#npx-dbos-workflow-retry): Retries a workflow from the last step it executed, keeping its workflow identity UUID.
+- [`npx dbos workflow restart <uuid>`](../api-reference/cli.md#npx-dbos-workflow-restart): Resubmits a workflow, restarting it from the beginning with the same arguments but a new workflow identity UUID.
+
 ### Further Reading
 
 To learn how to make workflows (or other functions) idempotent, see [our idempotency guide](./idempotency-tutorial).
