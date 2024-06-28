@@ -77,8 +77,7 @@ You can use this column to check which SQL statement in your function created or
 - `end_seq`: The insert/update/delete SQL statement sequence number within the transaction that deleted this record. The sequence number starts from 0 and increments by 1 for each insert/update/delete SQL statement. This field is used by the Time Travel Debugger to replay transactions.
 You can use this column to check which SQL statement in your function deleted or updated this record.
 
-To make sure that you can access previous data, DBOS provenance tables are append-only, and each provenance table includes all previous columns of this table.
-This means if you delete a column from a table, you are still able to view them in the provenance database.
+To make sure that you can access previous data, DBOS provenance tables are append-only, retaining all versions of old rows. Also, columns dropped from the application table are not dropped from the provenance table, so you are still able to view old values even if you drop a column from the source database.
 DBOS Cloud periodically garbage collects and compacts provenance tables according to your [data retention period](https://www.dbos.dev/pricing).
 
 ## Example
