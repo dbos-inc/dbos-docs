@@ -8,7 +8,7 @@ DBOS Transact and Cloud maintain several system tables to track application exec
 
 ## System Tables
 DBOS Transact records application execution history in several system tables.
-Most of these tables are in the system database, a Postgres database managed by DBOS Transact whose name is your application database name suffixed with `_dbos_sys`.
+Most of these tables are in the system database, whose name is your application database name suffixed with `_dbos_sys`.
 For example, if your application database is named `hello`, your system database is named `hello_dbos_sys`.
 One exception is the `dbos.transaction_outputs` table which is stored in your application database.
 
