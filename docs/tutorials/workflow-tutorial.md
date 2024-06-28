@@ -63,6 +63,11 @@ These guarantees assume that the application and database may crash and go offli
 2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
+For safety, DBOS automatically attempts to recover an workflow a set number of times.
+This is so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be [retried manually](#workflow-management).
+The maximum number of retries is by default 50, but this may be configured through arguments to the [`@Workflow`](../api-reference/decorators.md#workflow) decorator.
+
 ### Determinism
 
 A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
