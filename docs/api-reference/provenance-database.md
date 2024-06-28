@@ -62,7 +62,7 @@ This table stores the workflow execution information with the following columns:
 - `request`: The serialized [HTTP Request](./contexts#ctxtrequest) that triggered this workflow, if any.
 - `output`: The serialized workflow output, if any.
 - `error`: The serialized error thrown by the workflow, if any.
-- `created_at`: The timestamp of when this workflow starts.
+- `created_at`: The timestamp of when this workflow started.
 - `updated_at`: The latest timestamp when this workflow status is updated.
 - `application_version`: The application version of this workflow code.
 - `class_name`: The class name of the workflow function.
