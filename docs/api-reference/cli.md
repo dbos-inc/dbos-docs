@@ -157,13 +157,13 @@ A JSON whose fields are:
 - `<workflow-uuid>`: The UUID of the workflow to cancel.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 
-### `npx dbos workflow retry`
+### `npx dbos workflow resume`
 
 **Description:**
 Retries a workflow from the last step it executed, keeping its UUID.
 
 **Arguments:**
-- `<workflow-uuid>`: The UUID of the workflow to retry.
+- `<workflow-uuid>`: The UUID of the workflow to resume.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 
 ### `npx dbos workflow restart`
