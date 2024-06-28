@@ -63,6 +63,11 @@ These guarantees assume that the application and database may crash and go offli
 2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
+For safety, DBOS automatically attempts to recover an workflow a set number of times.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be [retried manually](#workflow-management).
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
+The maximum number of retries is by default 50, but this may be configured through arguments to the [`@Workflow`](../api-reference/decorators.md#workflow) decorator.
+
 ### Determinism
 
 A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
@@ -140,6 +145,17 @@ const result = await handle.getResult();
 ```
 
 For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
+
+### Workflow Management
+
+You can use the [DBOS Transact CLI](../api-reference/cli.md) to manage your application's workflows.
+It provides the following commands:
+
+- [`npx dbos workflow list`](../api-reference/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
+- [`npx dbos workflow get <uuid>`](../api-reference/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
+- [`npx dbos workflow cancel <uuid>`](../api-reference/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
+- [`npx dbos workflow resume <uuid>`](../api-reference/cli.md#npx-dbos-workflow-resume): Resume a workflow from the last step it executed, keeping its [identity UUID](#workflow-identity).
+- [`npx dbos workflow restart <uuid>`](../api-reference/cli.md#npx-dbos-workflow-restart): Resubmit a workflow, restarting it from the beginning with the same arguments but a new [identity UUID](#workflow-identity).
 
 ### Further Reading
 

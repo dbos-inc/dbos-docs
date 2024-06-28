@@ -100,6 +100,14 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 
 The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
 
+`@Workflow()` takes an optional `WorkflowConfig` object:
+
+```typescript
+interface WorkflowConfig {
+  maxRecoveryAttempts?: number; // The maximum number of times the workflow may be automatically recovered. Defaults to 50.
+}
+```
+
 #### `@Transaction`
 Registers a function as a [DBOS transaction](../tutorials/transaction-tutorial.md).
 

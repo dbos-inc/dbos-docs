@@ -91,3 +91,86 @@ For more information, please see the [OpenAPI Tutorial](../tutorials/openapi-tut
 
 **Arguments:**
 - `<entrypoints>`: Path to the application's TypeScript entrypoints (for example, `src/a.ts src/b.ts`)
+
+## Workflow Management Commands
+
+### `npx dbos workflow list`
+
+**Description:**
+This command lists workflows run by your application in JSON format ordered by recency (most recent workflows last).
+
+**Arguments:**
+- `-l, --limit <string>`: The number of results to retrieve (only the most recent results are returned). Defaults to 10.
+- `-u, --user <string>`: Retrieve results run by this user.
+- `-s, --start-time <string>`: Retrieve workflows starting after this timestamp (ISO 8601 format).
+- `-e, --end-time <string>`: Retrieve workflows starting before this timestamp (ISO 8601 format).
+- `-S, --status <string>`: Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, or `CANCELLED`)
+- `-d, --appDir <application-directory>`: The path to your application root directory.
+- `--request`: Display workflow request information.
+
+**Output:**
+For each retrieved workflow, emit a JSON whose fields are:
+- `status`: The status of the workflow
+- `workflowName`: The name of the workflow function
+- `workflowClassName`: The name of the class in which the workflow function is implemented
+- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/configured-instances.md), the name of the configuration
+- `authenticatedUser`: The user who ran the workflow, if specified
+- `assumedRole`: The role with which the workflow ran, if specified
+- `authenticatedRoles`: All roles which the authenticated user could assume
+- `workflowUUID`: The UUID of the workflow
+- `input`: The input arguments to the workflow, in array format
+- `output`: If the workflow completed successfuly, its output
+- `error`: If the workflow threw an error, the serialized error object
+- `request`: If the workflow was invoked via HTTP and this field was specified, the serialized request object
+
+### `npx dbos workflow get`
+
+**Description:**
+Retrieve information on a workflow run by your application.
+
+**Arguments:**
+- `<workflow-uuid>`: The UUID of the workflow to retrieve.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
+- `--request`: Display workflow request information.
+
+**Output:**
+A JSON whose fields are:
+- `status`: The status of the workflow
+- `workflowName`: The name of the workflow function
+- `workflowClassName`: The name of the class in which the workflow function is implemented
+- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/configured-instances.md), the name of the configuration
+- `authenticatedUser`: The user who ran the workflow, if specified
+- `assumedRole`: The role with which the workflow ran, if specified
+- `authenticatedRoles`: All roles which the authenticated user could assume
+- `workflowUUID`: The UUID of the workflow
+- `input`: The input arguments to the workflow, in array format
+- `output`: If the workflow completed successfuly, its output
+- `error`: If the workflow threw an error, the serialized error object
+- `request`: If the workflow was invoked via HTTP and this field was specified, the serialized request object
+
+### `npx dbos workflow cancel`
+
+**Description:**
+ Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
+
+**Arguments:**
+- `<workflow-uuid>`: The UUID of the workflow to cancel.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
+
+### `npx dbos workflow resume`
+
+**Description:**
+Retries a workflow from the last step it executed, keeping its UUID.
+
+**Arguments:**
+- `<workflow-uuid>`: The UUID of the workflow to resume.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
+
+### `npx dbos workflow restart`
+
+**Description:**
+Resubmits a workflow, restarting it from the beginning with the same arguments but a new UUID.
+
+**Arguments:**
+- `<workflow-uuid>`: The UUID of the workflow to restart.
+- `-d, --appDir <application-directory>`: The path to your application root directory.
