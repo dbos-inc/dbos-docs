@@ -37,7 +37,7 @@ chmod +x debug-proxy
 </Tabs>
 
 :::info
-The DBOS time travel proxy securely connects to the provenance database, an append-only replica of your application database maintained by DBOS Cloud.
+The DBOS time travel proxy securely connects to the [provenance database](../api-reference/system-tables.md), an append-only replica of your application database maintained by DBOS Cloud.
 It uses the historical information in this database to run time-travelled queries without modifying your application database.
 :::
 
