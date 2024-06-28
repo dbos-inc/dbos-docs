@@ -4,20 +4,20 @@ title: DBOS System Tables
 description: DBOS system tables reference
 ---
 
-DBOS Transact and Cloud maintain a list of system tables to track the execution of your application and data changes to your application database.
+DBOS Transact and Cloud maintain several system tables to track application execution history and data changes.
 
 ## System Tables
-DBOS Transact maintains a separate system database with several tables under the `dbos` schema to record each function/workflow execution.
-The system database name is your application database name plus a `_dbos_sys` suffix.
-For example, if your application database name is `hello`, then your system database is `hello_dbos_sys`.
+DBOS Transact records application execution history in several system tables.
+Most of these tables are in the system database, a Postgres database managed by DBOS Transact whose name is your application database name suffixed with `_dbos_sys`.
+For example, if your application database is named `hello`, your system database is named `hello_dbos_sys`.
 One exception is the `dbos.transaction_outputs` table which is stored in your application database.
 
 ### `dbos.workflow_status`
 
-This table stores the workflow execution information with the following columns:
+This table stores workflow execution information. It has the following columns:
 
 - `workflow_uuid`: The unique identifier of the workflow execution.
-- `status`: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, or `RETRIES_EXCEEDED`.
+- `status`: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, or `CANCELLED`.
 - `name`: The function name of the workflow.
 - `authenticated_user`: The user who ran the workflow. Empty string if not set.
 - `assumed_role`: The role used to run this workflow.  Empty string if authorization is not required.
@@ -26,17 +26,17 @@ This table stores the workflow execution information with the following columns:
 - `output`: The serialized workflow output, if any.
 - `error`: The serialized error thrown by the workflow, if any.
 - `created_at`: The timestamp of when this workflow started.
-- `updated_at`: The latest timestamp when this workflow status is updated.
+- `updated_at`: The latest timestamp when this workflow status was updated.
 - `application_version`: The application version of this workflow code.
 - `class_name`: The class name of the workflow function.
 - `config_name`: The name of the [configured instance](../tutorials/configured-instances.md) of this workflow, if any.
 - `recovery_attempts`: The number of attempts (so far) to recovery this workflow.
-- `application_id`: (Internal use) The application ID of this workflow code.
-- `executor_id`: (Internal use) Executor ID that ran this workflow.
+- `application_id`: (Internal use) The ID of the application that ran this workflow.
+- `executor_id`: (Internal use) The ID of the executor that ran this workflow.
 
 
 ### `dbos.workflow_inputs`
-This table stores the workflow inputs:
+This table stores workflow input information:
 
 - `workflow_uuid`: The unique identifier of the workflow execution.
 - `inputs`: The serialized inputs of the workflow execution.
@@ -49,8 +49,8 @@ This table stores the outputs of transaction functions:
 - `output`: The serialized transaction output, if any.
 - `error`: The serialized error thrown by the transaction, if any.
 - `txn_id`: The transaction ID of this function, if any. This is empty for read-only transactions.
-- `created_at`: The timestamp of when this function starts.
-- `txn_snapshot`: (Internal use) The transaction snapshot information for time travel debugging.
+- `created_at`: The timestamp of when this function started.
+- `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
 
 ### `dbos.operation_outputs`
 This table stores the outputs of communicator functions:
@@ -65,11 +65,12 @@ This table stores the outputs of communicator functions:
 
 DBOS Cloud maintains a provenance database for your application, which is an append-only versioned replica of your application database.
 It is the key enabler of [Interactive Time Travel](../cloud-tutorials/interactive-timetravel.md) and [Time Travel Debugging](../cloud-tutorials/timetravel-debugging.md).
-The provenance database name is your application database name plus a `_dbos_prov` suffix.
-For example, if your application database name is `hello`, then your provenance database is `hello_dbos_prov`. It contains the history (within the time travel [data retention period](https://www.dbos.dev/pricing)) of each of your database tables, where you can view all versions of records in that table.
+The provenance database name is your application database suffixed with `_dbos_prov`.
+For example, if your application database is named `hello`, then your provenance database is named `hello_dbos_prov`.
+The provenance database contains the history (within the time travel [data retention period](https://www.dbos.dev/pricing)) of each of your database tables.
 It also stores a copy of the DBOS system tables (under the `dbos` schema), which record each function/workflow execution.
 
-To enable time travel, DBOS Cloud extends each of your tables with four additional columns:
+To enable time travel, the provenance database extends each application database table with four additional columns:
 - `begin_xid`: The transaction ID (`txn_id` in the [`dbos.transaction_outputs`](#dbostransaction_outputs) table) that added the record/row. Each insert or update of the record in your application database creates a new version of the record in the provenance database. You can use this column to check which transaction created or updated this record.
 - `end_xid`: The transaction ID (`txn_id` in the [`dbos.transaction_outputs`](#dbostransaction_outputs) table) that deleted the record/row, or superseded the record with a new version. Each delete or update of the record in your application database does not delete the old record in the provenance database, instead, DBOS updates the `end_xid` field of the latest record (with `end_xid` set to "infinity" `9223372036854775807`) to the transaction that deleted it. You can use this column to check which transaction deleted or updated this record.
 - `begin_seq`: The insert/update/delete SQL statement sequence number within the transaction that added this record. The sequence number starts from 0 and increments by 1 for each insert/update/delete SQL statement. This field is used by the Time Travel Debugger to replay transactions.
