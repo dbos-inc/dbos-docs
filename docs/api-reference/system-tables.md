@@ -67,7 +67,7 @@ DBOS Cloud maintains a provenance database for your application, which is an app
 It is the key enabler of [Interactive Time Travel](../cloud-tutorials/interactive-timetravel.md) and [Time Travel Debugging](../cloud-tutorials/timetravel-debugging.md).
 The provenance database name is your application database name plus a `_dbos_prov` suffix.
 For example, if your application database name is `hello`, then your provenance database is `hello_dbos_prov`. It contains the history (within the time travel [data retention period](https://www.dbos.dev/pricing)) of each of your database tables, where you can view all versions of records in that table.
-It also stores a replica of the system tables under the `dbos` schema.
+It also stores a copy of the DBOS system tables (under the `dbos` schema), which record each function/workflow execution.
 
 To enable time travel, DBOS Cloud extends each of your tables with four additional columns:
 - `begin_xid`: The transaction ID (`txn_id` in the [`dbos.transaction_outputs`](#dbostransaction_outputs) table) that added the record/row. Each insert or update of the record in your application database creates a new version of the record in the provenance database. You can use this column to check which transaction created or updated this record.
