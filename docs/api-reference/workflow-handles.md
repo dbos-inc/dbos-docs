@@ -18,7 +18,7 @@ Retrieves the status of a workflow with the following structure:
 
 ```typescript
 export interface WorkflowStatus {
-  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, or ERROR.
+  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, or RETRIES_EXCEEDED.
   readonly workflowName: string; // The name of the workflow function.
   readonly authenticatedUser: string; // The user who ran the workflow. Empty string if not set.
   readonly assumedRole: string; // The role used to run this workflow.  Empty string if authorization is not required.
