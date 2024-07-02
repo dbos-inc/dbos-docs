@@ -86,10 +86,10 @@ This section is used to specify DBOS HTTP parameters.
 ```yaml
 http:
   cors_middleware: true
-  credentials: false
+  credentials: true
   allowed_origins:
-    'https://partner.com'
-    'https://app.internal.com'
+    - 'https://partner.com'
+    - 'https://app.internal.com'
 ```
 ---
 
