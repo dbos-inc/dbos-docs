@@ -104,7 +104,7 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 
 - Consideration should also be given to the `detect-non-literal-regexp` rule.
 
-### `no-secrets`: `no-secrets/no-secrets`
+#### `no-secrets`: `no-secrets/no-secrets`
 
 - The `no-secrets/no-secrets` rule detects strings that may be security credentials or other secrets, perhaps inadvertently left in the code.  Such credentials may be leaked if the source code is exposed (by the version control system, a disgruntled employee, or generic server breach).   Hard-coded credentials are certainly difficult to track, change, and manage, and should be placed in the environment or other suitable storage.
 
