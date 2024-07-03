@@ -111,9 +111,9 @@ These plugins are added:
 - [`@typescript-eslint/recommended`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended.ts)
 - `@typescript-eslint/recommended-requiring-type-checking` (TODO: find this one)
 
-### Handmade rules
+### DBOS custom rules
 
-One handmade lint rule is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
+One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
 
 #### `@dbos-inc/detect-nondeterministic-calls`
 
