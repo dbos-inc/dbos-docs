@@ -127,7 +127,7 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 
 ### Recommended rules/plugins
 
-These rules are added:
+These rules are enabled by default:
 - [`no-eval`](https://eslint.org/docs/latest/rules/no-eval)
 - [`@typescript-eslint/no-implied-eval`](https://eslint.org/docs/latest/rules/no-implied-eval)
 - [`security/detect-unsafe-regex`](https://github.com/eslint-community/eslint-plugin-security/blob/HEAD/docs/rules/detect-unsafe-regex.md)
@@ -139,13 +139,13 @@ These rules are added:
 - [`@typescript-eslint/no-misused-promises`](https://typescript-eslint.io/rules/no-misused-promises/)
 - [`@typescript-eslint/no-floating-promises`](https://typescript-eslint.io/rules/no-floating-promises/)
 
-These rules are disabled:
+These rules are disabled by default:
 - [`semi`](https://eslint.org/docs/latest/rules/semi)
 - [`no-empty`](https://eslint.org/docs/latest/rules/no-empty)
 - [`no-constant-condition`](https://eslint.org/docs/latest/rules/no-constant-condition)
 - [`@typescript-eslint/no-unnecessary-type-assertion`](https://typescript-eslint.io/rules/no-unnecessary-type-assertion/)
 
-These plugins are added:
+These plugins are enabled by default:
 - [`eslint:recommended`](https://github.com/eslint/eslint/blob/main/packages/js/src/configs/eslint-recommended.js)
 - [`@typescript-eslint/recommended`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended.ts)
 - [`@typescript-eslint/recommended-type-checked`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended-type-checked.ts)
