@@ -50,39 +50,8 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
 <Tabs groupId="config-types">
   <TabItem value="flat-config" label="Flat config">
     <h4> This config style will work with ESLint 8 and above. </h4>
-    Place an `eslint.config.js` file similar to the following in your project directory:
-
-    ```js
-    const { FlatCompat } = require("@eslint/eslintrc");
-    const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
-    const typescriptEslintParser = require("@typescript-eslint/parser");
-    const globals = require("globals");
-    const js = require("@eslint/js");
-
-    const compat = new FlatCompat({
-      baseDirectory: __dirname,
-      recommendedConfig: js.configs.recommended
-    });
-
-    module.exports = [
-      ...compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
-
-      { plugins: { "@dbos-inc": dbosIncEslintPlugin } },
-
-      {
-        languageOptions: {
-          parser: typescriptEslintParser,
-          parserOptions: { project: "./tsconfig.json" },
-          globals: { ...globals.node, ...globals.es6 }
-        }
-      },
-
-      { rules: {} }
-    ];
-    ```
-
-    If you'd like stronger typing, you can use `typescript-eslint`'s [`config`](https://typescript-eslint.io/packages/typescript-eslint/#config) helper function.
-    First, run `npm install --save-dev typescript-eslint`, and then set up your config like this:
+    For this config style, first run `npm install --save-dev typescript-eslint`. (More info can be found [here](https://typescript-eslint.io/packages/typescript-eslint/).)
+    Place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
     const { FlatCompat } = require("@eslint/eslintrc");
@@ -153,11 +122,6 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
   "lint-fix": "eslint --fix src"
 }
 ```
-
-#### Profiles to extend
-
-* `dbosRecommendedConfig`: this extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
-* `dbosBaseConfig`, `dbosExtendedConfig`: these configurations are deprecated, and are now the same as `dbosRecommendedConfig`.
 
 ---
 
