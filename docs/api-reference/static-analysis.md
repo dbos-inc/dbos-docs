@@ -80,65 +80,36 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 
 #### Profiles to extend
 
-* `dbosBaseConfig` - This configuration includes only rules required for security.  These rules will be enforced prior to deployment to the DBOS cloud.
+* `dbosBaseConfig` - This configuration is deprecated, and is the same as `dbosRecommendedConfig`.
 * `dbosRecommendedConfig` - This extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
-* `dbosExtendedConfig` - This configuration extenends the recommended configuration, and may include opinions on coding style.
+* `dbosExtendedConfig` - This configuration is deprecated, and is the same as `dbosRecommendedConfig`.
 
 ---
 
-### Base rules/plugins
-
-#### `eslint`: `no-eval`, `@typescript-eslint/no-implied-eval`
-
-- Interpreted languages like JavaScript support the ability to treat data directly as executable code.  If arbitrary user data can become code, many of the negative security implications are obvious.
-
-- The JavaScript facility for executing data as code is `eval`.  Use of `eval` in transaction processing backends is generally unnecessary and is not supported in DBOS.  The `no-eval` and `@typescript-eslint/no-implied-eval` rules, provided by the primary `eslint` package, are therefore automatically enabled in all configs of the DBOS plugin.
-
-- Code should be rewritten to avoid `eval`.
-
-#### `security`: `security/detect-unsafe-regex`
-
-- The `security/detect-unsafe-regex` rule detects regular expressions that may take a long time to run, slowing the event loop.  It is enabled by default in all DBOS `eslint` configurations.
-
-- For example, a regular expression that checks password complexity may be used as part of a registration process (and therefore available to the world at large).  If this regular expression involves significant "backtracking", it could take a long time to run on certain user inputs thereby forming a building block of a "denial of service" attack on the system.
-
-- Consideration should also be given to the `detect-non-literal-regexp` rule.
-
-#### `no-secrets`: `no-secrets/no-secrets`
-
-- The `no-secrets/no-secrets` rule detects strings that may be security credentials or other secrets, perhaps inadvertently left in the code.  Such credentials may be leaked if the source code is exposed (by the version control system, a disgruntled employee, or generic server breach).   Hard-coded credentials are certainly difficult to track, change, and manage, and should be placed in the environment or other suitable storage.
-
----
-
-### Recommended rules/plugins:
-
-This includes the base rules and plugins.
+### Recommended rules/plugins
 
 These rules are added:
-- `eqeqeq`
-- `@typescript-eslint/no-unused-vars` (silence the rule with leading underscores)
-- `@typescript-eslint/no-for-in-array`
-- `@typescript-eslint/no-misused-promises`
-- `@typescript-eslint/no-floating-promises`
+- [`no-eval`](https://eslint.org/docs/latest/rules/no-eval)
+- [`@typescript-eslint/no-implied-eval`](https://eslint.org/docs/latest/rules/no-implied-eval)
+- [`security/detect-unsafe-regex`](https://github.com/eslint-community/eslint-plugin-security/blob/HEAD/docs/rules/detect-unsafe-regex.md)
+- [`no-secrets/no-secrets`](https://www.npmjs.com/package/eslint-plugin-no-secrets/v/0.1.2)
+
+- [`eqeqeq`](https://eslint.org/docs/latest/rules/eqeqeq)
+- [`@typescript-eslint/no-unused-vars`](https://typescript-eslint.io/rules/no-unused-vars/) (silence this rule with leading underscores)
+- [`@typescript-eslint/no-for-in-array`](https://typescript-eslint.io/rules/no-for-in-array/)
+- [`@typescript-eslint/no-misused-promises`](https://typescript-eslint.io/rules/no-misused-promises/)
+- [`@typescript-eslint/no-floating-promises`](https://typescript-eslint.io/rules/no-floating-promises/)
 
 These rules are disabled:
-- `semi`
-- `no-empty`
-- `no-constant-condition`
-- `@typescript-eslint/no-unnecessary-type-assertion`
+- [`semi`](https://eslint.org/docs/latest/rules/semi)
+- [`no-empty`](https://eslint.org/docs/latest/rules/no-empty)
+- [`no-constant-condition`](https://eslint.org/docs/latest/rules/no-constant-condition)
+- [`@typescript-eslint/no-unnecessary-type-assertion`](https://typescript-eslint.io/rules/no-unnecessary-type-assertion/)
 
 These plugins are added:
-- `eslint:recommended`
-- `@typescript-eslint/recommended`
-- `@typescript-eslint/recommended-requiring-type-checking`
-
----
-
-### Extended rules/plugins
-
-- This includes the base and recommended rules, along with the rule [@typescript-eslint/no-shadow](https://typescript-eslint.io/rules/no-shadow/).
-
----
+- [`eslint:recommended`](https://github.com/eslint/eslint/blob/main/packages/js/src/configs/eslint-recommended.js)
+- [`@typescript-eslint/recommended`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended.ts)
+- `@typescript-eslint/recommended-requiring-type-checking` (TODO: find this one)
 
 ### Handmade rules
 
