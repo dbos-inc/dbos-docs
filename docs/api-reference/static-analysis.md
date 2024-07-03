@@ -80,9 +80,8 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 
 #### Profiles to extend
 
-* `dbosBaseConfig` - This configuration is deprecated, and is the same as `dbosRecommendedConfig`.
-* `dbosRecommendedConfig` - This extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
-* `dbosExtendedConfig` - This configuration is deprecated, and is the same as `dbosRecommendedConfig`.
+* `dbosRecommendedConfig`: this extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
+* `dbosBaseConfig`, `dbosExtendedConfig`: these configurations are deprecated, and are the same as `dbosRecommendedConfig`.
 
 ---
 
@@ -113,7 +112,7 @@ These plugins are added:
 
 ### DBOS custom rules
 
-One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default in all `@dbos-inc/eslint-plugin` configurations.
+One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
 
 #### `@dbos-inc/detect-nondeterministic-calls`
 
@@ -123,7 +122,7 @@ One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https:/
 - `Date()`, `new Date()`, `Date.now()`
 - `setTimeout(...)`
 
-###### All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [communicator](../tutorials/communicator-tutorial).
+*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [communicator](../tutorials/communicator-tutorial).*
 
 ##### These function calls are not necessarily nondeterministic, but are still warned about:
 
@@ -131,7 +130,7 @@ One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https:/
 - `bcrypt.hash(...)`
 - `bcrypt.compare(...)`
 
-###### Emitted warning messages will provide alternatives to each function call.
+*Emitted warning messages will provide alternatives to each function call.*
 
 ##### These behaviors result in warnings as well:
 
@@ -185,4 +184,4 @@ static async myWorkflow(ctxt: WorkflowContext) {
 }
 ```
 
-###### Any global variable defined outside the scope of the workflow which is directly modified will result in a warning.
+*Any global variable defined outside the scope of the workflow which is directly modified will result in a warning.*
