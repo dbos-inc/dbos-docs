@@ -81,7 +81,7 @@ Finally, to make `eslint` easy to run, it is suggested to place commands in `pac
 #### Profiles to extend
 
 * `dbosRecommendedConfig`: this extension to the base configuration is the recommended configuration, which includes best practices for new TypeScript code.
-* `dbosBaseConfig`, `dbosExtendedConfig`: these configurations are deprecated, and are the same as `dbosRecommendedConfig`.
+* `dbosBaseConfig`, `dbosExtendedConfig`: these configurations are deprecated, and are now the same as `dbosRecommendedConfig`.
 
 ---
 
@@ -136,7 +136,7 @@ These behaviors result in warnings as well:
 
 1. Awaiting in a workflow on a non-`WorkflowContext` object (this implies I/O, which is often nondeterministic):
 
-*Not allowed*:
+Not allowed:
 
 ```ts
 @Workflow()
@@ -145,7 +145,7 @@ static async myWorkflow(ctxt: WorkflowContext) {
 }
 ```
 
-*Allowed*:
+Allowed:
 
 ```ts
 @Communicator()
