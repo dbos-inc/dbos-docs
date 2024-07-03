@@ -184,7 +184,7 @@ These rules are disabled:
 These plugins are added:
 - [`eslint:recommended`](https://github.com/eslint/eslint/blob/main/packages/js/src/configs/eslint-recommended.js)
 - [`@typescript-eslint/recommended`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended.ts)
-- `@typescript-eslint/recommended-requiring-type-checking` (TODO: find this one)
+- [`@typescript-eslint/recommended-type-checked`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended-type-checked.ts)
 
 ---
 
