@@ -4,6 +4,9 @@ title: Static Analysis
 description: API, tool, and rule documentation for DBOS static code analysis
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Static Code Analysis
 
 ---
@@ -43,39 +46,76 @@ npm install --save-dev @dbos-inc/eslint-plugin
 
 Configuring `eslint` can be quite involved, as there are [several complete configuration schemes](https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-formats).
 
-The simplest method is to place an `.eslintrc` file similar to the following in your project directory:
-```json
-{
-  "root": true,
-  "extends": [
-    "plugin:@dbos-inc/dbosRecommendedConfig"
-  ],
-  "plugins": [
-    "@dbos-inc"
-  ],
-  "env": {
-    "node": true,
-    "es6": true
-  },
-  "rules": {
-  },
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": "./tsconfig.json"
-  }
-}
-```
+<Tabs groupId="config-types">
+  <TabItem value="flat-config" label="Flat config">
+    <h4> This config style will work with ESLint 8 and above. </h4>
+    Place an `eslint.config.js` file similar to the following in your project directory:
+    ```js
+    const { FlatCompat } = require("@eslint/eslintrc");
+    const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
+    const typescriptEslintParser = require("@typescript-eslint/parser");
+    const globals = require("globals");
+    const js = require("@eslint/js");
+
+    const compat = new FlatCompat({
+      baseDirectory: __dirname,
+      recommendedConfig: js.configs.recommended
+    });
+
+    module.exports = [
+      ...compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
+
+      { plugins: { "@dbos-inc": dbosIncEslintPlugin } },
+
+      { languageOptions:
+        {
+          parser: typescriptEslintParser,
+          parserOptions: { project: "./tsconfig.json" },
+          globals: { ...globals.node, ...globals.es6 }
+        }
+      },
+
+      { rules: {} }
+    ];
+    ```
+  </TabItem>
+  <TabItem value="legacy-config" label="Legacy config">
+    <h4> This config style will work with ESLint 8 and below. </h4>
+    Place an `.eslintrc` file similar to the following in your project directory:
+    ```json
+    {
+      "root": true,
+      "extends": [
+        "plugin:@dbos-inc/dbosRecommendedConfig"
+      ],
+      "plugins": [
+        "@dbos-inc"
+      ],
+      "env": {
+        "node": true,
+        "es6": true
+      },
+      "rules": {
+      },
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 The example above configures the project for the recommended `eslint` configuration.  Adjust the `extends`, `rules`, `plugins`, `env`, and other sections as desired, consulting the configurations and rules below.
 
 Finally, to make `eslint` easy to run, it is suggested to place commands in `package.json`.  For example:
 ```json
-  "scripts": {
-    "build": "tsc",
-    "test": "...",
-    "lint": "eslint src",
-    "lint-fix": "eslint --fix src"
-  },
+"scripts": {
+  "build": "tsc",
+  "test": "...",
+  "lint": "eslint src",
+  "lint-fix": "eslint --fix src"
+}
 ```
 
 #### Profiles to extend
