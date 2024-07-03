@@ -114,7 +114,7 @@ These plugins are added:
 
 One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
 
-#### `@dbos-inc/detect-nondeterministic-calls`
+#### `@dbos-inc/dbos-static-analysis`
 
 ##### These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
