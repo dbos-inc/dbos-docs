@@ -45,11 +45,13 @@ npm install --save-dev @dbos-inc/eslint-plugin
 ```
 
 Configuring `eslint` can be quite involved, as there are [several complete configuration schemes](https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-formats).
+Both of these options require you to set up a `tsconfig.json` file beforehand.
 
 <Tabs groupId="config-types">
   <TabItem value="flat-config" label="Flat config">
     <h4> This config style will work with ESLint 8 and above. </h4>
     Place an `eslint.config.js` file similar to the following in your project directory:
+
     ```js
     const { FlatCompat } = require("@eslint/eslintrc");
     const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
@@ -67,8 +69,8 @@ Configuring `eslint` can be quite involved, as there are [several complete confi
 
       { plugins: { "@dbos-inc": dbosIncEslintPlugin } },
 
-      { languageOptions:
-        {
+      {
+        languageOptions: {
           parser: typescriptEslintParser,
           parserOptions: { project: "./tsconfig.json" },
           globals: { ...globals.node, ...globals.es6 }
@@ -78,10 +80,43 @@ Configuring `eslint` can be quite involved, as there are [several complete confi
       { rules: {} }
     ];
     ```
+
+    If you'd like stronger typing, you can use `typescript-eslint`'s `config` helper function.
+    First, run `npm install --save-dev typescript-eslint`, and then set up your config like this:
+
+    ```js
+    const { FlatCompat } = require("@eslint/eslintrc");
+    const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
+    const typescriptEslint = require("typescript-eslint");
+    const typescriptEslintParser = require("@typescript-eslint/parser");
+    const globals = require("globals");
+    const js = require("@eslint/js");
+
+    const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended
+    });
+
+    module.exports = typescriptEslint.config(
+      {
+        extends: compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
+        plugins: { "@dbos-inc": dbosIncEslintPlugin },
+
+        languageOptions: {
+            parser: typescriptEslintParser,
+            parserOptions: { project: "./tsconfig.json" },
+            globals: { ...globals.node, ...globals.es6 }
+        },
+
+        rules: { }
+      }
+    );
+    ```
   </TabItem>
   <TabItem value="legacy-config" label="Legacy config">
     <h4> This config style will work with ESLint 8 and below. </h4>
     Place an `.eslintrc` file similar to the following in your project directory:
+
     ```json
     {
       "root": true,
@@ -109,6 +144,7 @@ Configuring `eslint` can be quite involved, as there are [several complete confi
 The example above configures the project for the recommended `eslint` configuration.  Adjust the `extends`, `rules`, `plugins`, `env`, and other sections as desired, consulting the configurations and rules below.
 
 Finally, to make `eslint` easy to run, it is suggested to place commands in `package.json`.  For example:
+
 ```json
 "scripts": {
   "build": "tsc",
