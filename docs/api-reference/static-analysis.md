@@ -116,7 +116,7 @@ One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https:/
 
 #### `@dbos-inc/dbos-static-analysis`
 
-##### These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
+These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
 - `Math.random()`
 - `Date()`, `new Date()`, `Date.now()`
@@ -124,7 +124,7 @@ One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https:/
 
 *All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [communicator](../tutorials/communicator-tutorial).*
 
-##### These function calls are not necessarily nondeterministic, but are still warned about:
+These function calls are not necessarily nondeterministic, but are still warned about:
 
 - `console.log(...)`
 - `bcrypt.hash(...)`
