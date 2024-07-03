@@ -110,11 +110,11 @@ These plugins are added:
 - [`@typescript-eslint/recommended`](https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/recommended.ts)
 - `@typescript-eslint/recommended-requiring-type-checking` (TODO: find this one)
 
+---
+
 ### DBOS custom rules
 
-One custom rule from DBOS is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
-
-#### `@dbos-inc/dbos-static-analysis`
+One custom rule from DBOS, `@dbos-inc/dbos-static-analysis`, is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
 
 These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
@@ -132,7 +132,7 @@ These function calls are not necessarily nondeterministic, but are still warned 
 
 *Emitted warning messages will provide alternatives to each function call.*
 
-##### These behaviors result in warnings as well:
+These behaviors result in warnings as well:
 
 1. Awaiting in a workflow on a non-`WorkflowContext` object (this implies I/O, which is often nondeterministic):
 
