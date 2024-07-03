@@ -50,8 +50,8 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
 <Tabs groupId="config-types">
   <TabItem value="flat-config" label="Flat config">
     <h4> This config style will work with ESLint 8 and above. </h4>
-    For this config style, first run `npm install --save-dev typescript-eslint`. (More info can be found [here](https://typescript-eslint.io/packages/typescript-eslint/).)
-    Place an `eslint.config.js` file similar to the following in your project directory.
+    For this config style, first run `npm install --save-dev typescript-eslint` (more info can be found [here](https://typescript-eslint.io/packages/typescript-eslint/)).
+    Then, place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
     const { FlatCompat } = require("@eslint/eslintrc");
