@@ -81,7 +81,7 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
     ];
     ```
 
-    If you'd like stronger typing, you can use `typescript-eslint`'s `config` helper function.
+    If you'd like stronger typing, you can use `typescript-eslint`'s [`config`](https://typescript-eslint.io/packages/typescript-eslint/#config) helper function.
     First, run `npm install --save-dev typescript-eslint`, and then set up your config like this:
 
     ```js
