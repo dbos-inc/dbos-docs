@@ -181,6 +181,7 @@ Not allowed:
 ```ts
 @Workflow()
 static async myWorkflow(ctxt: WorkflowContext) {
+  // Calling an external API in a workflow is not allowed.
   const result = await fetch("https://www.google.com");
 }
 ```
@@ -190,37 +191,53 @@ Allowed:
 ```ts
 @Communicator()
 static async myCommunicator(ctxt: CommunicatorContext) {
+  // Calling an external API in a communicator is allowed.
   const result = await fetch("https://www.google.com");
 }
 ```
 
+(code below adapted from [here](https://github.com/dbos-inc/dbos-demo-apps/blob/43c656e0cf50d8f85ca8bd8cba9087af2cea8038/shop-guide/src/operations.ts#L23))
 ```ts
 @Workflow()
-static async myWorkflow(ctxt: WorkflowContext) {
-  const user = await ctxt.client<User>('users').select("password").where({ username }).first();
+static async checkoutWorkflow(ctxt: WorkflowContext) {
+  // All awaits start with a leftmost `WorkflowContext`.
+
+  try {
+    await ctxt.invoke(ShopUtilities).reserveInventory();
+  }
+  catch (error) {
+    ctxt.logger.error("Failed to update inventory");
+    await ctxt.setEvent(session_topic, null);
+    return;
+  }
+
+  // ...
 }
+
 ```
 
 ```ts
 @Workflow()
-static async myWorkflow(ctxt: WorkflowContext) {
+static async checkoutWorkflow(ctxt: WorkflowContext) {
   /* Sometimes, you might await on a non-`WorkflowContext` object,
   but the function you're calling is a helper function that uses the
   underlying context. So if you pass in a `WorkflowContext` as a parameter,
   the warning will be supressed. */
-  const user = await getUser(ctxt, username);
+  await doCheckout(ctxt);
 }
 ```
 
 2. Global modification in a workflow (this often leads to nondeterministic behavior):
 
-```ts
+(code below adapted from [here](https://github.com/dbos-inc/dbos-demo-apps/blob/43c656e0cf50d8f85ca8bd8cba9087af2cea8038/bank/bank-backend/src/workflows/txnhistory.workflows.ts#L192))
 
-let globalUser = undefined;
+```ts
+let globalResult = undefined;
 
 @Workflow()
-static async myWorkflow(ctxt: WorkflowContext) {
-  globalUser = await ctxt.client<User>('users').select("password").where({ username }).first();
+static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
+  globalResult = await ctxt.invoke(BankTransactionHistory).updateAcctTransactionFunc(data.toAccountId, data, true);
+  // ...
 }
 ```
 
