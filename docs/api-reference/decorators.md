@@ -138,7 +138,7 @@ DBOS supports declaration of the following values for `IsolationLevel`:
 The transaction semantics of these levels are defined for PostgreSQL [here](https://www.postgresql.org/docs/current/transaction-iso.html).
 
 #### `@StoredProcedure`
-Registers a function as a [DBOS stored procedure](../tutorials/stored-proc-tutorial.md.md).
+Registers a function as a [DBOS stored procedure](../tutorials/stored-proc-tutorial.md).
 
 The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
 
