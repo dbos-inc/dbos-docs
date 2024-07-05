@@ -162,10 +162,14 @@ interface StoredProcedureConfig {
 The `readOnly` and `isolationLevel` config fields behave the same as their [@Transaction config](contexts#transactioncontextt) counterparts.
 
 The `executeLocally` config field can be used to control where the logic of a stored procedure is executed.
-When `executeLocally` is true, the stored procedure function is executed locally, similar to transaction functions.
-This can be useful for local debugging. 
+By default, stored procedures functions are executed by invoking the generated stored procedure that has been deployed to the database.
+However, for debugging scenarios, it can be helpful to step thru the procedure's logic like you can with the rest of your application code. 
+When `executeLocally` is set to true, the stored procedure function gets executed locally, similar to transaction functions.
+
+:::info
 The `executeLocally` field can be changed without redeploying the application with the [DBOS Compiler](dbos-compiler.md).
 DBOS Compiler will deploy all `@StoredProcedure()` functions, even those marked with `executeLocally` set to true.
+:::
 
 :::warning
 Note, when running locally, DBOS uses the [`node-postgres`](https://node-postgres.com/) package to connect to the application database.

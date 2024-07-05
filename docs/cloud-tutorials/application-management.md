@@ -83,18 +83,6 @@ npx dbos-cloud app deploy --previous-version <version-id>
 However, this will fail if the previous and current versions have different database schemas.
 For more information on schema management, see our [schema management guide](./database-management.md#database-schema-management).
 
-### Stored Procedure Versioning
-
-Since [@StoredProcedure](../tutorials/stored-proc-tutorial.md) functions must be tied to a specific application version, both DBOS Transact and the DBOS Compiler are version aware. 
-By default, the application version is specified via the `DBOS__APPVERSION` environment variable, but can also be controlled via command line parameters.
-When the application version is specified, the DBOS Compiler will automatically prefix generated stored procedures with `v` and the application version.
-For example, if the application version was `1720214256655`, all of the generated stored procedures would be prefixed with `v1720214256655`.
-Likewise, DBOS Transact will automatically invoked the version prefixed version of the deployed stored procedures when the application version is specified.
-
-:::warning
-DBOS Cloud cleans up the database deployed stored procedures for older application versions via a background task.
-Do not attempt to cleanup DBOS cloud deployed stored procedures yourself!
-:::
 
 ### Deleting Applications
 

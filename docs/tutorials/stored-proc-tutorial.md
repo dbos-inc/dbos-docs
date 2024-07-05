@@ -74,8 +74,14 @@ in the [`dbos-config.yaml` file](../api-reference/configuration.md) with the fol
 npx dbosc deploy
 ```
 
-To can deploy your app's stored procedures to the database via [Database Schema Management](../cloud-tutorials/database-management.md#database-schema-management). 
-To do so, simply add a call to `npx dbosc deploy` to the `database.migrate` section of your app's [`dbos-config.yaml` file](../api-reference/configuration.md).
+:::info
+For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../api-reference/dbos-compiler.md)
+:::
+
+You can deploy your app's stored procedures to the database via [Database Schema Management](../cloud-tutorials/database-management.md#database-schema-management). 
+Deploying your app's stored procedures via Database Schema Management is essential for DBOS Cloud deployment.
+
+To deploy your stored procedures via Database Schema Management, add a call to `npx dbosc deploy` to the `database.migrate` section of your app's [`dbos-config.yaml` file](../api-reference/configuration.md).
 
 ```yaml
 database:
@@ -84,6 +90,4 @@ database:
     - npx dbosc deploy
 ```
 
-:::info
-For information about all of the command line options, please see the [DBOS Compiler reference page](../api-reference/dbos-compiler.md)
-:::
+
