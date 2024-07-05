@@ -137,6 +137,41 @@ DBOS supports declaration of the following values for `IsolationLevel`:
 
 The transaction semantics of these levels are defined for PostgreSQL [here](https://www.postgresql.org/docs/current/transaction-iso.html).
 
+#### `@StoredProcedure`
+Registers a function as a [DBOS stored procedure](../tutorials/stored-proc-tutorial.md.md).
+
+The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
+
+```typescript
+@StoredProcedure({readOnly: true})
+static async doLogin(ctx: StoredProcedureContext, username: string, ) {
+  ...
+}
+```
+
+`@StoredProcedure()` takes an optional `StoredProcedureConfig` object:
+
+```typescript
+interface StoredProcedureConfig {
+  isolationLevel?: IsolationLevel;
+  readOnly?: boolean;
+  executeLocally?: boolean
+} 
+```
+
+The `readOnly` and `isolationLevel` config fields behave the same as their [@Transaction config](contexts#transactioncontextt) counterparts.
+
+The `executeLocally` config field can be used to control where the logic of a stored procedure is executed.
+When `executeLocally` is true, the stored procedure function is executed locally, similar to transaction functions.
+This can be useful for local debugging. 
+The `executeLocally` field can be changed without redeploying the application with the [DBOS Compiler](dbos-compiler.md).
+DBOS Compiler will deploy all `@StoredProcedure()` functions, even those marked with `executeLocally` set to true.
+
+:::warning
+Note, when running locally, DBOS uses the [`node-postgres`](https://node-postgres.com/) package to connect to the application database.
+There can be slight differences between the query results returned by PLV8 and `node-postgres`, in particular when querying for floating point values.
+:::
+
 #### `@Communicator`
 Registers a function as a [DBOS communicator](../tutorials/communicator-tutorial.md).
 
