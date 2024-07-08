@@ -20,11 +20,10 @@ static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) na
 Here's an example applying an endpoint decorator to an existing transaction:
 
 ```javascript
-@PostApi('/clear/:user')
+@PostApi('/greeting/:friend')
 @Transaction()
-static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
-  await ctxt.client.raw("DELETE FROM dbos_hello WHERE NAME = ?", [user]);
-  return `Cleared greet_count for ${user}!\n`;
+static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
+  await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, content]);
 }
 ```
 
@@ -56,7 +55,7 @@ Arguments are parsed from three places by default:
 2. For `POST`, `PUT`, and `PATCH` requests, from an HTTP body field.
 3. From a URL path parameter, if there are placeholders specified in the decorated URL.
 
-In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: string`.
+In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/greeting/:name` matches `name: string`.
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 For example, in the `greetingEndpoint` snippet above the `@ArgSource(ArgSources.URL)` decorator configures the function to parse its `user` argument from the endpoint URL's `:user` path parameter.
 

@@ -84,6 +84,9 @@ export class Greetings {
 }
 ```
 
+DBOS supports the full [Knex Postgres API](https://knexjs.org/guide/query-builder.html), but doesn't allow manually committing or aborting transactions.
+Instead, transactions automatically commit when the function successfully returns and abort and roll back if the function throws an exception.
+
 ### Configuring Knex
 
 :::info

@@ -15,7 +15,7 @@ Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#w
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow (from the [programming quickstart](../getting-started/quickstart-programming.md)) sending an email then recording it in the database.
+Here's an example workflow (from the [programming guide](../getting-started/quickstart-programming.md)) sending an email then recording it in the database.
 By using a workflow, we guarantee that every email is recorded in the database, even if execution is interrupted.
 
 ```javascript
