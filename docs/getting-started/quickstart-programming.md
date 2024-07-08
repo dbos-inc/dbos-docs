@@ -101,7 +101,7 @@ If successful, the migration should print `Migration successful!`.
 How to interact with the database.
 :::
 
-Let's augment the code to insert a new record in the database when we greet a friend.
+Now, let's insert a record into this new table when we greet a friend.
 We'll do this with a [transactional function](../tutorials/transaction-tutorial.md).
 Copy this code into `src/operations.ts`:
 
