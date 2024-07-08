@@ -24,7 +24,7 @@ Here are some of the core features of DBOS Transact:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database. Supports [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), and [Prisma](./tutorials/using-prisma.md).
+| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database. Compatible with [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), and [Prisma](./tutorials/using-prisma.md).
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
