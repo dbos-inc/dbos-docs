@@ -53,6 +53,48 @@ In this case, `Greeting` is a static member of the `Greetings` class.
 
 To learn more about HTTP serving in DBOS, see [our guide](../tutorials/http-serving-tutorial).
 
+### Creating Database Tables
+
+:::info what you will learn
+How to create and manage database tables
+:::
+
+Let's create a database table our app can use to store our greetings.
+In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration).
+By default, we use [Knex](https://knexjs.org/) to manage migrations, but also support other tools including [TypeORM](https://typeorm.io/) and [Prisma](https://www.prisma.io/).
+To create a new migration file, run the following command:
+
+```
+npx knex migrate:make greetings
+```
+
+This will create a new file named `migrations/<timestamp>_greetings.js`.
+Open that file and copy the following code into it:
+
+```javascript
+exports.up = function(knex) {
+    return knex.schema.createTable('greetings', table => {
+        table.text('name');
+        table.text('note');
+      });
+};
+
+
+exports.down = function(knex) {
+    return knex.schema.dropTable('greetings');
+};
+
+```
+
+This code instructs the database to create a new table called `greetings` with two text columns: a `name` column to store the person being greeted and a `note` column to store the greeting sent to them.
+To run this code and create the new table, run:
+
+```
+npx dbos migrate
+```
+
+If successful, the migration should print `Migration successful!`.
+
 ### Connecting to the Database
 
 :::info what you will learn
