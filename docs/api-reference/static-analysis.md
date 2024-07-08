@@ -40,7 +40,7 @@ Plugins to support TypeScript and detect common vulnerabilities are automaticall
 
 To install the `eslint` package and the DBOS plugin:
 ```bash
-npm install --save-dev eslint
+npm install --save-dev typescript-eslint
 npm install --save-dev @dbos-inc/eslint-plugin
 ```
 
@@ -50,7 +50,6 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
 <Tabs groupId="config-types">
   <TabItem value="flat-config" label="Flat config">
     <h4> This config style will work with ESLint 8 and above. </h4>
-    For this config style, first run `npm install --save-dev typescript-eslint` (more info can be found [here](https://typescript-eslint.io/packages/typescript-eslint/)).
     Then, place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
