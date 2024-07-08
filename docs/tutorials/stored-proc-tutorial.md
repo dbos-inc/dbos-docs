@@ -55,7 +55,7 @@ For running locally, we recommend using the [`sibedge/postgres-plv8` Docker imag
 For using DBOS Stored Procedures on your own PostgreSQL server, please see the [official PLV8 documentation](https://plv8.github.io/#building) for installation instructions.
 
 :::info
-As of DBOS 1.17, the [@dbos-inc/create](../api-reference/cli#npx-dbos-inccreate) templates have been updated to use `sibedge/postgres-plv8` in the `start_postgres_docker.js` script.
+As of version 1.17, the [@dbos-inc/create](../api-reference/cli#npx-dbos-inccreate) templates have been updated to use `sibedge/postgres-plv8` in the `start_postgres_docker.js` script.
 Older DBOS applications using Docker will need to switch their PostgreSQL image from `postgres:16.1` to `sibedge/postgres-plv8` manually to support Stored Procedures.
 :::
 
@@ -78,10 +78,8 @@ npx dbosc deploy
 For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../api-reference/dbos-compiler.md)
 :::
 
-You can deploy your app's stored procedures to the database via [Database Schema Management](../cloud-tutorials/database-management.md#database-schema-management). 
-Deploying your app's stored procedures via Database Schema Management is essential for DBOS Cloud deployment.
-
-To deploy your stored procedures via Database Schema Management, add a call to `npx dbosc deploy` to the `database.migrate` section of your app's [`dbos-config.yaml` file](../api-reference/configuration.md).
+You can deploy add `npx dbosc deploy` to your [database migration commands](../cloud-tutorials/database-management.md#database-schema-management) to run it alongside other schema migrations.
+Deploying your app's stored procedures via Database Schema Management is required for DBOS Cloud deployment.
 
 ```yaml
 database:
@@ -89,5 +87,3 @@ database:
     - npx knex migrate:latest
     - npx dbosc deploy
 ```
-
-

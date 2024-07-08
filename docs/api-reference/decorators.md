@@ -144,7 +144,7 @@ The first argument of the decorated function must be a [`StoredProcedureContext`
 
 ```typescript
 @StoredProcedure({readOnly: true})
-static async doLogin(ctx: StoredProcedureContext, username: string, ) {
+static async doLogin(ctx: StoredProcedureContext, username: string) {
   ...
 }
 ```
@@ -163,8 +163,8 @@ The `readOnly` and `isolationLevel` config fields behave the same as their [@Tra
 
 The `executeLocally` config field can be used to control where the logic of a stored procedure is executed.
 By default, stored procedures functions are executed by invoking the generated stored procedure that has been deployed to the database.
-However, for debugging scenarios, it can be helpful to step thru the procedure's logic like you can with the rest of your application code. 
-When `executeLocally` is set to true, the stored procedure function gets executed locally, similar to transaction functions.
+However, for debugging scenarios, it can be helpful to step through the procedure's logic like you can with the rest of your application code. 
+When `executeLocally` is set to true, the stored procedure function gets executed locally on the application server, similar to transaction functions.
 
 :::info
 The `executeLocally` field can be changed without redeploying the application with the [DBOS Compiler](dbos-compiler.md).
