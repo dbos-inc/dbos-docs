@@ -75,10 +75,10 @@ For example:
 ```javascript
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
     await ctxt.client('greetings').insert({
       name: friend,
-      note: content
+      note: note
     });
   }
 }
