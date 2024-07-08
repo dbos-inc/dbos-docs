@@ -20,8 +20,8 @@ Here's an example of a transaction function written using raw SQL (with [knex.ra
 ```javascript
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, content]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
   }
 }
 ```
@@ -31,10 +31,10 @@ Here's the same function written using the Knex query builder:
 ```javascript
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
     await ctxt.client('greetings').insert({
       name: friend,
-      note: content
+      note: note
     });
   }
 }

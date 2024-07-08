@@ -111,8 +111,8 @@ import { Knex } from 'knex';
 
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, content]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
     ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
@@ -164,8 +164,8 @@ export class Greetings {
   }
 
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, content]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
     ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
@@ -212,8 +212,8 @@ export class Greetings {
     }
 
     @Transaction()
-    static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-        await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, content]);
+    static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+        await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
         ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
     }
 
