@@ -24,13 +24,14 @@ Here are some of the core features of DBOS Transact:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database
+| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database. Supports [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), and [Prisma](./tutorials/using-prisma.md).
 | [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
 | [Kafka Integration](./tutorials/kafka-integration)                            | Consume Kafka messages exactly-once with transactions or workflows.
+| [Scheduled Workflows](./tutorials/scheduled-workflows.md)                     | Schedule your workflows to run exactly-once per time interval with cron-like syntax.
 | [Testing and Debugging](./tutorials/testing-tutorial)                         | Easily write unit tests for your applications, compatible with Jest and other popular testing frameworks.
 | [Self-Hosting](./tutorials/self-hosting)                                      | Host your applications anywhere, as long as they have a Postgres database to connect to.
 
