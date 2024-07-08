@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: Time Travel Debugger Quickstart
+title: Time Travel Debugger Guide
 ---
 
 Now that we've learned a little about programming DBOS, let's learn how to use the DBOS Time Travel Debugger!

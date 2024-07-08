@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Programming Quickstart
+title: Programming Guide
 ---
 
 Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts).
