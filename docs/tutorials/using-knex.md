@@ -70,7 +70,7 @@ When using DBOS, database operations are performed in [transaction functions](./
 Note that we specify `Knex` in angle brackets.
 
 Within the transaction function, access your [Knex client](https://knexjs.org/guide/query-builder.html) from the `.client` field of your transaction context.
-For example:
+For example, this function inserts a new row into the `greetings` table:
 
 ```javascript
 export class Greetings {
@@ -115,7 +115,7 @@ runtimeConfig:
 ```
 
 Many Knex commands, such as those for [schema migration](#schema-management), require a [`knexfile.js`](https://knexjs.org/guide/migrations.html#knexfile-js) configuration file.
-To avoid managing your configuration in two places, we recommend this file use your DBOS configuration file as a source.
+To avoid managing your configuration in two places, we recommend `knexfile.js` load configuration information from your [DBOS configuration file](../api-reference/configuration.md).
 Here is an example of a `knexfile.js` that does this:
 
 ```typescript

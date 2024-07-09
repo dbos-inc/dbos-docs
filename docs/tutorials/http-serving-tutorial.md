@@ -59,7 +59,7 @@ In all cases, the parameter name must match the function argument name (unless [
 
 - In the first snippet above, `name: string` matches `/greeting/:name` and is parsed from that path parameter.
 - In the second snippet above, `friend: string` matches `/greeting/:friend` and is parsed from that path parameter.
-- Also in the second snippet, `note: string` does not match any path parameter and so is parsed from the `note` field of the HTTP request body.
+- Also in the second snippet, `note: string` does not match any path parameter and is parsed from the `note` field of the HTTP request body.
 
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
 
