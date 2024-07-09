@@ -59,7 +59,7 @@ To learn more about HTTP serving in DBOS, see [our guide](../tutorials/http-serv
 How to create and manage database tables.
 :::
 
-Let's create a database table our app can use to store our greetings.
+Let's create a database table our app can use to store greetings.
 In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration).
 By default, we use [Knex](https://knexjs.org/) to manage migrations, but also support other tools including [TypeORM](https://typeorm.io/) and [Prisma](https://www.prisma.io/).
 To create a new migration file, run the following command:
