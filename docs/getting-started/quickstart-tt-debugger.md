@@ -33,18 +33,14 @@ inside VS Code (default keybinding: Ctrl+Shift+X / ⇧⌘X) and searching for "D
 
 ### Deploy the Programming Quickstart App to DBOS Cloud
 
-In this tutorial, you will time travel debug the `greeting-emails` application you built in the [Programming Quickstart](./quickstart-programming). 
-
-If you finished that tutorial, remove the sleep logic from `GreetingWorkflow`. 
-We're not going to need that sleep code for this tutorial.
-
-If you did not finished the Programming Quickstart, create a new DBOS application using `@dbos-inc/create`.
+In this tutorial, you will time travel debug an application similar to that from the [programming guide](./quickstart-programming.md).
+To initialize it, first create a new DBOS application using `@dbos-inc/create`:
 
 ```
 npx -y @dbos-inc/create@latest -n <app-name>
 ```
 
-And replace the logic in `src/operations.ts` with the following.
+Then replace the logic in `src/operations.ts` with the following.
 
 ```ts
 import {
