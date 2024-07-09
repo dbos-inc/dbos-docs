@@ -56,7 +56,7 @@ To learn more about HTTP serving in DBOS, see [our guide](../tutorials/http-serv
 ### Creating Database Tables
 
 :::info what you will learn
-How to create and manage database tables
+How to create and manage database tables.
 :::
 
 Let's create a database table our app can use to store our greetings.
@@ -94,6 +94,7 @@ npx dbos migrate
 ```
 
 If successful, the migration should print `Migration successful!`.
+To learn more about schema migrations in DBOS, check out our guides for [Knex](../tutorials/using-knex.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), and [Prisma](../tutorials/using-prisma.md#schema-management).
 
 ### Connecting to the Database
 
