@@ -115,7 +115,7 @@ The first argument of the decorated function must be a [`TransactionContext`](co
 
 ```typescript
 @Transaction({readOnly: true})
-static async doLogin(ctx: TransactionContext, username: string, ) {
+static async doLogin(ctx: TransactionContext, username: string) {
   ...
 }
 ```
