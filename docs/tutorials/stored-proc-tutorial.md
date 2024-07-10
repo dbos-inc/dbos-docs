@@ -17,14 +17,14 @@ While most database management systems provide support for stored procedures, th
 They typically need to be written in a custom language such as [PL/pgSQL](https://www.postgresql.org/docs/current/plpgsql.html).
 Additionally, they are not usually integrated into the application development process.
 DBOS stored procedure functions, in contrast, are written in TypeScript like the rest of your DBOS application.
-Additionally, we provide the DBOS Compiler to stored procedure functions from your application and deploy them to your application database.
+The [DBOS Compiler](../api-reference/dbos-compiler.md) deploys the stored procedure functions from your application to your application database.
 
 Here's an example of a stored procedure function.
 You'll notice it is similar to the [example transaction function](./transaction-tutorial.md) from the transaction tutorial. 
 
 
 :::warning
-Because stored procedures run inside the database, Only raw database queries are supported. 
+Because stored procedures run inside the database, only raw database queries are supported. 
 Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./using-typeorm.md) and [Prisma](./using-prisma.md) are not supported in stored procedure functions.
 :::
 
@@ -78,7 +78,7 @@ npx dbosc deploy
 For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../api-reference/dbos-compiler.md)
 :::
 
-You can deploy add `npx dbosc deploy` to your [database migration commands](../cloud-tutorials/database-management.md#database-schema-management) to run it alongside other schema migrations.
+You can add `npx dbosc deploy` to your [database migration commands](../cloud-tutorials/database-management.md#database-schema-management) to run it alongside other schema migrations.
 Deploying your app's stored procedures via Database Schema Management is required for DBOS Cloud deployment.
 
 ```yaml
