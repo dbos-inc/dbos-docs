@@ -83,6 +83,7 @@ npx dbos-cloud app deploy --previous-version <version-id>
 However, this will fail if the previous and current versions have different database schemas.
 For more information on schema management, see our [schema management guide](./database-management.md#database-schema-management).
 
+
 ### Deleting Applications
 
 To delete an application, run:

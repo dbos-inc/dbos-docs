@@ -464,6 +464,36 @@ A transaction function should only interact with the application database using 
 
 ---
 
+## `StoredProcedureContext`
+
+Stored procedures use StoredProcedureContext to interact with the database.
+
+- [query](#storedprocctxtquery)
+
+:::warning
+While `StoredProcedureContext` supports most of the [`DBOSContext`](#dboscontext) methods, it does not support
+either the [`span`](#ctxtspan) property or the [`getConfig<T>`](#ctxtgetconfig) method.
+::: 
+
+
+### Methods
+
+#### `storedProcCtxt.query`
+
+```typescript
+type QueryResult<TRow> = {
+  rowCount: number;
+  rows?: TRow[];
+}
+
+query<TRow>(sql: string, ...params: unknown[]): Promise<QueryResult<TRow>>;
+```
+
+Execute a query against the database.
+Returns an object with query result rows (if any) and the number of rows affected by the query.
+
+---
+
 ## `CommunicatorContext`
 
 Communicators use `CommunicatorContext` to retrieve information on communicator configuration.
