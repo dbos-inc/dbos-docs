@@ -22,27 +22,16 @@ The [DBOS Compiler](../api-reference/dbos-compiler.md) deploys the stored proced
 Here's an example of a stored procedure function.
 You'll notice it is similar to the [example transaction function](./transaction-tutorial.md) from the transaction tutorial. 
 
-
 :::warning
 Because stored procedures run inside the database, only raw database queries are supported. 
 Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./using-typeorm.md) and [Prisma](./using-prisma.md) are not supported in stored procedure functions.
 :::
 
 ```javascript
-export interface dbos_hello {
-  name: string;
-  greet_count: number;
-}
-
-export class Hello {
-
-  @StoredProcedure()  // Run this function as a stored procedure
-  static async helloTransaction(ctxt: StoredProcedureContext, user: string) {
-    // Retrieve and increment the number of times this user has been greeted.
-    const query = "INSERT INTO dbos_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = dbos_hello.greet_count + 1 RETURNING greet_count;"
-    const { rows } = await ctxt.query<dbos_hello>(query, [user]);
-    const greet_count = rows[0].greet_count;
-    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+export class Greetings {
+  @StoredProcedure()
+  static async InsertGreeting(ctxt: StoredProcedureContext, friend: string, note: string) {
+    await ctxt.query('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
   }
 }
 ```
