@@ -13,18 +13,17 @@ Here's an example of a new function with an endpoint decorator:
 
 ```javascript
 @GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
+static async greetingEndpoint(ctx: HandlerContext, name: string) {
   return `Greeting, ${name}`;
 }
 ```
 Here's an example applying an endpoint decorator to an existing transaction:
 
 ```javascript
-@PostApi('/clear/:user')
+@PostApi('/greeting/:friend')
 @Transaction()
-static async clearTransaction(ctxt: TransactionContext<Knex>, @ArgSource(ArgSources.URL) user: string) {
-  await ctxt.client.raw("DELETE FROM dbos_hello WHERE NAME = ?", [user]);
-  return `Cleared greet_count for ${user}!\n`;
+static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+  await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
 }
 ```
 
@@ -48,17 +47,21 @@ You should use handlers when you need to access HTTP requests or responses direc
 
 ### Inputs and HTTP Requests
 
-When a function has arguments other than its context (e.g., `name` or `user` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if arguments are not provided.
+When a function has arguments other than its context (e.g., `name`, `friend`, or `note` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if they are not found.
 
 Arguments are parsed from three places by default:
 
-1. For `GET` and `DELETE` requests, from a URL query string parameter.
-2. For `POST`, `PUT`, and `PATCH` requests, from an HTTP body field.
-3. From a URL path parameter, if there are placeholders specified in the decorated URL.
+1. From a URL path parameter, if there are placeholders specified in the decorated URL.
+2. For `GET` and `DELETE` requests, from a URL query string parameter.
+3. For `POST`, `PUT`, and `PATCH` requests, from an HTTP body field.
 
-In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). In the first snippet above, `/clear/:name` matches `name: string`.
+In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). For example:
+
+- In the first snippet above, `name: string` matches `/greeting/:name` and is parsed from that path parameter.
+- In the second snippet above, `friend: string` matches `/greeting/:friend` and is parsed from that path parameter.
+- Also in the second snippet, `note: string` does not match any path parameter and is parsed from the `note` field of the HTTP request body.
+
 Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
-For example, in the `greetingEndpoint` snippet above the `@ArgSource(ArgSources.URL)` decorator configures the function to parse its `user` argument from the endpoint URL's `:user` path parameter.
 
 By default, DBOS automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
 Validation can be turned off at the class level using [`@DefaultArgOptional`](../api-reference/decorators#defaultargoptional) or controlled at the parameter level using [`@ArgRequired`](../api-reference/decorators#argrequired) and [`@ArgOptional`](../api-reference/decorators#argoptional).

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Programming Quickstart
+title: Programming Guide
 ---
 
 Let's learn how to build applications with [DBOS Transact](https://github.com/dbos-inc/dbos-ts).
@@ -53,13 +53,56 @@ In this case, `Greeting` is a static member of the `Greetings` class.
 
 To learn more about HTTP serving in DBOS, see [our guide](../tutorials/http-serving-tutorial).
 
+### Creating Database Tables
+
+:::info what you will learn
+How to create and manage database tables.
+:::
+
+Let's create a database table our app can use to store greetings.
+In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration).
+By default, we use [Knex](https://knexjs.org/) to manage migrations, but also support other tools including [TypeORM](https://typeorm.io/) and [Prisma](https://www.prisma.io/).
+To create a new migration file, run the following command:
+
+```
+npx knex migrate:make greetings
+```
+
+This will create a new file named `migrations/<timestamp>_greetings.js`.
+Open that file and copy the following code into it:
+
+```javascript
+exports.up = function(knex) {
+    return knex.schema.createTable('greetings', table => {
+        table.text('name');
+        table.text('note');
+      });
+};
+
+
+exports.down = function(knex) {
+    return knex.schema.dropTable('greetings');
+};
+
+```
+
+This code instructs the database to create a new table called `greetings` with two text columns: a `name` column to store the person being greeted and a `note` column to store the greeting sent to them.
+To run this code and create the new table, run:
+
+```
+npx dbos migrate
+```
+
+If successful, the migration should print `Migration successful!`.
+To learn more about schema migrations in DBOS, check out our guides for [Knex](../tutorials/using-knex.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), and [Prisma](../tutorials/using-prisma.md#schema-management).
+
 ### Connecting to the Database
 
 :::info what you will learn
 How to interact with the database.
 :::
 
-Let's augment the code to insert a new record in the database when we greet a friend.
+Now, let's insert a record into this new table when we greet a friend.
 We'll do this with a [transactional function](../tutorials/transaction-tutorial.md).
 Copy this code into `src/operations.ts`:
 
@@ -69,8 +112,8 @@ import { Knex } from 'knex';
 
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
     ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
@@ -122,8 +165,8 @@ export class Greetings {
   }
 
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-    await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
     ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
   }
 
@@ -170,8 +213,8 @@ export class Greetings {
     }
 
     @Transaction()
-    static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, content: string) {
-        await ctxt.client.raw('INSERT INTO dbos_greetings (greeting_name, greeting_note_content) VALUES (?, ?)', [friend, content]);
+    static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+        await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
         ctxt.logger.info(`Greeting to ${friend} recorded in the database!`);
     }
 
