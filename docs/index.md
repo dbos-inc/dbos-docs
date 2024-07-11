@@ -8,7 +8,7 @@ DBOS is a serverless platform that radically simplifies backend application deve
 
 - **Build with DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for backend applications.
 
-- **Deploy to DBOS Cloud** - A serverless platform for DBOS Transact applications with built-in [high performance](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark), scalability, fault tolerance, and database time travel.
+- **Deploy to DBOS Cloud** - A [seriously fast](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) serverless hosting platform for TypeScript backends.
 
 You want to build your next application with DBOS because you need:
 
@@ -27,7 +27,7 @@ Here are some of the core features of DBOS Transact:
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database using [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), [Prisma](./tutorials/using-prisma.md), or raw SQL.
-| [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
+| [Reliable Workflows](./tutorials/workflow-tutorial)                           | Execute each step of your application exactly-once and automatically resume after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
 | [Stored Procedures](./tutorials/stored-proc-tutorial.md)                      | Speed up your transactions 2-3x by compiling them to Postgres stored procedures.
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
