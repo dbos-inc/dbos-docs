@@ -6,15 +6,17 @@ sidebar_position: 1
 
 DBOS is a serverless platform that radically simplifies backend application development.
 
-- **Build with DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for backend applications with built-in exactly-once code execution.
+- **Build with DBOS Transact** - An [open-source TypeScript framework](https://github.com/dbos-inc/dbos-ts) for backend applications.
 
-- **Deploy to DBOS Cloud** - A serverless platform for DBOS Transact applications with built-in [high performance](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark), scalability, fault tolerance, and database time travel.
+- **Deploy to DBOS Cloud** - A [seriously fast](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) serverless hosting platform for TypeScript backends.
 
-You want to build your next backend application with DBOS because:
+Build your next application with DBOS because you want:
 
-- **It's reliable by default**.  If your workflows are interrupted for any reason, they [will always resume from where they left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
-- **It's simple**.  Write your business logic with serverless functions and either [self-host them](./tutorials/self-hosting.md) or [deploy them to DBOS cloud](./getting-started/quickstart.md#deploying-to-dbos-cloud) in minutes. Store your data in Postgres&mdash;we'll manage the transactions for you.
-- **It makes debugging easy**.  With our [time travel debugger](./cloud-tutorials/timetravel-debugging.md), you can "rewind time" and replay any DBOS Cloud trace locally on your computer, exactly as it originally happened.
+- **Blazing-fast, developer-friendly serverless**.  Develop your project locally and run it anywhere. When you're ready, [deploy it for free to DBOS Cloud](./getting-started/quickstart#deploying-to-dbos-cloud) and experience serverless hosting [25x faster](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) and [15x cheaper](https://www.dbos.dev/blog/dbos-vs-lambda-cost) than AWS Lambda.
+- **Resilience to any failure**.  If your app is interrupted for any reason, it [automatically resumes from where it left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
+- **Built-in observability**. Automatically emit [OpenTelemetry](https://opentelemetry.io/)-compatible [logs and traces](https://docs.dbos.dev/tutorials/logging) from any application. Query your app's history from the [command line](https://docs.dbos.dev/api-reference/cli#workflow-management-commands) or [with SQL](https://docs.dbos.dev/api-reference/system-tables).
+- **Database time travel**. Query your database as of [any past point in time](./cloud-tutorials/interactive-timetravel.md). Use [time travel debugging](./cloud-tutorials/timetravel-debugging.md) to replay production traces locally.
+- **A framework built for the tools you love**. Build with TypeScript and **any** PostgreSQL-compatible database. Use raw SQL or your favorite query builder or ORM&mdash;we support [Knex](https://docs.dbos.dev/tutorials/using-knex), [TypeORM](https://docs.dbos.dev/tutorials/using-typeorm), and [Prisma](https://docs.dbos.dev/tutorials/using-prisma) out of the box.
 
 To get started in less than five minutes, check out our [quickstart](./getting-started/quickstart)!
 
@@ -24,10 +26,10 @@ Here are some of the core features of DBOS Transact:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database. Compatible with [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), and [Prisma](./tutorials/using-prisma.md).
-| [Workflows](./tutorials/workflow-tutorial)                                    | Reliable workflow orchestration&#8212;resume your program after any failure.
+| [Transactions](./tutorials/transaction-tutorial)                              | Easily and safely query your application database using [Knex](./tutorials/using-knex.md), [TypeORM](./tutorials/using-typeorm.md), [Prisma](./tutorials/using-prisma.md), or raw SQL.
+| [Reliable Workflows](./tutorials/workflow-tutorial)                           | Execute each step of your application exactly-once and automatically resume after any failure.
 | [HTTP Serving](./tutorials/http-serving-tutorial)                             | Set up endpoints to serve requests from your application.
-| [Stored Procedures](./tutorials/stored-proc-tutorial.md)                      | Speed up your transactions by 2-3x by compiling them to Postgres stored procedures.
+| [Stored Procedures](./tutorials/stored-proc-tutorial.md)                      | Speed up your transactions 2-3x by compiling them to Postgres stored procedures.
 | [Communicators](./tutorials/http-serving-tutorial)                            | Reliably interact with external services and third-party APIs.
 | [Idempotency](./tutorials/idempotency-tutorial)                               | Automatically make any request idempotent, so your requests happen exactly once.
 | [Authentication and Authorization](./tutorials/authentication-authorization)  | Secure your HTTP endpoints so only authorized users can access them.
