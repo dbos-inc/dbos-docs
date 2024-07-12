@@ -5,7 +5,7 @@ description: Learn the core ideas underlying DBOS Transact
 
 # DBOS Transact Core Concepts
 
-DBOS Transact is a transactional serverless TypeScript framework that helps you develop stateful applications that work right by default.
+DBOS Transact is a TypeScript framework that helps you develop backend applications that work right by default.
 Its two main principles are inspired by the [DBOS research project from Stanford and MIT](https://dbos-project.github.io/):
 
 1. **Store all application state in the database.** By managing database connections and transactions, DBOS makes it easy for you to store all your app state in the database so it can be safe, consistent, and durable.  Under the hood, we use the database to manage the state of workflow execution as well as all [messages](../tutorials/workflow-communication-tutorial#messages-api) and [events](../tutorials/workflow-communication-tutorial#events-api).
@@ -13,8 +13,7 @@ Its two main principles are inspired by the [DBOS research project from Stanford
 2.  **Access state only through database transactions.** All database operations in DBOS are transactional, making it easy for you to leverage databases' strong safety guarantees and eliminating most race conditions.  Under the hood, we use transactions to guarantee your workflows [always run to completion](../tutorials/workflow-tutorial#reliability-guarantees), your operations [execute exactly-once](../tutorials/idempotency-tutorial), and your messages are delievered reliably.
 
 ### Programming Model
-The DBOS programming model is serverless and inspired by [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) principles.
-You build your applications from Typescript functions, annotating them with [decorators](../api-reference/decorators) to declare their properties.
+In DBOS Transact, you build your applications from Typescript functions, annotating them with [decorators](../api-reference/decorators) to declare their properties.
 There are four basic types of functions:
 
 - **[Transactions](../tutorials/transaction-tutorial)** run your core business logic transactionally in the database.
