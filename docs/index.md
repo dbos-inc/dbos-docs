@@ -10,7 +10,7 @@ DBOS is a serverless platform that radically simplifies backend application deve
 
 - **Deploy to DBOS Cloud** - A [seriously fast](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) serverless hosting platform for TypeScript backends.
 
-You want to build your next application with DBOS because you need:
+Build your next application with DBOS because you want:
 
 - **Blazing-fast, developer-friendly serverless**.  Develop your project locally and run it anywhere. When you're ready, [deploy it for free to DBOS Cloud](./getting-started/quickstart#deploying-to-dbos-cloud) and experience serverless hosting [25x faster](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) and [15x cheaper](https://www.dbos.dev/blog/dbos-vs-lambda-cost) than AWS Lambda.
 - **Resilience to any failure**.  If your app is interrupted for any reason, it [automatically resumes from where it left off](./tutorials/workflow-tutorial#reliability-guarantees).  Reliable message delivery is [built in](./tutorials/workflow-communication-tutorial#reliability-guarantees-1). Idempotency is [built in](./tutorials/idempotency-tutorial).
