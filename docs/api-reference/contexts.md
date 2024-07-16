@@ -13,7 +13,7 @@ Each DBOS function has a specific context:
 - Contexts used within DBOS functions inherit from [`DBOSContext`](#dboscontext).
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
-- Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
+- Transactions use [`TransactionContext`](#transactioncontext) with a specific database client type.
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
 - Initialization functions use [`InitContext`](#initcontext).
 - Middleware functions use [`MiddlewareContext`](#middlewarecontext).
@@ -418,7 +418,7 @@ The wakeup time is set in the database when the function is first called, so if 
 
 ---
 
-## `TransactionContext<T>`
+## `TransactionContext`
 
 Transactions use `TransactionContext` to interact with the database.
 
