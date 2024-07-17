@@ -52,3 +52,5 @@ You can also configure the logging level as a CLI argument to the runtime:
 ```shell
 npx dbos start --loglevel debug
 ```
+
+For more granular details on the log levels, visit the [postgres](https://www.postgresql.org/docs/current/runtime-config-logging.html) reference docs and [Table 20.2](https://www.postgresql.org/docs/current/runtime-config-logging.html#RUNTIME-CONFIG-SEVERITY-LEVELS) specifically.
