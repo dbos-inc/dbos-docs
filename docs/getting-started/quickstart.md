@@ -52,7 +52,7 @@ This command should output `Application initialized successfully!` It creates a 
 
 ### 3. Log in to DBOS Cloud
 
-If you already created an account using our [website](https://www.dbos.dev), log in like so from your application folder:
+If you already created an account using the [cloud console](https://console.dbos.dev/), log in like so from your application folder:
 ```
 cd <application-folder>
 npx dbos-cloud login
