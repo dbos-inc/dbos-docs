@@ -5,11 +5,13 @@ sidebar_position: 1
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# DBOS Quickstart: Deploy Your First App
+# DBOS Quickstart
 
 This guide first shows how to deploy a simple "Hello" app to the cloud in less than 2 minutes. After that, we provide instructions for running it locally on your system.
 
-## 1. Install Node.js 20 or Later
+## Deploy Your First App to the Cloud
+
+### 1. Make Sure you have Node.js 20 or Later
 
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
@@ -33,7 +35,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </TabItem>
 </Tabs>
 
-## 2. Create Your App Directory
+### 2. Create the App Directory
 
 To create a new DBOS application, first pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then run this command:
 
@@ -41,23 +43,23 @@ To create a new DBOS application, first pick a name for your app. It should be 3
 npx -y @dbos-inc/create@latest -n <app-name>
    ```
 
-For example, if your app name is `hello` you would run:
+For example, to name your app `hello`, run:
    ```bash
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should output `Application initialized successfully!` This creates a new directory named `<app-name>` that contains a sample "Hello, Database!" app. This app greets users and tracks the count of greetings per user. Enter the directory to perform the next steps.
+This command should output `Application initialized successfully!` This creates a new directory named `<app-name>` that contains a sample "Hello" app. The app greets users and tracks the count of greetings per user. Enter the directory to perform the next steps.
 
-## 3. Log in to DBOS Cloud
+### 3. Log in to DBOS Cloud
 
 If you already created an account from our [website](https://www.dbos.dev), log in like so from your application directory:
 ```
 npx dbos-cloud login
 ```
 
-Otherwise, if you need to create a new account, you can do so by running `npx dbos-cloud register -u <username>`. User names should be 3 to 30 characters long and contain only lowercase letters, numbers, and underscores.
+Otherwise, if you need to create a new account, you can do so by running `npx dbos-cloud register -u <username>`. Usernames should be 3 to 30 characters long and contain only lowercase letters, numbers, and underscores.
 
-## 4. Provision a Database Instance
+### 4. Provision a Database Instance
 
 Every DBOS app connects to a Postgres database instance, and you can provision one for free. You can do this from the [cloud console](https://console.dbos.dev/) or by running the below command in your application directory.
 
@@ -73,7 +75,7 @@ This instance can host multiple independent databases for different applications
 By default, the quickstart application uses a database named `hello`. This is configurable in [`dbos-config.yaml`](../api-reference/configuration.md)
 :::
 
-## 5. Deploy!
+### 5. Deploy!
 
 Now, we're ready to deploy your application to DBOS Cloud! First, register your application by running this command, using your database instance name from the last step:
 
@@ -83,26 +85,32 @@ npx dbos-cloud app register -d <database-instance-name>
 
 If successful, the command should print `Successfully registered <app-name>!`
 
-Finally, deploy your application to run it in the cloud!
+Finally, deploy your application to run it in the cloud! This command may take a minute or so:
 
 ```
 npx dbos-cloud app deploy
 ```
 
-If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`
+If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit: 
+```
+https://mike-hello.cloud.dbos.dev/greeting/dbos
+```
 
-To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, visit `https://mike-hello.cloud.dbos.dev/greeting/dbos`. If you forget the URL, you can retrieve it by running `npx dbos-cloud app status`. Each time you refresh the page, the counter will go up by one.
+:::tip
+Don't forget to add `/greeting/dbos` at the end of the URL. 
+:::
 
-Congratulations, you've successfully deployed your first application to DBOS Cloud!
+If you forget the URL, you can retrieve it by running `npx dbos-cloud app status`. Each time you refresh the page, the counter will go up by one. If you change the last part of the URL from `dbos` to another name like `/greeting/alice`, the counter will start at 1 for each new name.
 
+Congratulations, you've successfully deployed your first application to DBOS Cloud! You can manage and monitor it in the [cloud console](https://console.dbos.dev/).
 
-# Running Locally
+## Run the App Locally
 
-You can run the same app locally on your machine. In order to do this you need to set up a  [PostgreSQL](https://www.postgresql.org/) database to connect to.
+You can run this app on your machine. In order to do this you need to set up a [PostgreSQL](https://www.postgresql.org/) database to connect to.
 
-## 1. Run Postgres Locally
+### 1. Install Postgres or Use Docker
 
-You can install Postgres locally or launch it in a Docker container: 
+You can install Postgres on your system or launch it in a Docker container: 
 
 <Tabs groupId="operating-systems">
 <TabItem value="mac" label="macOS">
@@ -143,9 +151,7 @@ You can install Postgres locally or launch it in a Docker container:
 </TabItem>   
 </Tabs>
 
-## 2. Configure the Postgres Connection
-
-You can connect to a Postgres database you installed or launch Postgres in a Docker container.
+### 2. Configure the Postgres Connection
 
 <Tabs groupId="postgres-or-docker">
 <TabItem value="postgres" label="Use Installed Postgres">
@@ -153,7 +159,7 @@ You can connect to a Postgres database you installed or launch Postgres in a Doc
 In your terminal, change to your application directory and run this command to connect your application to your Postgres database:
 
 ```
-cd <application-folder>
+cd <app directory>
 npx dbos configure
 ```
 
@@ -197,7 +203,7 @@ Run this script to launch Postgres in a Docker container:
   <TabItem value="mac" label="macOS">
 	  
    ```bash
-cd <application-folder>
+cd <app directory>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -206,7 +212,7 @@ node start_postgres_docker.js
     <TabItem value="linux" label="Linux">
 	    
    ```bash
-cd <application-folder>
+cd <app directory>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -215,7 +221,7 @@ node start_postgres_docker.js
   <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
-cd <application-folder>
+cd <app directory>
 $env:PGPASSWORD = "dbos"
 node start_postgres_docker.js
    ```
@@ -223,7 +229,7 @@ node start_postgres_docker.js
   <TabItem value="win-cmd" label="Windows (cmd)">
 
      ```bash
-cd <application-folder>
+cd <app directory>
 set PGPASSWORD=dbos
 node start_postgres_docker.js
    ```
@@ -234,7 +240,7 @@ If successful, the script should print `Database started successfully!`.
 </TabItem>
 </Tabs>
 
-## 3. Run the App
+### 3. Run the App
 
 Next, let's create some tables in your database by running a schema migration:
 
@@ -255,4 +261,4 @@ To see that it's working, visit this URL in your browser: [http://localhost:3000
 
 Congratulations!  You just launched your DBOS application on your local machine!
 
-Next, to learn how to build your own application, check out our [programming quickstart](./quickstart-programming.md).
+Next, to learn how to build your own application, check out our [programming guide](./quickstart-programming.md).
