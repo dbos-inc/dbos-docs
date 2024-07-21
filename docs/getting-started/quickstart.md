@@ -54,7 +54,7 @@ This command should output `Application initialized successfully!` This creates 
 
 If you already created an account from our [website](https://www.dbos.dev), log in like so from your application folder:
 ```
-cd <app-folder>
+cd <application-folder>
 npx dbos-cloud login
 ```
 
@@ -163,7 +163,7 @@ You can install Postgres on your system or launch it in a Docker container:
 In your terminal, change to your application folder and run this command to connect your application to your Postgres database:
 
 ```
-cd <app-folder>
+cd <application-folder>
 npx dbos configure
 ```
 
@@ -207,7 +207,7 @@ Run this script to launch Postgres in a Docker container:
   <TabItem value="mac" label="macOS">
 	  
    ```bash
-cd <app-folder>
+cd <application-folder>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -216,7 +216,7 @@ node start_postgres_docker.js
     <TabItem value="linux" label="Linux">
 	    
    ```bash
-cd <app-folder>
+cd <application-folder>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -225,7 +225,7 @@ node start_postgres_docker.js
   <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
-cd <app-folder>
+cd <application-folder>
 $env:PGPASSWORD = "dbos"
 node start_postgres_docker.js
    ```
@@ -233,7 +233,7 @@ node start_postgres_docker.js
   <TabItem value="win-cmd" label="Windows (cmd)">
 
      ```bash
-cd <app-folder>
+cd <application-folder>
 set PGPASSWORD=dbos
 node start_postgres_docker.js
    ```
