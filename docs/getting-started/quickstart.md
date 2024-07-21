@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-This guide shows how to deploy a "Hello" app to the cloud in about 2 minutes. After that, we provide instructions for running this app locally on your system.
+This guide shows how to deploy a simple "Hello" app to the cloud in about 2 minutes. After that, it provides instructions for running this app locally on your system.
 
 ## Deploy Your First App to the Cloud
 
@@ -52,7 +52,7 @@ This command should output `Application initialized successfully!` It creates a 
 
 ### 3. Log in to DBOS Cloud
 
-If you already created an account from our [website](https://www.dbos.dev), log in like so from your application folder:
+If you already created an account using our [website](https://www.dbos.dev), log in like so from your application folder:
 ```
 cd <application-folder>
 npx dbos-cloud login
