@@ -54,6 +54,7 @@ This command should output `Application initialized successfully!` This creates 
 
 If you already created an account from our [website](https://www.dbos.dev), log in like so from your application folder:
 ```
+cd <app-folder>
 npx dbos-cloud login
 ```
 
@@ -85,11 +86,14 @@ npx dbos-cloud app register -d <database-instance-name>
 
 If successful, the command should print `Successfully registered <app-name>!`
 
-Finally, deploy your application to run it in the cloud! This command may take a minute or so:
+Finally, deploy your application to run it in the cloud:
 
 ```
 npx dbos-cloud app deploy
 ```
+:::tip
+The deploy command may take a minute or so
+:::
 
 If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit: 
 ```
