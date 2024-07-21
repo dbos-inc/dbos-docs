@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-This guide shows how to deploy a simple "Hello" app to the cloud in about 2 minutes. After that, it provides instructions for running this app locally on your system.
+This guide shows how to deploy a simple "Hello" app to DBOS Cloud in about 2 minutes. After that, it provides instructions for running this app locally on your system.
 
 ## Deploy Your First App to the Cloud
 
