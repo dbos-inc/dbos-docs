@@ -11,7 +11,7 @@ This guide shows how to deploy a simple "Hello" app to DBOS Cloud in about 2 min
 
 ## Deploy Your First App to the Cloud
 
-### 1. Make sure you have Node.js version 20 or later
+### 1. Install Node.js version 20 or later
 
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
