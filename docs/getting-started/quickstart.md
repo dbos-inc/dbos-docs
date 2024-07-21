@@ -35,7 +35,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </TabItem>
 </Tabs>
 
-### 2. Create the App Directory
+### 2. Create the Application Folder
 
 To create a new DBOS application, first pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then run this command:
 
@@ -48,11 +48,11 @@ For example, to name your app `hello`, run:
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should output `Application initialized successfully!` This creates a new directory named `<app-name>` that contains a sample "Hello" app. The app greets users and tracks the count of greetings per user. Enter the directory to perform the next steps.
+This command should output `Application initialized successfully!` This creates a new folder named `<app-name>` that contains a sample "Hello" app. The app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
 
 ### 3. Log in to DBOS Cloud
 
-If you already created an account from our [website](https://www.dbos.dev), log in like so from your application directory:
+If you already created an account from our [website](https://www.dbos.dev), log in like so from your application folder:
 ```
 npx dbos-cloud login
 ```
@@ -61,7 +61,7 @@ Otherwise, if you need to create a new account, you can do so by running `npx db
 
 ### 4. Provision a Database Instance
 
-Every DBOS app connects to a Postgres database instance, and you can provision one for free. You can do this from the [cloud console](https://console.dbos.dev/) or by running the below command in your application directory.
+Every DBOS app connects to a Postgres database instance, and you can provision one for free. You can do this from the [cloud console](https://console.dbos.dev/) or by running the below command in your application folder.
 
 To provision, choose a database instance name, username and password. Both the instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores. The database password must contain at least 8 characters. Run this command and choose your database password when prompted:
 ```
@@ -156,10 +156,10 @@ You can install Postgres on your system or launch it in a Docker container:
 <Tabs groupId="postgres-or-docker">
 <TabItem value="postgres" label="Use Installed Postgres">
 
-In your terminal, change to your application directory and run this command to connect your application to your Postgres database:
+In your terminal, change to your application folder and run this command to connect your application to your Postgres database:
 
 ```
-cd <app directory>
+cd <app-folder>
 npx dbos configure
 ```
 
@@ -203,7 +203,7 @@ Run this script to launch Postgres in a Docker container:
   <TabItem value="mac" label="macOS">
 	  
    ```bash
-cd <app directory>
+cd <app-folder>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -212,7 +212,7 @@ node start_postgres_docker.js
     <TabItem value="linux" label="Linux">
 	    
    ```bash
-cd <app directory>
+cd <app-folder>
 export PGPASSWORD=dbos
 # Docker may require sudo -E
 node start_postgres_docker.js
@@ -221,7 +221,7 @@ node start_postgres_docker.js
   <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
-cd <app directory>
+cd <app-folder>
 $env:PGPASSWORD = "dbos"
 node start_postgres_docker.js
    ```
@@ -229,7 +229,7 @@ node start_postgres_docker.js
   <TabItem value="win-cmd" label="Windows (cmd)">
 
      ```bash
-cd <app directory>
+cd <app-folder>
 set PGPASSWORD=dbos
 node start_postgres_docker.js
    ```
