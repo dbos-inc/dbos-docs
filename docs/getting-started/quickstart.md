@@ -110,7 +110,7 @@ Congratulations, you've successfully deployed your first application to DBOS Clo
 
 ## Run the App Locally
 
-For development, debugging, testing, or a self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an application folder as described in the last secion.
+For development, debugging, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an application folder as described in the last section.
 
 ### 1. Install Postgres or use Docker
 
