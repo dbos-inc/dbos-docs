@@ -69,7 +69,7 @@ To provision, choose a database instance name, username and password. Both the i
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
-If successful, the command should print `Database successfully provisioned!`. To view your provisioned database you can run `npx dbos-cloud db list`. For more information on cloud database management, check out [our guide](../cloud-tutorials/database-management.md).
+If successful, the command should print `Database successfully provisioned!`. To view your provisioned instance, run `npx dbos-cloud db list`. For more information on cloud database management, check out [our guide](../cloud-tutorials/database-management.md).
 
 :::info
 This instance can host multiple independent databases for different applications.
