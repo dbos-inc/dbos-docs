@@ -86,7 +86,7 @@ npx dbos-cloud app register -d <database-instance-name>
 
 If successful, the command should print `Successfully registered <app-name>!`
 
-Finally, deploy your application to run it in the cloud:
+Finally, deploy your application:
 
 ```
 npx dbos-cloud app deploy
@@ -116,44 +116,38 @@ For development, debugging, testing, or self-hosted deployment, here's how to ru
 
 The app needs a [PostgreSQL](https://www.postgresql.org/) database to connect to. You can install Postgres on your system or launch it in a Docker container:
 
-<Tabs groupId="operating-systems">
-<TabItem value="mac" label="macOS">
 <Tabs groupId="postgres-or-docker">
-  <TabItem value="postgres" label="Install Postgres Locally">
-      Follow [this official guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
-  </TabItem>
-    <TabItem value="docker" label="Launch Postgres with Docker">
-      You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-      Later in this guide, we'll provide instructions on launching Postgres with Docker.
+   <TabItem value="postgres" label="Install Postgres Locally">
+   <Tabs groupId="operating-systems">
+      <TabItem value="mac" label="macOS">
+         Follow [this official guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
+      </TabItem>
+      <TabItem value="linux" label="Linux">
+         Follow these [official guides](https://www.postgresql.org/download/linux/) to install Postgres on several popular Linux distributions.
+      </TabItem>
+      <TabItem value="win-ps" label="Windows">
+         Follow [this official guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
+      </TabItem>
+   </Tabs>
    </TabItem>
-</Tabs>
-   
-</TabItem>
-<TabItem value="linux" label="Linux">
-<Tabs groupId="postgres-or-docker">
-  <TabItem value="postgres" label="Install Postgres Locally">
-      Follow these [official guides](https://www.postgresql.org/download/linux/) to install Postgres on several popular Linux distributions.
-  </TabItem>
-    <TabItem value="docker" label="Launch Postgres with Docker">
-      Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-      Later in this guide, we'll provide instructions on launching Postgres with Docker.
-   </TabItem>
-</Tabs>
-
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-<Tabs groupId="postgres-or-docker">
-  <TabItem value="postgres" label="Install Postgres Locally">
-      Follow [this official guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-  </TabItem>
-    <TabItem value="docker" label="Launch Postgres with Docker">
-      You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-      Later in this guide, we'll provide instructions on launching Postgres with Docker.
+   <TabItem value="docker" label="Launch Postgres with Docker">
+   <Tabs groupId="operating-systems">
+      <TabItem value="mac" label="macOS">
+         You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+         Later in this guide, we'll provide instructions on launching Postgres with Docker.
+      </TabItem>
+      <TabItem value="linux" label="Linux">
+         Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
+         Later in this guide, we'll provide instructions on launching Postgres with Docker.
+      </TabItem>
+      <TabItem value="win-ps" label="Windows">
+         You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+         Later in this guide, we'll provide instructions on launching Postgres with Docker.
+      </TabItem>
+   </Tabs>
    </TabItem>
 </Tabs>
 
-</TabItem>   
-</Tabs>
 
 ### 2. Configure the Postgres connection
 
