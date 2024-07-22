@@ -37,7 +37,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 
 ### 2. Create the application folder
 
-To create a new DBOS application, first pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then run this command:
+Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then run this command:
 
    ```bash
 npx -y @dbos-inc/create@latest -n <app-name>
@@ -48,7 +48,7 @@ For example, to name your app `hello`, run:
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should output `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. The app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
+This command should output `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
 
 ### 3. Log in to DBOS Cloud
 
@@ -86,7 +86,7 @@ npx dbos-cloud app register -d <database-instance-name>
 
 If successful, the command should print `Successfully registered <app-name>!`
 
-Finally, deploy your application:
+Finally, deploy like so:
 
 ```
 npx dbos-cloud app deploy
