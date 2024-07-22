@@ -106,7 +106,7 @@ Don't forget to add `/greeting/dbos` at the end of the URL.
 
 Each time you refresh the page, the counter will go up by one. If you change the last part of the URL from `dbos` to another name like `/greeting/alice`, the counter will start at 1 for each new name.
 
-Congratulations, you've successfully deployed your first application to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/) or in the cli by running `npx dbos-cloud app status`.
+Congratulations, you've successfully deployed your first application to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
 
 ## Run the App Locally
 
