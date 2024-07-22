@@ -13,8 +13,8 @@ If you're not a VS Code user, there is an advanced tutorial for [Time Travel Deb
 :::
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
-For convenience, we recommend [creating a DBOS Cloud account](./quickstart#deploying-to-dbos-cloud) and 
-[provisioning a DBOS Cloud database instance](./quickstart#provisioning-a-cloud-database-instance) before starting this tutorial.
+For convenience, we recommend [creating a DBOS Cloud account](./quickstart#deploy-your-first-app-to-the-cloud) and
+[provisioning a DBOS Cloud database instance](./quickstart#4-provision-a-database-instance) before starting this tutorial.
 
 ### Installing the DBOS Time Travel Debugging VS Code Extension
 
@@ -83,7 +83,7 @@ Next, we are going to deploy this application to DBOS Cloud.
 Currently, Time Travel Debugging is only supported for applications that have been deployed to DBOS Cloud.
 
 If you finished the [DBOS quickstart](./quickstart), you should already have a DBOS Cloud account and database instance.
-If you didn't finish the [Deploying to DBOS Cloud](./quickstart#deploying-to-dbos-cloud) section of that tutorial, 
+If you didn't finish the [Deploying to DBOS Cloud](./quickstart#deploy-your-first-app-to-the-cloud) section of that tutorial,
 please create an account and provision a cloud database instance by running the `npx dbos-cloud` commands shown below from project's root folder.
 
 ```
