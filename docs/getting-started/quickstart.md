@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-This guide shows how to deploy a simple "Hello" app to DBOS Cloud in about 2 minutes. After that, it provides instructions for running this app locally on your system.
+This guide shows how to deploy a simple "Hello" app to DBOS Cloud in less than 5 minutes. After that, it provides instructions for running this app locally on your system.
 
 ## Deploy Your First App to the Cloud
 
@@ -48,7 +48,7 @@ For example, to name your app `hello`, run:
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should output `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
+This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
 
 ### 3. Log in to DBOS Cloud
 
@@ -69,7 +69,7 @@ Choose a database instance name, username and password. Both the instance name a
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
-If successful, the command should print `Database successfully provisioned!`. To view your provisioned instance, run `npx dbos-cloud db list`. For more information on cloud database management, check out [our guide](../cloud-tutorials/database-management.md).
+This command should print `Database successfully provisioned!` To view your provisioned instance, run `npx dbos-cloud db list`. For more information, see the [database management guide](../cloud-tutorials/database-management.md).
 
 :::info
 This instance can host multiple independent databases for different applications.
@@ -78,7 +78,7 @@ By default, the "Hello" app uses a database named `hello`. This is configurable 
 
 ### 5. Deploy!
 
-Now, we're ready to deploy your application to DBOS Cloud! First, register your application by running this command, using your database instance name from the last step:
+Now, you're ready to deploy to DBOS Cloud! First, register your application by running this command, using your database instance name from the last step:
 
 ```
 npx dbos-cloud app register -d <database-instance-name>
@@ -95,7 +95,7 @@ npx dbos-cloud app deploy
 The deploy command may take a minute or so to finish
 :::
 
-If successful, the command will print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit: 
+This command should print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
 https://mike-hello.cloud.dbos.dev/greeting/dbos
 ```
@@ -110,7 +110,7 @@ Congratulations, you've successfully deployed your first application to DBOS Clo
 
 ## Run the App Locally
 
-For development, debugging, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an application folder as described in the last section.
+For development, debugging, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an application folder as described above.
 
 ### 1. Install Postgres or use Docker
 
