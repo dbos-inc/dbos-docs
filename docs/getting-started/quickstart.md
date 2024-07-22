@@ -37,7 +37,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 
 ### 2. Create the application folder
 
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then run this command:
+Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
    ```bash
 npx -y @dbos-inc/create@latest -n <app-name>
