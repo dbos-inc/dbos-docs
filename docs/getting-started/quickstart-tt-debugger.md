@@ -13,7 +13,7 @@ If you're not a VS Code user, there is an advanced tutorial for [Time Travel Deb
 :::
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
-For convenience, we recommend [creating a DBOS Cloud account](./quickstart#deploy-your-first-app-to-the-cloud) and
+For convenience, we recommend [creating a DBOS Cloud account](./quickstart#3-log-in-to-dbos-cloud) and
 [provisioning a DBOS Cloud database instance](./quickstart#4-provision-a-database-instance) before starting this tutorial.
 
 ### Installing the DBOS Time Travel Debugging VS Code Extension
