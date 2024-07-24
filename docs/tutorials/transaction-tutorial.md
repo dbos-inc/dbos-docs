@@ -36,8 +36,6 @@ export class Greetings {
 }
 ```
 
-DBOS supports the full [Knex Postgres API](https://knexjs.org/guide/query-builder.html), but doesn't allow manually committing or aborting transactions.
-Instead, transactions automatically commit when the function successfully returns and abort and roll back if the function throws an exception.
 See our [Knex guide](./using-knex.md) for more information.
 
 </TabItem>
@@ -69,8 +67,7 @@ export class DBOSGreetings {
 }
 ```
 
-Using TypeORM with DBOS requires defining entities (like `DBOSHello`), which are [defined in the same way as any other TypeORM project](https://typeorm.io/entities).
-To make DBOS aware of the entities, a class-level decorator (`OrmEntities`) is used on each class containing DBOS transaction methods.
+See our [TypeORM guide](./using-typeorm.md) for more information.
 
 
 </TabItem>
@@ -90,6 +87,9 @@ export class Greetings {
 }
 ```
 
+See our [Prisma guide](./using-prisma.md) for more information.
+
+
 </TabItem>
 <TabItem value="raw" label="Raw SQL">
 ```javascript
@@ -104,3 +104,19 @@ export class Greetings {
 </Tabs>
 
 ## Schema Management
+
+We strongly recommend you manage your database schema using migrations.
+Knex, TypeORM, and Prisma all provide rich support for schema management through migrations.
+Please see their guides for more detail:
+
+- [Knex schema management guide.](./using-knex.md#schema-management)
+- [TypeORM schema management guide.](./using-typeorm.md#schema-management)
+- [Prisma schema maanagement guide.](./using-prisma.md#schema-management)
+
+If you are not using database transactions, you may wish to disable database migrations.
+In [`dbos-config.yaml`](../api-reference/configuration.md), set your `migrate` setting as such:
+
+```yaml
+migrate:
+    - echo 'No migrations'  
+```
