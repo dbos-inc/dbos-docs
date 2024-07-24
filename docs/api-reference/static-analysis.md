@@ -33,13 +33,16 @@ Many DBOS-suggested coding practices can be enforced by a combination of `eslint
 
 ### Installing and configuring the plugin
 
-To install the `eslint` package and the DBOS plugin:
+::::tip
+If you got started with the [quickstart](../getting-started/quickstart.md), the plugin is already installed.
+Make sure that you do not have `eslint`, or the `typescript-eslint` package (or any of its subpackages) installed locally!
+The plugin takes care of the versioning details of that for you.
+::::
+
+To install the DBOS `eslint` plugin:
 ```bash
 npm install --save-dev @dbos-inc/eslint-plugin
 ```
-
-Note: make sure that you do not have the `typescript-eslint` package (or any of its subpackages) installed locally!
-The plugin takes care of the versioning details of that for you; so let the plugin handle it.
 
 Configuring `eslint` can be quite involved, as there are [several complete configuration schemes](https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-formats).
 Both of these options require you to set up a `tsconfig.json` file beforehand.
