@@ -16,8 +16,9 @@ Transaction functions must be annotated with the [`@Transaction`](../api-referen
 As with other DBOS functions, inputs and outputs must be serializable to JSON.
 
 The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
-DBOS supports [Knex.js](./using-knex.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL through [knex.raw](https://knexjs.org/guide/raw.html).
-You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file; Knex is used by default.
+DBOS supports [Knex.js](./using-knex.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL.
+You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
+Knex is used by default.
 
 Here's an example of a transaction function:
 
@@ -74,6 +75,8 @@ See our [TypeORM guide](./using-typeorm.md) for more information.
 <TabItem value="prisma" label="Prisma">
 
 ```javascript
+import { PrismaClient } from "@prisma/client"; // Use the generated Prisma client
+
 export class Greetings {
   @Transaction()
   static async insertGreeting(ctxt: TransactionContext<PrismaClient>, name: string, note: string)  {
@@ -92,6 +95,7 @@ See our [Prisma guide](./using-prisma.md) for more information.
 
 </TabItem>
 <TabItem value="raw" label="Raw SQL">
+
 ```javascript
 export class Greetings {
   @Transaction()
@@ -100,6 +104,8 @@ export class Greetings {
   }
 }
 ```
+
+We recommend using [knex.raw](https://knexjs.org/guide/raw.html) to execute raw SQL.
 </TabItem>
 </Tabs>
 
