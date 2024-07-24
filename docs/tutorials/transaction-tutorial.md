@@ -42,3 +42,19 @@ export class Greetings {
 DBOS supports the full [Knex Postgres API](https://knexjs.org/guide/query-builder.html), but doesn't allow manually committing or aborting transactions.
 Instead, transactions automatically commit when the function successfully returns and abort and roll back if the function throws an exception.
 If you need to orchestrate multiple transactions, use a [workflow](./workflow-tutorial).
+
+Assuming you are not using database transactions, as seen in the [puppeteer example](https://github.com/qianl15/dbos-puppeteer/tree/main), switch your migrations settings in dbos.config.yml  (found in the original setup) from this: 
+
+``` 
+  migrate:
+    - npx knex migrate:latest
+``` 
+
+to this:
+
+```
+migrate:
+    - echo 'no migrations'`  
+```
+
+and delete the migrations folder or else you will get an error re: running a migration.
