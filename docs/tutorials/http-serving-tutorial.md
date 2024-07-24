@@ -51,7 +51,7 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
 
 Then, give your method an argument with a matching name (such as `name: string` above) and it is automatically parsed from the path parameter.
 
-For example, if we send our app this request, then our method is called with `name` `dbos`:
+For example, if we send our app this request, then our method is called with `name` set to `dbos`:
 
 ```
 GET /greeting/dbos
