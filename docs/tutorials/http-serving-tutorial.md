@@ -113,7 +113,7 @@ You can specify that an argument is optional with the [`@ArgOptional`](../api-re
 :::
 
 :::info
-You can use the [`@ArgSource()`](../api-reference/decorators.md#argsource) decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
+You can use the [`@ArgSource()`](../api-reference/decorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
 :::
 
 #### Raw Requests
