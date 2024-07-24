@@ -101,8 +101,15 @@ Content-Type: application/json
 }
 ```
 
-No matter where arguments are parsed from, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
+:::info
+No matter where arguments are parsed from, if arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
+
 You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
+:::
+
+:::info
+You can use the [`@ArgSource()`](../api-reference/decorators.md#argsource) decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
+:::
 
 #### Raw Requests
 
