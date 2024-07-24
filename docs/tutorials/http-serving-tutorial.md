@@ -89,7 +89,7 @@ static async examplePost(ctx: HandlerContext, id: number, name: string) {
 }
 ```
 
-If we send our app this request, then our method is called with `id` `123` and `name` `dbos`:
+If we send our app this request, then our method is called with `id` set to `123` and `name` set to `dbos`:
 
 ```javascript
 POST /example
