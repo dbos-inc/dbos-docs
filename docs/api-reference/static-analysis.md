@@ -58,7 +58,7 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
       const dbosIncEslintPluginsVersion = require(`@dbos-inc/eslint-plugin/node_modules/${moduleName}/package.json`).version;
 
       if (version !== dbosIncEslintPluginsVersion) {
-        throw new Error(`Your local version of '${moduleName}' (${version}) is different from`
+        throw new Error(`Your local version of '${moduleName}' (${version}) is different from `
           + `the version installed in @dbos-inc/eslint-plugin (${dbosIncEslintPluginsVersion}). `
           + `If you do not uninstall your local version, the plugin may not work as expected.`);
       }
