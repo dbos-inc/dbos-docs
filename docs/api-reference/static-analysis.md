@@ -53,12 +53,12 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
     Place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
-    const js = require("@eslint/js");
-    const globals = require("globals");
     const { FlatCompat } = require("@eslint/eslintrc");
     const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
     const typescriptEslint = require("typescript-eslint");
     const typescriptEslintParser = require("@typescript-eslint/parser");
+    const globals = require("globals");
+    const js = require("@eslint/js");
 
     const compat = new FlatCompat({
       baseDirectory: __dirname,
