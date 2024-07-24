@@ -111,7 +111,7 @@ Please see their guides for more detail:
 
 - [Knex schema management guide.](./using-knex.md#schema-management)
 - [TypeORM schema management guide.](./using-typeorm.md#schema-management)
-- [Prisma schema maanagement guide.](./using-prisma.md#schema-management)
+- [Prisma schema management guide.](./using-prisma.md#schema-management)
 
 If you are not using database transactions, you may wish to disable database migrations.
 In [`dbos-config.yaml`](../api-reference/configuration.md), set your `migrate` setting as such:
