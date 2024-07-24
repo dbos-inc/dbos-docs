@@ -7,8 +7,9 @@ description: Learn how to serve HTTP requests
 In this guide, you'll learn how to make DBOS applications accessible through HTTP.
 
 Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
+
 You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../api-reference/decorators#transaction), [`@Workflow`](../api-reference/decorators#workflow), or [`@Communicator`](../api-reference/decorators#communicator) decorator.
-In the latter case, the order of the decorators doesn't matter.
+
 Here's an example of a new function with an endpoint decorator:
 
 ```javascript
@@ -17,7 +18,7 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
   return `Greeting, ${name}`;
 }
 ```
-Here's an example applying an endpoint decorator to an existing transaction:
+Here's an example applying an endpoint decorator to an existing transaction (the order of the decorators doesn't matter):
 
 ```javascript
 @PostApi('/greeting/:friend')
@@ -33,7 +34,7 @@ Each associates a function with an HTTP URL.
 
 ### Inputs and HTTP Requests
 
-When a function has arguments other than its context (e.g., `name`, `friend`, or `note` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if they are not found.
+When a function has arguments other than its context, DBOS automatically parses them from the HTTP request, and returns an error to the client if they are not found.
 
 Arguments can be parsed from three places:
 
@@ -50,7 +51,7 @@ static async greetingEndpoint(ctx: HandlerContext, name: string) {
 
 Then, give your method an argument with a matching name (such as `name: string` above) and it is automatically parsed from the path parameter.
 
-For example, if send the app this request, then our method is called with `name` `dbos`:
+For example, if we send our app this request, then our method is called with `name` `dbos`:
 
 ```
 GET /greeting/dbos
@@ -69,18 +70,15 @@ static async exampleGet(ctx: HandlerContext, id: number, name: string) {
 }
 ```
 
-If we send our app this request, then our method is called with the `id` 123 and `name` `dbos`:
+If we send our app this request, then our method is called with `id` `123` and `name` `dbos`:
 
 ```
 GET /example?id=123&name=dbos
 ```
 
-By default, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
-You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
-
 #### 3. HTTP Body Fields
 
-[`Post`](../api-reference/decorators#postapi), [`PATCH`](../api-reference/decorators#patchapi), and [`PUT`](../api-reference/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
+[`POST`](../api-reference/decorators#postapi), [`PATCH`](../api-reference/decorators#patchapi), and [`PUT`](../api-reference/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
 
 For example, the following endpoint expects the `id` and `name` parameters to be passed through the HTTP request body:
 
@@ -91,7 +89,7 @@ static async examplePost(ctx: HandlerContext, id: number, name: string) {
 }
 ```
 
-If we send our app this request, then our method is called with the `id` 123 and `name` `dbos`:
+If we send our app this request, then our method is called with `id` `123` and `name` `dbos`:
 
 ```javascript
 POST /example
@@ -103,12 +101,12 @@ Content-Type: application/json
 }
 ```
 
-By default, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
+No matter where arguments are parsed from, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
 You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
 
 #### Raw Requests
 
-If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its `context.request` field. This returns the following information:
+If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its [`context.request`](../api-reference/contexts#ctxtrequest) field. This returns the following information:
 
 ```typescript
 interface HTTPRequest {
@@ -142,7 +140,7 @@ However, DBOS makes no guarantees about handler execution: if a handler fails, i
 You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
 ### Body Parser
-By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator can be used.
+By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator.
 
 ### CORS
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients, preventing unintended information sharing across origins/domains.
@@ -156,7 +154,7 @@ If your DBOS application will be accessed from web browsers, some thought should
 
 DBOS supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
 Middlewares are configured at the class level through the [`@KoaMiddleware`](../api-reference/decorators#koamiddleware) decorator.
-Here is an example of a simple middleware looking for an HTTP header:
+Here is an example of a simple middleware checking an HTTP header:
 ```javascript
 import { Middleware } from "koa";
 
