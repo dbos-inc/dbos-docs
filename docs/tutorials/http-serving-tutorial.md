@@ -150,12 +150,12 @@ You should use handlers when you need to access HTTP requests or responses direc
 By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator.
 
 ### CORS
-[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients, preventing unintended information sharing across origins/domains.
-By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a configuration that is extremely permissive of cross-origin requests.
 
-If your DBOS application will be accessed from web browsers, some thought should be put into configuring CORS.  This can be adjusted in two main ways:
-* The [`dbos-config.yaml`](../api-reference/configuration#http) file
-* The [`@KoaCors`](../api-reference/decorators#koacors) class decorator
+[Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is a security feature that controls access to resources from different domains. DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a permissive default configuration.
+
+To customize CORS:
+* Use the HTTP configuration in [`dbos-config.yaml`](../api-reference/configuration#http) for global settings.
+* Use the [`@KoaCors`](../api-reference/decorators#koacors) class decorator for class-specific settings.
 
 ### Middleware
 
