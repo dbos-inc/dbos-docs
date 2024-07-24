@@ -53,26 +53,12 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
     Place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
-    function requireWithVersionCheck(moduleName) {
-      const version = require(`${moduleName}/package.json`).version;
-      const dbosIncEslintPluginsVersion = require(`@dbos-inc/eslint-plugin/node_modules/${moduleName}/package.json`).version;
-
-      if (version !== dbosIncEslintPluginsVersion) {
-        throw new Error(`Your local version of '${moduleName}' (${version}) is different from `
-          + `the version installed in @dbos-inc/eslint-plugin (${dbosIncEslintPluginsVersion}). `
-          + `If you do not uninstall your local version, the plugin may not work as expected.`);
-      }
-
-      return require(moduleName);
-    }
-
     const js = require("@eslint/js");
     const globals = require("globals");
     const { FlatCompat } = require("@eslint/eslintrc");
     const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
-
-    const typescriptEslint = requireWithVersionCheck("typescript-eslint");
-    const typescriptEslintParser = requireWithVersionCheck("@typescript-eslint/parser");
+    const typescriptEslint = require("typescript-eslint");
+    const typescriptEslintParser = require("@typescript-eslint/parser");
 
     const compat = new FlatCompat({
       baseDirectory: __dirname,
