@@ -91,6 +91,7 @@ static async examplePost(ctx: HandlerContext, id: number, name: string) {
 
 If we send our app this request, then our method is called with `id` set to `123` and `name` set to `dbos`:
 
+
 ```javascript
 POST /example
 Content-Type: application/json
@@ -100,6 +101,10 @@ Content-Type: application/json
   "id": 123
 }
 ```
+
+:::tip
+When sending an HTTP request with a JSON body, make sure you set the [`Content-Type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) header to `application/json`.
+:::
 
 :::info
 No matter where arguments are parsed from, if arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
