@@ -31,18 +31,15 @@ DBOS uses several techniques to ensure that static analysis is as productive as 
 
 Many DBOS-suggested coding practices can be enforced by a combination of `eslint` plugins and rule configurations.
 
-### Installing and configuring `eslint`
-
-::::tip
-If you got started with the [quickstart](../getting-started/quickstart.md), `eslint` and required plugins are already installed.
-Plugins to support TypeScript and detect common vulnerabilities are automatically installed with `@dbos-inc/eslint-plugin` as dependencies and do not need to be installed separately.
-::::
+### Installing and configuring the plugin
 
 To install the `eslint` package and the DBOS plugin:
 ```bash
-npm install --save-dev typescript-eslint
 npm install --save-dev @dbos-inc/eslint-plugin
 ```
+
+Note: make sure that you do not have the `typescript-eslint` package (or any of its subpackages) installed locally!
+The plugin takes care of the versioning details of that for you; so let the plugin handle it.
 
 Configuring `eslint` can be quite involved, as there are [several complete configuration schemes](https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file-formats).
 Both of these options require you to set up a `tsconfig.json` file beforehand.
@@ -53,32 +50,47 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
     Place an `eslint.config.js` file similar to the following in your project directory.
 
     ```js
+    function requireWithVersionCheck(moduleName) {
+      const version = require(`${moduleName}/package.json`).version;
+      const dbosIncEslintPluginsVersion = require(`@dbos-inc/eslint-plugin/node_modules/${moduleName}/package.json`).version;
+
+      if (version !== dbosIncEslintPluginsVersion) {
+        throw new Error(`Your local version of '${moduleName}' (${version}) is different from`
+          + `the version installed in @dbos-inc/eslint-plugin (${dbosIncEslintPluginsVersion}). `
+          + `If you do not uninstall your local version, the plugin may not work as expected.`);
+      }
+
+      return require(moduleName);
+    }
+
+    const js = require("@eslint/js");
+    const globals = require("globals");
     const { FlatCompat } = require("@eslint/eslintrc");
     const dbosIncEslintPlugin = require("@dbos-inc/eslint-plugin");
-    const typescriptEslint = require("typescript-eslint");
-    const typescriptEslintParser = require("@typescript-eslint/parser");
-    const globals = require("globals");
-    const js = require("@eslint/js");
+
+    const typescriptEslint = requireWithVersionCheck("typescript-eslint");
+    const typescriptEslintParser = requireWithVersionCheck("@typescript-eslint/parser");
 
     const compat = new FlatCompat({
-        baseDirectory: __dirname,
-        recommendedConfig: js.configs.recommended
+      baseDirectory: __dirname,
+      recommendedConfig: js.configs.recommended
     });
 
-    module.exports = typescriptEslint.config(
-      {
-        extends: compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
-        plugins: { "@dbos-inc": dbosIncEslintPlugin },
+    module.exports = typescriptEslint.config({
+      extends: compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
+      plugins: { "@dbos-inc": dbosIncEslintPlugin },
 
-        languageOptions: {
-            parser: typescriptEslintParser,
-            parserOptions: { project: "./tsconfig.json" },
-            globals: { ...globals.node, ...globals.es6 }
-        },
+      languageOptions: {
+        parser: typescriptEslintParser,
+        parserOptions: { project: "./tsconfig.json" },
+        globals: { ...globals.node, ...globals.es6 }
+      },
 
-        rules: { }
-      }
-    );
+      rules: { },
+
+      ignores: ["**/*.test.ts"]
+    });
+
     ```
   </TabItem>
   <TabItem value="legacy-config" label="Legacy config">
@@ -155,6 +167,44 @@ These plugins are enabled by default:
 
 One custom rule from DBOS, `@dbos-inc/dbos-static-analysis`, is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
 
+___
+
+Running a database query with a string that's vulnerable to SQL injection will result in an error.
+This would typically happen inside of a [transaction](https://docs.dbos.dev/tutorials/transaction-tutorial).
+- SQL injection happens when a bad actor puts SQL code as a field into something like an online form,
+and if a programmer builds a raw query from SQL and this data, the bad actor's supposed data may allow them to run
+arbitrary SQL commands over your database.
+- To avoid injection, use prepared statements. But if you accidentally make yourself vulnerable to injection, DBOS is here to save you!
+
+Here's how you should make a prepared statement:
+```ts
+export class Greetings {
+  @Transaction()
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+  }
+}
+```
+
+Here's how you would make SQL injection possible:
+```ts
+export class Greetings {
+  @Transaction()
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw(`INSERT INTO greetings (name, note) VALUES (${friend}, ${note})`);
+  }
+}
+```
+
+- A LR-value is a literal-reducible value, or a value that is known to be literal at some level.
+The most basic LR-value is a literal string or number. LR-values can be build up by concatenating
+other LR-values with each other.
+- As long as the query string you pass into your client is such a value, the plugin won't complain.
+- So for example, if your query string is formatted with some method parameters of unknown origin,
+  or perhaps with the result of a function call, then you're in trouble.
+
+___
+
 These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
 - `Math.random()`
@@ -170,6 +220,8 @@ These function calls are not necessarily nondeterministic, but are still warned 
 - `bcrypt.compare(...)`
 
 *Emitted warning messages will provide alternatives to each function call.*
+
+___
 
 These behaviors result in warnings as well:
 
