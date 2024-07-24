@@ -30,43 +30,85 @@ static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note
 DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@GetApi`](../api-reference/decorators#getapi), [`@PostApi`](../api-reference/decorators#postapi), [`@PutApi`](../api-reference/decorators.md#putapi), [`@PatchApi`](../api-reference/decorators.md#patchapi), and [`@DeleteApi`](../api-reference/decorators.md#deleteapi).
 Each associates a function with an HTTP URL.
 
-:::info
-
-You might be wondering why we don't talk about setting up an HTTP server.
-It's because DBOS is _serverless_.
-When you run an app locally with `npx dbos start`, we manage the HTTP server for you, using the endpoints and configuration you specify with decorators.
-
-:::
-
-### Handlers
-
-A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the first example above.
-Handlers can [invoke](../api-reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
-However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
-You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
 ### Inputs and HTTP Requests
 
 When a function has arguments other than its context (e.g., `name`, `friend`, or `note` in the snippets above), DBOS automatically parses them from the HTTP request, and returns an error to the client if they are not found.
 
-Arguments are parsed from three places by default:
+Arguments can be parsed from three places:
 
-1. From a URL path parameter, if there are placeholders specified in the decorated URL.
-2. For `GET` and `DELETE` requests, from a URL query string parameter.
-3. For `POST`, `PUT`, and `PATCH` requests, from an HTTP body field.
+#### 1. URL Path Parameters
 
-In all cases, the parameter name must match the function argument name (unless [`@ArgName`](../api-reference/decorators#argname) is specified). For example:
+You can include a path parameter placeholder in a URL by prefixing it with a colon, like `name` in this example:
 
-- In the first snippet above, `name: string` matches `/greeting/:name` and is parsed from that path parameter.
-- In the second snippet above, `friend: string` matches `/greeting/:friend` and is parsed from that path parameter.
-- Also in the second snippet, `note: string` does not match any path parameter and is parsed from the `note` field of the HTTP request body.
+```javascript
+@GetApi('/greeting/:name')
+static async greetingEndpoint(ctx: HandlerContext, name: string) {
+  return `Greeting, ${name}`;
+}
+```
 
-Default input parsing behavior can be configured using the [`@ArgSource`](../api-reference/decorators#argsource) parameter decorator.
+Then, give your method an argument with a matching name (such as `name: string` above) and it is automatically parsed from the path parameter.
 
-By default, DBOS automatically validates parsed inputs, throwing an error if a function is missing required inputs or if the input received is of a different type than specified in the method signature. 
-Validation can be turned off at the class level using [`@DefaultArgOptional`](../api-reference/decorators#defaultargoptional) or controlled at the parameter level using [`@ArgRequired`](../api-reference/decorators#argrequired) and [`@ArgOptional`](../api-reference/decorators#argoptional).
+For example, if send the app this request, then our method is called with `name` `dbos`:
 
-Additionally, any DBOS method invoked via HTTP request can access request information from its `context.request` field. This returns the following information:
+```
+GET /greeting/dbos
+```
+
+#### 2. URL Query String Parameters
+
+[`GET`](../api-reference/decorators#getapi) and [`DELETE`](../api-reference/decorators.md#deleteapi) endpoints automatically parse arguments from query strings.
+
+For example, the following endpoint expects the `id` and `name` parameters to be passed through a query string:
+
+```javascript
+@GetApi('/example')
+static async exampleGet(ctx: HandlerContext, id: number, name: string) {
+  return `${id} and ${name} are parsed from URL query string parameters`;
+}
+```
+
+If we send our app this request, then our method is called with the `id` 123 and `name` `dbos`:
+
+```
+GET /example?id=123&name=dbos
+```
+
+By default, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
+You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
+
+#### 3. HTTP Body Fields
+
+[`Post`](../api-reference/decorators#postapi), [`PATCH`](../api-reference/decorators#patchapi), and [`PUT`](../api-reference/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
+
+For example, the following endpoint expects the `id` and `name` parameters to be passed through the HTTP request body:
+
+```javascript
+@PostApi('/example')
+static async examplePost(ctx: HandlerContext, id: number, name: string) {
+  return `${id} and ${name} are parsed from the HTTP request body`;
+}
+```
+
+If we send our app this request, then our method is called with the `id` 123 and `name` `dbos`:
+
+```javascript
+POST /example
+Content-Type: application/json
+
+{
+  "name": "dbos",
+  "id": 123
+}
+```
+
+By default, if method arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
+You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
+
+#### Raw Requests
+
+If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its `context.request` field. This returns the following information:
 
 ```typescript
 interface HTTPRequest {
@@ -84,12 +126,20 @@ interface HTTPRequest {
 
 ### Outputs and HTTP Responses
 
-By default, if a function invoked via HTTP request returns successfully, its return value is sent in the HTTP response body with status code `200` (or `204` if nothing is returned).
+If a function invoked via HTTP request returns successfully, its return value is sent in the HTTP response body with status code `200` (or `204` if nothing is returned).
+
 If the function throws an exception, the error message is sent in the response body with a `400` or `500` status code.
-If the error contains a `status` field, the handler uses that status code instead.
+If the error contains a `status` field, the response uses that status code instead.
 
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
 DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../api-reference/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
+
+### Handlers
+
+A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the first example above.
+Handlers can [invoke](../api-reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
+However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
+You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
 ### Body Parser
 By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator can be used.
