@@ -177,7 +177,7 @@ This example is vulnerable to SQL injection:
 ```ts
 export class Greetings {
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+  static async VulnerableGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
     await ctxt.client.raw(`INSERT INTO greetings (name, note) VALUES (${friend}, ${note})`); // Don't do this!
   }
 }
