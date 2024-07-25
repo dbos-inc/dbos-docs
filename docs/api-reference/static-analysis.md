@@ -173,7 +173,7 @@ export class Greetings {
 }
 ```
 
-Here's how you would make SQL injection possible:
+This example is vulnerable to SQL injection:
 ```ts
 export class Greetings {
   @Transaction()
