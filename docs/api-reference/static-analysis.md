@@ -161,9 +161,9 @@ This would typically happen inside of a [transaction](https://docs.dbos.dev/tuto
 - SQL injection happens when a bad actor puts SQL code as a field into something like an online form,
 and if a programmer builds a raw query from SQL and this data, the bad actor's supposed data may allow them to run
 arbitrary SQL commands over your database.
-- To avoid injection, use prepared statements. But if you accidentally make yourself vulnerable to injection, DBOS is here to save you!
+- To avoid injection, use parameterized queries. But if you accidentally make yourself vulnerable to injection, DBOS is here to save you!
 
-Here's how you should make a prepared statement:
+Here's how you should make a parameterized query:
 ```ts
 export class Greetings {
   @Transaction()
@@ -183,12 +183,8 @@ export class Greetings {
 }
 ```
 
-- A LR-value is a literal-reducible value, or a value that is known to be literal at some level.
-The most basic LR-value is a literal string or number. LR-values can be build up by concatenating
-other LR-values with each other.
-- As long as the query string you pass into your client is such a value, the plugin won't complain.
-- So for example, if your query string is formatted with some method parameters of unknown origin,
-  or perhaps with the result of a function call, then you're in trouble.
+- The plugin will raise a potential SQL injection error if your query string is either directly or indirectly built up of a nonliteral component.
+- For example, if your query is a format string that has formatting parameters of things like a function call, a parameter, or something else like that, the plugin will let you know that you're vulnerable to injection.
 
 ___
 
