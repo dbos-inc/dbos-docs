@@ -184,7 +184,7 @@ export class Greetings {
 ```
 
 - The plugin will raise a potential SQL injection error if your query string is either directly or indirectly built up of a nonliteral component.
-- For example, if your query is a format string that has formatting parameters of things like a function call, a parameter, or something else like that, the plugin will let you know that you're vulnerable to injection.
+- For example, if your query is a format string parameterized by a function call, input variable, or other non-literal inputs, the plugin will let you know that you're vulnerable to injection.
 
 ___
 
