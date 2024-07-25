@@ -75,9 +75,7 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
         globals: { ...globals.node, ...globals.es6 }
       },
 
-      rules: { },
-
-      ignores: ["**/*.test.ts"]
+      rules: { }
     });
 
     ```
