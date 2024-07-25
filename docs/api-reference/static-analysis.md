@@ -31,16 +31,16 @@ DBOS uses several techniques to ensure that static analysis is as productive as 
 
 Many DBOS-suggested coding practices can be enforced by a combination of `eslint` plugins and rule configurations.
 
-### Installing and configuring `eslint`
+### Installing and configuring the plugin
 
 ::::tip
-If you got started with the [quickstart](../getting-started/quickstart.md), `eslint` and required plugins are already installed.
-Plugins to support TypeScript and detect common vulnerabilities are automatically installed with `@dbos-inc/eslint-plugin` as dependencies and do not need to be installed separately.
+If you got started with the [quickstart](../getting-started/quickstart.md), the plugin is already installed.
+Make sure that you do not have `eslint`, or the `typescript-eslint` package (or any of its subpackages) installed locally!
+The plugin takes care of the versioning details of that for you.
 ::::
 
-To install the `eslint` package and the DBOS plugin:
+To install the DBOS `eslint` plugin:
 ```bash
-npm install --save-dev typescript-eslint
 npm install --save-dev @dbos-inc/eslint-plugin
 ```
 
@@ -61,24 +61,23 @@ Both of these options require you to set up a `tsconfig.json` file beforehand.
     const js = require("@eslint/js");
 
     const compat = new FlatCompat({
-        baseDirectory: __dirname,
-        recommendedConfig: js.configs.recommended
+      baseDirectory: __dirname,
+      recommendedConfig: js.configs.recommended
     });
 
-    module.exports = typescriptEslint.config(
-      {
-        extends: compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
-        plugins: { "@dbos-inc": dbosIncEslintPlugin },
+    module.exports = typescriptEslint.config({
+      extends: compat.extends("plugin:@dbos-inc/dbosRecommendedConfig"),
+      plugins: { "@dbos-inc": dbosIncEslintPlugin },
 
-        languageOptions: {
-            parser: typescriptEslintParser,
-            parserOptions: { project: "./tsconfig.json" },
-            globals: { ...globals.node, ...globals.es6 }
-        },
+      languageOptions: {
+        parser: typescriptEslintParser,
+        parserOptions: { project: "./tsconfig.json" },
+        globals: { ...globals.node, ...globals.es6 }
+      },
 
-        rules: { }
-      }
-    );
+      rules: { }
+    });
+
     ```
   </TabItem>
   <TabItem value="legacy-config" label="Legacy config">
@@ -155,6 +154,40 @@ These plugins are enabled by default:
 
 One custom rule from DBOS, `@dbos-inc/dbos-static-analysis`, is provided in the [`@dbos-inc/eslint-plugin`](https://github.com/dbos-inc/eslint-plugin) package.  This rule is enabled by default.
 
+___
+
+Running a database query with a string that's vulnerable to SQL injection will result in an error.
+This would typically happen inside of a [transaction](https://docs.dbos.dev/tutorials/transaction-tutorial).
+- SQL injection happens when a bad actor puts SQL code as a field into something like an online form,
+and if a programmer builds a raw query from SQL and this data, the bad actor's supposed data may allow them to run
+arbitrary SQL commands over your database.
+- To avoid injection, use parameterized queries. But if you accidentally make yourself vulnerable to injection, DBOS is here to save you!
+
+Here's how you should make a parameterized query:
+```ts
+export class Greetings {
+  @Transaction()
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+  }
+}
+```
+
+This example is vulnerable to SQL injection:
+```ts
+export class Greetings {
+  @Transaction()
+  static async VulnerableGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
+    await ctxt.client.raw(`INSERT INTO greetings (name, note) VALUES (${friend}, ${note})`); // Don't do this!
+  }
+}
+```
+
+- The plugin will raise a potential SQL injection error if your query string is either directly or indirectly built up of a nonliteral component.
+- For example, if your query is a format string parameterized by a function call, input variable, or other non-literal inputs, the plugin will let you know that you're vulnerable to injection.
+
+___
+
 These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
 - `Math.random()`
@@ -170,6 +203,8 @@ These function calls are not necessarily nondeterministic, but are still warned 
 - `bcrypt.compare(...)`
 
 *Emitted warning messages will provide alternatives to each function call.*
+
+___
 
 These behaviors result in warnings as well:
 
