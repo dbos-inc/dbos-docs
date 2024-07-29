@@ -35,7 +35,7 @@ Many DBOS-suggested coding practices can be enforced by a combination of `eslint
 
 ::::tip
 If you got started with the [quickstart](../getting-started/quickstart.md), the plugin is already installed.
-If you encounter any errors, please make sure you installed the right versions of `eslint` and `typescript-eslint` (`npm` will tell you if there's a peer dependency conflict).
+If you encounter any errors, please make sure you install the right versions of `eslint` and `typescript-eslint` (`npm` will tell you if there's a peer dependency conflict).
 ::::
 
 To install the DBOS `eslint` plugin:
