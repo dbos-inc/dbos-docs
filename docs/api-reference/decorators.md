@@ -137,6 +137,11 @@ DBOS supports declaration of the following values for `IsolationLevel`:
 
 The transaction semantics of these levels are defined for PostgreSQL [here](https://www.postgresql.org/docs/current/transaction-iso.html).
 
+You should mark a transaction function as read-only if it doesn't contain any database writes.
+A read-only transaction runs faster than a standard read-write transaction because it doesn't require synchronized disk writes.
+
+If you mark a transaction function as `readOnly: true` but it contains database writes, it will throw an error (for example `ERROR:  cannot execute INSERT in a read-only transaction`).
+
 #### `@StoredProcedure`
 Registers a function as a [DBOS stored procedure](../tutorials/stored-proc-tutorial.md).
 
@@ -159,7 +164,7 @@ interface StoredProcedureConfig {
 } 
 ```
 
-The `readOnly` and `isolationLevel` config fields behave the same as their [@Transaction config](contexts#transactioncontextt) counterparts.
+The `readOnly` and `isolationLevel` config fields behave the same as their [TransactionConfig](#transaction) counterparts.
 
 The `executeLocally` config field is used to control where the stored procedure logic is executed.
 By default, stored procedures functions are executed by invoking the generated stored procedure that has been deployed to the database.
