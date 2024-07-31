@@ -100,7 +100,7 @@ export class Greetings {
 }
 ```
 
-Here we define a `GreetingRecord` interface to match a row of data in our `greetings` table. We then use `@Transaction` to define a [transactional function](../tutorials/transaction-tutorial.md) `InsertGreeting` that inserts a new `GreetingRecord` into the `greetings` table. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
+Here we define a `GreetingRecord` interface to match a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that puts a new `GreetingRecord` into the `greetings` table. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
 
 Stop your app with CTRL+C. Rebuild with `npm run build` and start with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should print this to the console:
 ```
@@ -208,7 +208,7 @@ export class Greetings {
 }
 ```
 
-We added a new `@Communicator` called `SignGuestbook` to access the third-party guestbook app using the `GUESTBOOK_KEY` environment variable and the axios package to send the request. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print a line for the guestbook signature along with the database record:
+We added a new `@Communicator` called `SignGuestbook` to access the Guestbook using the `GUESTBOOK_KEY` config. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print a line for the guestbook signature along with the database record:
 
 ```
 [info]: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."} 
