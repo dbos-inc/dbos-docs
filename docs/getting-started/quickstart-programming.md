@@ -138,7 +138,7 @@ In this quickstart, we run queries using [Knex query builder](https://knexjs.org
 
 Let's say we want to use a third-party service to send our greeting, or record it in a remote system. For this example, you can use our demo Guestbook app. It lets you generate a key and use it to record a few temporary greetings.
 
-### Generate and Record a Guestbook Key
+### Create a Guestbook Key
 To create a new key, visit https://demo-guestbook.cloud.dbos.dev/key It should output a 36-character sequence like so `12345abc-1234-5678-1234-567890abcdef`. Yours will be different. You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
 ```yaml
 env:
