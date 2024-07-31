@@ -111,7 +111,7 @@ You can then query your Postgres database to see the greeting records. It may lo
 ```
 psql -h localhost -U postgres -d hello -c "select * from greetings"; 
 ```
-The database name `hello` above will vary with your application name, if different. Your host, port or username may also be differnt depending on how you configured Postgres in the Quickstart. 
+The database name `hello` above will vary with your application name. Your `host`, `port` or `username` may also be differnt depending on how you configured Postgres in the Quickstart.
 
 ## Reading from the Database
 
