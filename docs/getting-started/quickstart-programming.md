@@ -151,7 +151,7 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-To avoid storing your key in cleartext, you could instead put `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` into `dbos-config.yaml` and then set `ENV_GUESTBOOK_KEY` in your enviornment prior to running `npx dbos start`. This also applies to cloud deployment: the variable is read at deploy time and securely passed to the cloud along with your app.
+In production, to avoid storing keys in cleartext and to make rotation easier you could change this entry to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}`. You would then set `ENV_GUESTBOOK_KEY` in your enviornment prior to running `npx dbos start`. This also applies to cloud deployment: the variable is expanded at `npx dbos-cloud app deploy` time and securely passed to the cloud.
 ::::
 
 ### Sign the Guestbook from the App
