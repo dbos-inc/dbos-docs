@@ -215,7 +215,7 @@ We added a new `@Communicator` called `SignGuestbook` to access the third-party 
 [info]: Greeting to Mike recorded in the database! 
 ```
 
-To verify the Guestbook greetings, you can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-value` to see all the greetings made with your key. Old greetings and keys are removed after a few days.
+You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-value` to see all the Guestbook greetings made with your key. Old greetings and keys are removed after a few days.
 
 ## Composing Reliable Workflows
 
