@@ -5,7 +5,7 @@ title: Programming Guide
 
 Before starting this tutorial, we recommend finishing the [quickstart](./quickstart.md). We'll modify the quickstart example to illustrate the core building blocks of [DBOS Transact](https://github.com/dbos-inc/dbos-ts). In the end, we'll create an app that reliably records events across two different systems: the Postgres database and a third-party API. The app will write to both systems consistently, even if we crash it between writes.
 
-## Serving Endpoints
+## Serving HTTP Requests
 
 Let's start with a simple HTTP GET handler to greet friends. In your app folder, change the file `src/operations.ts` to contain only the following:
 
