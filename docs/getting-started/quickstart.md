@@ -134,15 +134,12 @@ The app needs a [PostgreSQL](https://www.postgresql.org/) database to connect to
    <Tabs groupId="operating-systems">
       <TabItem value="mac" label="macOS">
          You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
       <TabItem value="linux" label="Linux">
          Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
       <TabItem value="win-ps" label="Windows">
          You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
    </Tabs>
    </TabItem>
@@ -258,5 +255,19 @@ npx dbos start
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one.
 
 Congratulations!  You just launched your DBOS application locallly!
+
+### 4. View your App Records in the Database
+
+Every greeting modifies the database table called `dbos_hello`. You can query your Postgres and see the changes. Your preferred query tool may vary depending on your setup. For example, using [psql](https://www.postgresql.org/docs/current/app-psql.html) you can connect to either the docker conatiner or the local installation on the default port:
+
+   ```bash
+$ psql -h localhost -U postgres -d hello -c "select * from dbos_hello";
+ name | greet_count
+------+-------------
+ Mike |           2
+ dbos |           3
+(2 rows)
+   ```
+Here, the database name `hello` matches your app name. Your `username`, `host` and `port` may be different as well.
 
 Next, to learn how to build your own apps, check out our [programming guide](./quickstart-programming.md).
