@@ -3,7 +3,7 @@ sidebar_position: 2
 title: Programming Guide
 ---
 
-This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally and connected to a Postgres database. In this guide we'll modify that example, step by step. In the end, we'll create an app that reliably records events across two different systems: the Postgres database and a third-party API. The app will write to both systems consistently, even if we crash it between writes.
+This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally. In this guide we'll modify that example to reliably record events across two different systems: Postgres and a third-party API. This app will write to both systems consistently, even if interrupted and restarted at any point.
 
 ## Serving HTTP Requests
 
@@ -45,7 +45,7 @@ To see that your application is working, visit this URL in your browser: [http:/
 
 ## Creating Database Tables
 
-Let's make a database table to record greetings. In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration). By default, we use [Knex](../tutorials/using-knex.md#schema-management) to manage migrations, but also support other tools including [TypeORM](../tutorials/using-typeorm.md#schema-management) and [Prisma](../tutorials/using-prisma.md#schema-management). To create a new migration file, run the following command:
+Let's make a database table to record greetings. In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration). By default, we use [Knex](../tutorials/using-knex.md#schema-management). We also support [TypeORM](../tutorials/using-typeorm.md#schema-management) and [Prisma](../tutorials/using-prisma.md#schema-management). To create a new migration file, run the following command:
 
 ```
 npx knex migrate:make greetings
@@ -134,15 +134,15 @@ You can add another GET API function to read all the greetings from the database
 //}
 ```
 
-Here we add a new `@GetApi` function that is also a `@Transaction`. We decorate this transaction as `{readOnly: true}` since it does not modify the database. This enables DBOS to execute it faster, with fewer database round-trips.
+Here we use `@GetApi` and `@Transaction` together. This transaction only reads data so we mark it as `{readOnly: true}`. This enables DBOS to execute it faster, with fewer database round-trips.
 
 :::info
-In this quickstart, we run queries using [Knex query builder](https://knexjs.org/guide/query-builder.html) but DBOS Transact also supports [Knex.raw](https://knexjs.org/guide/raw.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
+In this quickstart, we run queries using [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [Knex.raw](https://knexjs.org/guide/raw.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
 :::
 
 ## Interacting with External Services
 
-Now suppose we also want to record our greetings in a remote system. This could be something like sending an email or writing to some storage API. For this example, we'll use our demo Guestbook app. It lets us generate an API key and use it to record temporary greetings.
+Now suppose we also want to record our greetings in a remote system. This could be something like sending an email or writing to some storage API. For this example, we'll use a demo DBOS Guestbook app. It lets us generate an API key and use it to record temporary greetings.
 
 ### Create a Guestbook Key
 To create a new key, visit https://demo-guestbook.cloud.dbos.dev/key It should output a 36-character sequence like so `12345abc-1234-5678-1234-567890abcdef`. Yours will be different. You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
@@ -157,12 +157,12 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-In production, to avoid storing keys in cleartext and to make rotation easier you could change this to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}`. You would then set `ENV_GUESTBOOK_KEY` in your enviornment prior to starting or deploying the app. See our [Configuration Guide](../api-reference/configuration) for more details.
+In production, to avoid storing keys in cleartext and to make rotation easier you could change this to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}`. You would then set `ENV_GUESTBOOK_KEY` in your enviornment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration) for more details.
 ::::
 
 ### Sign the Guestbook from the App
 
-In DBOS, we strongly recommend that all calls to third-party APIs are wrapped in [Communicators](../tutorials/communicator-tutorial). Let's add one to our app to record each greeting in the Guestbook. We will use the config `GUESTBOOK_KEY` to send POST requests to the guestbook URL. Change your `src/operations.ts` to contain the following:
+In DBOS, we strongly recommend that all calls to third-party APIs are wrapped in [Communicators](../tutorials/communicator-tutorial). Let's add one to our app to POST each greeting to the Guestbook using the `GUESTBOOK_KEY` config. Change your `src/operations.ts` to contain the following:
 
 ```javascript
 import {
@@ -211,7 +211,7 @@ export class Greetings {
 }
 ```
 
-Here we add a new `@Communicator` called `SignGuestbook` to access the Guestbook using the `GUESTBOOK_KEY` config. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print a line for the guestbook signature along with the database record:
+Note the new `@Communicator` function called `SignGuestbook` that uses `axios` to send the request. If it does not receive a successful response, it will automatically retry up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries). Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print a line for the guestbook signature along with the database record:
 
 ```
 [info]: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."} 
@@ -222,7 +222,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 ## Composing Reliable Workflows
 
-Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if there are transient failures. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
+Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if stopped and restarted. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
 
 ```javascript
 import {
@@ -280,7 +280,7 @@ export class Greetings {
 }
 ```
 
-Here we create a [workflow function](../tutorials/workflow-tutorial.md) (`GreetingWorkflow`) using the `@Workflow` decorator. We invoke both `SignGuestbook` and `InsertGreeting` from the workflow. We introduce a sleep between them allowing you to interrupt the program midway through the workflow. We then change `Greeting` to start this workflow. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. 
+Here we create a `@Workflow` function called `GreetingWorkflow` that invokes `SignGuestbook` and then `InsertGreeting`. We introduce a sleep between them allowing you to interrupt the program midway through the workflow. We then change `Greeting` to start this workflow. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. 
 
 The next step is time-sensitive; you may want to read it over before running. First, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to your application. In your terminal, you should see an output like:
 
@@ -316,9 +316,9 @@ Press Control + C when prompted to interrupt your app. Then, run `npx dbos start
 [info]: Greeting to Mike recorded in the database!
 ```
 
-Notice how DBOS automatically resumes your workflow from where it left off. It does not sign the guestbook twice but records the outstanding greeting in the database. This reliability is a core feature of DBOS: workflows always run to completion and each of their operations executes exactly once. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
+If this were not a DBOS `@Workflow` you would expect the app to restart with a "clean slate." There would be one record in the guestbook without matching records in Postgres. But this workflow automatically resumes where it left off and finishes recording the greeting in the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
 
-Also, note that we start the workflow asynchronously using `startWorkflow`. This returns the response to the caller as soon as the workflow starts, without waiting for the workflow to return. DBOS guarantees that the workflow continues to process to completion asynchronously. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). If you prefer to wait for the workflow to complete, you can change this by switching `startWorkflow` to `invokeWorkflow`.
+Also, note that we start the workflow asynchronously using `startWorkflow`. This returns the response to the caller as soon as the workflow starts, without waiting for the workflow to return. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, you can switch `startWorkflow` with `invokeWorkflow`.
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-guestbook).
 
