@@ -95,7 +95,20 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Is this Page Helpful?',
+            title: 'DBOS Documentation',
+            items: [
+              {
+                label: 'Cloud Console',
+                href: 'https://console.dbos.dev/',
+              },
+              {
+                label: 'Main Page',
+                href: 'https://www.dbos.dev',
+              },
+            ],
+          },
+          {
+            title: 'Questions or Comments?',
             items: [
               {
                 label: 'Chat with us on Discord',
