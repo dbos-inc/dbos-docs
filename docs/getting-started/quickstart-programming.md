@@ -153,7 +153,7 @@ env:
   GUESTBOOK_KEY: 'your-key-value-here'
 ```
 
-For example, if your key value is `12345abc-1234-5678-1234-567890abcdef` then you would add:
+For example, if your key is `12345abc-1234-5678-1234-567890abcdef` then you should add:
 ```yaml
 env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
