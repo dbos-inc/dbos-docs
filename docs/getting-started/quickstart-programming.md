@@ -164,7 +164,7 @@ In production, we recommend storing the key in an environment variable instead o
 
 ### Sign the Guestbook from the App
 
-In DBOS, we strongly recommend that all calls to third-party APIs are wrapped in [Communicators](../tutorials/communicator-tutorial). Let's add one to our app to POST each greeting to the Guestbook using the `GUESTBOOK_KEY` config. Change your `src/operations.ts` to contain the following:
+In DBOS, we strongly recommend wrapping all calls to third-party APIs in [Communicators](../tutorials/communicator-tutorial). Let's add a communicator to our app to POST each greeting to the Guestbook using the `GUESTBOOK_KEY` config. Change your `src/operations.ts` to contain the following:
 
 ```javascript
 import {
