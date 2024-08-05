@@ -112,7 +112,7 @@ export class Greetings {
 }
 ```
 
-Here we define a `GreetingRecord` interface to match a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that puts a new `GreetingRecord` into `greetings`. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
+Here we define a `GreetingRecord` interface matching a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that inserts a new `GreetingRecord` into `greetings`. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
 
 :::info
 In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [TypeORM](../tutorials/using-typeorm), [Prisma](../tutorials/using-prisma), and [Raw SQL](../tutorials/transaction-tutorial#transaction-functions).
