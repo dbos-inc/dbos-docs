@@ -145,7 +145,9 @@ In this quickstart, we run queries using [Knex query builder](https://knexjs.org
 Now suppose we also want to send our greetings to a remote system. In this example, we'll use a demo DBOS Guestbook app. It lets us generate an API key and use it to record greetings in an online guestbook.
 
 ### Create a Guestbook Key
-To create a new key, visit https://demo-guestbook.cloud.dbos.dev/key It should output a 36-character sequence like so `12345abc-1234-5678-1234-567890abcdef`. Yours will be different. You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
+To generate a guestbook API key, visit https://demo-guestbook.cloud.dbos.dev/key. It should output a 36-character sequence like `12345abc-1234-5678-1234-567890abcdef` (yours will be different).
+
+You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
 ```yaml
 env:
   GUESTBOOK_KEY: 'your-key-value-here'
