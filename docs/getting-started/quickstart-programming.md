@@ -159,7 +159,7 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-In production, we recommend storing the key in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration#environment-variables) for more details.
+In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration#environment-variables) for more details.
 ::::
 
 ### 4.2. Sign the Guestbook from the App
@@ -169,7 +169,7 @@ In DBOS, we strongly recommend wrapping all calls to third-party APIs in [Commun
 ```javascript
 import {
   TransactionContext, Transaction, HandlerContext, GetApi,
-  CommunicatorContext, Communicator
+  CommunicatorContext, Communicator, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
@@ -187,7 +187,7 @@ export class Greetings {
     const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},
-      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY;, 'name': name})
+      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY, 'name': name})
     });
     const responseStr = JSON.stringify(await response.json());
     if (!response.ok) {
@@ -214,7 +214,7 @@ export class Greetings {
 }
 ```
 
-Note the new `@Communicator` function called `SignGuestbook` that uses a `fetch` call to send the request. If it does not receive a successful response, it will automatically retry up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries). Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it's recorded the greeting in the guestbook, then that it's recorded the greeting in the database.
+Note the new `@Communicator` function called `SignGuestbook` that uses a `fetch` call to send the request. If this communicator throws an error, it will be automatically retried up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries). Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it's recorded the greeting in the guestbook, then that it's recorded the greeting in the database.
 
 ```
 [info]: >>> STEP 1: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."}
@@ -230,7 +230,7 @@ Next, we want to make our app **reliable**: guarantee that it inserts exactly on
 ```javascript
 import {
     TransactionContext, Transaction, CommunicatorContext, Communicator,
-    WorkflowContext, Workflow, GetApi, HandlerContext
+    WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
@@ -248,7 +248,7 @@ export class Greetings {
     const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},
-      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY;, 'name': name})
+      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY, 'name': name})
     });
     const responseStr = JSON.stringify(await response.json());
     if (!response.ok) {
@@ -320,7 +320,7 @@ Now press Ctrl + C stop your app. Then, run `npx dbos start` to restart it. You 
 [info]: >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If this were not a DBOS `@Workflow` you would expect the app to restart with a "clean slate." There would be one record in the guestbook without matching records in Postgres. But this workflow automatically resumes where it left off and finishes recording the greeting in the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
+If this were not a DBOS `@Workflow` you would expect the app to restart with a "clean slate." You would see a `STEP 1` and no `STEP 2`. But this workflow automatically resumes where it left off and finishes recording the greeting in the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
 
 Also, note that we start the workflow asynchronously using `startWorkflow`. This returns the response to the caller as soon as the workflow starts, without waiting for the workflow to return. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, you can switch `startWorkflow` with `invokeWorkflow`.
 
