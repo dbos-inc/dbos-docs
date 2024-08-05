@@ -95,20 +95,15 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Learn',
+            title: 'Is this Page Helpful?',
             items: [
               {
-                label: 'Docs',
-                to: '/',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Discord',
+                label: 'Chat with us on Discord',
                 href: 'https://discord.gg/fMwQjeW5zg',
+              },
+              {
+                label: 'Write to us at contact@dbos.dev',
+                href: 'mailto:contact@dbos.dev',
               },
             ],
           },

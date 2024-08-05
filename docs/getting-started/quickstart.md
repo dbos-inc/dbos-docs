@@ -231,7 +231,10 @@ node start_postgres_docker.js
   </TabItem>
 </Tabs>
 
-If successful, the script should print `Database started successfully!`.
+If successful, the script should print `Database started successfully!`
+:::tip
+ You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
+:::
 </TabItem>
 </Tabs>
 
@@ -255,19 +258,5 @@ npx dbos start
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one.
 
 Congratulations!  You just launched your DBOS application locallly!
-
-### 4. View your App Records in the Database
-
-Every greeting modifies the database table called `dbos_hello`. You can query your Postgres and see the changes. Your preferred query tool may vary depending on your setup. For example, using [psql](https://www.postgresql.org/docs/current/app-psql.html) you can connect to either the docker conatiner or the local installation on the default port:
-
-   ```bash
-$ psql -h localhost -U postgres -d hello -c "select * from dbos_hello";
- name | greet_count
-------+-------------
- Mike |           2
- dbos |           3
-(2 rows)
-   ```
-Here, the database name `hello` matches your app name. Your `username`, `host` and `port` may be different as well.
 
 Next, to learn how to build your own apps, check out our [programming guide](./quickstart-programming.md).
