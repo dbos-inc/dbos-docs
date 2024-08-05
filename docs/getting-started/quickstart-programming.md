@@ -157,7 +157,7 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-In production, to avoid storing keys in cleartext and to make rotation easier you could change this to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}`. You would then set `ENV_GUESTBOOK_KEY` in your enviornment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration) for more details.
+In production, we recommend storing the key in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration#environment-variables) for more details.
 ::::
 
 ### Sign the Guestbook from the App
