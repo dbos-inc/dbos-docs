@@ -41,7 +41,7 @@ Rebuild with `npm run build` and start your application with `npx dbos start`. Y
 [info]: DBOS Admin Server is running at http://localhost:3001
 ```
 
-To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike). You should see the message `Greetings, Mike!`. If you replace Mike with a different name, your application will greet that name instead. To learn more about HTTP serving in DBOS, see [HTTP Serving Tutorial](../tutorials/http-serving-tutorial).
+To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike). You should see the message `Greetings, Mike!`. If you replace Mike with a different name, your application will greet that name instead. To learn more about HTTP serving in DBOS, see our [HTTP Serving Tutorial](../tutorials/http-serving-tutorial).
 
 ## Creating Database Tables
 
