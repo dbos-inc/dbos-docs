@@ -214,7 +214,7 @@ export class Greetings {
 }
 ```
 
-Note the new `@Communicator` function called `SignGuestbook` that uses `axios` to send the request. If it does not receive a successful response, it will automatically retry up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries). Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it's recorded the greeting in the guestbook, then that it's recorded the greeting in the database.
+Note the new `@Communicator` function called `SignGuestbook` that uses a `fetch` call to send the request. If it does not receive a successful response, it will automatically retry up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries). Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it's recorded the greeting in the guestbook, then that it's recorded the greeting in the database.
 
 ```
 [info]: >>> STEP 1: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."}
