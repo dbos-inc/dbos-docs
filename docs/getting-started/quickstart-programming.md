@@ -317,7 +317,7 @@ Now press Ctrl + C stop your app. Then, run `npx dbos start` to restart it. You 
 [info]: >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If your app did not use a DBOS `@Workflow` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes the workflow by recording the greeting to the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
+If your app did not use a DBOS `@Workflow` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
 
 :::info
 Here we use `startWorkflow` which returns the response to the caller as soon as the workflow starts, without waiting for it to finish. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, change `startWorkflow` to `invokeWorkflow`.
