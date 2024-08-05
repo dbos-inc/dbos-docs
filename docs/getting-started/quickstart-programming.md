@@ -137,7 +137,7 @@ You can add another GET API function to read all the greetings from the database
 Here we use `@GetApi` and `@Transaction` together. This transaction only reads data so we mark it as `{readOnly: true}`. This enables DBOS to execute it faster, with fewer database round-trips.
 
 :::info
-In this quickstart, we run queries using [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [Knex.raw](https://knexjs.org/guide/raw.html), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/docs/orm/prisma-client).
+In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [TypeORM](https://typeorm.io/), [Prisma](https://www.prisma.io/docs/orm/prisma-client), and raw SQL.
 :::
 
 ## Interacting with External Services
