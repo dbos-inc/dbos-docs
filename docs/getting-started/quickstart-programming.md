@@ -225,7 +225,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 ## 5. Composing Reliable Workflows
 
-Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if stopped and restarted. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
+Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
 
 ```javascript
 import {
