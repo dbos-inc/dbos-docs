@@ -63,6 +63,10 @@ This table stores the outputs of communicator functions:
 
 ## Provenance Tables
 
+:::tip
+Time travel is disabled by default. The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during registration](./cloud-cli#npx-dbos-cloud-app-register).
+:::
+
 DBOS Cloud maintains a provenance database for your application, which is an append-only versioned replica of your application database.
 It is the key enabler of [Interactive Time Travel](../cloud-tutorials/interactive-timetravel.md) and [Time Travel Debugging](../cloud-tutorials/timetravel-debugging.md).
 The provenance database name is your application database suffixed with `_dbos_prov`.

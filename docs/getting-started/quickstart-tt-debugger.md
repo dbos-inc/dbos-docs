@@ -91,10 +91,15 @@ npx dbos-cloud register -u <username>
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
+:::tip
+Time travel is disabled by default. If you already deployed an application from quickstart, please delete your application by running `npx dbos-cloud app delete`,
+and follow the instructions to re-register your application with the `--enable-timetravel` option.
+:::
+
 You can then deploy the app to DBOS Cloud by executing these commands from project's root folder:
 
 ```
-npx dbos-cloud app register -d <database-instance-name>
+npx dbos-cloud app register -d <database-instance-name> --enable-timetravel
 npx dbos-cloud app deploy
 ```
 
