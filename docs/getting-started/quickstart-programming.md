@@ -126,7 +126,7 @@ You can add another GET API function to read all the greetings from the database
   @Transaction({readOnly: true})
   @GetApi('/greetings')
   static async allGreetings(ctxt: TransactionContext<Knex>) {
-    return await ctxt.client('greetings').select('*') as GreetingRecord[];
+    return await ctxt.client<GreetingRecord>('greetings').select('*');
   }
 //}
 ```
