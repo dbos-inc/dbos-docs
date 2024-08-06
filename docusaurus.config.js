@@ -95,20 +95,28 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Learn',
+            title: 'DBOS Documentation',
             items: [
               {
-                label: 'Docs',
-                to: '/',
+                label: 'Cloud Console',
+                href: 'https://console.dbos.dev/',
+              },
+              {
+                label: 'Main Page',
+                href: 'https://www.dbos.dev',
               },
             ],
           },
           {
-            title: 'Community',
+            title: 'Questions or Comments?',
             items: [
               {
-                label: 'Discord',
+                label: 'Chat with us on Discord',
                 href: 'https://discord.gg/fMwQjeW5zg',
+              },
+              {
+                label: 'Write to us at contact@dbos.dev',
+                href: 'mailto:contact@dbos.dev',
               },
             ],
           },

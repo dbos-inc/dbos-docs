@@ -134,15 +134,12 @@ The app needs a [PostgreSQL](https://www.postgresql.org/) database to connect to
    <Tabs groupId="operating-systems">
       <TabItem value="mac" label="macOS">
          You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
       <TabItem value="linux" label="Linux">
          Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
       <TabItem value="win-ps" label="Windows">
          You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-         Later in this guide, we'll provide instructions on launching Postgres with Docker.
       </TabItem>
    </Tabs>
    </TabItem>
@@ -234,7 +231,10 @@ node start_postgres_docker.js
   </TabItem>
 </Tabs>
 
-If successful, the script should print `Database started successfully!`.
+If successful, the script should print `Database started successfully!`
+:::tip
+ You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
+:::
 </TabItem>
 </Tabs>
 

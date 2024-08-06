@@ -11,8 +11,7 @@ Valid configuration files must be:
 - Valid [YAML](https://yaml.org/) conforming to the schema described below.
 
 ::::info
-You can use environment variables for configuration values through the syntax `key: ${VALUE}`.
-We strongly recommend using an environment variable for the database password field, as demonstrated below.
+You can use environment variables for configuration values through the syntax `key: ${VALUE}`. They are expanded during `npx dbos start` or `npx dbos-cloud app deploy` and passed to the app securely. We strongly recommend using environment variables for secrets like the database password, as demonstrated below. 
 ::::
 
 ---
