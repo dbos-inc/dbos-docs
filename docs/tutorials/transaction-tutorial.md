@@ -16,7 +16,7 @@ Transaction functions must be annotated with the [`@Transaction`](../api-referen
 As with other DBOS functions, inputs and outputs must be serializable to JSON.
 
 The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
-DBOS supports [Knex.js](./using-knex.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL.
+DBOS supports [Knex.js](./using-knex.md), [Drizzle](./using-drizzle.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL.
 You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
 Knex is used by default.
 
@@ -38,6 +38,25 @@ export class Greetings {
 ```
 
 See our [Knex guide](./using-knex.md) for more information.
+
+</TabItem>
+<TabItem value="drizzle" label="Drizzle">
+
+```javascript
+export const greetings = pgTable('greetings', {
+  name: text('name'),
+  note: text('note')
+});
+
+export class DBOSGreetings {
+  @Transaction()
+  static async insertGreeting(ctxt: TransactionContext<NodePgDatabase>, name: string, note: string) {
+    await ctxt.client.insert(greetings).values({name: name, note: note});
+  }
+}
+```
+
+See our [Drizzle guide](./using-drizzle.md) for more information.
 
 </TabItem>
 <TabItem value="typeorm" label="TypeORM">

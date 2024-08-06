@@ -72,9 +72,11 @@ export const greetings = pgTable('greetings', {
   note: text('note')
 });
 
-@Transaction()
-static async insertGreeting(ctxt: TransactionContext<NodePgDatabase>, name: string, note: string) {
-  await ctxt.client.insert(greetings).values({name: name, note: note});
+export class DBOSGreetings {
+  @Transaction()
+  static async insertGreeting(ctxt: TransactionContext<NodePgDatabase>, name: string, note: string) {
+    await ctxt.client.insert(greetings).values({name: name, note: note});
+  }
 }
 ```
 
