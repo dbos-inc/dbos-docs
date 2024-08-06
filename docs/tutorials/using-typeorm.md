@@ -121,6 +121,7 @@ You should also configure TypeORM migration commands.
 Here is an example of a configuration file set up for TypeORM:
 
 ```yaml
+language: node
 database:
   hostname: 'localhost'
   port: 5432
