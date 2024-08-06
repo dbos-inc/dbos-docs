@@ -16,6 +16,20 @@ You can use environment variables for configuration values through the syntax `k
 
 ---
 
+### Fields
+
+Each `dbos-config.yaml` file has the following fields and sections:
+
+- **language**: The application language field. Must be set to `node` for TypeScript applications.
+- **database**: The [database](#database) section.
+- **runtimeConfig**: The [runtime](#runtime) section.
+- **http**: The [HTTP](#http) section.
+- **application**: The [application configuration](#application) section.
+- **env**: The [environment variables](#environment-variables) section.
+- **telemetry**: The [telemetry](#telemetry) section.
+
+---
+
 ### Database
 
 The database section is used to set up the connection to the database.
