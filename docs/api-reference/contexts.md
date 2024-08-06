@@ -428,7 +428,7 @@ Transactions use `TransactionContext` to interact with the database.
 The application database client is configurable in a project's [configuration file](./configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
-**[Knex](../tutorials/using-drizzle.md)**
+**[Knex](../tutorials/using-knex.md)**
 
 ```typescript
 import { Knex } from "knex";
