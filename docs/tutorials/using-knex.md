@@ -98,6 +98,7 @@ You should also configure Knex migration commands.
 Here is an example of a configuration file set up for Knex:
 
 ```yaml
+language: node
 database:
   hostname: localhost
   port: 5432

@@ -101,6 +101,7 @@ You should also configure Prisma migration commands.
 Here is an example of a configuration file set up for Prisma:
 
 ```yaml
+language: node
 database:
   hostname: 'localhost'
   port: 5432

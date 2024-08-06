@@ -16,6 +16,20 @@ You can use environment variables for configuration values through the syntax `k
 
 ---
 
+### Fields
+
+Each `dbos-config.yaml` file has the following fields and sections:
+
+- **language**: The application language field. Must be set to `node` for TypeScript applications.
+- **database**: The [database](#database) section.
+- **runtimeConfig**: The [runtime](#runtime) section.
+- **http**: The [HTTP](#http) section.
+- **application**: The [application configuration](#application) section.
+- **env**: The [environment variables](#environment-variables) section.
+- **telemetry**: The [telemetry](#telemetry) section.
+
+---
+
 ### Database
 
 The database section is used to set up the connection to the database.
@@ -28,10 +42,10 @@ Every field is required unless otherwise specified.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: Name of the application database.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html), [TypeORM](https://typeorm.io/migrations), and [Prisma](https://www.prisma.io/docs/orm/prisma-migrate).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:

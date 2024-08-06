@@ -42,7 +42,7 @@ npx dbos-cloud db status <database-instance-name>
 
 To manage your applications' database schemas, you must define schema migrations.
 DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
-We recommend using a Typescript-based migration tool like [Knex](https://knexjs.org/guide/migrations.html), [TypeORM](https://typeorm.io/migrations), or [Prisma](https://www.prisma.io/docs/orm/prisma-migrate).
+We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 
 You configure your schema migrations in the `migrate` and `rollback` fields of your [`dbos-config.yaml`](../api-reference/configuration.md).
 You must supply a list of commands to run to migrate to your most recent schema version.
