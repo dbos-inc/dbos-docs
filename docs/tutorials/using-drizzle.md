@@ -26,7 +26,7 @@ npx dbos migrate
 npx dbos start
 ```
 
-To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one.
+To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! We have made 1 greetings.` Each time you refresh the page, the counter should go up by one.
 
 ### Schema Management
 
@@ -83,7 +83,7 @@ export class DBOSGreetings {
 ### Configuring Drizzle
 
 :::info
-If you are using the [Drizzle template](#getting-started), this is done for you.
+If you are using the [Drizzle template](#getting-started), this configuration is done for you.
 :::
 
 To enable Drizzle, you must set the `app_db_client` field in the [DBOS configuration file](../api-reference/configuration.md) to `drizzle`.
