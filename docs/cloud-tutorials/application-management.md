@@ -25,7 +25,7 @@ Your application is automatically registered under the name in its `package.json
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 
 :::tip
-Time travel is disabled by default. To enable time travel for your application, please specify `--enable-timetravel` when you [register your application](../api-reference/cloud-cli#npx-dbos-cloud-app-register).
+To enable time travel for your application, specify `--enable-timetravel` when you [register your application](../api-reference/cloud-cli#npx-dbos-cloud-app-register).
 :::
 
 After you've registered your application, deploy it to run it in the cloud.
