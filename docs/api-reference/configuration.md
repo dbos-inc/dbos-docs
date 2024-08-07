@@ -152,13 +152,29 @@ telemetry:
     silent: false # false (default) | true
 ```
 
---- 
+---
+
+#### OTLPExporter
+Configures the Transact OpenTelemetry exporter.
+- **logsEndpoint**: The endpoint to which logs are sent.
+- **tracesEndpoint**: The endpoint to which traces are sent.
+
+The Transact exporter uses gRPC. An example configuration for a local Jaeger instance listening for gRPC traffic on port 4318 is shown below.
+
+**Example**:
+
+```yaml
+telemetry:
+  OTLPExporter:
+    logsEndpoint: 'http://localhost:4318'
+    tracesEndpoint: 'http://localhost:4318'
+```
 
 ### Configuration Schema File
 
 There is a schema file available for the DBOS configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
 This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
-For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files. 
+For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files.
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a link to the schema at the top of the config file:
 
