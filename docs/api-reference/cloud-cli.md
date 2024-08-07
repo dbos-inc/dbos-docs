@@ -161,7 +161,7 @@ This feature is currently only available to [DBOS Pro or Enterprise](https://www
 - `-H, --hostname <string>`: The hostname for your Postgres database instance (required).
 - `-p, --port [number]`: The connection port for your Postgres database instance (default: `5432`).
 - `-W, --password [string]`: The password for the `dbosadmin` role. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
-- `--enable-timetravel`: Enable time travel for your database instance. Please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
+- `--enable-timetravel`: Enable time travel for your database instance. If you are using a linked database, please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
 
 ---
 
@@ -186,6 +186,7 @@ It registers that application with DBOS Cloud.
 **Parameters:**
 - `[application-name]`: The name of the application to register. By default we obtain the application name from package.json. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect.
+- `--enable-timetravel`: Enable time travel for this application. Please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
 
 ---
 
