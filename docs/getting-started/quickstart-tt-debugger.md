@@ -92,7 +92,8 @@ npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 :::tip
-Time travel is disabled by default. If you already deployed an application from quickstart, please delete your application by running `npx dbos-cloud app delete`,
+Make sure you enable time travel when registering your application!
+If you already deployed an application from quickstart, please delete your application by running `npx dbos-cloud app delete`,
 and follow the instructions to re-register your application with the `--enable-timetravel` option.
 :::
 
