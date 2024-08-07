@@ -159,7 +159,7 @@ Configures the Transact OpenTelemetry exporter.
 - **logsEndpoint**: The endpoint to which logs are sent.
 - **tracesEndpoint**: The endpoint to which traces are sent.
 
-The Transact exporter uses gRPC. An example configuration for a local Jaeger instance listening for gRPC traffic on port 4318 is shown below.
+The Transact exporter uses [protobuf over HTTP](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-proto). An example configuration for a local Jaeger instance with default configuration is shown below.
 
 **Example**:
 
