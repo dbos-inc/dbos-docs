@@ -11,7 +11,7 @@ In this guide, you'll learn how to interactively time travel with DBOS Cloud: ho
 
 ### Preliminaries
 
-Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management).
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](../api-reference/cloud-cli#npx-dbos-cloud-app-register).
 
 In order to time travel, you need to locally install our time travel proxy.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
