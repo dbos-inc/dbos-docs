@@ -56,6 +56,7 @@ Here are some of the core features of DBOS Transact:
 | [Idempotency](https://www.dbos.dev/dbos-transact-python)                                        | Automatically make any request idempotent, so your requests happen exactly once.
 | [Kafka Integration](https://www.dbos.dev/dbos-transact-python)                                  | Consume Kafka messages exactly-once with transactions or workflows.
 | [Scheduled Workflows](https://www.dbos.dev/dbos-transact-python)                                | Schedule your workflows to run exactly-once per time interval with cron-like syntax.
+| [Testing and Debugging](https://www.dbos.dev/dbos-transact-python)                              | Easily write unit tests for your applications, compatible with Pytest and other popular testing frameworks.
 | [Self-Hosting](https://www.dbos.dev/dbos-transact-python)                                       | Host your applications anywhere, as long as they have a Postgres database to connect to.
 
 </TabItem>
