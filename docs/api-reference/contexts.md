@@ -429,25 +429,32 @@ Transactions use `TransactionContext` to interact with the database.
 The application database client is configurable in a project's [configuration file](./configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
-**[Knex](https://knexjs.org/guide/#typescript)**
+**[Knex](../tutorials/using-knex.md)**
 
 ```typescript
 import { Knex } from "knex";
 static async exampleTransaction(ctxt: TransactionContext<Knex>, ...)
 ```
 
-**[TypeORM](https://orkhan.gitbook.io/typeorm/docs/entity-manager-api)**
+**[TypeORM](../tutorials/using-typeorm.md)**
 
 ```typescript
 import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
-**[Prisma](https://www.prisma.io/docs/orm/prisma-client)**
+**[Prisma](../tutorials/using-prisma.md)**
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
 static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
+```
+
+**[Drizzle](../tutorials/using-drizzle.md)**
+
+```typescript
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+static async exampleTransaction(ctxt: TransactionContext<NodePgDatabase>, ...)
 ```
 
 ### Properties
@@ -457,7 +464,7 @@ static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
 #### `transactionCtxt.client`
 
 ```typescript
-client: T; // One of [Knex, EntityManager]
+client: T; // One of [Knex, EntityManager, PrismaClient, NodePgDatabase]
 ```
 
 Provides access to the chosen application database client.

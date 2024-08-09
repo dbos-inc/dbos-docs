@@ -13,8 +13,8 @@ If you're not a VS Code user, there is an advanced tutorial for [Time Travel Deb
 :::
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
-For convenience, we recommend [creating a DBOS Cloud account](./quickstart#deploying-to-dbos-cloud) and 
-[provisioning a DBOS Cloud database instance](./quickstart#provisioning-a-cloud-database-instance) before starting this tutorial.
+For convenience, we recommend [creating a DBOS Cloud account](./quickstart#3-log-in-to-dbos-cloud) and
+[provisioning a DBOS Cloud database instance](./quickstart#4-provision-a-database-instance) before starting this tutorial.
 
 ### Installing the DBOS Time Travel Debugging VS Code Extension
 
@@ -83,7 +83,7 @@ Next, we are going to deploy this application to DBOS Cloud.
 Currently, Time Travel Debugging is only supported for applications that have been deployed to DBOS Cloud.
 
 If you finished the [DBOS quickstart](./quickstart), you should already have a DBOS Cloud account and database instance.
-If you didn't finish the [Deploying to DBOS Cloud](./quickstart#deploying-to-dbos-cloud) section of that tutorial, 
+If you didn't finish the [Deploying to DBOS Cloud](./quickstart#deploy-your-first-app-to-the-cloud) section of that tutorial,
 please create an account and provision a cloud database instance by running the `npx dbos-cloud` commands shown below from project's root folder.
 
 ```
@@ -91,10 +91,16 @@ npx dbos-cloud register -u <username>
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
+:::tip
+Make sure you enable time travel when registering your application!
+If you already deployed an application from quickstart, please delete your application by running `npx dbos-cloud app delete`,
+and follow the instructions to re-register your application with the `--enable-timetravel` option.
+:::
+
 You can then deploy the app to DBOS Cloud by executing these commands from project's root folder:
 
 ```
-npx dbos-cloud app register -d <database-instance-name>
+npx dbos-cloud app register -d <database-instance-name> --enable-timetravel
 npx dbos-cloud app deploy
 ```
 

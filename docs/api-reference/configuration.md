@@ -11,9 +11,22 @@ Valid configuration files must be:
 - Valid [YAML](https://yaml.org/) conforming to the schema described below.
 
 ::::info
-You can use environment variables for configuration values through the syntax `key: ${VALUE}`.
-We strongly recommend using an environment variable for the database password field, as demonstrated below.
+You can use environment variables for configuration values through the syntax `key: ${VALUE}`. They are expanded during `npx dbos start` or `npx dbos-cloud app deploy` and passed to the app securely. We strongly recommend using environment variables for secrets like the database password, as demonstrated below. 
 ::::
+
+---
+
+### Fields
+
+Each `dbos-config.yaml` file has the following fields and sections:
+
+- **language**: The application language field. Must be set to `node` for TypeScript applications.
+- **database**: The [database](#database) section.
+- **runtimeConfig**: The [runtime](#runtime) section.
+- **http**: The [HTTP](#http) section.
+- **application**: The [application configuration](#application) section.
+- **env**: The [environment variables](#environment-variables) section.
+- **telemetry**: The [telemetry](#telemetry) section.
 
 ---
 
@@ -29,10 +42,10 @@ Every field is required unless otherwise specified.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: Name of the application database.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a migration tool like those built into [Knex](https://knexjs.org/guide/migrations.html), [TypeORM](https://typeorm.io/migrations), and [Prisma](https://www.prisma.io/docs/orm/prisma-migrate).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:
@@ -139,13 +152,29 @@ telemetry:
     silent: false # false (default) | true
 ```
 
---- 
+---
+
+#### OTLPExporter
+Configures the Transact OpenTelemetry exporter.
+- **logsEndpoint**: The endpoint to which logs are sent.
+- **tracesEndpoint**: The endpoint to which traces are sent.
+
+The Transact exporter uses [protobuf over HTTP](https://www.npmjs.com/package/@opentelemetry/exporter-trace-otlp-proto). An example configuration for a local Jaeger instance with default configuration is shown below.
+
+**Example**:
+
+```yaml
+telemetry:
+  OTLPExporter:
+    logsEndpoint: 'http://localhost:4318'
+    tracesEndpoint: 'http://localhost:4318'
+```
 
 ### Configuration Schema File
 
 There is a schema file available for the DBOS configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
 This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
-For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files. 
+For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files.
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a link to the schema at the top of the config file:
 
