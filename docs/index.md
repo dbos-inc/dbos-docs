@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 DBOS is a serverless platform that radically simplifies backend application development.
 
-- **Build with DBOS Transact** - An open-source framework for building resilient backend applications in [TypeScript](https://github.com/dbos-inc/dbos-transact) and [Python](https://www.dbos.dev/dbos-transact-python).
+- **Build with DBOS Transact** - An open-source framework for building resilient backend applications in [TypeScript](https://github.com/dbos-inc/dbos-transact) or [Python](https://www.dbos.dev/dbos-transact-python).
 
 - **Deploy to DBOS Cloud** - A [seriously fast](https://www.dbos.dev/blog/dbos-vs-aws-step-functions-benchmark) serverless hosting platform for backend applications.
 
