@@ -34,12 +34,12 @@ interface GreetingRecord {
 export class Greetings {
   //...
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
+  static async insertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
     await ctxt.client('greetings').insert(gr);
   }
 
   @Transaction({readOnly: true})
-  static async GetGreetings(ctxt: TransactionContext<Knex>) {
+  static async getGreetings(ctxt: TransactionContext<Knex>) {
     return await ctxt.client<GreetingRecord>('greetings').select('*');
   }
 }
@@ -70,10 +70,9 @@ See our [Drizzle guide](./using-drizzle.md) for more information.
 <TabItem value="typeorm" label="TypeORM">
 
 ```javascript
-@Entity()
-export class Greetings {
-
-    @PrimaryGeneratedColumn()
+@Entity('greetings') //set the name of the table to 'greetings'
+export class GreetingRecord {
+    @PrimaryGeneratedColumn() //note: TypeORM requires at least one primary key
     id!: number;
 
     @Column()
@@ -83,15 +82,21 @@ export class Greetings {
     note!: string;
 }
 
-@OrmEntities([Greetings])
+@OrmEntities([Greeting])
 export class DBOSGreetings {
+  //...
   @Transaction()
   static async insertGreeting(ctxt: TransactionContext<EntityManager>, name: string, note: string) {
-    let entity = new Greetings();
-    entity.name = name;
-    entity.note = note;
-    await ctxt.client.save(entity);
+    const greeting = new GreetingRecord();
+    greeting.name = name;
+    greeting.note = note;
+    await ctxt.client.save(greeting);
   }
+
+  @Transaction({ readOnly:true })
+  static async getGreetings(ctxt: TransactionContext<EntityManager>) {
+    return await ctxt.client.getRepository(GreetingRecord).find();
+  }  
 }
 ```
 
@@ -102,17 +107,31 @@ See our [TypeORM guide](./using-typeorm.md) for more information.
 <TabItem value="prisma" label="Prisma">
 
 ```javascript
+//Model specified in schema.prisma
+//model GreetingRecord {
+//  @@map("greetings")
+//  greeting_id Int @id @default(autoincrement()) //note: Prisma requires at least one primary key
+//  name String
+//  note String
+//}
+
 import { PrismaClient } from "@prisma/client"; // Use the generated Prisma client
 
 export class Greetings {
+  //...
   @Transaction()
-  static async insertGreeting(ctxt: TransactionContext<PrismaClient>, name: string, note: string)  {
-    await ctxt.client.greetings.create({
+  static async insertGreeting(ctxt: TransactionContext<PrismaClient>, name: string, note: string) {
+    await ctxt.client.greetingRecord.create({
       data: {
         name: name,
-        note: note,
+        note: note
       },
     });
+  }
+
+  @Transaction({ readOnly:true })
+  static async getGreetings(ctxt: TransactionContext<PrismaClient>) {
+    return await ctxt.client.greetingRecord.findMany();
   }
 }
 ```
