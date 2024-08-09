@@ -26,13 +26,21 @@ Here's an example of a transaction function:
 <TabItem value="knex" label="Knex">
 
 ```javascript
+interface GreetingRecord {
+  name: string;
+  note: string;
+}
+
 export class Greetings {
+  //...
   @Transaction()
-  static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-    await ctxt.client('greetings').insert({
-      name: friend,
-      note: note
-    });
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
+    await ctxt.client('greetings').insert(gr);
+  }
+
+  @Transaction({readOnly: true})
+  static async GetGreetings(ctxt: TransactionContext<Knex>) {
+    return await ctxt.client<GreetingRecord>('greetings').select('*');
   }
 }
 ```
@@ -116,10 +124,22 @@ See our [Prisma guide](./using-prisma.md) for more information.
 <TabItem value="raw" label="Raw SQL">
 
 ```javascript
+interface GreetingRecord {
+  name: string;
+  note: string;
+}
+
 export class Greetings {
+  //...
   @Transaction()
-  static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
+    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
+  }
+
+  @Transaction({readOnly: true})
+  static async GetGreetings(ctxt: TransactionContext<Knex>) {
+    const result = await ctxt.client.raw('SELECT name, note FROM greetings;') as { rows: GreetingRecord[] };
+    return result.rows;
   }
 }
 ```
