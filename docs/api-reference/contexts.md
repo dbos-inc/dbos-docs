@@ -17,6 +17,7 @@ Each DBOS function has a specific context:
 - Communicators use [`CommunicatorContext`](#communicatorcontext).
 - Initialization functions use [`InitContext`](#initcontext).
 - Middleware functions use [`MiddlewareContext`](#middlewarecontext).
+- Event receivers use [`DBOSExecutorContext`](#dbosexecutorcontext).
 
 ---
 
@@ -641,3 +642,80 @@ Example, for Knex:
     userName // Input value for the uname argument
   );
 ```
+
+## `DBOSExecutorContext`
+The `DBOSExecutorContext` is used by event receivers to get their configuration information and invoke workflows, transactions, or communicators in response to received events.
+
+```typescript
+export interface DBOSExecutorContext
+{
+  /* Logging service */
+  readonly logger: Logger;
+  /* Tracing service */
+  readonly tracer: Tracer;
+
+  /*
+   * Get the registrations for a receiver; this comes with:
+   *  methodConfig: the method info the receiver stored
+   *  classConfig: the class info the receiver stored
+   *  methodReg: the method registration (w/ workflow, transaction, function, and other info)
+   */
+  getRegistrationsFor(eri: DBOSEventReceiver) : {methodConfig: unknown, classConfig: unknown, methodReg: MethodRegistrationBase}[];
+
+  transaction<T extends unknown[], R>(txn: TransactionFunction<T, R>, params: WorkflowParams, ...args: T): Promise<R>;
+  workflow<T extends unknown[], R>(wf: WorkflowFunction<T, R>, params: WorkflowParams, ...args: T): Promise<WorkflowHandle<R>>;
+  external<T extends unknown[], R>(commFn: CommunicatorFunction<T, R>, params: WorkflowParams, ...args: T): Promise<R>;
+
+  send<T>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
+  getEvent<T>(workflowUUID: string, key: string, timeoutSeconds: number): Promise<T | null>;
+  retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>;
+}
+```
+
+#### Properties and Methods
+
+- [logger](#dbosexecutorcontextlogger)
+- [tracer](#dbosexecutorcontexttracer)
+- [getConfig](#dbosexecutorcontextgetconfig)
+
+#### `DBOSExecutorContext.logger`
+
+```typescript
+readonly logger: Logger
+```
+
+A reference to DBOS's logger.
+Please see our [logging tutorial](../tutorials/logging.md) for more information.
+
+#### `DBOSExecutorContext.tracer`
+
+```typescript
+readonly tracer: Tracer;
+```
+
+A reference to DBOS's tracer.
+Please see our [logging tutorial](../tutorials/logging.md) for more information.
+
+
+#### `DBOSExecutorContext.getConfig`
+```typescript
+getConfig<T>(key: string, defaultValue: T | undefined) : T | undefined
+```
+
+`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
+
+#### `DBOSExecutorContext.getRegistrationsFor`
+
+#### `DBOSExecutorContext.transaction`
+
+#### `DBOSExecutorContext.workflow`
+
+#### `DBOSExecutorContext.external`
+
+#### `DBOSExecutorContext.send`
+
+#### `DBOSExecutorContext.getEvent`
+
+#### `DBOSExecutorContext.retrieveWorkflow`
+
+
