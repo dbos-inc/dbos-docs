@@ -36,7 +36,7 @@ export class Greetings {
   }
 
   @Transaction({readOnly: true})
-  static async getGreetings(ctxt: TransactionContext<Knex>) {
+  static async getGreetings(ctxt: TransactionContext<Knex>): Promise<GreetingRecord[]>  {
     return await ctxt.client<GreetingRecord>('greetings').select('*');
   }
 }
@@ -97,7 +97,7 @@ export class Greetings {
   }
 
   @Transaction({ readOnly:true })
-  static async getGreetings(ctxt: TransactionContext<EntityManager>) {
+  static async getGreetings(ctxt: TransactionContext<EntityManager>): Promise<GreetingRecord[]> {
     return await ctxt.client.getRepository(GreetingRecord).find();
   }  
 }
@@ -134,7 +134,7 @@ export class Greetings {
   }
 
   @Transaction({ readOnly:true })
-  static async getGreetings(ctxt: TransactionContext<PrismaClient>) {
+  static async getGreetings(ctxt: TransactionContext<PrismaClient>): Promise<{greeting_id: number, name:string, note:string}[]> {
     return await ctxt.client.greetingRecord.findMany();
   }
 }
@@ -160,7 +160,7 @@ export class Greetings {
   }
 
   @Transaction({readOnly: true})
-  static async getGreetings(ctxt: TransactionContext<Knex>) {
+  static async getGreetings(ctxt: TransactionContext<Knex>): Promise<GreetingRecord[]> {
     const result = await ctxt.client.raw('SELECT name, note FROM greetings') as { rows: GreetingRecord[] };
     return result.rows;
   }
