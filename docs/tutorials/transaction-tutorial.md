@@ -7,20 +7,17 @@ description: Learn how to perform database operations
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-## Transaction Functions
-
-To perform operations on your application database in DBOS, you use _transaction functions_.
-As their name implies, these functions execute as [database transactions](https://en.wikipedia.org/wiki/Database_transaction).
+Use _transaction functions_ to read and write from your database. A transaction function may contian multiple queries, punctuated by local logic, and executes as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
 
 Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext`](../api-reference/contexts#transactioncontextt) as their first argument.
 As with other DBOS functions, inputs and outputs must be serializable to JSON.
 
-The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to transactionally interact with the database, so you don't need to worry about managing database connections.
+The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to interact with the database, so you don't need to worry about managing connections.
 DBOS supports [Knex.js](./using-knex.md), [Drizzle](./using-drizzle.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL.
 You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
-Knex is used by default.
+Knex is the default and we recommend using `Knex.raw()` for raw SQL.
 
-Here's an example of a transaction function:
+See below for an example of a write and a read transaction with each option. Note we recommend marking reads as `{readOnly: true}` for faster performance.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
@@ -51,15 +48,21 @@ See our [Knex guide](./using-knex.md) for more information.
 <TabItem value="drizzle" label="Drizzle">
 
 ```javascript
-export const greetings = pgTable('greetings', {
+export const GreetingRecord = pgTable('greetings', {
   name: text('name'),
-  note: text('note')
+  note: text('note'),
 });
 
-export class DBOSGreetings {
+export class Greetings {
+  //..
   @Transaction()
   static async insertGreeting(ctxt: TransactionContext<NodePgDatabase>, name: string, note: string) {
-    await ctxt.client.insert(greetings).values({name: name, note: note});
+    await ctxt.client.insert(GreetingRecord).values({name: name, note: note});
+  }
+
+  @Transaction({ readOnly:true })
+  static async getGreetings(ctxt: TransactionContext<NodePgDatabase>) {
+    return await ctxt.client.select().from(GreetingRecord);
   }
 }
 ```
@@ -82,8 +85,8 @@ export class GreetingRecord {
     note!: string;
 }
 
-@OrmEntities([Greeting])
-export class DBOSGreetings {
+@OrmEntities([GreetingRecord])
+export class Greetings {
   //...
   @Transaction()
   static async insertGreeting(ctxt: TransactionContext<EntityManager>, name: string, note: string) {
@@ -107,10 +110,11 @@ See our [TypeORM guide](./using-typeorm.md) for more information.
 <TabItem value="prisma" label="Prisma">
 
 ```javascript
-//Model specified in schema.prisma
+//Model specified in prisma/schema.prisma:
+//
 //model GreetingRecord {
-//  @@map("greetings")
-//  greeting_id Int @id @default(autoincrement()) //note: Prisma requires at least one primary key
+//  @@map("greetings") 
+//  greeting_id Int @id @default(autoincrement()) //Note: Prisma requires at least one primary key
 //  name String
 //  note String
 //}
@@ -151,19 +155,18 @@ interface GreetingRecord {
 export class Greetings {
   //...
   @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
+  static async insertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
     await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
   }
 
   @Transaction({readOnly: true})
-  static async GetGreetings(ctxt: TransactionContext<Knex>) {
-    const result = await ctxt.client.raw('SELECT name, note FROM greetings;') as { rows: GreetingRecord[] };
+  static async getGreetings(ctxt: TransactionContext<Knex>) {
+    const result = await ctxt.client.raw('SELECT name, note FROM greetings') as { rows: GreetingRecord[] };
     return result.rows;
   }
 }
 ```
 
-We recommend using [knex.raw](https://knexjs.org/guide/raw.html) to execute raw SQL.
 </TabItem>
 </Tabs>
 
@@ -174,11 +177,12 @@ Knex, TypeORM, and Prisma all provide rich support for schema management through
 Please see their guides for more detail:
 
 - [Knex schema management guide.](./using-knex.md#schema-management)
+- [Drizzle schema management guide.](./using-drizzle.md#schema-management)
 - [TypeORM schema management guide.](./using-typeorm.md#schema-management)
 - [Prisma schema management guide.](./using-prisma.md#schema-management)
 
 If you are not using database transactions, you may wish to disable database migrations.
-In [`dbos-config.yaml`](../api-reference/configuration.md), set your `migrate` setting as such:
+In [`dbos-config.yaml`](../api-reference/configuration.md), set your `migrate:` section as below:
 
 ```yaml
 migrate:

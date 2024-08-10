@@ -108,7 +108,7 @@ export class Greetings {
 Here we define a `GreetingRecord` interface matching a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that inserts a new `GreetingRecord` into `greetings`. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
 
 :::info
-In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [TypeORM](../tutorials/using-typeorm), [Prisma](../tutorials/using-prisma), and [Raw SQL](../tutorials/transaction-tutorial#transaction-functions).
+In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [TypeORM](../tutorials/using-typeorm), [Prisma](../tutorials/using-prisma), and [Raw SQL](../tutorials/transaction-tutorial).
 :::
 
 Stop your app with CTRL+C. Rebuild with `npm run build` and start with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should print this to the console:
