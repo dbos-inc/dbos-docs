@@ -18,10 +18,10 @@ You can configure which client to use in your [`dbos-config.yaml`](../api-refere
 Knex is the default and we recommend using `Knex.raw()` for raw SQL.
 
 :::tip
-We recommend marking read transactions as `@Transaction({readOnly: true})` for faster performance.
+We recommend decorating read transactions as `@Transaction({readOnly: true})` for faster performance.
 :::
 
-Here are examples of a write and a read transaction function in each client.
+Here are examples of a write and a read transaction function using each client.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
