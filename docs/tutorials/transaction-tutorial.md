@@ -61,7 +61,7 @@ export class Greetings {
   }
 
   @Transaction({ readOnly:true })
-  static async getGreetings(ctxt: TransactionContext<NodePgDatabase>) {
+  static async getGreetings(ctxt: TransactionContext<NodePgDatabase>): Promise<{name: string | null, note: string | null}[]> {
     return await ctxt.client.select().from(GreetingRecord);
   }
 }
