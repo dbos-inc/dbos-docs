@@ -17,7 +17,7 @@ DBOS supports [Knex.js](./using-knex.md), [Drizzle](./using-drizzle.md), [TypeOR
 You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
 Knex is the default and we recommend using `Knex.raw()` for raw SQL.
 
-See below for an example of a write and a read transaction with each option. Note we recommend marking reads as `{readOnly: true}` for faster performance.
+Here are examples of a write and a read transaction function in each client. Note we recommend marking reads as `{readOnly: true}` for faster performance.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
