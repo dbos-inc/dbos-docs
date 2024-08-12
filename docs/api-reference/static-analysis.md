@@ -276,3 +276,8 @@ static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
 ```
 
 *Any global variable defined outside the scope of the workflow which is directly modified will result in a warning.*
+
+3. Malformed transactions:
+- Your transactions must have a `TransactionContext<T>` as the first parameter, where `T` is a supported database client.
+- Your transactions must also use the `TransactionContext` parameter's `client` field. You are allowed to pass your `TransactionContext` to a helper function as a substitute for this replacement.
+- Failing to meet either of these requirements will result in an error from the plugin.
