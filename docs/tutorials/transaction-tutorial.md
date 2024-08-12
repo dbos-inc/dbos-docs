@@ -17,10 +17,6 @@ DBOS supports [Knex.js](./using-knex.md), [Drizzle](./using-drizzle.md), [TypeOR
 You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
 Knex is the default and we recommend using `Knex.raw()` for raw SQL.
 
-:::tip
-We recommend decorating read transactions as `@Transaction({readOnly: true})` for faster performance.
-:::
-
 Here are examples of a write and a read transaction function using each client.
 
 <Tabs groupId="database-clients">
@@ -123,7 +119,8 @@ See our [TypeORM guide](./using-typeorm.md) for more information.
 //  note String
 //}
 
-import { PrismaClient } from "@prisma/client"; // Use the generated Prisma client
+// Use the generated Prisma client and GreetingRecord class
+import { PrismaClient, GreetingRecord } from "@prisma/client";
 
 export class Greetings {
   //...
@@ -138,7 +135,7 @@ export class Greetings {
   }
 
   @Transaction({ readOnly:true })
-  static async getGreetings(ctxt: TransactionContext<PrismaClient>): Promise<{greeting_id: number, name:string, note:string}[]> {
+  static async getGreetings(ctxt: TransactionContext<PrismaClient>): Promise<GreetingRecord[]> {
     return await ctxt.client.greetingRecord.findMany();
   }
 }
@@ -173,6 +170,10 @@ export class Greetings {
 
 </TabItem>
 </Tabs>
+
+:::note
+As shown above, we suggest decorating read transactions as `@Transaction({readOnly: true})` for faster performance.
+:::
 
 ## Schema Management
 
