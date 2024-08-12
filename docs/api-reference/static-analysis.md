@@ -183,7 +183,8 @@ export class Greetings {
 ```
 
 - The plugin will raise a potential SQL injection error if your query string is either directly or indirectly built up of a nonliteral component.
-- For example, if your query is a format string parameterized by a function call, input variable, or other non-literal inputs, the plugin will let you know that you're vulnerable to injection.
+- For example, if your query is a format string parameterized by a function call, input variable, or other nonliteral components, the plugin will let you know that you're vulnerable to injection.
+- There has been an extensive effort to support as many literal component types as possible (things like numbers, regular expressions, ternaries, class expressions, function expressions, and some array and object literals; everything you could ever think of!). If you feel that your raw SQL query call should not be flagged as a potential SQL injection, feel free to file an issue [here](https://github.com/dbos-inc/dbos-docs).
 
 ___
 
