@@ -280,4 +280,4 @@ static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
 3. Malformed transactions:
 - Your transactions must have a `TransactionContext<T>` as the first parameter, where `T` is a supported database client.
 - Your transactions must also use the `TransactionContext` parameter's `client` field. You are allowed to pass your `TransactionContext` to a helper function as a substitute for this replacement.
-- Failing to meet either of these requirements will result in an error from the plugin.
+- Not meeting these requirements means that you are not using the database, which makes that transaction essentially useless. The plugin will give you a warning if so.
