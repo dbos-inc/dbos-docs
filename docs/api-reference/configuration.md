@@ -40,7 +40,7 @@ Every field is required unless otherwise specified.
 - **port**: Database server port. For local deployment only, not used in DBOS Cloud.
 - **username**: Username with which to connect to the database server. For local deployment only, not used in DBOS Cloud.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
-- **app_db_name**: Name of the application database.
+- **app_db_name**: Name of the application database. Defaults to the app name, with dashes replaced by underscores.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
 - **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../api-reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.

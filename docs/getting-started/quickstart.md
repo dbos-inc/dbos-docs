@@ -72,8 +72,7 @@ npx dbos-cloud db provision <database-instance-name> -U <database-username>
 This command should print `Database successfully provisioned!` To view your provisioned instance, run `npx dbos-cloud db list`. For more information, see the [database management guide](../cloud-tutorials/database-management.md).
 
 :::info
-This instance can host multiple independent databases for different applications.
-By default, the "Hello" app uses a database named `hello`. This is configurable in [`dbos-config.yaml`](../api-reference/configuration.md)
+This instance can host multiple logical databases for different apps. By default, every logical database has the same name as its app. This is configured in [`dbos-config.yaml`](../api-reference/configuration.md)
 :::
 
 ### 5. Deploy!
