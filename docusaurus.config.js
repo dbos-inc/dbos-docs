@@ -46,6 +46,14 @@ const config = {
         ],
       },
     ],
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: "phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP", // This is our "Production" project
+        appUrl: "https://d2j9bas80r5yfz.cloudfront.net", // Using our CloudFront proxy
+        enableInDevelopment: false,
+      },
+    ],
   ],
 
   presets: [
