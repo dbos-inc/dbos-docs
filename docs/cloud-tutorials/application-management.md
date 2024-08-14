@@ -40,7 +40,7 @@ It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
 :::info
-Your application must not consume more than 1GB of disk space.
+Your application must not use more than 1GB of disk space.
 :::
 
 ```
