@@ -70,12 +70,12 @@ Application databases are "logical" postgres databases. They are not to be confu
 
 ### Linked databases (BYODB)
 * DBOS Cloud will not configure `approle` for linked database
-* DBOS cloud will not provide a default SSL certificate for linked database [FIXME: what is the expected flow here?]
+* DBOS Cloud will not provide a default SSL certificate for linked database [FIXME: what is the expected flow here?]
 
 ## Users and organizations
 
 ### Registering a new user
-- A new user needs to be signed up with DBOS cloud (through auth0) before registering a cloud account.
+- A new user needs to be signed up with DBOS Cloud (through auth0) before registering a Cloud account.
 
 ### Refresh tokens
 The preferred way to programmatically authenticate with DBOS Cloud is to use refresh tokens. Note they:
