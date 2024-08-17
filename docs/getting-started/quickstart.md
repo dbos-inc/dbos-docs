@@ -37,48 +37,42 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 
 ### 2. Create the application folder
 
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
+Pick a name for your app, which should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
-   ```bash
+```bash
 npx -y @dbos-inc/create@latest -n <app-name>
-   ```
+```
 
 For example, to name your app `hello`, run:
    ```bash
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
+This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
 
-### 3. Log in to DBOS Cloud
-
-If you already created an account using the [cloud console](https://console.dbos.dev/), log in like so from your application folder:
 ```
-cd <application-folder>
-npx dbos-cloud login
+cd <app-name>
 ```
 
-Otherwise, to create a new account, run `npx dbos-cloud register -u <username>`. Usernames should be 3 to 30 characters long and contain only lowercase letters, numbers, and underscores.
+### 3. Deploy!
 
-### 4. Deploy!
-
-Now, you're ready to deploy to DBOS Cloud! Run the following command:
+Run the following command to deploy your app to DBOS Cloud:
 ```
 npx dbos-cloud app deploy
 ```
+
+This command first prompts you to login/sign up for DBOS Cloud.
+
+Then, it provisions a free database instance (server) for you if you haven't done so. It prompts you to pick a database instance name, which is `<username>-db-server` by default.
+For more information, see the [database management guide](../cloud-tutorials/database-management.md).
+
+After that, the command registers your app to use this database instance and uploads your code to DBOS Cloud.
+This command should print `Successfully deployed <app-name>! Access your application at <URL>`.
 :::tip
 The deploy command may take a minute or so to finish.
 :::
 
-This command first provisions a free database instance (server) for you if you haven't done so. It prompts you to pick a database instance name, which is `<username>-db-server` by default.
-For more information, see the [database management guide](../cloud-tutorials/database-management.md).
-:::info
-This instance is a Postgres database server that can host multiple "logical" databases for different apps.
-The application's  "logical" database is configurable in [`dbos-config.yaml`](../api-reference/configuration.md).
-:::
-
-Then, the command registers your app to use this database instance and deploys your code to DBOS Cloud.
-This command should print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit the `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
+To see that your app is working, visit the `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
 https://mike-hello.cloud.dbos.dev/
 ```
