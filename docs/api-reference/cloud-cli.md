@@ -187,7 +187,7 @@ This command must be run from an application root directory.
 It registers that application with DBOS Cloud.
 
 **Parameters:**
-- `[application-name]`: The name of the application to register. By default we obtain the application name from ackage.json. This argument overrides the package name.
+- `[application-name]`: The name of the application to register. By default we obtain the application name from package.json. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect.
 - `--enable-timetravel`: Enable time travel for this application. Please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
 
