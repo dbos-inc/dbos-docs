@@ -1,27 +1,26 @@
 ---
 sidebar_position: 8
 title: Best practices
-description: Tips and tricks for succesfully using DBOS Cloud
+description: DBOS Cloud Tips
 ---
 
-This section dives into specific behaviors and corner cases you might encounter when using DBOS Cloud.
+A list of tips for using DBOS Cloud effectively.
 
 ## Managing applications
 
-### Registration
-* An application must be registered before being deployed. DBOS Cloud CLI will handle registration by default when you deploy an application for the first time.
 * Only one request at a time can manipulate an application and you will get an `application is busy` error if you attempt multiple concurrent modifications.
-* Application names are unique within an [organization](#organizations-and-users-management)
 
 ### Deployment
-* Interrupting a deployment request - for example, pressing control + C - will *not* cancel the deploy action on DBOS Cloud
-* DBOS Cloud will prune all development dependencies. Make sure to explicitly install any runtime dependency you need with `npm install`
-* Your application must not use more than 1GB of disk space
+* An application must be registered before being deployed. DBOS Cloud CLI handles registration automatically when you deploy an application for the first time.
+* Application names are unique within an [organization](#users-and-organizations).
+* Interrupting a deployment request - for example, pressing control + C - will *not* cancel the deploy action in DBOS Cloud.
+* DBOS Cloud will prune all development dependencies. Make sure to explicitly install any runtime dependency you need with `npm install`.
+* Your application is allocated 1GB of disk space, 1CPU and 512MB of RAM.
 * DBOS Cloud stores each version of your application. You can download a specific version using the DBOS Cloud CLI [TOLINK WHEN MERGED]
 
 ### During runtime
-* Nothing on the filesystem is persisted between deployments
-* DBOS Cloud will keep around VMs running old versions of a workflow. This means, you need to be mindful of non-backward compatible database schema changes.
+* Files on disk are ephemeral. Nothing on the filesystem is persisted between deployments
+* To accomodate long running workflows, DBOS Cloud will keep around VMs running old versions of a workflow when you deploy a new version of the application. This also means you need to be mindful of non-backward compatible database schema changes, as they could break your long running workflows using an older version of the code.
 
 ### Deletion
 * Deleting an app is an asynchronous process and there is a small delay between a deletion request completing and the application being fully deleted. This means you could hit an "application is busy" error when re-deploying an application you just deleted
@@ -34,7 +33,7 @@ You cannot enable time travel on an existing application. You will need to regis
 See more information in the [time travel](#time-travel) section.
 
 ### Swapping database instance
-While an application cannot change database once registered, you can change the database instance (server) hosting the application database. When doing so, you can also decide to redeploy a previous version of the application. This is how DBOS Cloud support point in time recovery today.
+While an application cannot change database once registered, you can change the database instance (server) hosting the application database. When doing so, you can also decide to redeploy a previous version of the application. This is how DBOS Cloud support [point in time recovery](database-management#database-recovery) today.
 
 ## Application databases
 
