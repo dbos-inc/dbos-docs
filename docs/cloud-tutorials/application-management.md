@@ -6,30 +6,26 @@ description: Learn how to manage DBOS Cloud applications
 
 In this guide, you'll learn how to manage applications in DBOS Cloud.
 
-### Preliminaries
-
-You must define [schema migrations](./database-management.md#database-schema-management) to create your application's tables.
 
 ### Deploying Applications
 
-You can deploy an app to run it on DBOS Cloud with a single command (run this in your application root directory):
+To deploy your application to DBOS Cloud, run this command in its root directory:
 
 ```
 npx dbos-cloud app deploy
 ```
 
-If you haven't provisioned a database instance (server), this command first provisions one for you. It prompts you to pick a database instance name, which is `<username>-db-server` by default.
-For more information, see the [database management guide](../cloud-tutorials/database-management.md).
+Your application is deployed using the name in its `package.json`.
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+
+When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none.
 
 :::tip
-To specify a database instance name, you can also pass it in the `-d <database-instance-name>` option.
+You can specify a particular database instance through the `-d <database-instance-name>`.
 To enable time travel for your application, specify `--enable-timetravel`.
 :::
 
-Then, this command automatically deploys your application to under the name in its `package.json`.
-Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-
-When you deploy an application, DBOS Cloud first runs [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
+Each time you deploy an application, DBOS Cloud first runs [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
 It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
 
@@ -45,10 +41,6 @@ If you edit your application or schema, run `npx dbos-cloud app deploy` again to
 
 :::info
 You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
-:::
-
-:::info
-Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
 ### Monitoring and Debugging Applications
