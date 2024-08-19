@@ -177,22 +177,6 @@ This command unlinks a previously linked Postgres database instance.
 
 ## Application Management Commands
 
-### `npx dbos-cloud app register`
-
-:::info
-Deprecated, use `npx dbos-cloud app deploy` instead.
-:::
-**Description:**
-This command must be run from an application root directory.
-It registers that application with DBOS Cloud.
-
-**Parameters:**
-- `[application-name]`: The name of the application to register. By default we obtain the application name from package.json. This argument overrides the package name.
-- `-d, --database <string>`: The name of the Postgres database instance to which this application will connect.
-- `--enable-timetravel`: Enable time travel for this application. Please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
-
----
-
 ### `npx dbos-cloud app deploy`
 
 **Description:**
