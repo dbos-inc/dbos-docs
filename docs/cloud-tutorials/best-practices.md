@@ -58,7 +58,7 @@ Application databases are databases within a Postgres database instance (server)
 * You can configure your local `dbos-config.yaml` to point to your database instance using the [DBOS Cloud CLI](database-management). This will use your `dbos_role`.
 
 ### Schema migrations
-* You can instruct DBOS Cloud to run [migration commands](api-reference/configuration#database) during application deploy. These are handled by `dbosadmin`. You can use them to install extensions, create tables, etc.
+* You can instruct DBOS Cloud to run [migration commands](../api-reference/configuration#database) during application deploy. These are handled by `dbosadmin`. You can use them to install extensions, create tables, etc.
 * For more complex operations, you can use the DBOS Cloud CLI to connect to your database and run migrations manually.
 
 ### System databases
