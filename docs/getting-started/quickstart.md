@@ -63,16 +63,12 @@ npx dbos-cloud app deploy
 
 This command first prompts you to login/sign up for DBOS Cloud.
 
-Then, it provisions a free database instance (server) for you if you haven't done so. It prompts you to pick a database instance name, which is `<username>-db-server` by default.
-For more information, see the [database management guide](../cloud-tutorials/database-management.md).
+Then, it prompts you to provision a free [database instance](../cloud-tutorials/database-management.md) for your application.
 
-After that, the command registers your app to use this database instance and uploads your code to DBOS Cloud.
-This command should print `Successfully deployed <app-name>! Access your application at <URL>`.
-:::tip
-The deploy command may take a minute or so to finish.
-:::
+Finally, it uploads your code to DBOS Cloud and deploys your application.
+After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
-To see that your app is working, visit the `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
+To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
 https://mike-hello.cloud.dbos.dev/
 ```
