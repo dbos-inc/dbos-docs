@@ -82,5 +82,5 @@ The preferred way to programmatically authenticate with DBOS Cloud is to use ref
 * Can be revoked manually
 
 ## Time travel
-* Time travel will result in the creation of a new application database in the database instance
+* Time travel will result in the creation of a new database called `<app_db_name>_dbos_prov` in the database server. 
 
