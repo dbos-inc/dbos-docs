@@ -19,13 +19,13 @@ A list of tips for using DBOS Cloud effectively.
 * DBOS Cloud stores each version of your application. You can download a specific version using the DBOS Cloud CLI [TOLINK WHEN MERGED]
 
 ### During runtime
-* Files on disk are ephemeral. Nothing on the filesystem is persisted between deployments
+* Files on disk are ephemeral. Nothing on the filesystem is persisted between deployments.
 * To accomodate long running workflows, DBOS Cloud will keep around VMs running old versions of a workflow when you deploy a new version of the application. This also means you need to be mindful of non-backward compatible database schema changes, as they could break your long running workflows using an older version of the code.
 
 ### Deletion
-* Deleting an app is an asynchronous process and there is a small delay between a deletion request completing and the application being fully deleted. This means you could hit an "application is busy" error when re-deploying an application you just deleted
-* An application will be deleted once all PENDING workflows -- including these previous versions -- are completed
-* All application archives -- including previous versions -- will be deleted
+* Deleting an app is an asynchronous process and there is a small delay between a deletion request completing and the application being fully deleted. This means you could hit an "application is busy" error when re-deploying an application you just deleted.
+* An application will be deleted once all PENDING workflows -- including these previous versions -- are completed.
+* All application archives -- including previous versions -- will be deleted.
 * You can elect to drop the application database alongside deleting an application. This will also delete all the database roles associated with the application in the database instance.
 
 ### Time travel
@@ -41,19 +41,19 @@ While an application cannot change database once registered, you can change the 
 Application databases are databases within a Postgres database instance (server).
 :::
 
-* Application databases cannot be shared across applications
-* An application cannot change its database once deployed
+* Application databases cannot be shared across applications.
+* An application cannot change its database once deployed. You can delete the application and re-deploy with a new database name.
 
 ### Database roles
 
 * DBOS Cloud will create the following roles for each application:
     * `dbosadmin` - a privileged role used to execute your schema migration steps during application deployment
-    * `approle` - a user-provided role you provide when provisioning the database instance. This role has
+    * `dbos_role` - a role you  provide when provisioning the database instance. Defaults to `dbos_role` This role has:
         * a CREATE grant on the application database
         * `pg_read_all_data` and `pg_write_all_data` grants
         * an ALL PRIVILEGES grant on all schemas and [base tables](https://www.postgresql.org/docs/current/infoschema-tables.html#INFOSCHEMA-TABLES) in the database instance, expect for the schemas `pg_catalog`, `information_schema`, `dbos` or `pg_toast` schemas
         * ownership on all base tables in the database instance
-    * `dbosproxyrole` - a read-only role used during [DBOS Time Travel](cloud-tutorials/timetravel-debugging)
+    * `dbosproxyrole` - a read-only role used during [DBOS Time Travel Debugging](timetravel-debugging)
 
 ### Schema migrations
 * You can instruct DBOS Cloud to run [migration commands](api-reference/configuration#database) during application deploy. These are handled by `dbosadmin`. You can use them to install extensions, create tables, etc.
@@ -68,8 +68,8 @@ Application databases are databases within a Postgres database instance (server)
 * Provisioning instances is an asynchronous process. You can check the status of the instance with `npx dbos-cloud db status <database-instance-name>`
 
 ### Linked databases (BYODB)
-* DBOS Cloud will not configure `approle` for linked database
-* DBOS Cloud will not provide a default SSL certificate for linked database [FIXME: what is the expected flow here?]
+* DBOS Cloud will not configure `approle` for linked database.
+* DBOS Cloud will not provide a default SSL certificate for linked database [FIXME: what is the expected flow here?].
 
 ## Users and organizations
 
@@ -78,9 +78,9 @@ Application databases are databases within a Postgres database instance (server)
 
 ### Refresh tokens
 The preferred way to programmatically authenticate with DBOS Cloud is to use refresh tokens. Note they:
-* Expire after a year or a month of inactivity
-* Can be revoked manually
+* Expire after a year or a month of inactivity.
+* Can be revoked manually.
 
 ## Time travel
-* Time travel will result in the creation of a new database called `<app_db_name>_dbos_prov` in the database server. 
+* Time travel will result in the creation of a [new database](../api-reference/system-tables#provenance-tables) called `<app_db_name>_dbos_prov` in the database server.
 
