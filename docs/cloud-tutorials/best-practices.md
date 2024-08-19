@@ -38,7 +38,7 @@ While an application cannot change database once registered, you can change the 
 ## Application databases
 
 :::tip
-Application databases are "logical" postgres databases. They are not to be confused with database *instances*, the server hosting application databases.
+Application databases are databases within a Postgres database instance (server).
 :::
 
 * Application databases cannot be shared across applications
