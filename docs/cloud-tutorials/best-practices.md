@@ -60,7 +60,7 @@ Application databases are databases within a Postgres database instance (server)
 * For more complex operations, you can use the DBOS Cloud CLI to connect to your database and run migrations manually.
 
 ### System databases
-* DBOS Transact relies on a _system database_ to store metadata about the application. This database cannot be configured when running on DBOS Cloud.
+* DBOS Transact relies on a _system database_ to store metadata about the application. This database name is `<app_db_name>_dbos_sys` and cannot be configured when running on DBOS Cloud.
 
 ## Database instances
 
