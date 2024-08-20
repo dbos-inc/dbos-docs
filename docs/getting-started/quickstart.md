@@ -37,75 +37,44 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 
 ### 2. Create the application folder
 
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
+Pick a name for your app, which should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
-   ```bash
+```bash
 npx -y @dbos-inc/create@latest -n <app-name>
-   ```
+```
 
 For example, to name your app `hello`, run:
    ```bash
 npx -y @dbos-inc/create@latest -n hello
    ```
 
-This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next steps.
-
-### 3. Log in to DBOS Cloud
-
-If you already created an account using the [cloud console](https://console.dbos.dev/), log in like so from your application folder:
-```
-cd <application-folder>
-npx dbos-cloud login
-```
-
-Otherwise, to create a new account, run `npx dbos-cloud register -u <username>`. Usernames should be 3 to 30 characters long and contain only lowercase letters, numbers, and underscores.
-
-### 4. Provision a database instance
-
-Every DBOS app connects to a database instance, and you can provision one for free. You can do this from the [cloud console](https://console.dbos.dev/) or by running the below command in your application folder.
-
-Choose a database instance name, username and password. Both the instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores. The password must contain at least 8 characters. Run this command and enter the password when prompted:
-```
-npx dbos-cloud db provision <database-instance-name> -U <database-username>
-```
-
-This command should print `Database successfully provisioned!` To view your provisioned instance, run `npx dbos-cloud db list`. For more information, see the [database management guide](../cloud-tutorials/database-management.md).
-
-:::info
-This instance can host multiple logical databases for different apps. By default, every logical database has the same name as its app. This is configured in [`dbos-config.yaml`](../api-reference/configuration.md)
-:::
-
-### 5. Deploy!
-
-Now, you're ready to deploy to DBOS Cloud! First, register your application by running this command, using your database instance name from the last step:
+This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
 
 ```
-npx dbos-cloud app register -d <database-instance-name>
+cd <app-name>
 ```
 
-If successful, the command should print `Successfully registered <app-name>!`
+### 3. Deploy!
 
-Finally, deploy like so:
-
+Run the following command to deploy your app to DBOS Cloud:
 ```
 npx dbos-cloud app deploy
 ```
-:::tip
-The deploy command may take a minute or so to finish
-:::
 
-This command should print `Successfully deployed <app-name>! Access your application at <URL>`. To see that your app is working, visit `<URL>/greeting/dbos` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
+This command first prompts you to login/sign up for DBOS Cloud.
+
+Then, it prompts you to provision a free [database instance](../cloud-tutorials/database-management.md) for your application.
+
+Finally, it uploads your code to DBOS Cloud and deploys your application.
+After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+
+To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
-https://mike-hello.cloud.dbos.dev/greeting/dbos
+https://mike-hello.cloud.dbos.dev/
 ```
-
-:::tip
-Don't forget to add `/greeting/dbos` at the end of the URL. 
-:::
-
-When you visit the URL, you should see `Hello, dbos! You have been greeted <N> times.` The counter `N` will increment with each visit. If you change the last part of the URL from `dbos` to another name like `/greeting/alice`, the counter will start at 1 for each new name.
 
 Congratulations, you've successfully deployed your first application to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
+
 
 ## Run the App Locally
 
