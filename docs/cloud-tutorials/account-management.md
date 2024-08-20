@@ -6,6 +6,9 @@ description: Learn how to manage DBOS Cloud users
 
 In this guide, you'll learn how to manage DBOS Cloud accounts.
 
+### New user registration
+Sign up for an account on the [DBOS Cloud console](https://console.dbos.dev/).
+
 ### Authenticating Programatically
 
 Sometimes, such as in a CI/CD pipeline, it is useful to authenticate programatically without providing credentials through a browser-based login portal.
