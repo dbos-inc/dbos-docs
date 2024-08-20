@@ -7,7 +7,7 @@ description: DBOS Cloud Tips
 A list of tips for using DBOS Cloud effectively.
 
 ## Managing applications
-* Only one request at a time can manipulate an application and you will get an `application is busy` error if you attempt multiple concurrent modifications.
+* Only one request at a time can manipulate an application and you will get an `application is busy` error if you attempt multiple concurrent modifications. If you get this error, wait for a minute and retry.
 * Application names are unique within an [organization](#users-and-organizations).
 * Your application is allocated 1GB of disk space, 1CPU and 512MB of RAM.
 
