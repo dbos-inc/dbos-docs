@@ -18,7 +18,7 @@ npx dbos-cloud app deploy
 Your application is deployed using the name in its `package.json`.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](#users-and-organizations).
 
-When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none.
+When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none. Note this database instance (server) is different from the database name your application use (the `app_db_name` field in [`dbos-config.yaml`](../api-reference/configuration#database)).
 
 :::tip
 * You can specify a particular database instance through the `-d <database-instance-name>`.
@@ -49,6 +49,7 @@ If you edit your application or schema, run `npx dbos-cloud app deploy` again to
 :::info
 * You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 * You cannot change the database name of a deployed application. You can delete and re-deploy the application.
+* Databases cannot be shared across applications.
 :::
 
 ### Monitoring and Debugging Applications
