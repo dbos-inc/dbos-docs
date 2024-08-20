@@ -4,36 +4,6 @@ title: Best practices
 description: DBOS Cloud Tips
 ---
 
-A list of tips for using DBOS Cloud effectively.
-
-## Managing applications
-* Only one request at a time can manipulate an application and you will get an `application is busy` error if you attempt multiple concurrent modifications. If you get this error, wait for a minute and retry.
-* Application names are unique within an [organization](#users-and-organizations).
-* Your application is allocated 1GB of disk space, 1CPU and 512MB of RAM.
-
-### Deployment
-* Interrupting a deployment request - for example, pressing control + C - will *not* cancel the deploy action in DBOS Cloud.
-* DBOS Cloud builds your application and will prune all development dependencies. Make sure to explicitly install any runtime dependency you need with `npm install`.
-* DBOS Cloud manages an internal version number for your application. You can download specific versions achives using the DBOS Cloud CLI. [TOLINK WHEN MERGED]
-
-### Runtime
-* Files on disk are ephemeral. Nothing on the filesystem is persisted between deployments.
-* To accomodate long running workflows, DBOS Cloud will keep around VMs running old versions of a workflow when you deploy a new version of the application. This also means you need to be mindful of non-backward compatible database schema changes, as they could break workflows running an older version of the code.
-
-### Deletion
-* Deleting an app is an asynchronous process and there is a small delay between a deletion request completing and the application being fully deleted. This means you could hit an "application is busy" error when re-deploying an application you just deleted.
-* An application will be deleted once all PENDING workflows -- across all versions -- are completed.
-* All application archives -- including previous versions -- will be deleted from DBOS Cloud's artifact store.
-* Applications are assigned a [dedicated database role during deployment](#database-roles). Deleting an application will delete this role.
-* You can elect to drop the application database alongside deleting an application. This will also delete all the [database roles DBOS Cloud manages on behalf of the application](#database-roles).
-
-### Time travel
-Time travel can be enabled when deploying an application for the first time. Existing applications will need to be deleted and re-deployed to enable time travel.
-See more information in the [time travel](#time-travel) section.
-
-### Swapping database instance
-While an application cannot change database once registered, you can change the database instance (server) hosting the application database. When doing so, you can also decide to redeploy a previous version of the application. This is how DBOS Cloud support [point in time recovery](database-management#database-recovery) today.
-
 ## Application databases
 
 :::tip
