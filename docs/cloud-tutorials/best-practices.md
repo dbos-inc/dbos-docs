@@ -12,7 +12,6 @@ A list of tips for using DBOS Cloud effectively.
 * Your application is allocated 1GB of disk space, 1CPU and 512MB of RAM.
 
 ### Deployment
-* An application must be registered before being deployed. DBOS Cloud CLI handles registration automatically when you deploy an application for the first time.
 * Interrupting a deployment request - for example, pressing control + C - will *not* cancel the deploy action in DBOS Cloud.
 * DBOS Cloud builds your application and will prune all development dependencies. Make sure to explicitly install any runtime dependency you need with `npm install`.
 * DBOS Cloud manages an internal version number for your application. You can download specific versions achives using the DBOS Cloud CLI. [TOLINK WHEN MERGED]
