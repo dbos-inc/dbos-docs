@@ -35,13 +35,14 @@ Run this command in your application root directory:
 npx dbos-cloud app deploy
 ```
 
-When you deploy an application, DBOS Cloud first runs [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
+When you deploy an application, the DBOS Cloud CLI compresses your application folder in a zip archive and upload it to DBOS Cloud.
+:::info
+Application archives can be up to 500MB in size.
+:::
+
+DBOS Cloud will first run [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
 It then starts your application.
 After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
-
-:::info
-Each application is allocated 1GB of disk space.
-:::
 
 ```
 https://<username>-<app-name>.cloud.dbos.dev/
