@@ -93,9 +93,16 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/dbos-inc/dbos-ts',
-            label: 'GitHub',
+            to: 'https://console.dbos.dev/',
+            label: 'Cloud Console',
             position: 'right',
+            className: 'dbos-button-blue',
+          },
+          {
+            href: 'https://github.com/dbos-inc/dbos-transact',
+            position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
         ],
       },
