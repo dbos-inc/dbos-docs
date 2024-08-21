@@ -43,3 +43,25 @@
 .header-github-link:hover::before {
   background-color: var(--ifm-navbar-link-hover-color);
 }
+
+.dbos-button-blue {
+  border: 1px solid;
+  border-radius: 16px;
+}
+
+.dbos-button-blue:hover {
+  color: var(--ifm-navbar-link-color);
+  background-color: var(--ifm-color-primary-lightest);
+  border-color: var(--ifm-navbar-link-color);
+}
+
+[data-theme='dark'] .dbos-button-blue {
+  color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .dbos-button-blue:hover {
+  color: black;
+  background-color: var(--ifm-color-primary-dark);
+  border-color: var(--ifm-color-primary-dark);
+}
+

@@ -96,7 +96,7 @@ const config = {
             to: 'https://console.dbos.dev/',
             label: 'Cloud Console',
             position: 'right',
-            className: 'button button--secondary button--lg button--outline',
+            className: 'dbos-button-blue',
           },
           {
             href: 'https://github.com/dbos-inc/dbos-transact',
