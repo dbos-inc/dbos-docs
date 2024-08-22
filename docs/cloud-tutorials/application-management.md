@@ -16,7 +16,7 @@ npx dbos-cloud app deploy
 ```
 
 Your application is deployed using the name in its `package.json`.
-Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](#users-and-organizations).
+Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
 When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none. Note this database instance (server) is different from the database name your application uses (the `app_db_name` field in [`dbos-config.yaml`](../api-reference/configuration#database)).
 

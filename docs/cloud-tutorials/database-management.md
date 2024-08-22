@@ -63,7 +63,7 @@ database:
 
 To run your migrations locally, run `npx dbos migrate` or `npx dbos rollback`.
 
-When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
+When you [deploy](./application-management#deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
 
 :::info
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
