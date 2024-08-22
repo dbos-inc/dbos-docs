@@ -64,7 +64,7 @@ DBOS provides many tools to monitor and debug applications:
 
 - To retrieve the status of a particular application, run [`npx dbos-cloud app status <app-name>`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-list).
 
-Applications are run in microVMs sized with 1vCPU and 512MB of RAM. Note that files on disk are ephemeral and not persisted between deployments.
+Applications run in [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM. Note that files on disk are ephemeral and not persisted between deployments.
 
 ### Managing Application Versions
 
