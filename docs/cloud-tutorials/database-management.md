@@ -23,8 +23,8 @@ npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 :::info
-A Postgres database instance (server) can host multiple independent databases for different applications.
-You can configure which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
+A Postgres Database Instance (Server) can host many independent databases used by different applications.
+To configure which database your application uses, on its configured server, through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
 :::
 
 :::info
