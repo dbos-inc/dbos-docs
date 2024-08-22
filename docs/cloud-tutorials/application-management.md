@@ -48,8 +48,8 @@ If you edit your application or schema, run `npx dbos-cloud app deploy` again to
 
 :::info
 * You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
-* You cannot change the database name of a deployed application. You can delete and re-deploy the application.
-* Databases cannot be shared across applications.
+* You cannot change the database name (`app_db_name`) of a deployed application. You can delete and re-deploy the application.
+* Databases (`app_db_name`) cannot be shared across applications.
 :::
 
 ### Monitoring and Debugging Applications
