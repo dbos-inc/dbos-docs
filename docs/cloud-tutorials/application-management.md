@@ -83,7 +83,7 @@ npx dbos-cloud app deploy --previous-version <version-id>
 
 However, this will fail if the previous and current versions have different database schemas.
 
-Also, note DBOS Cloud will keep running Transact workflows from previous versions until they complete. This means you need to be mindful of non-backward compatible database schema migrations, as they could break running workflows.
+Also, note DBOS Cloud will keep running Transact workflows from previous versions until they complete. This means you need to be mindful of non-backward-compatible database schema migrations, as they could break running workflows.
 
 For more information on schema management, see our [schema management guide](./database-management.md#database-schema-management).
 
