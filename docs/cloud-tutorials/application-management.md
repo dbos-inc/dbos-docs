@@ -102,7 +102,6 @@ You can also delete the application database with the `--dropdb` argument:
 npx dbos-cloud app delete <app-name> --dropdb
 ```
 
-This will delete the database and all associated DBOS roles.
 
 :::warning
 This is a destructive operation and cannot be undone.
