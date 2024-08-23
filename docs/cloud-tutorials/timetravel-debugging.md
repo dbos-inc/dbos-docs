@@ -18,7 +18,7 @@ For Free Tier DBOS applications, time travel debug information is only kept for 
 
 ### Preliminaries
 
-Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](../api-reference/cloud-cli#npx-dbos-cloud-app-register).
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](../api-reference/cloud-cli#npx-dbos-cloud-app-deploy).
 
 Time travel debugging uses [Visual Studio Code](https://code.visualstudio.com/) and the
 [DBOS Time Travel Debugger Extension](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg).

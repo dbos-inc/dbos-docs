@@ -6,28 +6,28 @@ title: Time Travel Debugger Guide
 Now that we've learned a little about programming DBOS, let's learn how to use the DBOS Time Travel Debugger!
 
 This tutorial assumes you have [Visual Studio Code](https://code.visualstudio.com/) installed.
-Please see the VS Code documentation for [installation instructions](https://code.visualstudio.com/docs/setup/setup-overview) if necessary. 
+Please see the VS Code documentation for [installation instructions](https://code.visualstudio.com/docs/setup/setup-overview) if necessary.
 
 :::info
 If you're not a VS Code user, there is an advanced tutorial for [Time Travel Debugging with DBOS CLI](../cloud-tutorials/timetravel-debugging#time-travel-with-dbos-cli-non-vs-code-users).
 :::
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
-For convenience, we recommend [creating a DBOS Cloud account](./quickstart#3-log-in-to-dbos-cloud) and
-[provisioning a DBOS Cloud database instance](./quickstart#4-provision-a-database-instance) before starting this tutorial.
+For convenience, we recommend [creating a DBOS Cloud account](https://console.dbos.dev/) and
+[deploying an application](./quickstart#deploy) before starting this tutorial.
 
 ### Installing the DBOS Time Travel Debugging VS Code Extension
 
 Before we use the DBOS Time Travel debugger, we need to install its VS Code extension.
 
-To install the extension, navigate to the [extension's web page](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg) and press the "Install" button. 
-This will launch VS Code and open the DBOS Time Travel Debugger extension page inside the IDE. 
+To install the extension, navigate to the [extension's web page](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg) and press the "Install" button.
+This will launch VS Code and open the DBOS Time Travel Debugger extension page inside the IDE.
 From there, select the "Install" button to install the extension.
 
 ![Installing the DBOS Extension](./assets//ttdbg-install.png)
 
 :::info
-You can also install the extension by opening the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace) 
+You can also install the extension by opening the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
 inside VS Code (default keybinding: Ctrl+Shift+X / ⇧⌘X) and searching for "DBOS".
 :::
 
