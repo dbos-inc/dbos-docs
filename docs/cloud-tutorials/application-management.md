@@ -96,8 +96,6 @@ To delete an application, run:
 npx dbos-cloud app delete <app-name>
 ```
 
-The application will be fully deleted once all its running workflows complete.
-
 You can also delete the application database with the `--dropdb` argument:
 
 ```shell
