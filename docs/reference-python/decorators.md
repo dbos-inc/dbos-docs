@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 1
 title: Decorators
 description: API reference for DBOS decorators.
 ---
