@@ -7,7 +7,9 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-This guide shows you how to deploy your first app to DBOS Cloud in less than 5 minutes. After that, it shows you how to develop DBOS apps locally.
+You can run DBOS apps any computer that has Node.js and Postgres. 
+![DBOS Development and Deployment Model](./assets/quickstart-diagram.png)
+
 
 ## Deploy Your First App to the Cloud
 
