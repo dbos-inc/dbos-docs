@@ -50,6 +50,8 @@ For example, to name your app `hello`, run:
 npx -y @dbos-inc/create@latest -n hello
    ```
 
+This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
+
 ```
 cd <app-name>
 ```
