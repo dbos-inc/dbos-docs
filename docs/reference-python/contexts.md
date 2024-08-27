@@ -205,3 +205,29 @@ client: Optional[Address] # Information about the client that sent the request
 cookies: dict[str, str] # The request's cookie parameters
 method: str # The HTTP method of the request
 ```
+
+
+## Context Management
+
+### SetWorkflowUUID
+
+```python
+SetWorkflowUUID(
+    wfid: str
+)
+```
+
+Set the identity of the next workflow to run.
+Should be used in a `with` statement.
+
+Example syntax:
+
+```python
+@dbos.workflow()
+def example_workflow():
+    print("I am a workflow")
+
+# The workflow will run with the supplied ID
+with SetWorkflowUUID("very-unique-id"):
+    example_workflow()
+```
