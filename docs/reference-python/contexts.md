@@ -97,7 +97,7 @@ Waits for the event to be published, returning `None` if the wait times out.
 ```python
 DBOS.sleep(
     seconds: float
-)
+) -> None
 ```
 
 Sleep for the given number of seconds.
@@ -106,6 +106,49 @@ This sleep is durable--it records its intended wake-up time in the database so i
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
+
+### retrieve_workflow
+
+```python
+DBOS.retrieve_workflow(
+    workflow_uuid: str,
+    existing_workflow: bool = True,
+) -> WorkflowHandle[R]
+```
+
+Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workflow_uuid`.
+
+**Parameters:**
+- `workflow_uuid`: The identifier of the workflow whose handle to retrieve.
+- `existing_workflow`: Whether to throw an exception if the workflow does not yet exist, or to wait for its creation. If set to `False` and the workflow does not exist, will wait for the workflow to be created, then return its handle.
+
+**Returns:**
+- The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_uuid`.
+
+### start_workflow
+
+```python
+DBOS.start_workflow(
+    func: Workflow[P, R],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Start a workflow in the background and return a [handle](./workflow_handles.md) to it.
+The `DBOS.start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+Example syntax:
+
+```python
+@dbos.workflow()
+def example_workflow(var1: str, var2: str):
+    print("I am a workflow")
+
+# Start example_workflow in the background
+handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
+```
+
 
 ## Context Variables
 
@@ -162,4 +205,3 @@ client: Optional[Address] # Information about the client that sent the request
 cookies: dict[str, str] # The request's cookie parameters
 method: str # The HTTP method of the request
 ```
-
