@@ -15,8 +15,8 @@ Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#w
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow (from the [programming guide](../getting-started/quickstart-programming.md)) sending an email then recording it in the database.
-By using a workflow, we guarantee that every email is recorded in the database, even if execution is interrupted.
+Here's an example workflow (from the [programming guide](../getting-started/quickstart-programming.md)) signing an online guestbook then recording the signature in the database.
+By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
 
 ```javascript
 class Greetings {
@@ -25,12 +25,13 @@ class Greetings {
 
     @Workflow()
     @GetApi("/greeting/:friend")
-    static async GreetingWorkflow(ctxt: WorkflowContext, friend: string) {
-        const noteContent = `Thank you for being awesome, ${friend}!`;
-        await ctxt.invoke(Greetings).SendGreetingEmail(friend, noteContent);
-        await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
-        ctxt.logger.info(`Greeting sent to ${friend}!`);
-        return noteContent;
+    static async Greeting(ctxt: HandlerContext, friend: string) {
+      const noteContent = `Thank you for being awesome, ${friend}!`;
+      await ctxt.invoke(Greetings).SignGuestbook(friend);
+      await ctxt.invoke(Greetings).InsertGreeting(
+        { name: friend, note: noteContent }
+      );
+      return noteContent;
     }
 
 }
