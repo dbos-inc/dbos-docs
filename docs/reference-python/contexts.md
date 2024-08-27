@@ -90,3 +90,76 @@ Waits for the event to be published, returning `None` if the wait times out.
 
 **Returns:**
 - The value of the event published by `workflow_uuid` with name `key`, or `None` if the wait times out.
+
+
+### sleep
+
+```python
+DBOS.sleep(
+    seconds: float
+)
+```
+
+Sleep for the given number of seconds.
+May only be called from within a workflow.
+This sleep is durable--it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+
+**Parameters:**
+- `seconds`: The number of seconds to sleep.
+
+## Context Variables
+
+### logger
+
+```python
+DBOS.logger: Logger
+```
+
+Retrieve the DBOS logger. We recommend, but do not require, using it for all logging in DBOS apps.
+
+### sql_session
+
+```python
+DBOS.sql_session: sqlalchemy.Session
+```
+
+May only be accessed from within a transaction.
+Retrieves the SQLAlchemy session of the transaction, a database connection the transaction can use to interact with the database.
+
+### workflow_id
+
+```python
+DBOS.workflow_id: str
+```
+
+May only be accessed from within a workflow, transaction, or communicator.
+Return the identity of the current workflow.
+
+### span
+
+```python
+span -> opentelemetry.trace.Span
+```
+
+Retrieve the OpenTelemetry span associated with the curent request.
+You can use this to set custom attributes in your span.
+
+### request
+
+```python
+request -> Request
+```
+
+May only be accessed from within the handler of a FastAPI request, or in a function called from the handler.
+Retrieve request information parsed from FastAPI:
+```python
+headers: Headers # The request headers
+path_params: dict[str, Any] # The request's path parameters
+query_params QueryParams # The request's query parameters
+url: URL # The URL to which the request was sent
+base_url: URL # The base URL of the request
+client: Optional[Address] # Information about the client that sent the request
+cookies: dict[str, str] # The request's cookie parameters
+method: str # The HTTP method of the request
+```
+
