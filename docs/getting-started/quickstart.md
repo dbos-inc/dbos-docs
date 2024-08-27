@@ -7,9 +7,9 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-You can run DBOS apps any computer that has Node.js and Postgres. 
+You can develop, test and run DBOS apps on your computer using a local PostgreSQL database. Once you're ready, deploying to DBOS Cloud is quick and simple.
 ![DBOS Development and Deployment Model](./assets/quickstart-diagram.png)
-
+In this guide, we first walk you through deploying a sample "Hello" app to the cloud in 5 minutes. After that, we provide instructions on how to set up a local PostgreSQL database and run the app on your computer.
 
 ## Deploy Your First App to the Cloud
 
@@ -63,19 +63,14 @@ Run the following command to deploy your app to DBOS Cloud:
 npx dbos-cloud app deploy
 ```
 
-This command first prompts you to login/sign up for DBOS Cloud.
-
-Then, it prompts you to provision a free [database instance](../cloud-tutorials/database-management.md) for your application.
-
-Finally, it uploads your code to DBOS Cloud and deploys your application.
-After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a free [cloud database instance](../cloud-tutorials/database-management.md). Finally, it uploads your code to DBOS Cloud and deploys your app. After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
 https://mike-hello.cloud.dbos.dev/
 ```
 
-Congratulations, you've successfully deployed your first application to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
+Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
 
 
 ## Run the App Locally
