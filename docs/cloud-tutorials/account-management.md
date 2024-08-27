@@ -1,39 +1,13 @@
 ---
-sidebar_position: 0
+sidebar_position: 3
 title: Cloud Account Management
 description: Learn how to manage DBOS Cloud users
 ---
 
-In this guide, you'll learn how to register and authenticate DBOS Cloud accounts.
+In this guide, you'll learn how to manage DBOS Cloud accounts.
 
-### Registering a User
-
-To register a new DBOS Cloud account, run the following command, choosing a username that is 3-30 characters long and contains only lowercase letters, numbers, and underscores:
-
-```
-npx dbos-cloud register -u <username>
-```
-
-This command provides a URL to a secure login portal you can use to create an account from your browser.
-After registering, your credentials will be stored in `.dbos/credentials`.
-Credentials automatically expire after 24 hours, at which point you must log in again.
-
-### Authenticating from the Command Line
-
-To log in from the command line, run:
-
-```
-npx dbos-cloud login
-```
-
-This command provides a URL to a secure login portal from which you can log in.
-After you log in, your credentials will be stored in `.dbos/credentials`.
-They automatically expire after 24 hours.
-To delete your credentials and log out, run:
-
-```
-npx dbos-cloud logout
-```
+### New user registration
+Sign up for an account on the [DBOS Cloud console](https://console.dbos.dev/).
 
 ### Authenticating Programatically
 

@@ -183,7 +183,8 @@ export class Greetings {
 ```
 
 - The plugin will raise a potential SQL injection error if your query string is either directly or indirectly built up of a nonliteral component.
-- For example, if your query is a format string parameterized by a function call, input variable, or other non-literal inputs, the plugin will let you know that you're vulnerable to injection.
+- For example, if your query is a format string parameterized by a function call, input variable, or other nonliteral components, the plugin will let you know that you're vulnerable to injection.
+- There has been an extensive effort to support as many literal component types as possible (things like numbers, regular expressions, ternaries, class expressions, function expressions, and some array and object literals; everything you could ever think of!). If you feel that your raw SQL query call should not be flagged as a potential SQL injection, feel free to file an issue [here](https://github.com/dbos-inc/dbos-docs).
 
 ___
 
@@ -275,3 +276,8 @@ static async depositWorkflow(ctxt: WorkflowContext, data: TransactionHistory) {
 ```
 
 *Any global variable defined outside the scope of the workflow which is directly modified will result in a warning.*
+
+3. Malformed transactions:
+- Your transactions must have a `TransactionContext<T>` as the first parameter, where `T` is a supported database client.
+- Your transactions must also use the `TransactionContext` parameter's `client` field. You are allowed to pass your `TransactionContext` to a helper function as a substitute for this replacement.
+- Not meeting these requirements means that you are not using the database, which makes that transaction essentially useless. The plugin will give you a warning if so.

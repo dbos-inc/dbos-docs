@@ -4,37 +4,43 @@ title: Cloud Database Management
 description: Learn how to manage DBOS Cloud database instances
 ---
 
-In this guide, you'll learn how to manage database instances in DBOS Cloud.
-
 ### Provisioning Database Instances
 
-Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance for it.
+Before you can deploy an application to DBOS Cloud, you must provision a Postgres database instance (server) for it.
 You must choose a database instance name, username and password.
-Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
-The database password must contain 8 or more characters.
+
+:::info
+* Both the database instance name and username must be 3 to 16 characters long and contain only lowercase letters, numbers and underscores.
+* The username must start with a letter.
+* The usernames `dbosadmin`, `dbos`, `postgres` and `admin` are reserved and cannot be used.
+* The database password must contain between 8 and 128 characters, and cannot contain the characters `/`, `"`, `@`, `'`, or whitespaces.
+:::
+
 Run this command and choose your database password when prompted:
 
-```
+```shell
 npx dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
+
 :::info
-A Postgres database instance can host multiple independent databases for different applications.
-You can configure which database your application uses through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
+A Postgres Database Instance (Server) can host many independent databases used by different applications.
+To configure which database your application uses, on its configured server, through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
 :::
 
 :::info
 If you forget your database password, you can always [reset it](../api-reference/cloud-cli.md#npx-dbos-cloud-db-reset-password).
 :::
 
-To see a list of all provisioned instances, run:
+Provisioning a database instance is an asynchronous operation.
+To see a list of all provisioned instances and their status, run:
 
-```
+```shell
 npx dbos-cloud db list
 ```
 
 To retrieve the status of a particular instance, run:
 
-```
+```shell
 npx dbos-cloud db status <database-instance-name>
 ```
 
@@ -57,7 +63,7 @@ database:
 
 To run your migrations locally, run `npx dbos migrate` or `npx dbos rollback`.
 
-When you [deploy](./application-management.md#registering-and-deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
+When you [deploy](./application-management#deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
 
 :::info
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
@@ -66,7 +72,7 @@ Be careful making breaking schema changes such as deleting or renaming a column&
 Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
 To make this easier, you can load your cloud database connection information into your local [`dbos-config.yaml`](../api-reference/configuration.md) configuration file by running:
 
-```
+```shell
 npx dbos-cloud db connect <database-name>
 ```
 
@@ -85,7 +91,7 @@ Database recovery is not available for [linked databases](./byod-management.md)
 DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
 First, run the [`database restore`](../api-reference/cloud-cli.md#npx-dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
 
-```
+```shell
 npx dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
 ```
 
@@ -94,13 +100,13 @@ The timestamp must be in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339
 After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-change-database-instance).
 For each application connected to the original database instance, run:
 
-```
+```shell
 npx dbos-cloud app change-database-instance --database <new-db-instance-name>
 ```
 
 If you wish to restore your application to a previous version (such as the version that was running at the recovery timestamp), you can do this with the `--previous-version` parameter:
 
-```
+```shell
 npx dbos-cloud app change-database-instance --database <new-db-instance-name> --previous-version <version-id>
 ```
 
@@ -108,7 +114,7 @@ For more information on application version management, see [here](./application
 
 Finally, destroy the original database instance:
 
-```
+```shell
 npx dbos-cloud db destroy <original-database-instance-name>
 ```
 
@@ -116,7 +122,7 @@ npx dbos-cloud db destroy <original-database-instance-name>
 
 To destroy a database instance, run:
 
-```
+```shell
 npx dbos-cloud db destroy <database-name>
 ```
 

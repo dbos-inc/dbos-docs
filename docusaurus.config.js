@@ -46,6 +46,14 @@ const config = {
         ],
       },
     ],
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: "phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP", // This is our "Production" project
+        appUrl: "https://d2j9bas80r5yfz.cloudfront.net", // Using our CloudFront proxy
+        enableInDevelopment: false,
+      },
+    ],
   ],
 
   presets: [
@@ -85,9 +93,16 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/dbos-inc/dbos-ts',
-            label: 'GitHub',
+            to: 'https://console.dbos.dev/',
+            label: 'Cloud Console',
             position: 'right',
+            className: 'dbos-button-blue',
+          },
+          {
+            href: 'https://github.com/dbos-inc/dbos-transact',
+            position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
         ],
       },
