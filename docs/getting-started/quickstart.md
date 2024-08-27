@@ -7,9 +7,9 @@ import TabItem from '@theme/TabItem';
 
 # DBOS Quickstart
 
-You can develop, test and run DBOS apps on your computer using a local PostgreSQL database. Once you're ready, deploying to DBOS Cloud is quick and simple.
+You start developing a DBOS app by creating a folder for it on your computer. From this folder, you can run the app locally and deploy to DBOS Cloud in minutes.
 ![DBOS Development and Deployment Model](./assets/quickstart-diagram.png)
-In this guide, we first walk you through deploying a sample "Hello" app to the cloud in 5 minutes. After that, we provide instructions on how to set up a local PostgreSQL database and run the app on your computer.
+In this guide, we start by deploying a sample "Hello" app to the cloud. After that, we provide instructions for running this app on your computer.
 
 ## Deploy Your First App to the Cloud
 
@@ -37,7 +37,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </TabItem>
 </Tabs>
 
-### 2. Create the application folder
+### 2. Create the app folder
 
 Pick a name for your app, which should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
@@ -63,7 +63,7 @@ Run the following command to deploy your app to DBOS Cloud:
 npx dbos-cloud app deploy
 ```
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a free [cloud database instance](../cloud-tutorials/database-management.md). Finally, it uploads your code to DBOS Cloud and deploys your app. After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a free cloud database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. After about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
@@ -73,16 +73,16 @@ https://mike-hello.cloud.dbos.dev/
 Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
 
 
-## Run the App Locally
+## Run the App on Your Computer
 
-For development, debugging, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an application folder as described above.
+For development, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an app folder as described above.
 
 ### 1. Install Postgres or use Docker
 
-The app needs a [PostgreSQL](https://www.postgresql.org/) database to connect to. You can install Postgres on your system or launch it in a Docker container:
+The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
 <Tabs groupId="postgres-or-docker">
-   <TabItem value="postgres" label="Install Postgres Locally">
+   <TabItem value="postgres" label="Install Postgres">
    <Tabs groupId="operating-systems">
       <TabItem value="mac" label="macOS">
          Follow [this official guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
@@ -116,10 +116,10 @@ The app needs a [PostgreSQL](https://www.postgresql.org/) database to connect to
 <Tabs groupId="postgres-or-docker">
 <TabItem value="postgres" label="Use Installed Postgres">
 
-In your terminal, change to your application folder and run this command to connect your application to your Postgres database:
+In your terminal, change to your app folder and run this command to configure your Postgres connection:
 
 ```
-cd <application-folder>
+cd <app-folder>
 npx dbos configure
 ```
 
@@ -181,7 +181,7 @@ node start_postgres_docker.js
   <TabItem value="win-ps" label="Windows (PowerShell)">
   
      ```bash
-cd <application-folder>
+cd <app-folder>
 $env:PGPASSWORD = "dbos"
 node start_postgres_docker.js
    ```
@@ -189,7 +189,7 @@ node start_postgres_docker.js
   <TabItem value="win-cmd" label="Windows (cmd)">
 
      ```bash
-cd <application-folder>
+cd <app-folder>
 set PGPASSWORD=dbos
 node start_postgres_docker.js
    ```
@@ -222,6 +222,6 @@ npx dbos start
 
 To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one.
 
-Congratulations!  You just launched your DBOS application locallly!
+Congratulations!  You just launched your DBOS app locally!
 
 Next, to learn how to build your own apps, check out our [programming guide](./quickstart-programming.md).
