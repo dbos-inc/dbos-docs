@@ -10,16 +10,16 @@ You can easily turn **any** Python function into a communicator by annotating it
 Here's a simple example:
 
 ```python
-@dbos.communicator()
+@DBOS.communicator()
 def example_communicator():
     return requests.get("https://example.com").text
 ```
 
-You should mark a function as a communicator if you're using it in a DBOS workflow and it accesses an external API or service, like serving a file from [AWS S3](https://aws.amazon.com/s3/), calling an external API like [Stripe](https://stripe.com/), or accessing an external data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
+You should mark a function as a communicator if you're using it in a DBOS [workflow](./workflow-tutorial.md) and it accesses an external API or service, like serving a file from [AWS S3](https://aws.amazon.com/s3/), calling an external API like [Stripe](https://stripe.com/), or accessing an external data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
 
 Marking functions as communicators has two benefits:
 
-1. It lets workflows know this function interacts with an external API, so the workflow can guarantee those calls happen exactly-once.
+1. It lets [workflows](./workflow-tutorial.md) know this function interacts with an external API, so the workflow can guarantee those calls happen exactly-once.
 
 2. DBOS provides [configurable automatic retries](#configurable-retries) for communicators to more easily handle transient errors.
 
@@ -41,7 +41,7 @@ dbos.communicator(
 For example, we can configure our simple communicator to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
 
 ```python
-@dbos.communicator(retries_allowed=True, max_attempts=10)
+@DBOS.communicator(retries_allowed=True, max_attempts=10)
 def example_communicator():
     return requests.get("https://example.com").text
 ```
