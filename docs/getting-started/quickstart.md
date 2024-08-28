@@ -9,7 +9,7 @@ import ThemedImage from '@theme/ThemedImage';
 
 # DBOS Quickstart
 
-Let's create your first DBOS App! You start building an app by creating a special folder for it. From there, you can register with DBOS Cloud, provision a free Database Instance and deploy your app in a few minutes. You can also run DBOS apps on your computer.
+Let's create your first DBOS app! You start building an app by creating a special folder for it. From there, you can register with DBOS Cloud, provision a free Database Instance and deploy your app in a few minutes. You can also run DBOS apps on your computer.
 
 <ThemedImage
   alt="Docusaurus themed image"
