@@ -217,7 +217,7 @@ SetWorkflowUUID(
 )
 ```
 
-Set the identity of the next workflow to run.
+Set the [workflow ID](../tutorials-python/workflow-tutorial.md#workflow-ids)/[idempotency key](../tutorials-python/idempotency-tutorial.md) of the next workflow, transaction, or communicator to run.
 Should be used in a `with` statement.
 
 Example syntax:
@@ -225,7 +225,7 @@ Example syntax:
 ```python
 @dbos.workflow()
 def example_workflow():
-    print("I am a workflow")
+    print(f"I am a workflow with ID {DBOS.workflow_id}")
 
 # The workflow will run with the supplied ID
 with SetWorkflowUUID("very-unique-id"):
