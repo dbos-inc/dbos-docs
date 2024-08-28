@@ -70,20 +70,20 @@ dbos.scheduled(
 )
 ```
 
-Run a function on a schedule specified using [cron](https://en.wikipedia.org/wiki/Cron) syntax. See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a cron editor.
+Run a function on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax. See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
 
 The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).
 
 ```python
-@dbos.scheduled('* * * * *')
+@dbos.scheduled('* * * * *') # crontab syntax to run once every minute
 @dbos.workflow()
-def example_communicator(scheduled_time: datetime, actual_time: datetime):
+def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
     print("I am a workflow scheduled to run once a minute. ")
 ```
 
 
 **Parameters:**
-- `cron`: The schedule in [cron](https://en.wikipedia.org/wiki/Cron) syntax.
+- `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
 
 ## Authorization Decorators
 
