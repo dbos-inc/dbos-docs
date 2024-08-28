@@ -9,7 +9,7 @@ import ThemedImage from '@theme/ThemedImage';
 
 # DBOS Quickstart
 
-Let's create your first DBOS app! You start building an app by creating a special folder for it. From there, you can register with DBOS Cloud, provision a free Database Instance and deploy your app in a few minutes. You can also run DBOS apps on your computer.
+Let's create your first DBOS app! You develop this app in a folder on your computer. From there, you can run it locally or deploy it to DBOS Cloud.
 
 <ThemedImage
   alt="Docusaurus themed image"
@@ -19,7 +19,7 @@ Let's create your first DBOS app! You start building an app by creating a specia
   }}
 />
 
-In this guide, we start by deploying a sample "Hello" app to the cloud. After that, we provide instructions for how to run this app on your system.
+In this guide, we start by deploying a sample "Hello" app to the cloud. After that, we show you how to run it locally.
 
 ## Deploy your First App to the Cloud
 
@@ -70,7 +70,7 @@ Run the following command to deploy your app to DBOS Cloud:
 npx dbos-cloud app deploy
 ```
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
 ```
