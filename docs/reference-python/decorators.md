@@ -20,7 +20,7 @@ Run a function as a DBOS reliable workflow.
 ```python
 @dbos.workflow()
 def example_workflow():
-    print("I am a workflow")
+    DBOS.logger.info("I am a workflow")
 ```
 
 
@@ -37,7 +37,7 @@ Run a function as a database transaction. Access the database through the `DBOS.
 ```python
 @dbos.transaction()
 def example_transaction():
-    print("I am a transaction")
+    DBOS.logger.info("I am a transaction")
 ```
 
 **Parameters:**
@@ -59,7 +59,7 @@ Run a function as a DBOS communicator. Communicators allow durably calling third
 ```python
 @dbos.communicator()
 def example_communicator():
-    print("I am a communicator")
+    DBOS.logger.info("I am a communicator")
 ```
 
 ### scheduled
@@ -78,7 +78,7 @@ The annotated function must take in two parameters: The time that the run was sc
 @dbos.scheduled('* * * * *') # crontab syntax to run once every minute
 @dbos.workflow()
 def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
-    print("I am a workflow scheduled to run once a minute. ")
+    DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
 ```
 
 

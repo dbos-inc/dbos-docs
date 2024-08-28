@@ -11,7 +11,7 @@ To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference-pyth
 @dbos.scheduled('* * * * *') # crontab syntax to run once every minute
 @dbos.workflow()
 def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
-    print("I am a workflow scheduled to run once a minute. ")
+    DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
 ```
 
 Scheduled workflows must take in exactly two arguments: the time that the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).

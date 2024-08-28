@@ -18,7 +18,7 @@ For example:
 ```python
 @dbos.workflow()
 def example_workflow():
-    print(f"I am a workflow with ID {DBOS.workflow_id}")
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
 # The workflow will run with the supplied ID
 with SetWorkflowUUID("very-unique-id"):

@@ -143,7 +143,7 @@ Example syntax:
 ```python
 @dbos.workflow()
 def example_workflow(var1: str, var2: str):
-    print("I am a workflow")
+    DBOS.logger.info("I am a workflow")
 
 # Start example_workflow in the background
 handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
@@ -225,7 +225,7 @@ Example syntax:
 ```python
 @dbos.workflow()
 def example_workflow():
-    print(f"I am a workflow with ID {DBOS.workflow_id}")
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
 # The workflow will run with the supplied ID
 with SetWorkflowUUID("very-unique-id"):
