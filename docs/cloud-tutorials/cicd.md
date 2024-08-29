@@ -6,7 +6,8 @@ title: CI/CD tools
 This this section we will cover tools provided by DBOS Cloud to enable CI/CD best practices.
 
 ## Environments
-Use a different application for each environment, _e.g._, dev, staging and production.
+Use a different DBOS Cloud application for each environment, _e.g._, dev, staging and production.
+You can do so by deploying the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`.
 
 ## Secrets management
 The recommended way to make secrets, such as API keys, available to your application running in DBOS Cloud is to use environment variables.
@@ -28,5 +29,8 @@ environment:
 If `API_KEY` is set to `your-secret-value` in the CI/CD client's environment.
 
 ## Authentication
-We recommend you setup a dedicated DBOS account for CI/CD.
-You should then use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate with DBOS Cloud.
+You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
+
+:::info
+Upgrading to a DBOS Cloud paid plan will unlock the [organization feature](account-management#organization-management) which you can use to setup dedicated users for CI/CD.
+:::
