@@ -48,7 +48,7 @@ To communicate the payments URL to the customer, it uses events.
 The payments workflow emits an event containing a payment link using `set_event()`:
 
 ```javascript
-@dbos.workflow()
+@DBOS.workflow()
 def checkout_workflow():
     ...
     payment_url = ...

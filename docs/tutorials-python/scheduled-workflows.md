@@ -8,8 +8,8 @@ You can schedule DBOS [workflows](./workflow-tutorial.md) to run exactly once pe
 To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference-python/decorators.md#scheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
 
 ```python
-@dbos.scheduled('* * * * *') # crontab syntax to run once every minute
-@dbos.workflow()
+@DBOS.scheduled('* * * * *') # crontab syntax to run once every minute
+@DBOS.workflow()
 def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
 ```

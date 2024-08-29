@@ -141,7 +141,7 @@ The `DBOS.start_workflow` method resolves after the handle is durably created; a
 Example syntax:
 
 ```python
-@dbos.workflow()
+@DBOS.workflow()
 def example_workflow(var1: str, var2: str):
     DBOS.logger.info("I am a workflow")
 
@@ -223,7 +223,7 @@ Should be used in a `with` statement.
 Example syntax:
 
 ```python
-@dbos.workflow()
+@DBOS.workflow()
 def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 

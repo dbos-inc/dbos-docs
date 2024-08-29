@@ -30,7 +30,7 @@ You can optionally configure a communicator to automatically retry any exception
 Retries are configurable through arguments to the [communicator decorator](../reference-python/decorators.md#communicator):
 
 ```python
-dbos.communicator(
+DBOS.communicator(
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,

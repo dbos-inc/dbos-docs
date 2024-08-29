@@ -12,13 +12,13 @@ In DBOS, you annotate functions with decorators to give them properties.
 ### workflow
 
 ```python
-dbos.workflow()
+DBOS.workflow()
 ```
 
 Run a function as a DBOS reliable workflow.
 
 ```python
-@dbos.workflow()
+@DBOS.workflow()
 def example_workflow():
     DBOS.logger.info("I am a workflow")
 ```
@@ -27,7 +27,7 @@ def example_workflow():
 ### transaction
 
 ```python
-dbos.transaction(
+DBOS.transaction(
     isolation_level: str = "SERIALIZABLE"
 )
 ```
@@ -35,7 +35,7 @@ dbos.transaction(
 Run a function as a database transaction. Access the database through the `DBOS.sqlsession` context variable.
 
 ```python
-@dbos.transaction()
+@DBOS.transaction()
 def example_transaction():
     DBOS.logger.info("I am a transaction")
 ```
@@ -46,7 +46,7 @@ def example_transaction():
 ### communicator
 
 ```python
-dbos.communicator(
+DBOS.communicator(
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
@@ -57,7 +57,7 @@ dbos.communicator(
 Run a function as a DBOS communicator. Communicators allow durably calling third-party APIs from workflows and provide configurable automatic retries.
 
 ```python
-@dbos.communicator()
+@DBOS.communicator()
 def example_communicator():
     DBOS.logger.info("I am a communicator")
 ```
@@ -65,7 +65,7 @@ def example_communicator():
 ### scheduled
 
 ```python
-dbos.scheduled(
+DBOS.scheduled(
     cron: str
 )
 ```
@@ -75,8 +75,8 @@ Run a function on a schedule specified using [crontab](https://en.wikipedia.org/
 The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).
 
 ```python
-@dbos.scheduled('* * * * *') # crontab syntax to run once every minute
-@dbos.workflow()
+@DBOS.scheduled('* * * * *') # crontab syntax to run once every minute
+@DBOS.workflow()
 def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
 ```

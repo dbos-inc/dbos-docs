@@ -25,11 +25,11 @@ greetings = Table(
     Column("note", String)
 )
 
-@dbos.transaction()
+@DBOS.transaction()
 def example_insert(name: str, note: str) -> None:
     DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
 
-@dbos.transaction()
+@DBOS.transaction()
 def example_select(name: str) -> Optional[str]:
     row = DBOS.sql_session.execute(
         select(greetings.c.note).where(greetings.c.name == name)
@@ -41,13 +41,13 @@ def example_select(name: str) -> Optional[str]:
 <TabItem value="raw" label="Raw SQL">
 
 ```python
-@dbos.transaction()
+@DBOS.transaction()
 def example_insert(name: str, note: str) -> None:
     sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
     DBOS.sql_session.execute(sql, {"name": name, "note": note})
 
 
-@dbos.transaction()
+@DBOS.transaction()
 def example_select(name: str) -> Optional[str]:
     sql = text("SELECT note FROM greetings WHERE name = :name LIMIT 1")
     row = DBOS.sql_session.execute(sql, {"name": name}).first()

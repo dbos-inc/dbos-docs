@@ -84,7 +84,7 @@ The `start_workflow` method resolves after the handle is durably created; at thi
 Here's an example:
 
 ```python
-@dbos.workflow()
+@DBOS.workflow()
 def example_workflow(var1: str, var2: str):
     DBOS.sleep(10) # Sleep for 10 seconds
     return var1 + var2

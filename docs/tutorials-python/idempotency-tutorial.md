@@ -16,7 +16,7 @@ For example:
 
 
 ```python
-@dbos.workflow()
+@DBOS.workflow()
 def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
