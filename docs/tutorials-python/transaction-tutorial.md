@@ -61,7 +61,7 @@ def example_select(name: str) -> Optional[str]:
 ## Schema Management
 
 We strongly recommend you manage your database schema using migrations.
-DBOS supports any Python-compatible database migration tool, but by default uses [Alembic](https://alembic.sqlalchemy.org/en/latest/).
+DBOS supports any Python database migration tool, but by default uses [Alembic](https://alembic.sqlalchemy.org/en/latest/).
 
 
 Migration commands are configured in your [`dbos-config.yaml`](../reference-python/configuration.md) file.
