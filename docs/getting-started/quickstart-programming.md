@@ -325,5 +325,5 @@ Here we use `startWorkflow` which returns the response to the caller as soon as 
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-transact-tutorials).
+Next, to learn how to build more complex applications, check out our TypeScript tutorials.
 To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).

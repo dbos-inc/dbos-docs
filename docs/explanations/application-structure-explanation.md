@@ -105,4 +105,3 @@ Once you've written your functions, there are two basic ways to call them:
 1.  Any function (not just handlers) can be called from HTTP if it's annotated with the [`GetApi`](../api-reference/decorators#getapi) or [`PostApi`](../api-reference/decorators#postapi) decorators.  See our [HTTP serving tutorial](../tutorials/http-serving-tutorial) for details.
 2. Handlers and workflows can invoke other functions via their contexts' `invoke` ([workflow](../api-reference/contexts#workflowctxtinvoke), [handler](../api-reference/contexts#handlerctxtinvoke)) method.
 
-To learn more about each individual type of function and what it can do, see our [tutorials](../category/dbos-typescript-tutorials).
