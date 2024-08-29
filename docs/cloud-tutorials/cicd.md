@@ -7,7 +7,11 @@ This this section we will cover tools provided by DBOS Cloud to enable CI/CD bes
 
 ## Environments
 Use a different DBOS Cloud application for each environment, _e.g._, dev, staging and production.
-You can do so by deploying the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`.
+You can do so by [deploying](application-management#deploying-applications) the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`.
+
+:::info
+You must use a different database name (`app_db_name`) for each application.
+:::
 
 ## Secrets management
 The recommended way to make secrets, such as API keys, available to your application running in DBOS Cloud is to use environment variables.
