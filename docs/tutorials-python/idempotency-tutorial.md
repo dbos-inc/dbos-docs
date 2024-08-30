@@ -10,7 +10,7 @@ This is especially useful if your operations have side effects like making a pay
 An idempotency key can be any string, but we recommend using [UUIDs](https://docs.python.org/3/library/uuid.html).
 Idempotency keys are required to be **globally unique** for your application.
 
-Use [`SetWorkflowUUID`](../reference-python/contexts.md#setworkflowuuid) to set an idempotency key for a workflow, transaction, or communicator.
+Use [`SetWorkflowID`](../reference-python/contexts.md#SetWorkflowID) to set an idempotency key for a workflow, transaction, or communicator.
 This will also set the [workflow ID](./workflow-tutorial.md#workflow-ids) of that operation.
 For example:
 
@@ -21,7 +21,7 @@ def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
 # This sets the ID of the workflow to the supplied idempotency key
-with SetWorkflowUUID("very-unique-id"):
+with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 

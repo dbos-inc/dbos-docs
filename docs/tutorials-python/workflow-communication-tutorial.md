@@ -31,7 +31,7 @@ This call waits for the event to be published, returning `None` if the wait time
 
 ```python
 DBOS.get_event(
-    workflow_uuid: str,
+    workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
 ) -> None
@@ -60,7 +60,7 @@ The FastAPI handler that originally started the workflow uses `get_event()` to a
 @app.post("/checkout/{key}")
 def checkout_endpoint() -> Response:
     handle = dbos.start_workflow(checkout_workflow)
-    payment_url = dbos.get_event(handle.workflow_uuid, PAYMENT_URL_KEY)
+    payment_url = dbos.get_event(handle.workflow_id, PAYMENT_URL_KEY)
     if payment_url is None:
         return Response("/error")
     return Response(payment_url)
@@ -80,7 +80,7 @@ Messages can optionally be associated with a topic and are queued on the receive
 
 ```python
 DBOS.send(
-    destination_uuid: str,
+    destination_id: str,
     message: Any,
     topic: Optional[str] = None
 ) -> None
@@ -129,4 +129,4 @@ def payment_endpoint(workflow_id: str, payment_status: str) -> Response:
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
-If you're sending a message from normal Python code, you can use [`SetWorkflowUUID`](../reference-python/contexts.md#setworkflowuuid) with an idempotency key to guarantee exactly-once execution.
+If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference-python/contexts.md#SetWorkflowID) with an idempotency key to guarantee exactly-once execution.
