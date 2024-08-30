@@ -84,9 +84,3 @@ def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
 
 **Parameters:**
 - `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
-
-## Authorization Decorators
-
-### default_required_roles
-
-### required_roles
