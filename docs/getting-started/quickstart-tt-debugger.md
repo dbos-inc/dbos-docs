@@ -14,7 +14,7 @@ If you're not a VS Code user, there is an advanced tutorial for [Time Travel Deb
 
 Additionally, this tutorial builds on the [DBOS Quickstart](./quickstart).
 For convenience, we recommend [creating a DBOS Cloud account](https://console.dbos.dev/) and
-[deploying an application](./quickstart#deploy) before starting this tutorial.
+[deploying an application](./quickstart#3-deploy) before starting this tutorial.
 
 ### Installing the DBOS Time Travel Debugging VS Code Extension
 
@@ -213,6 +213,5 @@ However, you cannot change code that updates database state (i.e. insert/delete/
 a workflow or transaction function.
 :::
 
-Now that you know the basics of DBOS Time Travel Debugging, please check out our [tutorials](../category/dbos-transact-tutorials).
 To learn more about the Time Travel Debugger, check out our Time Travel Debugger [tutorial](../cloud-tutorials/timetravel-debugging)
 and [reference](../api-reference/time-travel-debugger).

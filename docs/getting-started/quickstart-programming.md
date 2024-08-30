@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Programming Guide
+title: DBOS Typescript Guide
 ---
 
 This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally. In this guide we'll modify that example to reliably record events across two different systems: Postgres and a third-party API. This app will write to both systems consistently, even if interrupted or restarted at any point.
@@ -325,5 +325,5 @@ Here we use `startWorkflow` which returns the response to the caller as soon as 
 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our [tutorials](../category/dbos-transact-tutorials).
+Next, to learn how to build more complex applications, check out our TypeScript tutorials.
 To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).

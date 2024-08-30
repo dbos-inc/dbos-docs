@@ -95,5 +95,4 @@ You can access trace objects using DBOS [contexts](../api-reference/contexts). F
     ctxt.span.addEvent("An important event")
     ...
   }
-}
 ```
