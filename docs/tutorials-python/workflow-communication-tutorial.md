@@ -112,9 +112,9 @@ def checkout_workflow():
   ... # Validate the order, then redirect customers to a payments service.
   payment_status = DBOS.recv(PAYMENT_STATUS_TOPIC)
   if payment_status is not None and payment_status == "paid":
-      ... # Handle the notification.
+      ... # Handle a successful payment.
   else:
-      ... # Notification did not arrive. Query payment state from the payment provider.
+      ... # Handle a failed payment or timeout.
 ```
 
 A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
