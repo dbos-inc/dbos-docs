@@ -9,7 +9,7 @@ This app will write to both systems consistently, even if interrupted or restart
 
 ## 1. Serving HTTP Requests
 
-Let's first use FastAPI to implement a simple HTTP endpoint to greet friends. In your app folder, change the file `main.py` to contain only the following:
+Let's first use [FastAPI](https://fastapi.tiangolo.com/) to implement a simple HTTP endpoint to greet friends. In your app folder, change the file `main.py` to contain only the following:
 
 ```python
 from dbos import DBOS
@@ -30,7 +30,7 @@ def readme() -> HTMLResponse:
     return HTMLResponse(readme)
 
 @app.get("/greeting/{name}")
-def greet(name: str):
+def greet(name: str) -> str:
     return f"Thank you for being awesome, {name}!"
 ```
 
@@ -108,7 +108,7 @@ def insert_greeting(name: str, note: str):
     DBOS.logger.info(f">>> Greeting to {name} recorded in the database!")
 
 @app.get("/greeting/{name}")
-def greet(name: str):
+def greet(name: str) -> str:
     note = f"Thank you for being awesome, {name}!"
     insert_greeting(name, note)
     return note
@@ -189,13 +189,11 @@ def sign_guestbook(name: str):
     payload = {"key": key, "name": name}
 
     response = requests.post(url, headers=headers, json=payload)
+    response_str = json.dumps(response.json())
     if not response.ok:
         raise Exception(f"Error signing guestbook: {response_str}")
-    response_str = json.dumps(response.json())
 
     DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
-
-    return response_str
 
 
 @DBOS.transaction()
@@ -205,7 +203,7 @@ def insert_greeting(name: str, note: str):
 
 
 @app.get("/greeting/{name}")
-def greet(name: str):
+def greet(name: str) -> str:
     note = f"Thank you for being awesome, {name}!"
     sign_guestbook(name)
     insert_greeting(name, note)
@@ -256,13 +254,11 @@ def sign_guestbook(name: str):
     payload = {"key": key, "name": name}
 
     response = requests.post(url, headers=headers, json=payload)
+    response_str = json.dumps(response.json())
     if not response.ok:
         raise Exception(f"Error signing guestbook: {response_str}")
-    response_str = json.dumps(response.json())
 
     DBOS.logger.info(f">>> STEP 1: Signed the Guestbook: {response_str}")
-
-    return response_str
 
 
 @DBOS.transaction()
@@ -281,7 +277,7 @@ def greeting_workflow(name: str, note: str):
 
 
 @app.get("/greeting/{name}")
-def greet(name: str):
+def greet(name: str) -> str:
     note = f"Thank you for being awesome, {name}!"
     DBOS.start_workflow(greeting_workflow, name, note)
     return note
