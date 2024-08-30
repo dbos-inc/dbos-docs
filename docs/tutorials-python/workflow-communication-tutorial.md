@@ -106,20 +106,20 @@ For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
-```javascript
+```python
 @DBOS.workflow()
 def checkout_workflow():
-  ... // Validate the order, then redirect customers to a payments service.
+  ... # Validate the order, then redirect customers to a payments service.
   payment_status = DBOS.recv(PAYMENT_STATUS_TOPIC)
   if payment_status is not None and payment_status == "paid":
-      ... // Handle the notification.
+      ... # Handle the notification.
   else:
-      ... // Notification did not arrive. Query payment state from the payment provider.
+      ... # Notification did not arrive. Query payment state from the payment provider.
 ```
 
 A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
-```javascript
+```python
 @app.post("/payment_webhook/{workflow_id}/{payment_status}")
 def payment_endpoint(workflow_id: str, payment_status: str) -> Response:
   DBOS.send(workflow_id, payment_status, PAYMENT_STATUS_TOPIC)
