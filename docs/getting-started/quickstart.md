@@ -87,7 +87,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 
 Then globally install the Cloud CLI:
 
-```
+```shell
 npm i -g @dbos-inc/dbos-cloud@latest
 ```
 
@@ -95,7 +95,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 ### 3. Deploy!
 
 Run the following command to deploy your app to DBOS Cloud:
-```
+```shell
 dbos-cloud app deploy
 ```
 
