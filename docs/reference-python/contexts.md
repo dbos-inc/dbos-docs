@@ -13,18 +13,18 @@ All are accessed through the syntax `DBOS.<method>` and can only be used once a 
 
 ```python
 DBOS.send(
-    destination_uuid: str,
+    destination_id: str,
     message: Any,
     topic: Optional[str] = None
 ) -> None
 ```
 
-Send a message to the workflow identified by `destination_uuid`.
+Send a message to the workflow identified by `destination_id`.
 Messages can optionally be associated with a topic.
 For more information, see our [workflow communication tutorial](#).
 
 **Parameters:**
-- `destination_uuid`: The workflow to which to send the message.
+- `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 
@@ -74,22 +74,22 @@ For more information, see our [workflow communication tutorial](#).
 
 ```python
 DBOS.get_event(
-    workflow_uuid: str,
+    workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
 ) -> None
 ```
 
-Retrieve an event published by the workflow identified by `workflow_uuid` to the key `key`.
+Retrieve an event published by the workflow identified by `workflow_id` to the key `key`.
 Waits for the event to be published, returning `None` if the wait times out.
 
 **Parameters:**
-- `workflow_uuid`: The identifier of the workflow whose events to retrieve.
+- `workflow_id`: The identifier of the workflow whose events to retrieve.
 - `key`: The key of the event to retrieve.
 - `timeout_seconds`: A timeout in seconds. If the wait times out, return `None`.
 
 **Returns:**
-- The value of the event published by `workflow_uuid` with name `key`, or `None` if the wait times out.
+- The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
 
 
 ### sleep
@@ -111,19 +111,19 @@ This sleep is durable--it records its intended wake-up time in the database so i
 
 ```python
 DBOS.retrieve_workflow(
-    workflow_uuid: str,
+    workflow_id: str,
     existing_workflow: bool = True,
 ) -> WorkflowHandle[R]
 ```
 
-Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workflow_uuid`.
+Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workflow_id`.
 
 **Parameters:**
-- `workflow_uuid`: The identifier of the workflow whose handle to retrieve.
+- `workflow_id`: The identifier of the workflow whose handle to retrieve.
 - `existing_workflow`: Whether to throw an exception if the workflow does not yet exist, or to wait for its creation. If set to `False` and the workflow does not exist, will wait for the workflow to be created, then return its handle.
 
 **Returns:**
-- The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_uuid`.
+- The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_id`.
 
 ### start_workflow
 
@@ -209,10 +209,10 @@ method: str # The HTTP method of the request
 
 ## Context Management
 
-### SetWorkflowUUID
+### SetWorkflowID
 
 ```python
-SetWorkflowUUID(
+SetWorkflowID(
     wfid: str
 )
 ```
@@ -228,6 +228,6 @@ def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
 # The workflow will run with the supplied ID
-with SetWorkflowUUID("very-unique-id"):
+with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
