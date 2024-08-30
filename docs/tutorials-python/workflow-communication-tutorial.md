@@ -45,7 +45,7 @@ To communicate the payments URL to the customer, it uses events.
 
 The payments workflow emits an event containing a payment link using `set_event()`:
 
-```javascript
+```python
 @DBOS.workflow()
 def checkout_workflow():
     ...
@@ -56,7 +56,7 @@ def checkout_workflow():
 
 The FastAPI handler that originally started the workflow uses `get_event()` to await this URL, then redirects the customer to it:
 
-```javascript
+```python
 @app.post("/checkout/{key}")
 def checkout_endpoint() -> Response:
     handle = dbos.start_workflow(checkout_workflow)
