@@ -21,7 +21,7 @@ Let's create your first DBOS app! You develop this app in a folder on your compu
   }}
 />
 
-In this guide, you'll start by deploying a sample "Hello" app to the cloud. After that, we'll show you how to run it locally.
+In this guide, you'll start by deploying a sample "Hello" app to the cloud. Then, you'll run it locally.
 
 
 <LargeTabs groupId="language">
