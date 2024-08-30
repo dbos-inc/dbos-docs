@@ -4,8 +4,6 @@ title: Workflow Communication
 description: Learn how to write interactive workflows
 ---
 
-In this guide, you'll learn how to implement communication with and between workflows.
-
 Workflow communication is useful if you want to make your workflows _interactive_, for example if a long-running workflow needs to query a user for input or report intermediate results back to its caller.
 DBOS provides two workflow communication APIs, the events API and the messages API.
 

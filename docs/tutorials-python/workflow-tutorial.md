@@ -4,8 +4,6 @@ title: Workflows
 description: Learn how to make applications reliable using workflows.
 ---
 
-In this guide, you'll learn how to make your applications reliable using workflows.
-
 Workflows orchestrate the execution of other functions, like transactions and communicators.
 Workflows provide _durable execution_: if they are interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.

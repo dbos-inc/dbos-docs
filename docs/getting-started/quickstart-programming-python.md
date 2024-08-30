@@ -116,7 +116,7 @@ def greet(name: str):
 
 Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy Core](https://docs.sqlalchemy.org/en/20/core/).
 We annotate it with [`@DBOS.transaction`](../tutorials-python/transaction-tutorial.md) to tell DBOS this function modifies the database.
-These annotations are critical for how DBOS provides lightweight reliable workflows, which we'll see later.
+These annotations are critical for how DBOS provides lightweight durable execution, which we'll see later.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
 
@@ -227,7 +227,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 ## 5. Composing Reliable Workflows
 
-Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `main.py` like so:
+Next, we want to make our app reliable: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. This is called **durable execution**. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `main.py` like so:
 
 ```python
 import json
@@ -289,11 +289,11 @@ def greet(name: str):
 
 Here, we add a new function called `greeting_workflow` that first calls `sign_guestbook`, then calls `insert_greeting`.
 We annotate it with `@DBOS.workflow()` to tell DBOS to execute it durably.
-We introduce a sleep between them allowing you to interrupt the program midway through the workflow.
-We then change `Greeting` to start this workflow.
-Stop your app with CTRL+C, then restart it with `dbos start`. 
+We introduce a sleep allowing you to interrupt the program midway through the workflow.
+We then change `greet` to start this workflow.
 
-The next step is time-sensitive; you may want to read it over before running. First, visit http://localhost:8000/greeting/Mike in your browser to send a request to your application. In your terminal, you should see an output like:
+The next step is time-sensitive; you may want to read it over before running. Stop your app with CTRL+C and restart it with `dbos start`.
+Then, visit http://localhost:8000/greeting/Mike in your browser to send a request to your application. In your terminal, you should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
