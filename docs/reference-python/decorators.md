@@ -55,11 +55,13 @@ DBOS.communicator(
 ```
 
 Run a function as a DBOS communicator. Communicators allow durably calling third-party APIs from workflows and provide configurable automatic retries.
+For example, this communicator fetches the contents of `example.com`.
+If `example.com` is down, it will automatically retry up to 10 times with exponential backoff.
 
 ```python
-@DBOS.communicator()
+@DBOS.communicator(retries_allowed=True, max_attempts=10)
 def example_communicator():
-    DBOS.logger.info("I am a communicator")
+    return requests.get("https://example.com").text
 ```
 
 ### scheduled
