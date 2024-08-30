@@ -41,13 +41,13 @@ source .venv/bin/activate
 
 Install the `dbos` library:
 
-```
+```shell
 pip install dbos
 ```
 
 Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
-```
+```shell
 dbos init <app-name>
 ```
 
