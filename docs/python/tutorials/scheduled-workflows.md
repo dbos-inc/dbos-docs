@@ -5,7 +5,7 @@ description: Learn how to run DBOS workflows on a schedule.
 ---
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run exactly once per time interval.
-To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference-python/decorators.md#scheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
+To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference/decorators.md#scheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
 
 ```python
 @DBOS.scheduled('* * * * *') # crontab syntax to run once every minute

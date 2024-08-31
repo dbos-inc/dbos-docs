@@ -9,7 +9,7 @@ Workflows provide _durable execution_: if they are interrupted for any reason (e
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store), we use a workflow for payment processing.
 
-To make a function a workflow, annotate it with the [`@DBOS.workflow`](../reference-python/decorators.md#workflow) decorator.
+To make a function a workflow, annotate it with the [`@DBOS.workflow`](../reference/decorators.md#workflow) decorator.
 Workflows may freely call transactions, communicators, and other workflows.
 However, they must be **[deterministic](#determinism).**
 
@@ -64,16 +64,16 @@ def example_workflow(friend: str):
 ### Workflow IDs
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the [`DBOS.workflow_id`](../reference-python/contexts.md#workflow_id) context variable.
+You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
 Workflow IDs are important for communicating with workflows and developing interactive workflows.
 For more information on workflow communication, see our guide.
 
 ### Starting Workflows Asynchronously
 
-You can use [start_workflow](../reference-python/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
+You can use [start_workflow](../reference/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
 
-`start_workflow` returns a [workflow handle](../reference-python/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+`start_workflow` returns a [workflow handle](../reference/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
 The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
 
@@ -91,7 +91,7 @@ handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
 result = handle.get_result()
 ```
 
-You can also use [`DBOS.retrieve_workflow`](../reference-python/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its [workflow ID](#workflow-ids).
+You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its [workflow ID](#workflow-ids).
 
 ### Further Reading
 

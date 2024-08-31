@@ -49,12 +49,12 @@ Here are some of the core features of DBOS Transact:
 
 | Feature                                                                       | Description
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [Transactions](./python/tutorials-python/transaction-tutorial.md)                                      | Easily and safely query your application database using [SQLAlchemy](https://www.sqlalchemy.org/) or raw SQL.
-| [Reliable Workflows](./python/tutorials-python/workflow-tutorial.md)                                   | Execute each step of your application exactly-once and automatically resume after any failure.
-| [Idempotency](./python/tutorials-python/idempotency-tutorial.md)                                       | Automatically make any request idempotent, so your requests happen exactly once.
+| [Transactions](./python/tutorials/transaction-tutorial.md)                                      | Easily and safely query your application database using [SQLAlchemy](https://www.sqlalchemy.org/) or raw SQL.
+| [Reliable Workflows](./python/tutorials/workflow-tutorial.md)                                   | Execute each step of your application exactly-once and automatically resume after any failure.
+| [Idempotency](./python/tutorials/idempotency-tutorial.md)                                       | Automatically make any request idempotent, so your requests happen exactly once.
 | [Kafka Integration](https://www.dbos.dev/dbos-transact-python)                                  | Consume Kafka messages exactly-once with transactions or workflows.
-| [Scheduled Workflows](./python/tutorials-python/scheduled-workflows.md)                                | Schedule your workflows to run exactly-once per time interval with cron-like syntax.
-| [Automatic Tracing](./python/tutorials-python/logging-and-tracing.md)                                  | Automatically generate and export [OpenTelemetry](https://opentelemetry.io/) traces from your application
+| [Scheduled Workflows](./python/tutorials/scheduled-workflows.md)                                | Schedule your workflows to run exactly-once per time interval with cron-like syntax.
+| [Automatic Tracing](./python/tutorials/logging-and-tracing.md)                                  | Automatically generate and export [OpenTelemetry](https://opentelemetry.io/) traces from your application
 
 </TabItem>
 </Tabs>

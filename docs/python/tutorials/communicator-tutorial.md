@@ -6,7 +6,7 @@ description: Learn how to communicate with external APIs and services
 
 When using DBOS workflows, we recommend marking functions that communicate with external APIs and services as _communicators_.
 
-You can easily turn **any** Python function into a communicator by annotating it with the [`@DBOS.communicator`](../reference-python/decorators.md#communicator) decorator.
+You can easily turn **any** Python function into a communicator by annotating it with the [`@DBOS.communicator`](../reference/decorators.md#communicator) decorator.
 Here's a simple example:
 
 ```python
@@ -27,7 +27,7 @@ Marking functions as communicators has two benefits:
 ### Configurable Retries
 
 You can optionally configure a communicator to automatically retry any exception a set number of times with exponential backoff.
-Retries are configurable through arguments to the [communicator decorator](../reference-python/decorators.md#communicator):
+Retries are configurable through arguments to the [communicator decorator](../reference/decorators.md#communicator):
 
 ```python
 DBOS.communicator(

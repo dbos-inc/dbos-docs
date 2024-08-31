@@ -9,14 +9,14 @@ description: Overview of logging and tracing in DBOS
 When using DBOS, we recommend you do all logging via Python's [built-in logger](https://docs.python.org/3/library/logging.html).
 This allows DBOS Cloud to collect and display your logs.
 
-For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference-python/contexts.md#logger).
+For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
 For example:
 
 ```python
 DBOS.logger.info("Welcome to DBOS!")
 ```
 
-You can configure the log level of this built-in logger in your [`dbos-config.yaml`](../reference-python/configuration.md) file
+You can configure the log level of this built-in logger in your [`dbos-config.yaml`](../reference/configuration.md) file
 
 ```yaml
 telemetry:
@@ -32,14 +32,14 @@ If you are using [FastAPI](https://fastapi.tiangolo.com/), it also automatically
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for every transaction, communicator, or workflow called in a trace.
 For example, if a FastAPI HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
-You can access your current span via [`DBOS.span`](../reference-python/contexts.md#span)
+You can access your current span via [`DBOS.span`](../reference/contexts.md#span)
 
 ### OpenTelemetry Export
 
 You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
 In DBOS Cloud, this is done automatically, and you can view your logs and traces in your [cloud console](https://console.dbos.dev) and [monitoring dashboard](../../cloud-tutorials/monitoring-dashboard.md).
 
-Locally, you can configure exporters in your [`dbos-config.yaml`](../reference-python/configuration.md):
+Locally, you can configure exporters in your [`dbos-config.yaml`](../reference/configuration.md):
 
 ```yaml
 telemetry:

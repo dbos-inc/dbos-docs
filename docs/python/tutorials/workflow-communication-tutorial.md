@@ -15,7 +15,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### set_event
 
-Any workflow can call [`DBOS.set_event`](../reference-python/contexts.md#set_event) to immutably publish a key-value pair.
+Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to immutably publish a key-value pair.
 A workflow cannot set a key it has already set.
 
 ```python
@@ -26,7 +26,7 @@ DBOS.set_event(
 ```
 #### get_event
 
-You can call [`DBOS.get_event`](../reference-python/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
+You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
 This call waits for the event to be published, returning `None` if the wait times out.
 
 ```python
@@ -129,4 +129,4 @@ def payment_endpoint(workflow_id: str, payment_status: str) -> Response:
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
-If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference-python/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
+If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.

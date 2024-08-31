@@ -9,8 +9,8 @@ import TabItem from '@theme/TabItem';
 
 We recommend performing database operations in _transaction functions_, which execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
 
-To make a Python function transactional, annotate it with the [`@DBOS.transaction`](../reference-python/decorators.md#transaction) decorator.
-Then, access the database using the [`DBOS.sqlsession`](../reference-python/contexts.md#sql_session) client, which is a [SQLAlchemy](https://www.sqlalchemy.org/) client DBOS automatically connects to your database.
+To make a Python function transactional, annotate it with the [`@DBOS.transaction`](../reference/decorators.md#transaction) decorator.
+Then, access the database using the [`DBOS.sqlsession`](../reference/contexts.md#sql_session) client, which is a [SQLAlchemy](https://www.sqlalchemy.org/) client DBOS automatically connects to your database.
 
 For example:
 
@@ -64,7 +64,7 @@ We strongly recommend you manage your database schema using migrations.
 DBOS supports any Python database migration tool, but by default uses [Alembic](https://alembic.sqlalchemy.org/en/latest/).
 
 
-Migration commands are configured in your [`dbos-config.yaml`](../reference-python/configuration.md) file.
+Migration commands are configured in your [`dbos-config.yaml`](../reference/configuration.md) file.
 At migration time, DBOS runs all migration commands.
 The default configuration, using Alembic, is:
 
