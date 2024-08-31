@@ -50,11 +50,3 @@ ctx.invoke(sesMailer).sendEmail(
    // ...
 },
 ```
-
-### Further Reading
-* For general information about DBOS Transact, see [Getting Started](../getting-started/quickstart)
-* For a reference on accessing information and functions from workflow and handler contexts, see [Contexts] (../api-reference/contexts)
-* For details on the `dbos-config.yaml` file, see the [Configuration Reference] (../api-reference/configuration)
-* For information about configuring classes, see [Configured Class Instances](../tutorials/configured-instances)
-* For a list of libraries, see the [Library Reference](../api-reference/communicatorlib)
-* For demo applications, see [Demo Applications](../tutorials/demo-apps)

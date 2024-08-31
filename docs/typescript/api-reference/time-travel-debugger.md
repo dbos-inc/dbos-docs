@@ -37,7 +37,7 @@ You cannot interact with the Debug Proxy via this window, but you can shut it do
 
 ### Launch DBOS Dashboard
 
-This menu item launches the [Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md) in a new browser instance.
+This menu item launches the [Monitoring Dashboard](../../cloud-tutorials/monitoring-dashboard.md) in a new browser instance.
 
 ## Interactive Time Travel Commands
 
@@ -70,7 +70,7 @@ Can be shortened to `DBOS WF`
 
 Sets the time travel debugger to the specific point in time when a specified workflow started. 
 Workflows are identified by their workflow UUID, which can be found in the
-[Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md).
+[Monitoring Dashboard](../../cloud-tutorials/monitoring-dashboard.md).
 The workflow UUID must be enclosed in quotes when using this command.
 
 Examples:
@@ -92,7 +92,7 @@ These commands can be invoked via the [VS Code Command Palette](https://code.vis
 
 The time travel debugger needs information about the application and its database from DBOS cloud. 
 While this information can be provided via configuration settings described below, the extension can retrieve this information via the
-[DBOS Cloud CLI](../api-reference/cloud-cli). This command runs [`npx dbos-cloud login`](../api-reference/cloud-cli#npx-dbos-cloud-login)
+[DBOS Cloud CLI](../../cloud-tutorials/cloud-cli.md). This command runs [`npx dbos-cloud login`](../../cloud-tutorials/cloud-cli#npx-dbos-cloud-login)
 on your behalf from inside VS Code.
 
 Typically, the time travel debugger will automatically prompt you to login to DBOS cloud if you're not logged in or your credentials have expired.
@@ -111,7 +111,7 @@ This command deletes any stored passwords saved in VS Code's secrets storage.
 
 :::note
 The database password is different from the DBOS Cloud login credentials. 
-Please see [Cloud Database Management](../cloud-tutorials/database-management) for more information.
+Please see [Cloud Database Management](../../cloud-tutorials/database-management) for more information.
 :::
 
 ### DBOS: Shutdown Debug Proxy
@@ -145,7 +145,7 @@ via the ['debug_proxy_port'](#dbos-ttdbgdebug_proxy_port) setting.
 ### dbos-ttdbg.pick-workflow-id
 
 This command prompts the user to choose a select a workflow to debug. For more information, please see the 
-[Time Travel Debugger tutorial](../cloud-tutorials/timetravel-debugging).
+[Time Travel Debugger tutorial](../../cloud-tutorials/timetravel-debugging).
 
 ## Configuration
 
@@ -171,7 +171,7 @@ even if that launch configuration does not specify a `preLaunchTask`.
 
 ### DBOS Cloud Database Connection
 
-Typically, the time travel debugger retrieves database connection information via [DBOS Cloud CLI](./cloud-cli). 
+Typically, the time travel debugger retrieves database connection information via [DBOS Cloud CLI](../../cloud-tutorials/cloud-cli.md). 
 However, the developer can specify this information directly via 
 [VS Code settings](https://code.visualstudio.com/docs/getstarted/settings), bypassing the need to use DBOS Cloud CLI.
 

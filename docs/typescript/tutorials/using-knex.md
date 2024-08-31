@@ -11,7 +11,7 @@ It also supports querying the database with [raw SQL](https://knexjs.org/guide/r
 
 ### Getting Started
 
-The default DBOS template application, used in the [quickstart](../getting-started/quickstart.md) and [programming guide](../getting-started/quickstart-programming.md) uses Knex.
+The default DBOS template application, used in the [quickstart](../../getting-started/quickstart.md) uses Knex.
 To download it, run:
 
 ```bash
@@ -41,7 +41,7 @@ npx knex migrate:make <migration-name>
 
 This will create a new migration file named `migrations/<timestamp>_<migration-name>.js`.
 You can implement your migration in this file.
-Here is a simple example from the [programming guide](../getting-started/quickstart-programming.md) of a migration that creates a `greetings` table with `name` and `note` text fields:
+Here is a simple example from the [programming guide](../../getting-started/quickstart-programming.md) of a migration that creates a `greetings` table with `name` and `note` text fields:
 
 ```javascript
 exports.up = function(knex) {

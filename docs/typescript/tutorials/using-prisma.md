@@ -11,7 +11,7 @@ DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeO
 ### Getting Started
 
 An easy way to get started with Prisma is to bootstrap your application with our Prisma template.
-This is similar to the template used in the [quickstart](../getting-started/quickstart.md), but built with Prisma instead of Knex.
+This is similar to the template used in the [quickstart](../../getting-started/quickstart.md), but built with Prisma instead of Knex.
 To download it, run:
 
 ```bash
@@ -153,4 +153,4 @@ Therefore, we recommend that you set the build script in your `package.json` fil
 ```
 
 ### Known Issues
-- Currently we do not support [time travel debugging](../cloud-tutorials/timetravel-debugging.md) for cloud deployed Prisma applications. However, you can still perform [interactive time travel queries](../cloud-tutorials/interactive-timetravel.md).
+- Currently we do not support [time travel debugging](../../cloud-tutorials/timetravel-debugging.md) for cloud deployed Prisma applications. However, you can still perform [interactive time travel queries](../../cloud-tutorials/interactive-timetravel.md).
