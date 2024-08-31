@@ -21,7 +21,6 @@ DBOS.send(
 
 Send a message to the workflow identified by `destination_id`.
 Messages can optionally be associated with a topic.
-For more information, see our [workflow communication tutorial](../tutorials/workflow-communication-tutorial.md).
 
 **Parameters:**
 - `destination_id`: The workflow to which to send the message.
@@ -42,7 +41,6 @@ Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [workflow communication tutorial](../tutorials/workflow-communication-tutorial.md).
 
 **Parameters:**
 - `topic`: A topic queue on which to wait.
@@ -63,7 +61,6 @@ DBOS.set_event(
 Create and associate with this workflow an immutable event named `key` with value `value`.
 Can only be called from within a workflow.
 Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
-For more information, see our [workflow communication tutorial](../tutorials/workflow-communication-tutorial.md).
 
 
 **Parameters:**
