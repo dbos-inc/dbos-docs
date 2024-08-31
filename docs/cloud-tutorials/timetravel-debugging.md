@@ -182,7 +182,7 @@ Currently, the time travel debugger supports stepping through any past workflows
 
 ### Configurations
 
-For more information, please read the [debugger extension reference](../typescript/api-reference/time-travel-debugger.md).
+For more information, please read the [debugger extension reference](../typescript/reference/time-travel-debugger.md).
 
 ## Time Travel with DBOS CLI (Non-VS Code Users)
 
@@ -224,4 +224,4 @@ npx dbos debug -u <workflow UUID>
 Every time you modify your code, you need to recompile it before running the `dbos debug` command again.
 :::
 
-For more information on the debug command, please see our [references](../typescript/api-reference/cli.md#npx-dbos-debug)
+For more information on the debug command, please see our [references](../typescript/reference/cli.md#npx-dbos-debug)

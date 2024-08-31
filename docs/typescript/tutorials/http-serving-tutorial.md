@@ -6,9 +6,9 @@ description: Learn how to serve HTTP requests
 
 In this guide, you'll learn how to make DBOS applications accessible through HTTP.
 
-Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../api-reference/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
+Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../reference/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
 
-You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../api-reference/decorators#transaction), [`@Workflow`](../api-reference/decorators#workflow), or [`@Communicator`](../api-reference/decorators#communicator) decorator.
+You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../reference/decorators#transaction), [`@Workflow`](../reference/decorators#workflow), or [`@Communicator`](../reference/decorators#communicator) decorator.
 
 Here's an example of a new function with an endpoint decorator:
 
@@ -28,7 +28,7 @@ static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note
 }
 ```
 
-DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@GetApi`](../api-reference/decorators#getapi), [`@PostApi`](../api-reference/decorators#postapi), [`@PutApi`](../api-reference/decorators.md#putapi), [`@PatchApi`](../api-reference/decorators.md#patchapi), and [`@DeleteApi`](../api-reference/decorators.md#deleteapi).
+DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@GetApi`](../reference/decorators#getapi), [`@PostApi`](../reference/decorators#postapi), [`@PutApi`](../reference/decorators.md#putapi), [`@PatchApi`](../reference/decorators.md#patchapi), and [`@DeleteApi`](../reference/decorators.md#deleteapi).
 Each associates a function with an HTTP URL.
 
 
@@ -59,7 +59,7 @@ GET /greeting/dbos
 
 #### 2. URL Query String Parameters
 
-[`GET`](../api-reference/decorators#getapi) and [`DELETE`](../api-reference/decorators.md#deleteapi) endpoints automatically parse arguments from query strings.
+[`GET`](../reference/decorators#getapi) and [`DELETE`](../reference/decorators.md#deleteapi) endpoints automatically parse arguments from query strings.
 
 For example, the following endpoint expects the `id` and `name` parameters to be passed through a query string:
 
@@ -78,7 +78,7 @@ GET /example?id=123&name=dbos
 
 #### 3. HTTP Body Fields
 
-[`POST`](../api-reference/decorators#postapi), [`PATCH`](../api-reference/decorators#patchapi), and [`PUT`](../api-reference/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
+[`POST`](../reference/decorators#postapi), [`PATCH`](../reference/decorators#patchapi), and [`PUT`](../reference/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
 
 For example, the following endpoint expects the `id` and `name` parameters to be passed through the HTTP request body:
 
@@ -109,16 +109,16 @@ When sending an HTTP request with a JSON body, make sure you set the [`Content-T
 :::info
 No matter where arguments are parsed from, if arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
 
-You can specify that an argument is optional with the [`@ArgOptional`](../api-reference/decorators#argoptional) parameter decorator.
+You can specify that an argument is optional with the [`@ArgOptional`](../reference/decorators#argoptional) parameter decorator.
 :::
 
 :::info
-You can use the [`@ArgSource()`](../api-reference/decorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
+You can use the [`@ArgSource()`](../reference/decorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
 :::
 
 #### Raw Requests
 
-If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its [`context.request`](../api-reference/contexts#ctxtrequest) field. This returns the following information:
+If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its [`context.request`](../reference/contexts#ctxtrequest) field. This returns the following information:
 
 ```typescript
 interface HTTPRequest {
@@ -142,30 +142,30 @@ If the function throws an exception, the error message is sent in the response b
 If the error contains a `status` field, the response uses that status code instead.
 
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
-DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../api-reference/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
+DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../reference/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
 
 ### Handlers
 
-A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../api-reference/contexts#handlercontext) as its first argument, like in the first example above.
-Handlers can [invoke](../api-reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
+A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../reference/contexts#handlercontext) as its first argument, like in the first example above.
+Handlers can [invoke](../reference/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
 However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
 You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
 
 ### Body Parser
-By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../api-reference/decorators#koabodyparser) decorator.
+By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../reference/decorators#koabodyparser) decorator.
 
 ### CORS
 
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is a security feature that controls access to resources from different domains. DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a permissive default configuration.
 
 To customize CORS:
-* Use the HTTP configuration in [`dbos-config.yaml`](../api-reference/configuration#http) for global settings.
-* Use the [`@KoaCors`](../api-reference/decorators#koacors) class decorator for class-specific settings.
+* Use the HTTP configuration in [`dbos-config.yaml`](../reference/configuration#http) for global settings.
+* Use the [`@KoaCors`](../reference/decorators#koacors) class decorator for class-specific settings.
 
 ### Middleware
 
 DBOS supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
-Middlewares are configured at the class level through the [`@KoaMiddleware`](../api-reference/decorators#koamiddleware) decorator.
+Middlewares are configured at the class level through the [`@KoaMiddleware`](../reference/decorators#koamiddleware) decorator.
 Here is an example of a simple middleware checking an HTTP header:
 ```javascript
 import { Middleware } from "koa";

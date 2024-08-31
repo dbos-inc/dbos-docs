@@ -11,7 +11,7 @@ Workflows are _reliable_: if their execution is interrupted for any reason (e.g.
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), we use a workflow for payment processing.
 
-Workflows must be annotated with the [`@Workflow`](../api-reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../api-reference/contexts#workflowcontext) as their first argument.
+Workflows must be annotated with the [`@Workflow`](../reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../reference/contexts#workflowcontext) as their first argument.
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
@@ -39,7 +39,7 @@ class Greetings {
 
 ### Invoking Functions from Workflows
 
-Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../api-reference/contexts#workflowctxtinvoke) method.
+Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../reference/contexts#workflowctxtinvoke) method.
 For example, this line from our above example invokes the transaction `InsertGreeting`:
 
 ```javascript
@@ -48,7 +48,7 @@ await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
 
 The syntax for invoking function `fn(args)` in class `Cls` is `ctxt.invoke(Cls).fn(args)`.
 
-You can also invoke other workflows with the [`ctxt.invokeWorkflow()`](../api-reference/contexts#workflowctxtinvokeworkflow) method.
+You can also invoke other workflows with the [`ctxt.invokeWorkflow()`](../reference/contexts#workflowctxtinvokeworkflow) method.
 The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
@@ -67,14 +67,14 @@ These guarantees assume that the application and database may crash and go offli
 For safety, DBOS automatically attempts to recover a workflow a set number of times.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be [retried manually](#workflow-management).
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
-The maximum number of retries is by default 50, but this may be configured through arguments to the [`@Workflow`](../api-reference/decorators.md#workflow) decorator.
+The maximum number of retries is by default 50, but this may be configured through arguments to the [`@Workflow`](../reference/decorators.md#workflow) decorator.
 
 ### Determinism
 
 A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
-You can safely [invoke](../api-reference/contexts.md#workflowctxtinvoke) these methods from a workflow.
+You can safely [invoke](../reference/contexts.md#workflowctxtinvoke) these methods from a workflow.
 
 For example, **don't do this**:
 
@@ -117,7 +117,7 @@ For more information on workflow communication, see [our guide](./workflow-commu
 ### Asynchronous Workflows
 
 Because workflows are often long-running, DBOS supports starting workflows asynchronously without waiting for them to complete.
-When you start a workflow from a handler or another workflow with [`handlerCtxt.startWorkflow`](../api-reference/contexts.md#handlerctxtstartworkflow) or [`workflowCtxt.startWorkflow`](../api-reference/contexts.md#workflowctxtstartworkflow), the invocation returns a [workflow handle](../api-reference/workflow-handles):
+When you start a workflow from a handler or another workflow with [`handlerCtxt.startWorkflow`](../reference/contexts.md#handlerctxtstartworkflow) or [`workflowCtxt.startWorkflow`](../reference/contexts.md#workflowctxtstartworkflow), the invocation returns a [workflow handle](../reference/workflow-handles):
 
 ```javascript
   @GetApi(...)
@@ -145,18 +145,18 @@ const handle = await ctxt.retrieveWorkflow(workflowIdentity)
 const result = await handle.getResult();
 ```
 
-For more information on workflow handles, see [their reference page](../api-reference/workflow-handles).
+For more information on workflow handles, see [their reference page](../reference/workflow-handles).
 
 ### Workflow Management
 
-You can use the [DBOS Transact CLI](../api-reference/cli.md) to manage your application's workflows.
+You can use the [DBOS Transact CLI](../reference/cli.md) to manage your application's workflows.
 It provides the following commands:
 
-- [`npx dbos workflow list`](../api-reference/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
-- [`npx dbos workflow get <uuid>`](../api-reference/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
-- [`npx dbos workflow cancel <uuid>`](../api-reference/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
-- [`npx dbos workflow resume <uuid>`](../api-reference/cli.md#npx-dbos-workflow-resume): Resume a workflow from the last step it executed, keeping its [identity UUID](#workflow-identity).
-- [`npx dbos workflow restart <uuid>`](../api-reference/cli.md#npx-dbos-workflow-restart): Resubmit a workflow, restarting it from the beginning with the same arguments but a new [identity UUID](#workflow-identity).
+- [`npx dbos workflow list`](../reference/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
+- [`npx dbos workflow get <uuid>`](../reference/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
+- [`npx dbos workflow cancel <uuid>`](../reference/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
+- [`npx dbos workflow resume <uuid>`](../reference/cli.md#npx-dbos-workflow-resume): Resume a workflow from the last step it executed, keeping its [identity UUID](#workflow-identity).
+- [`npx dbos workflow restart <uuid>`](../reference/cli.md#npx-dbos-workflow-restart): Resubmit a workflow, restarting it from the beginning with the same arguments but a new [identity UUID](#workflow-identity).
 
 ### Further Reading
 

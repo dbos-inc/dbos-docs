@@ -5,7 +5,7 @@ description: Learn to use logging in DBOS
 ---
 
 In this section we will learn to use DBOS's built-in logging system.
-The DBOS runtime comes with a global logger you can access through any operation's [context](../api-reference/contexts.md).
+The DBOS runtime comes with a global logger you can access through any operation's [context](../reference/contexts.md).
 
 ### Usage
 
@@ -36,7 +36,7 @@ npx dbos-cloud app logs
 
 ### Configuration
 
-In the [configuration file](../api-reference/configuration), you can configure the logging level, silence the logger, and request to add context metadata to log entries:
+In the [configuration file](../reference/configuration), you can configure the logging level, silence the logger, and request to add context metadata to log entries:
 ```yaml
 ...
 telemetry:

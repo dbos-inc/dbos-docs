@@ -9,12 +9,12 @@ import TabItem from '@theme/TabItem';
 
 Use _transaction functions_ to read and write from your database. A transaction function may contain multiple queries as well as TypeScript business logic and executes as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
 
-Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext`](../api-reference/contexts#transactioncontextt) as their first argument.
+Transaction functions must be annotated with the [`@Transaction`](../reference/decorators#transaction) decorator and must have a [`TransactionContext`](../reference/contexts#transactioncontextt) as their first argument.
 As with other DBOS functions, inputs and outputs must be serializable to JSON.
 
-The [`TransactionContext`](../api-reference/contexts#transactioncontextt) provides a `.client` field you can use to interact with the database, so you don't need to worry about managing connections.
+The [`TransactionContext`](../reference/contexts#transactioncontextt) provides a `.client` field you can use to interact with the database, so you don't need to worry about managing connections.
 DBOS supports [Knex.js](./using-knex.md), [Drizzle](./using-drizzle.md), [TypeORM](./using-typeorm.md), and [Prisma](./using-prisma.md) clients as well as raw SQL.
-You can configure which client to use in your [`dbos-config.yaml`](../api-reference/configuration.md) file.
+You can configure which client to use in your [`dbos-config.yaml`](../reference/configuration.md) file.
 Knex is the default and we recommend using `Knex.raw()` for raw SQL.
 
 Here are examples of a write and a read transaction function using each client.
@@ -187,7 +187,7 @@ Please see their guides for more detail:
 - [Prisma schema management guide.](./using-prisma.md#schema-management)
 
 If you are not using database transactions, you may wish to disable database migrations.
-In [`dbos-config.yaml`](../api-reference/configuration.md), set your `migrate:` section as below:
+In [`dbos-config.yaml`](../reference/configuration.md), set your `migrate:` section as below:
 
 ```yaml
 migrate:

@@ -28,7 +28,7 @@ class ScheduledExample{
 ```
 
 ### Scheduling The Workflow
-Then, annotate your method with a [`@Scheduled`](../api-reference/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run every 30 seconds:
+Then, annotate your method with a [`@Scheduled`](../reference/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run every 30 seconds:
 
 ```typescript
 import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
@@ -63,4 +63,4 @@ By default, scheduled workflows are executed exactly once per interval.  This me
 If the mode is set to `ExactlyOncePerIntervalWhenActive` , DBOS Transact will not consult the system database to figure out if scheduled workflows were missed, but will instead start the schedule at the current time.
 
 ### `crontab` Specification
-The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.  The specification for the DBOS variant can be found in the [decorator reference](../api-reference/decorators.md#crontab-specification).
+The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.  The specification for the DBOS variant can be found in the [decorator reference](../reference/decorators.md#crontab-specification).

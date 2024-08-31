@@ -60,7 +60,7 @@ If a workflow is invoked many times with the same idempotency key (for example, 
 
 ### Invoking the checkout workflow
 Upon receiving a request, the handler asynchronously invokes the checkout workflow using its idempotency key.
-It obtains a [workflow handle](../api-reference/workflow-handles), used to interact with the workflow.
+It obtains a [workflow handle](../reference/workflow-handles), used to interact with the workflow.
 
 ```javascript
 // A workflow handle is immediately returned. The workflow continues in the background.

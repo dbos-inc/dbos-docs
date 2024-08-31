@@ -152,7 +152,7 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../typescript/api-reference/configuration#environment-variables) for more details.
+In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../typescript/reference/configuration#environment-variables) for more details.
 ::::
 
 ### 4.2. Sign the Guestbook from the App

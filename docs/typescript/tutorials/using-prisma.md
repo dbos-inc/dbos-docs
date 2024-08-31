@@ -67,7 +67,7 @@ This automatically generates a new migration (under `prisma/migrations/`) contai
 
 ### Using Prisma
 
-When using DBOS, database operations are performed in [transaction functions](./transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../api-reference/decorators#transaction) decorator and must have a [`TransactionContext<PrismaClient>`](../api-reference/contexts#transactioncontextt) as their first argument.
+When using DBOS, database operations are performed in [transaction functions](./transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../reference/decorators#transaction) decorator and must have a [`TransactionContext<PrismaClient>`](../reference/contexts#transactioncontextt) as their first argument.
 Note that we specify `PrismaClient` in angle brackets.
 
 Within the transaction function, access your Prisma client from the `.client` field of your transaction context.
@@ -96,7 +96,7 @@ export class Hello {
 If you are using the [Prisma template](#getting-started), this is done for you.
 :::
 
-To enable Prisma, you must set the `app_db_client` field in the [DBOS configuration file](../api-reference/configuration.md) to `prisma`.
+To enable Prisma, you must set the `app_db_client` field in the [DBOS configuration file](../reference/configuration.md) to `prisma`.
 You should also configure Prisma migration commands.
 Here is an example of a configuration file set up for Prisma:
 

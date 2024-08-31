@@ -41,7 +41,7 @@ is the same as this:
 ### Enabling Decorators
 
 DBOS uses [Typescript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
-If you initialize your project with [`npx -y @dbos-inc/create`](../api-reference/cli.md#npx-dbos-inccreate), these are automatically enabled.
+If you initialize your project with [`npx -y @dbos-inc/create`](../reference/cli.md#npx-dbos-inccreate), these are automatically enabled.
 Otherwise, you must enable them by supplying the following configuration to the Typescript compiler (usually via the file `tsconfig.json`):
 
 ```json
@@ -365,7 +365,7 @@ class OperationEndpoints {
 #### `@KoaCors`
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients.
 
-By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) middleware with a configuration from [`dbos-config.yaml`](../api-reference/configuration#http).  (The defaults in this file are, in turn, extremely permissive, allowing all cross-origin requests, including those with credentials.)  If your application needs only a coarse configuration of CORS, such as disabling CORS, or enabling CORS only on whitelisted origins, the config file offers a simple option.
+By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) middleware with a configuration from [`dbos-config.yaml`](../reference/configuration#http).  (The defaults in this file are, in turn, extremely permissive, allowing all cross-origin requests, including those with credentials.)  If your application needs only a coarse configuration of CORS, such as disabling CORS, or enabling CORS only on whitelisted origins, the config file offers a simple option.
 
 If more complex logic is needed, or if the CORS configuration differs between operation classes, the `@KoaCors` class-level decorator can be used to specify the CORS middleware in full.
 
