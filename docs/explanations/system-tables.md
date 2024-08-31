@@ -22,14 +22,14 @@ This table stores workflow execution information. It has the following columns:
 - `authenticated_user`: The user who ran the workflow. Empty string if not set.
 - `assumed_role`: The role used to run this workflow.  Empty string if authorization is not required.
 - `authenticated_roles`: All roles the authenticated user has, if any.
-- `request`: The serialized [HTTP Request](./contexts#ctxtrequest) that triggered this workflow, if any.
+- `request`: The serialized HTTP Request that triggered this workflow, if any.
 - `output`: The serialized workflow output, if any.
 - `error`: The serialized error thrown by the workflow, if any.
 - `created_at`: The timestamp of when this workflow started.
 - `updated_at`: The latest timestamp when this workflow status was updated.
 - `application_version`: The application version of this workflow code.
 - `class_name`: The class name of the workflow function.
-- `config_name`: The name of the [configured instance](../tutorials/configured-instances.md) of this workflow, if any.
+- `config_name`: The name of the configured instance of this workflow, if any.
 - `recovery_attempts`: The number of attempts (so far) to recovery this workflow.
 - `application_id`: (Internal use) The ID of the application that ran this workflow.
 - `executor_id`: (Internal use) The ID of the executor that ran this workflow.
@@ -64,7 +64,7 @@ This table stores the outputs of communicator functions:
 ## Provenance Tables
 
 :::tip
-The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during deploy](./cloud-cli#npx-dbos-cloud-app-deploy).
+The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#npx-dbos-cloud-app-deploy).
 :::
 
 DBOS Cloud maintains a provenance database for your application, which is an append-only versioned replica of your application database.

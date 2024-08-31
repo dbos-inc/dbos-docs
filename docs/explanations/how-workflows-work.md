@@ -5,12 +5,12 @@ description: Learn how DBOS workflows work
 
 # How Workflows Work
 
-One of the most powerful features of DBOS is its [reliable workflows](../tutorials/workflow-tutorial#reliability-guarantees), which are guaranteed to always run to completion with each function executing once and only once.
+One of the most powerful features of DBOS is its reliable workflows, which are guaranteed to always run to completion with each function executing once and only once.
 In this guide, we'll explain how DBOS makes workflows reliable.
 
 ### Workflow Guarantees
 
-To reiterate from our [workflow tutorial](../tutorials/workflow-tutorial), workflows provide the following reliability guaranteees.
+TWorkflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
@@ -21,7 +21,7 @@ These guarantees assume that the application and database may crash and go offli
 
 To make workflows reliable, DBOS records every step they take in the database so it can safely re-execute them if they're interrupted.
 Before a workflow starts, DBOS records its input.
-Each time a workflow executes a [transaction](../tutorials/transaction-tutorial) or [communicator](../tutorials/communicator-tutorial), DBOS records its output (or the exception it threw, if any).
+Each time a workflow executes a transaction or communicator, DBOS records its output (or the exception it threw, if any).
 When a workflow finishes, DBOS records its output.
 
 If a DBOS server crashes and restarts, it uses the information saved in the database to resume all pending workflows from where they left off.
@@ -88,10 +88,10 @@ From a user's perspective, the workflow has resumed from where it failed last ti
 
 For workflow recovery to work, they must meet two requirements.
 
-**First, workflows must be [deterministic](../tutorials/workflow-tutorial#determinism)**:
+**First, workflows must be deterministic**:
 A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](../tutorials/transaction-tutorial) and all other non-deterministic operations in [communicators](../tutorials/communicator-tutorial).
+Instead, you should do all database operations in transactions and all other non-deterministic operations in communicators.
 That way, DBOS can capture the output of the non-deterministic operation and avoid re-executing it.
 
 **Second, DBOS functions should not have side effects in memory outside of their own scope**.

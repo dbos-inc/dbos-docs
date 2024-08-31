@@ -18,7 +18,7 @@ For Free Tier DBOS applications, time travel debug information is only kept for 
 
 ### Preliminaries
 
-Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](../api-reference/cloud-cli#npx-dbos-cloud-app-deploy).
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](./cloud-cli#npx-dbos-cloud-app-deploy).
 
 Time travel debugging uses [Visual Studio Code](https://code.visualstudio.com/) and the
 [DBOS Time Travel Debugger Extension](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg).
@@ -49,9 +49,7 @@ Time Travel debugging is only supported for applications that have been deployed
 #### Debugging from a CodeLens
 
 When you open your DBOS application in VS Code, the  DBOS Time Travel Debugger extension inserts a "⏳ Time Travel Debug"
-CodeLens to every DBOS [workflow](../tutorials/workflow-tutorial),
-[transaction](../tutorials/transaction-tutorial)
-and [communicator](../tutorials/communicator-tutorial) function in your DBOS application.
+CodeLens to every DBOS function in your application.
 
 ![DBOS Time Travel CodeLens Screenshot](./assets/ttdbg-code-lens.png)
 
@@ -78,7 +76,7 @@ You can [set breakpoints](https://code.visualstudio.com/docs/editor/debugging#_b
 #### Debugging from the Run and Debug View
 
 You can also debug your DBOS application via [VS Code's Start Debugging command](https://code.visualstudio.com/docs/editor/debugging).
-The extension includes [command variables](http://localhost:3000/api-reference/time-travel-debugger#command-variables) that can
+The extension includes command variables that can
 be used in the launch configuration file.
 
 When debugging this way, the `pick-workflow-id` command variable is used to select a recent execution of your cloud application to debug.
@@ -113,7 +111,7 @@ When time travel debugging, you can freely add read queries to your application 
 DBOS will support such changes in the future.
 :::
 
-For example, here is an transaction function from the [Transactions tutorial](../tutorials/transaction-tutorial)
+For example, here is an transaction function:
 
 ```javascript
 export class Hello {
@@ -184,7 +182,7 @@ Currently, the time travel debugger supports stepping through any past workflows
 
 ### Configurations
 
-For more information, please read the [debugger extension reference](../api-reference/time-travel-debugger).
+For more information, please read the [debugger extension reference](../typescript/api-reference/time-travel-debugger.md).
 
 ## Time Travel with DBOS CLI (Non-VS Code Users)
 
@@ -226,4 +224,4 @@ npx dbos debug -u <workflow UUID>
 Every time you modify your code, you need to recompile it before running the `dbos debug` command again.
 :::
 
-For more information on the debug command, please see our [references](../api-reference/cli.md#npx-dbos-debug)
+For more information on the debug command, please see our [references](../typescript/api-reference/cli.md#npx-dbos-debug)
