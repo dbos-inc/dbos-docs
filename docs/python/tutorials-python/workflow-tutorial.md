@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 1
 title: Workflows
 description: Learn how to make applications reliable using workflows.
 ---
