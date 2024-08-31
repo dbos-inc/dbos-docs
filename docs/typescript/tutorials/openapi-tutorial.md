@@ -49,7 +49,7 @@ We can't provide tutorials for all of these OpenAPI generator tools, but the Swa
 First, you need to run `npx dbos-openapi generate` against your DBOS application entrypoints as described above.
 
 ::::info
-Note, the shop and payment backend applications from the [DBOS E-Commerce demo app](./demo-apps.md#e-commerce)
+Note, the shop and payment backend applications from the [E-Commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce)
 include generated OpenApi definition files if you want to try this without creating your own application.
 ::::
 
