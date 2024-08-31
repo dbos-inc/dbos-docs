@@ -78,13 +78,13 @@ database:
 
 To execute all migration commands, run:
 
-```
+```shell
 dbos migrate
 ```
 
 If you are using Alembic, you can generate a new migration with:
 
-```
+```shell
 alembic revision -m <migration-name>
 ```
 

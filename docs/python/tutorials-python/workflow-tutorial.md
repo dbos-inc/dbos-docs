@@ -41,7 +41,7 @@ You can safely call these methods from your workflow.
 
 For example, **don't do this**:
 
-```javascript
+```python
 @DBOS.workflow()
 def example_workflow(friend: str):
     body = requests.get("https://example.com").text
@@ -50,7 +50,7 @@ def example_workflow(friend: str):
 
 Do this instead:
 
-```javascript
+```python
 @DBOS.communicator()
 def example_communicator():
     return requests.get("https://example.com").text
