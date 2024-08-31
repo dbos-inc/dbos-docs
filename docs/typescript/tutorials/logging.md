@@ -23,9 +23,9 @@ Each accepts and logs any output that can be serialized to JSON.
 
 ### Viewing Logs in DBOS Cloud
 
-You can view your applications' logs in DBOS Cloud through our [monitoring dashboard](../cloud-tutorials/monitoring-dashboard.md). It allows you to filter for particular applications or time ranges.
+You can view your applications' logs in DBOS Cloud through our [monitoring dashboard](..//../cloud-tutorials/monitoring-dashboard.md). It allows you to filter for particular applications or time ranges.
 
-You can also retrieve logs through the [`app logs`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-logs) command.
+You can also retrieve logs through the [`dbos-cloud app logs`](../../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-logs) command.
 In your package root directory, run:
 
 ```shell

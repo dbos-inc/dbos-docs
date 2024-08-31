@@ -24,11 +24,11 @@ npx dbos-cloud db provision <database-instance-name> -U <database-username>
 
 :::info
 A Postgres Database Instance (Server) can host many independent databases used by different applications.
-To configure which database your application uses, on its configured server, through the `app_db_name` field in its [`dbos-config.yaml`](../api-reference/configuration.md#database).
+To configure which database your application uses, on its configured server, through the `app_db_name` field in its `dbos-config.yaml`.
 :::
 
 :::info
-If you forget your database password, you can always [reset it](../api-reference/cloud-cli.md#npx-dbos-cloud-db-reset-password).
+If you forget your database password, you can always [reset it](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-db-reset-password).
 :::
 
 Provisioning a database instance is an asynchronous operation.
@@ -48,9 +48,8 @@ npx dbos-cloud db status <database-instance-name>
 
 To manage your applications' database schemas, you must define schema migrations.
 DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
-We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 
-You configure your schema migrations in the `migrate` and `rollback` fields of your [`dbos-config.yaml`](../api-reference/configuration.md).
+You configure your schema migrations in the `migrate` field of your `dbos-config.yaml`.
 You must supply a list of commands to run to migrate to your most recent schema version.
 For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), you might use:
 
@@ -58,10 +57,9 @@ For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), 
 database:
   # Other fields omitted
   migrate: ['npx knex migrate:latest']
-  rollback: ['npx knex migrate:down']
 ```
 
-To run your migrations locally, run `npx dbos migrate` or `npx dbos rollback`.
+To run your migrations locally, run `npx dbos migrate`.
 
 When you [deploy](./application-management#deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
 
@@ -70,13 +68,13 @@ Be careful making breaking schema changes such as deleting or renaming a column&
 :::
 
 Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
-To make this easier, you can load your cloud database connection information into your local [`dbos-config.yaml`](../api-reference/configuration.md) configuration file by running:
+To make this easier, you can load your cloud database connection information into your local `dbos-config.yaml` configuration file by running:
 
 ```shell
 npx dbos-cloud db connect <database-name>
 ```
 
-You can then locally run any migration command such as [`npx dbos rollback`](../api-reference/cli.md#npx-dbos-rollback) or [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
+You can then locally run any migration command such as [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
 
 :::warning
 While it is occasionally necessary, be careful when manually changing the schema on a production database.
@@ -89,7 +87,7 @@ Database recovery is not available for [linked databases](./byod-management.md)
 :::
 
 DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
-First, run the [`database restore`](../api-reference/cloud-cli.md#npx-dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
+First, run the [`database restore`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
 
 ```shell
 npx dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
@@ -97,7 +95,7 @@ npx dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-nam
 
 The timestamp must be in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format and must be within the backup retention period of your database (24 hours for free-tier users).
 
-After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-change-database-instance).
+After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-change-database-instance).
 For each application connected to the original database instance, run:
 
 ```shell

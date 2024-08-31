@@ -126,7 +126,7 @@ This command destroys a previously-provisioned Postgres database instance.
 ### `npx dbos-cloud db connect`
 
 **Description:**
-This command loads your cloud database's connection parameters into your local [`dbos-config.yaml`](../api-reference/configuration.md).
+This command loads your cloud database's connection parameters into your local `dbos-config.yaml`.
 
 **Parameters:**
 - `<database-instance-name>`: The name of the database instance to which to connect.
@@ -181,7 +181,7 @@ This command unlinks a previously linked Postgres database instance.
 
 **Description:**
 This command must be run from an application root directory.
-It executes the [migration commands declared in dbos-config.yaml](./configuration#database), deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
+It executes the migration commands declared in `dbos-config.yaml`, deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
 **Parameters:**
 - `[application-name]`: The name of the application to deploy. By default we obtain the application name from package.json. This argument overrides the package name.

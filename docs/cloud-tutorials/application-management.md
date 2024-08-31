@@ -18,7 +18,7 @@ npx dbos-cloud app deploy
 Your application is deployed using the name in its `package.json`.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
-When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none. Multiple applications can use the same database instance (server) but must use separate databases within that server (the `app_db_name` field in [`dbos-config.yaml`](../api-reference/configuration#database)).
+When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none. Multiple applications can use the same database instance (server) but must use separate databases within that server (the `app_db_name` field in `dbos-config.yaml`).
 
 :::tip
 * You can specify a particular database instance through the `-d <database-instance-name>`.
@@ -27,7 +27,7 @@ When you deploy an application for the first time, the command prompts you to ch
 
 When you deploy an application, the DBOS Cloud CLI will create an archive of your application folder and upload it to DBOS Cloud. This archive can be up to 500MB in size.
 
-During deploy, DBOS Cloud first runs [`npx dbos migrate`](../api-reference/cli.md#npx-dbos-migrate) on your application database to apply all schema migrations you've defined.
+During deploy, DBOS Cloud first runs `dbos migrate` on your application database to apply all schema migrations you've defined.
 It then builds and starts your application.
 
 :::info
@@ -47,7 +47,7 @@ If your account belongs to an [organization](./account-management.md#organizatio
 If you edit your application or schema, run `npx dbos-cloud app deploy` again to apply the latest migrations and upgrade to the latest version.
 
 :::info
-* You don't have to worry about changing database server connection parameters like `hostname` or `password` in [`dbos-config.yaml`](../api-reference/configuration.md) to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
+* You don't have to worry about changing database server connection parameters like `hostname` or `password` in `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 * You cannot change the application database (`app_db_name`) of a deployed application. You must delete and re-deploy the application.
 * While database instances can be shared across applications, application databases (`app_db_name`) cannot.
 :::
@@ -60,9 +60,9 @@ DBOS provides many tools to monitor and debug applications:
 
 - To replay DBOS Cloud execution traces locally, check out our [time travel debugger](./timetravel-debugging).
 
-- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud app logs -l <N>`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
+- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`npx dbos-cloud app logs -l <N>`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
 
-- To retrieve the status of a particular application, run [`npx dbos-cloud app status <app-name>`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-list).
+- To retrieve the status of a particular application, run [`npx dbos-cloud app status <app-name>`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-status). To retrieve the statuses of all applications, run [`npx dbos-cloud app list`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-list).
 
 Applications run in [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM. Note that files on disk are ephemeral and not persisted between deployments.
 
@@ -75,7 +75,7 @@ To list all previous versions of your application, run:
 npx dbos-cloud app versions <app-name>
 ```
 
-You can redeploy a previous version of your application by passing `--previous-version <version-id>` to the [`app deploy`](../api-reference/cloud-cli.md#npx-dbos-cloud-app-deploy) command.
+You can redeploy a previous version of your application by passing `--previous-version <version-id>` to the [`app deploy`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-deploy) command.
 
 ```shell
 npx dbos-cloud app deploy --previous-version <version-id>
