@@ -30,7 +30,7 @@ information in a tooltip.
 
 The time travel debugger relies on Debug Proxy utility to project the state of the database as it existed when a selected workflow started.
 When debugging a DBOS application in VSCode, the Debug Proxy is launched automatically. 
-You can launch the Debug Proxy manually in order to  use `psql` for running [interactive time-traveled queries](../cloud-tutorials/interactive-timetravel.md).
+You can launch the Debug Proxy manually in order to  use `psql` for running [interactive time-traveled queries](../../cloud-tutorials/interactive-timetravel.md).
 
 When the Debug Proxy is running, its output appears in a [VSCode terminal window](https://code.visualstudio.com/docs/terminal/basics).
 You cannot interact with the Debug Proxy via this window, but you can shut it down with Ctrl-C.

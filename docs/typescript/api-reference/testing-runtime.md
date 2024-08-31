@@ -179,7 +179,7 @@ queryUserDB<R>(sql: string, ...params: any[]): Promise<R[]>;
 Executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
 The type `R` is the return type of the database row.
 
-For example, to query the `dbos_hello` table created during [`quickstart`](../getting-started/quickstart.md) and check `greet_count`, using [Jest](https://jestjs.io/):
+For example, to query the `dbos_hello` table created during [`quickstart`](../../getting-started/quickstart.md) and check `greet_count`, using [Jest](https://jestjs.io/):
 ```typescript
 const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "dbos");
 expect(rows[0].greet_count).toBe(1);

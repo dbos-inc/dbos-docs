@@ -16,7 +16,7 @@ npm install --save-dev @dbos-inc/dbos-compiler
 
 ## Stored Procedure Versioning
 
-Since [@StoredProcedure](../tutorials/stored-proc-tutorial.md) functions must be tied to a specific [application version](../cloud-tutorials/application-management#managing-application-versions), both DBOS Transact and the DBOS Compiler are version aware. 
+Since [@StoredProcedure](../tutorials/stored-proc-tutorial.md) functions must be tied to a specific [application version](../../cloud-tutorials/application-management#managing-application-versions), both DBOS Transact and the DBOS Compiler are version aware. 
 By default, the application version is specified via the `DBOS__APPVERSION` environment variable, but can also be controlled via command line parameters.
 When a application version is specified, the DBOS Compiler will automatically prefix generated stored procedures with `v` and the application version.
 Likewise, DBOS Transact will automatically invoke prefixed versions of the deployed stored procedures when the application version is specified.

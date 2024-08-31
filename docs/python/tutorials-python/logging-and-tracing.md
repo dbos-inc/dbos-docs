@@ -37,7 +37,7 @@ You can access your current span via [`DBOS.span`](../reference-python/contexts.
 ### OpenTelemetry Export
 
 You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
-In DBOS Cloud, this is done automatically, and you can view your logs and traces in your [cloud console](https://console.dbos.dev) and [monitoring dashboard](../cloud-tutorials/monitoring-dashboard.md).
+In DBOS Cloud, this is done automatically, and you can view your logs and traces in your [cloud console](https://console.dbos.dev) and [monitoring dashboard](../../cloud-tutorials/monitoring-dashboard.md).
 
 Locally, you can configure exporters in your [`dbos-config.yaml`](../reference-python/configuration.md):
 

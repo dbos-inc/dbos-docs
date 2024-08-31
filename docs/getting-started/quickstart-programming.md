@@ -41,11 +41,11 @@ Rebuild with `npm run build` and start your application with `npx dbos start`. Y
 [info]: DBOS Admin Server is running at http://localhost:3001
 ```
 
-To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike). You should see the message `Greetings, Mike!`. If you replace Mike with a different name, your application will greet that name instead. To learn more about HTTP serving in DBOS, see our [HTTP Serving Tutorial](../tutorials/http-serving-tutorial).
+To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike). You should see the message `Greetings, Mike!`. If you replace Mike with a different name, your application will greet that name instead. To learn more about HTTP serving in DBOS, see our [HTTP Serving Tutorial](../typescript/tutorials/http-serving-tutorial).
 
 ## 2. Creating Database Tables
 
-Let's make a database table to record greetings. In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration). By default, we use [Knex](../tutorials/using-knex.md#schema-management). We also support [Drizzle](../tutorials/using-drizzle.md), [TypeORM](../tutorials/using-typeorm.md#schema-management) and [Prisma](../tutorials/using-prisma.md#schema-management). To create a new migration file, run the following command:
+Let's make a database table to record greetings. In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration). By default, we use [Knex](../typescript/tutorials/using-knex.md#schema-management). We also support [Drizzle](../typescript/tutorials/using-drizzle.md), [TypeORM](../typescript/tutorials/using-typeorm.md#schema-management) and [Prisma](../typescript/tutorials/using-prisma.md#schema-management). To create a new migration file, run the following command:
 
 ```
 npx knex migrate:make greetings
@@ -74,7 +74,7 @@ This command should print `Migration successful!`
 
 ## 3. Writing to the Database
 
-Now that we have `greetings` table, let's change our app to write to it. We'll do this with a [transactional function](../tutorials/transaction-tutorial.md). Change your `src/operations.ts` to contain:
+Now that we have `greetings` table, let's change our app to write to it. We'll do this with a [transactional function](../typescript/tutorials/transaction-tutorial.md). Change your `src/operations.ts` to contain:
 
 ```javascript
 import { TransactionContext, Transaction, HandlerContext, GetApi } from '@dbos-inc/dbos-sdk';
@@ -108,7 +108,7 @@ export class Greetings {
 Here we define a `GreetingRecord` interface matching a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that inserts a new `GreetingRecord` into `greetings`. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
 
 :::info
-In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [Drizzle](../tutorials/using-drizzle.md), [TypeORM](../tutorials/using-typeorm), [Prisma](../tutorials/using-prisma), and [Raw SQL](../tutorials/transaction-tutorial).
+In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [Drizzle](../typescript/tutorials/using-drizzle.md), [TypeORM](../typescript/tutorials/using-typeorm), [Prisma](../typescript/tutorials/using-prisma), and [Raw SQL](../typescript/tutorials/transaction-tutorial).
 :::
 
 Stop your app with CTRL+C. Rebuild with `npm run build` and start with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should print this to the console:
@@ -152,13 +152,13 @@ env:
   GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
 ```
 ::::tip
-In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../api-reference/configuration#environment-variables) for more details.
+In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../typescript/api-reference/configuration#environment-variables) for more details.
 ::::
 
 ### 4.2. Sign the Guestbook from the App
 
 Let's update our app to record each greeting in the guestbook.
-In DBOS, we strongly recommend wrapping all such calls to third-party APIs in [Communicators](../tutorials/communicator-tutorial).
+In DBOS, we strongly recommend wrapping all such calls to third-party APIs in [Communicators](../typescript/tutorials/communicator-tutorial).
 Change your `src/operations.ts` to contain the following:
 
 ```javascript
@@ -222,7 +222,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 ## 5. Composing Reliable Workflows
 
-Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
+Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. DBOS makes this easy with [workflows](../typescript/tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
 
 ```javascript
 import {
@@ -317,7 +317,7 @@ Now press Ctrl + C stop your app. Then, run `npx dbos start` to restart it. You 
 [info]: >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If your app did not use a DBOS `@Workflow` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
+If your app did not use a DBOS `@Workflow` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../typescript/tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
 
 :::info
 Here we use `startWorkflow` which returns the response to the caller as soon as the workflow starts, without waiting for it to finish. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, change `startWorkflow` to `invokeWorkflow`.
@@ -326,4 +326,4 @@ Here we use `startWorkflow` which returns the response to the caller as soon as 
 The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-guestbook).
 
 Next, to learn how to build more complex applications, check out our TypeScript tutorials.
-To walk through a more complex workflow, visit our [checkout workflow tutorial](../tutorials/checkout-tutorial).
+To walk through a more complex workflow, visit our [checkout workflow tutorial](../typescript/tutorials/checkout-tutorial).

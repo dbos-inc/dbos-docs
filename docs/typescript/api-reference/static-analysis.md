@@ -17,7 +17,7 @@ import TabItem from '@theme/TabItem';
 Unsafe use of user input, hardcoded/exposed security credentials, improper format strings, construction of SQL statements via string concatenation, and slow regular expressions, are all examples of tactical mistakes that have been exploited "in the wild" to compromise or disable systems.
 - While the list of "gotchas" is long and easily neglected, the good news is that many of these anti-patterns can be detected quickly and automatically by modern static code analysis tools.
 
-- DBOS recommends using static analysis as an ingredient in a comprehensive security strategy.  As adding rule enforcement to a large, established codebase can be a hassle, DBOS recommends using tools from the beginning of a project, and therefore includes tool configuration in its [demo applications](https://github.com/dbos-inc/dbos-demo-apps) and [quickstart templates](../getting-started/quickstart.md).
+- DBOS recommends using static analysis as an ingredient in a comprehensive security strategy.  As adding rule enforcement to a large, established codebase can be a hassle, DBOS recommends using tools from the beginning of a project, and therefore includes tool configuration in its [demo applications](https://github.com/dbos-inc/dbos-demo-apps) and [quickstart templates](../../getting-started/quickstart.md).
 
 DBOS uses several techniques to ensure that static analysis is as productive as possible, with minimal hassle:
 * DBOS Transact builds on popular frameworks, thereby leveraging community best-practices and tools integration.
@@ -34,7 +34,7 @@ Many DBOS-suggested coding practices can be enforced by a combination of `eslint
 ### Installing and configuring the plugin
 
 ::::tip
-If you got started with the [quickstart](../getting-started/quickstart.md), the plugin is already installed.
+If you got started with the [quickstart](../../getting-started/quickstart.md), the plugin is already installed.
 If you encounter any errors, please make sure you install the right versions of `eslint` and `typescript-eslint` (`npm` will tell you if there's a peer dependency conflict).
 ::::
 

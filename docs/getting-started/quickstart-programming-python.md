@@ -115,7 +115,7 @@ def greet(name: str) -> str:
 ```
 
 Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy Core](https://docs.sqlalchemy.org/en/20/core/).
-We annotate it with [`@DBOS.transaction`](../tutorials-python/transaction-tutorial.md) to tell DBOS this function modifies the database.
+We annotate it with [`@DBOS.transaction`](../python/tutorials-python/transaction-tutorial.md) to tell DBOS this function modifies the database.
 These annotations are critical for how DBOS provides lightweight durable execution, which we'll see later.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
@@ -211,7 +211,7 @@ def greet(name: str) -> str:
 ```
 
 We add a new function called `sign_guestbook` that uses `requests` to send an HTTP POST request to the guestbook to record a greeting.
-We annotate it with [`@DBOS.communicator`](../tutorials-python/communicator-tutorial.md) to tell DBOS this function makes an external API call.
+We annotate it with [`@DBOS.communicator`](../python/tutorials-python/communicator-tutorial.md) to tell DBOS this function makes an external API call.
 As we'll see later, these annotations allow DBOS to provide lightweight durable execution.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
@@ -225,7 +225,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 ## 5. Composing Reliable Workflows
 
-Next, we want to make our app reliable: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. This is called **durable execution**. DBOS makes this easy with [workflows](../tutorials/workflow-tutorial.md). To see them in action, change your `main.py` like so:
+Next, we want to make our app reliable: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. This is called **durable execution**. DBOS makes this easy with [workflows](../python/tutorials-python/workflow-tutorial.md). To see them in action, change your `main.py` like so:
 
 ```python
 import json

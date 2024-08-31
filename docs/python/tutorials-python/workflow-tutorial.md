@@ -13,7 +13,7 @@ To make a function a workflow, annotate it with the [`@DBOS.workflow`](../refere
 Workflows may freely call transactions, communicators, and other workflows.
 However, they must be **[deterministic](#determinism).**
 
-Here's an example workflow (from the [programming guide](../getting-started/quickstart-programming-python.md)) signing an online guestbook then recording the signature in the database.
+Here's an example workflow (from the [programming guide](../../getting-started/quickstart-programming-python.md)) signing an online guestbook then recording the signature in the database.
 Here, `sign_guestbook` is a [communicator](./communicator-tutorial.md) and `insert_greeting` is a [transaction](./transaction-tutorial.md).
 By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
 

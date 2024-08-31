@@ -31,7 +31,7 @@ You must compile your code (`npm run build`) before running this command.
 `npm create @dbos-inc` and `npm init @dbos-inc` are synonyms for `npx @dbos-inc/create`.  When using `npm create @dbos-inc` with any of the command line switches below, be sure to use `--` to separate `npm` arguments from the arguments intended for `@dbos-inc/create`.
 
 **Description:**
-This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../getting-started/quickstart).
+This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../../getting-started/quickstart).
 
 **Parameters:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
@@ -71,7 +71,7 @@ If parameters are not specified, it prompts for them.
 
 **Description:**
 This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
+It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
 You must compile your code (`npm run build`) and start the debug proxy before running this command.
 
 **Parameters:**
