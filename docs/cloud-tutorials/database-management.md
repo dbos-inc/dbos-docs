@@ -19,7 +19,7 @@ You must choose a database instance name, username and password.
 Run this command and choose your database password when prompted:
 
 ```shell
-npx dbos-cloud db provision <database-instance-name> -U <database-username>
+dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 :::info
@@ -28,20 +28,20 @@ To configure which database your application uses, on its configured server, thr
 :::
 
 :::info
-If you forget your database password, you can always [reset it](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-db-reset-password).
+If you forget your database password, you can always [reset it](../cloud-tutorials/cloud-cli.md#dbos-cloud-db-reset-password).
 :::
 
 Provisioning a database instance is an asynchronous operation.
 To see a list of all provisioned instances and their status, run:
 
 ```shell
-npx dbos-cloud db list
+dbos-cloud db list
 ```
 
 To retrieve the status of a particular instance, run:
 
 ```shell
-npx dbos-cloud db status <database-instance-name>
+dbos-cloud db status <database-instance-name>
 ```
 
 ### Database Schema Management
@@ -71,7 +71,7 @@ Sometimes, it may be necessary to manually perform schema changes on a cloud dat
 To make this easier, you can load your cloud database connection information into your local `dbos-config.yaml` configuration file by running:
 
 ```shell
-npx dbos-cloud db connect <database-name>
+dbos-cloud db connect <database-name>
 ```
 
 You can then locally run any migration command such as [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
@@ -87,25 +87,25 @@ Database recovery is not available for [linked databases](./byod-management.md)
 :::
 
 DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
-First, run the [`database restore`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
+First, run the [`database restore`](../cloud-tutorials/cloud-cli.md#dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
 
 ```shell
-npx dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
+dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
 ```
 
 The timestamp must be in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format and must be within the backup retention period of your database (24 hours for free-tier users).
 
-After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../cloud-tutorials/cloud-cli.md#npx-dbos-cloud-app-change-database-instance).
+After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-change-database-instance).
 For each application connected to the original database instance, run:
 
 ```shell
-npx dbos-cloud app change-database-instance --database <new-db-instance-name>
+dbos-cloud app change-database-instance --database <new-db-instance-name>
 ```
 
 If you wish to restore your application to a previous version (such as the version that was running at the recovery timestamp), you can do this with the `--previous-version` parameter:
 
 ```shell
-npx dbos-cloud app change-database-instance --database <new-db-instance-name> --previous-version <version-id>
+dbos-cloud app change-database-instance --database <new-db-instance-name> --previous-version <version-id>
 ```
 
 For more information on application version management, see [here](./application-management.md#managing-application-versions).
@@ -113,7 +113,7 @@ For more information on application version management, see [here](./application
 Finally, destroy the original database instance:
 
 ```shell
-npx dbos-cloud db destroy <original-database-instance-name>
+dbos-cloud db destroy <original-database-instance-name>
 ```
 
 ### Destroying Database Instances
@@ -121,7 +121,7 @@ npx dbos-cloud db destroy <original-database-instance-name>
 To destroy a database instance, run:
 
 ```shell
-npx dbos-cloud db destroy <database-name>
+dbos-cloud db destroy <database-name>
 ```
 
 :::warning

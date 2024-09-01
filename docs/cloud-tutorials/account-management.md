@@ -16,7 +16,7 @@ DBOS Cloud provides this capability with refresh tokens.
 To obtain a refresh token, run:
 
 ```
-npx dbos-cloud login --get-refresh-token
+dbos-cloud login --get-refresh-token
 ```
 
 This command has you authenticate through the browser, but obtains a refresh token and stores it in `.dbos/credentials`.
@@ -24,14 +24,14 @@ This command has you authenticate through the browser, but obtains a refresh tok
 Once you have your token, you can use it to authenticate programatically without going through the browser with the following command:
 
 ```
-npx dbos-cloud login --with-refresh-token <token>
+dbos-cloud login --with-refresh-token <token>
 ```
 
 Refresh tokens automatically expire after a year or after a month of inactivity.
 You can manually revoke them at any time:
 
 ```
-npx dbos-cloud revoke <token>
+dbos-cloud revoke <token>
 ```
 
 :::warning
@@ -52,7 +52,7 @@ When a user creates an account, they are automatically added to an organization 
 To invite a new user to your organization, run:
 
 ```
-npx dbos-cloud org invite
+dbos-cloud org invite
 ```
 
 This command retrieves a **single-use** organization secret that expires in 24 hours. To invite multiple users, create multiple secrets.
@@ -60,13 +60,13 @@ This command retrieves a **single-use** organization secret that expires in 24 h
 Using this organization secret, another user can register a new account in your organization by running:
 
 ```
-npx dbos-cloud register -u <username> -s <organization-secret>
+dbos-cloud register -u <username> -s <organization-secret>
 ```
 
 Alternatively, if a user has an existing account, they can join your organization by running:
 
 ```
-npx dbos-cloud org join <organization-name> <organization-secret>
+dbos-cloud org join <organization-name> <organization-secret>
 ```
 
 All users in an organization have full access to its resources, including databases and applications.
@@ -74,7 +74,7 @@ All users in an organization have full access to its resources, including databa
 An organization admin (the user who created the organization) can rename the organization by running:
 
 ```
-npx dbos-cloud org rename <current-org-name> <new-org-name>
+dbos-cloud org rename <current-org-name> <new-org-name>
 ```
 
 Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs.

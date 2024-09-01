@@ -263,8 +263,13 @@ To learn more about building DBOS apps, check out our [Python programming guide]
 
 ## Deploy your First App to the Cloud
 
-### 1. Install Node.js version 20 or later
+### 1. Install Node.js
 
+DBOS TypeScript requires Node.js 20 or later.
+Install Node.js if you don't already have it:
+
+<details>
+<summary>Instructions to install Node.js</summary>
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
    Run the following commands in your terminal:
@@ -286,6 +291,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 (`%user%` is the Windows user on which you are logged in).
 </TabItem>
 </Tabs>
+</details>
 
 
 ### 2. Create the app folder
@@ -306,19 +312,22 @@ cd <app-name>
 
 ### 3. Deploy!
 
-Run the following command to deploy your app to DBOS Cloud:
+Install the DBOS Cloud CLI:
+
 ```
-npx dbos-cloud app deploy
+npm i -g @dbos-inc/dbos-cloud@latest
 ```
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In about a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
-
-To see that your app is working, visit `<URL>` in your browser. For example, if your username is `mike` and your app name is `hello`, you would visit:
+Then run the following command to deploy your app to DBOS Cloud:
 ```
-https://mike-hello.cloud.dbos.dev/
+dbos-cloud app deploy
 ```
 
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `npx dbos-cloud app list`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In under a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+
+To see that your app is working, visit `<URL>` in your browser.
+
+Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
 
 
 ## Run the App on Your Computer
@@ -330,6 +339,59 @@ For development, testing, or self-hosted deployment, here's how to run this app 
 The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
 <Tabs groupId="postgres-or-docker">
+<TabItem value="docker" label="Launch Postgres with Docker">
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+# Docker may require sudo -E
+node start_postgres_docker.js
+   ```
+  </TabItem>
+    <TabItem value="linux" label="Linux">
+   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+# Docker may require sudo -E
+node start_postgres_docker.js
+   ```
+  </TabItem>
+  <TabItem value="win-ps" label="Windows (PowerShell)">
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <app-folder>
+$env:PGPASSWORD = "dbos"
+node start_postgres_docker.js
+   ```
+  </TabItem>
+  <TabItem value="win-cmd" label="Windows (cmd)">
+
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <app-folder>
+set PGPASSWORD=dbos
+node start_postgres_docker.js
+   ```
+  </TabItem>
+</Tabs>
+
+If successful, the script should print `Database started successfully!`
+:::tip
+ You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
+:::
+</TabItem>
+
 <TabItem value="postgres" label="Install Postgres">
 <Tabs groupId="operating-systems">
 <TabItem value="mac" label="macOS">
@@ -394,59 +456,6 @@ set PGPASSWORD=<your-postgres-password>
 ```
 </TabItem>
 </Tabs>
-</TabItem>
-
-<TabItem value="docker" label="Launch Postgres with Docker">
-<Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-    <TabItem value="linux" label="Linux">
-   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-	    
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-ps" label="Windows (PowerShell)">
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <app-folder>
-$env:PGPASSWORD = "dbos"
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-cmd" label="Windows (cmd)">
-
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container: 
-   ```bash
-cd <app-folder>
-set PGPASSWORD=dbos
-node start_postgres_docker.js
-   ```
-  </TabItem>
-</Tabs>
-
-If successful, the script should print `Database started successfully!`
-:::tip
- You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
-:::
 </TabItem>
 </Tabs>
 
