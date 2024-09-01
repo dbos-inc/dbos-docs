@@ -152,7 +152,19 @@ const config = {
         copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc.`,
       },
       prism: {
-        theme: prismThemes.okaidia,
+        theme: {
+          ...prismThemes.okaidia,
+          styles: [
+            ...prismThemes.okaidia.styles,
+            {
+              types: ['punctuation'],
+              languages: ['python'],
+              style: {
+                color: '#f92672', // Change this to your desired color
+              },
+            },
+          ],
+        },
       },
       tableOfContents: {
         maxHeadingLevel:5,
