@@ -11,7 +11,7 @@ In this guide, you'll learn how to interactively time travel with DBOS Cloud: ho
 
 ### Preliminaries
 
-Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](../api-reference/cloud-cli#npx-dbos-cloud-app-deploy).
+Before following the steps in this guide, make sure you've [deployed an application to DBOS Cloud](application-management) with [time travel enabled](./cloud-cli#npx-dbos-cloud-app-deploy).
 
 In order to time travel, you need to locally install our time travel proxy.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
@@ -24,7 +24,6 @@ Then, start your proxy and connect it to your application database instance:
 
 ![DBOS Time Travel Launch Debug Proxy Screenshot](./assets/ttdbg-launch-proxy.png)
 
-    For more information, please see the [Time Travel Debugger reference](../api-reference/time-travel-debugger.md)
   </TabItem>
   <TabItem value="CLI" label="CLI">
 	  Open a terminal window and navigate to the folder where you downloaded the pre-compiled debug proxy binary file (`debug-proxy`).
@@ -37,7 +36,7 @@ chmod +x debug-proxy
 </Tabs>
 
 :::info
-The DBOS time travel proxy securely connects to the [provenance database](../api-reference/system-tables.md), an append-only replica of your application database maintained by DBOS Cloud.
+The DBOS time travel proxy securely connects to the [provenance database](../explanations/system-tables.md), an append-only replica of your application database maintained by DBOS Cloud.
 It uses the historical information in this database to run time-travelled queries without modifying your application database.
 :::
 
