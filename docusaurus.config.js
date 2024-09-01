@@ -160,7 +160,7 @@ const config = {
               types: ['punctuation'],
               languages: ['python'],
               style: {
-                color: '#f92672', // Change this to your desired color
+                color: 'rgb(199, 146, 234)', // Change this to your desired color
               },
             },
           ],
