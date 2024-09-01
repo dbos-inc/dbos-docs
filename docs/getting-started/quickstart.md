@@ -99,7 +99,7 @@ Run the following command to deploy your app to DBOS Cloud:
 dbos-cloud app deploy
 ```
 
-This command first prompts you to login. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In under a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser.
 
@@ -323,7 +323,7 @@ Then run the following command to deploy your app to DBOS Cloud:
 dbos-cloud app deploy
 ```
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In under a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser.
 
