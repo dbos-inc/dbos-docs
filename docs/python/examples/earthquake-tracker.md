@@ -41,11 +41,9 @@ def get_earthquake_data(
     # USGS API endpoint for earthquake data
     url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 
-    # Format times for the API request
+    # Format parameters for the API request
     end_time_str = end_time.strftime("%Y-%m-%dT%H:%M:%S")
     start_time_str = start_time.strftime("%Y-%m-%dT%H:%M:%S")
-
-    # Parameters for the API request
     params = {
         "format": "geojson",
         "starttime": start_time_str,
@@ -53,10 +51,8 @@ def get_earthquake_data(
         "minmagnitude": 1.0,
     }
 
-    # Make the API request
+    # Make the API request and return its output
     response = requests.get(url, params=params)
-
-    # Return the output of the request
     if response.status_code == 200:
         data = response.json()
         earthquakes = []
@@ -96,11 +92,11 @@ def record_earthquake_data(data: EarthquakeData) -> bool:
 
 ## Scheduling Earthquake Data Downloads
 
-Finally, let's write a [scheduled job](../tutorials/scheduled-workflows.md) that records earthquakes every minute.
+Now, let's write a [scheduled job](../tutorials/scheduled-workflows.md) that records earthquakes every minute.
 Because earthquake data is sometimes updated later, this job queries the USGS for the last hour of data, recording new earthquakes and updating records of existing earthquakes.
 
 The [`@DBOS.scheduled`](../tutorials/scheduled-workflows.md) decorator tells DBOS to run this function on a schedule defined in [crontab syntax](https://en.wikipedia.org/wiki/Cron), in this case once per minute.
-The [`@DBOS.workflow`] decorator tells DBOS to durably execute this function, so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
+The [`@DBOS.workflow`](../tutorials/workflow-tutorial.md) decorator tells DBOS to durably execute this function, so it runs exactly-once per minute and you'll never miss an earthquake or record a duplicate.
 
 ```python
 @DBOS.scheduled("* * * * *")
