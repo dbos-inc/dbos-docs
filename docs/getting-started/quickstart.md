@@ -339,6 +339,59 @@ For development, testing, or self-hosted deployment, here's how to run this app 
 The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
 <Tabs groupId="postgres-or-docker">
+<TabItem value="docker" label="Launch Postgres with Docker">
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+# Docker may require sudo -E
+node start_postgres_docker.js
+   ```
+  </TabItem>
+    <TabItem value="linux" label="Linux">
+   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <application-folder>
+export PGPASSWORD=dbos
+# Docker may require sudo -E
+node start_postgres_docker.js
+   ```
+  </TabItem>
+  <TabItem value="win-ps" label="Windows (PowerShell)">
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <app-folder>
+$env:PGPASSWORD = "dbos"
+node start_postgres_docker.js
+   ```
+  </TabItem>
+  <TabItem value="win-cmd" label="Windows (cmd)">
+
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   ```bash
+cd <app-folder>
+set PGPASSWORD=dbos
+node start_postgres_docker.js
+   ```
+  </TabItem>
+</Tabs>
+
+If successful, the script should print `Database started successfully!`
+:::tip
+ You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
+:::
+</TabItem>
+
 <TabItem value="postgres" label="Install Postgres">
 <Tabs groupId="operating-systems">
 <TabItem value="mac" label="macOS">
@@ -403,59 +456,6 @@ set PGPASSWORD=<your-postgres-password>
 ```
 </TabItem>
 </Tabs>
-</TabItem>
-
-<TabItem value="docker" label="Launch Postgres with Docker">
-<Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-    <TabItem value="linux" label="Linux">
-   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-	    
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-ps" label="Windows (PowerShell)">
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <app-folder>
-$env:PGPASSWORD = "dbos"
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-cmd" label="Windows (cmd)">
-
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container: 
-   ```bash
-cd <app-folder>
-set PGPASSWORD=dbos
-node start_postgres_docker.js
-   ```
-  </TabItem>
-</Tabs>
-
-If successful, the script should print `Database started successfully!`
-:::tip
- You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
-:::
 </TabItem>
 </Tabs>
 
