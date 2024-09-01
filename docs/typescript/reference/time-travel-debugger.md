@@ -92,7 +92,7 @@ These commands can be invoked via the [VS Code Command Palette](https://code.vis
 
 The time travel debugger needs information about the application and its database from DBOS cloud. 
 While this information can be provided via configuration settings described below, the extension can retrieve this information via the
-[DBOS Cloud CLI](../../cloud-tutorials/cloud-cli.md). This command runs [`npx dbos-cloud login`](../../cloud-tutorials/cloud-cli#npx-dbos-cloud-login)
+[DBOS Cloud CLI](../../cloud-tutorials/cloud-cli.md). This command runs [`dbos-cloud login`](../../cloud-tutorials/cloud-cli#dbos-cloud-login)
 on your behalf from inside VS Code.
 
 Typically, the time travel debugger will automatically prompt you to login to DBOS cloud if you're not logged in or your credentials have expired.
@@ -159,13 +159,13 @@ The Debug Proxy listens on port 2345 by default. This port can be changed via th
 
 By default, the [Time Travel Debugging CodeLens](http://localhost:3000/cloud-tutorials/timetravel-debugging#launching-a-debug-session) will use
 the settings from the first [VS Code launch configuration](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations)
-that includes `npx dbos-cloud debug` in the command string. If there are no such launch configurations, the extension will create
+that includes `dbos-cloud debug` in the command string. If there are no such launch configurations, the extension will create
 a launch configuration from scratch. The `dbos-ttdbg.debug_pre_launch_task` configuration setting is used as the 
 [`preLaunchTask`](https://code.visualstudio.com/Docs/editor/debugging#:~:text=Debug%20quick%20pick.-,preLaunchTask,-%2D%20to%20launch%20a)
 value of the generated launch configuration.
 
 :::warning
-This configuration setting is ignored if you have a launch configuration with `npx dbos-cloud debug` in the command string,
+This configuration setting is ignored if you have a launch configuration with `dbos-cloud debug` in the command string,
 even if that launch configuration does not specify a `preLaunchTask`.
 :::
 

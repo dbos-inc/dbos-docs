@@ -22,7 +22,7 @@ Next, link your database instance to DBOS Cloud, entering the password for the `
 You must choose a database instance name that is 3 to 16 characters long and contains only lowercase letters, numbers and underscores.
 
 ```shell
-npx dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port>
+dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port>
 ```
 
 You can now register and deploy applications with this database instance as normal!  Check out our [applications management](./application-management.md) guide for details.
@@ -84,7 +84,7 @@ The `pg_create_subscription` role is added in PostgreSQL version 16. For earlier
 Finally, link your database instance to DBOS Cloud with time travel enabled, entering the password for the `dbosadmin` role when prompted:
 
 ```shell
-npx dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port> --enable-timetravel
+dbos-cloud db link <database-instance-name> -H <database-hostname> -p <database-port> --enable-timetravel
 ```
 
 You can now register and deploy applications with this database instance as normal and make full use of time travel!  Check out our [applications management](./application-management.md) and [time travel](./timetravel-debugging.md) guides for details.

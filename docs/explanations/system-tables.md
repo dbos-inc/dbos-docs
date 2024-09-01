@@ -64,7 +64,7 @@ This table stores the outputs of communicator functions:
 ## Provenance Tables
 
 :::tip
-The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#npx-dbos-cloud-app-deploy).
+The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#dbos-cloud-app-deploy).
 :::
 
 DBOS Cloud maintains a provenance database for your application, which is an append-only versioned replica of your application database.

@@ -11,7 +11,7 @@ In this guide, you'll learn how to use the monitoring dashboard to visualize the
 In order to launch the dashboard you must first deploy an application, as described in [quickstart](../getting-started/quickstart.md). Having done so, from your application directory, run:
 
 ```
-npx dbos-cloud dashboard url
+dbos-cloud dashboard url
 ```
 
 This command will output the URL of your dashboard. Log in with the same credentials you used to register your app. 
