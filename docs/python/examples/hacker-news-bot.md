@@ -9,7 +9,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ## Import and Initialize the App
 
-Let's start off with imports, and initializing the DBOS app.
+Let's start off with imports and initializing the DBOS app.
 
 ```python
 import html

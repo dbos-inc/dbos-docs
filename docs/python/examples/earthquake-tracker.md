@@ -11,7 +11,7 @@ You can see the dashboard live [here](https://demo-earthquake-tracker.cloud.dbos
 
 ## Import and Initialize the App
 
-Let's start off with imports, and initializing the DBOS app.
+Let's start off with imports and initializing the DBOS app.
 
 
 ```python
@@ -174,7 +174,7 @@ cd python/earthquake-tracker
 dbos-cloud app deploy
 ```
 
-This command outputs a URL--visit it to see some earthquakes!
+This command outputs a URL&mdash;visit it to see some earthquakes!
 You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
 
 ## Running Locally
