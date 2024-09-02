@@ -38,8 +38,7 @@
 }
 
 .cardIcon {
-  font-size: 300%;
   text-align: center;
-  margin: 0;
-  background-image: linear-gradient(to bottom right, #D0DEF5, #F5F8FA, #D0DEF5, #F5F8FA);
+  padding: 0.8rem;
+  background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }

@@ -3,6 +3,9 @@ title: DBOS Examples
 description: Example applications built with DBOS
 pagination_next: null
 ---
+import { FaHackerNews, FaSlack } from "react-icons/fa6";
+import { MdOutlineShoppingCart } from "react-icons/md";
+import { IoEarth } from "react-icons/io5";
 
   <section className="row list">
   <CardLink
@@ -10,27 +13,27 @@ pagination_next: null
     href="python/examples/hacker-news-bot"
     description="HackerNews Bot!!!"
     index="1"
-    icon="📰"
+    icon={<FaHackerNews color="white" size={60} />}
   />
   <CardLink
     label="RAG Slackbot"
     href="python/examples/widget-store"
     description="RAG Slackbot!!!"
     index="2"
-    icon="🤖"
+    icon={<FaSlack color="white" size={60}/>}
   />
   <CardLink
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Tracking earthquakes!!!"
     index="3"
-    icon="⛰️"
+    icon={<IoEarth color="white" size={60}/>}
   />
   <CardLink
     label="Widget Store"
     href="python/examples/widget-store"
     description="Widget store!!!"
     index="4"
-    icon="⌚"
+    icon={<MdOutlineShoppingCart color="white" size={60}/>}
   />
   </section>
