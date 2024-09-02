@@ -22,12 +22,24 @@
 
 .cardTitle {
   font-size: 1.2rem;
+  padding: 1rem;
+  padding-bottom: 0;
 }
 
 .cardDescription {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
 }
 
 .list article:last-child {
   margin-bottom: 0 !important;
+}
+
+.cardIcon {
+  font-size: 300%;
+  text-align: center;
+  margin: 0;
+  background-image: linear-gradient(to bottom right, #D0DEF5, #F5F8FA, #D0DEF5, #F5F8FA);
 }

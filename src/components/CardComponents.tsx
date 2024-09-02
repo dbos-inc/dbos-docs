@@ -24,7 +24,7 @@ function CardContainer({
   return (
     <Link
       href={href}
-      className={clsx('card padding--lg', styles.cardContainer)}>
+      className={clsx('card', styles.cardContainer)}>
       {children}
     </Link>
   );
@@ -43,11 +43,12 @@ function CardLayout({
 }): JSX.Element {
   return (
     <CardContainer href={href}>
+      <div className={styles.cardIcon}>{icon}</div>
       <Heading
         as="h2"
         className={clsx('text--truncate', styles.cardTitle)}
         title={title}>
-        {icon} {title}
+        {title}
       </Heading>
       {description && (
         <p
