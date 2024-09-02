@@ -1,4 +1,5 @@
 ---
+displayed_sidebar: examplesSidebar
 sidebar_position: 1
 title: Widget Store
 ---

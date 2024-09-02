@@ -1,4 +1,5 @@
 ---
+displayed_sidebar: examplesSidebar
 sidebar_position: 3
 title: Hacker News Slackbot
 ---
