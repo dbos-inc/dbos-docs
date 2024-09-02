@@ -93,18 +93,29 @@ const config = {
             label: 'Docs',
           },
           {
-            to: 'https://console.dbos.dev/',
+            to: 'examples',
+            label: 'Examples',
+          },
+          {
+            href: 'https://console.dbos.dev/',
             label: 'Cloud Console',
             position: 'right',
             className: 'dbos-button-blue',
           },
           {
-            href: 'https://github.com/dbos-inc/dbos-transact',
+            href: 'https://github.com/dbos-inc',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
         ],
+        hideOnScroll: false,
+      },
+      docs: {
+        sidebar: {
+          hideable: false,
+          autoCollapseCategories: false,
+        }
       },
       footer: {
         style: 'dark',
