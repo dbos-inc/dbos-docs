@@ -11,7 +11,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 Here's what the bot looks like in action:
 
-<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="500" />
+<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
 
 ## Import and Initialize the App
 
@@ -248,3 +248,29 @@ def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     )
     index.insert_nodes([node])
 ```
+
+## Try it Yourself!
+
+First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd python/earthquake-tracker
+```
+
+Next, you need to configure the bot in your Slack workspace.
+You must also supply Slack and OpenAI API keys.
+See the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot) for a detailed walkthrough on how to do this.
+
+After that, you can deploy it to the cloud with a single command:
+
+```shell
+dbos-cloud app deploy
+```
+
+Once deployed, you can use your bot from your Slack workspace.
+Llamabot answers questions whenever you tag the bot (`@Llamabot`) in your message or reply to a bot's message, and it stores any other messages as a "fact" in its vector store.
+
+An example conversation with the bot:
+
+<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
