@@ -2,6 +2,7 @@
 sidebar_position: 5
 title: Configuration
 description: DBOS configuration reference
+pagination_next: null
 ---
 
 You can configure DBOS with a configuration file.

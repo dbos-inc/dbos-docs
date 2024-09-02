@@ -2,6 +2,7 @@
 sidebar_position: 9
 title: Time Travel Debugger
 description: DBOS Time Travel Debugger VS Code extension reference
+pagination_next: null
 ---
 
 The DBOS Time Travel Debugger VS Code extension enables you to debug your production application deployed on DBOS Cloud.

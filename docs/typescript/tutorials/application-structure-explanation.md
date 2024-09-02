@@ -2,6 +2,7 @@
 sidebar_position: 30
 title: Project Structure
 description: Learn about the structure of a DBOS project
+pagination_next: null
 ---
 
 When you initialize a DBOS project with `npx @dbos-inc/create`, it has the following structure:

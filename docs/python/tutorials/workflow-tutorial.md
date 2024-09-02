@@ -3,6 +3,7 @@ sidebar_position: 1
 title: Workflows
 description: Learn how to make applications reliable using workflows.
 toc_max_heading_level: 3
+pagination_prev: getting-started/quickstart-programming-python
 ---
 
 Workflows orchestrate the execution of other functions, like transactions and communicators.

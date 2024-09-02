@@ -93,8 +93,15 @@ const config = {
             label: 'Docs',
           },
           {
-            to: 'examples',
+            to: 'getting-started/quickstart',
+            position: 'left',
+            label: 'Quickstart',
+          },
+          {
+            type: 'docSidebar',
             label: 'Examples',
+            position: 'left',
+            sidebarId: 'examplesSidebar',
           },
           {
             href: 'https://console.dbos.dev/',

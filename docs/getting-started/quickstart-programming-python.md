@@ -1,6 +1,8 @@
 ---
 sidebar_position: 2
 title: DBOS Python Guide
+pagination_next: python/tutorials/workflow-tutorial
+pagination_prev: getting-started/quickstart
 ---
 
 This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have an app running locally.
