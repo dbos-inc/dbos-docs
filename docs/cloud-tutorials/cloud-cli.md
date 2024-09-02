@@ -6,7 +6,7 @@ description: DBOS Cloud CLI reference
 
 ## Installation
 
-To globally install the latest Cloud CLI version, run the following command:
+To globally install the DBOS Cloud CLI, run the following command:
 
 ```
 npm install -g @dbos-inc/dbos-cloud@latest
