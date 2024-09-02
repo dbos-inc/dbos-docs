@@ -4,7 +4,8 @@ sidebar_position: 2
 title: Earthquake Tracker
 ---
 
-In this example, we use DBOS to build a real-time earthquake dashboard by streaming earthquake data from the USGS into Postgres, then displaying it using [Streamlit](https://streamlit.io/).
+In this example, we use DBOS to build and deploy a real-time earthquake dashboard.
+It works by streaming earthquake data from the USGS into Postgres, then displaying it using [Streamlit](https://streamlit.io/).
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/earthquake-tracker).
 

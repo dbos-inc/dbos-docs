@@ -5,7 +5,6 @@ title: Widget Store
 ---
 
 In this example, we use DBOS and FastAPI to deploy an online storefront that's resilient to any failure.
-The focus of this app is on the checkout workflow, which durably manages order status, product inventory, and payment to ensure every checkout completes correctly.
 
 You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).
 Try playing with it and pressing the crash button as often as you want.

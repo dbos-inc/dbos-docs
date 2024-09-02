@@ -4,7 +4,7 @@ sidebar_position: 3
 title: Hacker News Slackbot
 ---
 
-In this example, we use DBOS to deploy a scheduled job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
+In this example, we use DBOS to build and deploy a scheduled job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hackernews-alerts).
 
