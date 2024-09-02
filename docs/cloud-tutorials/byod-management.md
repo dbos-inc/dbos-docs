@@ -5,9 +5,6 @@ description: Learn how to bring your own PostgreSQL database to DBOS Cloud
 pagination_next: null
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 In this guide, you'll learn how to bring your own PostgreSQL database instance to DBOS Cloud and deploy your applications to it.
 
 ### Linking Your Database to DBOS Cloud

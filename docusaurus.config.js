@@ -104,7 +104,7 @@ const config = {
             sidebarId: 'examplesSidebar',
           },
           {
-            href: 'https://console.dbos.dev/',
+            to: 'https://console.dbos.dev/',
             label: 'Cloud Console',
             position: 'right',
             className: 'dbos-button-blue',

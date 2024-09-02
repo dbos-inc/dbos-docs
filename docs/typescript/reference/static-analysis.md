@@ -4,9 +4,6 @@ title: Static Analysis
 description: API, tool, and rule documentation for DBOS static code analysis
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Static Code Analysis
 
 ---
