@@ -108,7 +108,7 @@ def handle_message(request: BoltRequest) -> None:
 
 ## Processing Messages
 
-Now, let's write the main workflow function that processes incoming messages.
+Now, let's write the main workflow that durably processes Slack messages.
 
 This function parses each message to determine whether it's asking the bot a question.
 If it is asking a question, it answers the question using a RAG-assisted LLM call, then posts the answer to the channel.
