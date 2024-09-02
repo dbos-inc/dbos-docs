@@ -201,7 +201,7 @@ export PGPASSWORD=dbos
 python3 start_postgres_docker.py
 ```
 
-Then run the app in a virtual environment:
+Then run the app in the virtual environment:
 
 ```shell
 pip install -r requirements.txt
