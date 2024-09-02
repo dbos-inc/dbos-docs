@@ -7,7 +7,7 @@ In this example, we use DBOS to build a real-time earthquake dashboard by stream
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/earthquake-tracker).
 
-You can see the dashboard live [here](https://peter-earthquake-tracker.cloud.dbos.dev/).
+You can see the dashboard live [here](https://demo-earthquake-tracker.cloud.dbos.dev/).
 
 ## Import and Initialize the App
 
