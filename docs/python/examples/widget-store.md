@@ -240,7 +240,7 @@ Finally, here is the crash endpoint. It crashes your app. Trigger it as many tim
 def crash_application():
     os._exit(1)
 ```
-## Try it Yourself
+## Try it Yourself!
 ### Deploying to the Cloud
 
 To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):

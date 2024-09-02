@@ -92,7 +92,7 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info(f"Found {len(results)} comments at {str(actual_time)}")
 ```
 
-## Try it Yourself
+## Try it Yourself!
 
 ### Setting Up Slack
 

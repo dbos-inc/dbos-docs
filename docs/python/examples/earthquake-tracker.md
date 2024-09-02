@@ -159,7 +159,9 @@ st.title("Earthquake Tracker")
 st.table(df)
 ```
 
-## Deploying to the Cloud
+## Try it Yourself!
+
+### Deploying to the Cloud
 
 To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
 
@@ -178,7 +180,7 @@ dbos-cloud app deploy
 This command outputs a URL&mdash;visit it to see some earthquakes!
 You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
 
-## Running Locally
+### Running Locally
 
 First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
