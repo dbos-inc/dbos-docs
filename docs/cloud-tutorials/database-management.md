@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-title: Cloud Database Management
+sidebar_position: 2
+title: Database Management
 description: Learn how to manage DBOS Cloud database instances
 ---
 
@@ -23,16 +23,15 @@ dbos-cloud db provision <database-instance-name> -U <database-username>
 ```
 
 :::info
-A Postgres Database Instance (Server) can host many independent databases used by different applications.
-To configure which database your application uses, on its configured server, through the `app_db_name` field in its `dbos-config.yaml`.
+A Postgres database instance (server) can host many independent databases used by different applications.
+You can configure to which database on this server your app connects through the `app_db_name` field in its `dbos-config.yaml`.
 :::
 
 :::info
 If you forget your database password, you can always [reset it](../cloud-tutorials/cloud-cli.md#dbos-cloud-db-reset-password).
 :::
 
-Provisioning a database instance is an asynchronous operation.
-To see a list of all provisioned instances and their status, run:
+To see a list of all provisioned instances and their statuses, run:
 
 ```shell
 dbos-cloud db list
@@ -46,26 +45,8 @@ dbos-cloud db status <database-instance-name>
 
 ### Database Schema Management
 
-To manage your applications' database schemas, you must define schema migrations.
-DBOS Cloud is compatible with any schema management tool as long as all its dependencies and assets are stored in your application directory.
-
-You configure your schema migrations in the `migrate` field of your `dbos-config.yaml`.
-You must supply a list of commands to run to migrate to your most recent schema version.
-For example, if you are using [Knex](https://knexjs.org/guide/migrations.html), you might use:
-
-```yaml
-database:
-  # Other fields omitted
-  migrate: ['npx knex migrate:latest']
-```
-
-To run your migrations locally, run `npx dbos migrate`.
-
-When you [deploy](./application-management#deploying-applications) an application to DBOS Cloud it runs `npx dbos migrate` to apply all schema changes before starting your application or updating its code.
-
-:::info
-Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
-:::
+Every time you deploy an application to DBOS Cloud, it runs all migrations defined in your `dbos-config.yaml`.
+This is the same as running `dbos migrate` locally.
 
 Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
 To make this easier, you can load your cloud database connection information into your local `dbos-config.yaml` configuration file by running:
@@ -74,10 +55,14 @@ To make this easier, you can load your cloud database connection information int
 dbos-cloud db connect <database-name>
 ```
 
-You can then locally run any migration command such as [`npx knex migrate:down`](https://knexjs.org/guide/migrations.html#migration-cli) and it will execute on your cloud database.
+You can then locally run any migration command (for example, a down-migration command in your schema migration tool) and it will execute on your cloud database.
 
 :::warning
 While it is occasionally necessary, be careful when manually changing the schema on a production database.
+:::
+
+:::warning
+Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
 ### Database Recovery

@@ -1,10 +1,8 @@
 ---
-sidebar_position: 1
-title: DBOS Cloud CLI
+sidebar_position: 30
+title: Cloud CLI Reference
 description: DBOS Cloud CLI reference
 ---
-
-The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud.
 
 ## Installation
 
