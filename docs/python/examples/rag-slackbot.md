@@ -5,13 +5,18 @@ title: RAG Slackbot
 ---
 
 In this example, we use DBOS and LlamaIndex to build and deploy a Slackbot that uses retrieval-augmented generation (RAG) to answer questions about previous Slack conversations.
-This bot listens to conversations in a Slack channel, embeds them, persists them in a database table, and uses that knowledge to answer questions about what's going on in your Slack channel.
-
-All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot).
+The bot listens to conversations in a Slack channel, persists them in a Postgres vector index, and uses that knowledge to answer questions about what's going on in your Slack channel.
 
 Here's what the bot looks like in action:
 
 <img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
+
+This app uses DBOS to:
+
+1. Serverlessly deploy the bot to the cloud.
+2. Durably orchestrate the RAG pipeline, guaranteeing each Slack message is processed exactly once and no message is lost or duplicated.
+
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot).
 
 ## Import and Initialize the App
 
@@ -40,7 +45,7 @@ app = FastAPI()
 DBOS(fastapi=app)
 ```
 
-Next, let's initialize LlamaIndex to use the app's Postgres database as the vector store
+Next, let's initialize LlamaIndex to use the app's Postgres database as its vector store.
 
 ```python
 set_global_handler("simple", logger=DBOS.logger)
@@ -75,7 +80,7 @@ Now, let's create a FastAPI HTTP endpoint that listens for messages on a Slack c
 
 ```python
 @app.post("/")
-def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)):  # type: ignore
+def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)):
     if "challenge" in body:
         # Respond to the Slack challenge request
         DBOS.logger.info("Received challenge")
