@@ -2,6 +2,7 @@
 sidebar_position: 1
 title: Application Management
 description: Learn how to manage DBOS Cloud applications
+pagination_prev: null
 ---
 
 In this guide, you'll learn how to manage applications in DBOS Cloud.
