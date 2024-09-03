@@ -1,7 +1,8 @@
 ---
-sidebar_position: 2
-title: Cloud Application Management
+sidebar_position: 1
+title: Application Management
 description: Learn how to manage DBOS Cloud applications
+pagination_prev: null
 ---
 
 In this guide, you'll learn how to manage applications in DBOS Cloud.
@@ -15,42 +16,35 @@ To deploy your application to DBOS Cloud, run this command in its root directory
 dbos-cloud app deploy
 ```
 
-Your application is deployed using the name in its `package.json`.
+Your application is deployed using the name in its `dbos-config.yaml`.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
-When you deploy an application for the first time, the command prompts you to choose which [database instance](../cloud-tutorials/database-management.md) to connect your app to, or to provision one if you have none. Multiple applications can use the same database instance (server) but must use separate databases within that server (the `app_db_name` field in `dbos-config.yaml`).
+The first time you deploy an application, you are prompted to choose to which [database instance](../cloud-tutorials/database-management.md) to connect your app, or to provision one if you have none.
+Multiple applications can connect to the same database instance (server) but must use separate databases within that server (the `app_db_name` field in `dbos-config.yaml`).
+
+Each time you deploy an application, the following steps execute:
+
+- An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
+- Your application's dependencies are installed.
+In Python, dependencies are loaded from `requirements.txt`.
+In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if this is not present.
+You must provide one of these files to successfully deploy.
+- All database migrations specified in your `dbos-config.yaml` are run on your cloud database.
+- Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM.
+
+After your application is deployed, the URL of your deployed application is printed.
+This URL is of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
+If your account is part of an [organization](./account-management.md#organization-management), organization name is used instead of username.
+
+If you edit your application, run `dbos-cloud app deploy` again to apply the latest migrations and upgrade to the latest version.
 
 :::tip
-* You can specify a particular database instance through the `-d <database-instance-name>`.
-* During the first deployment, you can enable time travel for your application with `--enable-timetravel`. You can delete and re-deploy an existing application to enable time travel.
-:::
-
-When you deploy an application, the DBOS Cloud CLI will create an archive of your application folder and upload it to DBOS Cloud. This archive can be up to 500MB in size.
-
-During deploy, DBOS Cloud first runs `dbos migrate` on your application database to apply all schema migrations you've defined.
-It then builds and starts your application.
-
-:::info
-DBOS Cloud will prune all development dependencies to reduce your application size. Make sure to explicitly install runtime dependencies.
-:::
-
-After your application is deployed, DBOS Cloud hosts it at this URL, which is also printed by the deploy command:
-
-```shell
-https://<username>-<app-name>.cloud.dbos.dev/
-```
-
-:::info
-If your account belongs to an [organization](./account-management.md#organization-management), applications are hosted at `https://<organization-name>-<app-name>.cloud.dbos.dev/`
-:::
-
-If you edit your application or schema, run `dbos-cloud app deploy` again to apply the latest migrations and upgrade to the latest version.
-
-:::info
+* During your first deploy, you can programatically specify a particular database instance through the `-d <database-instance-name>`.
+* During the first deploy, you can enable time travel for your application with `--enable-timetravel`. You can delete and re-deploy an existing application to enable time travel.
 * You don't have to worry about changing database server connection parameters like `hostname` or `password` in `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
 * You cannot change the application database (`app_db_name`) of a deployed application. You must delete and re-deploy the application.
-* While database instances can be shared across applications, application databases (`app_db_name`) cannot.
 :::
+
 
 ### Monitoring and Debugging Applications
 
@@ -63,8 +57,6 @@ DBOS provides many tools to monitor and debug applications:
 - To retrieve the last `N` seconds of your application's logs, run in your application root directory [`dbos-cloud app logs -l <N>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
 
 - To retrieve the status of a particular application, run [`dbos-cloud app status <app-name>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-status). To retrieve the statuses of all applications, run [`dbos-cloud app list`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-list).
-
-Applications run in [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM. Note that files on disk are ephemeral and not persisted between deployments.
 
 ### Managing Application Versions
 
@@ -81,12 +73,7 @@ You can redeploy a previous version of your application by passing `--previous-v
 dbos-cloud app deploy --previous-version <version-id>
 ```
 
-However, this will fail if the previous and current versions have different database schemas.
-
-Also, note DBOS Cloud will keep running Transact workflows from previous versions until they complete. This means you need to be mindful of non-backward-compatible database schema migrations, as they could break running workflows.
-
-For more information on schema management, see our [schema management guide](./database-management.md#database-schema-management).
-
+This will fail if the previous and current versions have different database schemas.
 
 ### Deleting Applications
 
@@ -96,7 +83,7 @@ To delete an application, run:
 dbos-cloud app delete <app-name>
 ```
 
-You can also delete the application database with the `--dropdb` argument:
+You can also delete the application database (`app_db_name`) with the `--dropdb` argument:
 
 ```shell
 dbos-cloud app delete <app-name> --dropdb

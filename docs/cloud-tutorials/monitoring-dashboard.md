@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Monitoring Dashboard
 description: Learn how to monitor DBOS Cloud applications
 ---

@@ -1,15 +1,13 @@
 ---
-sidebar_position: 1
-title: DBOS Cloud CLI
+sidebar_position: 30
+title: Cloud CLI Reference
 description: DBOS Cloud CLI reference
-pagination_prev: null
+pagination_next: null
 ---
-
-The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud.
 
 ## Installation
 
-To globally install the latest Cloud CLI version, run the following command:
+To globally install the DBOS Cloud CLI, run the following command:
 
 ```
 npm install -g @dbos-inc/dbos-cloud@latest
@@ -185,7 +183,7 @@ This command must be run from an application root directory.
 It executes the migration commands declared in `dbos-config.yaml`, deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
 **Parameters:**
-- `[application-name]`: The name of the application to deploy. By default we obtain the application name from package.json. This argument overrides the package name.
+- `[application-name]`: The name of the application to deploy. By default we obtain the application name from `dbos-config.yaml`. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--enable-timetravel`: Enable time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.

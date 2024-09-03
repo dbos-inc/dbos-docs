@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 8
 title: Time Travel Debugging
 description: Learn how to time travel debug DBOS Cloud applications
 ---
@@ -9,6 +9,11 @@ In this guide, you'll learn how to time travel debug your production application
 DBOS Cloud automatically records every step a DBOS application takes and every change it makes in the database.
 The Time Travel Debugger uses this information to "rewind time" and project database state as it existed when a selected workflow originally ran.
 Developers can step through past executions and add print statements or database read queries to them and they'll return results as if they ran in the past!
+
+:::info
+Time Travel Debugging is currently only available in TypeScript
+:::
+
 
 :::warning
 For Free Tier DBOS applications, time travel debug information is only kept for 3 days.
