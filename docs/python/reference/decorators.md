@@ -16,13 +16,46 @@ In DBOS, you annotate functions with decorators to give them properties.
 DBOS.workflow()
 ```
 
-Run a function as a DBOS reliable workflow.
+Durably execute this function as a [DBOS workflow](../tutorials/workflow-tutorial.md).
 
+**Example:**
 ```python
 @DBOS.workflow()
-def example_workflow():
-    DBOS.logger.info("I am a workflow")
+def greeting_workflow(name: str, note: str):
+    sign_guestbook(name)
+    insert_greeting(name, note)
 ```
+
+### step
+
+```python
+DBOS.step(
+    retries_allowed: bool = False,
+    interval_seconds: float = 1.0,
+    max_attempts: int = 3,
+    backoff_rate: float = 2.0
+)
+```
+
+Mark a function as a step in a workflow.
+This has two benefits:
+
+1. It lets workflows know this function performs a complex operation or interacts with an external service, so the workflow can guarantee those operations or interactions happen exactly-once.
+
+2. DBOS provides configurable automatic retries with exponential backoff for steps to more easily handle transient errors.
+
+**Example:**
+```python
+@DBOS.step(retries_allowed=True, max_attempts=10)
+def example_step():
+    return requests.get("https://example.com").text
+```
+
+**Parameters:**
+- `retries_allowed`: Whether to retry the step if it throws an exception.
+- `interval_seconds`: How long to wait before the initial retry.
+- `max_attempts`: How many times to retry a step that is throwing exceptions.
+- `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
 
 
 ### transaction
@@ -33,37 +66,21 @@ DBOS.transaction(
 )
 ```
 
-Run a function as a database transaction. Access the database through the `DBOS.sqlsession` context variable.
+Transactions are a special type of step that are optimized for database operations.
+They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
+They provide database access through the `DBOS.sql_session` context variable.
 
+**Example:**
 ```python
 @DBOS.transaction()
-def example_transaction():
-    DBOS.logger.info("I am a transaction")
+def example_insert(name: str, note: str) -> None:
+    # Insert a new greeting into the database
+    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
+    DBOS.sql_session.execute(sql, {"name": name, "note": note})
 ```
 
 **Parameters:**
 - `isolation_level`: The isolation level with which to run the transaction. Must be one of `SERIALIZABLE`, `REPEATABLE READ`, or `READ COMMITTED`. Defaults to `SERIALIZABLE`.
-
-### communicator
-
-```python
-DBOS.communicator(
-    retries_allowed: bool = False,
-    interval_seconds: float = 1.0,
-    max_attempts: int = 3,
-    backoff_rate: float = 2.0
-)
-```
-
-Run a function as a DBOS communicator. Communicators allow durably calling third-party APIs from workflows and provide configurable automatic retries.
-For example, this communicator fetches the contents of `example.com`.
-If `example.com` is down, it will automatically retry up to 10 times with exponential backoff.
-
-```python
-@DBOS.communicator(retries_allowed=True, max_attempts=10)
-def example_communicator():
-    return requests.get("https://example.com").text
-```
 
 ### scheduled
 
@@ -77,6 +94,7 @@ Run a function on a schedule specified using [crontab](https://en.wikipedia.org/
 
 The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).
 
+**Example:**
 ```python
 @DBOS.scheduled('* * * * *') # crontab syntax to run once every minute
 @DBOS.workflow()
