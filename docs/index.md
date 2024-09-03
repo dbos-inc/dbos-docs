@@ -2,9 +2,6 @@
 sidebar_position: 1
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Welcome to DBOS!
 
 DBOS is a serverless platform that radically simplifies backend application development.

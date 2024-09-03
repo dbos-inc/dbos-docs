@@ -2,6 +2,7 @@
 sidebar_position: 1
 title: DBOS Cloud CLI
 description: DBOS Cloud CLI reference
+pagination_prev: null
 ---
 
 The DBOS Cloud CLI helps you serverlessly run your applications on DBOS Cloud.

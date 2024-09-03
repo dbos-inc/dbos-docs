@@ -4,9 +4,6 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 We recommend performing database operations in _transaction functions_, which execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
 
 To make a Python function transactional, annotate it with the [`@DBOS.transaction`](../reference/decorators.md#transaction) decorator.

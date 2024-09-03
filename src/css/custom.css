@@ -65,3 +65,6 @@
   border-color: var(--ifm-color-primary-dark);
 }
 
+.row list {
+  align-items: stretch;
+}
