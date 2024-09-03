@@ -14,6 +14,7 @@ import { IoEarth } from "react-icons/io5";
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     index="1"
     icon={<MdOutlineShoppingCart color="white" size={65}/>}
+    language="python"
   />
   <CardLink
     label="Earthquake Tracker"
@@ -21,6 +22,7 @@ import { IoEarth } from "react-icons/io5";
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
     index="2"
     icon={<IoEarth color="white" size={65}/>}
+    language="python"
   />
   <CardLink
     label="Hacker News Bot"
@@ -28,6 +30,7 @@ import { IoEarth } from "react-icons/io5";
     description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
     index="3"
     icon={<FaHackerNews color="white" size={65} />}
+    language="python"
   />
   <CardLink
     label="RAG Slackbot"
@@ -35,5 +38,6 @@ import { IoEarth } from "react-icons/io5";
     description="Use DBOS and LlamaIndex to build a Slackbot that uses RAG to answer questions about previous Slack conversations."
     index="4"
     icon={<FaSlack color="white" size={65}/>}
+    language="python"
   />
   </section>

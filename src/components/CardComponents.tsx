@@ -8,7 +8,6 @@
 import React, {type ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import isInternalUrl from '@docusaurus/isInternalUrl';
 
 import Heading from '@theme/Heading';
 import styles from './styles.module.css';
@@ -34,13 +33,16 @@ function CardLayout({
   href,
   icon,
   title,
+  language,
   description,
 }: {
   href: string;
   icon: ReactNode;
   title: string;
-  description?: string;
+  language: string;
+  description: string;
 }): JSX.Element {
+  const languageIcon = language === 'python' ? 'img/python-logo-only.svg' : 'img/typescript-logo.svg';
   return (
     <CardContainer href={href}>
       <div className={styles.cardIcon}>{icon}</div>
@@ -49,6 +51,7 @@ function CardLayout({
         className={clsx('text--truncate', styles.cardTitle)}
         title={title}>
         {title}
+        <img src={languageIcon} className={styles.cardLogo}/>
       </Heading>
       {description && (
         <p
@@ -62,16 +65,14 @@ function CardLayout({
   );
 }
 
-export function CardLink({label, href, description, index, icon}: {label: string, href: string, description: string, index: string, icon?: ReactNode}): JSX.Element {
-  if (!icon) {
-    icon = isInternalUrl(href) ? '📄️' : '🔗';
-  }
+export function CardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string}): JSX.Element {
   return (
     <article key={Number(index)} className="col col--6 margin-bottom--lg">
       <CardLayout
         href={href}
         icon={icon}
         title={label}
+        language={language}
         description={description}
       />
     </article>
