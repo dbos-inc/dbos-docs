@@ -2,7 +2,6 @@
 sidebar_position: 30
 title: Cloud CLI Reference
 description: DBOS Cloud CLI reference
-pagination_prev: null
 ---
 
 ## Installation
