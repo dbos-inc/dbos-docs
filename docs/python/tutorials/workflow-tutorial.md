@@ -134,30 +134,33 @@ DBOS.get_event(
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store), the payments workflow, after validating an order, needs to direct the customer to a payments URL.
-To communicate the payments URL to the customer, it uses events.
+For example, in our [widget store demo](../examples/widget-store.md), the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
+To communicate the payment ID to the customer, it uses events.
 
-The payments workflow emits an event containing a payment link using `set_event()`:
+The payments workflow emits the payment ID using `set_event()`:
 
 ```python
 @DBOS.workflow()
 def checkout_workflow():
     ...
-    payment_url = ...
-    dbos.set_event(PAYMENT_URL_KEY, payment_url)
+    payment_id = ...
+    dbos.set_event(PAYMENT_ID, payment_id)
     ...
 ```
 
-The FastAPI handler that originally started the workflow uses `get_event()` to await this URL, then redirects the customer to it:
+The FastAPI handler that originally started the workflow uses `get_event()` to await this payment ID, then returns it:
 
 ```python
-@app.post("/checkout/{key}")
-def checkout_endpoint() -> Response:
-    handle = dbos.start_workflow(checkout_workflow)
-    payment_url = dbos.get_event(handle.workflow_id, PAYMENT_URL_KEY)
-    if payment_url is None:
-        return Response("/error")
-    return Response(payment_url)
+@app.post("/checkout/{idempotency_key}")
+def checkout_endpoint(idempotency_key: str) -> Response:
+    # Idempotently start the checkout workflow in the background.
+    with SetWorkflowID(idempotency_key):
+        handle = DBOS.start_workflow(checkout_workflow)
+    # Wait for the checkout workflow to send a payment ID, then return it.
+    payment_id = DBOS.get_event(handle.workflow_id, PAYMENT_ID)
+    if payment_id is None:
+        raise HTTPException(status_code=404, detail="Checkout failed to start")
+    return Response(payment_id)
 ```
 
 #### Reliability Guarantees
@@ -196,7 +199,7 @@ DBOS.recv(
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store), the payments workflow, after redirecting customers to a payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in our [widget store demo](../examples/widget-store.md), the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
@@ -204,19 +207,20 @@ To wait for this notification, the payments workflow uses `recv()`, executing fa
 @DBOS.workflow()
 def checkout_workflow():
   ... # Validate the order, then redirect customers to a payments service.
-  payment_status = DBOS.recv(PAYMENT_STATUS_TOPIC)
+  payment_status = DBOS.recv(PAYMENT_STATUS)
   if payment_status is not None and payment_status == "paid":
       ... # Handle a successful payment.
   else:
       ... # Handle a failed payment or timeout.
 ```
 
-A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
+An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```python
 @app.post("/payment_webhook/{workflow_id}/{payment_status}")
-def payment_endpoint(workflow_id: str, payment_status: str) -> Response:
-  DBOS.send(workflow_id, payment_status, PAYMENT_STATUS_TOPIC)
+def payment_endpoint(payment_id: str, payment_status: str) -> Response:
+    # Send the payment status to the checkout workflow.
+    DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
 ```
 
 #### Reliability Guarantees
