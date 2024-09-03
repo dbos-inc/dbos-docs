@@ -6,17 +6,19 @@ toc_max_heading_level: 3
 pagination_prev: getting-started/quickstart-programming-python
 ---
 
-Workflows orchestrate the execution of other functions, like transactions and communicators.
-Workflows provide _durable execution_: if they are interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
-You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store), we use a workflow for payment processing.
+Workflows orchestrate other functions.
+They provide _durable execution_: if they are interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
+Workflows are critical for building reliable, fault-tolerant programs.
+To see what workflows can do, try out our [widget store example](../examples/widget-store.md): no matter how many times you crash the online storefront, it always correctly processes your orders.
 
-To make a function a workflow, annotate it with the [`@DBOS.workflow`](../reference/decorators.md#workflow) decorator.
-Workflows may freely call transactions, communicators, and other workflows.
-However, they must be **[deterministic](#determinism).**
+Workflows are comprised of [_steps_](./step-tutorial.md).
+Steps are functions that the workflow attempts to execute exactly-once.
+If a workflow is interrupted, it resumes execution from the last completed step.
+You can make any Python function a step by annotating it with `@DBOS.step()`.
 
 Here's an example workflow (from the [programming guide](../../getting-started/quickstart-programming-python.md)) signing an online guestbook then recording the signature in the database.
-Here, `sign_guestbook` is a [communicator](./communicator-tutorial.md) and `insert_greeting` is a [transaction](./transaction-tutorial.md).
+Here, `sign_guestbook` is a [step](./step-tutorial.md).
+`insert_greeting` is a [transaction](./transaction-tutorial.md), a special type of step optimized for database operations.
 By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
 
 ```python
@@ -31,15 +33,14 @@ Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
+3.  Steps are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
 2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
-3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
 
 ## Determinism
 
-A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
+A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
-You can safely call these methods from your workflow.
+Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
 
 For example, **don't do this**:
 
@@ -53,13 +54,13 @@ def example_workflow(friend: str):
 Do this instead:
 
 ```python
-@DBOS.communicator()
-def example_communicator():
+@DBOS.step()
+def example_step():
     return requests.get("https://example.com").text
 
 @DBOS.workflow()
 def example_workflow(friend: str):
-    body = example_communicator()
+    body = example_step()
     return example_transaction(body)
 ```
 
