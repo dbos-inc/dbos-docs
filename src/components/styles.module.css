@@ -9,6 +9,9 @@
   border: 1px solid var(--ifm-color-emphasis-200);
   transition: all var(--ifm-transition-fast) ease;
   transition-property: border, box-shadow;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .cardContainer:hover {
@@ -32,7 +35,7 @@
   padding-right: 1.2rem;
   padding-bottom: 1rem;
   overflow: auto;
-  height: 100%;
+  flex-grow: 1;
 }
 
 .list article:last-child {
