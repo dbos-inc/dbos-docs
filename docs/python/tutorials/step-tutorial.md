@@ -1,36 +1,35 @@
 ---
-sidebar_position: 3
-title: Communicators
-description: Learn how to communicate with external APIs and services
+sidebar_position: 2
+title: Steps
 ---
 
-When using DBOS workflows, we recommend marking functions that communicate with external APIs and services as _communicators_.
+When using DBOS workflows, we recommend annotating any function that performs complex operations or accesses external APIs or services as a _step_.
 
-You can easily turn **any** Python function into a communicator by annotating it with the [`@DBOS.communicator`](../reference/decorators.md#communicator) decorator.
+You can turn **any** Python function into a step by annotating it with the [`@DBOS.step`](../reference/decorators.md#step) decorator.
 Here's a simple example:
 
 ```python
-@DBOS.communicator()
-def example_communicator():
+@DBOS.step()
+def example_step():
     return requests.get("https://example.com").text
 ```
 
-You should mark a function as a communicator if you're using it in a DBOS [workflow](./workflow-tutorial.md) and it accesses an external API or service, like serving a file from [AWS S3](https://aws.amazon.com/s3/), calling an external API like [Stripe](https://stripe.com/), or accessing an external data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
+You should make a function a step if you're using it in a DBOS [workflow](./workflow-tutorial.md) and it accesses an external API or service, like serving a file from [AWS S3](https://aws.amazon.com/s3/), calling an external API like [Stripe](https://stripe.com/), or accessing an external data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
 
-Marking functions as communicators has two benefits:
+Making a function a step has two benefits:
 
-1. It lets [workflows](./workflow-tutorial.md) know this function interacts with an external API, so the workflow can guarantee those calls happen exactly-once.
+1. It lets [workflows](./workflow-tutorial.md) know this function performs a complex operation or interacts with an external service, so the workflow can guarantee those operations or interactions happen exactly-once.
 
-2. DBOS provides [configurable automatic retries](#configurable-retries) for communicators to more easily handle transient errors.
+2. DBOS provides [configurable automatic retries](#configurable-retries) for steps to more easily handle transient errors.
 
 
 ### Configurable Retries
 
-You can optionally configure a communicator to automatically retry any exception a set number of times with exponential backoff.
-Retries are configurable through arguments to the [communicator decorator](../reference/decorators.md#communicator):
+You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
+Retries are configurable through arguments to the [step decorator](../reference/decorators.md#step):
 
 ```python
-DBOS.communicator(
+DBOS.step(
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
@@ -38,10 +37,10 @@ DBOS.communicator(
 )
 ```
 
-For example, we can configure our simple communicator to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
+For example, we can configure `example_step` to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
 
 ```python
-@DBOS.communicator(retries_allowed=True, max_attempts=10)
-def example_communicator():
+@DBOS.step(retries_allowed=True, max_attempts=10)
+def example_step():
     return requests.get("https://example.com").text
 ```
