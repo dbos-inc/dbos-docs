@@ -9,31 +9,31 @@ import { IoEarth } from "react-icons/io5";
 
   <section className="row list">
   <CardLink
-    label="HackerNews Bot"
-    href="python/examples/hacker-news-bot"
-    description="Use DBOS to build and deploy a scheduled job that periodically searches Hacker News and posts the comments to Slack."
+    label="Widget Store"
+    href="python/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     index="1"
+    icon={<MdOutlineShoppingCart color="white" size={65}/>}
+  />
+  <CardLink
+    label="Earthquake Tracker"
+    href="python/examples/earthquake-tracker"
+    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
+    index="2"
+    icon={<IoEarth color="white" size={65}/>}
+  />
+  <CardLink
+    label="Hacker News Bot"
+    href="python/examples/hacker-news-bot"
+    description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
+    index="3"
     icon={<FaHackerNews color="white" size={65} />}
   />
   <CardLink
     label="RAG Slackbot"
     href="python/examples/widget-store"
-    description="RAG Slackbot!!!"
-    index="2"
-    icon={<FaSlack color="white" size={65}/>}
-  />
-  <CardLink
-    label="Earthquake Tracker"
-    href="python/examples/earthquake-tracker"
-    description="Tracking earthquakes!!!"
-    index="3"
-    icon={<IoEarth color="white" size={65}/>}
-  />
-  <CardLink
-    label="Widget Store"
-    href="python/examples/widget-store"
-    description="Widget store!!!"
+    description="Use DBOS and LlamaIndex to build a Slackbot that uses RAG to answer questions about previous Slack conversations."
     index="4"
-    icon={<MdOutlineShoppingCart color="white" size={65}/>}
+    icon={<FaSlack color="white" size={65}/>}
   />
   </section>

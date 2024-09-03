@@ -11,7 +11,7 @@ Here's what the bot looks like in action:
 
 <img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
 
-This app is adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot). This app uses DBOS to:
+This app is adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot). It uses DBOS to:
 
 1. Serverlessly deploy the bot to the cloud.
 2. Durably orchestrate the RAG pipeline, guaranteeing each Slack message is processed exactly once and no message is lost or duplicated.
