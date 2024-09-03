@@ -64,3 +64,9 @@
   background-color: var(--ifm-color-primary-dark);
   border-color: var(--ifm-color-primary-dark);
 }
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}

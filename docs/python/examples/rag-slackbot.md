@@ -11,12 +11,13 @@ Here's what the bot looks like in action:
 
 <img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
 
-This app uses DBOS to:
+This app is adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot). This app uses DBOS to:
 
 1. Serverlessly deploy the bot to the cloud.
 2. Durably orchestrate the RAG pipeline, guaranteeing each Slack message is processed exactly once and no message is lost or duplicated.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot).
+
 
 ## Import and Initialize the App
 
@@ -276,6 +277,4 @@ dbos-cloud app deploy
 Once deployed, you can use your bot from your Slack workspace.
 Llamabot answers questions whenever you tag the bot (`@Llamabot`) in your message or reply to a bot's message, and it stores any other messages as a "fact" in its vector store.
 
-An example conversation with the bot:
-
-<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
+Have fun chatting with the bot!

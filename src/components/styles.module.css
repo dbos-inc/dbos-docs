@@ -22,15 +22,17 @@
 
 .cardTitle {
   font-size: 1.2rem;
-  padding: 1rem;
+  padding: 1.2rem;
   padding-bottom: 0;
 }
 
 .cardDescription {
   font-size: 0.9rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
   padding-bottom: 1rem;
+  overflow: auto;
+  height: 100%;
 }
 
 .list article:last-child {
@@ -39,6 +41,6 @@
 
 .cardIcon {
   text-align: center;
-  padding: 0.8rem;
+  padding: 1rem;
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
