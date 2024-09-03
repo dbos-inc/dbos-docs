@@ -93,18 +93,36 @@ const config = {
             label: 'Docs',
           },
           {
+            to: 'getting-started/quickstart',
+            position: 'left',
+            label: 'Quickstart',
+          },
+          {
+            type: 'docSidebar',
+            label: 'Examples',
+            position: 'left',
+            sidebarId: 'examplesSidebar',
+          },
+          {
             to: 'https://console.dbos.dev/',
             label: 'Cloud Console',
             position: 'right',
             className: 'dbos-button-blue',
           },
           {
-            href: 'https://github.com/dbos-inc/dbos-transact',
+            href: 'https://github.com/dbos-inc',
             position: 'right',
             className: 'header-github-link',
             'aria-label': 'GitHub repository',
           },
         ],
+        hideOnScroll: false,
+      },
+      docs: {
+        sidebar: {
+          hideable: false,
+          autoCollapseCategories: false,
+        }
       },
       footer: {
         style: 'dark',

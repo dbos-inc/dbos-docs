@@ -4,9 +4,6 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 Use _transaction functions_ to read and write from your database. A transaction function may contain multiple queries as well as TypeScript business logic and executes as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
 
 Transaction functions must be annotated with the [`@Transaction`](../reference/decorators#transaction) decorator and must have a [`TransactionContext`](../reference/contexts#transactioncontextt) as their first argument.

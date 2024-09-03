@@ -1,6 +1,7 @@
 ---
 sidebar_position: 4
 description: Learn how DBOS workflows work
+pagination_prev: null
 ---
 
 # How Workflows Work

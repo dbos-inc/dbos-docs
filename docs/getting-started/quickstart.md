@@ -3,9 +3,6 @@ sidebar_position: 1
 hide_table_of_contents: true
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-import {LargeTabs, LargeTabItem} from '@site/src/components/LargeTabs';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 
