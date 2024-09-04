@@ -4,7 +4,7 @@ title: Contexts
 description: API reference for DBOS context methods and variables
 ---
 
-DBOS provides a number of context methods and variables you can use to interact with functions and the database.
+DBOS provides a number of useful context methods and variables.
 All are accessed through the syntax `DBOS.<method>` and can only be used once a DBOS class object has been initialized.
 
 ## Context Methods
@@ -58,13 +58,13 @@ DBOS.set_event(
 ) -> None
 ```
 
-Create and associate with this workflow an immutable event named `key` with value `value`.
+Create and associate with this workflow an immutable event with key `key` and value `value`.
 Can only be called from within a workflow.
-Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
+Events are immutable and attempting to emit an event twice from a given workflow instance will error.
 
 
 **Parameters:**
-- `key`: The name to give the event.
+- `key`: The key of the event.
 - `value`: The value of the event. Must be serializable.
 
 ### get_event
@@ -99,7 +99,7 @@ DBOS.sleep(
 
 Sleep for the given number of seconds.
 May only be called from within a workflow.
-This sleep is durable--it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
@@ -135,7 +135,7 @@ DBOS.start_workflow(
 Start a workflow in the background and return a [handle](./workflow_handles.md) to it.
 The `DBOS.start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
-Example syntax:
+**Example syntax:**
 
 ```python
 @DBOS.workflow()
@@ -155,7 +155,7 @@ handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
 DBOS.logger: Logger
 ```
 
-Retrieve the DBOS logger. We recommend, but do not require, using it for all logging in DBOS apps.
+Retrieve the DBOS logger. This is a pre-configured Python logger provided as a convenience.
 
 ### sql_session
 
@@ -172,7 +172,7 @@ Retrieves the SQLAlchemy session of the transaction, a database connection the t
 DBOS.workflow_id: str
 ```
 
-May only be accessed from within a workflow, transaction, or communicator.
+May only be accessed from within a workflow, step, or transaction.
 Return the identity of the current workflow.
 
 ### span
@@ -214,7 +214,7 @@ SetWorkflowID(
 )
 ```
 
-Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids)/[idempotency key](../tutorials/idempotency-tutorial.md) of the next workflow, transaction, or communicator to run.
+Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids)/[idempotency key](../tutorials/idempotency-tutorial.md) of the next workflow to run.
 Should be used in a `with` statement.
 
 Example syntax:

@@ -27,10 +27,10 @@ telemetry:
 
 ### Tracing 
 
-DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all [workflows](./workflow-tutorial.md), [transactions](./transaction-tutorial.md), and [communicators](./communicator-tutorial.md).
+DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all workflows and their steps.
 If you are using [FastAPI](https://fastapi.tiangolo.com/), it also automatically traces each HTTP request.
 
-DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for every transaction, communicator, or workflow called in a trace.
+DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if a FastAPI HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
 You can access your current span via [`DBOS.span`](../reference/contexts.md#span)

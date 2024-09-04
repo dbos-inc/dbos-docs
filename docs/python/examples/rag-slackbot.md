@@ -172,10 +172,10 @@ def message_workflow(message: Dict[str, Any]) -> None:
 ```
 
 Let's also define some helper functions to help the main workflow interact with Slack.
-We annotate each of these with `@DBOS.communicator` so the workflow can durably call them.
+We annotate each of these with `@DBOS.step` so the workflow can durably call them.
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def post_slack_message(
     message: str, channel: str, thread_ts: Optional[str] = None
 ) -> None:
@@ -183,13 +183,13 @@ def post_slack_message(
 
 
 # Get all the replies in a Slack thread
-@DBOS.communicator()
+@DBOS.step()
 def get_slack_replies(channel: str, thread_ts: str) -> SlackResponse:
     return slackapp.client.conversations_replies(channel=channel, ts=thread_ts)
 
 
 # Get a Slack user's username from their user id
-@DBOS.communicator()
+@DBOS.step()
 def get_user_name(user_id: str) -> str:
     user_info = slackapp.client.users_info(user=user_id)
     user_name: str = user_info["user"]["name"]
@@ -202,7 +202,7 @@ Finally, let's write the functions that answer questions and store chat historie
 We answer questions using LlamaIndex backed by GPT-3.5 Turbo:
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def answer_question(
     query: str, message: Dict[str, Any], replies: Optional[SlackResponse] = None
 ) -> Any:
@@ -244,7 +244,7 @@ def answer_question(
 To aid in answering questions, we embed all Slack messages and store them in an index in Postgres:
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def insert_node(text: str, user_name: str, formatted_time: str) -> None:
     # create a node and apply metadata
     node = TextNode(

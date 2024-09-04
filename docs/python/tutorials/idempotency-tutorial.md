@@ -4,13 +4,13 @@ title: Idempotency
 description: Learn how to make operations idempotent.
 ---
 
-You can set an idempotency key for any workflow, transaction, or communicator to guarantee it executes only once, even if called multiple times with that key.
+You can set an idempotency key for a workflow to guarantee it executes only once, even if called multiple times with that key.
 This is especially useful if your operations have side effects like making a payment or sending an email.
 
 An idempotency key can be any string, but we recommend using [UUIDs](https://docs.python.org/3/library/uuid.html).
 Idempotency keys are required to be **globally unique** for your application.
 
-Use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) to set an idempotency key for a workflow, transaction, or communicator.
+Use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) to set an idempotency key for a workflow.
 This will also set the [workflow ID](./workflow-tutorial.md#workflow-ids) of that operation.
 For example:
 
@@ -26,4 +26,4 @@ with SetWorkflowID("very-unique-id"):
 ```
 
 If you're serving HTTP requests with [FastAPI](https://fastapi.tiangolo.com/), you can make any request idempotent by setting its `dbos-idempotency-key` header field.
-DBOS will automatically parse that header and assign the idempotency key to the first workflow, transaction, or communicator called from the request.
+DBOS will automatically parse that header and assign the idempotency key to the first workflow called from the request.
