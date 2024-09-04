@@ -22,7 +22,7 @@ import requests
 import slack_sdk
 from dbos import DBOS
 
-DBOS()
+dbos = DBOS()
 ```
 
 ## Searching Hacker News
@@ -90,6 +90,13 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
     for comment, url in results:
         post_to_slack(comment, url)
     DBOS.logger.info(f"Found {len(results)} comments at {str(actual_time)}")
+```
+
+Finally, in our main function, let's launch DBOS:
+
+```python
+if __name__ == "__main__":
+    dbos.launch()
 ```
 
 ## Try it Yourself!
