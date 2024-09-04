@@ -13,7 +13,7 @@ You can see the dashboard live [here](https://demo-earthquake-tracker.cloud.dbos
 
 ## Import and Initialize the App
 
-Let's start off with imports and initializing the DBOS app.
+In our main file (`earthquake_tracker/main.py`) let's start off with imports and initializing the DBOS app.
 
 
 ```python
@@ -33,10 +33,10 @@ DBOS()
 
 Now, let's write a function that queries the USGS for data on recent earthquakes.
 Our function will take in a time range and return the id, place, magnitude, and timestamp of all earthquakes that occured in that time range.
-We annotate the function with [`@DBOS.communicator`](../tutorials/communicator-tutorial.md) so we can call it from a durable workflow later on.
+We annotate the function with [`@DBOS.step`](../tutorials/step-tutorial.md) so we can call it from a durable workflow later on.
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def get_earthquake_data(
     start_time: datetime, end_time: datetime
 ) -> list[EarthquakeData]:
@@ -118,46 +118,119 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 
 ## Visualizing the Data with Streamlit
 
-We'll use Streamlit to create a real-time dashboard from the data in Postgres.
-We write the visualization code in a separate script because Streamlit re-runs its entire script each time it's viewed.
+Now, in a separate script (`earthquake_tracker/streamlit.py`), let's use Streamlit to create a real-time dashboard from the data in Postgres.
+We use a separate script because Streamlit re-runs its entire script each time it's viewed.
 
-First, let's do imports, load database connection information, and create a SQLAlchemy database connection:
+First, let's do imports and configure Streamlit with a title and some custom CSS.
 
 ```python
 import dbos
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 from schema import earthquake_tracker
 from sqlalchemy import create_engine, desc, select
 
-database_url = dbos.get_dbos_database_url()
-engine = create_engine(database_url)
+st.set_page_config(page_title="DBOS Earthquake Tracker", layout="wide")
+st.markdown(
+    """
+<style>
+    .reportview-container {
+        background-color: #f0f2f6;
+    }
+    .sidebar .sidebar-content {
+        background-color: #ffffff;
+    }
+    .Widget>label {
+        color: #31333F;
+        font-weight: bold;
+    }
+    .stProgress > div > div > div > div {
+        background-color: #4CAF50;
+    }
+            
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+st.title("🌎 Earthquake Tracker")
+st.markdown(
+    "This app uses DBOS to stream earthquake data from the USGS into Postgres and displays it using Streamlit."
+)
 ```
 
-Next, let's read the most recent 1000 earthquakes in Postgres into a pandas dataframe.
+Next, let's read the most recent 10000 earthquakes in Postgres into a pandas dataframe.
 We'll also do some transformations to the dataframe to make it more human-readable, such as transforming UNIX epoch timestamps into Python datetimes.
 
 ```python
-query = (
-    select(earthquake_tracker)
-    .order_by(desc(earthquake_tracker.c.timestamp))
-    .limit(1000)
-)
-df = pd.read_sql(query, engine)
-df["timestamp"] = pd.to_numeric(df["timestamp"], errors="coerce")
-df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-df = df.rename(
-    columns={"timestamp": "UTC Timestamp", "magnitude": "Magnitude", "place": "Place"}
-)
-df = df.drop(columns=["id"])
+def load_data():
+    database_url = dbos.get_dbos_database_url()
+    engine = create_engine(database_url)
+    query = (
+        select(earthquake_tracker)
+        .order_by(desc(earthquake_tracker.c.timestamp))
+        .limit(10000)
+    )
+    df = pd.read_sql(query, engine)
+    df["timestamp"] = pd.to_numeric(df["timestamp"], errors="coerce")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+    df = df.rename(
+        columns={
+            "timestamp": "UTC Timestamp",
+            "magnitude": "Magnitude",
+            "place": "Place",
+        }
+    )
+    return df.drop(columns=["id"])
+
+
+df = load_data()
 ```
 
-Finally, let's display our dataframe using Streamlit!
+Now, let's display our data using Streamlit.
+We'll add a magnitude selector slider in a sidebar:
 
 ```python
-st.set_page_config(page_title="DBOS Earthquake Tracker")
-st.title("Earthquake Tracker")
-st.table(df)
+with st.sidebar:
+    st.header("Filters")
+    min_magnitude = st.slider(
+        "Minimum Magnitude",
+        float(df["Magnitude"].min()),
+        float(df["Magnitude"].max()),
+        float(df["Magnitude"].min()),
+    )
+filtered_df = df[(df["Magnitude"] >= min_magnitude)]
+```
+
+In side-by-side columns, let's display the magnitude distribution and summary statistics of the earthquakes:
+
+```python
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.subheader("📊 Magnitude Distribution")
+    fig = px.histogram(
+        filtered_df, x="Magnitude", nbins=20, color_discrete_sequence=["#4CAF50"]
+    )
+    fig.update_layout(xaxis_title="Magnitude", yaxis_title="Count", bargap=0.1)
+    st.plotly_chart(fig, use_container_width=True)
+with col2:
+    st.subheader("📈 Summary Statistics")
+    total_earthquakes = len(filtered_df)
+    avg_magnitude = filtered_df["Magnitude"].mean()
+    max_magnitude = filtered_df["Magnitude"].max()
+
+    st.metric("Total Earthquakes", f"{total_earthquakes:,}")
+    st.metric("Average Magnitude", f"{avg_magnitude:.2f}")
+    st.metric("Max Magnitude", f"{max_magnitude:.2f}")
+```
+
+Finally, let's add a sortable data table with all the raw earthquake data:
+
+```python
+st.dataframe(filtered_df, use_container_width=True)
 ```
 
 ## Try it Yourself!
