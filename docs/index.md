@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-DBOS is a serverless platform that radically simplifies backend application development.
+DBOS is a serverless platform for building reliable backend applications.
 
 - **Build with DBOS Transact** - An open-source framework for building resilient backend applications in [TypeScript](https://github.com/dbos-inc/dbos-transact) or [Python](https://www.dbos.dev/dbos-transact-python).
 
