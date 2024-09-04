@@ -30,10 +30,10 @@ DBOS()
 Next, let's write a function that searches Hacker News.
 This function uses Algolia's Hacker News Search API to find all comments in the last _N_ hours containing a search term.
 It returns matching comments and links to them.
-We annotate this function with `@DBOS.Communicator` so later we can durably call it from our scheduled workflow.
+We annotate this function with `@DBOS.step` so later we can durably call it from our scheduled workflow.
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def search_hackernews(query: str, window_size_hours: int):
     threshold = datetime.now(UTC) - timedelta(hours=window_size_hours)
 
@@ -61,10 +61,10 @@ def search_hackernews(query: str, window_size_hours: int):
 Next, let's write a function that posts a Hacker News comment and its URL to Slack.
 This function requires a Slack bot token supplied through an environment variable.
 We'll explain later how to generate one.
-Again, we annotate this function with `@DBOS.Communicator` so later we can durably call it from our scheduled workflow.
+Again, we annotate this function with `@DBOS.step` so later we can durably call it from our scheduled workflow.
 
 ```python
-@DBOS.communicator()
+@DBOS.step()
 def post_to_slack(comment: str, url: str):
     message = f"{comment}\n\n{url}"
     client = slack_sdk.WebClient(token=os.environ["SLACK_HN_BOT_OAUTH_TOKEN"])
