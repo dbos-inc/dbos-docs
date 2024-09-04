@@ -26,7 +26,7 @@ from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
-DBOS()
+dbos = DBOS()
 ```
 
 ## Retrieving Earthquake Data
@@ -115,6 +115,12 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```
 
+Finally, in our main function, let's launch DBOS:
+
+```python
+if __name__ == "__main__":
+    dbos.launch()
+```
 
 ## Visualizing the Data with Streamlit
 
