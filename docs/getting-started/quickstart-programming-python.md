@@ -180,7 +180,7 @@ DBOS(app)
 # Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
   
-@DBOS.communicator()
+@DBOS.step()
 def sign_guestbook(name: str):
     key = os.environ.get("GUESTBOOK_KEY", None)
     if key is None or len(key) != 36:
@@ -213,8 +213,7 @@ def greet(name: str) -> str:
 ```
 
 We add a new function called `sign_guestbook` that uses `requests` to send an HTTP POST request to the guestbook to record a greeting.
-We annotate it with [`@DBOS.communicator`](../python/tutorials/communicator-tutorial.md) to tell DBOS this function makes an external API call.
-As we'll see later, these annotations allow DBOS to provide lightweight durable execution.
+Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical to how DBOS provides lightweight durable execution.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -245,7 +244,7 @@ DBOS(app)
 # Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
 
-@DBOS.communicator()
+@DBOS.step()
 def sign_guestbook(name: str):
     key = os.environ.get("GUESTBOOK_KEY", None)
     if key is None or len(key) != 36:
@@ -285,7 +284,7 @@ def greet(name: str) -> str:
     return note
 ```
 
-Here, we add a new function called `greeting_workflow` that first calls `sign_guestbook`, then calls `insert_greeting`.
+Here, we add a new function called `greeting_workflow` that calls two _steps_: `sign_guestbook` and `insert_greeting`.
 We annotate it with `@DBOS.workflow()` to tell DBOS to execute it durably.
 We introduce a sleep allowing you to interrupt the program midway through the workflow.
 We then change `greet` to start this workflow.
@@ -322,6 +321,6 @@ This behavior is useful when the caller expects a fast response, such as with a 
 To make it synchronous, call the workflow function directly instead of using `start_workflow`.
 :::
 
-The code for this guide is available on GitHub.
+The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our Python tutorials and demo apps.
+Next, to learn how to build more complex applications, check out our Python tutorials and example apps.
