@@ -22,7 +22,7 @@ import requests
 import slack_sdk
 from dbos import DBOS
 
-dbos = DBOS()
+DBOS()
 ```
 
 ## Searching Hacker News
@@ -96,7 +96,7 @@ Finally, in our main function, let's launch DBOS:
 
 ```python
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 ```
 
 ## Try it Yourself!

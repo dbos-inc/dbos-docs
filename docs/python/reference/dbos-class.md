@@ -25,7 +25,7 @@ DBOS(
 ### launch
 
 ```python
-dbos.launch()
+DBOS.launch()
 ```
 
 Launch DBOS, initializing database connections and starting scheduled workflows.
@@ -47,7 +47,7 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 
 # In your main function, launch DBOS
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 ```
 
 ### destroy

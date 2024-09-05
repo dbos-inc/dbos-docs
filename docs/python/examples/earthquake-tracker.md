@@ -26,7 +26,7 @@ from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
-dbos = DBOS()
+DBOS()
 ```
 
 ## Retrieving Earthquake Data
@@ -119,7 +119,7 @@ Finally, in our main function, let's launch DBOS:
 
 ```python
 if __name__ == "__main__":
-    dbos.launch()
+    DBOS.launch()
 ```
 
 ## Visualizing the Data with Streamlit
