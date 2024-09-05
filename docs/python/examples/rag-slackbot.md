@@ -9,28 +9,21 @@ The bot listens to conversations in a Slack channel, persists them in a Postgres
 
 Here's what the bot looks like in action:
 
-<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="Debug this workflow menu" width="400" />
+<img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="example slack conversation" width="400" />
 
-This app is adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot). It uses DBOS to:
+This example shows you how to build a **reliable, cloud-deployed** RAG application.
+Any AI-powered Slackbot has to deal with some basic reliability and cloud hosting issues.
+For example:
 
-1. Serverlessly deploy the bot to the cloud.
-2. Durably orchestrate the RAG pipeline, guaranteeing each Slack message is processed exactly once and no message is lost or duplicated.
+1. To listen to Slack events, you need a public URL and reliable hosting service for your app.
+2. Slack requires you to respond to events within [3 seconds](https://api.slack.com/apis/events-api#retries), but AI models often take longer than this to generate responses.
+3. Slack may send duplicate events, and you should handle these without sending duplicate Slack messages.
+
+We'll durably orchestrate the RAG pipeline with DBOS to solve problems #2 and #3 and deploy to DBOS Cloud to solve problem #1.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot).
+It's adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot).
 
-## Why Use DBOS?
-
-DBOS solves three pain points to build an AI-powered Slackbot:
-
-1. To listen to Slack events, you need a public URL and a reliable hosting service for your app.
-This typically requires you to manage some cloud infrastructure.
-2. Slack expects a response from your app within [3 seconds](https://api.slack.com/apis/events-api#retries), otherwise, it considers the app failed to handle the event and will retry up to _3 times_. However, AI models could be slow in response.
-3. You must handle duplicated events in case of Slack retries, for example, the app should not send duplicate responses to a Slack channel.
-
-According to Slack [best practices](https://api.slack.com/apis/events-api#responding), you should respond to events with a HTTP 200 OK soon and implement a queue to process events asynchronously, which could be complicated.
-
-With DBOS, you don't need to set up any external queue service; you could start a DBOS workflow _exactly once_ and respond to Slack immediately without waiting for it to complete.
-DBOS Cloud serverlessly hosts your app and automatically scales the app based on load.
 
 ## How It Works?
 ### Import and Initialize the App
@@ -106,6 +99,9 @@ def slack_challenge(request: FastAPIRequest, body: Dict[str, Any] = Body(...)):
 
 We'll then write a Slack Bolt endpoint to handle messages.
 Whenever this endpoint receives a message, it starts a DBOS workflow to durably process the message.
+
+We start the workflow in the background so we can quickly respond to Slack, avoiding a timeout.
+This is safe because DBOS durably executes workflows: once they're started, even asynchronously, they always run to completion.
 We use the message's unique event ID as an [idempotency key](../tutorials/idempotency-tutorial.md) to guarantee that no matter how many times Slack calls this endpoint, the message is processed exactly-once.
 
 ```python
