@@ -25,8 +25,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 It's adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/llamabot).
 
 
-## How It Works?
-### Import and Initialize the App
+## Import and Initialize the App
 
 Let's start off with imports and initializing DBOS and FastAPI.
 
@@ -82,7 +81,7 @@ auth_response = slackapp.client.auth_test()
 bot_user_id = auth_response["user_id"]
 ```
 
-### Dispatching Slack Messages
+## Dispatching Slack Messages
 
 Now, let's create a FastAPI HTTP endpoint that listens for messages on a Slack channel and dispatches them to Slack Bolt.
 
@@ -117,7 +116,7 @@ def handle_message(request: BoltRequest) -> None:
         DBOS.start_workflow(message_workflow, request.body["event"])
 ```
 
-### Processing Messages
+## Processing Messages
 
 Now, let's write the main workflow that durably processes Slack messages.
 
@@ -206,7 +205,7 @@ def get_user_name(user_id: str) -> str:
     return user_name
 ```
 
-### Answering Questions and Embedding Messages
+## Answering Questions and Embedding Messages
 
 Finally, let's write the functions that answer questions and store chat histories.
 We answer questions using LlamaIndex backed by GPT-3.5 Turbo:
