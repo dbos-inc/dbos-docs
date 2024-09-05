@@ -33,9 +33,9 @@ import { IoEarth } from "react-icons/io5";
     language="python"
   />
   <CardLink
-    label="RAG Slackbot"
-    href="python/examples/widget-store"
-    description="Use DBOS and LlamaIndex to build a Slackbot that uses RAG to answer questions about previous Slack conversations."
+    label="AI-Powered Slackbot"
+    href="python/examples/rag-slackbot"
+    description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
     index="4"
     icon={<FaSlack color="white" size={65}/>}
     language="python"
