@@ -37,7 +37,7 @@ If a FastAPI app is passed into the `DBOS` constructor, `launch` is called autom
 from dbos import DBOS
 
 # Initialize the DBOS object
-dbos = DBOS()
+DBOS()
 
 # Define a scheduled workflow
 @DBOS.scheduled("* * * * *")
