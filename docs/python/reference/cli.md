@@ -7,12 +7,28 @@ title: DBOS CLI
 
 ### dbos start
 
-Start your DBOS application by executing the start command defined in [`dbos-config.yaml`](./configuration.md#runtime).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime).
+For example:
+
+```yaml
+runtimeConfig:
+  start:
+    - "fastapi run"
+```
+
 DBOS Cloud uses this command as an entrypoint to start your app.
 
 ### dbos migrate
 
 Run all database schema migration commands defined in [`dbos-config.yaml`](./configuration.md#database).
+For example:
+
+```yaml
+database:
+  migrate:
+    - alembic upgrade head
+```
+
 DBOS Cloud uses this command during application deployment to migrate your database schema.
 
 ### dbos init
