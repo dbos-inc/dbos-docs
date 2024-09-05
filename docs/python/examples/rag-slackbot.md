@@ -18,8 +18,22 @@ This app is adapted from LlamaIndex's [Llamabot](https://github.com/run-llama/ll
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot).
 
+## Why Use DBOS?
 
-## Import and Initialize the App
+DBOS solves three pain points to build an AI-powered Slackbot:
+
+1. To listen to Slack events, you need a public URL and a reliable hosting service for your app.
+This typically requires you to manage some cloud infrastructure.
+2. Slack expects a response from your app within [3 seconds](https://api.slack.com/apis/events-api#retries), otherwise, it considers the app failed to handle the event and will retry up to _3 times_. However, AI models could be slow in response.
+3. You must handle duplicated events in case of Slack retries, for example, the app should not send duplicate responses to a Slack channel.
+
+According to Slack [best practices](https://api.slack.com/apis/events-api#responding), you should respond to events with a HTTP 200 OK soon and implement a queue to process events asynchronously, which could be complicated.
+
+With DBOS, you don't need to set up any external queue service; you could start a DBOS workflow _exactly once_ and respond to Slack immediately without waiting for it to complete.
+DBOS Cloud serverlessly hosts your app and automatically scales the app based on load.
+
+## How It Works?
+### Import and Initialize the App
 
 Let's start off with imports and initializing DBOS and FastAPI.
 
@@ -75,7 +89,7 @@ auth_response = slackapp.client.auth_test()
 bot_user_id = auth_response["user_id"]
 ```
 
-## Dispatching Slack Messages
+### Dispatching Slack Messages
 
 Now, let's create a FastAPI HTTP endpoint that listens for messages on a Slack channel and dispatches them to Slack Bolt.
 
@@ -107,7 +121,7 @@ def handle_message(request: BoltRequest) -> None:
         DBOS.start_workflow(message_workflow, request.body["event"])
 ```
 
-## Processing Messages
+### Processing Messages
 
 Now, let's write the main workflow that durably processes Slack messages.
 
@@ -196,7 +210,7 @@ def get_user_name(user_id: str) -> str:
     return user_name
 ```
 
-## Answering Questions and Embedding Messages
+### Answering Questions and Embedding Messages
 
 Finally, let's write the functions that answer questions and store chat histories.
 We answer questions using LlamaIndex backed by GPT-3.5 Turbo:
