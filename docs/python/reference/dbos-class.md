@@ -3,7 +3,7 @@ sidebar_position: 1
 title: DBOS Class
 ---
 
-The DBOS class is a singleton&mdash;you may only instantiate it once in a program's lifetime.
+The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
 Here, we document its constructor and lifecycle methods.
 Decorators are documented [here](./decorators.md) and context methods and variables [here](./contexts.md).
 
@@ -18,8 +18,8 @@ DBOS(
 ```
 
 **Parameters:**
-- `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls `launch` when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
-- `config`: A configuration object, which if passed in is used in place of `dbos-config.yaml`. We recommend using this for testing only.
+- `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
+- `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed in its contents are used instead. We recommend using this for testing only.
 
 
 ### launch
