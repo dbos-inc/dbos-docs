@@ -37,7 +37,7 @@ Initialize the local directory with a DBOS template application.
 
 **Parameters:**
 - `<application-name>`: The name of your application. If not specified, will be prompted for.
-- `--template, -t <str>`: Specify a template to use. Currently, we support only the basic "hello" template, which is used by default.
+- `--template, -t <str>`: Specify a template to use. Currently, we have a single "hello" template, which is used by default.
 - `--config, -c`: If this flag is passed in, only the `dbos-config.yaml` file is added from the template. Useful to add DBOS to an existing project.
 
 
