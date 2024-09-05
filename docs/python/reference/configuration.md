@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Configuration
 description: DBOS configuration reference
 pagination_next: null
