@@ -115,6 +115,12 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```
 
+Finally, in our main function, let's launch DBOS:
+
+```python
+if __name__ == "__main__":
+    DBOS.launch()
+```
 
 ## Visualizing the Data with Streamlit
 
