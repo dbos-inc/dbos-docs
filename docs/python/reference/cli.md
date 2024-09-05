@@ -16,7 +16,7 @@ runtimeConfig:
     - "fastapi run"
 ```
 
-DBOS Cloud uses this command as an entrypoint to start your app.
+DBOS Cloud executes this command to start your app.
 
 ### dbos migrate
 
