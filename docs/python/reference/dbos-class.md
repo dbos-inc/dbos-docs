@@ -29,7 +29,7 @@ DBOS.launch()
 ```
 
 Launch DBOS, initializing database connections and starting scheduled workflows.
-Should be called in your main function.
+Should be called after all decorators run.
 If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
 
 **Example:**
@@ -45,10 +45,30 @@ DBOS()
 def run_every_minute(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info("This is a scheduled workflow!")
 
-# In your main function, launch DBOS
-if __name__ == "__main__":
-    DBOS.launch()
+# After all decorators run, launch DBOS
+DBOS.launch()
 ```
+
+**Example using Flask:**
+```python
+from flask import Flask
+from dbos import DBOS
+
+app = Flask(__name__)
+DBOS()
+
+@app.route("/")
+@DBOS.workflow()
+def test_workflow():
+    return "<p>Workflow successful!</p"
+
+DBOS.launch()
+
+if __name__ == "__main__":
+    app.run()
+```
+
+Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -w 1 'main:app'` (prod)
 
 ### destroy
 
