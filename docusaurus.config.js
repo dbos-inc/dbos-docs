@@ -104,6 +104,10 @@ const config = {
             sidebarId: 'examplesSidebar',
           },
           {
+            type: 'search',
+            position: 'right',
+          },
+          {
             to: 'https://console.dbos.dev/',
             label: 'Cloud Console',
             position: 'right',

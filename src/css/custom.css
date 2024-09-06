@@ -47,10 +47,15 @@
 .dbos-button-blue {
   border: 1px solid;
   border-radius: 20px;
+  text-align: center;
+  border-color: var(--ifm-color-primary-dark);
+  color: var(--ifm-color-primary-dark);
+  width: 140px;
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
 .dbos-button-blue:hover {
-  border-color: var(--ifm-navbar-link-color);
   color: var(--ifm-navbar-link-color);
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
