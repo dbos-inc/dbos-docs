@@ -1,5 +1,4 @@
 ---
-sidebar_position: 1
 hide_table_of_contents: true
 ---
 
@@ -252,7 +251,7 @@ To see that it's working, visit this URL in your browser: http://localhost:8000/
 
 Congratulations! You started a DBOS app on your system!
 
-To learn more about building DBOS apps, check out our [Python programming guide](./quickstart-programming-python.md).
+To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
 
 
 </LargeTabItem>
@@ -477,7 +476,7 @@ To see that it's working, visit this URL in your browser: [http://localhost:3000
 
 Congratulations! You started a DBOS app on your system!
 
-Next, to learn how to build your own apps, check out our [programming guide](./quickstart-programming.md).
+Next, to learn how to build your own apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
 
 </LargeTabItem>
 </LargeTabs>

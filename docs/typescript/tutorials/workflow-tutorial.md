@@ -15,7 +15,7 @@ Workflows must be annotated with the [`@Workflow`](../reference/decorators#workf
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
-Here's an example workflow from the [programming guide](../../getting-started/quickstart-programming.md). It signs an online guestbook then records the signature in the database.
+Here's an example workflow from the [programming guide](../programming-guide.md). It signs an online guestbook then records the signature in the database.
 By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
 
 ```javascript

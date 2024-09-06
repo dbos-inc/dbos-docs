@@ -11,7 +11,7 @@ It also supports querying the database with [raw SQL](https://orm.drizzle.team/d
 ### Getting Started
 
 An easy way to get started with Drizzle is to bootstrap your application with our Drizzle template.
-This is similar to the template used in the [quickstart](../../getting-started/quickstart.md), but built with Drizzle instead of Knex.
+This is similar to the template used in the [quickstart](../../quickstart.md), but built with Drizzle instead of Knex.
 To download it, run:
 
 ```bash

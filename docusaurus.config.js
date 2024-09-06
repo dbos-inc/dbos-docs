@@ -40,8 +40,8 @@ const config = {
         redirects: [
           // /docs/oldDoc -> /docs/newDoc
           {
-            to: '/getting-started/quickstart#deploy-your-first-app-to-the-cloud',
-            from: '/getting-started/quickstart-cloud',
+            to: '/quickstart',
+            from: '/getting-started/quickstart',
           },
         ],
       },
@@ -93,7 +93,7 @@ const config = {
             label: 'Docs',
           },
           {
-            to: 'getting-started/quickstart',
+            to: 'quickstart',
             position: 'left',
             label: 'Quickstart',
           },

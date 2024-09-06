@@ -2,7 +2,6 @@
 sidebar_position: 1
 title: HTTP Serving
 description: Learn how to serve HTTP requests
-pagination_prev: getting-started/quickstart-programming
 ---
 
 In this guide, you'll learn how to make DBOS applications accessible through HTTP.

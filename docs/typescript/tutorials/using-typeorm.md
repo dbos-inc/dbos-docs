@@ -16,7 +16,7 @@ DBOS supports essentially direct use of TypeORM, but a few additional steps are 
 ### Getting Started
 
 An easy way to get started with TypeORM is to bootstrap your application with our TypeORM template.
-This is similar to the template used in the [quickstart](../../getting-started/quickstart.md), but built with TypeORM instead of Knex.
+This is similar to the template used in the [quickstart](../../quickstart.md), but built with TypeORM instead of Knex.
 To download it, run:
 
 ```bash

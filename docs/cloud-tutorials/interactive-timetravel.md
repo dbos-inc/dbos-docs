@@ -47,7 +47,7 @@ psql -h localhost -p 2345 -U postgres
 ```
 
 By default, any queries you run will reflect the current state of your database.
-Let's assume you've deployed the ["Hello, Database" quickstart](../getting-started/quickstart) application to DBOS Cloud.
+Let's assume you've deployed the ["Hello, Database" quickstart](../quickstart) application to DBOS Cloud.
 The application's `dbos_hello` table tracks how many times each person has been greeted.
 The following query tells you how many times Mike has been greeted:
 

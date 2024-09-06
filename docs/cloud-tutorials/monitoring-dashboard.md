@@ -8,7 +8,7 @@ In this guide, you'll learn how to use the monitoring dashboard to visualize the
 
 ### Preliminaries
 
-In order to launch the dashboard you must first deploy an application, as described in [quickstart](../getting-started/quickstart.md). Having done so, from your application directory, run:
+In order to launch the dashboard you must first deploy an application, as described in [quickstart](../quickstart.md). Having done so, from your application directory, run:
 
 ```
 dbos-cloud dashboard url

@@ -1,11 +1,11 @@
 ---
-sidebar_position: 2
-title: DBOS Typescript Guide
+sidebar_position: 1
+title: Learn DBOS TypeScript
 pagination_next: typescript/tutorials/http-serving-tutorial
-pagination_prev: getting-started/quickstart
+pagination_prev: quickstart
 ---
 
-This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally. In this guide we'll modify that example to reliably record events across two different systems: Postgres and a third-party API. This app will write to both systems consistently, even if interrupted or restarted at any point.
+This tutorial assumes you have finished the [Quickstart](../quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally. In this guide we'll modify that example to reliably record events across two different systems: Postgres and a third-party API. This app will write to both systems consistently, even if interrupted or restarted at any point.
 
 ## 1. Serving HTTP Requests
 

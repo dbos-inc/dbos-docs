@@ -2,7 +2,6 @@
 sidebar_position: 1
 title: Workflows
 toc_max_heading_level: 3
-pagination_prev: getting-started/quickstart-programming-python
 ---
 
 Workflows orchestrate other functions.
@@ -15,7 +14,7 @@ Steps are functions that the workflow attempts to execute exactly-once.
 If a workflow is interrupted, it resumes execution from the last completed step.
 You can make any Python function a step by annotating it with `@DBOS.step()`.
 
-Here's an example workflow (from the [programming guide](../../getting-started/quickstart-programming-python.md)) signing an online guestbook then recording the signature in the database.
+Here's an example workflow (from the [programming guide](../programming-guide.md)) signing an online guestbook then recording the signature in the database.
 Here, `sign_guestbook` is a [step](./step-tutorial.md) and `insert_greeting` is a [transaction](./transaction-tutorial.md), a special type of step optimized for database operations.
 By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
 

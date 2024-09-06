@@ -1,11 +1,11 @@
 ---
-sidebar_position: 2
-title: DBOS Python Guide
+sidebar_position: 1
+title: Learn DBOS Python
 pagination_next: python/tutorials/workflow-tutorial
-pagination_prev: getting-started/quickstart
+pagination_prev: quickstart
 ---
 
-This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have an app running locally.
+This tutorial assumes you have finished the [Quickstart](../quickstart.md) and you have an app running locally.
 In this guide we'll modify that app to reliably record events across two different systems: Postgres and a third-party API.
 This app will write to both systems consistently, even if interrupted or restarted at any point.
 
