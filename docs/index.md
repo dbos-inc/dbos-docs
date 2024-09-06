@@ -129,7 +129,14 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
 
 ### Join the Community
 
-If you have any questions or feedback about DBOS, you can reach out to us in the following ways:
-- [Chat with us on our Discord community](https://discord.gg/fMwQjeW5zg)
-- [Write an email to us](mailto:contact@dbos.dev)
-- [Submit a contact form](https://www.dbos.dev/contact)
+If you have any questions or feedback about DBOS, you can reach out to DBOS community members and developers on our [Discord server](https://discord.gg/fMwQjeW5zg).
+
+<section className="row list">
+  <IndexCardLarge
+      label="Welcome to the DBOS Discord!"
+      href="https://discord.gg/fMwQjeW5zg"
+      description=""
+      index="1"
+      icon={<img src='img/discord-mark-blue.svg' />}
+  />
+</section>
