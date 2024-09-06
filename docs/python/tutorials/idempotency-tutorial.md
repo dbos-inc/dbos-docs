@@ -25,5 +25,5 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
-If you're serving HTTP requests with [FastAPI](https://fastapi.tiangolo.com/), you can make any request idempotent by setting its `dbos-idempotency-key` header field.
+If you're serving HTTP requests with FastAPI or Flask, you can make any request idempotent by setting its `dbos-idempotency-key` header field.
 DBOS will automatically parse that header and assign the idempotency key to the first workflow called from the request.
