@@ -42,6 +42,34 @@ const config = {
             from: '/getting-started/quickstart',
             to: '/quickstart',
           },
+          {
+            from: '/explanations/core-concepts',
+            to: '/',
+          },
+          {
+            from: '/tutorials/scheduled-workflows',
+            to: '/python/tutorials/scheduled-workflows',
+          },
+          {
+            from: '/tutorials/idempotency-tutorial',
+            to: '/python/tutorials/idempotency-tutorial',
+          },
+          {
+            from: '/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
+          },
+          {
+            from: '/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
+          },
+          {
+            from: '/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/testing-tutorial',
+          },
+          {
+            from: '/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
+          },
         ],
       },
     ],
