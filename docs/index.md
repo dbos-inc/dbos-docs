@@ -84,42 +84,42 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
 
 <section className="row list">
   <IndexCardLink
-    label="Fast, efficient serverless"
+    label="Fast, Efficient Serverless"
     href="https://console.dbos.dev/"
     description="Experience serverless hosting 25x faster and 15x cheaper than AWS Lambda"
     index="1"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Lightweight durable execution"
+    label="Lightweight Durable Execution"
     href="/python/tutorials/workflow-tutorial"
     description="Annotate your code to make it resilient to any failure"
     index="2️"
     icon={<TbDatabaseSmile color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Built-in observability"
+    label="Built-in Observability"
     href="/python/tutorials/logging-and-tracing"
     description="All your workflows automatically emit OpenTelemetry traces"
     index="3"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Exactly-once event processing"
+    label="Exactly-Once Event Processing"
     href="/typescript/tutorials/kafka-integration"
     description="Use durable workflows to process incoming events exactly-once"
     index="4"
     icon={<SiApachekafka color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Scheduled jobs"
+    label="Scheduled Jobs"
     href="/python/tutorials/scheduled-workflows"
     description="Run your workflows exactly-once per time interval"
     index="5"
     icon={<RiCalendarScheduleLine color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Time travel"
+    label="Time Travel"
     href="/cloud-tutorials/interactive-timetravel"
     description="Query your database as of any past point in time"
     index="6"
