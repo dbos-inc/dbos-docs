@@ -29,22 +29,22 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Learn Durable Execution"
-    href=""
-    description={<HtmlToReactNode htmlString={"<a href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' height='30px' title='Learn DBOS Python'/></a>&nbsp;&nbsp;<a href='/typescript/programming-guide'><img src='img/typescript-logo.svg' height='30px' alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
+    label="Explore Example Apps"
+    href="/examples"
+    description="See what you can build with DBOS"
     index="3"
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore Example Apps"
-    href="/examples"
-    description="See what you can build with DBOS"
+    label="Learn Durable Execution"
+    href=""
+    description={<HtmlToReactNode htmlString={"<a href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' height='30px' title='Learn DBOS Python'/></a>&nbsp;&nbsp;<a href='/typescript/programming-guide'><img src='img/typescript-logo.svg' height='30px' alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
 </section>
 
-### Build with DBOS
+### Example Applications
 import { FaSlack } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { IoEarth } from "react-icons/io5";
@@ -74,9 +74,6 @@ import { IoEarth } from "react-icons/io5";
 </section>
 
 
-[Learn more...](/examples)
-
-
 ### Features
 
 import { IoIosRocket } from "react-icons/io";
@@ -94,9 +91,9 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Ultra-lightweight durable execution"
+    label="Lightweight durable execution"
     href="/python/tutorials/workflow-tutorial"
-    description="Add lightweight annotations to your code to make it resilient to any failure"
+    description="Annotate your code to make it resilient to any failure"
     index="2️"
     icon={<TbDatabaseSmile color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
