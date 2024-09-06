@@ -13,7 +13,9 @@ Thanks to durable execution, it always writes to both systems consistently, even
 This guide assumes you have a Postgres database running locally.
 If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
-Before starting, let's quickly initialize a new DBOS application.
+## 1. Scaffolding
+
+First, let's intialize a new DBOS application.
 In a clean directory, run:
 
 ```shell
@@ -23,9 +25,7 @@ pip install dbos
 dbos init
 ```
 
-## 1. Scaffolding
-
-Let's first create a simple FastAPI app with an HTTP endpoint to greet friends.
+Then use [FastAPI](https://github.com/fastapi/fastapi) to write a simple HTTP endpoint to greet friends.
 In your app folder, change the file `main.py` to contain only the following:
 
 ```python
@@ -41,13 +41,12 @@ def greet(name: str) -> str:
     return f"Thank you for being awesome, {name}!"
 ```
 
-Start your application with `dbos start`. You should see an output similar to:
+Start your application with `dbos start`. You should see output similar to:
 
 ```shell
 INFO:     Started server process [191280]
 INFO:     Waiting for application startup.
-14:21:20 [    INFO] (dbos:admin_sever.py:31) Starting DBOS admin server on port 3001
-14:21:20 [    INFO] (dbos:dbos.py:317) DBOS initialized
+14:21:20 [    INFO] (dbos:dbos.py:317) DBOS launched
 INFO:     Application startup complete.
 14:21:20 [    INFO] (dbos:system_database.py:657) Listening to notifications
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
