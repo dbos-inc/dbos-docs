@@ -52,11 +52,11 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-To see that your application is working, visit this URL in your browser: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike). You should see the message `Thank you for being awesome, Mike!`. If you replace Mike with a different name, your application will greet that name instead. 
+To see that your application is working, visit this URL in your browser: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike). You should see the message `Thank you for being awesome, Mike!`.
 
 ## 2. Creating Database Tables
 
-Let's make a database table to record greetings.
+Now, let's make a database table to record greetings.
 We strongly recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration).
 DBOS supports any Python database migration tool, but in this tutorial we'll use [Alembic](https://alembic.sqlalchemy.org/en/latest/).
 First, let's define our new table.
@@ -118,11 +118,11 @@ def greet(name: str) -> str:
     return note
 ```
 
-Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy Core](https://docs.sqlalchemy.org/en/20/core/).
+Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/).
 We annotate it with [`@DBOS.transaction`](../python/tutorials/transaction-tutorial.md) to tell DBOS this function modifies the database.
 These annotations are critical for durable execution, which we'll see later.
 
-Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
+Stop your app with Control + C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
 
 ```shell
 14:41:13 [    INFO] (dbos:main.py:22) >>> Greeting to Mike recorded in the database!
@@ -149,7 +149,7 @@ Now suppose we also want to send our greetings to a remote system. In this examp
 ### 4.1. Create a Guestbook Key
 To generate a guestbook API key, visit https://demo-guestbook.cloud.dbos.dev/key. It should output a 36-character sequence like `12345abc-1234-5678-1234-567890abcdef` (yours will be different).
 
-You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
+You can pass this key to your app as an environment variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
 ```yaml
 env:
   GUESTBOOK_KEY: 'your-key-value-here'
@@ -229,7 +229,7 @@ You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md).
-To add them, change your `main.py` like so:
+To add one, change your `main.py` like so:
 
 ```python
 import json
@@ -286,12 +286,12 @@ def greet(name: str) -> str:
     return note
 ```
 
-Here, we add a new function called `greeting_workflow` that calls two _steps_: `sign_guestbook` and `insert_greeting`.
+Here, we add a new function called `greeting_workflow` that calls two **steps**: `sign_guestbook` and `insert_greeting`.
 We annotate it with `@DBOS.workflow()` to tell DBOS to execute it durably.
 We introduce a sleep allowing you to interrupt the program midway through the workflow.
 We then change `greet` to start this workflow.
 
-The next step is time-sensitive; you may want to read it over before running. Stop your app with CTRL+C and restart it with `dbos start`.
+The next step is time-sensitive; you may want to read it over before running. Stop your app with Control + C and restart it with `dbos start`.
 Then, visit http://localhost:8000/greeting/Mike in your browser to send a request to your application. In your terminal, you should see an output like:
 
 ```shell
