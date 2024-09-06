@@ -1,17 +1,32 @@
 ---
-sidebar_position: 2
-title: DBOS Python Guide
+sidebar_position: 1
+title: Learn DBOS Python
 pagination_next: python/tutorials/workflow-tutorial
-pagination_prev: getting-started/quickstart
+pagination_prev: quickstart
 ---
 
-This tutorial assumes you have finished the [Quickstart](./quickstart.md) and you have an app running locally.
-In this guide we'll modify that app to reliably record events across two different systems: Postgres and a third-party API.
-This app will write to both systems consistently, even if interrupted or restarted at any point.
+This tutorial shows you how to build a simple Python app with DBOS.
+It highlights how DBOS **durable execution** makes your apps resilient to any failures.
+Our app will record events to two different systems: Postgres and a third-party API.
+Thanks to durable execution, it always writes to both systems consistently, even if interrupted or restarted at any point.
 
-## 1. Serving HTTP Requests
+This guide assumes you have a Postgres database running locally.
+If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
-Let's first use [FastAPI](https://fastapi.tiangolo.com/) to implement a simple HTTP endpoint to greet friends. In your app folder, change the file `main.py` to contain only the following:
+## 1. Scaffolding
+
+First, let's intialize a new DBOS application.
+In a clean directory, run:
+
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+pip install dbos
+dbos init
+```
+
+Then use [FastAPI](https://github.com/fastapi/fastapi) to write a simple HTTP endpoint to greet friends.
+In your app folder, change the file `main.py` to contain only the following:
 
 ```python
 from dbos import DBOS
@@ -19,40 +34,29 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
-DBOS(app)
-
-
-@app.get("/")
-def readme() -> HTMLResponse:
-    readme = """<html><body><p>
-      Welcome! Visit the route /greeting/:name to be greeted!<br>
-      For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
-      </p></body></html>
-      """
-    return HTMLResponse(readme)
+DBOS(fastapi=app)
 
 @app.get("/greeting/{name}")
 def greet(name: str) -> str:
     return f"Thank you for being awesome, {name}!"
 ```
 
-Start your application with `dbos start`. You should see an output similar to:
+Start your application with `dbos start`. You should see output similar to:
 
 ```shell
 INFO:     Started server process [191280]
 INFO:     Waiting for application startup.
-14:21:20 [    INFO] (dbos:admin_sever.py:31) Starting DBOS admin server on port 3001
-14:21:20 [    INFO] (dbos:dbos.py:317) DBOS initialized
+14:21:20 [    INFO] (dbos:dbos.py:317) DBOS launched
 INFO:     Application startup complete.
 14:21:20 [    INFO] (dbos:system_database.py:657) Listening to notifications
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-To see that your application is working, visit this URL in your browser: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike). You should see the message `Thank you for being awesome, Mike!`. If you replace Mike with a different name, your application will greet that name instead. 
+To see that your application is working, visit this URL in your browser: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike). You should see the message `Thank you for being awesome, Mike!`.
 
 ## 2. Creating Database Tables
 
-Let's make a database table to record greetings.
+Now, let's make a database table to record greetings.
 We strongly recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration).
 DBOS supports any Python database migration tool, but in this tutorial we'll use [Alembic](https://alembic.sqlalchemy.org/en/latest/).
 First, let's define our new table.
@@ -100,9 +104,7 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
-
-# Omitted for brevity: def readme()
+DBOS(fastapi=app)
 
 @DBOS.transaction()
 def insert_greeting(name: str, note: str):
@@ -116,9 +118,9 @@ def greet(name: str) -> str:
     return note
 ```
 
-Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy Core](https://docs.sqlalchemy.org/en/20/core/).
+Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/).
 We annotate it with [`@DBOS.transaction`](../python/tutorials/transaction-tutorial.md) to tell DBOS this function modifies the database.
-These annotations are critical for how DBOS provides lightweight durable execution, which we'll see later.
+These annotations are critical for durable execution, which we'll see later.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
 
@@ -147,7 +149,7 @@ Now suppose we also want to send our greetings to a remote system. In this examp
 ### 4.1. Create a Guestbook Key
 To generate a guestbook API key, visit https://demo-guestbook.cloud.dbos.dev/key. It should output a 36-character sequence like `12345abc-1234-5678-1234-567890abcdef` (yours will be different).
 
-You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
+You can pass this key to your app as an environment variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
 ```yaml
 env:
   GUESTBOOK_KEY: 'your-key-value-here'
@@ -175,9 +177,8 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
-# Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
   
 @DBOS.step()
@@ -212,8 +213,8 @@ def greet(name: str) -> str:
     return note
 ```
 
-We add a new function called `sign_guestbook` that uses `requests` to send an HTTP POST request to the guestbook to record a greeting.
-Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical to how DBOS provides lightweight durable execution.
+We add a new function called `sign_guestbook` that sends an HTTP POST request to the guestbook to record a greeting.
+Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical for durable execution.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -224,9 +225,11 @@ Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits t
 
 You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-value` to see all the Guestbook greetings made with your key. Old greetings and keys are removed after a few days.
 
-## 5. Composing Reliable Workflows
+## 5. Durable Execution with Workflows
 
-Next, we want to make our app reliable: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. This is called **durable execution**. DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md). To see them in action, change your `main.py` like so:
+Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
+DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md).
+To add one, change your `main.py` like so:
 
 ```python
 import json
@@ -239,9 +242,8 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
-# Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
 
 @DBOS.step()
@@ -284,7 +286,7 @@ def greet(name: str) -> str:
     return note
 ```
 
-Here, we add a new function called `greeting_workflow` that calls two _steps_: `sign_guestbook` and `insert_greeting`.
+Here, we add a new function called `greeting_workflow` that calls two **steps**: `sign_guestbook` and `insert_greeting`.
 We annotate it with `@DBOS.workflow()` to tell DBOS to execute it durably.
 We introduce a sleep allowing you to interrupt the program midway through the workflow.
 We then change `greet` to start this workflow.
@@ -301,7 +303,7 @@ INFO:     127.0.0.1:35398 - "GET /greeting/Mike HTTP/1.1" 200 OK
 14:57:55 [    INFO] (dbos:main.py:54) Press Control + C to stop the app...
 14:57:56 [    INFO] (dbos:main.py:54) Press Control + C to stop the app...
 ```
-Now press Ctrl + C stop your app. Then, run `dbos start` to restart it. You should see an output like:
+Now press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -313,14 +315,14 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 14:58:40 [    INFO] (dbos:main.py:47) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If your app did not use `DBOS.workflow()` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database **without** re-signing the guestbook.
+If your app did not use `DBOS.workflow()` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and correctly completes it by recording the greeting to the database **without** re-signing the guestbook.
 
 :::info
 Our example uses `DBOS.start_workflow` to start the workflow in the background.
-This behavior is useful when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing).
+This behavior is useful when the caller expects a fast response.
 To make it synchronous, call the workflow function directly instead of using `start_workflow`.
 :::
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our Python tutorials and example apps.
+Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).

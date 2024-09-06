@@ -32,7 +32,7 @@ You must compile your code (`npm run build`) before running this command.
 `npm create @dbos-inc` and `npm init @dbos-inc` are synonyms for `npx @dbos-inc/create`.  When using `npm create @dbos-inc` with any of the command line switches below, be sure to use `--` to separate `npm` arguments from the arguments intended for `@dbos-inc/create`.
 
 **Description:**
-This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../../getting-started/quickstart).
+This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../../quickstart).
 
 **Parameters:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).

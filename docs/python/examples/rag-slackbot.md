@@ -15,7 +15,7 @@ This example shows you how to build a **reliable, cloud-deployed** RAG applicati
 Any AI-powered Slackbot has to deal with some basic reliability and cloud hosting issues.
 For example:
 
-1. To listen to Slack events, you need a public URL and reliable hosting service for your app.
+1. You need a reliable hosting service for your app, and to listen to Slack events, you also need a public HTTPS URL.
 2. Slack requires you to respond to events within [3 seconds](https://api.slack.com/apis/events-api#retries), but AI models often take longer than this to generate responses.
 3. Slack may send duplicate events, and you should handle these without sending duplicate Slack messages.
 

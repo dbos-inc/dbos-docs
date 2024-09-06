@@ -38,10 +38,41 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
-          // /docs/oldDoc -> /docs/newDoc
           {
-            to: '/getting-started/quickstart#deploy-your-first-app-to-the-cloud',
-            from: '/getting-started/quickstart-cloud',
+            from: '/getting-started/quickstart',
+            to: '/quickstart',
+          },
+          {
+            from: '/explanations/core-concepts',
+            to: '/',
+          },
+          {
+            from: '/tutorials/scheduled-workflows',
+            to: '/python/tutorials/scheduled-workflows',
+          },
+          {
+            from: '/tutorials/idempotency-tutorial',
+            to: '/python/tutorials/idempotency-tutorial',
+          },
+          {
+            from: '/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
+          },
+          {
+            from: '/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/testing-tutorial',
+          },
+          {
+            from: '/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
+          },
+          {
+            from: '/getting-started/quickstart-programming',
+            to: '/',
+          },
+          {
+            from: '/getting-started/quickstart-tt-debugger',
+            to: '/',
           },
         ],
       },
@@ -93,7 +124,7 @@ const config = {
             label: 'Docs',
           },
           {
-            to: 'getting-started/quickstart',
+            to: 'quickstart',
             position: 'left',
             label: 'Quickstart',
           },
@@ -102,6 +133,10 @@ const config = {
             label: 'Examples',
             position: 'left',
             sidebarId: 'examplesSidebar',
+          },
+          {
+            type: 'search',
+            position: 'right',
           },
           {
             to: 'https://console.dbos.dev/',

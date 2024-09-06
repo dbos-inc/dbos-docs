@@ -87,7 +87,7 @@ DBOS Cloud periodically garbage collects and compacts provenance tables accordin
 
 ## Example
 
-As an example, we deployed a ["Hello, Database" quickstart](../getting-started/quickstart) application to DBOS Cloud.
+As an example, we deployed a ["Hello, Database" quickstart](../quickstart) application to DBOS Cloud.
 Its `dbos_hello` table looks like this after we send several greetings to Mike:
 
 ```

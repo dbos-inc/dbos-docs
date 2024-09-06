@@ -11,7 +11,7 @@ DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeO
 ### Getting Started
 
 An easy way to get started with Prisma is to bootstrap your application with our Prisma template.
-This is similar to the template used in the [quickstart](../../getting-started/quickstart.md), but built with Prisma instead of Knex.
+This is similar to the template used in the [quickstart](../../quickstart.md), but built with Prisma instead of Knex.
 To download it, run:
 
 ```bash

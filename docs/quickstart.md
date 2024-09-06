@@ -1,6 +1,5 @@
 ---
-sidebar_position: 1
-hide_table_of_contents: true
+toc_max_heading_level: 2
 ---
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -21,11 +20,13 @@ Let's create your first DBOS app! You develop this app in a folder on your compu
 In this guide, you'll start by deploying a sample "Hello" app to the cloud. Then, you'll run it locally.
 
 
-<LargeTabs groupId="language">
-<LargeTabItem value="python" label="Python">
 
 
 ## Deploy your First App to the Cloud
+
+
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
 
 ### 1. Initialize your application
 
@@ -103,7 +104,85 @@ To see that your app is working, visit `<URL>` in your browser.
 Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
 
 
+</LargeTabItem>
+<LargeTabItem value="typescript" label="TypeScript">
+
+### 1. Install Node.js
+
+DBOS TypeScript requires Node.js 20 or later.
+Install Node.js if you don't already have it:
+
+<details>
+<summary>Instructions to install Node.js</summary>
+<Tabs groupId="operating-systems">
+<TabItem value="maclinux" label="macOS or Linux">
+   Run the following commands in your terminal:
+
+   ```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+nvm install 22
+nvm use 22
+   ```
+</TabItem>
+<TabItem value="win-ps" label="Windows">
+
+Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
+After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
+(`%user%` is the Windows user on which you are logged in).
+</TabItem>
+</Tabs>
+</details>
+
+
+### 2. Create the app folder
+
+Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
+
+```bash
+npx -y @dbos-inc/create@latest -n <app-name>
+```
+
+For example, to name your app `hello`, run `npx -y @dbos-inc/create@latest -n hello`
+
+This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
+
+```
+cd <app-name>
+```
+
+### 3. Deploy!
+
+Install the DBOS Cloud CLI:
+
+```
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+
+Then run the following command to deploy your app to DBOS Cloud:
+```
+dbos-cloud app deploy
+```
+
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+
+To see that your app is working, visit `<URL>` in your browser.
+
+Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
+</LargeTabItem>
+
+</LargeTabs>
+
+
 ## Run the App on Your Computer
+
+
+
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
 
 Your DBOS app is just an ordinary Python app connecting to a Postgres database, so you can easily run it locally.
 
@@ -252,82 +331,11 @@ To see that it's working, visit this URL in your browser: http://localhost:8000/
 
 Congratulations! You started a DBOS app on your system!
 
-To learn more about building DBOS apps, check out our [Python programming guide](./quickstart-programming-python.md).
+To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
 
 
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
-
-## Deploy your First App to the Cloud
-
-### 1. Install Node.js
-
-DBOS TypeScript requires Node.js 20 or later.
-Install Node.js if you don't already have it:
-
-<details>
-<summary>Instructions to install Node.js</summary>
-<Tabs groupId="operating-systems">
-<TabItem value="maclinux" label="macOS or Linux">
-   Run the following commands in your terminal:
-
-   ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
-nvm install 22
-nvm use 22
-   ```
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-
-Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
-After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
-(`%user%` is the Windows user on which you are logged in).
-</TabItem>
-</Tabs>
-</details>
-
-
-### 2. Create the app folder
-
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
-
-```bash
-npx -y @dbos-inc/create@latest -n <app-name>
-```
-
-For example, to name your app `hello`, run `npx -y @dbos-inc/create@latest -n hello`
-
-This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
-
-```
-cd <app-name>
-```
-
-### 3. Deploy!
-
-Install the DBOS Cloud CLI:
-
-```
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-
-Then run the following command to deploy your app to DBOS Cloud:
-```
-dbos-cloud app deploy
-```
-
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
-
-To see that your app is working, visit `<URL>` in your browser.
-
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
-
-
-## Run the App on Your Computer
 
 For development, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an app folder as described above.
 
@@ -477,7 +485,7 @@ To see that it's working, visit this URL in your browser: [http://localhost:3000
 
 Congratulations! You started a DBOS app on your system!
 
-Next, to learn how to build your own apps, check out our [programming guide](./quickstart-programming.md).
+Next, to learn how to build your own apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
 
 </LargeTabItem>
 </LargeTabs>
