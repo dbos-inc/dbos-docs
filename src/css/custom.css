@@ -64,7 +64,3 @@
   border-color: var(--ifm-color-primary-dark);
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
-
-.row list {
-  align-items: stretch;
-}

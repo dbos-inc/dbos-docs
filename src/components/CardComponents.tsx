@@ -103,10 +103,10 @@ function IndexCardLayout({
   return (
     <CardContainer href={href}>
       <div className={styles.indexCardBox}>
-        <div className={styles.indexCardIcon} style={{width: '6rem', float: 'left'}}>
+        <div className={styles.indexCardIcon} style={{width: '80px'}}>
           <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1.2rem', height: '100%'}}>{icon}</div>
         </div>
-        <div style={{float: 'right'}}>
+        <div style={{width: '100%'}}>
           <Heading
             as="h2"
             className={styles.indexCardTitle}
