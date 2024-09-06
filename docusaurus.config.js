@@ -59,10 +59,6 @@ const config = {
             to: '/typescript/tutorials/authentication-authorization',
           },
           {
-            from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/authentication-authorization',
-          },
-          {
             from: '/tutorials/testing-tutorial',
             to: '/typescript/tutorials/testing-tutorial',
           },
