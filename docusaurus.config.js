@@ -125,20 +125,33 @@ const config = {
         }
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         links: [
           {
-            title: 'DBOS Documentation',
+            title: 'Follow Us',
             items: [
               {
-                label: 'Cloud Console',
-                href: 'https://console.dbos.dev/',
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/dbos-inc/',
               },
               {
-                label: 'Main Page',
-                href: 'https://www.dbos.dev',
+                label: 'Twitter/X',
+                href: 'https://x.com/DBOS_Inc',
               },
             ],
+          },
+          {
+            title: 'Learn More',
+            items: [
+              {
+                label: 'Blog',
+                href: 'https://www.dbos.dev/blog',
+              },
+              {
+                label: 'About',
+                href: 'https://www.dbos.dev/about'
+              }
+            ]
           },
           {
             title: 'Questions or Comments?',
@@ -153,21 +166,15 @@ const config = {
               },
             ],
           },
-          {
-            title: 'More',
-            items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/dbos-inc',
-              },
-              {
-                label: 'LinkedIn',
-                href: 'https://www.linkedin.com/company/dbos-inc/',
-              },
-            ],
-          },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc. | <a href="https://www.dbos.dev/privacy" target=_blank>Privacy Policy</a>`,
+        logo: {
+          alt: 'DBOS Logo',
+          src: 'img/dbos-logo.png',
+          srcDark: 'img/dbos-logo-dark.png',
+          href: 'https://dbos.dev',
+          width: 100,
+        },
       },
       prism: {
         theme: {
