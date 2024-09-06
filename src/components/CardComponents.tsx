@@ -96,7 +96,7 @@ function IndexCardLayout({
     <CardContainer href={href}>
       <div className={styles.indexCardBox}>
         <div className={styles.indexCardIcon} style={{width: '20%', float: 'left'}}>
-          <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%'}}>{icon}</div>
+          <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1.2rem', height: '100%'}}>{icon}</div>
         </div>
         <div style={{width: '80%', float: 'right'}}>
           <Heading

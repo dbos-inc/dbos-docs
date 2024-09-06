@@ -19,30 +19,30 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     href="/quickstart#deploy-your-first-app-to-the-cloud"
     description="Deploy an app to the cloud in minutes"
     index="1"
-    icon={<TbHexagonNumber1 color="var(--ifm-color-primary)" size={35}/>}
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary)" size={30}/>}
   />
   <IndexCardLink
     label="Start Developing Locally"
     href="/quickstart#run-the-app-on-your-computer"
     description="Set up DBOS with a local Postgres database"
     index="2️"
-    icon={<TbHexagonNumber2 color="var(--ifm-color-primary)" size={35}/>}
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary)" size={30}/>}
   />
   <IndexCardLink
     label="Learn Durable Execution"
     href="#"
     description={<HtmlToReactNode htmlString={"<a href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' height='30px'/></a><a href='/typescript/programming-guide'>&nbsp;&nbsp;<img src='img/typescript-logo.svg' height='30px' alt='typescript'/></a>"} />}
     index="3"
-    icon={<TbHexagonNumber3 color="var(--ifm-color-primary)" size={35}/>}
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore the Cloud Console"
-    href="https://console.dbos.dev/"
-    description="Manage your apps from the web"
+    label="Explore Example Apps"
+    href="/examples"
+    description="See what you can build with DBOS"
     index="4"
-    icon={<TbHexagonNumber4 color="var(--ifm-color-primary)" size={35}/>}
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary)" size={30}/>}
   />
-  </section>
+</section>
 
 
 ## Features
