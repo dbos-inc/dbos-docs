@@ -216,7 +216,7 @@ def greet(name: str) -> str:
 We add a new function called `sign_guestbook` that sends an HTTP POST request to the guestbook to record a greeting.
 Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical for durable execution.
 
-Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
+Stop your app with Control + C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
 ```
 14:54:13 [    INFO] (dbos:main.py:39) >>> STEP 1: Signed the Guestbook: {"ip_address": "...", "greeted_name": "Mike", "greeted_ts": "2024-08-29T21:54:13.832Z"}
@@ -303,7 +303,7 @@ INFO:     127.0.0.1:35398 - "GET /greeting/Mike HTTP/1.1" 200 OK
 14:57:55 [    INFO] (dbos:main.py:54) Press Control + C to stop the app...
 14:57:56 [    INFO] (dbos:main.py:54) Press Control + C to stop the app...
 ```
-Now press Ctrl + C stop your app. Then, run `dbos start` to restart it. You should see an output like:
+Now press Control + C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
