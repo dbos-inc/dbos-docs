@@ -77,7 +77,7 @@ import { IoEarth } from "react-icons/io5";
 ### Features
 
 import { IoIosRocket } from "react-icons/io";
-import { TbDatabaseSmile } from "react-icons/tb";
+import { BsDatabaseCheck } from "react-icons/bs";
 import { SiOpentelemetry, SiApachekafka } from "react-icons/si";
 import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
 
@@ -95,7 +95,7 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
     href="/python/tutorials/workflow-tutorial"
     description="Annotate your code to make it resilient to any failure"
     index="2️"
-    icon={<TbDatabaseSmile color="var(--ifm-color-primary-lightest)" size={30}/>}
+    icon={<BsDatabaseCheck color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Built-in Observability"
