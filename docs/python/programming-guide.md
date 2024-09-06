@@ -23,9 +23,10 @@ pip install dbos
 dbos init
 ```
 
-## 1. Serving HTTP Requests
+## 1. Scaffolding
 
-Let's first use [FastAPI](https://fastapi.tiangolo.com/) to implement a simple HTTP endpoint to greet friends. In your app folder, change the file `main.py` to contain only the following:
+Let's first create a simple FastAPI app with an HTTP endpoint to greet friends.
+In your app folder, change the file `main.py` to contain only the following:
 
 ```python
 from dbos import DBOS
@@ -33,17 +34,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
-DBOS(app)
-
-
-@app.get("/")
-def readme() -> HTMLResponse:
-    readme = """<html><body><p>
-      Welcome! Visit the route /greeting/:name to be greeted!<br>
-      For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>
-      </p></body></html>
-      """
-    return HTMLResponse(readme)
+DBOS(fastapi=app)
 
 @app.get("/greeting/{name}")
 def greet(name: str) -> str:
@@ -114,9 +105,7 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
-
-# Omitted for brevity: def readme()
+DBOS(fastapi=app)
 
 @DBOS.transaction()
 def insert_greeting(name: str, note: str):
@@ -189,9 +178,8 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
-# Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
   
 @DBOS.step()
@@ -255,9 +243,8 @@ from fastapi.responses import HTMLResponse
 from schema import greetings
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
-# Omitted for brevity: def readme()
 # Omitted for brevity: def get_greetings()
 
 @DBOS.step()
