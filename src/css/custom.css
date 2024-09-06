@@ -60,6 +60,23 @@
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
 
+.logo-button {
+  border: 1px solid;
+  border-color: var(--ifm-card-background-color);
+  padding: 0.2rem;
+  border-radius: 5px;
+  color: var(--ifm-navbar-link-color);
+  display: inline-block;
+}
+
+.logo-button img {
+  display: block;
+}
+
+.logo-button:hover {
+  border-color: var(--ifm-color-primary-lightest);
+}
+
 [data-theme='dark'] .dbos-button-blue {
   color: var(--ifm-color-primary);
 }
