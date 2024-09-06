@@ -66,6 +66,14 @@ const config = {
             from: '/tutorials/workflow-tutorial',
             to: '/typescript/tutorials/workflow-tutorial',
           },
+          {
+            from: '/getting-started/quickstart-programming',
+            to: '/',
+          },
+          {
+            from: '/getting-started/quickstart-tt-debugger',
+            to: '/',
+          },
         ],
       },
     ],
