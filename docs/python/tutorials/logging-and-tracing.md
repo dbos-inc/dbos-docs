@@ -2,7 +2,6 @@
 sidebar_position: 7
 title: Logging & Tracing
 description: Overview of logging and tracing in DBOS
-pagination_next: null
 ---
 
 ### Logging
