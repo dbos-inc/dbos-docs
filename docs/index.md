@@ -31,7 +31,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
   <IndexCardLink
     label="Learn durable execution"
     href="#"
-    description={<HtmlToReactNode htmlString={"<a href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' height='30px'/></a><a href='/typescript/programming-guide'>&nbsp;&nbsp;<img src='img/typescript-logo.svg' height='30px' alt='typescript'/></a>"} />}
+    description={<HtmlToReactNode htmlString={"Make your app resilient to any failure<br><a href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' height='30px'/></a><a href='/typescript/programming-guide'>&nbsp;&nbsp;<img src='img/typescript-logo.svg' height='30px' alt='typescript'/></a>"} />}
     index="3"
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary)" size={35}/>}
   />
