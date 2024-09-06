@@ -46,13 +46,13 @@
 
 .dbos-button-blue {
   border: 1px solid;
-  border-radius: 16px;
+  border-radius: 20px;
 }
 
 .dbos-button-blue:hover {
-  color: var(--ifm-navbar-link-color);
-  background-color: var(--ifm-color-primary-lightest);
   border-color: var(--ifm-navbar-link-color);
+  color: var(--ifm-navbar-link-color);
+  background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
 
 [data-theme='dark'] .dbos-button-blue {
@@ -61,8 +61,8 @@
 
 [data-theme='dark'] .dbos-button-blue:hover {
   color: black;
-  background-color: var(--ifm-color-primary-dark);
   border-color: var(--ifm-color-primary-dark);
+  background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
 
 .row list {
