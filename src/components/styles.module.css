@@ -58,6 +58,8 @@
 .cardIcon {
   text-align: center;
   padding: 1rem;
+  display: flex;
+  justify-content: center;
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
 }
 

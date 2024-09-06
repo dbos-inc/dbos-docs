@@ -8,7 +8,7 @@ DBOS is a serverless platform for building reliable backend applications.
 Add lightweight annotations to your app to _durably execute_ it, making it resilient to any failure.
 Then, deploy your app to the cloud with a single command.
 
-## Get Started
+### Get Started
 
 import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 } from "react-icons/tb";
 
@@ -44,8 +44,40 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
   />
 </section>
 
+### Build with DBOS
+import { FaSlack } from "react-icons/fa6";
+import { MdOutlineShoppingCart } from "react-icons/md";
+import { IoEarth } from "react-icons/io5";
 
-## Features
+<section className="row list">
+  <NarrowCardLink
+    label="AI-Powered Slackbot"
+    href="python/examples/rag-slackbot"
+    description="Build a Slackbot that uses RAG to answer questions about previous Slack conversations."
+    index="1"
+    icon={<FaSlack color="white" size={30}/>}
+  />
+  <NarrowCardLink
+    label="Widget Store"
+    href="python/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    index="2"
+    icon={<MdOutlineShoppingCart color="white" size={30}/>}
+  />
+  <NarrowCardLink
+    label="Earthquake Tracker"
+    href="python/examples/earthquake-tracker"
+    description="Build a real-time earthquake dashboard by streaming data from the USGS into Postgres."
+    index="3"
+    icon={<IoEarth color="white" size={30}/>}
+  />
+</section>
+
+
+[Learn more...](/examples)
+
+
+### Features
 
 import { IoIosRocket } from "react-icons/io";
 import { TbDatabaseSmile } from "react-icons/tb";
@@ -97,3 +129,10 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
     icon={<RiRewindStartMiniLine color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
 </section>
+
+### Join the Community
+
+If you have any questions or feedback about DBOS, you can reach out to us in the following ways:
+- [Chat with us on our Discord community](https://discord.gg/fMwQjeW5zg)
+- [Write an email to us](mailto:contact@dbos.dev)
+- [Submit a contact form](https://www.dbos.dev/contact)

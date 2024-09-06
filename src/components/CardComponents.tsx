@@ -51,16 +51,24 @@ function CardLayout({
   language: string;
   description: string;
 }): JSX.Element {
-  const languageIcon = language === 'python' ? 'img/python-logo-only.svg' : 'img/typescript-logo.svg';
+  let languageIcon = '';
+  switch (language) {
+    case 'python':
+      languageIcon = 'img/python-logo-only.svg';
+      break;
+    case 'typescript':
+      languageIcon = 'img/typescript-logo.svg';
+      break;
+  }
   return (
     <CardContainer href={href}>
-      <div className={styles.cardIcon}>{icon}</div>
+      {icon && <div className={styles.cardIcon}>{icon}</div>}
       <Heading
         as="h2"
-        className={clsx('text--truncate', styles.cardTitle)}
+        className={clsx(styles.cardTitle)}
         title={title}>
         {title}
-        <img src={languageIcon} className={styles.cardLogo}/>
+        {languageIcon && <img src={languageIcon} className={styles.cardLogo}/>}
       </Heading>
       {description && (
         <p
@@ -142,4 +150,18 @@ export function IndexCardLink ({icon, label, href, description, index}: {title: 
 
 export function HtmlToReactNode({ htmlString }) {
   return <div dangerouslySetInnerHTML={{ __html: htmlString }} />;
+}
+
+export function NarrowCardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string}): JSX.Element {
+  return (
+    <article key={Number(index)} className="col col--4 margin-bottom--lg">
+      <CardLayout
+        href={href}
+        icon={icon}
+        title={label}
+        language={language}
+        description={description}
+      />
+    </article>
+  );
 }

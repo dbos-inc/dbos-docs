@@ -6,7 +6,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 import {LargeTabs, LargeTabItem} from '@site/src/components/LargeTabs';
-import { CardLink, IndexCardLink, HtmlToReactNode } from '@site/src/components/CardComponents';
+import { CardLink, IndexCardLink, HtmlToReactNode, NarrowCardLink } from '@site/src/components/CardComponents';
 
 export default {
   // Re-use the default mapping
@@ -18,6 +18,7 @@ export default {
   CardLink,
   IndexCardLink,
   HtmlToReactNode,
+  NarrowCardLink,
   LargeTabItem,
   LargeTabs,
 };
