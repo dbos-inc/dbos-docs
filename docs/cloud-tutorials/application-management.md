@@ -31,6 +31,7 @@ In TypeScript, they are loaded from `package-lock.json`, or from `package.json` 
 You must provide one of these files to successfully deploy.
 - All database migrations specified in your `dbos-config.yaml` are run on your cloud database.
 - Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM.
+These microVMs expect your application to serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for DBOS Transact and Koa).
 
 After your application is deployed, the URL of your deployed application is printed.
 This URL is of the form `https://<username>-<app-name>.cloud.dbos.dev/`.

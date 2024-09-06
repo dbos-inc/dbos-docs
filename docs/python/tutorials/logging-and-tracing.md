@@ -28,7 +28,7 @@ telemetry:
 ### Tracing 
 
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all workflows and their steps.
-If you are using [FastAPI](https://fastapi.tiangolo.com/), it also automatically traces each HTTP request.
+If you are using FastAPI or Flask, it also automatically traces each HTTP request.
 
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if a FastAPI HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
