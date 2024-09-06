@@ -13,12 +13,14 @@ Decorators are documented [here](./decorators.md) and context methods and variab
 DBOS(
     *,
     fastapi: Optional[FastAPI] = None,
+    flask: Optional[Flask] = None,
     config: Optional[ConfigFile] = None,
 )
 ```
 
 **Parameters:**
 - `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
+- `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
 - `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed in its contents are used instead. We recommend using this for testing only.
 
 
@@ -55,12 +57,12 @@ from flask import Flask
 from dbos import DBOS
 
 app = Flask(__name__)
-DBOS()
+DBOS(flask=app)
 
 @app.route("/")
 @DBOS.workflow()
 def test_workflow():
-    return "<p>Workflow successful!</p"
+    return "<p>Workflow successful!</p>"
 
 # After all decorators run, launch DBOS
 DBOS.launch()
