@@ -20,13 +20,21 @@ function CardContainer({
   href: string;
   children: ReactNode;
 }): JSX.Element {
-  return (
-    <Link
-      href={href}
-      className={clsx('card', styles.cardContainer)}>
-      {children}
-    </Link>
-  );
+  if (href != "") {
+    return (
+      <Link
+        href={href}
+        className={clsx('card', styles.cardContainer)}>
+        {children}
+      </Link>
+    );
+  } else {
+    return (
+      <Link className={clsx('card', styles.cardContainer)}>
+        {children}
+      </Link>
+    );
+  }
 }
 
 // For example apps
@@ -95,10 +103,10 @@ function IndexCardLayout({
   return (
     <CardContainer href={href}>
       <div className={styles.indexCardBox}>
-        <div className={styles.indexCardIcon} style={{width: '20%', float: 'left'}}>
+        <div className={styles.indexCardIcon} style={{width: '6rem', float: 'left'}}>
           <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1.2rem', height: '100%'}}>{icon}</div>
         </div>
-        <div style={{width: '80%', float: 'right'}}>
+        <div style={{float: 'right'}}>
           <Heading
             as="h2"
             className={styles.indexCardTitle}
