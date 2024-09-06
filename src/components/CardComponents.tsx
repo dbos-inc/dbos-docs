@@ -122,12 +122,12 @@ function IndexCardLayout({
             {title}
           </Heading>
           {description && (
-            <p
+            <div
               // className={clsx('text--truncate', styles.cardDescription)}
               className={styles.indexCardDescription}
               title={title}>
               {description}
-            </p>
+            </div>
           )}
         </div>
       </div>
