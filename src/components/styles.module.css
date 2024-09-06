@@ -12,6 +12,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: auto;
+}
+
+.indexCardBox {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
 }
 
 .cardContainer:hover {
@@ -52,4 +59,32 @@
   text-align: center;
   padding: 1rem;
   background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
+}
+
+.indexCardIcon {
+  text-align: center;
+  font-size: x-large;
+}
+
+.indexCardLogo {
+  height: 1.5rem;
+  padding-bottom: 0;
+  padding-left: 0;
+  float: right;
+}
+
+.indexCardTitle {
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  padding-left: 0;
+  padding-bottom: 0;
+}
+
+.indexCardDescription {
+  font-size: 0.9rem;
+  padding-left: 0;
+  padding-right: 1.2rem;
+  padding-bottom: 1rem;
+  overflow: auto;
+  flex-grow: 1;
 }
