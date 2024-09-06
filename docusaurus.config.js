@@ -38,10 +38,9 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
-          // /docs/oldDoc -> /docs/newDoc
           {
-            to: '/quickstart',
             from: '/getting-started/quickstart',
+            to: '/quickstart',
           },
         ],
       },
