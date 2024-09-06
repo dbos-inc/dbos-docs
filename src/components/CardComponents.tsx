@@ -109,7 +109,7 @@ function IndexCardLayout({
             <p
               // className={clsx('text--truncate', styles.cardDescription)}
               className={styles.indexCardDescription}
-              title={description.toString()}>
+              title={title}>
               {description}
             </p>
           )}
