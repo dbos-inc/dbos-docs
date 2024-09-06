@@ -5,9 +5,23 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
-This tutorial assumes you have finished the [Quickstart](../quickstart.md) and you have an app running locally.
-In this guide we'll modify that app to reliably record events across two different systems: Postgres and a third-party API.
-This app will write to both systems consistently, even if interrupted or restarted at any point.
+This tutorial shows you how to build a simple Python app with DBOS.
+It highlights how DBOS **durable execution** makes your apps resilient to any failures.
+Our app will record events to two different systems: Postgres and a third-party API.
+Thanks to durable execution, it always writes to both systems consistently, even if interrupted or restarted at any point.
+
+This guide assumes you have a Postgres database running locally.
+If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
+
+Before starting, let's quickly initialize a new DBOS application.
+In a clean directory, run:
+
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+pip install dbos
+dbos init
+```
 
 ## 1. Serving HTTP Requests
 
@@ -118,7 +132,7 @@ def greet(name: str) -> str:
 
 Here, we add a new `insert_greeting` function that records your greeting in the database using [SQLAlchemy Core](https://docs.sqlalchemy.org/en/20/core/).
 We annotate it with [`@DBOS.transaction`](../python/tutorials/transaction-tutorial.md) to tell DBOS this function modifies the database.
-These annotations are critical for how DBOS provides lightweight durable execution, which we'll see later.
+These annotations are critical for durable execution, which we'll see later.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should print this to the console:
 
@@ -212,8 +226,8 @@ def greet(name: str) -> str:
     return note
 ```
 
-We add a new function called `sign_guestbook` that uses `requests` to send an HTTP POST request to the guestbook to record a greeting.
-Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical to how DBOS provides lightweight durable execution.
+We add a new function called `sign_guestbook` that sends an HTTP POST request to the guestbook to record a greeting.
+Note the [`@DBOS.step`](../python/tutorials/step-tutorial.md) annotation&mdash;we'll come back to it later, as it's critical for durable execution.
 
 Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -224,9 +238,11 @@ Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits t
 
 You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-value` to see all the Guestbook greetings made with your key. Old greetings and keys are removed after a few days.
 
-## 5. Composing Reliable Workflows
+## 5. Durable Execution with Workflows
 
-Next, we want to make our app reliable: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. This is called **durable execution**. DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md). To see them in action, change your `main.py` like so:
+Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
+DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md).
+To add them, change your `main.py` like so:
 
 ```python
 import json
@@ -313,14 +329,14 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 14:58:40 [    INFO] (dbos:main.py:47) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If your app did not use `DBOS.workflow()` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database **without** re-signing the guestbook.
+If your app did not use `DBOS.workflow()` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and correctly completes it by recording the greeting to the database **without** re-signing the guestbook.
 
 :::info
 Our example uses `DBOS.start_workflow` to start the workflow in the background.
-This behavior is useful when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing).
+This behavior is useful when the caller expects a fast response.
 To make it synchronous, call the workflow function directly instead of using `start_workflow`.
 :::
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our Python tutorials and example apps.
+Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
