@@ -62,6 +62,7 @@ DBOS()
 def test_workflow():
     return "<p>Workflow successful!</p"
 
+# After all decorators run, launch DBOS
 DBOS.launch()
 
 if __name__ == "__main__":
