@@ -13,6 +13,11 @@
   flex-direction: column;
   height: 100%;
   overflow: auto;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.cardContainer:hover {
+  color: var(--ifm-color-emphasis-700);
 }
 
 .indexCardBox {
