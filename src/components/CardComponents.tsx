@@ -30,9 +30,9 @@ function CardContainer({
     );
   } else {
     return (
-      <Link className={clsx('card', styles.cardContainer)}>
+      <div className={clsx('card', styles.cardContainer)}>
         {children}
-      </Link>
+      </div>
     );
   }
 }
