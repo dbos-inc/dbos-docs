@@ -13,20 +13,23 @@ Thanks to durable execution, it always writes to both systems consistently, even
 This guide assumes you have a Postgres database running locally.
 If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
-## 1. Scaffolding
+## 1. Starting Out
 
-First, let's intialize a new DBOS application.
-In a clean directory, run:
+In a clean directory, set up a virtual environment:
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+Then, install and initialize DBOS:
+```shell
 pip install dbos
 dbos init
 dbos migrate
 ```
 
-Then use [FastAPI](https://github.com/fastapi/fastapi) to write a simple HTTP endpoint to greet friends.
+Next, use [FastAPI](https://github.com/fastapi/fastapi) to write a simple HTTP endpoint to greet friends.
 In your app folder, change the file `main.py` to contain only the following:
 
 ```python
@@ -42,15 +45,15 @@ def greeting_endpoint(name: str) -> str:
     return f"Thank you for being awesome, {name}!"
 ```
 
-Start your application with `dbos start`. 
-Then, to see that your application is working, visit this URL in your browser: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike).
+Start your app with `dbos start`. 
+To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike).
 You should see the message `Thank you for being awesome, Mike!`.
 
-## 2. Making Some Writes
+## 2. Adding Some Steps
 
-Now, let's update the app so that every time it receives a greeting, it does two things:
+Now, let's update the app so that every time it receives a greeting, it performs two steps:
 
-1. Sign an online guestbook with the greeting
+1. Sign an online guestbook with the greeting.
 2. Record the greeting in the database.
 
 Copy the following code into your `main.py`:
@@ -75,8 +78,6 @@ def sign_guestbook(name: str):
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )
-    if not response.ok:
-        raise Exception(f"Error signing guestbook: {json.dumps(response.json())}")
     DBOS.logger.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 @DBOS.transaction()
@@ -98,15 +99,15 @@ We add two new functions.
 2. `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
 
 Importantly, **both are ordinary Python functions**.
-However, we apply to each a DBOS annotation so that we can durably execute them.
-[`DBOS.step`](../python/tutorials/step-tutorial.md) is an annotation we can apply to any Python function to use it as a step in a durable workflow.
-[`DBOS.transaction`](../python/tutorials/transaction-tutorial.md) is a special type of step optimized for functions that perform database operations.
+However, we apply to each a DBOS annotation so we can durably execute them later.
+- [`DBOS.step`](../python/tutorials/step-tutorial.md) is an annotation we can apply to any function to use it as a step in a durable workflow.
+- [`DBOS.transaction`](../python/tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
 
-Stop your app with CTRL+C then restart it with `dbos start`. Make a few visits to the greeting URL in your browser (http://localhost:8000/greeting/Mike). With every new visit, the app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
+To see your app working, restart it with `dbos start`. Then, visit this URL: http://localhost:8000/greeting/Mike. When you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
 ```
-14:54:13 [    INFO] (dbos:main.py:24) >>> STEP 1: Signed the guestbook for Mike
-14:54:13 [    INFO] (dbos:main.py:37) >>> STEP 2: Greeting to Mike recorded in the database!
+14:54:13 [    INFO] (dbos:main.py:21) >>> STEP 1: Signed the guestbook for Mike
+14:54:13 [    INFO] (dbos:main.py:28) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
 ## 3. Durable Execution with Workflows
@@ -135,8 +136,6 @@ def sign_guestbook(name: str):
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )
-    if not response.ok:
-        raise Exception(f"Error signing guestbook: {json.dumps(response.json())}")
     DBOS.logger.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 @DBOS.transaction()
@@ -160,31 +159,32 @@ The only change we make is adding the `@DBOS.workflow()` annotation to `greeting
 **This single line transforms your FastAPI endpoint into a durably executed workflow!**
 For demonstration purposes, we also introduce a sleep to interrupt your app midway through the workflow.
 
-To see the power of durable execution, stop your app with CTRL+C and restart it with `dbos start`.
-Then, visit http://localhost:8000/greeting/Mike in your browser to send your app a request.
+To see the power of durable execution, restart your app with `dbos start`.
+Then, visit this URL: http://localhost:8000/greeting/Mike.
 In your terminal, you should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-16:02:00 [    INFO] (dbos:main.py:24) >>> STEP 1: Signed the guestbook for Mike
-16:02:00 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:01 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:02 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
+16:02:00 [    INFO] (dbos:main.py:21) >>> STEP 1: Signed the guestbook for Mike
+16:02:00 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:01 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:02 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
 ```
-Now press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
+Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-16:02:20 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:20 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:20 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:20 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:20 [    INFO] (dbos:main.py:45) Press Control + C to stop the app...
-16:02:21 [    INFO] (dbos:main.py:37) >>> STEP 2: Greeting to Mike recorded in the database!
+16:02:20 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:20 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:20 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:20 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:20 [    INFO] (dbos:main.py:36) Press Control + C to stop the app...
+16:02:21 [    INFO] (dbos:main.py:28) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
 Without durable execution&mdash;if you removed `DBOS.workflow()`&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
 However, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
+This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
