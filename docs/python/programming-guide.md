@@ -7,7 +7,7 @@ pagination_prev: quickstart
 
 This tutorial shows you how to build a simple Python app with DBOS.
 It highlights how DBOS **durable execution** makes your apps resilient to any failures.
-Our app records greetings to two different systems: Postgres and an online guestbook
+We'll build an app that records greetings to two different systems: Postgres and an online guestbook.
 Thanks to durable execution, it always writes to both systems consistently, even if interrupted or restarted at any point.
 
 This guide assumes you have a Postgres database running locally.
