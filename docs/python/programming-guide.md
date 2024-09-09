@@ -110,6 +110,10 @@ To see your app working, restart it with `dbos start`. Then, visit this URL: htt
 14:54:13 [    INFO] (dbos:main.py:28) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
+Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
+This is bad in many real-world situtations, for example if a program fails to record making or receiving a payment.
+To fix this problem, we'll use DBOS durable execution.
+
 ## 3. Durable Execution with Workflows
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
@@ -161,7 +165,7 @@ def greeting_endpoint(name: str):
 
 The only change we make is adding the [`@DBOS.workflow`](./tutorials/workflow-tutorial.md) annotation to `greeting_endpoint`.
 **This single line transforms your FastAPI endpoint into a durably executed workflow!**
-For demonstration purposes, we also introduce a sleep to interrupt your app midway through the workflow.
+For demonstration purposes, we also introduce a sleep so you can interrupt your app midway through the workflow.
 
 To see the power of durable execution, restart your app with `dbos start`.
 Then, visit this URL: http://localhost:8000/greeting/Mike.
