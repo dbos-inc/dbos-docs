@@ -96,8 +96,8 @@ We add two new functions.
 - `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
 
 Both are ordinary Python functions, but we **annotate** them so we can durably execute them later:
-- [`DBOS.step`](../python/tutorials/step-tutorial.md) is an annotation we can apply to any function to use it as a step in a durable workflow.
-- [`DBOS.transaction`](../python/tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
+- [`DBOS.step`](./tutorials/step-tutorial.md) is an annotation we can apply to any function to use it as a step in a durable workflow.
+- [`DBOS.transaction`](./tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
 
 To see your app working, restart it with `dbos start`. Then, visit this URL: http://localhost:8000/greeting/Mike. When you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -109,7 +109,7 @@ To see your app working, restart it with `dbos start`. Then, visit this URL: htt
 ## 3. Durable Execution with Workflows
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
-DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md).
+DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 Copy the following code into your `main.py`:
 
 ```python
@@ -148,7 +148,7 @@ def greeting_endpoint(name: str):
     return f"Thank you for being awesome, {name}!"
 ```
 
-The only change we make is adding the `@DBOS.workflow()` annotation to `greeting_endpoint`.
+The only change we make is adding the [`@DBOS.workflow`](./tutorials/workflow-tutorial.md) annotation to `greeting_endpoint`.
 **This single line transforms your FastAPI endpoint into a durably executed workflow!**
 For demonstration purposes, we also introduce a sleep to interrupt your app midway through the workflow.
 
