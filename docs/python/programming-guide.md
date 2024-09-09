@@ -101,7 +101,7 @@ Now that we have `greetings` table, let's change our app to write to it. Change 
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from schema import greetings
+from .schema import greetings
 
 app = FastAPI()
 DBOS(fastapi=app)
@@ -174,13 +174,13 @@ import requests
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from schema import greetings
+from .schema import greetings
 
 app = FastAPI()
 DBOS(fastapi=app)
 
 # Omitted for brevity: def get_greetings()
-  
+
 @DBOS.step()
 def sign_guestbook(name: str):
     key = os.environ.get("GUESTBOOK_KEY", None)
@@ -239,7 +239,7 @@ import requests
 from dbos import DBOS
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from schema import greetings
+from .schema import greetings
 
 app = FastAPI()
 DBOS(fastapi=app)

@@ -71,7 +71,7 @@ if __name__ == "__main__":
     app.run()
 ```
 
-Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -w 1 'main:app'` (prod)
+Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -w 1 'main:app' -b 0.0.0.0:8000` (prod)
 
 ### destroy
 

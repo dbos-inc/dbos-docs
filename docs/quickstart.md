@@ -37,6 +37,11 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+:::info
+Windows users will need to activate the virtual environment with `.venv\Scripts\activate.ps1` or `.venv\Scripts\activate.bat`.
+See the [official Python documentation](https://docs.python.org/3/library/venv.html#how-venvs-work) for more information.
+:::
+
 Install the `dbos` library:
 
 ```shell
@@ -92,7 +97,14 @@ npm i -g @dbos-inc/dbos-cloud@latest
 
 ### 3. Deploy!
 
-Run the following command to deploy your app to DBOS Cloud:
+First, run [`pip freeze`](https://pip.pypa.io/en/stable/cli/pip_freeze/) to create a 
+[requirements file](https://pip.pypa.io/en/stable/reference/requirements-file-format/) specifying the app dependencies.
+
+```shell
+pip freeze > requirements.txt
+```
+
+Then, run the following command to deploy your app to DBOS Cloud:
 ```shell
 dbos-cloud app deploy
 ```
