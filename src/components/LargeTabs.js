@@ -6,14 +6,10 @@ const largeTabsStyle = `
   .large-tabs {
     font-size: 1.2rem;
   }
-  .large-tabs .tabs__item {
-    padding: 0.75rem 1.5rem;
-  }
 `;
 
 export const LargeTabs = ({ children, ...props }) => (
-  <div className="large-tabs-wrapper">
-    <style>{largeTabsStyle}</style>
+  <div className="large-tabs-wrapper" style={{largeTabsStyle}}>
     <Tabs {...props} className="large-tabs">
       {children}
     </Tabs>
