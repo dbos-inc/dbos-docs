@@ -110,7 +110,7 @@ To see your app working, restart it with `dbos start`. Then, visit this URL: htt
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](../python/tutorials/workflow-tutorial.md).
-To add one, copy the following code into your `main.py`:
+Copy the following code into your `main.py`:
 
 ```python
 import requests
