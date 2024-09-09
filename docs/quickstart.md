@@ -234,7 +234,7 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-#### 1. Set up Postgres
+#### 1. Setup a Local Postgres Server
 <section className="row list">
 <article className="col col--6">
 
@@ -384,7 +384,7 @@ To learn more about building DBOS apps, check out our [Python programming guide]
 
 For development, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an app folder as described above.
 
-#### 1. Set up Postgres
+#### 1. Setup a Local Postgres Server
 
 The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
