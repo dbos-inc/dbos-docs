@@ -137,9 +137,6 @@ pip freeze > requirements.txt
 Then, run this command to deploy your app.
 It will first prompt you to login and provision a Postgres database server on the cloud.
 After that, it will deploy your app to DBOS Cloud.
-In less than a minute, it should print `Access your application at <URL>`.
-
-To see that your app is working, visit `<URL>` in your browser.
 </article>
 
 <article className="col col--6">
@@ -149,9 +146,19 @@ dbos-cloud app deploy
 </article>
 
 <article className="col col--6">
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
+In less than a minute, it should print `Access your application at <URL>`.
+To see that your app is working, visit `<URL>` in your browser.
 </article>
 
+<article className="col col--6">
+<BrowserWindow url="https://<username>-my-app.cloud.dbos.dev">
+**Welcome to DBOS!**
+</BrowserWindow>
+</article>
+
+<article className="col col--6">
+Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
+</article>
 
 </section>
 
@@ -372,8 +379,17 @@ dbos start
 </article>
 
 <article className="col col--6">
-To see that it's working, visit this URL in your browser: http://localhost:8000/
+To see that it's working, visit this URL in your browser: `http://localhost:8000/`
+</article>
 
+<article className="col col--6">
+<BrowserWindow url="http://localhost:8000/">
+**Welcome to DBOS!**
+</BrowserWindow>
+</article>
+
+
+<article className="col col--6">
 Congratulations, you've started a DBOS app locally!
 To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
 </article>
