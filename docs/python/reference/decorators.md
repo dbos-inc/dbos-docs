@@ -132,7 +132,7 @@ def my_support_workflow():
 
 Methods in classes can be decorated with any of the [function decorators](#function-decorators) above.
 Functions marked as `@classmethod` or `@staticmethod` are supported in the same way as regular functions. 
-Classes with instance functions should extend from [`DBOSConfiguredInstance`](#dbosconfiguredinstance).
+Classes with instance methods should extend from [`DBOSConfiguredInstance`](#dbosconfiguredinstance).
 
 ### dbos_class
 
