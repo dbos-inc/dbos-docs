@@ -23,7 +23,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
   />
   <IndexCardLink
     label="Start Developing Locally"
-    href="/quickstart#run-the-app-on-your-computer"
+    href="/quickstart#run-your-app-locally"
     description="Set up DBOS with a local Postgres database"
     index="2️"
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}

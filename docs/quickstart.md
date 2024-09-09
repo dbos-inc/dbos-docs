@@ -1,65 +1,86 @@
 ---
 toc_max_heading_level: 2
+hide_table_of_contents: true
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
-import ThemedImage from '@theme/ThemedImage';
+# Get Started with DBOS
 
-# DBOS Quickstart
+Learn how to deploy an app to the cloud and run it locally.
 
-Let's create your first DBOS app! You develop this app in a folder on your computer. From there, you can run it locally or deploy it to DBOS Cloud.
-
-<ThemedImage
-  alt="Docusaurus themed image"
-  sources={{
-    light: useBaseUrl('/img/quickstart-diagram.png'),
-    dark:  useBaseUrl('/img/quickstart-diagram-dark.png'),
-  }}
-/>
-
-In this guide, you'll start by deploying a sample "Hello" app to the cloud. Then, you'll run it locally.
+### Deploy Your First App to the Cloud
 
 
-
-
-## Deploy your First App to the Cloud
-
-
-<LargeTabs groupId="language">
+<LargeTabs groupId="language" queryString="language">
 <LargeTabItem value="python" label="Python">
 
-### 1. Initialize your application
+<section className="row list">
+<article className="col col--6">
+#### 1. Initialize your application
 
-In a clean directory, set up and activate a Python virtual environment:
+Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
+> You can choose another name for your app. Names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
+</article>
+
+<article className="col col--6">
+<Tabs groupId="operating-systems">
+<TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv .venv
+python3 -m venv my-app/.venv
+cd my-app
 source .venv/bin/activate
 ```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+python3 -m venv my-app/.venv
+cd my-app
+.venv\Scripts\activate.ps1
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+python3 -m venv my-app/.venv
+cd my-app
+.venv\Scripts\activate.bat
+```
+</TabItem>
+</Tabs>
 
-:::info
-Windows users will need to activate the virtual environment with `.venv\Scripts\activate.ps1` or `.venv\Scripts\activate.bat`.
-See the [official Python documentation](https://docs.python.org/3/library/venv.html#how-venvs-work) for more information.
-:::
+</article>
 
-Install the `dbos` library:
+<article className="col col--6">
+Then, install the `dbos` library.
+</article>
 
+<article className="col col--6">
 ```shell
 pip install dbos
 ```
+</article>
 
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
+<article className="col col--6">
 
+Next, initialize your folder with a sample application.
+
+</article>
+
+<article className="col col--6">
 ```shell
-dbos init <app-name>
+dbos init
 ```
+</article>
 
-This initializes your directory with a sample application that greets users and tracks the count of greetings per user.
+</section>
 
-### 2. Install the DBOS Cloud CLI
+#### 2. Install the DBOS Cloud CLI
+<section className="row list">
+<article className="col col--6">
 
 The Cloud CLI requires Node.js 20 or later.
-Install Node.js if you don't already have it:
+</article>
+
+<article className="col col--6">
 
 <details>
 <summary>Instructions to install Node.js</summary>
@@ -87,39 +108,59 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </Tabs>
 
 </details>
+</article>
 
-Then globally install the Cloud CLI:
+<article className="col col--6">
+Globally install the DBOS Cloud CLI with a `-g` flag.
+</article>
 
+<article className="col col--6">
 ```shell
 npm i -g @dbos-inc/dbos-cloud@latest
 ```
+</article>
+</section>
 
-
-### 3. Deploy!
-
+#### 3. Deploy!
+<section className="row list">
+<article className="col col--6">
 First, run [`pip freeze`](https://pip.pypa.io/en/stable/cli/pip_freeze/) to create a 
 [requirements file](https://pip.pypa.io/en/stable/reference/requirements-file-format/) specifying the app dependencies.
+</article>
 
+<article className="col col--6">
 ```shell
 pip freeze > requirements.txt
 ```
+</article>
 
-Then, run the following command to deploy your app to DBOS Cloud:
+<article className="col col--6">
+Then, run this command to deploy your app to DBOS Cloud.
+It will first prompt to login and provision a database instance.
+Then, it will deploy your app to DBOS Cloud.
+In less than a minute, it should print `Access your application at <URL>`.
+
+To see that your app is working, visit `<URL>` in your browser.
+</article>
+
+<article className="col col--6">
 ```shell
 dbos-cloud app deploy
 ```
+</article>
 
-This command first prompts you to login. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+<article className="col col--6">
+Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
+</article>
 
-To see that your app is working, visit `<URL>` in your browser.
 
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
+</section>
 
 
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
-### 1. Install Node.js
+#### 1. Install Node.js
 
 DBOS TypeScript requires Node.js 20 or later.
 Install Node.js if you don't already have it:
@@ -150,7 +191,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </details>
 
 
-### 2. Create the app folder
+#### 2. Create the app folder
 
 Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
 
@@ -166,7 +207,7 @@ This command should print `Application initialized successfully!` It creates a n
 cd <app-name>
 ```
 
-### 3. Deploy!
+#### 3. Deploy!
 
 Install the DBOS Cloud CLI:
 
@@ -189,18 +230,25 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 </LargeTabs>
 
 
-## Run the App on Your Computer
-
-
+### Run Your App Locally
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-Your DBOS app is just an ordinary Python app connecting to a Postgres database, so you can easily run it locally.
+#### 1. Set up Postgres
+<section className="row list">
+<article className="col col--6">
 
-### 1. Set up Postgres
+First, your app needs a Postgres database server to connect to.
 
-Your app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
+> Database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
+> If you didn't use our guide to start the Postgres server, make sure you update this file with the correct connection info.
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Start a Postgres Server</summary>
 
 <Tabs groupId="postgres-or-docker">
 <TabItem value="docker" label="Launch Postgres with Docker">
@@ -251,9 +299,7 @@ python3 start_postgres_docker.py
 </Tabs>
 
 If successful, the script should print `Database started successfully!`
-:::tip
- You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
-:::
+
 </TabItem>
 
 <TabItem value="postgres" label="Install Postgres">
@@ -322,36 +368,52 @@ set PGPASSWORD=<your-postgres-password>
 </Tabs>
 </TabItem>
 </Tabs>
+</details>
+</article>
 
-### 2. Run the app
 
-Next, let's perform a schema migration to create tables for your app in your database:
+</section>
 
+#### 2. Run the app
+
+<section className="row list">
+
+<article className="col col--6">
+Next, run a schema migration to create tables for your app in your database.
+If successful, the migration should print `Completed schema migration...`
+</article>
+
+<article className="col col--6">
 ```bash
 dbos migrate
 ```
+</article>
 
-If successful, the migration should print `Completed schema migration...`.
 
-Finally, start the app:
+<article className="col col--6">
+Finally, start the app.
+</article>
 
+<article className="col col--6">
 ```bash
 dbos start
 ```
+</article>
 
+<article className="col col--6">
 To see that it's working, visit this URL in your browser: http://localhost:8000/
 
-Congratulations! You started a DBOS app on your system!
-
+Congratulations, you started a DBOS app on your system!
 To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
+</article>
 
-
+</section>
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
 For development, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an app folder as described above.
 
-### 1. Set up Postgres
+#### 1. Set up Postgres
 
 The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
@@ -404,9 +466,7 @@ node start_postgres_docker.js
 </Tabs>
 
 If successful, the script should print `Database started successfully!`
-:::tip
- You can connect to this container just like a local Postgres database, and run queries with common tools like [psql](https://www.postgresql.org/docs/current/app-psql.html). It accepts connections on `localhost`, the default port 5432, username `postgres` and the password you set above.
-:::
+
 </TabItem>
 
 <TabItem value="postgres" label="Install Postgres">
@@ -476,7 +536,7 @@ set PGPASSWORD=<your-postgres-password>
 </TabItem>
 </Tabs>
 
-### 2. Run the app
+#### 2. Run the app
 
 Next, let's perform a schema migration to create tables for your app in your database:
 
