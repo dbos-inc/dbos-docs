@@ -92,6 +92,32 @@ env:
   WEB_PORTAL: 'https://example.com'
 ```
 
+```python
+  portal_url=os.environ.get('WEB_PORTAL', '')
+```
+
+---
+
+### Application
+
+Applications can optionally keep a hierarchy of configuration information in the `application` section of the configuration file.
+The schema for this section is defined by the application.
+The configuration is available to your application when its code is initialized.
+
+**Example**:
+```yaml
+application:
+  service_url: 'https://service.org'
+  service_config:
+    user: "user"
+    password: "password"
+```
+
+```python
+url = DBOS.config["application"]["service_url"]
+pass = DBOS.config["application"]["service_config"]["password"]
+```
+
 ---
 
 ### Telemetry
@@ -138,4 +164,13 @@ The easiest is to simply add a comment with a link to the schema at the top of t
 
 ```yaml
 # yaml-language-server: $schema=https://github.com/dbos-inc/dbos-transact-py/blob/main/dbos/dbos-config.schema.json
+```
+
+### Accessing Configuration From Code
+
+The information in `dbos-config.yaml` can be accessed from python code using `DBOS.config`.
+
+```python
+lang = DBOS.config["language"]  # "python"
+url = DBOS.config["application"]["service_url"]
 ```

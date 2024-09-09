@@ -178,7 +178,7 @@ Return the identity of the current workflow.
 ### span
 
 ```python
-span -> opentelemetry.trace.Span
+DBOS.span: opentelemetry.trace.Span
 ```
 
 Retrieve the OpenTelemetry span associated with the curent request.
@@ -187,7 +187,7 @@ You can use this to set custom attributes in your span.
 ### request
 
 ```python
-request -> Request
+DBOS.request: Request
 ```
 
 May only be accessed from within the handler of a FastAPI request, or in a function called from the handler.
@@ -203,6 +203,50 @@ cookies: dict[str, str] # The request's cookie parameters
 method: str # The HTTP method of the request
 ```
 
+### config
+
+```python
+DBOS.config: ConfigFile
+```
+
+Return the current DBOS [configuration](./configuration.md), as a `ConfigFile`.
+
+## Authentication
+
+### authenticated_user
+
+```python
+DBOS.authenticated_user: Optional[str]
+```
+
+Return the current authenticated user, if any, associated with the current context.
+
+### authenticated_roles
+
+```python
+DBOS.authenticated_roles: Optional[List[str]]
+```
+
+Return the roles granted to the current authenticated user, if any, associated with the current context.
+
+### assumed_role
+
+```python
+DBOS.assumed_role: Optional[str]
+```
+
+Return the role currently assumed by the authenticated user, if any, associated with the current context.
+
+### set_authentication
+
+```python
+DBOS.set_authentication(
+  authenticated_user: Optional[str],
+  authenticated_roles: Optional[List[str]]
+) -> None
+```
+
+Set the current authenticated user and granted roles into the current context.  This would generally be done by HTTP middleware 
 
 ## Context Management
 
@@ -228,3 +272,16 @@ def example_workflow():
 with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
+
+### DBOSContextEnsure
+
+```python
+DBOSContextEnsure()
+
+  with DBOSContextEnsure():
+    # Call DBOS functions
+    pass
+```
+
+Use of `DBOSContextEnsure` ensures that there is a DBOS context associated with the enclosed code prior to calling DBOS functions.  `DBOSContextEnsure` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.
+
