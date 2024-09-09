@@ -76,7 +76,7 @@ dbos init
 <section className="row list">
 <article className="col col--6">
 
-The Cloud CLI requires Node.js 20 or later.
+First, the Cloud CLI requires Node.js 20 or later.
 </article>
 
 <article className="col col--6">
@@ -110,7 +110,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </article>
 
 <article className="col col--6">
-Globally install the DBOS Cloud CLI with a `-g` flag.
+Then, globally install the DBOS Cloud CLI with a `-g` flag.
 </article>
 
 <article className="col col--6">
@@ -120,7 +120,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 </article>
 </section>
 
-#### 3. Deploy!
+#### 3. Deploy to DBOS Cloud!
 <section className="row list">
 <article className="col col--6">
 First, run [`pip freeze`](https://pip.pypa.io/en/stable/cli/pip_freeze/) to create a 
@@ -134,9 +134,9 @@ pip freeze > requirements.txt
 </article>
 
 <article className="col col--6">
-Then, run this command to deploy your app to DBOS Cloud.
-It will first prompt to login and provision a database instance.
-Then, it will deploy your app to DBOS Cloud.
+Then, run this command to deploy your app.
+It will first prompt you to login and provision a Postgres database server on the cloud.
+After that, it will deploy your app to DBOS Cloud.
 In less than a minute, it should print `Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser.
@@ -219,7 +219,7 @@ Then run the following command to deploy your app to DBOS Cloud:
 dbos-cloud app deploy
 ```
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a database instance. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a Postgres database server on the cloud. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
 
 To see that your app is working, visit `<URL>` in your browser.
 
@@ -238,7 +238,7 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres database server to connect to.
+First, your app needs a local Postgres server to connect to.
 
 > Database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
 > If you didn't use our script to start the Postgres server, make sure you update this file with the correct connection info.
