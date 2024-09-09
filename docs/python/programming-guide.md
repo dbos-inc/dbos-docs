@@ -92,11 +92,10 @@ def greeting_endpoint(name: str):
 
 We add two new functions.
 
-1. `sign_guestbook` &mdash; Signs the online guestbook with an HTTP POST request
-2. `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
+- `sign_guestbook` &mdash; Signs the online guestbook with an HTTP POST request
+- `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
 
-Importantly, **both are ordinary Python functions**.
-However, we apply to each a DBOS annotation so we can durably execute them later.
+Both are ordinary Python functions, but we **annotate** them so we can durably execute them later:
 - [`DBOS.step`](../python/tutorials/step-tutorial.md) is an annotation we can apply to any function to use it as a step in a durable workflow.
 - [`DBOS.transaction`](../python/tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
 
