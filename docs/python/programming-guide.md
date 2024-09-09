@@ -176,7 +176,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 16:02:21 [    INFO] (dbos:main.py:28) >>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-Without durable execution&mdash;if you removed `DBOS.workflow()`&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
+Without durable execution&mdash;if you remove `DBOS.workflow()`&mdash;your app restarts with a "clean slate" and completely forgets about your interrupted workflow.
 However, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
 This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
 
