@@ -209,7 +209,7 @@ method: str # The HTTP method of the request
 DBOS.config: ConfigFile
 ```
 
-Return the currend DBOS [configuration](./configuration.md), as a `ConfigFile`.
+Return the current DBOS [configuration](./configuration.md), as a `ConfigFile`.
 
 ## Authentication
 
