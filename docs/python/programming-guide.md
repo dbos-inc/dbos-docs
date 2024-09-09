@@ -6,9 +6,9 @@ pagination_prev: quickstart
 ---
 
 This tutorial shows you how to build a simple Python app with DBOS.
-It highlights how DBOS **durable execution** makes your apps resilient to any failures.
+It highlights how DBOS **durable execution** makes your apps resilient to any temporary failure.
 We'll build an app that records greetings to two different systems: Postgres and an online guestbook.
-Thanks to durable execution, it always writes to both systems consistently, even if interrupted or restarted at any point.
+Thanks to DBOS durable execution, the app always writes to both systems consistently, even if it is interrupted or restarted at any point.
 
 This guide assumes you have a Postgres database running locally.
 If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
@@ -99,8 +99,8 @@ We add two new functions.
 - `sign_guestbook` &mdash; Signs the online guestbook with an HTTP POST request
 - `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
 
-Both are ordinary Python functions, but we **annotate** them so we can durably execute them later:
-- [`DBOS.step`](./tutorials/step-tutorial.md) is an annotation we can apply to any function to use it as a step in a durable workflow.
+Both are ordinary Python functions (though for convenience, `insert_greeting` uses the pre-configured `DBOS.sql_session` SQLAlchemy client), but we **annotate** them so we can durably execute them later:
+- [`DBOS.step`](./tutorials/step-tutorial.md) is an annotation we can apply to **any function** to use it as a step in a durable workflow.
 - [`DBOS.transaction`](./tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
 
 To see your app working, restart it with `dbos start`. Then, visit this URL: http://localhost:8000/greeting/Mike. When you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
