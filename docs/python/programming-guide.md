@@ -65,8 +65,10 @@ def greeting_endpoint(name: str) -> str:
 ```
 
 Start your app with `dbos start`. 
-To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike).
-You should see the message `Thank you for being awesome, Mike!`.
+To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
+<BrowserWindow url="http://localhost:8000/greeting/Mike">
+"Thank you for being awesome, Mike!"
+</BrowserWindow>
 
 ## 2. Adding Some Steps
 
@@ -118,9 +120,9 @@ We add two new functions.
 - `sign_guestbook` &mdash; Signs the online guestbook with an HTTP POST request
 - `insert_greeting` &mdash; Uses [SQLAlchemy](https://docs.sqlalchemy.org/en/20/core/) to record the greeting in the database.
 
-Both are ordinary Python functions (though for convenience, `insert_greeting` uses the pre-configured `DBOS.sql_session` SQLAlchemy client), but we **annotate** them so we can durably execute them later:
+Both are ordinary Python functions, but we **annotate** them so we can durably execute them later:
 - [`DBOS.step`](./tutorials/step-tutorial.md) is an annotation we can apply to **any function** to use it as a step in a durable workflow.
-- [`DBOS.transaction`](./tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations.
+- [`DBOS.transaction`](./tutorials/transaction-tutorial.md) is a special type of step optimized for performing database operations. It provides a pre-configured `DBOS.sql_session` SQLAlchemy client.
 
 To see your app working, restart it with `dbos start`. Then, visit this URL: http://localhost:8000/greeting/Mike. When you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -137,41 +139,11 @@ To fix this problem, we'll use DBOS durable execution.
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
-Copy the following code into your `main.py`:
+Replace your `greeting_endpoint` with the following:
 
 ```python
-import logging
-
-import requests
-from dbos import DBOS
-from fastapi import FastAPI
-
-from .schema import dbos_hello
-
-app = FastAPI()
-DBOS(fastapi=app)
-
-logging.basicConfig(level=logging.INFO)
-
-
-@DBOS.step()
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guest-book.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
-
-
-@DBOS.transaction()
-def insert_greeting(name: str) -> str:
-    query = dbos_hello.insert().values(name=name)
-    DBOS.sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
-
-
 @app.get("/greeting/{name}")
+# highlight-next-line
 @DBOS.workflow()
 def greeting_endpoint(name: str):
     sign_guestbook(name)
@@ -182,7 +154,7 @@ def greeting_endpoint(name: str):
     return f"Thank you for being awesome, {name}!"
 ```
 
-The only change we make is adding the [`@DBOS.workflow`](./tutorials/workflow-tutorial.md) annotation to `greeting_endpoint`.
+The key change we make is adding the [`@DBOS.workflow`](./tutorials/workflow-tutorial.md) annotation.
 Since we've already annotated `sign_guestbook` and `insert_greeting` as steps, **this single line transforms your FastAPI endpoint into a durably executed workflow!**
 For demonstration purposes, we also introduce a sleep so you can interrupt your app midway through the workflow.
 
