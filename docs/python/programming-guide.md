@@ -15,12 +15,31 @@ If not, see the [quickstart](../quickstart.md) for instructions on how to set it
 
 ## 1. Starting Out
 
-In a clean directory, set up a virtual environment:
+Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
+<Tabs groupId="operating-systems">
+<TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv .venv
+python3 -m venv durable-greetings/.venv
+cd durable-greetings
 source .venv/bin/activate
 ```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+python3 -m venv durable-greetings/.venv
+cd durable-greetings
+.venv\Scripts\activate.ps1
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+python3 -m venv durable-greetings/.venv
+cd durable-greetings
+.venv\Scripts\activate.bat
+```
+</TabItem>
+</Tabs>
 
 Then, install and initialize DBOS:
 ```shell
