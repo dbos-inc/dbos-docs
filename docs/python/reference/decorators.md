@@ -106,6 +106,7 @@ def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
 **Parameters:**
 - `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
 
+
 ### required_roles
 
 ```python
@@ -127,6 +128,42 @@ The `@DBOS.dbos_required_roles` decorator applies role-based security to the dec
 def my_support_workflow():
   pass # Function accessible only with "support" or "admin" role
 ```
+
+### kafka_consumer
+
+```python
+DBOS.kafka_consumer(
+        config: dict[str, Any],
+        topics: list[str]
+)
+```
+
+Runs a function for each Kafka message received on the specified topic(s). 
+Uses the Kafka message's topic, partition and offset to create a unique [workflow id](http://localhost:3000/python/reference/contexts#setworkflowid) to ensure once and only once execution.
+Takes a configuration dictionary and a list of topics to consume. 
+The decorated function must take a KafkaMessage as its only parameter.
+
+**Parameters:**
+- `config`: a dictionary of config settings. Information on required settings follows with full configuration setting details available in the [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
+  - `bootstrap.servers`: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+    This list should be in the form host1:port1,host2:port2,...
+  - `group.id`: A unique string that identifies the consumer group this consumer belongs to.
+- `topics`: a list of Kafka topics to subscribe to
+
+**Example**
+```python
+@DBOS.kafka_consumer(
+        config={
+            "bootstrap.servers": "localhost:9092",
+            "group.id": "dbos-kafka-group",
+        },
+        topics=["example-topic"],
+)
+@DBOS.workflow()
+def test_kafka_workflow(msg: KafkaMessage):
+    DBOS.logger.info(f"Message received: {msg.value.decode()}")
+```
+
 
 ## Classes and Decorators
 
