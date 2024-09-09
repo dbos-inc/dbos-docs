@@ -49,7 +49,7 @@ cd my-app
 </article>
 
 <article className="col col--6">
-Then, install the `dbos` library.
+Then, install `dbos`.
 </article>
 
 <article className="col col--6">
@@ -76,7 +76,7 @@ dbos init
 <section className="row list">
 <article className="col col--6">
 
-First, the Cloud CLI requires Node.js 20 or later.
+The Cloud CLI requires Node.js 20 or later.
 </article>
 
 <article className="col col--6">
@@ -110,7 +110,7 @@ After installing Node.js, create the following folder: `C:\Users\%user%\AppData\
 </article>
 
 <article className="col col--6">
-Then, globally install the DBOS Cloud CLI with a `-g` flag.
+Run this command to install it.
 </article>
 
 <article className="col col--6">
@@ -124,7 +124,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <section className="row list">
 <article className="col col--6">
 First, run [`pip freeze`](https://pip.pypa.io/en/stable/cli/pip_freeze/) to create a 
-[requirements file](https://pip.pypa.io/en/stable/reference/requirements-file-format/) specifying the app dependencies.
+[requirements file](https://pip.pypa.io/en/stable/reference/requirements-file-format/) specifying your app's dependencies.
 </article>
 
 <article className="col col--6">
@@ -134,9 +134,8 @@ pip freeze > requirements.txt
 </article>
 
 <article className="col col--6">
-Then, run this command to deploy your app.
-It will first prompt you to login and provision a Postgres database server on the cloud.
-After that, it will deploy your app to DBOS Cloud.
+Then, run this command to deploy your app to DBOS Cloud.
+Follow the prompts to sign in and to provision a Postgres database server on the cloud.
 </article>
 
 <article className="col col--6">
@@ -247,8 +246,8 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 
 First, your app needs a local Postgres server to connect to.
 
-> Database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
-> If you didn't use our script to start the Postgres server, make sure you update this file with the correct connection info.
+> Local database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
+> If you're using your own Postgres database, make sure you update this file with the correct connection info.
 </article>
 
 <article className="col col--6">
