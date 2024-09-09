@@ -105,3 +105,103 @@ def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
 
 **Parameters:**
 - `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+
+### required_roles
+
+```python
+DBOS.required_roles(
+  roles: List[str]
+)
+```
+
+The `@DBOS.dbos_required_roles` decorator applies role-based security to the decorated function.  The authenticated user must have at least one of the roles on the `roles` list in order to access the function.
+
+**Parameters:**
+- `roles`: List of required roles applied to the decorated function.
+
+
+**Example:**
+```python
+@DBOS.workflow()
+@DBOS.required_roles(["support","admin")
+def my_support_workflow():
+  pass # Function accessible only with "support" or "admin" role
+```
+
+## Classes and Decorators
+
+Methods in classes can be decorated with any of the [function decorators](#function-decorators) above.
+Functions marked as `@classmethod` or `@staticmethod` are supported in the same way as regular functions. 
+Classes with instance methods should extend from [`DBOSConfiguredInstance`](#dbosconfiguredinstance).
+
+### dbos_class
+
+```python
+DBOS.dbos_class()
+```
+
+The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow, transaction, and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
+
+**Example:**
+```python
+@DBOS.dbos_class()
+class MyClass:
+  @staticmethod
+  @DBOS.workflow()
+  def my_class_wf():
+    pass
+```
+
+### default_required_roles
+
+```python
+DBOS.default_required_roles(
+  roles: List[str]
+)
+```
+
+The `@DBOS.default_required_roles` decorator can be applied to a class to set the default list of required access roles for all functions in the class.  The list of required roles for individual functions can be overridden with [`required_roles`](#required_roles).
+
+**Parameters:**
+- `roles`: List of required roles to apply to all functions not individually decorated with [`required_roles`](#required_roles).
+
+**Example:**
+```python
+@DBOS.default_required_roles(["user"])
+class MyClass:
+  @staticmethod
+  @DBOS.workflow()
+  def my_user_function() -> None:
+    pass  # Must have "user" role to access
+
+  @staticmethod
+  @DBOS.workflow()
+  @DBOS.required_roles(["admin"])
+  def my_admin_function() -> None:
+    pass  # Must have "admin" role to access
+```
+
+
+### DBOSConfiguredInstance
+
+```python
+DBOSConfiguredInstance(
+  instance_name: str
+)
+```
+
+`DBOSConfiguredInstance` should be used as a base for classes with decorated instance member functions.
+`DBOSConfiguredInstance` collects the instance name; this name is recorded in the database workflow records so that recovery can be targeted to the correct instance.
+`DBOSConfiguredInstance` also registers the class instance with the DBOS recovery system.
+
+**Parameters:**
+- `instance_name`: The name of the instance, for recording in workflow database records
+
+**Example:**
+```
+    @DBOS.dbos_class()
+    class DBOSTestClass(DBOSConfiguredInstance):
+        def __init__(self) -> None:
+            super().__init__("instance1")
+```
+
