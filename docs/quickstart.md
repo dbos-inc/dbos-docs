@@ -30,17 +30,37 @@ In this guide, you'll start by deploying a sample "Hello" app to the cloud. Then
 
 ### 1. Initialize your application
 
-In a clean directory, set up and activate a Python virtual environment:
 
-```shell
+<Tabs groupId="virtual-envs">
+<TabItem value="maclinux" label="macOS or Linux">
+   In a clean directory, set up and activate a Python virtual environment.
+   Run the following commands in your terminal:
+
+   ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-```
+   ```
+</TabItem>
+<TabItem value="win-ps" label="Windows Powershell">
+   In a clean directory, set up and activate a Python virtual environment.
+   Run the following commands in your terminal:
 
-:::info
-Windows users will need to activate the virtual environment with `.venv\Scripts\activate.ps1` or `.venv\Scripts\activate.bat`.
-See the [official Python documentation](https://docs.python.org/3/library/venv.html#how-venvs-work) for more information.
-:::
+   ```shell
+python3 -m venv .venv
+.venv\Scripts\Activate.ps1
+   ```
+</TabItem>
+
+<TabItem value="win-cmd" label="Windows cmd">
+   In a clean directory, set up and activate a Python virtual environment.
+   Run the following commands in your terminal:
+
+   ```shell
+python3 -m venv .venv
+.venv\Scripts\activate.bat
+   ```
+</TabItem>
+</Tabs>
 
 Install the `dbos` library:
 
