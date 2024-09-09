@@ -5,7 +5,6 @@ hide_table_of_contents: true
 
 # Get Started with DBOS
 
-Learn how to deploy an app to the cloud and run it locally.
 
 ### Deploy Your First App to the Cloud
 
@@ -242,7 +241,7 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 First, your app needs a Postgres database server to connect to.
 
 > Database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
-> If you didn't use our guide to start the Postgres server, make sure you update this file with the correct connection info.
+> If you didn't use our script to start the Postgres server, make sure you update this file with the correct connection info.
 </article>
 
 <article className="col col--6">
@@ -307,13 +306,6 @@ If successful, the script should print `Database started successfully!`
 <TabItem value="mac" label="macOS">
 Follow [this guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
 
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
 Then, set the `PGPASSWORD` environment variable to your Postgres password:
 ```bash
 export PGPASSWORD=<your-postgres-password>
@@ -321,13 +313,6 @@ export PGPASSWORD=<your-postgres-password>
 </TabItem>
 <TabItem value="linux" label="Linux">
 Follow these [guides](https://www.postgresql.org/download/linux/) to install Postgres on popular Linux distributions.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
 
 Then, set the `PGPASSWORD` environment variable to your Postgres password:
 ```bash
@@ -337,13 +322,6 @@ export PGPASSWORD=<your-postgres-password>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
 
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
 Then, set the `PGPASSWORD` environment variable to your Postgres password:
 
 ```bash
@@ -352,13 +330,6 @@ $env:PGPASSWORD = "<your-postgres-password>"
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
 
 Then, set the `PGPASSWORD` environment variable to your Postgres password:
 ```bash
@@ -403,7 +374,7 @@ dbos start
 <article className="col col--6">
 To see that it's working, visit this URL in your browser: http://localhost:8000/
 
-Congratulations, you started a DBOS app on your system!
+Congratulations, you've started a DBOS app locally!
 To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
 </article>
 
