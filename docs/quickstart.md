@@ -247,7 +247,7 @@ First, your app needs a Postgres database server to connect to.
 <article className="col col--6">
 
 <details>
-<summary>Start a Postgres Server</summary>
+<summary>Instructions to start a local Postgres server</summary>
 
 <Tabs groupId="postgres-or-docker">
 <TabItem value="docker" label="Launch Postgres with Docker">
