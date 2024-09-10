@@ -95,7 +95,7 @@ ctxt.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/typescript/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the payments workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
