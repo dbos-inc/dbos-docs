@@ -49,7 +49,7 @@ We can't provide tutorials for all of these OpenAPI generator tools, but the Swa
 First, you need to run `npx dbos-openapi generate` against your DBOS application entrypoints as described above.
 
 ::::info
-Note, the shop and payment backend applications from the [E-Commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce)
+Note, the shop and payment backend applications from the [E-Commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce)
 include generated OpenApi definition files if you want to try this without creating your own application.
 ::::
 
@@ -67,7 +67,7 @@ This will download a zip file containing a TypeScript package with the code gene
 The `typescript-axios` Swagger generator generates a full TypeScript package that supports `npm install` and `npm run build`.
 Typically, you would incorporate the generated code into an existing client projects that needs to call into the DBOS project.
 
-Here is some example code using the `typescript-axios` Swagger generator and the OpenAPI definition for the [E-Commerce Demo Shop DBOS application](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce/shop-backend).
+Here is some example code using the `typescript-axios` Swagger generator and the OpenAPI definition for the [E-Commerce Demo Shop DBOS application](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce/shop-backend).
 
 
 ```ts

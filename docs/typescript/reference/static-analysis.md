@@ -227,7 +227,6 @@ static async myCommunicator(ctxt: CommunicatorContext) {
 }
 ```
 
-(code below adapted from [here](https://github.com/dbos-inc/dbos-demo-apps/blob/43c656e0cf50d8f85ca8bd8cba9087af2cea8038/shop-guide/src/operations.ts#L23))
 ```ts
 @Workflow()
 static async checkoutWorkflow(ctxt: WorkflowContext) {
@@ -260,7 +259,6 @@ static async checkoutWorkflow(ctxt: WorkflowContext) {
 
 2. Global modification in a workflow (this often leads to nondeterministic behavior):
 
-(code below adapted from [here](https://github.com/dbos-inc/dbos-demo-apps/blob/43c656e0cf50d8f85ca8bd8cba9087af2cea8038/bank/bank-backend/src/workflows/txnhistory.workflows.ts#L192))
 
 ```ts
 let globalResult = undefined;

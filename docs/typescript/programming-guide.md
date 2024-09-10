@@ -325,7 +325,7 @@ If your app did not use a DBOS `@Workflow` you would expect it to restart with a
 Here we use `startWorkflow` which returns the response to the caller as soon as the workflow starts, without waiting for it to finish. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, change `startWorkflow` to `invokeWorkflow`.
 :::
 
-The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/greeting-guestbook).
+The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
 
 Next, to learn how to build more complex applications, check out our TypeScript tutorials.
 To walk through a more complex workflow, visit our [checkout workflow tutorial](../typescript/tutorials/checkout-tutorial).
