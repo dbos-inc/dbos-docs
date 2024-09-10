@@ -36,7 +36,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore Example Apps"
+    label="Explore Examples"
     href="/examples"
     description="See what you can build with DBOS"
     index="4"
