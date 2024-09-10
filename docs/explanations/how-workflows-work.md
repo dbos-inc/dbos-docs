@@ -26,7 +26,7 @@ Before a workflow starts, DBOS records its input.
 Each time a workflow executes a step, DBOS records its output (or the exception it threw, if any).
 When a workflow finishes, DBOS records its output.
 
-If a DBOS server crashes and restarts, it uses the information saved in the database to resume all pending workflows from where they left off.
+If a server crashes and restarts, DBOS uses the information saved in the database to resume all pending workflows from where they left off.
 First, it finds all pending workflows: those with a recorded input, but no recorded output.
 Then, it restarts every pending workflow from the beginning, using its saved inputs.
 While re-executing an pending workflow, it checks before every function execution if the function has an output stored in the database, meaning it previously completed.
@@ -35,8 +35,8 @@ When the workflow gets to the first function that does not have a saved output a
 Let's look at how this procedure obtains all three guarantees above.
 
 1.  Any interrupted workflow is re-started and re-executed until it completes, so workflows always run to completion.
-2.  DBOS records each transaction's output as part of the transaction and re-executes it if and only if the output is not found, so transactions execute exactly once.
-3.  DBOS records each step's output after it completes and re-executes it if and only if the output is not found, so steps are tried at least once but never re-execute after completion.
+2.  DBOS records each step's output after it completes and re-executes it if and only if the output is not found, so steps are tried at least once but never re-execute after completion.
+3.  DBOS records each transaction's output as part of the transaction and re-executes it if and only if the output is not found, so transactions execute exactly once.
 
 ### Reliability by Example
 
