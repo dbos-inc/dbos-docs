@@ -27,7 +27,7 @@ If a payment doesn't go through, you have to return any reserved inventory.
 :::
 
 ## Resources
-This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps/tree/main/shop-guide) containing all its code.
+This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/shop-guide) containing all its code.
 
 
 ## Overview
@@ -108,7 +108,7 @@ The checkout workflow reserves inventory for an order, attempts to process payme
 As we'll show, it's **reliable**: it always fulfills orders if payments succeed, never charges customers twice for the same order, and always returns reserved inventory on failure.
 
 :::info
-Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce) for a more elaborate example.
+Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce) for a more elaborate example.
 :::
 
 ### Registering the workflow

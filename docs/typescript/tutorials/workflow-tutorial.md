@@ -9,7 +9,7 @@ In this guide, you'll learn how to make your applications reliable using workflo
 Workflows orchestrate the execution of other functions, like transactions and communicators.
 Workflows are _reliable_: if their execution is interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/e-commerce), we use a workflow for payment processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), we use a workflow for payment processing.
 
 Workflows must be annotated with the [`@Workflow`](../reference/decorators#workflow) decorator and must have a [`WorkflowContext`](../reference/contexts#workflowcontext) as their first argument.
 Like for other functions, inputs and outputs must be serializable to JSON.
