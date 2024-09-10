@@ -31,7 +31,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
   <IndexCardLink
     label="Build Crashproof Apps"
     href=""
-    description={<HtmlToReactNode htmlString={"<a class='logo-button' href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' width=30 title='Learn DBOS Python'/></a><a class='logo-button' href='/typescript/programming-guide'><img src='img/typescript-logo.svg' width=30 alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
+    description={<HtmlToReactNode htmlString={"<a class='logo-button' href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' width=35 title='Learn DBOS Python'/></a><a class='logo-button' href='/typescript/programming-guide'><img src='img/typescript-logo.svg' width=35 alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
     index="3"
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />

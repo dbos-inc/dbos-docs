@@ -63,7 +63,10 @@
 .logo-button {
   border: 1px solid;
   border-color: var(--ifm-card-background-color);
-  padding: 0.2rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
   border-radius: 5px;
   color: var(--ifm-navbar-link-color);
   display: inline-block;
