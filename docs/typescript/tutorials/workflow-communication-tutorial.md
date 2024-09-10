@@ -36,7 +36,7 @@ ctxt.getEvent<T>(workflowIdentityUUID: string, key:string, timeoutSeconds?: numb
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/typescript/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
+For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the payments workflow, after validating an order, needs to direct the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
 After validating an order, the payments workflow emits an event containing a payment link using `setEvent()`:
