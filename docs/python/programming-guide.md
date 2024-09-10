@@ -20,22 +20,22 @@ Create a folder for your app with a virtual environment, then enter the folder a
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv durable-greetings/.venv
-cd durable-greetings
+python3 -m venv greeting-guestbook/.venv
+cd greeting-guestbook
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-python3 -m venv durable-greetings/.venv
-cd durable-greetings
+python3 -m venv greeting-guestbook/.venv
+cd greeting-guestbook
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-python3 -m venv durable-greetings/.venv
-cd durable-greetings
+python3 -m venv greeting-guestbook/.venv
+cd greeting-guestbook
 .venv\Scripts\activate.bat
 ```
 </TabItem>
@@ -49,7 +49,7 @@ dbos migrate
 ```
 
 Next, use [FastAPI](https://github.com/fastapi/fastapi) to write a simple HTTP endpoint to greet friends.
-In your app folder, change the file `main.py` to contain only the following:
+In your app folder, change the file `greeting_guestbook/main.py` to contain only the following:
 
 ```python
 from dbos import DBOS
@@ -77,7 +77,7 @@ Now, let's update the app so that every time it receives a greeting, it performs
 1. Sign an online guestbook with the greeting.
 2. Record the greeting in the database.
 
-Copy the following code into your `main.py`:
+Copy the following code into your `greeting_guestbook/main.py`:
 
 ```python
 import logging
@@ -96,7 +96,7 @@ logging.basicConfig(level=logging.INFO)
 @DBOS.step()
 def sign_guestbook(name: str):
     requests.post(
-        "https://demo-guest-book.cloud.dbos.dev/record_greeting",
+        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )

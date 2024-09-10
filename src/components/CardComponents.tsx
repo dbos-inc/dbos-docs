@@ -115,16 +115,35 @@ function IndexCardLayout({
           <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1.2rem', height: '100%'}}>{icon}</div>
         </div>
         <div style={{width: '100%'}}>
-          <Heading
-            as="h4"
-            className={styles.indexCardTitle}
-            title={title}>
-            {title}
-          </Heading>
-          {description && (
+          {(typeof description == "string") && (
+              <Heading
+              as="h4"
+              className={styles.indexCardTitle}
+              title={title}>
+              {title}
+            </Heading>
+            )
+          }
+          {(typeof description != "string") && (
+              <Heading
+              as="h4"
+              className={styles.indexCardTitleLogo}
+              title={title}>
+              {title}
+            </Heading>
+            )
+          }
+          {description && (typeof description == "string") && (
+            <p
+              className={styles.indexCardDescription}
+              title={title}>
+              {description}
+            </p>
+          )}
+          {description && (typeof description != "string") && (
             <p
               // className={clsx('text--truncate', styles.cardDescription)}
-              className={styles.indexCardDescription}
+              className={styles.indexCardDescriptionLogo}
               title={title}>
               {description}
             </p>
