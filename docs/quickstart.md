@@ -378,7 +378,7 @@ dbos start
 </article>
 
 <article className="col col--6">
-To see that it's working, visit this URL in your browser: `http://localhost:8000/`
+To see that it's working, visit this URL in your browser: http://localhost:8000/
 </article>
 
 <article className="col col--6">
