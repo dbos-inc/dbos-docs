@@ -176,11 +176,11 @@ def greeting_endpoint(name: str):
 Only the **four highlighted lines of code** are needed to enable durable execution.
 
 - First, we initialize DBOS on line 12.
-- Then, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 17 and 30.
-- Finally, we annotate `greeting_endpoint` as a _durable workflow_ on line 38.
+- Then, we annotate `sign_guestbook` and `insert_greeting` as [_workflow steps_](./tutorials/step-tutorial.md) on lines 17 and 30.
+- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 38.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
-To help demonstrate this, we add a sleep so you can interrupt your app midway through the workflow.
+To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
 
 To see the power of durable execution, restart your app with `dbos start`.
 Then, visit this URL: http://localhost:8000/greeting/Mike.
@@ -222,7 +222,7 @@ def insert_greeting(name: str) -> str:
     logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
 ```
 
-`@DBOS.transaction()` is a special annotation for workflow steps that access the database.
+[`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
 It executes your function in a single database transaction.
 We recommend using them because:
 
