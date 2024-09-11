@@ -229,6 +229,9 @@ We recommend using transactions because:
 1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself. You no longer need to configure a SQLAlchemy engine!
 2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
 
+Now, restart your app with `dbos start` and visit its URL again: http://localhost:8000/greeting/Mike.
+The app should durably execute your workflow the same as before!
+
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
 Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
