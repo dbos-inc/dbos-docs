@@ -65,6 +65,7 @@ Class decorators are affixed to a class, just before the keyword `class`.  Such 
 -   [`@KoaBodyParser`](#koabodyparser)
 -   [`@KoaCors`](#koacors)
 -   [`@KoaMiddleware`](#koamiddleware)
+-   [`@KoaGlobalMiddleware`](#koaglobalmiddleware)
 
 ### Function Decorators
 
@@ -386,7 +387,7 @@ class EndpointsWithSpecialCORS {
 ```
 
 #### `@KoaMiddleware`
-Configures the DBOS HTTP server allow insertion of arbitrary Koa middlewares. All functions in the decorated class will use the provided middleware list.
+Configures the DBOS HTTP server allow insertion of arbitrary Koa middlewares. All handler functions in the decorated class will use the provided middleware list.
 
 ```typescript
 const exampleMiddleware: Koa.Middleware = async (ctx, next) => {
@@ -398,6 +399,19 @@ class OperationEndpoints{
   ...
 }
 ```
+
+#### `@KoaGlobalMiddleware`
+Configures the DBOS HTTP server to add arbitrary Koa middleware for all requests.  Unlike [`@KoaMiddleware`](#koamiddleware), this also includes any requests made to URLs that are registered in other classes, or are not registered to any handlers at all, and may therefore be useful for debugging.
+
+```typescript
+import logger from 'koa-logger';
+
+@KoaGlobalMiddleware(logger())
+class OperationEndpoints{
+  ...
+}
+```
+
 
 ### Declarative Security Decorators
 
