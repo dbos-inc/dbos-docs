@@ -79,7 +79,7 @@ def sign_guestbook(name: str):
     )
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
-# Create a SQLAlchemy engine. Adjust this connection string as needed.
+# Create a SQLAlchemy engine. Adjust this connection string for your database.
 engine = create_engine(f"postgresql://postgres:{os.environ['PGPASSWORD']}@localhost/greeting_guestbook")
 
 # Record the greeting in the database using SQLAlchemy
