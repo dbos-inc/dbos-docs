@@ -5,8 +5,7 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
-This tutorial shows you how to use DBOS in your Python app.
-It highlights how **DBOS durable execution makes your apps resilient to any failure.**
+This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
 First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
