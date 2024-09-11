@@ -205,7 +205,7 @@ INFO:root:Press Control + C to stop the app...
 INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app restarts with a "clean slate" and completely forgets about your interrupted workflow.
+Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
 By contrast, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
 This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
 
