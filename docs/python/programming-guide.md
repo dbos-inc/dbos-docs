@@ -209,7 +209,7 @@ Without durable execution&mdash;if you remove the four highlighted lines&mdash;y
 By contrast, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
 This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
 
-# 3. Optimizing Database Operations
+## 3. Optimizing Database Operations
 
 For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
 To see this in action, replace your `insert_greeting` with the following:
