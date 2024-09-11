@@ -1,0 +1,92 @@
+import CodeBlock from '@theme/CodeBlock';
+
+<Tabs groupId="postgres-or-docker">
+<TabItem value="docker" label="Launch Postgres with Docker">
+<Tabs groupId="operating-systems">
+  <TabItem value="mac" label="macOS">
+   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   <CodeBlock
+      language="bash">
+      {`export PGPASSWORD=dbos
+# Docker may require sudo -E
+${props.cmd}`}
+    </CodeBlock>
+  </TabItem>
+    <TabItem value="linux" label="Linux">
+   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
+	    
+   Then, run this script to launch Postgres in a Docker container:
+   <CodeBlock
+      language="bash">
+      {`export PGPASSWORD=dbos
+# Docker may require sudo -E
+${props.cmd}`}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="win-ps" label="Windows (PowerShell)">
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container:
+   <CodeBlock
+      language="bash">
+      {`$env:PGPASSWORD = "dbos"
+${props.cmd}`}
+   </CodeBlock>
+  </TabItem>
+  <TabItem value="win-cmd" label="Windows (cmd)">
+
+   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
+
+   Then, run this script to launch Postgres in a Docker container: 
+   <CodeBlock
+      language="bash">
+      {`set PGPASSWORD=dbos
+${props.cmd}`}
+   </CodeBlock>
+  </TabItem>
+</Tabs>
+
+If successful, the script should print `Database started successfully!`
+
+</TabItem>
+
+<TabItem value="postgres" label="Install Postgres">
+<Tabs groupId="operating-systems">
+<TabItem value="mac" label="macOS">
+Follow [this guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
+
+Then, set the `PGPASSWORD` environment variable to your Postgres password:
+```bash
+export PGPASSWORD=<your-postgres-password>
+```
+</TabItem>
+<TabItem value="linux" label="Linux">
+Follow these [guides](https://www.postgresql.org/download/linux/) to install Postgres on popular Linux distributions.
+
+Then, set the `PGPASSWORD` environment variable to your Postgres password:
+```bash
+export PGPASSWORD=<your-postgres-password>
+```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
+
+Then, set the `PGPASSWORD` environment variable to your Postgres password:
+
+```bash
+$env:PGPASSWORD = "<your-postgres-password>"
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
+
+Then, set the `PGPASSWORD` environment variable to your Postgres password:
+```bash
+set PGPASSWORD=<your-postgres-password>
+```
+</TabItem>
+</Tabs>
+</TabItem>
+</Tabs>

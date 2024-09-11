@@ -3,6 +3,10 @@ toc_max_heading_level: 2
 hide_table_of_contents: true
 ---
 
+import InstallNode from '/docs/partials/_install_node.mdx';
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
+import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
+
 # Get Started with DBOS
 
 
@@ -84,27 +88,7 @@ The Cloud CLI requires Node.js 20 or later.
 <details>
 <summary>Instructions to install Node.js</summary>
 
-<Tabs groupId="operating-systems">
-<TabItem value="maclinux" label="macOS or Linux">
-   Run the following commands in your terminal:
-
-   ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
-nvm install 22
-nvm use 22
-   ```
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-
-Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
-After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
-(`%user%` is the Windows user on which you are logged in).
-</TabItem>
-</Tabs>
+<InstallNode />
 
 </details>
 </article>
@@ -144,20 +128,7 @@ dbos-cloud app deploy
 ```
 </article>
 
-<article className="col col--6">
-In less than a minute, it should print `Access your application at <URL>`.
-To see that your app is working, visit `<URL>` in your browser.
-</article>
-
-<article className="col col--6">
-<BrowserWindow url="https://<username>-my-app.cloud.dbos.dev">
-**Welcome to DBOS!**
-</BrowserWindow>
-</article>
-
-<article className="col col--6">
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
-</article>
+<QuickstartDeploy />
 
 </section>
 
@@ -165,71 +136,73 @@ Congratulations, you've successfully deployed your first app to DBOS Cloud! You 
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
-#### 1. Install Node.js
+#### 1. Initialize your application
 
+<section className="row list">
+<article className="col col--6">
 DBOS TypeScript requires Node.js 20 or later.
-Install Node.js if you don't already have it:
+</article>
 
+<article className="col col--6">
 <details>
 <summary>Instructions to install Node.js</summary>
-<Tabs groupId="operating-systems">
-<TabItem value="maclinux" label="macOS or Linux">
-   Run the following commands in your terminal:
 
-   ```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-
-nvm install 22
-nvm use 22
-   ```
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-
-Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
-After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
-(`%user%` is the Windows user on which you are logged in).
-</TabItem>
-</Tabs>
+<InstallNode />
 </details>
+</article>
 
+<article className="col col--6">
+Initialize your app with this command.
 
-#### 2. Create the app folder
+> You can choose another name for your app. Names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
+</article>
 
-Pick a name for your app. It should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores. Then, run this command:
-
+<article className="col col--6">
 ```bash
-npx -y @dbos-inc/create@latest -n <app-name>
+npx -y @dbos-inc/create@latest -n my-app
 ```
+</article>
 
-For example, to name your app `hello`, run `npx -y @dbos-inc/create@latest -n hello`
+<article className="col col--6">
+It creates and initializes a new folder named `my-app/` with a sample app. Enter the folder to perform the next step.
+</article>
 
-This command should print `Application initialized successfully!` It creates a new folder named `<app-name>` that contains all the files needed by the "Hello" app. This app greets users and tracks the count of greetings per user. Enter the folder to perform the next step.
-
+<article className="col col--6">
 ```
-cd <app-name>
+cd my-app/
 ```
+</article>
 
-#### 3. Deploy!
+</section>
 
-Install the DBOS Cloud CLI:
+#### 2. Deploy to DBOS Cloud!
 
+<section className="row list">
+<article className="col col--6">
+Install the DBOS Cloud CLI.
+</article>
+
+<article className="col col--6">
 ```
 npm i -g @dbos-inc/dbos-cloud@latest
 ```
+</article>
 
-Then run the following command to deploy your app to DBOS Cloud:
-```
+<article className="col col--6">
+Then, run this command to deploy your app to DBOS Cloud.
+Follow the prompts to sign in and to provision a Postgres database server on the cloud.
+</article>
+
+<article className="col col--6">
+```shell
 dbos-cloud app deploy
 ```
+</article>
 
-This command first prompts you to login, or register if this is your first time. Then, it prompts you to provision a Postgres database server on the cloud. Finally, it uploads your code to DBOS Cloud and deploys your app. In less than a minute, it should succeed and print `Successfully deployed <app-name>! Access your application at <URL>`.
+<QuickstartDeploy />
 
-To see that your app is working, visit `<URL>` in your browser.
+</section>
 
-Congratulations, you've successfully deployed your first app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/), or in the CLI by running `dbos-cloud app list`.
 </LargeTabItem>
 
 </LargeTabs>
@@ -255,96 +228,7 @@ First, your app needs a local Postgres server to connect to.
 <details>
 <summary>Instructions to start a local Postgres server</summary>
 
-<Tabs groupId="postgres-or-docker">
-<TabItem value="docker" label="Launch Postgres with Docker">
-<Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-python3 start_postgres_docker.py
-   ```
-  </TabItem>
-    <TabItem value="linux" label="Linux">
-   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-	    
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-python3 start_postgres_docker.py
-   ```
-  </TabItem>
-  <TabItem value="win-ps" label="Windows (PowerShell)">
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <app-folder>
-$env:PGPASSWORD = "dbos"
-python3 start_postgres_docker.py
-   ```
-  </TabItem>
-  <TabItem value="win-cmd" label="Windows (cmd)">
-
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container: 
-   ```bash
-cd <app-folder>
-set PGPASSWORD=dbos
-python3 start_postgres_docker.py
-   ```
-  </TabItem>
-</Tabs>
-
-If successful, the script should print `Database started successfully!`
-
-</TabItem>
-
-<TabItem value="postgres" label="Install Postgres">
-<Tabs groupId="operating-systems">
-<TabItem value="mac" label="macOS">
-Follow [this guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-export PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-<TabItem value="linux" label="Linux">
-Follow these [guides](https://www.postgresql.org/download/linux/) to install Postgres on popular Linux distributions.
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-export PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-
-```bash
-$env:PGPASSWORD = "<your-postgres-password>"
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-set PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-</Tabs>
-</TabItem>
-</Tabs>
+<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
 </details>
 </article>
 
@@ -403,124 +287,11 @@ For development, testing, or self-hosted deployment, here's how to run this app 
 
 The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
 
-<Tabs groupId="postgres-or-docker">
-<TabItem value="docker" label="Launch Postgres with Docker">
-<Tabs groupId="operating-systems">
-  <TabItem value="mac" label="macOS">
-   You can install Docker on macOS through [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/).
+<details>
+<summary>Instructions to start a local Postgres server</summary>
 
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-    <TabItem value="linux" label="Linux">
-   Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <application-folder>
-export PGPASSWORD=dbos
-# Docker may require sudo -E
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-ps" label="Windows (PowerShell)">
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <app-folder>
-$env:PGPASSWORD = "dbos"
-node start_postgres_docker.js
-   ```
-  </TabItem>
-  <TabItem value="win-cmd" label="Windows (cmd)">
-
-   You can install Docker on Windows through [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/).
-
-   Then, run this script to launch Postgres in a Docker container:
-   ```bash
-cd <app-folder>
-set PGPASSWORD=dbos
-node start_postgres_docker.js
-   ```
-  </TabItem>
-</Tabs>
-
-If successful, the script should print `Database started successfully!`
-
-</TabItem>
-
-<TabItem value="postgres" label="Install Postgres">
-<Tabs groupId="operating-systems">
-<TabItem value="mac" label="macOS">
-Follow [this guide](https://www.postgresql.org/download/macosx/) to install Postgres on macOS.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-export PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-<TabItem value="linux" label="Linux">
-Follow these [guides](https://www.postgresql.org/download/linux/) to install Postgres on popular Linux distributions.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-export PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-
-```bash
-$env:PGPASSWORD = "<your-postgres-password>"
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-Follow [this guide](https://www.postgresql.org/download/windows/) to install Postgres on Windows.
-
-Then, in your terminal, change to your app folder and run this command to configure your Postgres connection:
-```
-cd <app-folder>
-npx dbos configure
-```
-The command will prompt you for your Postgres hostname, port, and username. If you installed Postgres with the default settings, you can select the default hostname (`localhost`), port (`5432`), and username (`postgres`).
-
-Then, set the `PGPASSWORD` environment variable to your Postgres password:
-```bash
-set PGPASSWORD=<your-postgres-password>
-```
-</TabItem>
-</Tabs>
-</TabItem>
-</Tabs>
+<LocalPostgres cmd="node start_postgres_docker.js" />
+</details>
 
 #### 2. Run the app
 
