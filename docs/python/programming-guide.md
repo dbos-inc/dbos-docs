@@ -224,10 +224,10 @@ def insert_greeting(name: str) -> str:
 
 [`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
 It executes your function in a single database transaction.
-We recommend using them because:
+We recommend using transactions because:
 
-1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself.
-2. Under the hood, they're highly optimized because DBOS can update its record of your program's execution step _inside_ your transaction.
+1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself. You no longer need to configure a SQLAlchemy engine!
+2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
 
