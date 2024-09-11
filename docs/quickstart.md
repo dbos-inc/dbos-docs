@@ -232,7 +232,6 @@ First, your app needs a local Postgres server to connect to.
 </details>
 </article>
 
-
 </section>
 
 #### 2. Run the app
@@ -281,40 +280,73 @@ To learn more about building DBOS apps, check out our [Python programming guide]
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
-For development, testing, or self-hosted deployment, here's how to run this app on your local machine. This section assumes you've already created an app folder as described above.
-
 #### 1. Setup a Local Postgres Server
+<section className="row list">
+<article className="col col--6">
 
-The app needs a Postgres database to connect to. If you are familiar with Docker, you may find it convenient to use a Postgres container that we provide. Alternatively, you can install Postgres on your system:
+First, your app needs a local Postgres server to connect to.
+
+> Local database connection info is stored in the [`dbos-config.yaml`](./typescript/reference/configuration#database) file in your app folder.
+> If you're using your own Postgres database, make sure you update this file with the correct connection info.
+</article>
+
+<article className="col col--6">
 
 <details>
 <summary>Instructions to start a local Postgres server</summary>
 
-<LocalPostgres cmd="node start_postgres_docker.js" />
+<LocalPostgres cmd={'node start_postgres_docker.js'} />
 </details>
+</article>
+
+</section>
+
 
 #### 2. Run the app
 
-Next, let's perform a schema migration to create tables for your app in your database:
 
-   ```bash
+<section className="row list">
+
+<article className="col col--6">
+Next, run a schema migration to create tables for your app in your database.
+If successful, the migration should print `Migration successful!`
+</article>
+
+<article className="col col--6">
+```bash
 npx dbos migrate
-   ```
+```
+</article>
 
-If successful, the migration should print `Migration successful!`.
 
-Finally, build and start the app:
+<article className="col col--6">
+Finally, build and start the app.
+</article>
 
-   ```bash
+<article className="col col--6">
+```bash
 npm run build
 npx dbos start
-   ```
+```
+</article>
 
-To see that it's working, visit this URL in your browser: [http://localhost:3000/greeting/dbos](http://localhost:3000/greeting/dbos).  You should get this message: `Hello, dbos! You have been greeted 1 times.` Each time you refresh the page, the counter should go up by one.
+<article className="col col--6">
+To see that it's working, visit this URL in your browser: http://localhost:3000/
+</article>
 
-Congratulations! You started a DBOS app on your system!
+<article className="col col--6">
+<BrowserWindow url="http://localhost:3000/">
+**Welcome to DBOS!**
+</BrowserWindow>
+</article>
 
-Next, to learn how to build your own apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
+
+<article className="col col--6">
+Congratulations, you've started a DBOS app locally!
+To learn more about building DBOS apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
+</article>
+
+</section>
 
 </LargeTabItem>
 </LargeTabs>
