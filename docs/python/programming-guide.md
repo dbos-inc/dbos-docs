@@ -96,7 +96,7 @@ def greeting_endpoint(name: str):
     return f"Thank you for being awesome, {name}!"
 ```
 
-Start your app with `dbos start`. 
+Start your app with `dbos start`.
 To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
 <BrowserWindow url="http://localhost:8000/greeting/Mike">
 "Thank you for being awesome, Mike!"
@@ -117,7 +117,7 @@ To fix this problem, we'll use DBOS durable execution.
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
-We can add durable execution to our app with **just four lines of code**.
+We can add durable execution to our app with **just four lines of code** and an import statement.
 Copy the following into your `main.py`.
 
 
@@ -126,6 +126,7 @@ import logging
 import os
 
 import requests
+#highlight-next-line
 from dbos import DBOS
 from fastapi import FastAPI
 from sqlalchemy import create_engine
