@@ -102,10 +102,20 @@ def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
     DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
 ```
 
-
 **Parameters:**
-- `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+- `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax. DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, which is able to do second repetition and by default we use seconds as the first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)). The DBOS variant contains 5 or 6 items, separated by spaces:
 
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
 
 ### required_roles
 
