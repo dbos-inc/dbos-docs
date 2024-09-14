@@ -270,7 +270,7 @@ First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-dem
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/earthquake-tracker
+cd python/llamabot
 ```
 
 Next, you need to configure the bot in your Slack workspace.

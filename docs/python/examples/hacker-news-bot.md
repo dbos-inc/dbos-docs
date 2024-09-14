@@ -137,7 +137,7 @@ First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-dem
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/earthquake-tracker
+cd python/hackernews-alerts
 ```
 
 Then create a virtual environment:
