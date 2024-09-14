@@ -19,13 +19,18 @@ When writing tests, you are responsible for setting up and cleaning up your data
 
 ## Create Testing Runtime
 
-### createTestingRuntime(\[userClasses\], \[configFilePath\])
+### createTestingRuntime(\[userClasses\], \[configFilePath\], \[dropSysDB\])
 ```typescript
-async function createTestingRuntime(userClasses: object[] | undefined = undefined, configFilePath: string = dbosConfigFilePath): Promise<TestingRuntime>
+async function createTestingRuntime(
+  userClasses: object[] | undefined = undefined,
+  configFilePath: string = dbosConfigFilePath,
+  dropSysDB: boolean = true
+): Promise<TestingRuntime>
 ```
 
 Creates a testing runtime and loads user functions from provided `userClasses`.  By default, all classes and dependencies from the test file are loaded and registered.
 Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
+This method also provides an option to keep system database data across test runs.
 
 The defaults are generally sufficient as long as classes are at least indirectly referenced from the test file:
 ```typescript
@@ -39,9 +44,15 @@ testRuntime = await createTestingRuntime([Hello], "test-config.yaml");
 
 :::warning
 
-This method *drops and re-creates* the DBOS system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
+This method by default *drops and re-creates* the DBOS system database. You will lose all persisted system information such as workflow status. Don't run unit tests on your production database!
+Also, make sure you close any open connections to the system database, otherwise, tests may time out because the `DROP DATABASE` command would fail.
 
 :::
+
+If you want to keep your system database across runs, you can specify `dropSysDB = false`. For example, to load all classes and dependencies, use the default configuration file, and keep the system database:
+```typescript
+testRuntime = await createTestingRuntime(undefined, "dbos-config.yaml", false);
+```
 
 ## Methods
 - [invoke(target, \[workflowUUID, params\])](#runtimeinvoketarget-workflowuuid-params)
