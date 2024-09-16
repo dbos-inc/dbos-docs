@@ -8,6 +8,7 @@ pagination_next: null
 
 import { FaHackerNews, FaSlack } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
+import { SiApachekafka } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 
   <section className="row list">
@@ -42,5 +43,13 @@ import { IoEarth } from "react-icons/io5";
     index="4"
     icon={<FaSlack color="white" size={50}/>}
     language="python"
+  />
+  <CardLink
+    label="Kafka Alert Queue"
+    href="typescript/examples/kafka-alert-queue"
+    description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
+    index="1"
+    icon={<SiApachekafka color="white" size={50}/>}
+    language="typescript"
   />
   </section>
