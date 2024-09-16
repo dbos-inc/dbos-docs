@@ -21,6 +21,14 @@ import { IoEarth } from "react-icons/io5";
     language="python"
   />
   <CardLink
+    label="Kafka Alert Queue"
+    href="typescript/examples/kafka-alert-queue"
+    description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
+    index="1"
+    icon={<SiApachekafka color="white" size={50}/>}
+    language="typescript"
+  />
+  <CardLink
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
@@ -43,13 +51,5 @@ import { IoEarth } from "react-icons/io5";
     index="4"
     icon={<FaSlack color="white" size={50}/>}
     language="python"
-  />
-  <CardLink
-    label="Kafka Alert Queue"
-    href="typescript/examples/kafka-alert-queue"
-    description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
-    index="1"
-    icon={<SiApachekafka color="white" size={50}/>}
-    language="typescript"
   />
   </section>
