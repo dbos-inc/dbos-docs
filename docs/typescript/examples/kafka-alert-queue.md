@@ -23,7 +23,7 @@ Below, we walk you through the key components of this app, step by step.
 
 ## 1. Setting up App Schema
 
-Alerts have 3 enumerated alert statuses: ACTIVE (not assigned), ASSIGNED and RESOLVED. We define these statuses in utilities.ts:
+Alerts have 3 enumerated statuses: ACTIVE (not assigned), ASSIGNED and RESOLVED. We define these in utilities.ts:
 ```typescript
 export enum AlertStatus {
   ACTIVE   = 0,
@@ -32,7 +32,7 @@ export enum AlertStatus {
 }
 ```
 
-In this app we use [Knex](../tutorials/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert-id and the alert table has a nullable employee-id. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
+In this app we use [Knex](../tutorials/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert_id and the alert table has a nullable employee_name. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
 ```typescript
 exports.up = async function(knex) {
   await knex.schema.createTable('employee', table => {
@@ -64,7 +64,7 @@ We create a `env` line in dbos-config.yaml for the KAFKA_BROKER environment vari
 env:
   KAFKA_BROKER: ${KAFKA_BROKER}
 ```
-This will pass the value of `KAFKA_BROKER` to the app when running locally and also to DBOS Cloud when deploying the app.
+This passes the value of `KAFKA_BROKER` to the app when running locally and also to DBOS Cloud when deploying the app.
 
 Following the [Kafka Integration](../tutorials/kafka-integration.md) guide, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
 ```typescript
@@ -99,16 +99,15 @@ export class AlertCenter {
       alerts: AlertWithMessage[],
     };
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`); 
-    //Invoke a transaction to add to the alerts table
     for (const detail of payload.alerts) {
-      await ctxt.invoke(RespondUtilities).addAlert(detail);
+      await ctxt.invoke(RespondUtilities).addAlert(detail); //insert
     }
     return Promise.resolve();
   }
 }
 ```
 
-This invokes the following `addAlert` transaction to insert a new record into the `alerts` table in utilities.ts:
+Here's the code for `addAlert` in utilities.ts:
 ```typescript
 //in utilities.ts/RespondUtilities
 @Transaction()
@@ -133,7 +132,7 @@ const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduce
 });
 ```
 
-We can then create PostAPI route that accepts a message string and uses the KafkaProducerCommunicator to produce a new message:
+We then create PostAPI route that accepts a message string and uses `producerConfig` to produce a new message:
 ```typescript
 //Produce a new alert message to our broker (in operations.ts/AlertCenter)
 @PostApi('/do_send')
@@ -157,12 +156,12 @@ We now have a very simple app that can send and recieve Kafka messages!
 
 ## 4. Creating Employee-Alert Assignments
 
-Now that we have a table of alerts, we provide capabilities for employees to request assignments and check what they are supposed to be working on. First, we'll define a database transaction that accepts the name of an employee and current time. It covers the following cases:
+Now that we have a table of alerts, we provide capabilities for employees to request assignments and check what they are supposed to be working on. First, we define a database transaction that accepts the name of an employee and current time. It covers the following cases:
 
 1. if an employee is looking for a new alert assignment, try to find one and return whether a new assignment is made
-2. if an employee has an existing assignment - simply return the current expiration time
+2. if an employee has an existing assignment - simply return the current assignment
 
-In all cases, if the employee does not exist (first time on duty) - add them to the `employees` table. Return the status of the assignment - the alert details and how much time is remaining. 
+In all cases, if the employee does not exist (first time on duty) - add them to the `employees` table. 
 
 First we create a few auxiliary structures:
 ```typescript
@@ -224,9 +223,9 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
 
 Note the final [implementation of this transaction on Github](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/operations.ts#L55) has a few lines of additional logic to handle the case of employee requesting for more time.
 
-## 5. Checking status of Existing Assignments
+## 5. Checking status of an Existing Assignment
 
-We define another transaction to check whether an existing employee assignment has run out of time. If so, we unlink the alert from the employee making it up for grabs by another employee:
+We define another transaction to check whether an existing employee assignment has run out of time. If so, we unlink the alert from the employee making it up for grabs by others:
 
 ```typescript
 //in utilities.ts/RespondUtilities
@@ -253,13 +252,13 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
 
 ## 6. The Assignment Workflow.
 
-We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release the assignments when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
+We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
 1. use the [CurrentTimeCommunicator](../reference/communicatorlib.md#currenttimecommunicator) to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to invalidate this assignment when time is up.
 
-In other words, if this is a new assignment, then the workflow runs longer, until it finds that the assignment is over. Else, it simply checks the status and returns quickly. We can do this with DBOS because workflows are guaranteed to continue executing to completion. 
+In other words, if this is a new assignment, then the workflow runs longer, until the assignment is over. Else, it simply checks the status and returns quickly. We can do this with DBOS because workflows are guaranteed to continue executing to completion. 
 
 The code looks like so:
 ```typescript
@@ -268,7 +267,7 @@ The code looks like so:
 static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
   let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
 
-  //Assign, extend time or simply return current assignment
+  //Get new assignment, extend time or simply return current assignment
   const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
   
   //Get the expiration time (if there is a current assignment); pass it to the caller
@@ -286,7 +285,6 @@ static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOpt
       const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
       if (!nextTime) {
         //This assignment has been released and we can stop monitoring it
-        ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
         break;
       }
       expirationMS = nextTime.getTime();
@@ -297,7 +295,7 @@ static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOpt
 
 ## 7. Other Ways to Resolve Assignments
 
-An employee may resolve the assignment by fixing the alert. We can add a transaction to do this like so:
+An employee may also release an assignment by fixing the alert. We can add a transaction to do this like so:
 ```typescript
 //in utilities.ts/RespondUtilities
 @Transaction()
@@ -316,7 +314,7 @@ And, we write a very analogous `employeeAbandonAssignment` for when an employee 
 
 ## 8. Exposing these APIs to the Frontend
 
-Finally we can define routes in `frontend.ts` that our UI will invoke. Like so:
+Finally we can define routes in `frontend.ts` that our UI invokes. Like so:
 ```typescript
 //Serve public/app.html as the main endpoint
 @GetApi('/')
@@ -347,15 +345,15 @@ The frontend at `app.html` calls `/assignment` in a loop, every half second or s
 
 ## 9. Trying out the App
 
-You can run locally with a Kafka broker container we provide. First, make sure you have Postgres configured as shown in the [quickstart](../../quickstart.md#1-setup-a-local-postgres-server). 
+You can run locally with a Kafka broker container we provide. First, make sure you have Docker and Postgres configured as shown in the [quickstart](../../quickstart.md#1-setup-a-local-postgres-server). 
 
-Then, start the broker:
+Then, start the broker container:
 ```bash
 cd alert-center
 export KAFKA_BROKER="localhost:9092"
 docker-compose -f kafka-compose.yml up
 ```
-This will start a session with terminal output. You can leave it running.
+This starts a session with terminal output. You can leave it running.
 
 Then, in another terminal window, build, migrate and run the app:
 ```bash
@@ -366,7 +364,7 @@ npm install
 npm run build
 npx dbos migrate
 
-# in order to restart on crash, we run the app in a loop. On Linux or Mac:
+# in order to restart when crashed, we run the app in a loop. On Linux or Mac:
 while [ 1 ] ; do npx dbos start; done 
 # Alternatively you can use regular npx dbos start
 ```
@@ -379,6 +377,4 @@ export KAFKA_BROKER="broker1.example.com:9092"
 #...
 dbos-cloud app deploy
 ```
-This way, the `dbos-cloud app deploy` command will pass the value of `KAFKA_BROKER` to the deployed cloud app.
-
-
+This way, the `dbos-cloud app deploy` command passes the value of `KAFKA_BROKER` to the deployed cloud app.
