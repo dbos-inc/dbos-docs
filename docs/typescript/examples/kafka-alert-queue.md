@@ -104,9 +104,11 @@ export class AlertCenter {
     return Promise.resolve();
   }
 }
+```
 
+This invokes the following `addAlert` transaction to insert a new record into the `alerts` table in utilities.ts:
+```typescript
 //in utilities.ts/RespondUtilities
-//Trsansaction to add a new alert to the alerts table
 @Transaction()
 static async addAlert(ctx: KnexTransactionContext, message: AlertWithMessage) {
   await ctx.client<AlertEmployee>('alert_employee').insert({
@@ -153,13 +155,14 @@ We now have a very simple app that can send and recieve Kafka messages!
 
 ## 4. Creating Employee-Alert Assignments
 
-Next, let's define a database transaction that accepts the name of an employee, the current time and whether they are asking for an extension with an existing assignment. This transaction covers the following cases:
+Now that we have a table of alerts, we provide capabilities for employees to request assignments and check what they are supposed to be working on. First, we'll define a database transaction that accepts the name of an employee and current time. It covers the following cases:
 
 1. if an employee is looking for a new alert assignment, try to find one and return whether a new assignment is made
-2. if an employee has an existing assignment and needs more time - add more time to the expiration
-3. if an employee has an existing assignment and is not asking more time - simply return the current expiration time
-In all cases, if the employee does not exist (first time on duty) - add them to the `employees` table. Return the status of the assignment - the alert details and how much time is remaining. The transaction looks like so. Note the use of [@ArgOptional](../reference/decorators#argoptional) for `more_time`:
+2. if an employee has an existing assignment - simply return the current expiration time
 
+In all cases, if the employee does not exist (first time on duty) - add them to the `employees` table. Return the status of the assignment - the alert details and how much time is remaining. 
+
+First we create a few auxiliary structures:
 ```typescript
 //Query interfaces (utilities.ts)
 export interface Employee {
@@ -177,15 +180,17 @@ export interface AlertEmployee {
 }
 
 const timeToRespondToAlert = 30; //default alert time window, in seconds
+```
 
+Then we add the following `getUserAssignment` transaction:
+```typescript
 //in utilities.ts/RespondUtilities
 @Transaction()
-static async getUserAssignment(ctx: KnexTransactionContext, employee_name: string, currentTime: number, @ArgOptional more_time: boolean | undefined) {
+static async getUserAssignment(ctx: KnexTransactionContext, employee_name: string, currentTime: number) {
   let employees = await ctx.client<Employee>('employee').where({employee_name}).select();
   let newAssignment = false;
-
-  if (employees.length === 0) {
-    //Is this the first getUserAssignment for this employee? Add them to the employee table
+  if (employees.length === 0) { 
+    //First getUserAssignment for this employee? Add them to the employees table
     employees = await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
   }
 
@@ -194,8 +199,8 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
   if (!employees[0].alert_id) { 
     //This employee does not have a current assignment. Let's find a new one!
     const op = await ctx.client<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
-
-    if (op) { //found an alert - assign it
+    
+    if (op) { //found an alert that needs work - assign it!
       op.employee_name = employee_name;
       const alert_id = op.alert_id;
       employees[0].alert_id = op.alert_id;
@@ -203,17 +208,10 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
       await ctx.client<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
       await ctx.client<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
       newAssignment = true;
-      ctx.logger.info(`New Assignment for ${employee_name}: ${alert_id}`);
     }
   }
-  else if (employees[0].alert_id && more_time) {
-    //This employee has an assignment and is asking for more time.
-    ctx.logger.info(`Extending time for ${employee_name} on ${employees[0].alert_id}`);
-    employees[0].expiration = expirationTime;
-    await ctx.client<Employee>('employee').where({employee_name}).update({expiration: expirationTime});
-  }
 
-  //If we have an assignment (new or existing), retrieve and return it
+  //If we have an assignment (new or existing) - return it
   let alert : AlertEmployee[] = [];
   if (employees[0].alert_id) {
     alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
@@ -222,9 +220,11 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
 }
 ```
 
+Note the final [implementation of this transaction on Github](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/operations.ts#L55) has a few lines of additional logic to handle the case of employee requesting for more time.
+
 ## 5. Checking status of Existing Assignments
 
-We define another transaction (also in utilities.ts/RespondUtilities) to check whether an existing employee assignment has expired. If so, we unlink the alert from the employee making it eligible for assignment by another employee:
+We define another transaction to check whether an existing employee assignment has run out of time. If so, we unlink the alert from the employee making it up for grabs by another employee:
 
 ```typescript
 //in utilities.ts/RespondUtilities
@@ -239,7 +239,6 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
 
   if ((employees[0].expiration?.getTime() ?? 0) > currentDate.getTime()) {
     //This employee is assigned and their time is not yet expired
-    ctx.logger.info(`Not yet expired: ${employees[0].expiration?.getTime()} > ${currentDate.getTime()}`);
     return employees[0].expiration;
   }
 
@@ -252,8 +251,8 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
 
 ## 6. The Assignment Workflow.
 
-We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts to users and also invalidate the assignments when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
-1. use a [@Communicator](../tutorials/communicator-tutorial.md) to get the current time
+We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release the assignments when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
+1. use the [CurrentTimeCommunicator](../reference/communicatorlib.md#currenttimecommunicator) to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to invalidate this assignment when time is up.
@@ -263,46 +262,32 @@ In other words, if this is a new assignment, then the workflow runs longer, unti
 The code looks like so:
 ```typescript
 //in operations.ts/AlertCenter
-
-//This is invoked when:
-// 1. An employee asks for a new assignment, or
-// 2. An employee asks for more time with the existing assignment, or
-// 3. There's a simple refresh of the page to let the employee know how much time is left
 @Workflow()
 static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
-  
-  //Get the current time from a communicator
   let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
 
   //Assign, extend time or simply return current assignment
   const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
   
-  //Get the expiration time (if there is a current assignment); use setEvent to provide it to the caller
+  //Get the expiration time (if there is a current assignment); pass it to the caller
   const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
   await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
 
   if (userRec.newAssignment) {
-
-    //First time we assigned this alert to this employee. 
-    //Here we start a loop that sleeps, wakes up and checks if the assignment has expired
-    ctxt.logger.info(`Start watch workflow for ${name}`);
-    let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
+    //Start a loop that checks for expiration
+    let expirationMS = userRec.employee.expiration.getTime();
 
     while (expirationMS > ctime) {
-      ctxt.logger.debug(`Sleeping ${expirationMS-ctime}`);
-      await ctxt.sleepms(expirationMS - ctime);
+      await ctxt.sleepms(expirationMS - ctime); //durable sleep
       const curDate = await ctxt.invoke(CurrentTimeCommunicator).getCurrentDate();
       ctime = curDate.getTime();
       const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
-
       if (!nextTime) {
-        //The time on this assignment expired, and we can stop monitoring it
+        //This assignment has been released and we can stop monitoring it
         ctxt.logger.info(`Assignment for ${name} ended; no longer watching.`);
         break;
       }
-
       expirationMS = nextTime.getTime();
-      ctxt.logger.info(`Going around again: ${expirationMS} / ${ctime}`);
     }
   }
 }
@@ -325,14 +310,13 @@ static async employeeCompleteAssignment(ctx: KnexTransactionContext, employee_na
   await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
 }
 ```
-And, we write a very analogous `employeeAbandonAssignment` for when an employee logs out. It mainly differs in not setting alert status to `RESOLVED`.
+And, we write a very analogous `employeeAbandonAssignment` for when an employee logs out [here](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/utilities.ts#L132). It mainly differs in not setting alert status to `RESOLVED`.
 
 ## 8. Exposing these APIs to the Frontend
 
 Finally we can define routes in `frontend.ts` that our UI will invoke. Like so:
 ```typescript
-
- //Serve public/app.html as the main endpoint
+//Serve public/app.html as the main endpoint
 @GetApi('/')
   static frontend(_ctxt: HandlerContext) {
   return render("app.html", {});
@@ -348,28 +332,16 @@ static async getAssignment(ctxt: HandlerContext, name: string, @ArgOptional more
   return userRec;
 }
 
-//An employee request to cancel the current assignment
-@PostApi('/respond/cancel')
-  static async cancelAssignment(ctxt: HandlerContext, name: string) {
-  await ctxt.invoke(RespondUtilities).employeeAbandonAssignment(name);
-  return Promise.resolve();
-}
-
 //An employee request to mark the current assignment as completed
 @PostApi('/respond/fixed') 
 static async fixAlert(ctxt: HandlerContext, name: string) {
   await ctxt.invoke(RespondUtilities).employeeCompleteAssignment(name);
 }
 
-//An employee request to ask for more time (simple redirect to above)
-@PostApi('/respond/more_time')
-static async extendAssignment(ctxt: HandlerContext, name: string) {
-  ctxt.koaContext.redirect(`/assignment?name=${encodeURIComponent(name)}&more_time=true`);
-  return Promise.resolve();
-}
+//And so on for respond/cancel, respond/more_time, etc...
 ```
 
-The frontend at `app.html` is created to run `/assignment` in a loop, every half second or so, to show the assignment time countdown. In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
+The frontend at `app.html` calls `/assignment` in a loop, every half second or so, to show the assignment time countdown. In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
 
 ## 9. Trying out the App
 
