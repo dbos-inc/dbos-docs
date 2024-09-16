@@ -12,16 +12,18 @@ The app maintains a table of **employees** working in a fictional (but very impo
 
 Once an employee logs in, the app looks for any alerts that are not assigned. If such an alert exists, the employee is assigned to handle it. The employee has 30 seconds to resolve the alert or request more time. After the timer expires, the alert may be reassigned to any of the other logged-in employees. The employee may also choose to log out, making the alert eligible for immediate reassignment. If there are no active alerts to handle, the employee is presented with a soothing message encouraging them to relax.
 
-To make the demo easier, the app allows several employees to log in from the same machine, using different browser tabs. The frontend also features a button to create new alerts. In this case, the app produces a Kafka message to the broker that it also consumes. And, as with some other example apps, we provide the "Crash Application" button to showcase how DBOS recovers from failures.
+For easy demonstration, the app allows several employees to log in from the same machine, using different browser tabs. The frontend also features a button to create new alerts. In this case, the app produces a Kafka message to the broker that it also consumes. And, as with other example apps, we provide the "Crash Application" button to showcase how DBOS recovers from failures at any point.
 
 The front end presents a history of all the alerts on the left, the current alert assignment in the middle and tools for creating alerts or crashing the app on the right:
 ![Time picker](./assets/alert_center_ui.png)
+
+Roughly speaking, this app implements many features of a [Task Queue](https://en.wikipedia.org/wiki/Scheduling_(computing)#task_queue). Employees act like workers requesting tasks and then sending completion updates. Tasks are assigned reliably and properly reassigned if a worker stops responding. 
 
 Below, we walk you through the key components of this app, step by step.
 
 ## 1. Setting up App Schema
 
-Alerts have 3 enumerated statuses: ACTIVE (not assigned), ASSIGNED and RESOLVED. We define these statuses in utilities.ts:
+Alerts have 3 enumerated alert statuses: ACTIVE (not assigned), ASSIGNED and RESOLVED. We define these statuses in utilities.ts:
 ```typescript
 export enum AlertStatus {
   ACTIVE   = 0,
@@ -30,7 +32,7 @@ export enum AlertStatus {
 }
 ```
 
-In this app we use [Knex](../tutorials/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert-id and the alert table has a nullable employee-id. Our schema migration file looks like so:
+In this app we use [Knex](../tutorials/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert-id and the alert table has a nullable employee-id. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
 ```typescript
 exports.up = async function(knex) {
   await knex.schema.createTable('employee', table => {
@@ -97,7 +99,7 @@ export class AlertCenter {
       alerts: AlertWithMessage[],
     };
     ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`); 
-    //Invoke a transaction to add each alert to the database
+    //Invoke a transaction to add to the alerts table
     for (const detail of payload.alerts) {
       await ctxt.invoke(RespondUtilities).addAlert(detail);
     }
