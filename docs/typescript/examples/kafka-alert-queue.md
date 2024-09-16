@@ -156,12 +156,12 @@ We now have a very simple app that can send and recieve Kafka messages!
 
 ## 4. Creating Employee-Alert Assignments
 
-Now that we have a table of alerts, we provide capabilities for employees to request assignments and check what they are supposed to be working on. First, we define a database transaction that accepts the name of an employee and current time. It covers the following cases:
+Now that we have a table of alerts, we provide capabilities for employees to request work and see their assignment status. First, we define a database transaction that accepts the name of an employee and current time. It covers the following cases:
 
-1. if an employee is looking for a new alert assignment, try to find one and return whether a new assignment is made
-2. if an employee has an existing assignment - simply return the current assignment
+1. if an employee needs a new alert assignment, try to find one and return whether a new assignment is made
+2. if an employee has an existing assignment - return its status, including how much time is left
 
-In all cases, if the employee does not exist (first time on duty) - add them to the `employees` table. 
+If the employee does not exist (first time on duty), we add them to the `employees` table on the spot.
 
 First we create a few auxiliary structures:
 ```typescript
@@ -191,7 +191,7 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
   let employees = await ctx.client<Employee>('employee').where({employee_name}).select();
   let newAssignment = false;
   if (employees.length === 0) { 
-    //First getUserAssignment for this employee? Add them to the employees table
+    //First time on duty? Add to the employees table
     employees = await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
   }
 
@@ -201,7 +201,7 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
     //This employee does not have a current assignment. Let's find a new one!
     const op = await ctx.client<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
     
-    if (op) { //found an alert that needs work - assign it!
+    if (op) { //found an alert that needs work - set expiration time and assign it!
       op.employee_name = employee_name;
       const alert_id = op.alert_id;
       employees[0].alert_id = op.alert_id;
@@ -221,11 +221,11 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
 }
 ```
 
-Note the final [implementation of this transaction on Github](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/operations.ts#L55) has a few lines of additional logic to handle the case of employee requesting for more time.
+Note the final [implementation of this transaction on Github](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/operations.ts#L55) has a few lines of additional logic to handle the case of employee asking for more time.
 
-## 5. Checking status of an Existing Assignment
+## 5. Releasing Assignments When Time is Up
 
-We define another transaction to check whether an existing employee assignment has run out of time. If so, we unlink the alert from the employee making it up for grabs by others:
+We define another transaction to check whether an existing assignment has run out of time. If so, we unlink the alert from the employee making it up for grabs by others:
 
 ```typescript
 //in utilities.ts/RespondUtilities
@@ -250,13 +250,13 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
 }
 ```
 
-## 6. The Assignment Workflow.
+## 6. The Workflow to Assign and Release
 
 We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
 1. use the [CurrentTimeCommunicator](../reference/communicatorlib.md#currenttimecommunicator) to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to return the assignment status to the caller
-4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to invalidate this assignment when time is up.
+4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to release this assignment when time is up.
 
 In other words, if this is a new assignment, then the workflow runs longer, until the assignment is over. Else, it simply checks the status and returns quickly. We can do this with DBOS because workflows are guaranteed to continue executing to completion. 
 
@@ -293,9 +293,9 @@ static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOpt
 }
 ```
 
-## 7. Other Ways to Resolve Assignments
+## 7. Other Ways to Release Assignments
 
-An employee may also release an assignment by fixing the alert. We can add a transaction to do this like so:
+An employee may also release an assignment by fixing the alert! We add a transaction to do this like so:
 ```typescript
 //in utilities.ts/RespondUtilities
 @Transaction()
@@ -310,11 +310,11 @@ static async employeeCompleteAssignment(ctx: KnexTransactionContext, employee_na
   await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
 }
 ```
-And, we write a very analogous `employeeAbandonAssignment` for when an employee logs out [here](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/utilities.ts#L132). It mainly differs in not setting alert status to `RESOLVED`.
+We write a very analogous `employeeAbandonAssignment` for when an employee logs out [here](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/utilities.ts#L132). It mainly differs in not setting alert status to `RESOLVED`.
 
 ## 8. Exposing these APIs to the Frontend
 
-Finally we can define routes in `frontend.ts` that our UI invokes. Like so:
+Finally we define routes for these actions in `frontend.ts` that our UI invokes. Like so:
 ```typescript
 //Serve public/app.html as the main endpoint
 @GetApi('/')
@@ -322,7 +322,7 @@ Finally we can define routes in `frontend.ts` that our UI invokes. Like so:
   return render("app.html", {});
 }
 
-//For a new employee to get an assignment or for an assigned employee to ask for more time
+//For a new employee to get / check their assignment or ask for more time
 @GetApi('/assignment')
 static async getAssignment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
   const userRecWF = await ctxt.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
