@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 title: Workflow Handles
 description: API reference for DBOS workflow handles
 ---
