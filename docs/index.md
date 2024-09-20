@@ -106,7 +106,7 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
   />
   <IndexCardLink
     label="Exactly-Once Event Processing"
-    href="/typescript/tutorials/kafka-integration"
+    href="/python/tutorials/kafka-integration"
     description="Use durable workflows to process incoming events exactly-once"
     index="4"
     icon={<SiApachekafka color="var(--ifm-color-primary-lightest)" size={30}/>}
