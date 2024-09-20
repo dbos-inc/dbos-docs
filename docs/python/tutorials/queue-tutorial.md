@@ -73,6 +73,7 @@ The concurrency limit guarantees that even if many tasks are submitted at once, 
  ### In-Order Processing
 
  You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+ Only a single event will be processed at a time.
  For example, this app processes events sequentially in the order of their arrival:
 
  ```python
