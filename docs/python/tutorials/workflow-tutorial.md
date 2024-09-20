@@ -102,14 +102,12 @@ To make this easier, DBOS provides two workflow communication APIs, the events A
 
 ### Events API
 
-This API allows workflows to emit and listen for events.
-Events are immutable key-value pairs.
+This API allows workflows to emit _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### set_event
 
-Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to immutably publish a key-value pair.
-A workflow cannot set a key it has already set.
+Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
 
 ```python
 DBOS.set_event(
@@ -120,7 +118,7 @@ DBOS.set_event(
 #### get_event
 
 You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
-This call waits for the event to be published, returning `None` if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
 
 ```python
 DBOS.get_event(
@@ -164,7 +162,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 #### Reliability Guarantees
 
-All events are persisted to the database and are immutable, so once an event it set, it is guaranteed to always be retrievable.
+All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
 
 ### Messages API
 This API allows operations to send messages to a specific [workflow ID](./workflow-tutorial#workflow-ids).
