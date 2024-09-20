@@ -45,7 +45,7 @@ def process_task(task):
 @DBOS.workflow()
 def process_tasks(tasks):
   task_handles = []
-  # Enqueue each task so all tasks are processed in parallel.
+  # Enqueue each task so all tasks are processed concurrently.
   for task in tasks:
     handle = queue.enqueue(process_task, task)
     task_handles.append(handle)

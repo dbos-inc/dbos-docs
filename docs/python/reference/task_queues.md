@@ -26,13 +26,14 @@ If not provided, any number of tasks may run concurrently.
 
 ```python
 queue.enqueue(
-    func: Workflow[P, R],
+    func: Callable[P, R],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandle[R]
 ```
 
 Enqueue a task for processing and return a [handle](./workflow_handles.md) to it.
+You can enqueue any DBOS-annotated function.
 The `enqueue` method durably enqueues your task; after it returns your task is guaranteed to later execute even if your app is interrupted.
 
 **Example syntax:**
@@ -49,7 +50,7 @@ def process_task(task):
 @DBOS.workflow()
 def process_tasks(tasks):
   task_handles = []
-  # Enqueue each task so all tasks are processed in parallel.
+  # Enqueue each task so all tasks are processed concurrently.
   for task in tasks:
     handle = queue.enqueue(process_task, task)
     task_handles.append(handle)
