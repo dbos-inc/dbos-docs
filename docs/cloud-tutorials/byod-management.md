@@ -9,10 +9,10 @@ In this guide, you'll learn how to bring your own PostgreSQL database instance t
 ### Linking Your Database to DBOS Cloud
 
 To bring your own PostgreSQL database instance to DBOS Cloud, you must first create a role DBOS Cloud can use to deploy and manage your apps.
-This role must be named `dbosadmin` and must have the `LOGIN`, `CREATEDB` and `CREATEROLE` privileges:
+This role must be named `dbosadmin` and must have the `LOGIN` and `CREATEDB` privileges:
 
 ```sql
-CREATE ROLE dbosadmin WITH LOGIN CREATEDB CREATEROLE PASSWORD <password>;
+CREATE ROLE dbosadmin WITH LOGIN CREATEDB PASSWORD <password>;
 ```
 
 Next, link your database instance to DBOS Cloud, entering the password for the `dbosadmin` role when prompted.
