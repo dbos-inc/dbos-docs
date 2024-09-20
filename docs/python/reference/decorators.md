@@ -144,7 +144,8 @@ def my_support_workflow():
 ```python
 DBOS.kafka_consumer(
         config: dict[str, Any],
-        topics: list[str]
+        topics: list[str],
+        in_order: bool = False,
 )
 ```
 
@@ -159,6 +160,7 @@ The decorated function must take a KafkaMessage as its only parameter.
     This list should be in the form host1:port1,host2:port2,...
   - `group.id`: A unique string that identifies the consumer group this consumer belongs to.
 - `topics`: a list of Kafka topics to subscribe to
+- `in_order`: If true, messages will be processed sequentially in offset order.
 
 **Example**
 ```python

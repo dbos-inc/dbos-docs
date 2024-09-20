@@ -58,9 +58,9 @@ DBOS.set_event(
 ) -> None
 ```
 
-Create and associate with this workflow an immutable event with key `key` and value `value`.
+Create and associate with this workflow an event with key `key` and value `value`.
+If the event already exists, update its value.
 Can only be called from within a workflow.
-Events are immutable and attempting to emit an event twice from a given workflow instance will error.
 
 
 **Parameters:**
@@ -77,8 +77,8 @@ DBOS.get_event(
 ) -> None
 ```
 
-Retrieve an event published by the workflow identified by `workflow_id` to the key `key`.
-Waits for the event to be published, returning `None` if the wait times out.
+Retrieve the latest value of an event published by the workflow identified by `workflow_id` to the key `key`.
+If the event does not yet exist, wait for it to be published, returning `None` if the wait times out.
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.

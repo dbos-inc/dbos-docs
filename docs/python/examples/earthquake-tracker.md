@@ -17,6 +17,7 @@ In our main file (`earthquake_tracker/main.py`) let's start off with imports and
 
 
 ```python
+import threading
 from datetime import datetime, timedelta
 from typing import TypedDict
 
@@ -115,11 +116,12 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```
 
-Finally, in our main function, let's launch DBOS:
+Finally, in our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python
 if __name__ == "__main__":
     DBOS.launch()
+    threading.Event().wait()
 ```
 
 ## Visualizing the Data with Streamlit
