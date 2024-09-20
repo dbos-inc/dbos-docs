@@ -19,6 +19,7 @@ Queue(
 - `name`: The name of the queue. Must be unique among all your queues.
 - `concurrency`: The maximum number of tasks from this queue that may run concurrently.
 This concurrency limit is global across all DBOS processes using this queue.
+If not provided, any number of tasks may run concurrently.
 
 
 ### enqueue
@@ -48,8 +49,11 @@ def process_task(task):
 @DBOS.workflow()
 def process_tasks(tasks):
   task_handles = []
+  # Enqueue each task so all tasks are processed in parallel.
   for task in tasks:
     handle = queue.enqueue(process_task, task)
     task_handles.append(handle)
+  # Wait for each task to complete and retrieve its result.
+  # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
 ```
