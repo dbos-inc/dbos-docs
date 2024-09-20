@@ -53,7 +53,7 @@ Thus, even if a message is delivered multiple times (e.g., due to transient netw
 
 ## In-Order Processing
 
-You can request process Kafka events in-order by setting `in_order=True` in the `@DBOS.kafka_consumer` decorator.
+You can process Kafka events in-order by setting `in_order=True` in the `@DBOS.kafka_consumer` decorator.
 If this is set, messages are processed **sequentially** in order by offset.
 In other words, processing of Message #4 does not begin until Message #3 is fully processed.
 For example:
