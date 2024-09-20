@@ -50,3 +50,24 @@ def test_kafka_workflow(msg: KafkaMessage):
 Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
 This combination is guaranteed to be unique for each Kafka cluster.
 Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+
+## In-Order Processing
+
+You can request process Kafka events in-order by setting `in_order=True` in the `@DBOS.kafka_consumer` decorator.
+If this is set, messages are processed **sequentially** in order by offset.
+In other words, processing of Message #4 does not begin until Message #3 is fully processed.
+For example:
+
+```python
+from dbos import DBOS, KafkaMessage
+
+@DBOS.kafka_consumer(
+        config=config,
+        topics=["example-topic"],
+        in_order=True
+)
+@DBOS.workflow()
+def process_messages_in_order(msg: KafkaMessage):
+    DBOS.logger.info(f"Messages are processed sequentially in offset order")
+
+```
