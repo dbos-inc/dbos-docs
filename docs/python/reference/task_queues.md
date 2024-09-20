@@ -3,8 +3,8 @@ sidebar_position: 4
 title: Task Queues
 ---
 
-Task queues allows you to submit tasks to run in the background with a controlled degree of parallelism.
-They are useful for orchestration of parallel events.
+Task queues allow you to submit tasks to run in the background with a controlled degree of concurrency.
+They are useful for running many tasks in parallel.
 
 ### class dbos.Queue
 
@@ -33,7 +33,7 @@ queue.enqueue(
 ```
 
 Enqueue a task for processing and return a [handle](./workflow_handles.md) to it.
-The `enqueue` method resolves after the task is is durably enqueued; at this point the task is guaranteed to later execute even if the app is interrupted.
+The `enqueue` method durably enqueues your task; after it returns your task is guaranteed to later execute even if your app is interrupted.
 
 **Example syntax:**
 

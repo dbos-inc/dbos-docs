@@ -3,7 +3,7 @@ sidebar_position: 4
 title: Task Queues & Parallelism
 ---
 
-Task queues allows you to submit tasks to run in the background with a controlled degree of concurrency.
+Task queues allow you to submit tasks to run in the background with a controlled degree of concurrency.
 They are useful for running many tasks in parallel.
 
 To create a queue, specify its name and the maximum number of tasks that it may run concurrently:
