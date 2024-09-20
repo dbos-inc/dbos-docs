@@ -15,7 +15,7 @@ queue = Queue("example_queue", concurrency=10)
 ```
 
 You can then enqueue any DBOS-annotated function.
-Enqueuing a function submits it for execution and returns a [handle](./workflow_handles.md) to the enqueued task.
+Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to the enqueued task.
 Enqueued tasks are executed in FIFO order.
 
 ```python
