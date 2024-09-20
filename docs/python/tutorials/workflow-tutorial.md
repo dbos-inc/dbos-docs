@@ -162,7 +162,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 #### Reliability Guarantees
 
-All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
+All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
 
 ### Messages API
 This API allows operations to send messages to a specific [workflow ID](./workflow-tutorial#workflow-ids).
