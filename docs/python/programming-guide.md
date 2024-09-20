@@ -110,7 +110,7 @@ INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
 Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
-This is bad in many real-world situtations, for example if a program fails to record making or receiving a payment.
+This is bad in many real-world situations, for example if a program fails to record making or receiving a payment.
 To fix this problem, we'll use DBOS durable execution.
 
 ## 2. Durable Execution with Workflows
