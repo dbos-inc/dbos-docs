@@ -1,21 +1,30 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 1
-title: DBOS AI Quickstart
+title: AI Storyteller (Starter Example)
+hide_table_of_contents: true
 ---
 
-This is a "9 lines of code" DBOS AI starter example using OpenAI, built on top of the famous ["5 lines of code" starter](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/) from LlamaIndex.
+In this tutorial, you'll learn how to build a reliable AI app with DBOS from scratch.
+This is a "9 lines of code" DBOS AI starter example using OpenAI and FastAPI, built on top of the famous ["5 lines of code" starter](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/) from LlamaIndex.
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/ai-storyteller).
 
-## Preparation
+### Preparation
 
-First, you need to create a folder for your app and activate a virtual environment.
+<section className="row list">
+<article className="col col--6">
 
+First, you need to create a folder for your app and activate a virtual environment. You also want to create an empty file named `main.py` for your code.
+</article>
+
+<article className="col col--6">
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
 python3 -m venv ai-app/.venv
 cd ai-app
 source .venv/bin/activate
+touch main.py
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
@@ -23,6 +32,7 @@ source .venv/bin/activate
 python3 -m venv ai-app/.venv
 cd ai-app
 .venv\Scripts\activate.ps1
+New-Item main.py
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
@@ -30,18 +40,28 @@ cd ai-app
 python3 -m venv ai-app/.venv
 cd ai-app
 .venv\Scripts\activate.bat
+TYPE nul > main.py
 ```
 </TabItem>
 </Tabs>
+</article>
 
-Then, install dependencies and initialize a `dbos-config.yaml` file.
+<article className="col col--6">
+Then, install dependencies and initialize a DBOS config file.
+</article>
+
+<article className="col col--6">
 ```shell
 pip install dbos llama-index
 dbos init --config
 ```
+</article>
 
-Next, to run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview). LlamaIndex uses the `gpt-3.5-turbo` model by default. Set the API as an environment variable:
+<article className="col col--6">
+Next, to run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview). LlamaIndex uses the `gpt-3.5-turbo` model by default. Set the API key as an environment variable.
+</article>
 
+<article className="col col--6">
 <Tabs groupId="operating-systems">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
@@ -59,27 +79,186 @@ set OPENAI_API_KEY=XXXXX
 ```
 </TabItem>
 </Tabs>
+</article>
 
+<article className="col col--6">
+Also append the following two lines to `dbos-config.yaml` to specify the env variable for the OpenAI API key.
+</article>
+
+<article className="col col--6">
+```yaml title="dbos-config.yaml"
+env:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+```
+</article>
+
+<article className="col col--6">
 Finally, let's download some data. This app uses the text from Paul Graham's ["What I Worked On"](http://paulgraham.com/worked.html). You can download the text from [this link](https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt) and save it under `data/paul_graham_essay.txt` of your app folder.
 
-## Import and Initialize the App
+Now, your app folder structure should look like this:
+</article>
 
-
-## Try it Yourself!
-
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
-
+<article className="col col--6">
 ```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/ai-storyteller/
+ai-app/
+├── dbos-config.yaml
+├── main.py
+└── data/
+    └── paul_graham_essay.txt
+```
+</article>
+</section>
+
+### Load Data and Build a Q&A Engine
+
+Open the `main.py` file and add the following lines from LlamaIndex's starter example:
+
+```python showLineNumbers title="main.py"
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+
+query_engine = index.as_query_engine()
+response = query_engine.query("What did the author do growing up?")
+print(response)
 ```
 
-Next, set up your OpenAI API key as mentioned [above](#import-and-initialize-the-app).
+This script loads data and builds an index over the documents under the `data/` folder, and it generates an answer by querying the index. You can run this script and it should give you a response, for example:
+```bash
+$ python3 main.py
 
-After that, you can deploy it to the cloud with a single command:
+The author worked on writing short stories and programming...
+```
+
+### HTTP Serving
+
+Now, let's add a FastAPI endpoint so we can serve responses through HTTP. Modify your `main.py` as follows:
+
+```python showLineNumbers title="main.py"
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+#highlight-next-line
+from fastapi import FastAPI
+
+#highlight-next-line
+app = FastAPI()
+
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+#highlight-start
+@app.get("/")
+def get_answer():
+#highlight-end
+    response = query_engine.query("What did the author do growing up?")
+#highlight-next-line
+    return str(response)
+```
+
+Now you can start your app with `fastapi run main.py`. To see that it's working, visit this URL: [http://localhost:8000](http://localhost:8000) 
+<BrowserWindow url="http://localhost:8000">
+"The author worked on writing short stories and programming..."
+</BrowserWindow>
+
+The result may be different every time you refresh your browser window!
+
+### Hosting on DBOS Cloud
+
+To make your app deployable to DBOS Cloud, you only need to add two lines to the top of `main.py`:
+
+```python showLineNumbers title="main.py"
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+from fastapi import FastAPI
+#highlight-next-line
+from dbos import DBOS
+
+app = FastAPI()
+#highlight-next-line
+DBOS(fastapi=app)
+
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+@app.get("/")
+def get_answer():
+    response = query_engine.query("What did the author do growing up?")
+    return str(response)
+```
+
+Assume you've installed the [DBOS Cloud CLI](../../quickstart#2-install-the-dbos-cloud-cli). Run the following commands to freeze dependencies to `requirements.txt` and deploy it to DBOS Cloud:
 
 ```shell
+pip freeze > requirements.txt
 dbos-cloud app deploy
 ```
 
-Once deployed, you can visit the app URL and generate stories!
+In less than a minute, it should print `Access your application at <URL>`.
+To see that your app is working, visit `<URL>` in your browser.
+<BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev">
+"The author worked on writing short stories and programming..."
+</BrowserWindow>
+
+Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
+
+### Building a Reliable Storyteller
+
+Want to have some fun?
+Let's add multiple steps and turn this simple Q&A app into a storyteller! Add the following lines to `main.py`:
+
+```python showLineNumbers title="main.py"
+from dbos import SetWorkflowID
+
+#highlight-next-line
+@DBOS.step()
+def get_growup():
+    response = query_engine.query("What did the author do growing up?")
+    return str(response)
+
+#highlight-next-line
+@DBOS.step()
+def get_art_school():
+    response = query_engine.query("How did the author start YC?")
+    return str(response)
+
+#highlight-next-line
+@DBOS.step()
+def get_yc():
+    response = query_engine.query("What happened after YC?")
+    return str(response)
+
+# This workflow invokes the above three steps to tell a whole story!
+#highlight-next-line
+@DBOS.workflow()
+def story_workflow():
+    res1 = "First, " + get_growup()
+    res2 = " Then, " + get_art_school()
+    res3 = " Finally, " + get_yc()
+    return res1 + res2 + res3
+
+# Let's define a route that generates a version of the story.
+# Every time you visit the same version, you get the same story.
+@app.get("/story/{version}")
+def get_story(version: str):
+    #highlight-next-line
+    with SetWorkflowID(version):
+        return story_workflow()
+```
+
+Deploy it to DBOS Cloud again (or [run it locally](../../quickstart#run-your-app-locally)). Visit `<URL>/story/<version>` in your browser. For example:
+<BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev/story/v1">
+"First, The author worked on writing short stories and programming... Then, The author started Y Combinator (YC) by organizing a summer program called the Summer Founders Program... Finally, After YC, the individual decided to pursue painting as a new endeavor..."
+</BrowserWindow>
+
+To tell a slightly different version of the story, visit another version. For example:
+<BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev/story/v2">
+"First, The author wrote short stories and tried programming on the IBM 1401 in 9th grade using an early version of Fortran... Then, The author started YC by deciding to create an investment firm with Jessica after facing delays from VCs... Finally, Paul Graham decided to hand over Y Combinator (YC) to someone else after his mother had a stroke in 2012..."
+</BrowserWindow>
+
+The cool thing about this app is that if you visit the same version again, it will consistently return the same story. Under the hood, `SetWorkflowID` assigns the version number as the unique identifier to the workflow, and DBOS guarantees that each workflow ID always completes and runs exactly once no matter how many times it's invoked/interrupted.
+
+Moreover, you might notice that the first time you visit a version it may take ~10 seconds to generate a story due to the OpenAI model inference latency, but the second time you visit a version it responds much faster.
+This is because DBOS persists the output of steps to guarantee durable execution. When re-executing a completed workflow, DBOS directly uses the recorded output instead of calling out to OpenAI again.
+
+Now you know how to build a reliable AI app! This is just the beginning of your DBOS journey. Check out our [examples](../../examples) for more apps you can build with DBOS.
