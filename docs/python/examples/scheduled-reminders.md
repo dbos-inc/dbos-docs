@@ -1,10 +1,10 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 4
+sidebar_position: 5
 title: Scheduled Reminders
 ---
 
-In this example, we use DBOS to build and deploy an app that schedules reminder emails to send far in the future.
+In this example, we use DBOS to build and deploy an app that schedules reminder emails to send weeks or months in the future.
 
 You can see the application live [here](https://demo-scheduled-reminders.cloud.dbos.dev/).
 Enter your email address and it will send you a reminder email one minute, one day, one week, and one month from now!
