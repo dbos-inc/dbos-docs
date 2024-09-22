@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 3
+sidebar_position: 4
 title: Scheduled Reminders
 ---
 
