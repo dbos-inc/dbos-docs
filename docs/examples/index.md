@@ -55,7 +55,7 @@ import { IoEarth } from "react-icons/io5";
   <CardLink
     label="Scheduled Reminders"
     href="python/examples/scheduled-reminders"
-    description="Use DBOS to build and deploy an app that schedules reminder emails to send weeks or months in the future."
+    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
     index="5"
     icon={<MdEmail color="white" size={50}/>}
     language="python"

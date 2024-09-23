@@ -4,7 +4,7 @@ sidebar_position: 5
 title: Scheduled Reminders
 ---
 
-In this example, we use DBOS to build and deploy an app that schedules reminder emails to send weeks or months in the future.
+In this example, we use DBOS to build and deploy an app that schedules reminder emails for any day in the future.
 
 You can see the application live [here](https://demo-scheduled-reminders.cloud.dbos.dev/).
 Enter your email address and it will send you a reminder email one minute, one day, one week, and one month from now!
@@ -32,29 +32,31 @@ DBOS(fastapi=app)
 ## Scheduling Emails
 
 Next, let's write the workflow that sends emails.
-It sends emails one minute, one day, one week, and one month in the future.
+We'll send a quick confirmation email, then wait until the scheduled day, then send the reminder email.
 
-Because we use a DBOS [durably executed workflow](../tutorials/workflow-tutorial.md), scheduling a function to execute far in the future is easy: **just sleep then call the function**.
+Because we use a DBOS [durably executed workflow](../tutorials/workflow-tutorial.md), waiting until the scheduled day is easy, no matter how far away that day is: **just sleep!**
 
 Under the hood, this works because when you first call [`DBOS.sleep`](../reference/contexts.md#sleep), it records its wakeup time in the database.
-That way, even if your program is interrupted or restarted multiple times during a month-long sleep, it still wakes up on schedule and sends the reminder email.
+That way, even if your program is interrupted or restarted multiple times during a days-long sleep, it still wakes up on schedule and sends the reminder email.
 
 Note that if you need to schedule regular events instead of a one-off email, we recommend using [scheduled workflows](../tutorials/scheduled-workflows.md).
 
 ```python
 @DBOS.workflow()
-def reminder_workflow(to_email: str):
-    DBOS.sleep(60)  # Wait for one minute
-    send_email(to_email, time="one minute")
-
-    DBOS.sleep(24 * 60 * 60)  # Wait for one day
-    send_email(to_email, time="one day")
-
-    DBOS.sleep(7 * 24 * 60 * 60)  # Wait for one week
-    send_email(to_email, time="one week")
-
-    DBOS.sleep(30 * 24 * 60 * 60)  # Wait for one month (30 days)
-    send_email(to_email, time="one month")
+def reminder_workflow(to_email: str, send_date: datetime, start_date: datetime):
+    send_email(
+        to_email,
+        subject="DBOS Reminder Confirmation",
+        message=f"Thank you for signing up for DBOS reminders! You will receive a reminder on {send_date}.",
+    )
+    days_to_wait = (send_date - start_date).days
+    seconds_to_wait = days_to_wait * 24 * 60 * 60
+    DBOS.sleep(seconds_to_wait)
+    send_email(
+        to_email,
+        subject="DBOS Reminder",
+        message=f"This is a reminder from DBOS! You requested this reminder on {start_date}.",
+    )
 ```
 
 ## Sending Emails
@@ -77,26 +79,23 @@ We annotate this function with [`@DBOS.step`](../tutorials/step-tutorial.md) so 
 
 ```python
 @DBOS.step()
-def send_email(to_email: str, time: str):
+def send_email(to_email: str, subject: str, message: str):
     message = Mail(
-        from_email=from_email,
-        to_emails=to_email,
-        subject="DBOS Reminder",
-        html_content=f"This is a reminder from DBOS! It has been {time} since your last reminder.",
+        from_email=from_email, to_emails=to_email, subject=subject, html_content=message
     )
     email_client = SendGridAPIClient(api_key)
     email_client.send(message)
-    DBOS.logger.info(f"Email sent to {to_email} at time {time}")
+    DBOS.logger.info(f"Email sent to {to_email}")
 ```
 
 
 ## Serving the App
 
 Next, let's use FastAPI to write an HTTP endpoint for scheduling reminder emails.
-The endpoint takes in an email address and starts a reminder workflow in the background.
+The endpoint takes in an email address and a scheduled date and starts a reminder workflow in the background.
 
-As a basic anti-spam measure, we'll use the supplied email address as an [idempotency key](../tutorials/idempotency-tutorial.md).
-That way, you can only send reminders once to any email address.
+As a basic anti-spam measure, we'll use the supplied email address and date as an [idempotency key](../tutorials/idempotency-tutorial.md).
+That way, you can only send one reminder to any email address per day.
 
 ```python
 class EmailSchema(BaseModel):
