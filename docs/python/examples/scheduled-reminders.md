@@ -7,7 +7,7 @@ title: Scheduled Reminders
 In this example, we use DBOS to build and deploy an app that schedules reminder emails for any day in the future.
 
 You can see the application live [here](https://demo-scheduled-reminders.cloud.dbos.dev/).
-Enter your email address and it will send you a reminder email one minute, one day, one week, and one month from now!
+Enter your email address and a date and you'll get a reminder on that date!
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/scheduled-reminders).
 
