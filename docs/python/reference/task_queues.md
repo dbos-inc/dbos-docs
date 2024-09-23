@@ -1,10 +1,10 @@
 ---
 sidebar_position: 4
-title: Task Queues
+title: Queues
 ---
 
-Task queues allow you to submit tasks to run in the background with a controlled degree of concurrency.
-They are useful for running many tasks in parallel.
+Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
+They are useful for running many functions in parallel.
 
 ### class dbos.Queue
 
@@ -17,9 +17,9 @@ Queue(
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all your queues.
-- `concurrency`: The maximum number of tasks from this queue that may run concurrently.
+- `concurrency`: The maximum number of functions from this queue that may run concurrently.
 This concurrency limit is global across all DBOS processes using this queue.
-If not provided, any number of tasks may run concurrently.
+If not provided, any number of functions may run concurrently.
 
 
 ### enqueue
@@ -32,9 +32,9 @@ queue.enqueue(
 ) -> WorkflowHandle[R]
 ```
 
-Enqueue a task for processing and return a [handle](./workflow_handles.md) to it.
+Enqueue a function for processing and return a [handle](./workflow_handles.md) to it.
 You can enqueue any DBOS-annotated function.
-The `enqueue` method durably enqueues your task; after it returns your task is guaranteed to later execute even if your app is interrupted.
+The `enqueue` method durably enqueues your function; after it returns your function is guaranteed to later execute even if your app is interrupted.
 
 **Example syntax:**
 
