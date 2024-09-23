@@ -7,7 +7,7 @@ pagination_next: null
 # Featured Examples
 
 import { FaHackerNews, FaSlack } from "react-icons/fa6";
-import { MdOutlineShoppingCart } from "react-icons/md";
+import { MdOutlineShoppingCart, MdEmail } from "react-icons/md";
 import { SiApachekafka } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 
@@ -50,6 +50,14 @@ import { IoEarth } from "react-icons/io5";
     description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
     index="4"
     icon={<FaSlack color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Scheduled Reminders"
+    href="python/examples/scheduled-reminders"
+    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
+    index="5"
+    icon={<MdEmail color="white" size={50}/>}
     language="python"
   />
   </section>
