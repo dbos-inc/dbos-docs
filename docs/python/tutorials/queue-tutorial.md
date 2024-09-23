@@ -4,9 +4,9 @@ title: Queues & Parallelism
 ---
 
 Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
-They are useful for running many operations in parallel.
+They are useful for running many functions in parallel.
 
-To create a queue, specify its name and the maximum number of operations that it may run concurrently:
+To create a queue, specify its name and the maximum number of functions that it may run concurrently:
 
 ```python
 from dbos import Queue
@@ -56,10 +56,10 @@ def process_tasks(tasks):
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of operations from this queue that may run concurrently.
+You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently.
 Concurrency limits are global across all DBOS processes using this queue.
-If no limit is provided, any number of operations may run concurrently.
-For example, this queue has a maximum concurrency of 10, so at most 10 operations submitted to it may run at once:
+If no limit is provided, any number of functions may run concurrently.
+For example, this queue has a maximum concurrency of 10, so at most 10 functions submitted to it may run at once:
 
 ```python
 from dbos import Queue
@@ -67,8 +67,8 @@ from dbos import Queue
 queue = Queue("example_queue", concurrency=10)
 ```
 
-You may want to specify a maximum concurrency if operations in your queue submit work to an external process or call a rate-limited API.
-The concurrency limit guarantees that even if many operations are submitted at once, they won't overwhelm the worker process or trigger the API's rate limit.
+You may want to specify a maximum concurrency if functions in your queue submit work to an external process or call a rate-limited API.
+The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the worker process or trigger the API's rate limit.
 
  ### In-Order Processing
 

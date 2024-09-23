@@ -4,7 +4,7 @@ title: Queues
 ---
 
 Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
-They are useful for running many operations in parallel.
+They are useful for running many functions in parallel.
 
 ### class dbos.Queue
 
@@ -17,9 +17,9 @@ Queue(
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all your queues.
-- `concurrency`: The maximum number of operations from this queue that may run concurrently.
+- `concurrency`: The maximum number of functions from this queue that may run concurrently.
 This concurrency limit is global across all DBOS processes using this queue.
-If not provided, any number of operations may run concurrently.
+If not provided, any number of functions may run concurrently.
 
 
 ### enqueue
