@@ -161,7 +161,7 @@ Now you can start your app with `fastapi run main.py`. To see that it's working,
 "The author worked on writing short stories and programming..."
 </BrowserWindow>
 
-The result may be different every time you refresh your browser window!
+The result may be slightly different every time you refresh your browser window!
 
 ### Hosting on DBOS Cloud
 
@@ -202,13 +202,17 @@ To see that your app is working, visit `<URL>` in your browser.
 
 Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
 
-### Building a Reliable Storyteller
+### Building a Reliable Storyteller Slackbot
 
 Want to have some fun?
-Let's add multiple steps and turn this simple Q&A app into a storyteller! Add the following lines to `main.py`:
+Let's add multiple steps and turn this simple Q&A app into an agentic workflow -- a storyteller Slackbot! Add the following lines to `main.py`:
 
 ```python showLineNumbers title="main.py"
 from dbos import SetWorkflowID
+import os
+import requests
+
+slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL")
 
 #highlight-next-line
 @DBOS.step()
@@ -228,14 +232,23 @@ def get_yc():
     response = query_engine.query("What happened after YC?")
     return str(response)
 
-# This workflow invokes the above three steps to tell a whole story!
+#highlight-next-line
+@DBOS.step()
+def post_to_slack(message: str):
+    requests.post(slack_webhook_url, headers={"Content-Type": "application/json"}, json={"text": message})
+
+# This workflow invokes the above three steps to tell a whole story.
+# Then, optionally send the story to a Slack channel.
 #highlight-next-line
 @DBOS.workflow()
 def story_workflow():
-    res1 = "First, " + get_growup()
-    res2 = " Then, " + get_art_school()
-    res3 = " Finally, " + get_yc()
-    return res1 + res2 + res3
+    res1 = get_growup()
+    res2 = get_art_school()
+    res3 = get_yc()
+    story = f"Story Version {DBOS.workflow_id}: First, {res1} Then, {res2} Finally, {res3}"
+    if slack_webhook_url:
+        post_to_slack(story)
+    return story
 
 # Let's define a route that generates a version of the story.
 # Every time you visit the same version, you get the same story.
@@ -244,6 +257,41 @@ def get_story(version: str):
     #highlight-next-line
     with SetWorkflowID(version):
         return story_workflow()
+```
+
+Then, create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post messages from your app into Slack. Be aware to keep the webhook URL a secret. It should look something like this:
+
+```
+https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+Set it as an environment variable:
+
+<Tabs groupId="operating-systems">
+<TabItem value="maclinux" label="macOS or Linux">
+```shell
+export SLACK_WEBHOOK_URL=XXXXX
+```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+set SLACK_WEBHOOK_URL=XXXXX
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+set SLACK_WEBHOOK_URL=XXXXX
+```
+</TabItem>
+</Tabs>
+
+
+Also add the following line to `dbos-config.yaml` to specify the `env` variable for the Slack webhook URL.
+
+
+```yaml title="dbos-config.yaml"
+env:
+  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
 ```
 
 Deploy it to DBOS Cloud again (or [run it locally](../../quickstart#run-your-app-locally)). Visit `<URL>/story/<version>` in your browser. For example:
@@ -256,9 +304,9 @@ To tell a slightly different version of the story, visit another version. For ex
 "First, The author wrote short stories and tried programming on the IBM 1401 in 9th grade using an early version of Fortran... Then, The author started YC by deciding to create an investment firm with Jessica after facing delays from VCs... Finally, Paul Graham decided to hand over Y Combinator (YC) to someone else after his mother had a stroke in 2012..."
 </BrowserWindow>
 
-The cool thing about this app is that if you visit the same version again, it will consistently return the same story. Under the hood, `SetWorkflowID` assigns the version number as the unique identifier to the workflow, and DBOS guarantees that each workflow ID always completes and runs exactly once no matter how many times it's invoked/interrupted.
+The cool thing about this app is that if you visit the same version again, it will consistently return the same story and only send it to Slack once. Under the hood, `SetWorkflowID` assigns the version number as the unique identifier to the workflow, and DBOS guarantees that each workflow ID always completes and runs exactly once no matter how many times it's invoked/interrupted.
 
-Moreover, you might notice that the first time you visit a version it may take ~10 seconds to generate a story due to the OpenAI model inference latency, but the second time you visit a version it responds much faster.
-This is because DBOS persists the output of steps to guarantee durable execution. When re-executing a completed workflow, DBOS directly uses the recorded output instead of calling out to OpenAI again.
+Moreover, you might notice the second time you visit a version it responds much faster and doesn't re-send a Slack message.
+This is because DBOS persists the output of steps to guarantee durable execution. When re-executing a completed workflow, DBOS directly uses the recorded output instead of calling third-party APIs again.
 
 Now you know how to build a reliable AI app! This is just the beginning of your DBOS journey. Check out our [examples](../../examples) for more apps you can build with DBOS.
