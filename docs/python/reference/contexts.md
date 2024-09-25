@@ -278,6 +278,7 @@ with SetWorkflowID("very-unique-id"):
 ```python
 DBOSContextEnsure()
 
+  # Code inside will run with a DBOS context available
   with DBOSContextEnsure():
     # Call DBOS functions
     pass
@@ -285,3 +286,17 @@ DBOSContextEnsure()
 
 Use of `DBOSContextEnsure` ensures that there is a DBOS context associated with the enclosed code prior to calling DBOS functions.  `DBOSContextEnsure` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.
 
+### DBOSContextSetAuth
+
+```python
+DBOSContextSetAuth(user: Optional[str], roles: Optional[List[str]])
+
+  # Code inside will run with `curuser` and `curroles`
+  with DBOSContextSetAuth(curuser, curroles):
+    # Call DBOS functions
+    pass
+```
+
+`with DBOSContextSetAuth` sets the current authorized user and roles for the code inside the `with` block.  Similar to `DBOSContextEnsure`, `DBOSContextSetAuth` also ensures that there is a DBOS context associated with the enclosed code prior to calling DBOS functions.
+
+`DBOSContextSetAuth` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.

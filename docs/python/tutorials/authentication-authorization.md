@@ -17,16 +17,9 @@ A simple middleware for FastAPI may pass authentication information to DBOS in a
     async def authMiddleware(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        with DBOSContextEnsure():
-            prev_user = DBOS.authenticated_user
-            prev_roles = DBOS.authenticated_roles
-            DBOS.set_authentication("user1", ["user", "engineer"])
-            try:
-                response = await call_next(request)
-                return response
-            finally:
-                DBOS.set_authentication(prev_user, prev_roles)
-
+        with DBOSContextSetAuth("user1", ["user", "engineer"]):
+            response = await call_next(request)
+            return response
 ```
 
 There are several things happening in this code snippet.
@@ -86,15 +79,9 @@ In this example, we demonstrate how to use JWT tokens with DBOS declarative secu
         except Exception as e:
             pass
 
-        with DBOSContextEnsure():
-            prev_user = DBOS.authenticated_user
-            prev_roles = DBOS.authenticated_roles
-            DBOS.set_authentication(user, roles)
-            try:
-                response = await call_next(request)
-                return response
-            finally:
-                DBOS.set_authentication(prev_user, prev_roles)
+        with DBOSContextSetAuth(user, roles):
+            response = await call_next(request)
+            return response
 ```
 
 As with the simpler example in [Authorization Decorators](#authorization-decorators) above, `@app.middleware("http")` is used to insert the `jwtAuthMiddleware` function between the FastAPI `app` and DBOS.  Use of `DBOSContextEnsure`, `DBOS.set_authentication`, and `call_next` is also the same.
