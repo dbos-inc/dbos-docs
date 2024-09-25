@@ -373,9 +373,9 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 ```
 
-Creates an immutable event named `key` with value `value`.
+Creates or updates an event named `key` with value `value`.
 Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgetevent) with the workflow's UUID.
-Events are immutable and attempting to emit an event twice from a given workflow instance will result in an error.
+Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
 For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
 
 #### `workflowCtxt.getEvent`
