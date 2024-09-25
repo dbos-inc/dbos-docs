@@ -159,7 +159,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
 
-## Workflow Messaging
+## Workflow Messaging and Notifications
 You can send messages to a specific workflow ID.
 This is useful for sending notifications to an active workflow.
 
