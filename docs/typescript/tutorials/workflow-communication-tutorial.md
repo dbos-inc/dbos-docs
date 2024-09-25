@@ -17,8 +17,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### setEvent
 
-Any workflow can call [`ctxt.setEvent`](../reference/contexts#workflowctxtsetevent) to immutably publish a key-value pair.
-A workflow cannot set a key it has already set.
+Any workflow can call [`ctxt.setEvent`](../reference/contexts#workflowctxtsetevent) to publish a key-value pair.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
