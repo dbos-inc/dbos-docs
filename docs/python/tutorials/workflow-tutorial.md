@@ -68,7 +68,7 @@ def example_workflow(friend: str):
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
-Workflow IDs are important for communicating with workflows and developing interactive workflows.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 ## Starting Workflows Asynchronously
 
