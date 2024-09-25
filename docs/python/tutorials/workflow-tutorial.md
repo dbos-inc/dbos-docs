@@ -4,34 +4,35 @@ title: Workflows
 toc_max_heading_level: 3
 ---
 
-Workflows orchestrate other functions.
-They provide _durable execution_: if they are interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
-Workflows are critical for building reliable, fault-tolerant programs.
-To see what workflows can do, try out our [widget store example](../examples/widget-store.md): no matter how many times you crash the online storefront, it always correctly processes your orders.
+Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+Workflows are comprised of [steps](./step-tutorial.md), which are ordinary Python functions annotated with `@DBOS.step()`.
+If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-Workflows are comprised of [_steps_](./step-tutorial.md).
-Steps are functions that the workflow attempts to execute exactly-once.
-If a workflow is interrupted, it resumes execution from the last completed step.
-You can make any Python function a step by annotating it with `@DBOS.step()`.
-
-Here's an example workflow (from the [programming guide](../programming-guide.md)) signing an online guestbook then recording the signature in the database.
-Here, `sign_guestbook` is a [step](./step-tutorial.md) and `insert_greeting` is a [transaction](./transaction-tutorial.md), a special type of step optimized for database operations.
-By using a workflow, we guarantee that every guestbook signature is recorded in the database, even if execution is interrupted.
+Here's an example workflow that sends a confirmation email, sleeps for a while, then sends a reminder email.
+By using a workflow, we guarantee that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
 
 ```python
 @DBOS.workflow()
-def greeting_workflow(name: str, note: str):
-    sign_guestbook(name)
-    insert_greeting(name, note)
+def reminder_workflow(email: str, time_to_sleep: int):
+    send_confirmation_email(email)
+    DBOS.sleep(time_to_sleep)
+    send_reminder_email(email)
 ```
+
+Here are some example apps demonstrating what workflows can do:
+
+- [**Widget Store**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
+- [**Scheduled Reminders**](../examples/scheduled-reminders.md): Send a reminder email to yourself on any day in the future&mdash;even if it's months away.
+
+
 ## Reliability Guarantees
 
 Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
-1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
-2.  Steps are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from the last completed step.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
 ## Determinism
 
@@ -68,7 +69,6 @@ def example_workflow(friend: str):
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
 Workflow IDs are important for communicating with workflows and developing interactive workflows.
-For more information on workflow communication, see our guide.
 
 ## Starting Workflows Asynchronously
 
@@ -93,16 +93,11 @@ handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
 result = handle.get_result()
 ```
 
-You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its [workflow ID](#workflow-ids).
+You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its ID.
 
-## Interactive Workflows
+## Workflow Events
 
-It is often useful to make workflows _interactive_, for example if a long-running workflow needs to query a user for input or report intermediate results back to its caller.
-To make this easier, DBOS provides two workflow communication APIs, the events API and the messages API.
-
-### Events API
-
-This API allows workflows to emit _events_, which are key-value pairs associated with the workflow.
+Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
 They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### set_event
@@ -164,8 +159,9 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
 
-### Messages API
-This API allows operations to send messages to a specific [workflow ID](./workflow-tutorial#workflow-ids).
+## Workflow Messaging
+You can send messages to a specific workflow ID.
+This is useful for sending notifications to an active workflow.
 
 #### Send
 
