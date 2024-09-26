@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 1
+sidebar_position: 2
 title: AI-Powered Storyteller
 hide_table_of_contents: false
 ---
