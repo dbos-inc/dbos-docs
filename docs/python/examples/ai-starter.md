@@ -1,15 +1,14 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 1
-title: Storyteller (AI Starter)
-hide_table_of_contents: true
+title: AI-Powered Storyteller
+hide_table_of_contents: false
 ---
 
 In this tutorial, you'll learn how to build a reliable AI agent with DBOS from scratch.
-With **9 lines of code**, you'll be able to host an AI app (using OpenAI and FastAPI) on the Cloud.
+In just **9 lines of code** build an interactive AI application with LlamaIndex and OpenAI and host it on the cloud.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/ai-storyteller).
-It's built on top of the famous ["5 lines of code" starter](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/) from LlamaIndex.
 
 ### Preparation
 
@@ -60,7 +59,7 @@ dbos init --config
 </article>
 
 <article className="col col--6">
-Next, to run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview). LlamaIndex uses the `gpt-3.5-turbo` model by default. Set the API key as an environment variable.
+Next, to run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys). Set the API key as an environment variable.
 </article>
 
 <article className="col col--6">
@@ -84,7 +83,7 @@ set OPENAI_API_KEY=XXXXX
 </article>
 
 <article className="col col--6">
-Also append the following two lines to `dbos-config.yaml` to specify the env variable for the OpenAI API key.
+Declare the environment variable in `dbos-config.yaml`:
 </article>
 
 <article className="col col--6">
@@ -113,7 +112,8 @@ ai-app/
 
 ### Load Data and Build a Q&A Engine
 
-Open the `main.py` file and add the following lines from LlamaIndex's starter example:
+Let's start with a 5 line-of-code LlamaIndex starter.
+Add the following code to your `main.py`:
 
 ```python showLineNumbers title="main.py"
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
@@ -135,7 +135,7 @@ The author worked on writing short stories and programming...
 
 ### HTTP Serving
 
-Now, let's add a FastAPI endpoint so we can serve responses through HTTP. Modify your `main.py` as follows:
+Now, let's add a FastAPI endpoint to serve responses through HTTP. Modify your `main.py` as follows:
 
 ```python showLineNumbers title="main.py"
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
@@ -167,7 +167,7 @@ The result may be slightly different every time you refresh your browser window!
 
 ### Hosting on DBOS Cloud
 
-To make your app deployable to DBOS Cloud, you only need to add two DBOS specific lines to the top of `main.py`:
+To deploy your app to DBOS Cloud, you only need to add two lines to `main.py`:
 
 ```python showLineNumbers title="main.py"
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
@@ -189,7 +189,13 @@ def get_answer():
     return str(response)
 ```
 
-Assume you've installed the [DBOS Cloud CLI](../../quickstart#2-install-the-dbos-cloud-cli). Run the following commands to freeze dependencies to `requirements.txt` and deploy it to DBOS Cloud:
+Now, install the DBOS Cloud CLI if you haven't already (requires Node):
+
+```shell
+npm i -g @dbos-inc/dbos-cloud
+```
+
+Then freeze dependencies to `requirements.txt` and deploy to DBOS Cloud:
 
 ```shell
 pip freeze > requirements.txt
@@ -204,11 +210,11 @@ To see that your app is working, visit `<URL>` in your browser.
 
 Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
 
-### Building a Reliable Storyteller Slackbot
+### Building a Reliable AI Agent
 
 Want to have some fun?
 Let's add multiple steps and turn this simple Q&A app into a more complex AI agent -- a storyteller Slackbot! Add the following lines to `main.py`.
-Note that this is normal Python code, with DBOS specific lines highlighted.
+Note that this is normal Python code, with DBOS-specific lines highlighted.
 
 ```python showLineNumbers title="main.py"
 #highlight-next-line
@@ -265,9 +271,10 @@ def get_story(version: str):
 ```
 
 <details>
-<summary>(Optional) Setting up Slack incoming webhook </summary>
+<summary>(Optional) Setting up a Slack webhook </summary>
 
-Optionally, you can create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post stories from your app into your Slack workspace. Be aware to keep the webhook URL a secret. It should look something like this:
+Optionally, you can create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post stories from your app to your Slack workspace.
+It should look something like this:
 
 ```
 https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
@@ -294,7 +301,7 @@ set SLACK_WEBHOOK_URL=XXXXX
 </Tabs>
 
 
-Also add the following line to `dbos-config.yaml` to specify the `env` variable for the Slack webhook URL.
+Declare the environment variable in `dbos-config.yaml`:
 
 
 ```yaml title="dbos-config.yaml"
@@ -310,16 +317,15 @@ Deploy it to DBOS Cloud again (or [run it locally](../../quickstart#run-your-app
 "First, The author worked on writing short stories and programming... Then, The author started Y Combinator (YC) by organizing a summer program called the Summer Founders Program... Finally, After YC, the individual decided to pursue painting as a new endeavor..."
 </BrowserWindow>
 
-If you configured a Slack incoming webhook, you should be able to see a copy of this story in your Slack channel!
+If you configured a Slack webhook, you should be able to see a copy of this story in your Slack channel!
 
 To tell a slightly different version of the story, visit another version. For example:
 <BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev/story/v2">
 "First, The author wrote short stories and tried programming on the IBM 1401 in 9th grade using an early version of Fortran... Then, The author started YC by deciding to create an investment firm with Jessica after facing delays from VCs... Finally, Paul Graham decided to hand over Y Combinator (YC) to someone else after his mother had a stroke in 2012..."
 </BrowserWindow>
 
-The cool thing about this app is that if you visit the same version again, it will consistently return the same story and only send it to Slack once. Under the hood, `SetWorkflowID` assigns the version number as the unique identifier to the workflow, and DBOS guarantees that each workflow ID always completes and runs exactly once no matter how many times it's invoked/interrupted.
+Because this app uses a DBOS workflow, it _executes durably_: if it is ever interrupted, it automatically resumes from the last completed step, completing the story and posting it to Slack.
+It is also _idempotent_, using the version number you provide as an idempotency key (through `SetWorkflowID`).
+That way, if you submit multiple requests for the same version, the workflow only executes once and subsequent re-executions with the same version number return the same story and don't re-post to Slack.
 
-Moreover, you might notice the second time you visit a version it responds much faster and doesn't re-send a Slack message.
-This is because DBOS persists the output of steps to guarantee durable execution. When re-executing a completed workflow, DBOS directly uses the recorded output instead of calling third-party APIs again.
-
-Now you know how to build a reliable AI app! This is just the beginning of your DBOS journey. Check out our [examples](../../examples) for more apps you can build with DBOS.
+Now you know how to build a reliable AI app! This is just the beginning of your DBOS journey. Check out the [Python guide](../programming-guide.md) to learn more or try out more [examples](../../examples) of apps you can build with DBOS.
