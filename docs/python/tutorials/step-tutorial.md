@@ -6,6 +6,7 @@ title: Steps
 When using DBOS workflows, we recommend annotating any function that performs complex operations or accesses external APIs or services as a _step_.
 
 You can turn **any** Python function into a step by annotating it with the [`@DBOS.step`](../reference/decorators.md#step) decorator.
+The only requirement is that its inputs and outputs should be serializable ([pickle](https://docs.python.org/3/library/pickle.html)-able).
 Here's a simple example:
 
 ```python
