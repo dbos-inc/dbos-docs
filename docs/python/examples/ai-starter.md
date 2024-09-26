@@ -1,13 +1,15 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 1
-title: AI Storyteller (Starter Example)
+title: Storyteller (AI Starter)
 hide_table_of_contents: true
 ---
 
-In this tutorial, you'll learn how to build a reliable AI app with DBOS from scratch.
-This is a "9 lines of code" DBOS AI starter example using OpenAI and FastAPI, built on top of the famous ["5 lines of code" starter](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/) from LlamaIndex.
+In this tutorial, you'll learn how to build a reliable AI agent with DBOS from scratch.
+With **9 lines of code**, you'll be able to host an AI app (using OpenAI and FastAPI) on the Cloud.
+
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/ai-storyteller).
+It's built on top of the famous ["5 lines of code" starter](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/) from LlamaIndex.
 
 ### Preparation
 
@@ -165,7 +167,7 @@ The result may be slightly different every time you refresh your browser window!
 
 ### Hosting on DBOS Cloud
 
-To make your app deployable to DBOS Cloud, you only need to add two lines to the top of `main.py`:
+To make your app deployable to DBOS Cloud, you only need to add two DBOS specific lines to the top of `main.py`:
 
 ```python showLineNumbers title="main.py"
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
@@ -205,9 +207,11 @@ Congratulations, you've successfully deployed your first AI app to DBOS Cloud! Y
 ### Building a Reliable Storyteller Slackbot
 
 Want to have some fun?
-Let's add multiple steps and turn this simple Q&A app into an agentic workflow -- a storyteller Slackbot! Add the following lines to `main.py`:
+Let's add multiple steps and turn this simple Q&A app into a more complex AI agent -- a storyteller Slackbot! Add the following lines to `main.py`.
+Note that this is normal Python code, with DBOS specific lines highlighted.
 
 ```python showLineNumbers title="main.py"
+#highlight-next-line
 from dbos import SetWorkflowID
 import os
 import requests
@@ -222,13 +226,13 @@ def get_growup():
 
 #highlight-next-line
 @DBOS.step()
-def get_art_school():
+def get_start_yc():
     response = query_engine.query("How did the author start YC?")
     return str(response)
 
 #highlight-next-line
 @DBOS.step()
-def get_yc():
+def get_after_yc():
     response = query_engine.query("What happened after YC?")
     return str(response)
 
@@ -236,6 +240,7 @@ def get_yc():
 @DBOS.step()
 def post_to_slack(message: str):
     requests.post(slack_webhook_url, headers={"Content-Type": "application/json"}, json={"text": message})
+    DBOS.logger.info(f"Sent story version {DBOS.workflow_id} to Slack!")
 
 # This workflow invokes the above three steps to tell a whole story.
 # Then, optionally send the story to a Slack channel.
@@ -243,8 +248,8 @@ def post_to_slack(message: str):
 @DBOS.workflow()
 def story_workflow():
     res1 = get_growup()
-    res2 = get_art_school()
-    res3 = get_yc()
+    res2 = get_start_yc()
+    res3 = get_after_yc()
     story = f"Story Version {DBOS.workflow_id}: First, {res1} Then, {res2} Finally, {res3}"
     if slack_webhook_url:
         post_to_slack(story)
@@ -259,7 +264,10 @@ def get_story(version: str):
         return story_workflow()
 ```
 
-Then, create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post messages from your app into Slack. Be aware to keep the webhook URL a secret. It should look something like this:
+<details>
+<summary>(Optional) Setting up Slack incoming webhook </summary>
+
+Optionally, you can create an [incoming webhook](https://api.slack.com/messaging/webhooks) to post stories from your app into your Slack workspace. Be aware to keep the webhook URL a secret. It should look something like this:
 
 ```
 https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
@@ -294,10 +302,15 @@ env:
   SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
 ```
 
+</details>
+
+
 Deploy it to DBOS Cloud again (or [run it locally](../../quickstart#run-your-app-locally)). Visit `<URL>/story/<version>` in your browser. For example:
 <BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev/story/v1">
 "First, The author worked on writing short stories and programming... Then, The author started Y Combinator (YC) by organizing a summer program called the Summer Founders Program... Finally, After YC, the individual decided to pursue painting as a new endeavor..."
 </BrowserWindow>
+
+If you configured a Slack incoming webhook, you should be able to see a copy of this story in your Slack channel!
 
 To tell a slightly different version of the story, visit another version. For example:
 <BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev/story/v2">

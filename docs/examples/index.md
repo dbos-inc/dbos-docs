@@ -7,9 +7,10 @@ pagination_next: null
 # Featured Examples
 
 import { FaHackerNews, FaSlack } from "react-icons/fa6";
-import { MdOutlineShoppingCart, MdEmail } from "react-icons/md";
+import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
+import { RiCalendarScheduleLine } from "react-icons/ri";
 
   <section className="row list">
   <CardLink
@@ -21,20 +22,20 @@ import { IoEarth } from "react-icons/io5";
     language="python"
   />
   <CardLink
+    label="Storyteller (AI Starter)"
+    href="python/examples/ai-starter"
+    description="Use DBOS and OpenAI to build a reliable cloud AI app in 9 lines of code."
+    index="2"
+    icon={<SiOpenai color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Kafka Alert Queue"
     href="typescript/examples/kafka-alert-queue"
     description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
-    index="2"
+    index="3"
     icon={<SiApachekafka color="white" size={50}/>}
     language="typescript"
-  />
-    <CardLink
-    label="AI Storyteller"
-    href="python/examples/ai-starter"
-    description="Use DBOS and OpenAI to build a reliable cloud AI app in 9 lines of code."
-    index="3"
-    icon={<SiOpenai color="white" size={50}/>}
-    language="python"
   />
   <CardLink
     label="Earthquake Tracker"
@@ -65,7 +66,7 @@ import { IoEarth } from "react-icons/io5";
     href="python/examples/scheduled-reminders"
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
     index="7"
-    icon={<MdEmail color="white" size={50}/>}
+    icon={<RiCalendarScheduleLine color="white" size={50}/>}
     language="python"
   />
   </section>
