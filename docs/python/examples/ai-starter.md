@@ -208,7 +208,7 @@ To see that your app is working, visit `<URL>` in your browser.
 "The author worked on writing short stories and programming..."
 </BrowserWindow>
 
-Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/).
+Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/login-redirect).
 
 ### Building a Reliable AI Agent
 

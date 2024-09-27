@@ -257,7 +257,7 @@ dbos-cloud app deploy
 ```
 
 This command outputs a URL&mdash;visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
+You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
 
 ### Running Locally
 

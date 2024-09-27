@@ -131,7 +131,7 @@ git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/hackernews-alerts
 dbos-cloud app deploy
 ```
-You can visit the [DBOS Cloud Console](https://console.dbos.dev/) to see your app's status and logs.
+You can visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
 
 ### Running Locally
 
