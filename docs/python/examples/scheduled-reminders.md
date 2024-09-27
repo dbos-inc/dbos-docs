@@ -121,7 +121,7 @@ def frontend():
 
 ## Try it Yourself!
 
-### Setting Up Slack
+### Setting Up SendGrid
 
 This app uses [SendGrid](https://sendgrid.com/en-us) to send reminder emails.
 Create a SendGrid account, verify an email for sending, and generate an API key.
