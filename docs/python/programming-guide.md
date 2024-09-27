@@ -17,7 +17,7 @@ If not, see the [quickstart](../quickstart.md) for instructions on how to set it
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
-<Tabs groupId="operating-systems">
+<Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
 python3 -m venv greeting-guestbook/.venv

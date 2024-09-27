@@ -19,8 +19,8 @@ First, you need to create a folder for your app and activate a virtual environme
 </article>
 
 <article className="col col--6">
-<Tabs groupId="operating-systems">
-<TabItem value="maclinux" label="macOS or Linux">
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS/Linux">
 ```shell
 python3 -m venv ai-app/.venv
 cd ai-app
@@ -63,8 +63,8 @@ Next, to run this app, you need an OpenAI developer account. Obtain an API key [
 </article>
 
 <article className="col col--6">
-<Tabs groupId="operating-systems">
-<TabItem value="maclinux" label="macOS or Linux">
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS/Linux">
 ```shell
 export OPENAI_API_KEY=XXXXX
 ```
@@ -282,7 +282,7 @@ https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
 
 Set it as an environment variable:
 
-<Tabs groupId="operating-systems">
+<Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
 export SLACK_WEBHOOK_URL=XXXXX

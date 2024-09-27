@@ -26,7 +26,7 @@ Create a folder for your app with a virtual environment, then enter the folder a
 </article>
 
 <article className="col col--6">
-<Tabs groupId="operating-systems">
+<Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
 python3 -m venv my-app/.venv
