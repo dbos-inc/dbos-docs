@@ -7,9 +7,10 @@ pagination_next: null
 # Featured Examples
 
 import { FaHackerNews, FaSlack } from "react-icons/fa6";
-import { MdOutlineShoppingCart, MdEmail } from "react-icons/md";
-import { SiApachekafka } from "react-icons/si";
+import { MdOutlineShoppingCart } from "react-icons/md";
+import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
+import { RiCalendarScheduleLine } from "react-icons/ri";
 
   <section className="row list">
   <CardLink
@@ -21,10 +22,18 @@ import { IoEarth } from "react-icons/io5";
     language="python"
   />
   <CardLink
+    label="AI-Powered Storyteller"
+    href="python/examples/ai-starter"
+    description="Use DBOS and OpenAI to build a reliable cloud AI app in 9 lines of code."
+    index="2"
+    icon={<SiOpenai color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Kafka Alert Queue"
     href="typescript/examples/kafka-alert-queue"
     description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
-    index="1"
+    index="3"
     icon={<SiApachekafka color="white" size={50}/>}
     language="typescript"
   />
@@ -32,7 +41,7 @@ import { IoEarth } from "react-icons/io5";
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
-    index="2"
+    index="4"
     icon={<IoEarth color="white" size={50}/>}
     language="python"
   />
@@ -40,7 +49,7 @@ import { IoEarth } from "react-icons/io5";
     label="Hacker News Bot"
     href="python/examples/hacker-news-bot"
     description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
-    index="3"
+    index="5"
     icon={<FaHackerNews color="white" size={50} />}
     language="python"
   />
@@ -48,7 +57,7 @@ import { IoEarth } from "react-icons/io5";
     label="AI-Powered Slackbot"
     href="python/examples/rag-slackbot"
     description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
-    index="4"
+    index="6"
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
@@ -56,8 +65,8 @@ import { IoEarth } from "react-icons/io5";
     label="Scheduled Reminders"
     href="python/examples/scheduled-reminders"
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
-    index="5"
-    icon={<MdEmail color="white" size={50}/>}
+    index="7"
+    icon={<RiCalendarScheduleLine color="white" size={50}/>}
     language="python"
   />
   </section>

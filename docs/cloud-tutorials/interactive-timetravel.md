@@ -14,7 +14,7 @@ In order to time travel, you need to locally install our time travel proxy.
 Please follow our [time travel debugging tutorial](./timetravel-debugging) to install the proxy via VSCode or manually.
 Then, start your proxy and connect it to your application database instance:
 
-<Tabs groupId="environment">
+<Tabs groupId="environment" className="small-tabs">
   <TabItem value="VSCode" label="VSCode">
 	  Open VSCode to your application folder. In the DBOS Cloud View, hover over the application you want to debug and select the `Launch Debug Proxy` menu item.
     This automatically launches the time travel proxy and connects it to your application database instance.
