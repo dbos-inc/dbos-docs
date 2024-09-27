@@ -3,7 +3,7 @@ sidebar_position: 4
 title: Queues
 ---
 
-Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
+Queues allow you to schedule functions to run in the background.
 They are useful for running many functions in parallel.
 
 ### class dbos.Queue

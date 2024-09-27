@@ -3,15 +3,15 @@ sidebar_position: 4
 title: Queues & Parallelism
 ---
 
-Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
+Queues allow you to schedule functions to run in the background.
 They are useful for running many functions in parallel.
 
-To create a queue, specify its name and the maximum number of functions that it may run concurrently:
+To create a queue, specify its name:
 
 ```python
 from dbos import Queue
 
-queue = Queue("example_queue", concurrency=10)
+queue = Queue("example_queue")
 ```
 
 You can then enqueue any DBOS-annotated function.
@@ -67,10 +67,22 @@ from dbos import Queue
 queue = Queue("example_queue", concurrency=10)
 ```
 
-You may want to specify a maximum concurrency if functions in your queue submit work to an external process or call a rate-limited API.
-The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the worker process or trigger the API's rate limit.
+You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
+The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the process.
 
- ### In-Order Processing
+### Rate Limiting
+
+You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
+Rate limits are global across all DBOS processes using this queue.
+For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
+
+```python
+queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
+```
+
+You can use rate limits when working with a rate-limited API (for example, most LLM APIs, including OpenAI's) so that you do not exhaust your limit.
+
+### In-Order Processing
 
  You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
  Only a single event will be processed at a time.
