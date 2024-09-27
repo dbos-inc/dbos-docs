@@ -74,6 +74,10 @@ const config = {
             from: '/getting-started/quickstart-tt-debugger',
             to: '/',
           },
+          {
+            from: '/python/reference/task_queues',
+            to: '/python/reference/queues',
+          },
         ],
       },
     ],
