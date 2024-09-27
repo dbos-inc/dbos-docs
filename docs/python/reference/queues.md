@@ -3,7 +3,7 @@ sidebar_position: 4
 title: Queues
 ---
 
-Queues allow you to submit functions to run in the background with a controlled degree of concurrency.
+Queues allow you to schedule functions to run in the background.
 They are useful for running many functions in parallel.
 
 ### class dbos.Queue
@@ -12,7 +12,12 @@ They are useful for running many functions in parallel.
 Queue(
     name: str = None,
     concurrency: Optional[int] = None,
+    limiter: Optional[Limiter] = None
 )
+
+class Limiter(TypedDict):
+    limit: int
+    period: float # In seconds
 ```
 
 **Parameters:**
@@ -20,6 +25,15 @@ Queue(
 - `concurrency`: The maximum number of functions from this queue that may run concurrently.
 This concurrency limit is global across all DBOS processes using this queue.
 If not provided, any number of functions may run concurrently.
+- `limiter`: A limit on the maximum number of functions which may be started in a given period.
+
+**Example syntax:**
+
+This queue may run no more than 10 functions concurrently and may not start more than 50 functions per 30 seconds:
+
+```python
+queue = Queue("example_queue", concurrency=10, limiter={"limit": 50, "period": 30})
+```
 
 
 ### enqueue
