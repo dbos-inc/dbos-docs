@@ -147,6 +147,26 @@ const result = await handle.getResult();
 
 For more information on workflow handles, see [their reference page](../reference/workflow-handles).
 
+### Workflow Queues
+
+By default, the `startWorkflow` methods [described above](#asynchronous-workflows) always start the target workflow immediately.  If it is desired to control the concurrency or rate of workflow invocations, a [`queue`](../reference/workflow-queues.md) can be provided to `startWorkflow`.
+
+In the example below, the workflows started on `example_queue` will have the following restrictions:
+- No more than 10 will be executing concurrently across all DBOS instances
+- No more than 50 will be started in any 30-second period
+
+```typescript
+const queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, periodSec: 30});
+
+// ...
+
+  @GetApi(...)
+  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
+    const handle = await handlerCtxt.startWorkflow(Class, undefined, queue).workflow(...);
+  }
+
+```
+
 ### Workflow Management
 
 You can use the [DBOS Transact CLI](../reference/cli.md) to manage your application's workflows.
