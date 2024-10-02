@@ -191,16 +191,17 @@ You don't supply a context to the invoked workflow&#8212;the DBOS Transact runti
 #### `handlerCtxt.startWorkflow`
 
 ```typescript
-startWorkflow<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
+startWorkflow<T>(target: T, workflowUUID?: string, queue?: WorkflowQueue): InvokeFuncs<T>
 ```
 
-Start a workflow and return a [handle](./workflow-handles.md) to it.
+Start or enqueue a workflow and return a [handle](./workflow-handles.md) to it.
 This does not wait for the workflow to complete, though the resulting handle can be used to wait for the workflow result.
 To start a workflow and wait for the result, see [`invokeWorkflow`](#handlerctxtinvokeworkflow).
 The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
 
-
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
+
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
 
 ```typescript
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
