@@ -32,8 +32,6 @@ In your package root directory, run:
 dbos-cloud app logs
 ```
 
-
-
 ### Configuration
 
 In the [configuration file](../reference/configuration), you can configure the logging level, silence the logger, and request to add context metadata to log entries:
@@ -51,4 +49,14 @@ Context metadata includes the workflow identity UUID and the name of the user ru
 You can also configure the logging level as a CLI argument to the runtime:
 ```shell
 npx dbos start --loglevel debug
+```
+
+### Global Logger
+
+Wherever possible, the logger should be taken from the DBOS Context, as the context logger may have information about the current operation being performed.  `InitContext`, `MiddlewareContext`, and all subtypes of `DBOSContext` provide `logger`s.
+
+However, there are exceptional cases where logging is desired outside of the scope of a context, such as in a Koa middleware, or a background task.  For that, it is possible to use [`DBOS.logger`](../reference/contexts.md#information-available-outside-of-contexts):
+
+```typescript
+  DBOS.logger.info("There is no context here, but I need to log something anyway!");
 ```

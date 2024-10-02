@@ -412,6 +412,42 @@ class OperationEndpoints{
 }
 ```
 
+Note that the `koa-logger` logs are not collected in DBOS Cloud, but will be useful if you are running in development / locally.  If you want to log Koa requests to the DBOS log, you may expand on something like the following:
+
+```typescript
+// Logging middleware
+const logAllRequests = () => {
+    return async (ctx: Koa.Context, next: Koa.Next) => {
+        const start = Date.now();
+
+        // Log the request method and URL
+        DBOS.globalLogger?.info(`[Request] ${ctx.method} ${ctx.url}`);
+
+        let ok = false;
+        try {
+            await next();
+            ok = true;
+        }
+        finally {
+            const ms = Date.now() - start;
+            if (ok) {
+                // Log the response status and time taken
+                DBOS.globalLogger?.info(`[Response] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+            }
+            else {
+                // Log error response
+                DBOS.globalLogger?.warn(`[Exception] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+            }
+        }
+        
+    };
+};
+
+@KoaGlobalMiddleware(logAllRequests)
+class OperationEndpoints{
+  ...
+}
+```
 
 ### Declarative Security Decorators
 
