@@ -3,8 +3,8 @@ sidebar_position: 4
 title: Queues & Parallelism
 ---
 
-Queues allow you to schedule functions to run in the background.
-They are useful for running many functions in parallel.
+Queues allow you to ensure that functions will be run, without starting them immediately.
+Queues are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
 
 To create a queue, specify its name:
 
@@ -16,7 +16,7 @@ queue = Queue("example_queue")
 
 You can then enqueue any DBOS-annotated function.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to it.
-Enqueued tasks are executed in first-in, first-out (FIFO) order.
+Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```python
 queue = Queue("example_queue")
@@ -31,7 +31,7 @@ handle = queue.enqueue(process_task, task)
 
 ### Queue Example
 
-Here's an example of a workflow using a queue to process many tasks in parallel:
+Here's an example of a workflow using a queue to process tasks in parallel:
 
 ```python
 from dbos import DBOS, Queue
@@ -53,6 +53,8 @@ def process_tasks(tasks):
   # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
 ```
+
+While something similar to this could have been accomplished with `start_workflow`, use of a `Queue` allows the dispatch behavior to be controlled.
 
 ### Managing Concurrency
 
@@ -84,9 +86,9 @@ You can use rate limits when working with a rate-limited API (for example, most 
 
 ### In-Order Processing
 
- You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
- Only a single event will be processed at a time.
- For example, this app processes events sequentially in the order of their arrival:
+You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+Only a single event will be processed at a time.
+For example, this app processes events sequentially in the order of their arrival:
 
  ```python
 from fastapi import FastAPI
