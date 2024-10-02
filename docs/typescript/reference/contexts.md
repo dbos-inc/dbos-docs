@@ -654,10 +654,12 @@ Example, for Knex:
 While most code is executed within one of the numerous DBOS contexts, there are a few exceptions, such as the HTTP server, its non-DBOS middleware, or background tasks.  For these cases, it is possible to access the `globalLogger` and `dbosConfig` from a global location:
 
 ```typescript
-  import { DBOS } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
-  DBOS.logger.info(`There is no context here, but I need to log something anyway!
-                    My config is '${dbosConfig.application.myvalue}'`);
+function myFunc() {
+  DBOS.globalLogger?.info(`There is no context here, but I need to log something anyway!
+                    My config is '${dbosConfig?.application?.myvalue}'`);
+}
 ```
 
 The definition of `DBOS` is:
@@ -667,3 +669,5 @@ class DBOS {
   static dbosConfig?: DBOSConfig; // The global DBOS configuration
 }
 ```
+
+Note that `DBOS` is not fully available util runtime initialization starts.

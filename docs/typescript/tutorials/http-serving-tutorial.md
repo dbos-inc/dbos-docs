@@ -185,7 +185,7 @@ class Hello {
 
 The `@KoaMiddleware` decorator above only places middleware on registered routes within the decorated class.  It is sometimes desired to add middleware to all routes globally, including on routes that are not registered at all.
 
-For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a global middleware:
+For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a [global middleware](../reference/decorators.md#koaglobalmiddleware):
 
 ```typescript
 import logger from 'koa-logger';
