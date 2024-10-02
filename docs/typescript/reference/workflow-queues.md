@@ -55,24 +55,33 @@ The `startWorkflow` method durably enqueues your function; after it returns, you
 
 **Example syntax:**
 
-```python
-await ctx.startWorkflow(TestChildWFs, undefined, childqueue).testChildWF(var1)
-from dbos import DBOS, Queue
+In the example below, a `WorkflowQueue` is used to process tasks serially, without concurrency:
 
-queue = Queue("example_queue")
+```typescript
+import { WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
-@DBOS.step()
-def process_task(task):
-  ...
+const serialqueue = new WorkflowQueue("serialQ", 1);
 
-@DBOS.workflow()
-def process_tasks(tasks):
-  task_handles = []
-  # Enqueue each task so all tasks are processed concurrently.
-  for task in tasks:
-    handle = queue.enqueue(process_task, task)
-    task_handles.append(handle)
-  # Wait for each task to complete and retrieve its result.
-  # Return the results of all tasks.
-  return [handle.get_result() for handle in task_handles]
+class TaskWFs
+{
+    @Workflow()
+    static async processTask(ctx: WorkflowContext, task: MyTask): Promise<MyResult> {
+      // ...
+    }
+}
+
+const handles: WorkflowHandle<MyResult>[] = []
+
+// Enqueue each task so all tasks are processed sequentially.
+for (const task of tasks) {
+  handles.push(await ctx.startWorkflow(TaskWFs, undefined, serialqueue).processTask({task:"Do it"}));
+}
+
+// Wait for each task to complete and retrieve its result.
+// Return the results of all tasks.
+const results: Result[] = [];
+for (const h of handles) {
+  results.push(await h.getResult());
+}
+return results;
 ```

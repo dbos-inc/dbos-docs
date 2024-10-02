@@ -111,7 +111,7 @@ As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally p
 #### runtime.startWorkflow(target, \[workflowUUID, params\])
 
 ```typescript
-startWorkflow<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+startWorkflow<T>(target: T, workflowID?: string, params?: WorkflowInvokeParams, queue?: WorkflowQueue): InvokeFuncs<T>
 ```
 
 Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
@@ -124,6 +124,9 @@ const workflowHandle = await runtime.startWorkflow(Cls).wf(arg);
 You don't supply a context to start a workflow&#8212;the testing runtime does this for you.
 
 As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
+
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
+
 
 ### runtime.retrieveWorkflow(workflowUUID)
 

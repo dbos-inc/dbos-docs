@@ -156,13 +156,13 @@ In the example below, the workflows started on `example_queue` will have the fol
 - No more than 50 will be started in any 30-second period
 
 ```typescript
-const queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, periodSec: 30});
+const example_queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, periodSec: 30});
 
 // ...
 
   @GetApi(...)
   static async exampleHandler(handlerCtxt: HandlerContext, ...) {
-    const handle = await handlerCtxt.startWorkflow(Class, undefined, queue).workflow(...);
+    const handle = await handlerCtxt.startWorkflow(Class, undefined, example_queue).workflow(...);
   }
 
 ```
