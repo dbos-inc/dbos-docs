@@ -141,7 +141,7 @@ Handlers use `HandlerContext` to invoke other functions, interact with active wo
 
 - [invoke(target)](#handlerctxtinvoke)
 - [invokeWorkflow(target, \[workflowUUID\])](#handlerctxtinvokeworkflow)
-- [startWorkflow(target, \[workflowUUID\])](#handlerctxtstartworkflow)
+- [startWorkflow(target, \[workflowUUID\], \[queue\])](#handlerctxtstartworkflow)
 - [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflow)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsend)
 - [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgetevent)
@@ -191,20 +191,23 @@ You don't supply a context to the invoked workflow&#8212;the DBOS Transact runti
 #### `handlerCtxt.startWorkflow`
 
 ```typescript
-startWorkflow<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
+startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue): InvokeFuncs<T>
 ```
 
-Start a workflow and return a [handle](./workflow-handles.md) to it.
+Start or enqueue a workflow and return a [handle](./workflow-handles.md) to it.
 This does not wait for the workflow to complete, though the resulting handle can be used to wait for the workflow result.
 To start a workflow and wait for the result, see [`invokeWorkflow`](#handlerctxtinvokeworkflow).
 The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
-
 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
+
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../tutorials/idempotency-tutorial.md).
+
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
 
 You don't supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
 
@@ -324,7 +327,7 @@ You don't supply a context to the invoked child workflow&#8212;the DBOS Transact
 #### `workflowCtxt.startWorkflow`
 
 ```typescript
-startWorkflow<T>(target: T).workflowFunction(args)
+startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue).workflowFunction(args)
 ```
 
 Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for the workflow to complete.
@@ -334,6 +337,11 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 ```typescript
 const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
+
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../tutorials/idempotency-tutorial.md).
+
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
+
 
 You don't supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
 
