@@ -160,7 +160,7 @@ This feature is currently only available to [DBOS Pro or Enterprise](https://www
 - `-H, --hostname <string>`: The hostname for your Postgres database instance (required).
 - `-p, --port [number]`: The connection port for your Postgres database instance (default: `5432`).
 - `-W, --password [string]`: The password for the `dbosadmin` role. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
-- `--enable-timetravel`: Enable time travel for your database instance. If you are using a linked database, please follow [our instructions](../cloud-tutorials/byod-management#enabling-time-travel) to set up your database before using this option.
+- `--enable-timetravel`: Enable time travel for your database instance.
 
 ---
 
