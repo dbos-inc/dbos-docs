@@ -180,3 +180,73 @@ class Hello {
   ...
 }
 ```
+
+### Global Middleware
+
+The `@KoaMiddleware` decorator above only places middleware on registered routes within the decorated class.  It is sometimes desired to add middleware to all routes globally, including on routes that are not registered at all.
+
+For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a global middleware:
+
+```typescript
+import logger from 'koa-logger';
+
+@KoaGlobalMiddleware(logger())
+class OperationEndpoints{
+  ...
+}
+```
+
+If more detail is required, or to ensure that logs go to the DBOS log, a custom logger can be implemented:
+```typescript
+// Logging middleware
+const logAllRequests = () => {
+    return async (ctx: Koa.Context, next: Koa.Next) => {
+        const start = Date.now();
+
+        // Log the request method and URL
+        DBOS.globalLogger?.info(`[Request] ${ctx.method} ${ctx.url}`);
+
+        let ok = false;
+        try {
+            await next();
+            ok = true;
+        }
+        finally {
+            const ms = Date.now() - start;
+            if (ok) {
+                // Log the response status and time taken
+                DBOS.globalLogger?.info(`[Response] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+            }
+            else {
+                // Log error response
+                DBOS.globalLogger?.warn(`[Exception] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+            }
+        }
+        
+    };
+};
+
+@KoaGlobalMiddleware(logAllRequests)
+class OperationEndpoints{
+  ...
+}
+```
+
+### Serving Static Content
+
+While it is generally advised to serve static content from a CDN, [S3 Bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html), or similar, sometimes it is desired to serve a few static files from DBOS.  This can be done easily with a package such as `koa-send`:
+
+```typescript
+export class Serve {
+    @GetApi('/static/:item') // Adjust route, or recursive wildcard, to suit
+    static async serve(ctx: HandlerContext, item: string) {
+        return send(ctx.koaContext, item, {root: 'static'}); // Adjust root to point to directory w/ files
+    }
+}
+```
+
+To install `koa-send`:
+```bash
+npm install koa-send; npm install --save-dev @types/koa-send 
+```
+
