@@ -85,7 +85,7 @@ import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
 <section className="row list">
   <IndexCardLink
     label="Fast, Efficient Serverless"
-    href="https://console.dbos.dev/"
+    href="https://console.dbos.dev/login-redirect"
     description="Experience serverless hosting 25x faster and 15x cheaper than AWS Lambda"
     index="1"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}

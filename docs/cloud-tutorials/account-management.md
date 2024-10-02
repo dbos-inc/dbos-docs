@@ -8,7 +8,7 @@ In this guide, you'll learn how to manage DBOS Cloud accounts.
 
 ### New User Registration
 
-You can sign up for an account on the [DBOS Cloud console](https://console.dbos.dev/).
+You can sign up for an account on the [DBOS Cloud console](https://console.dbos.dev/login-redirect).
 Additionally, all `dbos-cloud` commands prompt you to register a new account if you don't already have one.
 
 ### Authenticating Programatically
