@@ -4,18 +4,22 @@ title: Steps
 description: Learn how to communicate with external APIs and services
 ---
 
-In this guide, you'll learn how to use _steps_.  Along with [transactions](./transaction-tutorial.md), _steps_ are functions used to build reliable [workflows](./workflow-tutorial.md).  A _step_ is just a function, but when executed to completion, the result of the _step_ will be stored durably in the DBOS system database, so that retried workflows will skip the step and use the stored output.  The stored output can also be used for [time travel](../reference/time-travel-debugger.md).  Thus, it is important to use _steps_ for all functions that read or update external state that may change with time.
+In this guide, you'll learn how to use _steps_.  Along with [transactions](./transaction-tutorial.md), _steps_ are functions used to build reliable [workflows](./workflow-tutorial.md).  A _step_ is just a function, but when executed to completion, the result of the _step_ will be stored durably in the DBOS system database, so that retried workflows will skip the step and use the stored output.  The stored output can also be used for [time travel](../reference/time-travel-debugger.md).  Thus, it is important to use _steps_ for all functions that read or update external state that may change between invocations.
 
-One primary use of steps is to communicate with external APIs and services from a DBOS application.  For this reason, steps were often referred to as "communicators" in the past.
+One primary use of steps is to communicate with external APIs and services from a DBOS application.  For this reason, steps were often referred to as "communicators" in the past.  We recommend that all communication with external services be done in _step_ functions.
 
-We recommend that all communication with external services be done in _step_ functions.
 For example, you can use steps to serve a file from [AWS S3](https://aws.amazon.com/s3/), call an external API like [Stripe](https://stripe.com/), or access a non-Postgres data store like [Elasticsearch](https://www.elastic.co/elasticsearch/).
-Encapsulating these calls in steps is especially important if you're using [workflows](./workflow-tutorial) so the workflow knows to execute them only once.
+Encapsulating these calls in steps is especially important if you're using [workflows](./workflow-tutorial).  That way, the workflow will complete them only once and record the result durably.
 
-Steps must be annotated with the [`@Step`](../reference/decorators#step) decorator and must have a [`StepContext`](../reference/contexts#communicatorcontext) as their first argument.
-As with other DBOS functions, step inputs and outputs must be serializable to JSON.
+For correct workflow behavior, it is important to use _steps_ for all functions that interact with external state that may change with time.  While accessing external services is an obvious case, other non-deterministic functions include:
+* Functions that return, or depend on, the current time
+* Functions that produce random random numbers
+* Functions that generate UUIDs
+* Cryptographic functions that may generate a salt
+
+Steps must be annotated with the [`@Step`](../reference/decorators#step) decorator and must have a [`StepContext`](../reference/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
+
 Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to retrieve the contents of `https://example.com`:
-
 
 ```javascript
   @Step()
