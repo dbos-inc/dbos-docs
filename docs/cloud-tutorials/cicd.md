@@ -9,15 +9,15 @@ This this section we will cover tools provided by DBOS Cloud to enable CI/CD bes
 Use a different DBOS Cloud application for each environment, _e.g._, dev, staging and production.
 You can do so by [deploying](application-management#deploying-applications) the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`.
 
-:::info
-You must use a different database name (`app_db_name`) for each application.
+:::info best practice
+We recommend using a different database instance for each environment.
 :::
 
 ## Secrets management
 The recommended way to make secrets, such as API keys, available to your application running in DBOS Cloud is to use environment variables.
 You can use the application's `dbos-config.yaml` [environment section](../api-reference/configuration#environment-variables) to do so.
 
-`dbos-config.yaml` supports setting variables values from the environment. For instance:
+`dbos-config.yaml` supports setting variables values from the environment. For instance, if `API_KEY` is set to `your-secret-value` in the CI/CD client's environment, the following configuration:
 
 ```yaml
 environment:
@@ -30,7 +30,6 @@ environment:
     API_KEY: "your-secret-value"
 ```
 
-If `API_KEY` is set to `your-secret-value` in the CI/CD client's environment.
 
 ## Authentication
 You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
