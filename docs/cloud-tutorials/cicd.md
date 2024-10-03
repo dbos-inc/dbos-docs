@@ -15,7 +15,7 @@ We recommend using a different database instance for each environment. Also note
 
 ## Secrets management
 The recommended way to make secrets, such as API keys, available to your application running in DBOS Cloud is to use environment variables.
-You can use the application's `dbos-config.yaml` [environment section](../api-reference/configuration#environment-variables) to do so.
+You can use the application's `dbos-config.yaml` [environment section](../python/reference/configuration#environment-variables) to do so.
 
 `dbos-config.yaml` supports setting variables values from the environment. For instance, if `API_KEY` is set to `your-secret-value` in the CI/CD client's environment, the following configuration:
 
