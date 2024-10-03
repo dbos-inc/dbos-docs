@@ -7,7 +7,7 @@ This this section we will cover tools provided by DBOS Cloud to enable CI/CD bes
 
 ## Environments
 Use a different DBOS Cloud application for each environment, _e.g._, dev, staging and production.
-You can do so by [deploying](application-management#deploying-applications) the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`.
+You can do so by [deploying](application-management#deploying-applications) the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`. The application name can be provided to the DBOS Cloud CLI, for instance: `dbos-cloud app deploy my-app-dev`.
 
 :::info best practice
 We recommend using a different database instance for each environment.
