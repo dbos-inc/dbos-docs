@@ -6,7 +6,7 @@ description: API reference for library of DBOS Optional Packages
 
 ## Background
 
-In DBOS, steps represent interfaces to external systems, or wrap nondeterministic functions, and are often reusable.
+In DBOS, steps and event handlers represent interfaces to external systems, or wrap nondeterministic functions, and are often reusable.
 DBOS comes with several libraries for common purposes.
 
 ---
