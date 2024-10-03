@@ -136,7 +136,7 @@ try {
 ```
 
 ### Initiating a payment session
-Next, the workflow initiates a payment session using the `createPaymentSession` [communicator](../tutorials/communicator-tutorial).
+Next, the workflow initiates a payment session using the `createPaymentSession` [step](../tutorials/communicator-tutorial).
 If this fails, it returns reserved items using the `undoReserveInventory` transaction, notifies its handler, and returns.
 ```javascript
 // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.

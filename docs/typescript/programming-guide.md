@@ -160,13 +160,13 @@ In production, we recommend storing API keys and other secrets in an environment
 ### 4.2. Sign the Guestbook from the App
 
 Let's update our app to record each greeting in the guestbook.
-In DBOS, we strongly recommend wrapping all such calls to third-party APIs in [Communicators](../typescript/tutorials/communicator-tutorial).
+In DBOS, we strongly recommend wrapping all such calls to third-party APIs in [Steps](../typescript/tutorials/communicator-tutorial).
 Change your `src/operations.ts` to contain the following:
 
 ```javascript
 import {
   TransactionContext, Transaction, HandlerContext, GetApi,
-  CommunicatorContext, Communicator, DBOSResponseError
+  StepContext, Step, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
 
@@ -179,8 +179,8 @@ export class Greetings {
   //Omitted for brevity: @GetApi('/') //app readme
   //Omitted for brevity: @GetApi('/greetings') //read greetings from database
   
-  @Communicator()
-  static async SignGuestbook(ctxt: CommunicatorContext, name: string) {
+  @Step()
+  static async SignGuestbook(ctxt: StepContext, name: string) {
     const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},
@@ -211,7 +211,7 @@ export class Greetings {
 }
 ```
 
-We add a new `@Communicator` function called `SignGuestbook` that uses `fetch` to send an HTTP POST request to the guestbook to record a greeting. If the communicator throws an error, it is automatically retried up to 3 times with exponential backoff. This is configurable [here](https://docs.dbos.dev/tutorials/communicator-tutorial#configurable-retries).
+We add a new `@Step` function called `SignGuestbook` that uses `fetch` to send an HTTP POST request to the guestbook to record a greeting. If the step throws an error, it is automatically retried up to 3 times with exponential backoff. This is configurable [via the `StepConfig` parameter to `@Step`](../typescript/tutorials/communicator-tutorial.md#configurable-retries).
 
 Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
@@ -228,7 +228,7 @@ Next, we want to make our app **reliable**: guarantee that it inserts exactly on
 
 ```javascript
 import {
-    TransactionContext, Transaction, CommunicatorContext, Communicator,
+    TransactionContext, Transaction, StepContext, Step,
     WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
 } from "@dbos-inc/dbos-sdk";
 import { Knex } from "knex";
@@ -242,8 +242,8 @@ export class Greetings {
   //Omitted for brevity: @GetApi('/') //app readme
   //Omitted for brevity: @GetApi('/greetings') //read greetings from database
   
-  @Communicator()
-  static async SignGuestbook(ctxt: CommunicatorContext, name: string) {
+  @Step()
+  static async SignGuestbook(ctxt: StepContext, name: string) {
     const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},

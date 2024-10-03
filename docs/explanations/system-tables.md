@@ -53,7 +53,7 @@ This table stores the outputs of transaction functions:
 - `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
 
 ### `dbos.operation_outputs`
-This table stores the outputs of communicator functions:
+This table stores the outputs of step functions:
 
 - `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
 - `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.

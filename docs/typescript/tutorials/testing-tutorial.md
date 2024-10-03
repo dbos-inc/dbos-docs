@@ -29,7 +29,7 @@ If no path is provided, the runtime loads a configuration file from the default 
 
 ### Testing Functions
 
-A testing runtime object can invoke workflows, transactions, and communicators using the `invoke` method.
+A testing runtime object can invoke workflows, transactions, and steps using the `invoke` method.
 The syntax for invoking function `foo(ctxt, args)` in class `Bar` is `testRuntime.invoke(Bar).foo(args)`.
 You don't need to supply the context to an invoked function&#8212;the testing runtime does this for you.
 For example:
