@@ -71,7 +71,7 @@ testRuntime = await createTestingRuntime(undefined, "dbos-config.yaml", false);
 invoke<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
-Invoke a transaction or communicator.
+Invoke a transaction or step.
 To invoke workflows, use [`invokeWorkflow`](#runtimeinvokeworkflowtarget-workflowuuid-params) or [`startWorkflow`](#runtimestartworkflowtarget-workflowuuid-params) instead.
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 

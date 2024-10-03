@@ -80,7 +80,7 @@ If the payment doesn't go through, it releases the ticket.
       // If the ticket can't be reserved, return failure
       return false
     }
-    // Invoke a communicator to pay for the ticket
+    // Invoke a step to pay for the ticket
     const paymentSuccessful = ctxt.invoke(Ticket).processPayment(paymentInfo)
     if (paymentSuccessful) {
       // If the payment succeeded, return success

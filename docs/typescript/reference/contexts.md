@@ -14,7 +14,7 @@ Each DBOS function has a specific context:
 - Handlers use [`HandlerContext`](#handlercontext).
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
-- Communicators use [`CommunicatorContext`](#communicatorcontext).
+- Steps use [`StepContext`](#stepcontext).
 - Initialization functions use [`InitContext`](#initcontext).
 - Middleware functions use [`MiddlewareContext`](#middlewarecontext).
 
@@ -67,7 +67,7 @@ readonly workflowUUID: string
 ```
 
 The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
-In a transaction or communicator, this field is set to the identity UUID of the calling workflow.
+In a transaction or step, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
 #### `ctxt.authenticatedUser`
@@ -160,7 +160,7 @@ The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) 
 invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Invoke a transaction or communicator on the `target` class or configured instance.
+Invoke a transaction or step on the `target` class or configured instance.
 To invoke workflows, use [`invokeWorkflow`](#handlerctxtinvokeworkflow) or [`startWorkflow`](#handlerctxtstartworkflow) instead.
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
 
@@ -297,7 +297,7 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
 ```
 
-Invoke transactions and communicators.
+Invoke transactions and steps.
 To invoke other workflows, use [`invokeWorkflow`](#workflowctxtinvokeworkflow) or [`startWorkflow`](#workflowctxtstartworkflow).
 
 The syntax for invoking function `fn` in class `Cls` with argument `arg` is:
@@ -509,32 +509,38 @@ Returns an object with query result rows (if any) and the number of rows affecte
 
 ---
 
-## `CommunicatorContext`
+## `StepContext`
 
-Communicators use `CommunicatorContext` to retrieve information on communicator configuration.
+Steps use `StepContext` to retrieve configuration information.
 
 #### Properties
 
-- [retriesAllowed](#communicatorctxtretriesallowed)
-- [maxAttempts](#communicatorctxtmaxattempts)
+- [retriesAllowed](#stepctxtretriesallowed)
+- [maxAttempts](#stepctxtmaxattempts)
 
-#### `communicatorCtxt.retriesAllowed`
+#### `stepCtxt.retriesAllowed`
 
 ```typescript
 readonly retriesAllowed: boolean;
 ```
 
-Whether the communicator is automatically retried on failure.
-Configurable through the [`@Communicator`](./decorators#communicator) decorator.
+Whether the step is automatically retried on failure.
+Configurable through the [`@Step`](./decorators#step) decorator.
 
-#### `communicatorCtxt.maxAttempts`
+#### `stepCtxt.maxAttempts`
 
 ```typescript
 readonly maxAttempts: number;
 ```
 
-Maximum number of retries for the communicator.
-Configurable through the [`@Communicator`](./decorators#communicator) decorator.
+Maximum number of retries for the step.
+Configurable through the [`@Step`](./decorators#step) decorator.
+
+---
+
+## `CommunicatorContext`
+
+`CommunicatorContext` is a historical synonym for [`StepContext`](#stepcontext), as steps are frequently used to communicate with external systems.
 
 ---
 

@@ -1,13 +1,13 @@
 ---
 sidebar_position: 10
 title: Configuring Class Instances
-description: Learn how to make workflows, transactions, and communicators reusable and configurable
+description: Learn how to make workflows, transactions, and steps reusable and configurable
 ---
 
 In this guide, you'll learn how to make your DBOS functions configurable using instances.
 
 ## Concepts
-Basic DBOS transactions, communicators, and workflows are just functions - they accept input parameters, apply those parameters to the database, or use them to place calls to external services.
+Basic DBOS transactions, steps, and workflows are just functions - they accept input parameters, apply those parameters to the database, or use them to place calls to external services.
 
 However, it is sometimes desirable to have configuration information available to DBOS functions.  Using function parameters for items such as access URLs, API keys, port numbers, and so on is a bad idea, so these are generally stored as configuration data in `dbos-config.yaml` or otherwise accessed from context.
 
@@ -55,7 +55,7 @@ All configured classes must:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
 * Have an `initialize(ctx: InitContext)` that will be called after all objects have been created, but before request handling commences
-* Have `@Transaction`, `@Communicator`, and/or `@Workflow` methods to be called on the instances
+* Have `@Transaction`, `@Step`, and/or `@Workflow` methods to be called on the instances
 
 ```typescript
 class MyConfiguredClass extends ConfiguredInstance {
@@ -76,8 +76,8 @@ class MyConfiguredClass extends ConfiguredInstance {
     return Promise.resolve();
   }
 
-  @Communicator()
-  testCommunicator(_ctxt: CommunicatorContext) {
+  @Step()
+  testStep(_ctxt: StepContext) {
     // Operations that use this.cfg
     return Promise.resolve();
   }

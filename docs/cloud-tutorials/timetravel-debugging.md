@@ -181,9 +181,9 @@ Currently, the time travel debugger supports stepping through any past workflows
 - DBOS will allow you to step thru transaction functions that aborted when originally executed, but will always throw their recorded errors
   regardless of what the function returned during debugging. This allows consistent execution under the debugger for
   database errors that were caused by non-deterministic factors (e.g., database lock contentions).
-- DBOS debugger exclusively uses recorded outputs for communicators without providing an opportunity to step through the code,
-  because communicators may contain unexpected side effects.
-  For example, if a communicator sent an email to the user at run time, an email would not be sent out during debugging sessions.
+- DBOS debugger exclusively uses recorded outputs for steps without providing an opportunity to step through the code,
+  because steps may contain unexpected side effects.
+  For example, if a step sent an email to the user at run time, an email would not be sent out during debugging sessions.
 
 ### Configurations
 

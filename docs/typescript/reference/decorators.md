@@ -72,7 +72,7 @@ Class decorators are affixed to a class, just before the keyword `class`.  Such 
 Function decorators are affixed to a function, just before its name and modifiers (such as `async` or `static`).  Function decorators apply to the decorated function and its parameters.  Examples of function-level decorators:
 -   [`@Workflow`](#workflow)
 -   [`@Transaction`](#transaction)
--   [`@Communicator`](#communicator)
+-   [`@Step`](#step)
 -   [`@RequiredRole`](#requiredrole)
 -   [`@GetApi`](#getapi)
 -   [`@PostApi`](#postapi)
@@ -99,7 +99,7 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 }
 ```
 
-The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and communicators, send and receive messages, and get other contextual information such as the authenticated user.
+The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and steps, send and receive messages, and get other contextual information such as the authenticated user.
 
 `@Workflow()` takes an optional `WorkflowConfig` object:
 
@@ -182,28 +182,31 @@ Note, when running locally, DBOS uses the [`node-postgres`](https://node-postgre
 There can be slight differences between the query results returned by PLV8 and `node-postgres`, in particular when querying for floating point values.
 :::
 
-#### `@Communicator`
-Registers a function as a [DBOS communicator](../tutorials/communicator-tutorial.md).
+#### `@Step`
+Registers a function as a [DBOS step](../tutorials/communicator-tutorial.md).
 
 ```typescript
-@Communicator()
-static async doComms(commCtxt: CommunicatorContext) {
+@Step()
+static async doComms(commCtxt: StepContext) {
   ...
 }
 ```
 
-The first argument to a communicator function must be a [`CommunicatorContext`](contexts.md#communicatorcontext).
+The first argument to a step function must be a [`StepContext`](contexts.md#stepcontext).
 
-`@Communicator()` takes an optional `CommunicatorConfig`, which allows a number of communicator properties to be specified:
+`@Step()` takes an optional `StepConfig`, which allows a number of step properties to be specified:
 
 ```typescript
-export interface CommunicatorConfig {
+export interface StepConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default true)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
   maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
 }
 ```
+
+#### `@Communicator`
+`Communicator` is a historical synonym for [`Step`](#step), as steps are frequently used to communicate with external systems.
 
 ### HTTP API Registration Decorators
 
@@ -217,9 +220,9 @@ static async hello(_ctx: HandlerContext) {
 }
 ```
 
-The `@GetApi` decorator can be combined with [`@Transaction`](#transaction), [`@Workflow`](#workflow), or [`@Communicator`](#communicator) to serve those operations via HTTP.
+The `@GetApi` decorator can be combined with [`@Transaction`](#transaction), [`@Workflow`](#workflow), or [`@Step`](#step) to serve those operations via HTTP.
 It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
-The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and communicators.
+The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and steps.
 
 Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.
