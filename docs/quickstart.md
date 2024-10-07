@@ -76,13 +76,13 @@ dbos init
 <details>
 <summary>What if `dbos init` fails?</summary>
 
-DBOS uses [psycopg3](https://www.psycopg.org/psycopg3/docs/basic/install.html) which relies on [libpq](https://www.postgresql.org/docs/current/libpq.html) to interface with PostgreSQL. If you see an error message `ImportError: no pq wrapper available`, please try to install the binary package:
+If you see an error message `ImportError: no pq wrapper available`, try to install the binary package:
 
 ```shell
 pip install "psycopg[binary]"
 ```
 
-However, if the binary package is unavailable for your machine, try to install `libpq`:
+If the binary package is unavailable for your machine, try to install `libpq`:
 
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="mac" label="macOS">
@@ -100,7 +100,7 @@ Use the [interactive windows installer](https://www.postgresql.org/download/wind
 </TabItem>
 </Tabs>
 
-For more information, please check out the [psycopg3 installation guide](https://www.psycopg.org/psycopg3/docs/basic/install.html).
+If this fails, please check out the [psycopg3 installation guide](https://www.psycopg.org/psycopg3/docs/basic/install.html).
 
 </details>
 
