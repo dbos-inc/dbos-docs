@@ -22,9 +22,9 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     language="python"
   />
   <CardLink
-    label="AI-Powered Storyteller"
+    label="OpenAI Quickstart"
     href="python/examples/ai-starter"
-    description="Use DBOS and OpenAI to build a reliable cloud AI app in 9 lines of code."
+    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
     index="2"
     icon={<SiOpenai color="white" size={50}/>}
     language="python"

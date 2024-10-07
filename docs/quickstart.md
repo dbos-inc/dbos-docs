@@ -72,6 +72,38 @@ Next, initialize your folder with a sample application.
 ```shell
 dbos init
 ```
+
+<details>
+<summary>What if `dbos init` fails?</summary>
+
+If you see an error message `ImportError: no pq wrapper available`, try to install the binary package:
+
+```shell
+pip install "psycopg[binary]"
+```
+
+If the binary package is unavailable for your machine, try to install `libpq`:
+
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="mac" label="macOS">
+```shell
+brew install libpq
+```
+</TabItem>
+<TabItem value="linux" label="Linux">
+```shell
+sudo apt install libpq5
+```
+</TabItem>
+<TabItem value="win-ps" label="Windows">
+Use the [interactive windows installer](https://www.postgresql.org/download/windows/) to install **Command Line Tools**.
+</TabItem>
+</Tabs>
+
+If this fails, please check out the [psycopg3 installation guide](https://www.psycopg.org/psycopg3/docs/basic/install.html).
+
+</details>
+
 </article>
 
 </section>
