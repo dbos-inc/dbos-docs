@@ -11,6 +11,7 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
+import { IoIosChatboxes } from "react-icons/io";
 
   <section className="row list">
   <CardLink
@@ -38,11 +39,11 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     language="typescript"
   />
   <CardLink
-    label="Earthquake Tracker"
-    href="python/examples/earthquake-tracker"
-    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
+    label="LLM-Powered Chatbot"
+    href="python/examples/chatbot"
+    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it 50x cheaper than on AWS."
     index="4"
-    icon={<IoEarth color="white" size={50}/>}
+    icon={<IoIosChatboxes color="white" size={50}/>}
     language="python"
   />
   <CardLink
@@ -67,6 +68,14 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
     index="7"
     icon={<RiCalendarScheduleLine color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Earthquake Tracker"
+    href="python/examples/earthquake-tracker"
+    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
+    index="8"
+    icon={<IoEarth color="white" size={50}/>}
     language="python"
   />
   </section>
