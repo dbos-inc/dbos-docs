@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 8
+sidebar_position: 4
 title: LLM-Powered Chatbot
 ---
 
