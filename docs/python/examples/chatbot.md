@@ -4,20 +4,21 @@ sidebar_position: 4
 title: LLM-Powered Chatbot
 ---
 
-In this example, we'll show you how to build an interactive LLM-powered chatbot with DBOS and LangChain.
+In this example, you'll learn how to build an interactive LLM-powered chatbot with DBOS and LangChain and serverlessly deploy it to DBOS Cloud.
 
 You can see the chatbot live [here](https://demo-chatbot.cloud.dbos.dev/).
 
 In addition to chatting, this bot displays both the amount of CPU time and wall-clock time consumed by your requests.
 As you chat, you'll quickly notice that while your requests may take a long time, they consume very little CPU.
 That's because they spend most of their time idle waiting for the LLM to respond.
-This gap explains why DBOS is 50x cheaper than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
+This gap explains why DBOS is 50x more cost-efficient than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/chatbot).
 
 ## Import and Initialize the App
 
 Let's start off with imports and initializing DBOS.
+We'll also set up FastAPI to serve HTTP requests.
 
 ```python
 import os
@@ -46,7 +47,7 @@ dbos = DBOS(fastapi=app)
 ## Setting Up LangChain
 
 Next, let's set up Langchain.
-We'll use Langchain to answer each chat message using OpenAI's `gpt-3.5-turbo`.
+We'll use Langchain to answer each chat message using OpenAI's `gpt-3.5-turbo` model.
 We'll configure LangChain to store message history in Postgres so it persists across app restarts.
 
 For fun, let's also instruct our chatbot to talk like a pirate.
@@ -124,7 +125,7 @@ def chat_workflow(chat: ChatSchema):
 Next, let's write the function that actually queries LangChain for each new message.
 It uses your username as a thread ID so different users can have different threads of conversation.
 
-We annotate this function with `@DBOS.step()` to mark is as a step in our chat workflow.
+We annotate this function with `@DBOS.step()` to mark it as a step in our chat workflow.
 
 ```python
 @DBOS.step()
@@ -146,7 +147,7 @@ def history_endpoint(username: str):
 ```
 
 Then, let's use SQLAlchemy to write the functions that write chats to and read chats from the database.
-We annotate these functions with @DBOS.transaction() to use a DBOS-provided managed database connection.
+We annotate these functions with `@DBOS.transaction()` to access DBOS's managed database connection.
 
 ```python
 @DBOS.transaction()
@@ -237,7 +238,7 @@ def times_endpoint():
 To run this app, you need an OpenAI developer account.
 Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
 This bot uses `gpt-3.5-turbo` for text generation.
-Make sure you have some credits (&lt;&dollar;1) to use it.
+Make sure you have some credits (~&dollar;1) to use it.
 
 Set your API key as an environment variable:
 
@@ -261,7 +262,7 @@ cd python/chatbot
 dbos-cloud app deploy
 ```
 
-This command outputs a URL&mdash;visit it to schedule a reminder!
+This command outputs a URL&mdash;visit it to see your chatbot!
 You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
 
 ### Running Locally
@@ -270,7 +271,7 @@ First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-dem
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/scheduled-reminders
+cd python/chatbot
 ```
 
 Then create a virtual environment:
