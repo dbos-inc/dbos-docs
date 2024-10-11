@@ -204,7 +204,7 @@ A few more functions to go!
 
 First, let's write a workflow to dispatch orders that have been paid for.
 This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
-Every second, it updates the progress of a paid order, then dispatches if the order is fully progressed.
+Every second, it updates the progress of a paid order, then dispatches the order if it is fully progressed.
 
 ```python
 @DBOS.workflow()
