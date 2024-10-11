@@ -245,11 +245,12 @@ dbos-cloud app deploy
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-#### 1. Setup a Local Postgres Server
+#### 1. Set up a Postgres Server
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a local Postgres server to connect to.
+First, your app needs a Postgres server to connect to.
+You can use a DBOS Cloud server, a Docker container, or a local Postgres installation.
 
 > Local database connection info is stored in the [`dbos-config.yaml`](./python/reference/configuration#database) file in your app folder.
 > If you're using your own Postgres database, make sure you update this file with the correct connection info.
@@ -258,7 +259,7 @@ First, your app needs a local Postgres server to connect to.
 <article className="col col--6">
 
 <details>
-<summary>Instructions to start a local Postgres server</summary>
+<summary>Instructions to set up a Postgres server</summary>
 
 <LocalPostgres cmd={'python3 start_postgres_docker.py'} />
 </details>
@@ -312,11 +313,12 @@ To learn more about building DBOS apps, check out our [Python programming guide]
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
-#### 1. Setup a Local Postgres Server
+#### 1. Set up a Postgres Server
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a local Postgres server to connect to.
+First, your app needs a Postgres server to connect to.
+You can use a DBOS Cloud server, a Docker container, or a local Postgres installation.
 
 > Local database connection info is stored in the [`dbos-config.yaml`](./typescript/reference/configuration#database) file in your app folder.
 > If you're using your own Postgres database, make sure you update this file with the correct connection info.
@@ -325,7 +327,7 @@ First, your app needs a local Postgres server to connect to.
 <article className="col col--6">
 
 <details>
-<summary>Instructions to start a local Postgres server</summary>
+<summary>Instructions to set up a Postgres</summary>
 
 <LocalPostgres cmd={'node start_postgres_docker.js'} />
 </details>
