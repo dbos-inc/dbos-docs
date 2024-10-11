@@ -12,6 +12,8 @@ Within a few seconds, the app will recover and resume as if nothing happened.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store).
 
+![Time picker](./assets/widget_store_ui.png)
+
 ## Import and Initialize the App
 
 Let's start off with imports and initializing the DBOS and FastAPI apps.
@@ -40,7 +42,7 @@ ORDER_ID = "order_id"
 
 Next, let's write the checkout workflow.
 This workflow is triggered whenever a customer buys a widget.
-It creates a new order, then reserves inventory, then processes payment, then marks the order as paid.
+It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatch the order.
 If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
 
 DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
@@ -69,11 +71,12 @@ def checkout_workflow():
     # Wait for a message that the customer has completed payment.
     payment_status = DBOS.recv(PAYMENT_STATUS)
 
-    # If payment succeeded, mark the order as paid.
+    # If payment succeeded, mark the order as paid and start the order dispatch workflow.
     # Otherwise, return reserved inventory and cancel the order.
     if payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
         update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
+        DBOS.start_workflow(dispatch_order_workflow, order_id)
     else:
         DBOS.logger.warn(f"Payment failed for order {order_id}")
         undo_reserve_inventory()
@@ -199,26 +202,34 @@ def restock():
 
 A few more functions to go!
 
-First, let's write a [scheduled job](../tutorials/scheduled-workflows.md) to dispatch orders that have been paid for.
+First, let's write a workflow to dispatch orders that have been paid for.
 This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
-Every second, it updates the progress of every outstanding paid order, then dispatches order that are fully progressed.
+Every second, it updates the progress of a paid order, then dispatches if the order is fully progressed.
 
 ```python
-@DBOS.scheduled("* * * * * *")
+@DBOS.workflow()
+def dispatch_order_workflow(order_id):
+    for _ in range(10):
+        DBOS.sleep(1)
+        update_order_progress(order_id)
+
 @DBOS.transaction()
-def update_order_progress(scheduled_time, actual_time):
+def update_order_progress(order_id):
     # Update the progress of paid orders.
-    DBOS.sql_session.execute(
+    progress_remaining = DBOS.sql_session.execute(
         orders.update()
-        .where(orders.c.order_status == OrderStatus.PAID.value)
+        .where(orders.c.order_id == order_id)
         .values(progress_remaining=orders.c.progress_remaining - 1)
-    )
-    # Dispatch fully-progressed orders.
-    DBOS.sql_session.execute(
-        orders.update()
-        .where(orders.c.progress_remaining == 0)
-        .values(order_status=OrderStatus.DISPATCHED.value)
-    )
+        .returning(orders.c.progress_remaining)
+    ).scalar_one()
+
+    # Dispatch if the order is fully-progressed.
+    if progress_remaining == 0:
+        DBOS.sql_session.execute(
+            orders.update()
+            .where(orders.c.order_id == order_id)
+            .values(order_status=OrderStatus.DISPATCHED.value)
+        )
 ```
 
 Let's also serve the app's frontend from an HTML file using FastAPI.
