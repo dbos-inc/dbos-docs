@@ -124,7 +124,7 @@ def chat_workflow(chat: ChatSchema):
 Next, let's write the function that actually queries LangChain for each new message.
 It uses your username as a thread ID so different users can have different threads of conversation.
 
-We annotate this function with @DBOS.step() to mark is as a step in our chat workflow.
+We annotate this function with `@DBOS.step()` to mark is as a step in our chat workflow.
 
 ```python
 @DBOS.step()
@@ -189,7 +189,7 @@ We track the CPU consumption of this process using `psutil`.
 We track wall-clock time by recording the end-to-end duration of each request.
 
 When you first start the app, you'll notice some small residual CPU consumption from the HTTP server.
-However, as you start chatting, you'll quickly see that each chat consumes only ~10ms of CPU time, but 1-2 seconds of wall-clock time.
+However, as you start chatting, you'll quickly see that each chat only consumes ~10ms of CPU time, but 1-2 seconds of wall-clock time.
 This gap explains why DBOS is 50x cheaper than other serverless platforms for AI workloads&mdash;because DBOS bills only for the CPU time you actually consume, while other platforms bill for the total request duration.
 
 ```python

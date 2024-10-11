@@ -41,7 +41,7 @@ import { IoIosChatboxes } from "react-icons/io";
   <CardLink
     label="LLM-Powered Chatbot"
     href="python/examples/chatbot"
-    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it 50x cheaper than on AWS."
+    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
     index="4"
     icon={<IoIosChatboxes color="white" size={50}/>}
     language="python"
