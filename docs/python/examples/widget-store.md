@@ -42,7 +42,7 @@ ORDER_ID = "order_id"
 
 Next, let's write the checkout workflow.
 This workflow is triggered whenever a customer buys a widget.
-It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatch the order.
+It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
 If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
 
 DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
