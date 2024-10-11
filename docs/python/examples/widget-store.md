@@ -12,7 +12,7 @@ Within a few seconds, the app will recover and resume as if nothing happened.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store).
 
-![Time picker](./assets/widget_store_ui.png)
+![Widget store UI](./assets/widget_store_ui.png)
 
 ## Import and Initialize the App
 
