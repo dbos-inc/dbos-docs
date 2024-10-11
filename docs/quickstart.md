@@ -259,7 +259,7 @@ You can use a DBOS Cloud server, a Docker container, or a local Postgres install
 <article className="col col--6">
 
 <details>
-<summary>Instructions to set up a Postgres server</summary>
+<summary>Instructions to set up Postgres</summary>
 
 <LocalPostgres cmd={'python3 start_postgres_docker.py'} />
 </details>
@@ -327,7 +327,7 @@ You can use a DBOS Cloud server, a Docker container, or a local Postgres install
 <article className="col col--6">
 
 <details>
-<summary>Instructions to set up a Postgres</summary>
+<summary>Instructions to set up Postgres</summary>
 
 <LocalPostgres cmd={'node start_postgres_docker.js'} />
 </details>
