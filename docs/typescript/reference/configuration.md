@@ -45,6 +45,7 @@ Every field is required unless otherwise specified.
 - **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../reference/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
+- **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
 - **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 

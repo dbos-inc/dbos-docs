@@ -107,7 +107,7 @@ This command retrieves the status of a Postgres database instance
 This command resets your password for a Postgres database instance.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance to provision.
+- `[database-instance-name]`: The name of the database instance to provision.
 - `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---
@@ -122,13 +122,27 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ---
 
+### `dbos-cloud db local`
+
+**Description:**
+Configure `dbos-config.yaml` to use a DBOS Cloud Postgres server for local development.
+This command also sets the `local_suffix` field in `dbos-config.yaml`, so your application will suffix its application database name with `_local` while running locally.
+This isolates the database you use for local development from the database used by your app deployed to DBOS Cloud even though both use the same Postgres server.
+
+
+**Parameters:**
+- `[database-instance-name]`: The name of the database instance to which to connect.
+- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
+
+---
+
 ### `dbos-cloud db connect`
 
 **Description:**
 This command loads your cloud database's connection parameters into your local `dbos-config.yaml`.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance to which to connect.
+- `[database-instance-name]`: The name of the database instance to which to connect.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
 ---

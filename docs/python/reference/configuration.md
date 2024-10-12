@@ -42,7 +42,9 @@ Every field is required unless otherwise specified.
 - **app_db_name**: Name of the application database. Defaults to the app name, with dashes replaced by underscores.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
+- **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
 - **migrate** (optional): A list of commands to run to apply your application's schema to the database. 
+
 
 **Example**:
 
