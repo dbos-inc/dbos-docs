@@ -125,7 +125,9 @@ This command destroys a previously-provisioned Postgres database instance.
 ### `dbos-cloud db local`
 
 **Description:**
-Configure `dbos-config.yaml` to use a DBOS Cloud database server for local development.
+Configure `dbos-config.yaml` to use a DBOS Cloud Postgres server for local development.
+This command also sets the `local_suffix` field in `dbos-config.yaml`, so your application will suffix its application database name with `_local` while running locally.
+This isolates the database you use for local development from the database used by your app deployed to DBOS Cloud even though both use the same Postgres server.
 
 
 **Parameters:**
