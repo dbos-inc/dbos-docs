@@ -1,0 +1,123 @@
+/* For doc cards */
+/* https://github.com/facebook/docusaurus/blob/main/packages/docusaurus-theme-classic/src/theme/DocCard/styles.module.css */
+.cardContainer {
+  --ifm-link-color: var(--ifm-color-emphasis-800);
+  --ifm-link-hover-color: var(--ifm-color-emphasis-700);
+  --ifm-link-hover-decoration: none;
+
+  box-shadow: 0 1.5px 3px 0 rgb(0 0 0 / 15%);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  transition: all var(--ifm-transition-fast) ease;
+  transition-property: border, box-shadow;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.cardContainer:hover {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.indexCardBox {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.cardContainer:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 3px 6px 0 rgb(0 0 0 / 20%);
+}
+
+.cardContainer *:last-child {
+  margin-bottom: 0;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  padding-bottom: 0;
+}
+
+.cardLogo {
+  height: 1.5rem;
+  padding-bottom: 0;
+  float: right;
+}
+
+.cardDescription {
+  font-size: 0.9rem;
+  padding-left: 1.2rem;
+  padding-right: 1.2rem;
+  padding-bottom: 1rem;
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.cardIcon {
+  text-align: center;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  background-image: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
+}
+
+.indexCardIcon {
+  text-align: center;
+  font-size: x-large;
+}
+
+.indexCardLogo {
+  height: 1.5rem;
+  padding-bottom: 0;
+  padding-left: 0;
+  float: right;
+}
+
+.indexCardTitle {
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  padding-left: 0;
+  padding-bottom: 0;
+}
+
+.indexCardTitleLogo {
+  font-size: 1.2rem;
+  padding: 1.2rem;
+  padding-left: 0;
+  padding-bottom: 0;
+  margin-bottom: 0.5rem;
+}
+
+.indexCardDescription {
+  font-size: 0.9rem;
+  padding-left: 0;
+  padding-right: 1.2rem;
+  padding-bottom: 1.2rem;
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.indexCardDescriptionLogo {
+  font-size: 0.9rem;
+  padding-left: 0;
+  padding-top: 0;
+  padding-right: 1.2rem;
+  padding-bottom: 0rem;
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.indexCardLargeTitle {
+  font-size: 1.5rem;
+  padding: 1.2rem;
+  padding-left: 1.5rem;
+  height: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-weight: bold;
+}

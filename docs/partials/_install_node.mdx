@@ -1,0 +1,21 @@
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS or Linux">
+   Run the following commands in your terminal:
+
+   ```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+nvm install 22
+nvm use 22
+   ```
+</TabItem>
+<TabItem value="win-ps" label="Windows">
+
+Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
+After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
+(`%user%` is the Windows user on which you are logged in).
+</TabItem>
+</Tabs>

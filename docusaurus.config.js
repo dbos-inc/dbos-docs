@@ -38,12 +38,55 @@ const config = {
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
-          // /docs/oldDoc -> /docs/newDoc
           {
-            to: '/getting-started/quickstart#deploy-your-first-app-to-the-cloud',
-            from: '/getting-started/quickstart-cloud',
+            from: '/getting-started/quickstart',
+            to: '/quickstart',
+          },
+          {
+            from: '/explanations/core-concepts',
+            to: '/',
+          },
+          {
+            from: '/tutorials/scheduled-workflows',
+            to: '/python/tutorials/scheduled-workflows',
+          },
+          {
+            from: '/tutorials/idempotency-tutorial',
+            to: '/python/tutorials/idempotency-tutorial',
+          },
+          {
+            from: '/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
+          },
+          {
+            from: '/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/testing-tutorial',
+          },
+          {
+            from: '/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
+          },
+          {
+            from: '/getting-started/quickstart-programming',
+            to: '/',
+          },
+          {
+            from: '/getting-started/quickstart-tt-debugger',
+            to: '/',
+          },
+          {
+            from: '/python/reference/task_queues',
+            to: '/python/reference/queues',
           },
         ],
+      },
+    ],
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: "phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP", // This is our "Production" project
+        appUrl: "https://d2j9bas80r5yfz.cloudfront.net", // Using our CloudFront proxy
+        enableInDevelopment: false,
       },
     ],
   ],
@@ -68,7 +111,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: 'img/social-card.png',
+      image: 'img/social-card.jpg',
       navbar: {
         title: '',
         logo: {
@@ -85,27 +128,69 @@ const config = {
             label: 'Docs',
           },
           {
-            href: 'https://github.com/dbos-inc/dbos-ts',
-            label: 'GitHub',
+            to: 'quickstart',
+            position: 'left',
+            label: 'Quickstart',
+          },
+          {
+            type: 'docSidebar',
+            label: 'Examples',
+            position: 'left',
+            sidebarId: 'examplesSidebar',
+          },
+          {
+            type: 'search',
             position: 'right',
           },
+          {
+            to: 'https://console.dbos.dev/login-redirect',
+            label: 'Cloud Console',
+            position: 'right',
+            className: 'dbos-button-blue',
+          },
+          {
+            href: 'https://github.com/dbos-inc',
+            position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
+          },
         ],
+        hideOnScroll: false,
+      },
+      docs: {
+        sidebar: {
+          hideable: true,
+          autoCollapseCategories: false,
+        }
       },
       footer: {
-        style: 'dark',
+        style: 'light',
         links: [
           {
-            title: 'DBOS Documentation',
+            title: 'Follow Us',
             items: [
               {
-                label: 'Cloud Console',
-                href: 'https://console.dbos.dev/',
+                label: 'LinkedIn',
+                href: 'https://www.linkedin.com/company/dbos-inc/',
               },
               {
-                label: 'Main Page',
-                href: 'https://www.dbos.dev',
+                label: 'Twitter/X',
+                href: 'https://x.com/DBOS_Inc',
               },
             ],
+          },
+          {
+            title: 'Learn More',
+            items: [
+              {
+                label: 'Blog',
+                href: 'https://www.dbos.dev/blog',
+              },
+              {
+                label: 'About',
+                href: 'https://www.dbos.dev/about'
+              }
+            ]
           },
           {
             title: 'Questions or Comments?',
@@ -120,24 +205,30 @@ const config = {
               },
             ],
           },
-          {
-            title: 'More',
-            items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/dbos-inc',
-              },
-              {
-                label: 'LinkedIn',
-                href: 'https://www.linkedin.com/company/dbos-inc/',
-              },
-            ],
-          },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} DBOS, Inc. | <a href="https://www.dbos.dev/privacy" target=_blank>Privacy Policy</a>`,
+        logo: {
+          alt: 'DBOS Logo',
+          src: 'img/dbos-logo.png',
+          srcDark: 'img/dbos-logo-dark.png',
+          href: 'https://dbos.dev',
+          width: 100,
+        },
       },
       prism: {
-        theme: prismThemes.okaidia,
+        theme: {
+          ...prismThemes.okaidia,
+          styles: [
+            ...prismThemes.okaidia.styles,
+            {
+              types: ['punctuation'],
+              languages: ['python'],
+              style: {
+                color: 'rgb(199, 146, 234)', // Change this to your desired color
+              },
+            },
+          ],
+        },
       },
       tableOfContents: {
         maxHeadingLevel:5,
