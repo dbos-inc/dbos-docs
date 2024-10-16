@@ -843,3 +843,68 @@ export class User {}
 ```
 
 This code will ensure that the TypeORM entity manager and repository knows about the entities in the list.
+
+## Custom Event Receiver Decorators
+
+Custom decorators can be created to register methods and configuration information with DBOS.  This is particularly useful when creating new event receivers, as it allows the target functions to be annotated.
+
+### Creating Decorators
+
+First, create a [Stage 2 Decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) or factory for use on classes or methods; method decorators should be placed on target functions, with class decorators providing default information for all methods in the class.
+
+### associateClassWithEventReceiver
+```typescript
+function associateClassWithEventReceiver<CtorT>(rcvr: DBOSEventReceiver, ctor: CtorT) : {}
+```
+
+`associateClassWithEventReceiver` provides a means to associate event receiver configuration information collected by a decorator with the decorated class:
+* `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
+* `ctor`: The constructor of the class that is being decorated
+
+The return value of `associateClassWithEventReceiver` is an object.  Any properties set on this object will be available to `rcvr` when it is initialized, from the `classConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](./contexts.md#dbosexecutorcontextgetregistrationsfor).
+
+In the following example, a `@Kafka(config)` decorator is created for providing Kafka broker configuration information as class-level defaults:
+```typescript
+let kafkaInst: DBOSKafka = ...;
+
+export function Kafka(kafkaConfig: KafkaConfig) {
+  function clsdec<T extends { new(...args: unknown[]): object }>(ctor: T) {
+    const kafkaInfo = associateClassWithEventReceiver(kafkaInst, ctor) as KafkaDefaults;
+    kafkaInfo.kafkaConfig = kafkaConfig;
+  }
+  return clsdec;
+}
+```
+
+### associateMethodWithEventReceiver
+```typescript
+function associateMethodWithEventReceiver<This, Args extends unknown[], Return>(rcvr: DBOSEventReceiver, target: object, propertyKey: string, inDescriptor: TypedPropertyDescriptor<(this: This, ...args: Args) => Promise<Return>>) : {descriptor: ..., receiverInfo: {}}
+```
+
+`associateMethodWithEventReceiver` provides a means to associate event receiver configuration information collected by a decorator with the decorated method:
+* `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
+* `target`, `propertyKey`, `inDescriptor`: The target and property key of the decorated method, and the method's property descriptor
+
+There are two return values from `associateMethodWithEventReceiver`.   `descriptor` is an updated property descriptor that the decorator should install in place of the previous property descriptor.  `receiverInfo` is an object; any properties set on this object will be available to `rcvr` when it is initialized, from the `methodConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](./contexts.md#dbosexecutorcontextgetregistrationsfor).
+
+In the following example, a `@KafkaConsume(topic, ...)` method decorator is defined, which associates a topic with a workflow method that will be invoked when Kafka messages are consumed:
+```typescript
+// Decorator factory function
+export function KafkaConsume(topic: string, consumerConfig?: ConsumerConfig) {
+  // Decorator function
+  function kafkadec<This, Ctx extends DBOSContext, Return>(
+    target: object,
+    propertyKey: string,
+    inDescriptor: TypedPropertyDescriptor<(this: This, ctx: Ctx, ...args: KafkaArgs) => Promise<Return>>
+  ) {
+    const {descriptor, receiverInfo} = associateMethodWithEventReceiver(kafkaInst, target, propertyKey, inDescriptor);
+
+    const kafkaRegistration = receiverInfo as KafkaRegistrationInfo;
+    kafkaRegistration.kafkaTopic = topic;
+    kafkaRegistration.consumerConfig = consumerConfig;
+
+    return descriptor;
+  }
+  return kafkadec;
+}
+```
