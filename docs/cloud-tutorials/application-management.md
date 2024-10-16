@@ -30,7 +30,7 @@ In Python, dependencies are loaded from `requirements.txt`.
 In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if this is not present.
 You must provide one of these files to successfully deploy.
 - All database migrations specified in your `dbos-config.yaml` are run on your cloud database.
-- Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM.
+- Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/)&mdash;referred to as `executors` internally&mdash;with 1vCPU and 512MB of RAM by default. DBOS Pro subscribers can configure the amount of memory allocated to each executor by [updating their application](../cloud-tutorials/cloud-cli#dbos-cloud-app-update).
 These microVMs expect your application to serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for DBOS Transact and Koa).
 
 After your application is deployed, the URL of your deployed application is printed.
