@@ -205,6 +205,21 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 
 ---
 
+### `dbos-cloud app update`
+
+**Description:**
+Update an application metadata in DBOS Cloud.
+
+**Parameters:**
+- `[application-name]`: The name of the application to update.
+- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription.
+
+:::info
+This command does not trigger a redeployment of the application. To apply changes affecting the application's executors, you must redeploy the application with [`dbos-cloud app deploy`](#dbos-cloud-app-deploy).
+:::
+
+---
+
 ### `dbos-cloud app delete`
 
 **Parameters:**
