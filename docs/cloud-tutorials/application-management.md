@@ -76,6 +76,16 @@ dbos-cloud app deploy --previous-version <version-id>
 
 This will fail if the previous and current versions have different database schemas.
 
+### Updating Applications
+
+To update your application metadata, run:
+
+```shell
+dbos-cloud app update <app-name>
+```
+
+See the [DBOS Cloud CLI reference](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-update) for a list of properties you can update. Note that updating an application metadata does not trigger a redeploy of the code, which you can do with the [`app deploy`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-deploy) command.
+
 ### Deleting Applications
 
 To delete an application, run:
