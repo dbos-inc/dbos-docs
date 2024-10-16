@@ -141,11 +141,11 @@ Handlers use `HandlerContext` to invoke other functions, interact with active wo
 ### Methods
 
 - [invoke(target)](#handlerctxtinvoke)
-- [invokeWorkflow(target, \[workflowUUID\])](#handlerctxtinvokeworkflow)
-- [startWorkflow(target, \[workflowUUID\], \[queue\])](#handlerctxtstartworkflow)
-- [retrieveWorkflow(workflowUUID)](#handlerctxtretrieveworkflow)
+- [invokeWorkflow(target, \[workflowID\])](#handlerctxtinvokeworkflow)
+- [startWorkflow(target, \[workflowID\], \[queue\])](#handlerctxtstartworkflow)
+- [retrieveWorkflow(workflowID)](#handlerctxtretrieveworkflow)
 - [send(destinationUUID, message, \[topic, idempotencyKey\])](#handlerctxtsend)
-- [getEvent(workflowUUID, key, \[timeoutSeconds\])](#handlerctxtgetevent)
+- [getEvent(workflowID, key, \[timeoutSeconds\])](#handlerctxtgetevent)
 
 #### `handlerCtxt.koaContext`
 
@@ -158,7 +158,7 @@ The [Koa Context](https://github.com/koajs/koa/blob/master/docs/api/context.md) 
 #### `handlerCtxt.invoke`
 
 ```typescript
-invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
+invoke<T>(target: T, workflowID?: string): InvokeFuncs<T>
 ```
 
 Invoke a transaction or step on the `target` class or configured instance.
@@ -176,7 +176,7 @@ For more information, see our [idempotency tutorial](../tutorials/idempotency-tu
 #### `handlerCtxt.invokeWorkflow`
 
 ```typescript
-invokeWorkflow<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
+invokeWorkflow<T>(target: T, workflowID?: string): InvokeFuncs<T>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
@@ -215,10 +215,10 @@ You don't supply a context to the newly started workflow&#8212;the DBOS Transact
 #### `handlerCtxt.retrieveWorkflow`
 
 ```typescript
-retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
+retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowUUID`.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `handlerCtxt.send`
@@ -235,10 +235,10 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 #### `handlerCtxt.getEvent`
 
 ```typescript
-getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
@@ -288,14 +288,14 @@ Workflows use `WorkflowContext` to invoke other functions and interact with othe
 - [recv(\[topic, timeoutSeconds\])](#workflowctxtrecv)
 - [setEvent(key, value)](#workflowctxtsetevent)
 - [getEvent()](#workflowctxtgetevent)
-- [retrieveWorkflow(workflowUUID)](#workflowctxtretrieveworkflow)
+- [retrieveWorkflow(workflowID)](#workflowctxtretrieveworkflow)
 - [sleep(durationSec)](#workflowcontextsleep)
 - [sleepms(durationMS)](#workflowcontextsleepms)
 
 #### `workflowCtxt.invoke`
 
 ```typescript
-invoke<T>(target: T, workflowUUID?: string): InvokeFuncs<T>
+invoke<T>(target: T, workflowID?: string): InvokeFuncs<T>
 ```
 
 Invoke transactions and steps.
@@ -390,19 +390,19 @@ For more information, see our [events API tutorial](../tutorials/workflow-commun
 #### `workflowCtxt.getEvent`
 
 ```typescript
-getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
+Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `workflowCtxt.retrieveWorkflow`
 
 ```typescript
-retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
+retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowUUID_.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowID_.
 `R` is the return type of the target workflow.
 
 #### `WorkflowContext.sleep`
@@ -680,8 +680,8 @@ export interface DBOSExecutorContext
   external<T extends unknown[], R>(stepFn: StepFunction<T, R>, params: WorkflowParams, ...args: T): Promise<R>;
 
   send<T>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
-  getEvent<T>(workflowUUID: string, key: string, timeoutSeconds: number): Promise<T | null>;
-  retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>;
+  getEvent<T>(workflowID: string, key: string, timeoutSeconds: number): Promise<T | null>;
+  retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 
   getEventDispatchState(svc: string, wfn: string, key: string): Promise<DBOSEventReceiverState | undefined>;
   upsertEventDispatchState(state: DBOSEventReceiverState): Promise<DBOSEventReceiverState>;
@@ -738,7 +738,9 @@ getRegistrationsFor(eri: DBOSEventReceiver) : DBOSEventReceiverRegistration[];
 
 #### `DBOSExecutorContext.workflow`
 ```typescript
-workflow<T extends unknown[], R>(wf: WorkflowFunction<T, R>, params: WorkflowParams, ...args: T): Promise<WorkflowHandle<R>>;
+workflow<T extends unknown[], R>(
+  wf: WorkflowFunction<T, R>, params: WorkflowParams, ...args: T
+) : Promise<WorkflowHandle<R>>;
 ```
 
 Invokes the provided `wf` workflow function, with inputs specified by `args`.  The `WorkflowParams` control how the workflow is started:
@@ -748,42 +750,46 @@ Invokes the provided `wf` workflow function, with inputs specified by `args`.  T
 
 #### `DBOSExecutorContext.transaction`
 ```typescript
-transaction<T extends unknown[], R>(txnFn: TransactionFunction<T, R>, params: WorkflowParams, ...args: T): Promise<R>;
+transaction<T extends unknown[], R>(
+  txnFn: TransactionFunction<T, R>, params: WorkflowParams, ...args: T
+) : Promise<R>;
 ```
 
 Invokes a single-operation workflow consisting of the provided `txnFn` function, with inputs specified by `args`.  For additional information, see [`DBOSExecutorContext.workflow`](#dbosexecutorcontextworkflow).
 
 #### `DBOSExecutorContext.external`
 ```typescript
-external<T extends unknown[], R>(stepFn: StepFunction<T, R>, params: WorkflowParams, ...args: T): Promise<R>;
+external<T extends unknown[], R>(
+  stepFn: StepFunction<T, R>, params: WorkflowParams, ...args: T
+) : Promise<R>;
 ```
 
 Invokes a single-operation workflow consisting of the provided `stepFn` function, with inputs specified by `args`.  For additional information on `WorkflowParams`, see [`DBOSExecutorContext.workflow`](#dbosexecutorcontextworkflow).
 
 #### `DBOSExecutorContext.send`
 ```typescript
-send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
+send<T extends NonNullable<any>>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>
 ```
 
-Sends a message to workflow `destinationUUID`.
+Sends a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
 For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
 
 #### `DBOSExecutorContext.getEvent`
 ```typescript
-getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowUUID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
-Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
+Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `DBOSExecutorContext.retrieveWorkflow`
 ```typescript
-retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>
+retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowUUID`.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`
@@ -819,7 +825,8 @@ The function return value indicates the contents of the system database for the 
 
 #### `DBOSExecutorContext.getEventDispatchState`
 ```typescript
-getEventDispatchState(service: string, workflowFnName: string, key: string): Promise<DBOSEventReceiverState | undefined>;
+getEventDispatchState(service: string, workflowFnName: string, key: string)
+  : Promise<DBOSEventReceiverState | undefined>;
 ```
 
 Retrieve the value set for an event receiver's key, as stored by [`upsertEventDispatchState`](#dbosexecutorcontextupserteventdispatchstate) above.  If no value has been associated with the combination of `service`/`workflowFnName`/`key` above, then `undefined` is returned.

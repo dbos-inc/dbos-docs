@@ -1,7 +1,7 @@
 ---
 sidebar_position: 11
 title: Creating Custom Event Receivers
-description: Learn how to start DBOS workflows and other functions in response to external events
+description: Learn how to start DBOS workflows and other functions in response to external events and data sources
 ---
 
 In this guide, you'll learn how to make your DBOS application execute in response to external events.
