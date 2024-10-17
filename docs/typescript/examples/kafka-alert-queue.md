@@ -345,7 +345,7 @@ The frontend at `app.html` calls `/assignment` in a loop, every half second or s
 
 ## 9. Trying out the App
 
-You can run locally with a Kafka broker container we provide. First, make sure you have Docker and Postgres configured as shown in the [quickstart](../../quickstart.md#1-setup-a-local-postgres-server). 
+You can run locally with a Kafka broker container we provide. First, make sure you have Docker and Postgres configured as shown in the [quickstart](../../quickstart.md#1-set-up-a-postgres-server). 
 
 Then, start the broker container:
 ```bash

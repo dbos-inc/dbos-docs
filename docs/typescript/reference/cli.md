@@ -118,7 +118,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
-- `workflowUUID`: The UUID of the workflow
+- `workflowUUID`: The ID of the workflow
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
@@ -130,7 +130,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 Retrieve information on a workflow run by your application.
 
 **Arguments:**
-- `<workflow-uuid>`: The UUID of the workflow to retrieve.
+- `<workflow-uuid>`: The ID of the workflow to retrieve.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 - `--request`: Display workflow request information.
 
