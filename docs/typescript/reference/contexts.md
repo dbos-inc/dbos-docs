@@ -747,6 +747,7 @@ Invokes the provided `wf` workflow function, with inputs specified by `args`.  T
 * `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../tutorials/idempotency-tutorial.md#manually-setting-idempotency-keys), for OAOO.
 * `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../reference/workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
 
+The return value of `workflow` is a [`WorkflowHandle`](../reference/workflow-handles.md) for the running or queued workflow.
 
 #### `DBOSExecutorContext.transaction`
 ```typescript
