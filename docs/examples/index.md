@@ -12,6 +12,7 @@ import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";
+import { HiOutlineDocumentDuplicate } from "react-icons/hi";
 
   <section className="row list">
   <CardLink
@@ -62,11 +63,19 @@ import { IoIosChatboxes } from "react-icons/io";
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
+    <CardLink
+    label="Docment Detective"
+    href="python/examples/document-detective"
+    description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
+    index="7"
+    icon={<HiOutlineDocumentDuplicate  color="white" size={50}/>}
+    language="python"
+  />
   <CardLink
     label="Scheduled Reminders"
     href="python/examples/scheduled-reminders"
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
-    index="7"
+    index="8"
     icon={<RiCalendarScheduleLine color="white" size={50}/>}
     language="python"
   />
@@ -74,7 +83,7 @@ import { IoIosChatboxes } from "react-icons/io";
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
-    index="8"
+    index="9"
     icon={<IoEarth color="white" size={50}/>}
     language="python"
   />

@@ -4,9 +4,9 @@ sidebar_position: 5
 title: Document Detective
 ---
 
-In this example, you'll learn how to use DBOS and LlamaIndex to build and serverlessly deploy a chatbot agent that can index PDF documents and answer questions about them.
+In this example, you'll learn how to use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.
 
-This example highlights how to use DBOS to build a durable data processing pipeline that can run many tasks concurrently, in this case performing parallel ingestion of many documents.
+This example highlights how to use DBOS to build a **reliable data processing pipeline** that can run many tasks concurrently, in this case performing parallel ingestion of many documents.
 
 For example, here's what the app looks like after ingesting the last three years of Apple 10-K filings.
 It can accurately answer questions about Apple's financials:
