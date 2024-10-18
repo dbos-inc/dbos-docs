@@ -12,7 +12,7 @@ import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";
-import { HiOutlineDocumentDuplicate } from "react-icons/hi";
+import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 
   <section className="row list">
   <CardLink
@@ -64,11 +64,11 @@ import { HiOutlineDocumentDuplicate } from "react-icons/hi";
     language="python"
   />
     <CardLink
-    label="Docment Detective"
+    label="Document Detective"
     href="python/examples/document-detective"
     description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
     index="7"
-    icon={<HiOutlineDocumentDuplicate  color="white" size={50}/>}
+    icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
     language="python"
   />
   <CardLink
