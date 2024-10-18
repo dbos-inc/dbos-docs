@@ -127,10 +127,13 @@ The application code will then have to specify which configuration to use when i
 
 ### Simple Email Service (SES)
 
-DBOS provides a step for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/communicator-email-ses](https://github.com/dbos-inc/dbos-transact/tree/main/packages/communicator-email-ses) package.
+DBOS provides a step for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/communicator-email-ses](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/communicator-email-ses) package.
 
 ## Simple Storage Service (S3)
 
-DBOS provides steps for working with S3, and transactional workflows for keeping a database table in sync with an S3 bucket.  For details of the functionality, see the documentation accompanying the [@dbos-inc/component-aws-s3](https://github.com/dbos-inc/dbos-transact/tree/main/packages/component-aws-s3) package.
+DBOS provides steps for working with S3, and transactional workflows for keeping a database table in sync with an S3 bucket.  For details of the functionality, see the documentation accompanying the [@dbos-inc/component-aws-s3](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/component-aws-s3) package.
 
+## Simple Queue Service (SQS)
+
+DBOS provides steps for sending messages via Amazon SQS, and an event receiver for executing workflow functions in response to received SQS messages.  For details of the functionality, see the documentation accompanying the [@dbos-inc/dbos-sqs](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/dbos-sqs) package.
 
