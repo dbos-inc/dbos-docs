@@ -45,17 +45,17 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 </section>
 
 ### Example Applications
-import { FaSlack } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { IoEarth } from "react-icons/io5";
+import { SiOpenai } from "react-icons/si";
 
 <section className="row list">
   <NarrowCardLink
-    label="AI-Powered Slackbot"
-    href="python/examples/rag-slackbot"
-    description="Build a Slackbot that uses RAG to answer questions about previous Slack conversations."
+    label="OpenAI Quickstart"
+    href="python/examples/ai-starter"
+    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
     index="1"
-    icon={<FaSlack color="white" size={30}/>}
+    icon={<SiOpenai color="white" size={30}/>}
   />
   <NarrowCardLink
     label="Widget Store"
@@ -65,11 +65,11 @@ import { IoEarth } from "react-icons/io5";
     icon={<MdOutlineShoppingCart color="white" size={30}/>}
   />
   <NarrowCardLink
-    label="Earthquake Tracker"
-    href="python/examples/earthquake-tracker"
-    description="Build a real-time earthquake dashboard by streaming data from the USGS into Postgres."
+    label="Scheduled Reminders"
+    href="python/examples/scheduled-reminders"
+    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
     index="3"
-    icon={<IoEarth color="white" size={30}/>}
+    icon={<RiCalendarScheduleLine color="white" size={30}/>}
   />
 </section>
 

@@ -191,7 +191,7 @@ These function calls are currently flagged as [nondeterministic](https://docs.db
 - `Date()`, `new Date()`, `Date.now()`
 - `setTimeout(...)`
 
-*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [communicator](../tutorials/communicator-tutorial).*
+*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [step](../tutorials/communicator-tutorial).*
 
 These function calls are not necessarily nondeterministic, but are still warned about:
 
@@ -220,9 +220,9 @@ static async myWorkflow(ctxt: WorkflowContext) {
 Allowed:
 
 ```ts
-@Communicator()
-static async myCommunicator(ctxt: CommunicatorContext) {
-  // Calling an external API in a communicator is allowed.
+@Step()
+static async myStep(ctxt: StepContext) {
+  // Calling an external API in a step is allowed.
   const result = await fetch("https://www.google.com");
 }
 ```

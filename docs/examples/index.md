@@ -11,6 +11,8 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
+import { IoIosChatboxes } from "react-icons/io";
+import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 
   <section className="row list">
   <CardLink
@@ -22,9 +24,9 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     language="python"
   />
   <CardLink
-    label="AI-Powered Storyteller"
+    label="OpenAI Quickstart"
     href="python/examples/ai-starter"
-    description="Use DBOS and OpenAI to build a reliable cloud AI app in 9 lines of code."
+    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
     index="2"
     icon={<SiOpenai color="white" size={50}/>}
     language="python"
@@ -38,11 +40,11 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     language="typescript"
   />
   <CardLink
-    label="Earthquake Tracker"
-    href="python/examples/earthquake-tracker"
-    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
+    label="LLM-Powered Chatbot"
+    href="python/examples/chatbot"
+    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
     index="4"
-    icon={<IoEarth color="white" size={50}/>}
+    icon={<IoIosChatboxes color="white" size={50}/>}
     language="python"
   />
   <CardLink
@@ -61,12 +63,28 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
+    <CardLink
+    label="Document Detective"
+    href="python/examples/document-detective"
+    description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
+    index="7"
+    icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
+    language="python"
+  />
   <CardLink
     label="Scheduled Reminders"
     href="python/examples/scheduled-reminders"
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
-    index="7"
+    index="8"
     icon={<RiCalendarScheduleLine color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Earthquake Tracker"
+    href="python/examples/earthquake-tracker"
+    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
+    index="9"
+    icon={<IoEarth color="white" size={50}/>}
     language="python"
   />
   </section>

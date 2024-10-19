@@ -6,7 +6,7 @@ description: Learn how to make applications reliable using workflows.
 
 In this guide, you'll learn how to make your applications reliable using workflows.
 
-Workflows orchestrate the execution of other functions, like transactions and communicators.
+Workflows orchestrate the execution of other functions, like transactions and steps.
 Workflows are _reliable_: if their execution is interrupted for any reason (e.g., an executor is restarted or crashes), DBOS automatically resumes them from where they left off, running them to completion without re-executing any operation that already finished.
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), we use a workflow for payment processing.
@@ -39,7 +39,7 @@ class Greetings {
 
 ### Invoking Functions from Workflows
 
-Workflows can invoke transactions and communicators using their [`ctxt.invoke()`](../reference/contexts#workflowctxtinvoke) method.
+Workflows can invoke transactions and steps using their [`ctxt.invoke()`](../reference/contexts#workflowctxtinvoke) method.
 For example, this line from our above example invokes the transaction `InsertGreeting`:
 
 ```javascript
@@ -62,7 +62,7 @@ These guarantees assume that the application and database may crash and go offli
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from where it left off.
 2.  Transactions commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
-3.  Communicators are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a communicator, the communicator may be retried, but once a communicator has completed, it will never be re-executed.
+3.  Steps are tried _at least once_ but are never re-executed after they successfully complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
 
 For safety, DBOS automatically attempts to recover a workflow a set number of times.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be [retried manually](#workflow-management).
@@ -71,9 +71,9 @@ The maximum number of retries is by default 50, but this may be configured throu
 
 ### Determinism
 
-A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and communicators with the same inputs in the same order.
+A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and steps with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [communicators](./communicator-tutorial).
+Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./communicator-tutorial).
 You can safely [invoke](../reference/contexts.md#workflowctxtinvoke) these methods from a workflow.
 
 For example, **don't do this**:
@@ -93,9 +93,9 @@ Do this instead:
 
 ```javascript
 class Example {
-    @Communicator()
-    static async fetchBody(ctxt: CommunicatorContext) {
-      // Instead, make HTTP requests in communicators
+    @Step()
+    static async fetchBody(ctxt: StepContext) {
+      // Instead, make HTTP requests in steps
       return await fetch("https://example.com").then(r => r.text());
     }
 

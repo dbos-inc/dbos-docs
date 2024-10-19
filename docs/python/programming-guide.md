@@ -73,7 +73,7 @@ logging.basicConfig(level=logging.INFO)
 # Sign the guestbook using an HTTP POST request
 def sign_guestbook(name: str):
     requests.post(
-        "https://demo-guest-book.cloud.dbos.dev/record_greeting",
+        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )
@@ -144,7 +144,7 @@ logging.basicConfig(level=logging.INFO)
 @DBOS.step()
 def sign_guestbook(name: str):
     requests.post(
-        "https://demo-guest-book.cloud.dbos.dev/record_greeting",
+        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
         headers={"Content-Type": "application/json"},
         json={"name": name},
     )

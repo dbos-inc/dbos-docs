@@ -107,7 +107,7 @@ This command retrieves the status of a Postgres database instance
 This command resets your password for a Postgres database instance.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance to provision.
+- `[database-instance-name]`: The name of the database instance to provision.
 - `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---
@@ -122,13 +122,27 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ---
 
+### `dbos-cloud db local`
+
+**Description:**
+Configure `dbos-config.yaml` to use a DBOS Cloud Postgres server for local development.
+This command also sets the `local_suffix` field in `dbos-config.yaml`, so your application will suffix its application database name with `_local` while running locally.
+This isolates the database you use for local development from the database used by your app deployed to DBOS Cloud even though both use the same Postgres server.
+
+
+**Parameters:**
+- `[database-instance-name]`: The name of the database instance to which to connect.
+- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
+
+---
+
 ### `dbos-cloud db connect`
 
 **Description:**
 This command loads your cloud database's connection parameters into your local `dbos-config.yaml`.
 
 **Parameters:**
-- `<database-instance-name>`: The name of the database instance to which to connect.
+- `[database-instance-name]`: The name of the database instance to which to connect.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
 ---
@@ -188,6 +202,21 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 - `--enable-timetravel`: Enable time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
+
+---
+
+### `dbos-cloud app update`
+
+**Description:**
+Update an application metadata in DBOS Cloud.
+
+**Parameters:**
+- `[application-name]`: The name of the application to update.
+- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription.
+
+:::info
+This command does not trigger a redeployment of the application. To apply changes affecting the application's executors, you must redeploy the application with [`dbos-cloud app deploy`](#dbos-cloud-app-deploy).
+:::
 
 ---
 

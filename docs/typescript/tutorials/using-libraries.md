@@ -15,13 +15,13 @@ npm install @dbos-inc/communicator-email-ses
 
 Second, import the key classes from the library for use in your source files:
 ```typescript
-import { SendEmailCommunicator } from "@dbos-inc/communicator-email-ses";
+import { SendEmailStep } from "@dbos-inc/communicator-email-ses";
 ```
 
 ### Calling Simple Functions
 Libraries such as `@dbos-inc/communicator-bcrypt` or `@dbos-inc/communicator-datetime` are comprised of functions that can be invoked from their classes.  Using the context (named `ctx` below), the `invoke` method can be used to call the library function:
 ```typescript
-ctx.invoke(BcryptCommunicator).bcryptHash('myString');
+ctx.invoke(BcryptStep).bcryptHash('myString');
 ```
 
 ### Working With Configured Classes
@@ -29,13 +29,13 @@ While libraries such as `@dbos-inc/communicator-bcrypt` or `@dbos-inc/communicat
 
 ```typescript
 import { configureInstance } from "@dbos-inc/dbos-sdk";
-import { SendEmailCommunicator } from "@dbos-inc/communicator-email-ses";
+import { SendEmailStep } from "@dbos-inc/communicator-email-ses";
 
-const sesMailer = configureInstance(SendEmailCommunicator, 'marketing', {awscfgname: 'marketing_email_aws_config'});
+const sesMailer = configureInstance(SendEmailStep, 'marketing', {awscfgname: 'marketing_email_aws_config'});
 ```
 
 Note that the `configureInstance` call above serves multiple purposes:
-* Creates an instance of `SendEmailCommunicator`
+* Creates an instance of `SendEmailStep`
 * Provides the instance with enough information to find essential configuration information (AWS region, access key, and secret) from the configuration file
 * Registers the instance under the name 'marketing'
 

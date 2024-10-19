@@ -126,7 +126,7 @@ This workflow is guaranteed to handle every Kafka message exactly once, even if 
 
 To send messages, we create a KafkaProducerCommunicator object like so:
 ```typescript
-//A Communicator config instance used to produce messages (operations.ts)
+//A configured instance used to produce messages (operations.ts)
 const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, respondTopic, {
   createPartitioner: Partitioners.DefaultPartitioner
 });
@@ -253,7 +253,7 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
 ## 6. The Workflow to Assign and Release
 
 We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
-1. use the [CurrentTimeCommunicator](../reference/communicatorlib.md#currenttimecommunicator) to durably retrieve the workflow start time
+1. use the [CurrentTimeStep](../reference/communicatorlib.md#currenttimestep) to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to release this assignment when time is up.
@@ -265,7 +265,7 @@ The code looks like so:
 //in operations.ts/AlertCenter
 @Workflow()
 static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
-  let ctime = await ctxt.invoke(CurrentTimeCommunicator).getCurrentTime();
+  let ctime = await ctxt.invoke(CurrentTimeStep).getCurrentTime();
 
   //Get new assignment, extend time or simply return current assignment
   const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
@@ -280,7 +280,7 @@ static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOpt
 
     while (expirationMS > ctime) {
       await ctxt.sleepms(expirationMS - ctime); //durable sleep
-      const curDate = await ctxt.invoke(CurrentTimeCommunicator).getCurrentDate();
+      const curDate = await ctxt.invoke(CurrentTimeStep).getCurrentDate();
       ctime = curDate.getTime();
       const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
       if (!nextTime) {
