@@ -1,11 +1,16 @@
 ---
 sidebar_position: 11
-title: CI/CD tools
+title: CI/CD Best Practices
 ---
 
 This this section we will cover tools provided by DBOS Cloud to enable CI/CD best practices.
 
-## Environments
+## Staging and Production Environments
+
+To make it easy to test changes to your application with affecting your production users, we recommend using separate staging and production environments. You can implement these as separate DBOS applications with separate application databases. Here's how we recommend doing this:
+
+TODO: Make `app_db_name` configurable from the command line, then come back and write this properly.
+
 Use a different DBOS Cloud application for each environment, _e.g._, dev, staging and production.
 You can do so by [deploying](application-management#deploying-applications) the same application multiple times, each time with a different name, _e.g._, `my-app-dev`, `my-app-staging`, `my-app-prod`. The application name can be provided to the DBOS Cloud CLI, for instance: `dbos-cloud app deploy my-app-dev`.
 
