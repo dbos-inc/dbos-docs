@@ -104,7 +104,6 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: hello
   app_db_client: knex
   migrate:
     - npx knex migrate:latest

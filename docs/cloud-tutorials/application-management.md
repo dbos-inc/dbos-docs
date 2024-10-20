@@ -20,7 +20,7 @@ Your application is deployed using the name in its `dbos-config.yaml`.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
 The first time you deploy an application, you are prompted to choose to which [database instance](../cloud-tutorials/database-management.md) to connect your app, or to provision one if you have none.
-Multiple applications can connect to the same database instance (server) but must use separate databases within that server (the `app_db_name` field in `dbos-config.yaml`).
+Multiple applications can connect to the same database instance (server)&mdash;they are deployed to isolated databases on that server.
 
 Each time you deploy an application, the following steps execute:
 
@@ -43,7 +43,7 @@ If you edit your application, run `dbos-cloud app deploy` again to apply the lat
 * During your first deploy, you can programatically specify a particular database instance through the `-d <database-instance-name>`.
 * During the first deploy, you can enable time travel for your application with `--enable-timetravel`. You can delete and re-deploy an existing application to enable time travel.
 * You don't have to worry about changing database server connection parameters like `hostname` or `password` in `dbos-config.yaml` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database instance.
-* You cannot change the application database (`app_db_name`) of a deployed application. You must delete and re-deploy the application.
+* You cannot change the database of a deployed application. You must delete and re-deploy the application.
 :::
 
 

@@ -97,7 +97,6 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: dbos_hello_app
   connectionTimeoutMillis: 3000
   app_db_client: drizzle
   migrate:
