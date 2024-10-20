@@ -4,7 +4,7 @@ sidebar_position: 4
 title: Reliable Customer Service Agent
 ---
 
-In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and OpenAI's Swarm framework.
+In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and OpenAI's [Swarm](https://github.com/openai/swarm/tree/main) framework.
 
 This agent takes in a user's name, processes a refund for the user, and then applies a discount.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.
@@ -16,47 +16,10 @@ Try running this agent and pressing `Ctrl+C` at any time. You can see that when 
 All source code is [available on GitHub](https://github.com/dbos-inc/durable-swarm/tree/main/examples/reliable_refund).
 
 
-## Reliable Multi-Agent Orchestration
+## Writing an AI-Powered Refund Agent
 
-Let's start off with enhancing OpenAI's lightweight multi-agent orchestration framework, [Swarm](https://github.com/openai/swarm/tree/main), with DBOS to make it **resilient to any failure**.
-Simply create a `durable_swarm.py` file containing the following code:
-
-```python showLineNumbers title="durable_swarm.py"
-from swarm import Swarm
-from dbos import DBOS, DBOSConfiguredInstance
-from swarm.repl.repl import pretty_print_messages
-
-DBOS()
-
-@DBOS.dbos_class()
-class DurableSwarm(Swarm, DBOSConfiguredInstance):
-    def __init__(self, client=None):
-        Swarm.__init__(self, client)
-        DBOSConfiguredInstance.__init__(self, "openai_client")
-
-    @DBOS.step()
-    def get_chat_completion(self, *args, **kwargs):
-        return super().get_chat_completion(*args, **kwargs)
-
-    @DBOS.workflow()
-    def run(self, *args, **kwargs):
-        response = super().run(*args, **kwargs)
-        pretty_print_messages(response.messages)
-        return response
-
-DBOS.launch()
-```
-
-This code declares the main loop of Swarm (`run`) to be a durable workflow and each chat completion to be a step in that workflow.
-Therefore, if a workflow is interrupted, it will skip already finished chat completion steps and use the recorded outputs of those steps.
-
-## Writing a Refund Agent
-
-Next, let's create a refund agent using Swarm.
-Swarm agents can call python functions directly, and this agent contains two functions: `process_refund` and `apply_discount`. We decorate the `refund_step` and `apply_discount` functions as DBOS steps in the agent's workflow.
-
-This way, if the agent's workflow is interrupted while processing a refund, when it restarts, it will resume from the last completed step.
-DBOS guarantees that once the agent's workflow starts, you will always get a refund, and never be refunded twice or get the discount twice!
+Let's start off with creating an AI-powered refund agent using OpenAI's lightweight multi-agent orchestration framework, [Swarm](https://github.com/openai/swarm/tree/main).
+This agent contains two functions: `process_refund` to help a user to return an item, and `apply_discount` to apply a discount to the user's future purchases. These functions may be invoked based on OpenAI LLM's output. In addition, the `process_refund` function invokes several sub-steps (`refund_step`) which simulates a complex refund workflow.
 
 ```python showLineNumbers title="agents.py"
 from swarm import Agent
@@ -89,23 +52,54 @@ refunds_agent = Agent(
 )
 ```
 
-## Invoking the Agent's Workflow
+We decorate the `refund_step` and `apply_discount` functions as DBOS steps in the agent's workflow. This way, if the agent's workflow is interrupted while processing a refund, when it restarts, it will resume from the last completed step.
+DBOS guarantees that once the agent's workflow starts, you will always get a refund, and never be refunded twice or get the discount twice!
 
-Finally, let's connect to the agent and use it to process refunds!
-In your `main.py`, import `refunds_agent` and `DurableSwarm` you just wrote, and kick off a workflow with the user's name as an [idempotency key](../tutorials/idempotency-tutorial.md).
+
+## Reliable Agentic Workflow Orchestration
+
+Next, let's enhance Swarm with a few lines of DBOS code to make it **resilient to any failure**.
+In your `main.py` and copy in the following code:
+
+```python showLineNumbers title="main.py"
+from dbos import DBOS, DBOSConfiguredInstance
+from swarm import Swarm
+from swarm.repl.repl import pretty_print_messages
+
+DBOS()
+
+@DBOS.dbos_class()
+class DurableSwarm(Swarm, DBOSConfiguredInstance):
+    def __init__(self, client=None):
+        Swarm.__init__(self, client)
+        DBOSConfiguredInstance.__init__(self, "openai_client")
+
+    @DBOS.step()
+    def get_chat_completion(self, *args, **kwargs):
+        return super().get_chat_completion(*args, **kwargs)
+
+    @DBOS.workflow()
+    def run(self, *args, **kwargs):
+        response = super().run(*args, **kwargs)
+        pretty_print_messages(response.messages)
+        return response
+
+DBOS.launch()
+```
+
+This code declares the main loop of Swarm (`run`) to be a durable DBOS workflow and each chat completion to be a DBOS step in that workflow.
+Therefore, if a workflow is interrupted, it will skip already finished chat completion steps and use the recorded outputs of those steps.
+
+Finally, let's create a DurableSwarm instance and use the refund agent to process refunds!
+Add the following lines to your `main.py`. This script kicks off a workflow with the user's name as an [idempotency key](../tutorials/idempotency-tutorial.md).
 This way, each user is guaranteed to be refunded exactly once.
 
 ```python showLineNumbers title="main.py"
-import sys
-import signal
-
 from agents import refunds_agent
-from durable_swarm import DurableSwarm
 from dbos import SetWorkflowID
 
-client = DurableSwarm()
-
 def main():
+    client = DurableSwarm()
     print("Connecting to Durable Refund Agent 💪🐝")
 
     user_name = input("\033[90mWhat's your name\033[0m: \n")
