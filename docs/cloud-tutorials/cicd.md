@@ -3,8 +3,6 @@ sidebar_position: 11
 title: CI/CD Best Practices
 ---
 
-This this section we will cover tools provided by DBOS Cloud to enable CI/CD best practices.
-
 ## Staging and Production Environments
 
 To make it easy to test changes to your application with affecting your production users, we recommend using separate staging and production environments.
