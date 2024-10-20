@@ -126,7 +126,6 @@ database:
   hostname: 'localhost'
   port: 5432
   username: 'postgres'
-  app_db_name: 'hello_typeorm'
   password: ${PGPASSWORD}
   connectionTimeoutMillis: 3000
   app_db_client: typeorm

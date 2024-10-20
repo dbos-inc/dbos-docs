@@ -24,7 +24,7 @@ dbos-cloud db provision <database-instance-name> -U <database-username>
 
 :::info
 A Postgres database instance (server) can host many independent databases used by different applications.
-You can configure to which database on this server your app connects through the `app_db_name` field in its `dbos-config.yaml`.
+Each application is deployed to an isolated database by default; you can configure this through the `app_db_name` field in `dbos-config.yaml`.
 :::
 
 :::info
