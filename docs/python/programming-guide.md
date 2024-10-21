@@ -56,8 +56,9 @@ Every time the app receives a greeting, it performs two steps:
 
 We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
 
+Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
 
-```python showLineNumbers
+```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
 import os
 
@@ -118,10 +119,10 @@ To fix this problem, we'll use DBOS durable execution.
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following into your `main.py`.
+Copy the following code into your `greeting_guestbook/main.py`, replacing its existing contents:
 
 
-```python showLineNumbers
+```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
 import os
 
@@ -213,7 +214,7 @@ This is an incredibly powerful guarantee that helps you build complex, reliable 
 ## 3. Optimizing Database Operations
 
 For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace your `insert_greeting` with the following:
+To see this in action, replace the `insert_greeting` function in `greeting_guestbook/main.py` with the following:
 
 ```python showLineNumbers
 @DBOS.transaction()
