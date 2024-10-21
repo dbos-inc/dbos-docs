@@ -54,7 +54,7 @@ Every time the app receives a greeting, it performs two steps:
 1. Sign an online guestbook with the greeting.
 2. Record the greeting in the database.
 
-We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
+We deliberately **won't** use DBOS yet (except to fetch the database connection string) so we can show you how easy it is to add later.
 
 Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
 
@@ -63,6 +63,7 @@ import logging
 import os
 
 import requests
+from dbos import get_dbos_database_url
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
@@ -81,7 +82,7 @@ def sign_guestbook(name: str):
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 # Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(f"postgresql+psycopg://postgres:{os.environ['PGPASSWORD']}@localhost/greeting_guestbook")
+engine = create_engine(get_dbos_database_url())
 
 # Record the greeting in the database using SQLAlchemy
 def insert_greeting(name: str) -> str:
@@ -128,7 +129,7 @@ import os
 
 import requests
 #highlight-next-line
-from dbos import DBOS
+from dbos import DBOS, get_dbos_database_url
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
@@ -152,7 +153,7 @@ def sign_guestbook(name: str):
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 # Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(f"postgresql+psycopg://postgres:{os.environ['PGPASSWORD']}@localhost/greeting_guestbook")
+engine = create_engine(get_dbos_database_url())
 
 # Record the greeting in the database using SQLAlchemy
 #highlight-next-line
