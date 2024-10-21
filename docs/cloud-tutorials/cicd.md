@@ -37,7 +37,7 @@ env:
 ```
 
 Then the value of `API_KEY` in your client environment will be submitted with your application and supplied to it as an environment variable on DBOS Cloud.
-Only environment variables so requested in `dbos-config.yaml` are submitted and supplied like this.
+Only environment variables declared in `dbos-config.yaml` are submitted and supplied like this.
 
 ## Authentication
 You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
