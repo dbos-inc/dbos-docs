@@ -13,6 +13,7 @@ import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
+import { RiCustomerService2Line } from "react-icons/ri";
 
   <section className="row list">
   <CardLink
@@ -48,10 +49,18 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
     language="python"
   />
   <CardLink
+    label="Reliable Customer Service Agent"
+    href="python/examples/reliable-ai-agent"
+    description="Use DBOS and OpenAI's Swarm to build a reliable AI-powered customer service agent."
+    index="5"
+    icon={<RiCustomerService2Line color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Hacker News Bot"
     href="python/examples/hacker-news-bot"
     description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
-    index="5"
+    index="6"
     icon={<FaHackerNews color="white" size={50} />}
     language="python"
   />
@@ -59,7 +68,7 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
     label="AI-Powered Slackbot"
     href="python/examples/rag-slackbot"
     description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
-    index="6"
+    index="7"
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
@@ -67,7 +76,7 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
     label="Document Detective"
     href="python/examples/document-detective"
     description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
-    index="7"
+    index="8"
     icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
     language="python"
   />
@@ -75,7 +84,7 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
     label="Scheduled Reminders"
     href="python/examples/scheduled-reminders"
     description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
-    index="8"
+    index="9"
     icon={<RiCalendarScheduleLine color="white" size={50}/>}
     language="python"
   />
@@ -83,7 +92,7 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
-    index="9"
+    index="10"
     icon={<IoEarth color="white" size={50}/>}
     language="python"
   />
