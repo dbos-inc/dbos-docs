@@ -39,7 +39,7 @@ Every field is required unless otherwise specified.
 - **port**: Database server port. For local deployment only, not used in DBOS Cloud.
 - **username**: Username with which to connect to the database server. For local deployment only, not used in DBOS Cloud.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
-- **app_db_name**: (optional): Name of the application database. If not supplied, the application name is used instead.
+- **app_db_name**: (optional): Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
