@@ -5,13 +5,13 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
+
+
 This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
 First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
-
-This guide assumes you have access to a Postgres database, either running locally or in DBOS Cloud.
-If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
 ## 1. Setting Up Your App
 
@@ -45,14 +45,21 @@ Then, install and initialize DBOS:
 ```shell
 pip install dbos
 dbos init
-dbos migrate
 ```
 
-If you created a Postgres server on DBOS Cloud in the quickstart and want to connect to it, run this command and enter your cloud database password.
-**If you're using a local Postgres installation, skip this step**.
+DBOS needs a Postgres database to connect to.
+Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud database (if you followed the quickstart to set one up), a Docker container, or a local Postgres installation:
+
+<details>
+<summary>Instructions to set up Postgres</summary>
+
+<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
+</details>
+
+Finally, set up some database tables:
 
 ```shell
-dbos-cloud db local
+dbos migrate
 ```
 
 Next, let's use FastAPI to write a simple app that greets our friends.
