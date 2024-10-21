@@ -215,12 +215,12 @@ dbos-cloud app deploy
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-#### 1. Set up a Postgres Server
+#### 1. Set up a Postgres Database
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres server to connect to.
-You can use a DBOS Cloud server, a Docker container, or a local Postgres installation.
+First, your app needs a Postgres data to connect to.
+You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 > If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
 </article>

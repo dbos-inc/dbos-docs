@@ -10,7 +10,7 @@ First, without using DBOS, we'll build an app that records greetings to two diff
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
 
-This guide assumes you have a Postgres database running locally.
+This guide assumes you have access to a Postgres database, either running locally or in DBOS Cloud.
 If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
 ## 1. Setting Up Your App
@@ -46,6 +46,13 @@ Then, install and initialize DBOS:
 pip install dbos
 dbos init
 dbos migrate
+```
+
+If you created a Postgres server on DBOS Cloud in the quickstart and want to connect to it, run this command and enter your cloud database password.
+**If you're using a local Postgres installation, skip this step**.
+
+```shell
+dbos-cloud db local
 ```
 
 Next, let's use FastAPI to write a simple app that greets our friends.
