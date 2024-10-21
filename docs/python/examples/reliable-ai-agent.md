@@ -90,12 +90,10 @@ DBOS.launch()
 ```
 
 Finally, let's create a DurableSwarm instance and use the refund agent to process refunds!
-This script creates an interactive CLI for your agent that uses the user's name as an [idempotency key](../tutorials/idempotency-tutorial.md).
-This way, each user is guaranteed to be refunded exactly once.
+This script creates an interactive CLI for your agent.
 
 ```python showLineNumbers title="main.py"
 from agents import refunds_agent
-from dbos import SetWorkflowID
 
 def main():
     client = DurableSwarm()
@@ -108,13 +106,11 @@ def main():
     query = "I want to refund item 99 because it's too expensive and I don't like its color! I want to proceed with the refund and also get a discount for my next purchase!"
     context_variables = {"user_name": user_name}
 
-    # SetWorkflowID is used to ensure that user is refunded exactly once.
-    with SetWorkflowID(user_name):
-        client.run(
-            agent=refunds_agent,
-            messages=[{"role": "user", "content": query}],
-            context_variables=context_variables,
-        )
+    client.run(
+        agent=refunds_agent,
+        messages=[{"role": "user", "content": query}],
+        context_variables=context_variables,
+    )
 
 if __name__ == "__main__":
     main()
