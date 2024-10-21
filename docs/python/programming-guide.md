@@ -10,8 +10,7 @@ First, without using DBOS, we'll build an app that records greetings to two diff
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
 
-_**This guide assumes you have a Postgres database running locally and PGPASSWORD is exported in your environment.**_
-_**If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.**_
+_**This guide assumes you have a Postgres database running locally. You might need to export PGPASSWORD in your environment. See the [quickstart](../quickstart.md) for instructions on how to set up Postgres.**_
 
 ## 1. Setting Up Your App
 
