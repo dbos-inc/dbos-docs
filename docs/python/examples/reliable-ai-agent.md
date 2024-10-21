@@ -59,7 +59,9 @@ DBOS guarantees that once the agent's workflow starts, you will always get a ref
 ## Reliable Agentic Workflow Orchestration
 
 Next, let's enhance Swarm with a few lines of DBOS code to make it **resilient to any failure**.
-In your `main.py` and copy in the following code:
+
+This code declares the main loop of Swarm (`run`) to be a durable DBOS workflow and each chat completion to be a DBOS step in that workflow.
+Therefore, if a workflow is interrupted, it will skip already finished chat completion steps and use the recorded outputs of those steps.
 
 ```python showLineNumbers title="main.py"
 from dbos import DBOS, DBOSConfiguredInstance
@@ -87,11 +89,8 @@ class DurableSwarm(Swarm, DBOSConfiguredInstance):
 DBOS.launch()
 ```
 
-This code declares the main loop of Swarm (`run`) to be a durable DBOS workflow and each chat completion to be a DBOS step in that workflow.
-Therefore, if a workflow is interrupted, it will skip already finished chat completion steps and use the recorded outputs of those steps.
-
 Finally, let's create a DurableSwarm instance and use the refund agent to process refunds!
-Add the following lines to your `main.py`. This script kicks off a workflow with the user's name as an [idempotency key](../tutorials/idempotency-tutorial.md).
+This script creates an interactive CLI for your agent that uses the user's name as an [idempotency key](../tutorials/idempotency-tutorial.md).
 This way, each user is guaranteed to be refunded exactly once.
 
 ```python showLineNumbers title="main.py"
