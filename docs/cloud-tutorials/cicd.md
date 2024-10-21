@@ -5,7 +5,7 @@ title: CI/CD Best Practices
 
 ## Staging and Production Environments
 
-To make it easy to test changes to your application with affecting your production users, we recommend using separate staging and production environments.
+To make it easy to test changes to your application without affecting your production users, we recommend using separate staging and production environments.
 You can do this by deploying your application with different names for staging and production.
 For example, when deploying `my-app` to staging, deploy using:
 
