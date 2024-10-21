@@ -14,13 +14,24 @@ The piece at the top of the stack is a reusable "event receiver".  The "event re
 
 At the bottom of the stack, DBOS Transact functions will perform the application's work.  Workflows, transactions, and steps can be used to update the database and do further cordination with external systems.
 
-The necessary piece in the middle is configuration, which associates the events with the functions.  In the case of database triggers, the required configuration consists of:
+The necessary piece in the middle is configuration, which associates the events with the functions.  This configuration may also vary widely depending on the event source.
+
+In the case of Kafka, the configuration consists of:
+*  The location of the broker
+*  The message topic(s) of interest
+*  Any client configuration
+
+In the case of the scheduler, the configuration consists of:
+*  The event schedule
+*  For time periods where the application is inactive, whether missed events should be made up or skipped
+
+In the case of database triggers, which listen for records inserted into a table, the required configuration consists of:
 *  The source database
 *  The table (and schema) within the source database
 *  The key and timestamp columns of the source table records
 *  The function to be executed for each record received
 
-The configuration is conveyed by class and method [decorators](../reference/decorators.md#function-decorators) that accompany the event receiver, and are specific to its configuration needs.
+Because it is highly variable, configuration is conveyed by purpose-built class and method [decorators](../reference/decorators.md#function-decorators) that accompany the event receiver, and are specific to its configuration needs.
 
 ### Event Receiver Lifecycle
 An event receiver implements the `DBOSEventReceiver` interface:
@@ -64,13 +75,13 @@ The `workflow` method provided by `executor` accepts a `params` argument, of typ
 #### Backfilling For Missed Events
 The implementation of backfill depends on the nature of the event receiver.  Examples:
 * The scheduler can calculate past calendar dates and times when function invocation should have occurred
-* Kafka maintains a durable log of messages, so messages can be replayed from a topic offset
+* Kafka maintains a durable log of messages, so messages can be replayed from an offset within a topic
 * Database tables may keep old records, which can be queried for replay
 
 In these examples, it is important to have some durable summary status indicating which events were certainly already processed, and which may need to be handled upon recovery.  This event receiver checkpoint may be conservative, as the OAOO mechanisms built into workflows will handle any cases where multiple attempts were made to start the same workflow.
 
 * The scheduler should record a point in time before which all scheduled functions are known to have been initiated.
-* Kafka should keep per-topic offsets for each function, indicating a point in the message streamprior to which all messages are known to have been dispatched.
+* Kafka should keep per-topic offsets for each function, indicating a point in the message stream prior to which all messages are known to have been dispatched.
 * A database trigger should record a recent date or sequence number of records in the source table that are all known to be processed.
 
 The [`getEventDispatchState`](../reference/contexts.md#dbosexecutorcontextgeteventdispatchstate) and [`upsertEventDispatchState`](../reference/contexts.md#dbosexecutorcontextupserteventdispatchstate) methods provided by `executor` can be used to persist the event receiver state in the DBOS system database.
@@ -80,7 +91,7 @@ At `initialize` time, the event receiver can then:
 2. Query the system database to find the recent checkpoint
 3. Use the checkpoint to find missed source events after the checkpoint
 4. Perform "backfill"; process events from step 3 in sequential order, updating the checkpoint during processing
-5. Once backfill is complete, proceed to processing new events from step the listener in step 1.  These may be redundant with backfill work, but this is inconsequential as long as the workflow IDs are set.
+5. Once backfill is complete, proceed to processing new events from the listener started in step 1.  These may be redundant with backfill work, but this is inconsequential; as long as the workflow IDs are set, execution will happen once.
 
 ## Custom Event Receiver Decorators
 
