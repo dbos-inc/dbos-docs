@@ -219,7 +219,7 @@ dbos-cloud app deploy
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres data to connect to.
+First, your app needs a Postgres database to connect to.
 You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 > If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
