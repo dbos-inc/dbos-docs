@@ -60,7 +60,6 @@ Copy the following code into `greeting_guestbook/main.py`, replacing its existin
 
 ```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
-import os
 
 import requests
 from dbos import get_dbos_database_url
@@ -125,7 +124,6 @@ Copy the following code into your `greeting_guestbook/main.py`, replacing its ex
 
 ```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
-import os
 
 import requests
 #highlight-next-line
