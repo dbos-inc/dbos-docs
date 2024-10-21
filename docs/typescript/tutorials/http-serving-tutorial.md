@@ -222,11 +222,10 @@ const logAllRequests = () => {
                 DBOS.globalLogger?.warn(`[Exception] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
             }
         }
-        
     };
 };
 
-@KoaGlobalMiddleware(logAllRequests)
+@KoaGlobalMiddleware(logAllRequests())
 class OperationEndpoints{
   ...
 }
