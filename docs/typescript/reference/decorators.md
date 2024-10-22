@@ -630,7 +630,7 @@ Class-level decorator defining a Kafka configuration to use in all class methods
 Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
 
 
-#### `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig)` {#kafka-consume}
+#### `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)` {#kafka-consume}
 Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
 Takes in a Kafka topic or list of Kafka topics (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
@@ -656,6 +656,10 @@ class KafkaExample{
 }
 ```
 
+#### Concurrency and Rate Limiting
+By default, `@KafkaConsume` workflows are started immediately upon receiving Kafka messages.  If `queueName` is provided to the `@KafkaConsume` decorator, then the workflows will be enqueued in a [workflow queue](https://docs.dbos.dev/typescript/reference/workflow-queues) and subject to rate limits.
+
+
 ### Scheduled Workflow Decorators
 
 #### `@Scheduled(schedulerConfig: SchedulerConfig)` {#scheduled}
@@ -680,6 +684,7 @@ The `@Scheduled` decorator's configuration object is:
 export class SchedulerConfig {
     crontab : string = '* * * * *'; // Every minute by default
     mode ?: SchedulerMode = SchedulerMode.ExactlyOncePerInterval; // How to treat intervals
+    queueName ?: string;
 }
 ```
 
@@ -703,6 +708,9 @@ class ScheduledExample{
   }
 }
 ```
+
+### Concurrency and Rate Limiting
+By default, `@Scheduled` workflows are started immediately, including any make-up work identified when a VM starts.  If `queueName` is specified in the `SchedulerConfig`, then the workflow will be enqueued in a [workflow queue](https://docs.dbos.dev/typescript/reference/workflow-queues) and subject to rate limits.
 
 #### `crontab` Specification
 The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.

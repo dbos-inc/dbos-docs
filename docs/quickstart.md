@@ -21,10 +21,10 @@ import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 #### 1. Initialize your application
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
+Next, install `dbos` and initialize your folder with a sample application.
 
 > You can choose another name for your app. Names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
 
-Then, install `dbos` and initialize your folder with a sample application.
 
 </article>
 
@@ -58,37 +58,6 @@ dbos init
 ```
 </TabItem>
 </Tabs>
-
-<details>
-<summary>What if `dbos init` fails?</summary>
-
-If you see an error message `ImportError: no pq wrapper available`, try to install the binary package:
-
-```shell
-pip install "psycopg[binary]"
-```
-
-If the binary package is unavailable for your machine, try to install `libpq`:
-
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="mac" label="macOS">
-```shell
-brew install libpq
-```
-</TabItem>
-<TabItem value="linux" label="Linux">
-```shell
-sudo apt install libpq5
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-Use the [interactive windows installer](https://www.postgresql.org/download/windows/) to install **Command Line Tools**.
-</TabItem>
-</Tabs>
-
-If this fails, please check out the [psycopg3 installation guide](https://www.psycopg.org/psycopg3/docs/basic/install.html).
-
-</details>
 
 </article>
 
@@ -215,12 +184,12 @@ dbos-cloud app deploy
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-#### 1. Set up a Postgres Server
+#### 1. Set up a Postgres Database
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres server to connect to.
-You can use a DBOS Cloud server, a Docker container, or a local Postgres installation.
+First, your app needs a Postgres database to connect to.
+You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 > If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
 </article>

@@ -59,6 +59,7 @@ testRuntime = await createTestingRuntime(undefined, "dbos-config.yaml", false);
 - [invokeWorkflow(target, \[workflowID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
 - [startWorkflow(target, \[workflowID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
 - [retrieveWorkflow(workflowID)](#runtimeretrieveworkflowworkflowuuid)
+- [getWorkflows(query)](#runtimegetworkflowsquery)
 - [send(destinationID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
 - [getEvent(workflowID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
 - [getHandlersCallback()](#runtimegethandlerscallback)
@@ -136,6 +137,14 @@ retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 
 Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowID_](../tutorials/workflow-tutorial#workflow-identity).
 `R` is the return type of the target workflow.
+
+### runtime.getWorkflows(query)
+
+```typescript
+getWorkflows(query: GetWorkflowsInput): Promise<GetWorkflowsOutput>;
+```
+
+Returns a list of workflow IDs matching the provided query parameters.  See [`HandlerContext.getWorkflows()`](../reference/contexts.md#handlerctxtgetworkflows) for details.
 
 ### runtime.send(destinationUUID, message, \[topic, idempotencyKey\])
 

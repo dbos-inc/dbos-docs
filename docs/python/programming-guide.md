@@ -5,13 +5,13 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
+
+
 This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
 First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
-
-This guide assumes you have a Postgres database running locally.
-If not, see the [quickstart](../quickstart.md) for instructions on how to set it up.
 
 ## 1. Setting Up Your App
 
@@ -45,6 +45,20 @@ Then, install and initialize DBOS:
 ```shell
 pip install dbos
 dbos init
+```
+
+DBOS needs a Postgres database to connect to.
+Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud database (if you followed the quickstart to set one up), a Docker container, or a local Postgres installation:
+
+<details>
+<summary>Instructions to set up Postgres</summary>
+
+<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
+</details>
+
+Finally, set up some database tables:
+
+```shell
 dbos migrate
 ```
 
@@ -54,14 +68,15 @@ Every time the app receives a greeting, it performs two steps:
 1. Sign an online guestbook with the greeting.
 2. Record the greeting in the database.
 
-We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
+We deliberately **won't** use DBOS yet (except to fetch the database connection string) so we can show you how easy it is to add later.
 
+Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
 
-```python showLineNumbers
+```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
-import os
 
 import requests
+from dbos import get_dbos_database_url
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
@@ -80,7 +95,7 @@ def sign_guestbook(name: str):
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 # Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(f"postgresql+psycopg://postgres:{os.environ['PGPASSWORD']}@localhost/greeting_guestbook")
+engine = create_engine(get_dbos_database_url())
 
 # Record the greeting in the database using SQLAlchemy
 def insert_greeting(name: str) -> str:
@@ -118,16 +133,15 @@ To fix this problem, we'll use DBOS durable execution.
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following into your `main.py`.
+Copy the following code into your `greeting_guestbook/main.py`, replacing its existing contents:
 
 
-```python showLineNumbers
+```python showLineNumbers title="greeting_guestbook/main.py"
 import logging
-import os
 
 import requests
 #highlight-next-line
-from dbos import DBOS
+from dbos import DBOS, get_dbos_database_url
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 
@@ -151,7 +165,7 @@ def sign_guestbook(name: str):
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
 # Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(f"postgresql+psycopg://postgres:{os.environ['PGPASSWORD']}@localhost/greeting_guestbook")
+engine = create_engine(get_dbos_database_url())
 
 # Record the greeting in the database using SQLAlchemy
 #highlight-next-line
@@ -213,7 +227,7 @@ This is an incredibly powerful guarantee that helps you build complex, reliable 
 ## 3. Optimizing Database Operations
 
 For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace your `insert_greeting` with the following:
+To see this in action, replace the `insert_greeting` function in `greeting_guestbook/main.py` with the following:
 
 ```python showLineNumbers
 @DBOS.transaction()
