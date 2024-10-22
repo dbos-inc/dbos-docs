@@ -21,10 +21,10 @@ import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 #### 1. Initialize your application
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
+Next, install `dbos` and initialize your folder with a sample application.
 
 > You can choose another name for your app. Names should be 3 to 30 characters long and contain only lowercase letters and numbers, dashes, and underscores.
 
-Then, install `dbos` and initialize your folder with a sample application.
 
 </article>
 
@@ -58,37 +58,6 @@ dbos init
 ```
 </TabItem>
 </Tabs>
-
-<details>
-<summary>What if `dbos init` fails?</summary>
-
-If you see an error message `ImportError: no pq wrapper available`, try to install `libpq`:
-
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="mac" label="macOS">
-```shell
-brew install libpq
-```
-</TabItem>
-<TabItem value="linux" label="Linux">
-```shell
-sudo apt install libpq5
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows">
-Use the [interactive windows installer](https://www.postgresql.org/download/windows/) to install **Command Line Tools**.
-</TabItem>
-</Tabs>
-
-If this doesn't work, instead install the binary package:
-
-```shell
-pip install "psycopg[binary]"
-```
-
-If this also doesn't work, please check out the [psycopg3 installation guide](https://www.psycopg.org/psycopg3/docs/basic/install.html).
-
-</details>
 
 </article>
 
