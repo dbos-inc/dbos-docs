@@ -255,7 +255,7 @@ DBOSConfiguredInstance(
 - `instance_name`: The name of the instance, for recording in workflow database records
 
 **Example:**
-```
+```python
     @DBOS.dbos_class()
     class DBOSTestClass(DBOSConfiguredInstance):
         def __init__(self) -> None:
