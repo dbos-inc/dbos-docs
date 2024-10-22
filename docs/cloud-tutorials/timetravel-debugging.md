@@ -90,7 +90,7 @@ of a single function.
 
 #### Debugging from the Monitoring Dashboard
 
-You can launch the Time Travel Debugger directly from the [Monitoring Dashboard](./monitoring-dashboard#time-travel-debugging).
+You can launch the Time Travel Debugger directly from the [Monitoring Dashboard](./monitoring-dashboard).
 Clicking on the dashboard button in the workflow picker brings you directly to the Monitoring Dashboard. From there, you
 can use the dashboard's filtering capabilities to find the workflow you want to time travel debug. Once you find the
 desired workflow execution, click on the value in the workflow uuid column and select "Debug this Workflow" from the menu.
