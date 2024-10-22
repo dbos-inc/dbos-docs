@@ -55,13 +55,13 @@ testRuntime = await createTestingRuntime(undefined, "dbos-config.yaml", false);
 ```
 
 ## Methods
-- [invoke(target, \[workflowUUID, params\])](#runtimeinvoketarget-workflowuuid-params)
-- [invokeWorkflow(target, \[workflowUUID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
-- [startWorkflow(target, \[workflowUUID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
-- [retrieveWorkflow(workflowUUID)](#runtimeretrieveworkflowworkflowuuid)
+- [invoke(target, \[workflowID, params\])](#runtimeinvoketarget-workflowuuid-params)
+- [invokeWorkflow(target, \[workflowID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
+- [startWorkflow(target, \[workflowID, params\])](#runtimeinvokeworkflowtarget-workflowuuid-params)
+- [retrieveWorkflow(workflowID)](#runtimeretrieveworkflowworkflowuuid)
 - [getWorkflows(query)](#runtimegetworkflowsquery)
-- [send(destinationUUID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
-- [getEvent(workflowUUID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
+- [send(destinationID, message, \[topic, idempotencyKey\])](#runtimesenddestinationuuid-message-topic-idempotencykey)
+- [getEvent(workflowID, key, \[timeoutSeconds\])](#runtimegeteventworkflowuuid-key-timeoutseconds)
 - [getHandlersCallback()](#runtimegethandlerscallback)
 - [getConfig(key, defaultValue)](#runtimegetconfigkey-defaultvalue)
 - [queryUserDB(sql, ...params)](#runtimequeryuserdbsql-params)
@@ -69,7 +69,7 @@ testRuntime = await createTestingRuntime(undefined, "dbos-config.yaml", false);
 
 ### runtime.invoke(target, \[workflowUUID, params\])
 ```typescript
-invoke<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+invoke<T>(target: T, workflowID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 Invoke a transaction or step.
@@ -95,7 +95,7 @@ interface WorkflowInvokeParams {
 #### runtime.invokeWorkflow(target, \[workflowUUID, params\])
 
 ```typescript
-invokeWorkflow<T>(target: T, workflowUUID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
+invokeWorkflow<T>(target: T, workflowID?: string, params?: WorkflowInvokeParams): InvokeFuncs<T>
 ```
 
 Invoke a workflow and wait for it to complete, returning its result.
@@ -132,10 +132,10 @@ If the `queue` argument is provided, the workflow may not start immediately.  St
 ### runtime.retrieveWorkflow(workflowUUID)
 
 ```typescript
-retrieveWorkflow<R>(workflowUUID: string): WorkflowHandle<R>;
+retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 ```
 
-Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowUUID_](../tutorials/workflow-tutorial#workflow-identity).
+Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowID_](../tutorials/workflow-tutorial#workflow-identity).
 `R` is the return type of the target workflow.
 
 ### runtime.getWorkflows(query)
@@ -160,10 +160,10 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 ### runtime.getEvent(workflowUUID, key, \[timeoutSeconds\])
 
 ```typescript
-getEvent<T extends NonNullable<any>>(workflowUUID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
+getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
 ```
 
-Retrieves a value published by a _workflowUUID_ with identifier _key_ using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves a value published by a _workflowID_ with identifier _key_ using the [events API](../tutorials/workflow-communication-tutorial#events-api).
 A call to `getEvent` waits for the value to be published and returns `null` in case of time out.
 
 ### runtime.getHandlersCallback()
