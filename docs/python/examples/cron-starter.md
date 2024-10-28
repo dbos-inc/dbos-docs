@@ -87,7 +87,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 
 </section>
 
-### Building a Cloud Cron Application
+### Scheduling Your Code
 
 Now, let's build a scheduled job in just 6 lines of code.
 Create a `main.py` file and copy the following code into it:
@@ -131,10 +131,15 @@ You can easily adapt this 6-line starter to implement your own scheduled job.
 Simply replace `scheduled_function` with your own function to run it on a schedule!
 Some useful implementation notes:
 
-- The two arguments passed into `scheduled_function` are the time the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).
-- Schedules are specified in crontab syntax as an argument to the `@DBOS.scheduled` decorator.
+- Schedules are specified in crontab syntax.
 For example, `* * * * *` means "run once a minute."
-To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
+To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/).
+- The two arguments passed into `scheduled_function` are the time the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).
+
+Here are two larger examples built with DBOS scheduling:
+
+- [**Hacker News Slackbot**](../examples/hacker-news-bot.md): Periodically search Hacker News for people commenting about serverless computing and post the comments to Slack.
+- [**Earthquake Tracker**](../examples/earthquake-tracker.md): Use a scheduled job to scrape earthquake data from the USGS, then build a real-time earthquake dashboard over it.
 
 ### Running It Locally
 
