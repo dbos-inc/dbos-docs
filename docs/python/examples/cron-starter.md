@@ -135,6 +135,7 @@ Some useful implementation notes:
 For example, `* * * * *` means "run once a minute."
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/).
 - The two arguments passed into `scheduled_function` are the time the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).
+- For more information, see our [scheduling documentation](../tutorials/scheduled-workflows.md).
 
 Here are two larger examples built with DBOS scheduling:
 
