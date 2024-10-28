@@ -6,7 +6,16 @@ hide_table_of_contents: false
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 
-In this tutorial, you'll learn how to build a scheduled (cron) job in Python and deploy it to the cloud in just **6 lines of code**.
+Let's say you want to run some code **on a schedule**.  For example, you want to:
+
+- Record a stock's price once a minute.
+- Migrate some data from one database to another once an hour.
+- Send emails to inactive users once a week.
+
+This kind of code isn't easy to manage because the server running it has to always be "on"&mdash;you can't just run it on your laptop.
+
+In this tutorial, we'll show you how to use DBOS to **host scheduled jobs on the cloud** so you don't have to worry about maintaining them.
+You'll learn how to write a scheduled (cron) job in **just 6 lines of Python code** and deploy it to the cloud with **just a single command**.
 
 ### Preparation
 
@@ -95,7 +104,7 @@ def scheduled_function(scheduled_time, actual_time):
     DBOS.logger.info(f"I just ran at {scheduled_time}")
 ```
 
-This code runs `scheduled_function` once a minute, every minute (the cron syntax `* * * * *` means "run every minute")
+This code runs `scheduled_function` once a minute, every minute (the cron syntax `* * * * *` means "run every minute").
 
 Now, let's deploy our application to the cloud.
 Just run these two commands:
