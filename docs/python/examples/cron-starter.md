@@ -5,6 +5,7 @@ title: Cloud Cron Quickstart
 hide_table_of_contents: false
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 Let's say you want to run some code **on a schedule**.  For example, you want to:
 
@@ -15,7 +16,7 @@ Let's say you want to run some code **on a schedule**.  For example, you want to
 This kind of code isn't easy to manage because the server running it has to always be "on"&mdash;you can't just run it on your laptop.
 
 In this tutorial, we'll show you how to use DBOS to **host scheduled jobs on the cloud** so you don't have to worry about maintaining them.
-You'll learn how to write a scheduled (cron) job in **just 6 lines of Python code** and deploy it to the cloud with **just a single command**.
+You'll learn how to write a scheduled (cron) job in **just 6 lines of Python code** and deploy it to the cloud with **a single command**.
 
 ### Preparation
 
@@ -123,3 +124,31 @@ dbos-cloud app logs
 ```
 
 You should see one log entry for every minute your application has been alive.
+
+### Next Steps
+
+You can easily adapt this 6-line starter to implement your own scheduled job.
+Simply replace `scheduled_function` with your own function to run it on a schedule!
+Some useful implementation notes:
+
+- The two arguments passed into `scheduled_function` are the time the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).
+- Schedules are specified in crontab syntax as an argument to the `@DBOS.scheduled` decorator.
+For example, `* * * * *` means "run once a minute."
+To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
+
+### Running It Locally
+
+Of course, you can also run your application locally for development and testing.
+Under the hood, DBOS uses Postgres for scheduling, so you need to connect your app to a Postgres database&mdash;you can use a DBOS Cloud database, a Docker container, or a local Postgres installation:
+
+<details>
+<summary>Instructions to set up Postgres</summary>
+
+<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
+</details>
+
+Once your app is connected, you can start it with:
+
+```
+dbos start
+```
