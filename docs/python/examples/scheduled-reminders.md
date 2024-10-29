@@ -98,14 +98,17 @@ As a basic anti-spam measure, we'll use the supplied email address and date as a
 That way, you can only send one reminder to any email address per day.
 
 ```python
-class EmailSchema(BaseModel):
+class RequestSchema(BaseModel):
     email: EmailStr
+    date: str
 
 
 @app.post("/email")
-def email_endpoint(email: EmailSchema):
-    with SetWorkflowID(email.email):
-        DBOS.start_workflow(reminder_workflow, email.email)
+def email_endpoint(request: RequestSchema):
+    send_date = datetime.strptime(request.date, "%Y-%m-%d").date()
+    today_date = datetime.now().date()
+    with SetWorkflowID(f"{request.email}-{request.date}"):
+        DBOS.start_workflow(reminder_workflow, request.email, send_date, today_date)
 ```
 
 Finally, let's serve the app's frontend from an HTML file using FastAPI.
