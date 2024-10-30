@@ -19,7 +19,8 @@ You should make a function a step if you're using it in a DBOS [workflow](./work
 
 Making a function a step has two benefits:
 
-1. It lets [workflows](./workflow-tutorial.md) know this function performs a complex operation or interacts with an external service, so the workflow can guarantee those operations or interactions happen exactly-once.
+1. If a [workflow](./workflow-tutorial.md) is interrupted, upon restart it automatically resumes execution from the **last completed step**.
+Therefore, making a function a step guarantees that a workflow will never re-execute it once it completes.
 
 2. DBOS provides [configurable automatic retries](#configurable-retries) for steps to more easily handle transient errors.
 
@@ -38,7 +39,7 @@ DBOS.step(
 )
 ```
 
-For example, we can configure `example_step` to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
+For example, we configure this step to retry exceptions (such as if `example.com` is temporarily down) up to 10 times:
 
 ```python
 @DBOS.step(retries_allowed=True, max_attempts=10)

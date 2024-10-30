@@ -14,6 +14,7 @@ import { RiCalendarScheduleLine } from "react-icons/ri";
 import { IoIosChatboxes } from "react-icons/io";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { RiCustomerService2Line } from "react-icons/ri";
+import { TbClock2 } from "react-icons/tb";
 
   <section className="row list">
   <CardLink
@@ -94,6 +95,14 @@ import { RiCustomerService2Line } from "react-icons/ri";
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
     index="10"
     icon={<IoEarth color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Cloud Cron Quickstart"
+    href="python/examples/cron-starter"
+    description="Use DBOS to write a cron job in just six lines of code and host it in the cloud with a single command."
+    index="10"
+    icon={<TbClock2 color="white" size={50}/>}
     language="python"
   />
   </section>
