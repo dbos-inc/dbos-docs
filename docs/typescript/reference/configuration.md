@@ -166,8 +166,8 @@ The Transact exporter uses [protobuf over HTTP](https://www.npmjs.com/package/@o
 ```yaml
 telemetry:
   OTLPExporter:
-    logsEndpoint: 'http://localhost:4318'
-    tracesEndpoint: 'http://localhost:4318'
+    logsEndpoint: 'http://localhost:4318/v1/logs'
+    tracesEndpoint: 'http://localhost:4318/v1/traces'
 ```
 
 ### Configuration Schema File
