@@ -80,6 +80,8 @@ DBOS.logger.info(f"I just ran at {scheduled_time}")
 
 You can view your application's logs from your [applications page](https://console.dbos.dev/applications).
 
+<img src={require('@site/static/img/cron-starter/4-app-page.png').default} alt="Deploy with GitHub" width="800" className="custom-img" />
+
 
 ### Next Steps
 
