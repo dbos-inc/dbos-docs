@@ -97,3 +97,12 @@
   margin: 0;
   font-size: small;
 }
+
+.custom-details {
+  background-color: var(--ifm-card-background-color);
+}
+
+.custom-img {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+}
