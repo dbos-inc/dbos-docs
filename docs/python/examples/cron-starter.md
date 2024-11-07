@@ -15,115 +15,73 @@ Let's say you want to run some code **on a schedule**.  For example, you want to
 
 This kind of code isn't easy to manage because the server running it has to always be "on"&mdash;you can't just run it on your laptop.
 
-In this tutorial, we'll show you how to use DBOS to **host scheduled jobs on the cloud** so you don't have to worry about maintaining them.
-You'll learn how to write a scheduled (cron) job in **just 6 lines of Python code** and deploy it to the cloud with **a single command**.
+In this tutorial, we'll show you how to use DBOS to **run code on a schedule in the cloud** so you don't have to worry about maintaining it.
+You'll learn how to write a scheduled (cron) function in **just 11 lines of Python code** and deploy it to the cloud with **a single click**.
 
-### Preparation
+### Tutorial
 
-<section className="row list">
-<article className="col col--6">
+#### 1. Select the Cloud Cron Starter
+Visit [https://console.dbos.dev/launch](https://console.dbos.dev/launch) and select the DBOS Cron Starter.
+When prompted, create a database for your app with default settings.
 
-First, create a folder for your app and activate a virtual environment.
-</article>
+<img src={require('@site/static/img/cron-starter/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
-<article className="col col--6">
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS/Linux">
-```shell
-python3 -m venv cron-app/.venv
-cd cron-app
-source .venv/bin/activate
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-```shell
-python3 -m venv ai-app/.venv
-cd ai-app
-.venv\Scripts\activate.ps1
-New-Item main.py
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-```shell
-python3 -m venv ai-app/.venv
-cd ai-app
-.venv\Scripts\activate.bat
-TYPE nul > main.py
-```
-</TabItem>
-</Tabs>
-</article>
+#### 2. Connect to GitHub and Deploy to DBOS Cloud
 
-<article className="col col--6">
-Then, install dependencies and initialize a DBOS config file.
-</article>
+To ensure you can easily update your project after deploying it, DBOS will create a GitHub repository for you.
+You can deploy directly from that GitHub repository to DBOS Cloud.
 
-<article className="col col--6">
-```shell
-pip install dbos
-dbos init --config
-```
-</article>
+First, sign in to your GitHub account.
+Then, set your repository name and whether it should be public or private.
 
-<article className="col col--6">
+Next, click "Create GitHub Repo and Deploy" and DBOS will clone a copy of the source code into your GitHub account, then deploy your project to DBOS Cloud.
+In less than a minute, your app should deploy successfully.
 
-Next, install the DBOS Cloud CLI.
-It requires Node.js 20 or later.
+<img src={require('@site/static/img/cron-starter/2-ready-deploy.png').default} alt="Deploy with GitHub" width="1000" className="custom-img" />
 
-</article>
+#### 3. View Your Application
 
-<article className="col col--6">
+At this point, your app is running code on a schedule in the cloud!
 
-<details>
-<summary>Instructions to install Node.js</summary>
-<InstallNode />
-</details>
+To see its code, visit your new GitHub repository and open `app/main.py`.
+The app schedules a function incrementing a counter to run once a minute (the cron syntax `* * * * *` means "once a minute").
+You can visit your app's URL to see the current value of the counter.
 
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-
-
-</section>
-
-### Scheduling Your Code
-
-Now, let's build a scheduled job in just 6 lines of code.
-Create a `main.py` file and copy the following code into it:
-
-```python showLineNumbers title="main.py"
+```python
 from dbos import DBOS
 from fastapi import FastAPI
 
 app = FastAPI()
 DBOS(fastapi=app)
+counter = 0
 
 @DBOS.scheduled("* * * * *")
-@DBOS.workflow()
+@DBOS.step()
 def scheduled_function(scheduled_time, actual_time):
-    DBOS.logger.info(f"I just ran at {scheduled_time}")
+    global counter
+    counter += 1
+
+@app.get("/")
+def endpoint():
+    return f"The scheduled function has run {counter} times!"
 ```
 
-This code runs `scheduled_function` once a minute, every minute (the cron syntax `* * * * *` means "run every minute").
 
-Now, let's deploy our application to the cloud.
-Just run these two commands:
+#### 4. Start Building
 
-```shell
-pip freeze > requirements.txt
-dbos-cloud app deploy
+To start building, edit your application on GitHub (source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" on your [applications page](https://console.dbos.dev/applications) to see your changes reflected in the live application.
+
+Not sure where to start?
+Try adding this line to the scheduled function so it logs each time it runs:
+
+```python
+DBOS.logger.info(f"I just ran at {scheduled_time}")
 ```
 
-Your app is now live in the cloud!
-Every minute, it will run `scheduled_function`.
-To view the app's logs, run:
+You can view your application's logs from the cloud console.
 
-```shell
-dbos-cloud app logs
-```
+<img src={require('@site/static/img/cron-starter/4-app-page.png').default} alt="Application Page" width="1000" className="custom-img" />
 
-You should see one log entry for every minute your application has been alive.
 
 ### Next Steps
 
@@ -145,16 +103,94 @@ Here are two larger examples built with DBOS scheduling:
 ### Running It Locally
 
 Of course, you can also run your application locally for development and testing.
-Under the hood, DBOS uses Postgres for scheduling, so you need to connect your app to a Postgres database&mdash;you can use a DBOS Cloud database, a Docker container, or a local Postgres installation:
+Just follow these steps!
+
+<section className="row list">
+<article className="col col--6">
+
+
+#### 1. Git Clone Your Application
+
+Clone your application from git, enter it, and set up a virtual environment.
+
+</article>
+
+
+<article className="col col--6">
+
+```shell
+git clone <your-git-url>
+cd dbos-cron-starter
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+</article>
+
+</section>
+
+#### 2. Install the DBOS Cloud CLI
+<section className="row list">
+<article className="col col--6">
+
+The Cloud CLI requires Node.js 20 or later.
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+Run this command to install it.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+#### 3. Connect Your Application to Postgres
+<section className="row list">
+<article className="col col--6">
+
+Under the hood, DBOS uses Postgres for scheduling, so you need to connect your app to a Postgres database—you can use a DBOS Cloud database, a Docker container, or a local Postgres installation:
+
+</article>
+
+<article className="col col--6">
 
 <details>
 <summary>Instructions to set up Postgres</summary>
 
 <LocalPostgres cmd={'python3 start_postgres_docker.py'} />
 </details>
+</article>
 
-Once your app is connected, you can start it with:
+</section>
 
-```
+
+#### 4. Start Your Appliation
+<section className="row list">
+<article className="col col--6">
+
+Start your application with this command, then visit [`http://localhost:8000`](http://localhost:8000) to see it!
+
+</article>
+
+<article className="col col--6">
+```shell
 dbos start
 ```
+</article>
+
+</section>
+
