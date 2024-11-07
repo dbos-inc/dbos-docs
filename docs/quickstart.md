@@ -13,7 +13,7 @@ import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 ### Deploy Your First App to the Cloud
 
 <details className="custom-details">
-<summary>Using CLI?</summary>
+<summary>Using the CLI?</summary>
 
 
 <LargeTabs groupId="language" queryString="language">
@@ -185,34 +185,41 @@ dbos-cloud app deploy
 
 <!-- Using cloud console -->
 #### 1. Find a Template
-Visit https://console.dbos.dev/launch and sign up/log in to DBOS Cloud Console.
-Then, click on the template you want to deploy.
-If you don't have a database, it will prompt you to provision a new one.
+From [https://console.dbos.dev/launch](https://console.dbos.dev/launch), select the template you'd like to deploy.
+When prompted, create a database for your app with default settings.
+
+Not sure which template to use? We recommend the DBOS + FastAPI starter.
 
 <img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
-#### 2. Deploy to DBOS Cloud
 
-After selecting a template and a database, you're ready to deploy!
-You could directly deploy without signing in to GitHub. However, to ensure you can easily update your app after deploying it, we recommend you to [deploy with GitHub](#3-deploy-with-github).
+#### 2. Connect to GitHub
 
-<img src={require('@site/static/img/quickstart/2-ready-deploy.png').default} alt="Ready to Deploy" width="1000" className="custom-img" />
+To ensure you can easily update your project after deploying it, DBOS will create a GitHub repository for it.
+You can deploy directly from that GitHub repository to DBOS Cloud.
 
-
-#### 3. Deploy with GitHub
-
-Once you sign in to GitHub, you'll need to set the repository name.
-DBOS will clone a copy of the source code into your GitHub account (as a **private repo** by default).
+First, sign in to your GitHub account.
+Then, set your repository name and whether it should be public or private.
 
 <img src={require('@site/static/img/quickstart/3-deploy-github.png').default} alt="Deploy with GitHub" width="1000" className="custom-img" />
 
+#### 3. Deploy to DBOS Cloud
 
-Click "Create GitHub Repo and Deploy", in less than a minute, it should show that the app is deployed successfully.
+Click "Create GitHub Repo and Deploy" and DBOS will clone a copy of the source code into your GitHub account, then deploy your project to DBOS Cloud.
+In less than a minute, your app should deploy successfully.
+
+Congratulations, you've successfully deployed your first app to DBOS Cloud!
 
 <img src={require('@site/static/img/quickstart/4-deploy-success.png').default} alt="Deploy Success" width="1000" className="custom-img" />
 
+#### 4. View Your Application
 
-Congratulations, you've successfully deployed your first app to DBOS Cloud!
+At this point, your app is serverlessly deployed, with its very own URL assigned.
+If you continue to your [application page](https://console.dbos.dev/applications), you can click on the URL to see your application live on the Internet.
+
+To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
+
+## TODO: App Page Screenshot
 
 ### Run Your App Locally
 
