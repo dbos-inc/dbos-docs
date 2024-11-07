@@ -146,11 +146,9 @@ npx -y @dbos-inc/create@latest -n my-app
 cd my-app/
 ```
 </article>
-
 </section>
 
 #### 2. Deploy to DBOS Cloud!
-
 <section className="row list">
 <article className="col col--6">
 Install the DBOS Cloud CLI.
@@ -247,7 +245,7 @@ cd my-app
 <section className="row list">
 <article className="col col--6">
 
-#### 2. Set up a virtual environment
+#### 2. Set up a Virtual Environment
 Create a virtual environment and install dependencies.
 
 </article>
@@ -331,7 +329,7 @@ You can use a DBOS Cloud database, a Docker container, or a local Postgres insta
 
 </section>
 
-#### 5. Run the app
+#### 5. Run the App
 
 <section className="row list">
 
@@ -439,7 +437,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres database to connect to.
+Your app needs a Postgres database to connect to.
 You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 </article>
@@ -456,7 +454,7 @@ You can use a DBOS Cloud database, a Docker container, or a local Postgres insta
 </section>
 
 
-#### 5. Run the app
+#### 5. Run the App
 
 
 <section className="row list">
