@@ -2,7 +2,7 @@
 displayed_sidebar: examplesSidebar
 sidebar_position: 11
 title: Cloud Cron Quickstart
-hide_table_of_contents: false
+hide_table_of_contents: true
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 import LocalPostgres from '/docs/partials/_local_postgres.mdx';
@@ -78,22 +78,20 @@ Try adding this line to the scheduled function so it logs each time it runs:
 DBOS.logger.info(f"I just ran at {scheduled_time}")
 ```
 
-You can view your application's logs from the cloud console.
-
-<img src={require('@site/static/img/cron-starter/4-app-page.png').default} alt="Application Page" width="1000" className="custom-img" />
+You can view your application's logs from your [applications page](https://console.dbos.dev/applications).
 
 
 ### Next Steps
 
-You can easily adapt this 6-line starter to implement your own scheduled job.
-Simply replace `scheduled_function` with your own function to run it on a schedule!
+You can adapt this 6-line starter to implement your own scheduled job.
+Replace `scheduled_function` with your own function to run it on a schedule!
 Some useful implementation notes:
 
 - Schedules are specified in crontab syntax.
 For example, `* * * * *` means "run once a minute."
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/).
 - The two arguments passed into `scheduled_function` are the time the run was scheduled (as a `datetime`) and the time the run was actually started (as a `datetime`).
-- For more information, see our [scheduling documentation](../tutorials/scheduled-workflows.md).
+- For more information, see the [scheduling documentation](../tutorials/scheduled-workflows.md).
 
 Here are two larger examples built with DBOS scheduling:
 
@@ -102,35 +100,62 @@ Here are two larger examples built with DBOS scheduling:
 
 ### Running It Locally
 
-Of course, you can also run your application locally for development and testing.
-Just follow these steps!
-
-<section className="row list">
-<article className="col col--6">
-
+You can also run your application locally for development and testing.
 
 #### 1. Git Clone Your Application
-
-Clone your application from git, enter it, and set up a virtual environment.
-
+<section className="row list">
+<article className="col col--6">
+Clone your application from git and enter its directory.
 </article>
-
 
 <article className="col col--6">
 
 ```shell
 git clone <your-git-url>
 cd dbos-cron-starter
+```
+
+</article>
+</section>
+
+#### 2. Set up a virtual environment
+<section className="row list">
+<article className="col col--6">
+
+Create a virtual environment and install dependencies.
+
+</article>
+
+<article className="col col--6">
+
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS or Linux">
+```shell
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.ps1
+pip install -r requirements.txt
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+</TabItem>
+</Tabs>
 
 </article>
-
 </section>
 
-#### 2. Install the DBOS Cloud CLI
+#### 3. Install the DBOS Cloud CLI
 <section className="row list">
 <article className="col col--6">
 
@@ -158,7 +183,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 </article>
 </section>
 
-#### 3. Connect Your Application to Postgres
+#### 4. Connect Your Application to Postgres
 <section className="row list">
 <article className="col col--6">
 
@@ -178,11 +203,11 @@ Under the hood, DBOS uses Postgres for scheduling, so you need to connect your a
 </section>
 
 
-#### 4. Start Your Appliation
+#### 5. Start Your Appliation
 <section className="row list">
 <article className="col col--6">
 
-Start your application with this command, then visit [`http://localhost:8000`](http://localhost:8000) to see it!
+Start your application with `dbos start`, then visit [`http://localhost:8000`](http://localhost:8000) to see it!
 
 </article>
 
