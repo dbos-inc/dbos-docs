@@ -315,10 +315,9 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres database to connect to.
+Your app needs a Postgres database to connect to.
 You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
-> If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
 </article>
 
 <article className="col col--6">
@@ -357,16 +356,14 @@ To see that it's working, visit this URL in your browser: http://localhost:8000/
 **Welcome to DBOS!**
 </BrowserWindow>
 </article>
-</section>
 
-#### 6. Next step
-<section className="row list">
 <article className="col col--6">
 Congratulations, you've started a DBOS app locally!
 To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
 </article>
 
 </section>
+
 </LargeTabItem>
 
 <LargeTabItem value="typescript" label="TypeScript">
@@ -445,7 +442,6 @@ npm i -g @dbos-inc/dbos-cloud@latest
 First, your app needs a Postgres database to connect to.
 You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
-> If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
 </article>
 
 <article className="col col--6">
@@ -488,10 +484,7 @@ To see that it's working, visit this URL in your browser: http://localhost:3000/
 </BrowserWindow>
 </article>
 
-</section>
 
-#### 6. Next step
-<section className="row list">
 <article className="col col--6">
 Congratulations, you've started a DBOS app locally!
 To learn more about building DBOS apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
