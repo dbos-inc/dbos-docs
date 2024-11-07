@@ -201,7 +201,7 @@ You can deploy directly from that GitHub repository to DBOS Cloud.
 First, sign in to your GitHub account.
 Then, set your repository name and whether it should be public or private.
 
-<img src={require('@site/static/img/quickstart/3-deploy-github.png').default} alt="Deploy with GitHub" width="1000" className="custom-img" />
+<img src={require('@site/static/img/quickstart/3-deploy-github.png').default} alt="Deploy with GitHub" width="800" className="custom-img" />
 
 #### 3. Deploy to DBOS Cloud
 
@@ -210,23 +210,108 @@ In less than a minute, your app should deploy successfully.
 
 Congratulations, you've successfully deployed your first app to DBOS Cloud!
 
-<img src={require('@site/static/img/quickstart/4-deploy-success.png').default} alt="Deploy Success" width="1000" className="custom-img" />
+<img src={require('@site/static/img/quickstart/4-deploy-success.png').default} alt="Deploy Success" width="800" className="custom-img" />
 
 #### 4. View Your Application
 
 At this point, your app is serverlessly deployed, with its very own URL assigned.
 If you continue to your [application page](https://console.dbos.dev/applications), you can click on the URL to see your application live on the Internet.
 
+<img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
+
 To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
-## TODO: App Page Screenshot
 
 ### Run Your App Locally
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
 
-#### 1. Set up a Postgres Database
+<section className="row list">
+<article className="col col--6">
+
+#### 1. Git Clone Your Application
+Clone your application from git and enter its directory.
+</article>
+
+<article className="col col--6">
+
+```shell
+git clone <your-git-url> my-app
+cd my-app
+```
+
+</article>
+</section>
+
+<section className="row list">
+<article className="col col--6">
+
+#### 2. Set up a virtual environment
+Create a virtual environment and install dependencies.
+
+</article>
+
+<article className="col col--6">
+
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS or Linux">
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.ps1
+pip install -r requirements.txt
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+</TabItem>
+</Tabs>
+
+</article>
+</section>
+
+
+<section className="row list">
+<article className="col col--6">
+
+#### 3. Install the DBOS Cloud CLI
+
+The Cloud CLI requires Node.js 20 or later.
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+Run this command to install it.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+#### 4. Set up a Postgres Database
 <section className="row list">
 <article className="col col--6">
 
@@ -247,7 +332,7 @@ You can use a DBOS Cloud database, a Docker container, or a local Postgres insta
 
 </section>
 
-#### 2. Run the app
+#### 5. Run the app
 
 <section className="row list">
 
@@ -274,7 +359,7 @@ To see that it's working, visit this URL in your browser: http://localhost:8000/
 </article>
 </section>
 
-#### 3. Next step
+#### 6. Next step
 <section className="row list">
 <article className="col col--6">
 Congratulations, you've started a DBOS app locally!
@@ -283,14 +368,82 @@ To learn more about building DBOS apps, check out our [Python programming guide]
 
 </section>
 </LargeTabItem>
+
 <LargeTabItem value="typescript" label="TypeScript">
 
-#### 1. Set up a Postgres Server
 <section className="row list">
 <article className="col col--6">
 
-First, your app needs a Postgres server to connect to.
-You can use a DBOS Cloud server, a Docker container, or a local Postgres installation.
+#### 1. Git Clone Your Application
+Clone your application from git and enter its directory.
+</article>
+
+<article className="col col--6">
+
+```shell
+git clone <your-git-url> my-app
+cd my-app
+```
+
+</article>
+</section>
+
+<section className="row list">
+<article className="col col--6">
+
+#### 2. Install Dependencies
+DBOS TypeScript requires Node.js 20 or later.
+
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+
+Install dependencies.
+
+</article>
+
+
+<article className="col col--6">
+
+```shell
+npm install
+```
+
+</article>
+</section>
+
+
+<section className="row list">
+<article className="col col--6">
+
+#### 3. Install the DBOS Cloud CLI
+
+Run this command to install the Cloud CLI globally.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+#### 4. Set up a Postgres Database
+<section className="row list">
+<article className="col col--6">
+
+First, your app needs a Postgres database to connect to.
+You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
 
 > If you're using your own Postgres database, make sure you update [`dbos-config.yaml`](./python/reference/configuration#database) with the connection info.
 </article>
@@ -307,7 +460,7 @@ You can use a DBOS Cloud server, a Docker container, or a local Postgres install
 </section>
 
 
-#### 2. Run the app
+#### 5. Run the app
 
 
 <section className="row list">
@@ -337,7 +490,7 @@ To see that it's working, visit this URL in your browser: http://localhost:3000/
 
 </section>
 
-#### 3. Next step
+#### 6. Next step
 <section className="row list">
 <article className="col col--6">
 Congratulations, you've started a DBOS app locally!
