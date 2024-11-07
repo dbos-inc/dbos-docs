@@ -12,6 +12,9 @@ import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 
 ### Deploy Your First App to the Cloud
 
+<details className="custom-details">
+<summary>Using CLI?</summary>
+
 
 <LargeTabs groupId="language" queryString="language">
 <LargeTabItem value="python" label="Python">
@@ -178,6 +181,38 @@ dbos-cloud app deploy
 
 </LargeTabs>
 
+</details>
+
+<!-- Using cloud console -->
+#### 1. Find a Template
+Visit https://console.dbos.dev/launch and sign up/log in to DBOS Cloud Console.
+Then, click on the template you want to deploy.
+If you don't have a database, it will prompt you to provision a new one.
+
+<img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+
+#### 2. Deploy to DBOS Cloud
+
+After selecting a template and a database, you're ready to deploy!
+You could directly deploy without signing in to GitHub. However, to ensure you can easily update your app after deploying it, we recommend you to [deploy with GitHub](#3-deploy-with-github).
+
+<img src={require('@site/static/img/quickstart/2-ready-deploy.png').default} alt="Ready to Deploy" width="1000" className="custom-img" />
+
+
+#### 3. Deploy with GitHub
+
+Once you sign in to GitHub, you'll need to set the repository name.
+DBOS will clone a copy of the source code into your GitHub account (as a **private repo** by default).
+
+<img src={require('@site/static/img/quickstart/3-deploy-github.png').default} alt="Deploy with GitHub" width="1000" className="custom-img" />
+
+
+Click "Create GitHub Repo and Deploy", in less than a minute, it should show that the app is deployed successfully.
+
+<img src={require('@site/static/img/quickstart/4-deploy-success.png').default} alt="Deploy Success" width="1000" className="custom-img" />
+
+
+Congratulations, you've successfully deployed your first app to DBOS Cloud!
 
 ### Run Your App Locally
 
