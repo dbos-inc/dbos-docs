@@ -174,6 +174,10 @@ const config = {
                 href: 'https://www.linkedin.com/company/dbos-inc/',
               },
               {
+                label: 'Bluesky',
+                href: 'https://bsky.app/profile/dbos.dev',
+              },
+              {
                 label: 'Twitter/X',
                 href: 'https://x.com/DBOS_Inc',
               },
