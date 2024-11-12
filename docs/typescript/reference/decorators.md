@@ -40,9 +40,9 @@ is the same as this:
 
 ### Enabling Decorators
 
-DBOS uses [Typescript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
+DBOS uses [TypeScript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
 If you initialize your project with [`npx -y @dbos-inc/create`](../reference/cli.md#npx-dbos-inccreate), these are automatically enabled.
-Otherwise, you must enable them by supplying the following configuration to the Typescript compiler (usually via the file `tsconfig.json`):
+Otherwise, you must enable them by supplying the following configuration to the TypeScript compiler (usually via the file `tsconfig.json`):
 
 ```json
 {
@@ -55,7 +55,7 @@ Otherwise, you must enable them by supplying the following configuration to the 
 
 ## Decorator Locations
 
-DBOS currently uses decorators at the class, function, or function parameter level.  (Typescript also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)
+DBOS currently uses decorators at the class, function, or function parameter level.  (TypeScript also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)
 
 ### Class Decorators
 
@@ -87,7 +87,7 @@ Parameter decorators are affixed to a function parameter, just before its name. 
 
 ## Decorators Reference
 
-### DBOS Typescript Decorators
+### DBOS TypeScript Decorators
 
 #### `@Workflow`
 Registers a function as a DBOS workflow.
@@ -522,7 +522,7 @@ export class User {}
 Allows the argument to have an undefined value.  See also [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
 
 :::info note
-TypeScript/Javascript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, DBOS converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in TypeScript.)
+TypeScript/JavaScript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, DBOS converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in TypeScript.)
 :::
 
 ```typescript
