@@ -48,5 +48,5 @@ As for the rest of the directory:
 - `src/operations.test.ts` contains example unit tests written with [Jest](https://jestjs.io/) and our [testing runtime](../tutorials/testing-tutorial.md). `jest.config.js` contains Jest configuration.
 - `knexfile.js` is a configuration file for [Knex](https://knexjs.org), which we use as a query builder and migration tool.
 - `migrations` is initialized with a Knex database migration used in the [quickstart guide](../../quickstart).  You can replace this with your own migration files.
-- `node_modules`, `package.json`, `package-lock.json`, and `tsconfig.json` are needed by all Node/Typescript projects. `eslint.config.js` is used by the JavaScript/TypeScript linter, [ESLint](https://eslint.org/).
+- `node_modules`, `package.json`, `package-lock.json`, and `tsconfig.json` are needed by all Node/TypeScript projects. `eslint.config.js` is used by the JavaScript/TypeScript linter, [ESLint](https://eslint.org/).
 - `start_postgres_docker.js` is a convenience script that initializes a Docker Postgres container for use in the [quickstart](../../quickstart). You can modify this script if you want to use Docker-hosted Postgres for local development.

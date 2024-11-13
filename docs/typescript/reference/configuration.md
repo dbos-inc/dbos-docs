@@ -46,7 +46,7 @@ Every field is required unless otherwise specified.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a Typescript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a TypeScript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:
@@ -74,7 +74,7 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 This section is used to specify DBOS runtime parameters.
 
 - **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./cli#npx-dbos-start) overrides this config parameter.
-- **entrypoints** (optional): The compiled Javascript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
+- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
 
 **Example**:
 

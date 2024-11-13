@@ -42,7 +42,7 @@ Some of these tools include:
 * [Swagger CodeGen](https://swagger.io/tools/swagger-codegen/) and [Online Editor](https://editor.swagger.io/)
 * [openapi-typescript](https://openapi-ts.pages.dev/)
 * [oazapfts](https://github.com/oazapfts/oazapfts)
-* [OpenAPI Typescript Codegen](https://github.com/ferdikoomen/openapi-typescript-codegen)
+* [OpenAPI TypeScript Codegen](https://github.com/ferdikoomen/openapi-typescript-codegen)
 
 We can't provide tutorials for all of these OpenAPI generator tools, but the Swagger Editor runs in the browser so is straightforward to use for a simple tutorial
 
