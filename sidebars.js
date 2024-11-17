@@ -25,6 +25,11 @@ const sidebars = {
       label: 'Get Started',
     },
     {
+      type: 'doc',
+      id: 'why-dbos',
+      label: 'Why DBOS?',
+    },
+    {
       type: 'category',
       label: 'Develop with Python',
       items: [
