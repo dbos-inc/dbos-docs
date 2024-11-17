@@ -5,7 +5,7 @@
 
 DBOS helps you write code that is **reliable** and **fault-tolerant** by default.
 DBOS **durably executes** your programs, so that if they fail, upon restart they automatically resume from where they left off.
-This makes all sorts of programs much easier to write:
+This makes all sorts of programs easier to write:
 
 
 <Tabs groupId="examples">
@@ -41,7 +41,7 @@ def checkout_workflow(items):
 <article className="col col--6">
 
 Launch any task to run in the background and guarantee it eventually completes.
-Wait for hours, days, or weeks, or for a notification, before continuing&mdash;it just works.
+Wait for days or weeks, or for a notification, before continuing&mdash;it just works.
 </article>
 <article className="col col--6">
 
@@ -209,4 +209,4 @@ Your program runs the same in the cloud as it does locally, but with operating i
 
 ## Get Started
 
-What are you waiting for?  Check out our [quickstart](./quickstart.md) to get started!
+What are you waiting for?  Check out the [quickstart](./quickstart.md) to get started!
