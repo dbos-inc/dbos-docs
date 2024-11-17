@@ -22,10 +22,13 @@ If that happens and you're not careful, your program might break:
 - Your program might be interrupted before the user fills out their form, so you never handle it.
 
 Writing programs that correctly handle failures is **hard**.
-Experienced developers tell us that if the want their programs to be correct, 70-90% of their code must be for failure handling and recovery.
+Experienced developers tell us that if you want your programs to be correct, 70-90% of the code must be for failure handling and recovery.
 For every line of business logic you write, you have to write 3-10 lines of failure handling.
-That's a lot.
-DBOS makes it easier, letting you write code that reliably works by default:
+
+DBOS helps you write code that is **reliable** and **fault-tolerant** by default.
+DBOS **durably executes** your programs, so that if they fail, upon restart they automatically resume from where they left off.
+This makes all sorts of programs much easier to write:
+
 
 <Tabs groupId="examples">
 
@@ -182,3 +185,50 @@ def handle_message(request: BoltRequest) -> None:
 </TabItem>
 
 </Tabs>
+
+## How it Works
+
+All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
+To use the library, annotate _workflows_ and _steps_ in your program like this:
+
+```python
+@DBOS.step()
+def step_one():
+    ...
+
+@DBOS.step()
+def step_two():
+    ...
+
+@DBOS.workflow()
+def workflow()
+    step_one()
+    step_two()
+```
+
+If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
+
+Under the hood, DBOS works by storing your program's execution state (which workflows are currently executing and which steps they've completed) in a Postgres database.
+So all DBOS needs to work is a Postgres database to connect to&mdash;there's no need for a separate "workflow server".
+
+DBOS provides many powerful features you can use to enhance your workflows, including:
+
+- Durable queues: Start many parallel durable workflows, with controlled concurrency.
+- Durable sleeps and notifications: Workflows can wait hours, days, or weeks, or for a notification, and will always resume on schedule.
+- Scheduled workflows: Run a workflow exactly-once per time interval.
+- Exactly-once event processing: Start a durable workflow exactly-once per incoming event, for example from Kafka.
+- Idempotency: Use built-in idempotency keys to start a workflow only once, no matter how many times it is called with that key.
+
+## Serverless Hosting
+
+Any program you build with DBOS you can deploy for free to DBOS Cloud.
+You can deploy any program with a single command&mdash;no configuration required.
+Your program runs the same in the cloud as it does locally, but with operating it is much simpler thanks to:
+
+- Severless autoscaling to millions of users.
+- A billing model where you pay only for the CPU time you actually use, and nothing at all for idle time.
+- Built-in application management and observability from the [cloud console](https://console.dbos.dev).
+
+## Get Started
+
+What are you waiting for?  Check out our [quickstart](./quickstart.md) to get started!
