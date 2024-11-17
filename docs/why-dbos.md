@@ -3,28 +3,6 @@
 
 # Why DBOS?
 
-DBOS helps you build **reliable applications**.
-Right now, many common programs are much harder to write than they should be.
-For example, imagine if you want to:
-
-- Run a workflow with several business-critical steps (for example, booking a hotel reservation), guaranteeing that each step executes once and only once.
-- Build a webhook handler that can process notifications in the background and handle duplicates without ever dropping a notification.
-- Schedule an event to run 24 hours from now (or once every 24 hours until a task is complete).
-- Email a form to someone, then pause your workflow until they're done filling out the form.
-
-Each of these examples is hard to write reliably because you have to deal with **failures**.
-At any point in time, any step in your program might fail, or crash, or be interrupted, or your server may be restarted.
-If that happens and you're not careful, your program might break:
-
-- A workflow might fail partway through, leaving steps incomplete.
-- A webhook might fail while asynchronously processing a notification, dropping it forever.
-- Your server might restart while waiting the 24 hours, so your scheduled event never runs.
-- Your program might be interrupted before the user fills out their form, so you never handle it.
-
-Writing programs that correctly handle failures is **hard**.
-Experienced developers tell us that if you want your programs to be correct, 70-90% of the code must be for failure handling and recovery.
-For every line of business logic you write, you have to write 3-10 lines of failure handling.
-
 DBOS helps you write code that is **reliable** and **fault-tolerant** by default.
 DBOS **durably executes** your programs, so that if they fail, upon restart they automatically resume from where they left off.
 This makes all sorts of programs much easier to write:
@@ -138,9 +116,8 @@ logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 <section className="row list">
 <article className="col col--6">
 
-Enhance your AI workflows with DBOS.
-Build reliable AI agents with automatic retries and no limit on how long tools can run for.
-Integrate with frameworks like LlamaIndex and LangChain.
+Consume Kafka messages exactly-once, no need to worry about timeouts or offsets.
+
 </article>
 <article className="col col--6">
 
@@ -209,15 +186,15 @@ def workflow()
 If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
 
 Under the hood, DBOS works by storing your program's execution state (which workflows are currently executing and which steps they've completed) in a Postgres database.
-So all DBOS needs to work is a Postgres database to connect to&mdash;there's no need for a separate "workflow server".
+So all DBOS needs to work is a Postgres database to connect to&mdash;there's no need for a separate "workflow server."
 
-DBOS provides many powerful features you can use to enhance your workflows, including:
+DBOS provides many powerful features you can use to build reliable programs, including:
 
-- Durable queues: Start many parallel durable workflows, with controlled concurrency.
-- Durable sleeps and notifications: Workflows can wait hours, days, or weeks, or for a notification, and will always resume on schedule.
-- Scheduled workflows: Run a workflow exactly-once per time interval.
-- Exactly-once event processing: Start a durable workflow exactly-once per incoming event, for example from Kafka.
-- Idempotency: Use built-in idempotency keys to start a workflow only once, no matter how many times it is called with that key.
+- **Durable queues**: Run many durable workflows in parallel, with controlled concurrency.
+- **Durable sleeps and notifications**: Workflows can wait for days or weeks, or for a notification, and will always resume on schedule.
+- **Scheduled workflows**: Start a workflow exactly-once per time interval.
+- **Exactly-once event processing**: Start a durable workflow exactly-once per incoming event, for example from Kafka.
+- **Idempotency**: Use built-in idempotency keys to start a workflow only once, no matter how many times it is called with that key.
 
 ## Serverless Hosting
 
@@ -225,9 +202,10 @@ Any program you build with DBOS you can deploy for free to DBOS Cloud.
 You can deploy any program with a single command&mdash;no configuration required.
 Your program runs the same in the cloud as it does locally, but with operating it is much simpler thanks to:
 
-- Severless autoscaling to millions of users.
-- A billing model where you pay only for the CPU time you actually use, and nothing at all for idle time.
-- Built-in application management and observability from the [cloud console](https://console.dbos.dev).
+- **No servers to manage**: We serverlessly deploy your applications for you.
+- **Autoscaling**: Your application automatically scales with load, potentially to millions of users.
+- **Pay only for the CPU time you actually use**: Pay only when you're using your app, and nothing at all for idle time.
+- **Built in observability**: View your logs and traces and manage your application from the [cloud console](https://console.dbos.dev).
 
 ## Get Started
 
