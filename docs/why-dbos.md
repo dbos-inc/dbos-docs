@@ -1,4 +1,5 @@
 ---
+hide_table_of_contents: false
 ---
 
 # Why DBOS?
@@ -12,12 +13,12 @@ This makes all sorts of programs easier to write:
 
 <TabItem value="workflow" label="Reliable Workflows">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Write your business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
 
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
 @DBOS.workflow()
@@ -38,12 +39,12 @@ def checkout_workflow(items):
 
 <TabItem value="background" label="Background Tasks">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Launch any task to run in the background and guarantee it eventually completes.
 Wait for days or weeks, or for a notification, before continuing&mdash;it just works.
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
 @DBOS.workflow()
@@ -62,13 +63,13 @@ def email_endpoint(request):
 
 <TabItem value="cron" label="Cron Jobs">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Schedule functions to run at specific times.
 Host them completely serverlessly.
 
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
 @DBOS.scheduled("0 * * * *") # Run once an hour
@@ -85,12 +86,12 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
 
 <TabItem value="pipelines" label="Data Pipelines">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Build data pipelines that are reliable and observable by default.
 DBOS durable queues guarantee all your tasks complete.
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
 queue = Queue("indexing_queue")
@@ -104,7 +105,7 @@ def indexing_workflow(urls: List[HttpUrl]):
 indexed_pages = 0
 for handle in handles:
      indexed_pages += handle.get_result()
-logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
+logger.info(f"Indexed {len(urls)} documents, {indexed_pages} pages")
 ```
 
 </article>
@@ -114,47 +115,40 @@ logger.info(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 
 <TabItem value="kafka" label="Kafka Event Processing">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Consume Kafka messages exactly-once, no need to worry about timeouts or offsets.
 
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
-@DBOS.step(retries_allowed=True, max_attempts=2)
-def process_refund(item, reason):
-    return f"Processed refund for item {item}, because {reason}"
-
-@DBOS.step(retries_allowed=True, max_attempts=3)
-def apply_discount(amount):
-    return f"Applied discount of {amount}%"
-
-refunds_agent = Agent(
-    name="Refunds Agent",
-    instructions="Help the user with a refund. If the reason is that it was too expensive, offer the user a refund code.",
-    functions=[process_refund, apply_discount],
-)
+@DBOS.kafka_consumer(config,["alerts-topic"])
+@DBOS.workflow()
+def process_kafka_alerts(msg: KafkaMessage):
+  alerts = msg.value.decode()
+  for alert in alerts:
+    respond_to_alert(alert)
 ```
 
 </article>
 </section>
 </TabItem>
 
-<TabItem value="webhooks" label="Webhooks and Notifications">
+<TabItem value="webhooks" label="Webhooks">
 <section className="row list">
-<article className="col col--6">
+<article className="col col--4">
 
 Effortlessly mix synchronous webhook code with asynchronous event processing. Reliably wait weeks or months for events, then use idempotency and durable execution to process them exactly once.
 </article>
-<article className="col col--6">
+<article className="col col--8">
 
 ```python
 @slackapp.message()
 def handle_message(request: BoltRequest) -> None:
   event_id = request.body["event_id"]
   with SetWorkflowID(event_id):
-    DBOS.start_workflow(message_workflow,     request.body["event"])
+    DBOS.start_workflow(message_workflow, request.body["event"])
 ```
 
 </article>
