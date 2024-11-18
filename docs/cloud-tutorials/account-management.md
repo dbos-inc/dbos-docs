@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 2
 title:  Account Management
 description: Learn how to manage DBOS Cloud users
 ---

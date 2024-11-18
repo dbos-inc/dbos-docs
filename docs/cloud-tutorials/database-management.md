@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: Database Management
 description: Learn how to manage DBOS Cloud database instances
 ---
