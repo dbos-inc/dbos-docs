@@ -5,7 +5,7 @@ title: Supabase
 
 #  Use DBOS With Supabase
 
-This guide shows you how to deploy a DBOS application with Supabase.
+This guide shows you how to deploy a DBOS application with [Supabase](https://supabase.com/).
 Your application is hosted in DBOS Cloud, but stores its data in Supabase.
 
 ### 1. Connect to Supabase
