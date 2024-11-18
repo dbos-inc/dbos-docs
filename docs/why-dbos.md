@@ -113,7 +113,7 @@ logger.info(f"Indexed {len(urls)} documents, {indexed_pages} pages")
 </TabItem>
 
 
-<TabItem value="kafka" label="Kafka Event Processing">
+<TabItem value="kafka" label="Kafka">
 <section className="row list">
 <article className="col col--4">
 
@@ -149,6 +149,34 @@ def handle_message(request: BoltRequest) -> None:
   event_id = request.body["event_id"]
   with SetWorkflowID(event_id):
     DBOS.start_workflow(message_workflow, request.body["event"])
+```
+
+</article>
+</section>
+</TabItem>
+
+<TabItem value="agents" label="AI Agents">
+<section className="row list">
+<article className="col col--4">
+
+Enhance your AI agents with tools that can run asynchronous tasks and keep a human in the loop.
+Integrate with popular frameworks like LangChain and LlamaIndex.
+</article>
+<article className="col col--8">
+
+```python
+@DBOS.workflow()
+def agentic_refund(purchase):
+    # Escalate refunds of expensive items to a human for approval
+    if purchase.price > 1000:
+        email_human_for_approval(purchase)
+        status = DBOS.recv(timeout_seconds=APPROVAL_TIMEOUT)
+        if status == "approve":
+            approve_refund(purchase)
+        else:
+            reject_refund(purchase)
+    else:
+        approve_refund(purchase)
 ```
 
 </article>
