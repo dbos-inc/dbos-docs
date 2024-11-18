@@ -53,7 +53,7 @@ Congratulations, you've successfully deployed an app to DBOS Cloud and Supabase!
 
 ### 5. View Your Application
 
-At this point, your app is serverlessly deployed, with its very own URL assigned.
+At this point, your app is deployed, with its very own URL assigned.
 If you continue to your [application page](https://console.dbos.dev/applications), you can click on the URL to see your application live on the Internet.
 
 <img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
