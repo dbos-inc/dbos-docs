@@ -3,20 +3,21 @@ sidebar_position: 5
 title: Supabase
 ---
 
-This guide will show you how to deploy an application to DBOS Cloud and Supabase.
-Your application will be hosted in DBOS Cloud, but will store all its data in Supabase.
+This guide shows you how to deploy a DBOS application with Supabase.
+Your application is hosted in DBOS Cloud, but stores its data in Supabase.
 
 ### 1. Connect to Supabase
-Visit [https://console.dbos.dev/provision](https://console.dbos.dev/provision) and click "Connect to Supabase" to link your DBOS and Supabase accounts.
+Visit [https://console.dbos.dev/provision](https://console.dbos.dev/provision) and click "Connect Supabase" to connect your DBOS and Supabase accounts.
 
 <img src={require('@site/static/img/supabase-starter/1-supabase-list.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
-After linking your account, you should see a list of your Supabase projects.
+After connecting your Supabase account, you should see a list of your Supabase projects.
 Choose one to use with DBOS.
 When prompted, enter your Supabase database password (you set this when you created your Supabase project, if you forgot it you can reset it from your Supabase dashboard).
 
 <img src={require('@site/static/img/supabase-starter/2-supabase-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
+Congratulations! You've linked your Supabase project to DBOS. Now, let's deploy a DBOS app to your Supabase database.
 
 ### 2. Select a Template
 
