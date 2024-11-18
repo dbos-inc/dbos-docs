@@ -1,6 +1,6 @@
 ---
 sidebar_position: 5
-title: Integrating with Supabase
+title: Supabase
 ---
 
 This guide will show you how to deploy an application to DBOS Cloud and Supabase.
