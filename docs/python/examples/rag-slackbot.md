@@ -12,7 +12,7 @@ Here's what the bot looks like in action:
 <img src="https://github.com/user-attachments/assets/1051ed46-ac6f-49bf-9109-449df9e4bca2" alt="example slack conversation" width="400" />
 
 This example shows you how to build a **reliable, cloud-deployed** RAG application.
-Any AI-powered Slackbot has to deal with some basic reliability and cloud hosting issues.
+Any AI-powered Slackbot or webhook has to deal with some basic reliability and cloud hosting issues.
 For example:
 
 1. You need a reliable hosting service for your app, and to listen to Slack events, you also need a public HTTPS URL.

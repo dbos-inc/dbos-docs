@@ -1,5 +1,5 @@
 ---
-hide_table_of_contents: false
+hide_table_of_contents: true
 ---
 
 # Why DBOS?
@@ -16,6 +16,8 @@ This makes all sorts of programs easier to write:
 <article className="col col--4">
 
 Write your business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
+
+[See an example ↗️](./python/examples/widget-store.md)
 
 </article>
 <article className="col col--8">
@@ -43,6 +45,9 @@ def checkout_workflow(items):
 
 Launch any task to run in the background and guarantee it eventually completes.
 Wait for days or weeks, or for a notification, before continuing&mdash;it just works.
+
+[See an example ↗️](./python/examples/scheduled-reminders.md)
+
 </article>
 <article className="col col--8">
 
@@ -68,6 +73,8 @@ def email_endpoint(request):
 Schedule functions to run at specific times.
 Host them completely serverlessly.
 
+[Get started ↗️](./python/examples/cron-starter.md)
+
 </article>
 <article className="col col--8">
 
@@ -90,6 +97,9 @@ def run_hourly(scheduled_time: datetime, actual_time: datetime):
 
 Build data pipelines that are reliable and observable by default.
 DBOS durable queues guarantee all your tasks complete.
+
+[See an example ↗️](./python/examples/document-detective.md)
+
 </article>
 <article className="col col--8">
 
@@ -119,6 +129,8 @@ logger.info(f"Indexed {len(urls)} documents, {indexed_pages} pages")
 
 Consume Kafka messages exactly-once, no need to worry about timeouts or offsets.
 
+[Learn more ↗️](./python/tutorials/kafka-integration.md)
+
 </article>
 <article className="col col--8">
 
@@ -140,6 +152,9 @@ def process_kafka_alerts(msg: KafkaMessage):
 <article className="col col--4">
 
 Effortlessly mix synchronous webhook code with asynchronous event processing. Reliably wait weeks or months for events, then use idempotency and durable execution to process them exactly once.
+
+[See an example ↗️](./python/examples/rag-slackbot.md)
+
 </article>
 <article className="col col--8">
 
@@ -161,6 +176,9 @@ def handle_message(request: BoltRequest) -> None:
 
 Enhance your AI agents with tools that can run asynchronous tasks and keep a human in the loop.
 Integrate with popular frameworks like LangChain and LlamaIndex.
+
+[See an example ↗️](./python/examples/reliable-ai-agent.md)
+
 </article>
 <article className="col col--8">
 
