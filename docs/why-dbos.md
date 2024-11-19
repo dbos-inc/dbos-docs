@@ -203,7 +203,7 @@ def agentic_refund(purchase):
 
 </Tabs>
 
-## How it Works
+## Using DBOS
 
 All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
 To use the library, annotate _workflows_ and _steps_ in your program like this:
@@ -225,7 +225,7 @@ def workflow()
 
 If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
 
-Under the hood, DBOS works by storing your program's execution state (which workflows are currently executing and which steps they've completed) in a Postgres database.
+Under the hood, DBOS works by storing your program's execution state (e.g., which workflows are currently executing and which steps they've completed) in a Postgres database.
 So all DBOS needs to work is a Postgres database to connect to&mdash;there's no need for a separate "workflow server."
 
 DBOS provides many powerful features you can use to build reliable programs, including:
@@ -236,7 +236,7 @@ DBOS provides many powerful features you can use to build reliable programs, inc
 - **Exactly-once event processing**: Start a durable workflow exactly-once per incoming event, for example from Kafka.
 - **Idempotency**: Use built-in idempotency keys to start a workflow only once, no matter how many times it is called with that key.
 
-## Serverless Hosting
+## DBOS Cloud
 
 Any program you build with DBOS you can deploy for free to DBOS Cloud.
 You can deploy any program with a single command&mdash;no configuration required.
