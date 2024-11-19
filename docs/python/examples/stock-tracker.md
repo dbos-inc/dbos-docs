@@ -64,7 +64,7 @@ def fetch_stock_price(symbol):
 
 ## Sending SMS alerts
 
-We'll use the Twilio API to send SMS alerts and write a DBOS [step](../tutorials/step-tutorial) to make it durable. You can sign up for a free Twilio account at https://www.twilio.com/try-twilio. We'll need a few environment variables to store our Twilio account SID, auth token and phone number.
+We'll use the Twilio API to send SMS alerts and write a DBOS [step](../tutorials/step-tutorial) to make it durable. You can sign up for a free Twilio account at https://www.twilio.com/try-twilio. We'll need a few environment variables to store our Twilio account SID, auth token and phone number. The alerts themselves are configured on the app's streamlit frontend.
 
 ```python
 twilio_account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
