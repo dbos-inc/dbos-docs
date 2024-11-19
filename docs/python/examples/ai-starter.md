@@ -8,173 +8,44 @@ import InstallNode from '/docs/partials/_install_node.mdx';
 
 In this tutorial, you'll learn how to build an interactive AI application and deploy it to the cloud in just **9 lines of code**.
 
-### Preparation
+### Tutorial
 
-<section className="row list">
-<article className="col col--6">
+#### 1. Select the DBOS AI Starter
+Visit [https://console.dbos.dev/launch](https://console.dbos.dev/launch) and select the DBOS AI Starter.
+When prompted, create a database for your app with default settings.
 
-First, create a folder for your app and activate a virtual environment.
-</article>
+<img src={require('@site/static/img/ai-starter/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
-<article className="col col--6">
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS/Linux">
-```shell
-python3 -m venv ai-app/.venv
-cd ai-app
-source .venv/bin/activate
-touch main.py
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-```shell
-python3 -m venv ai-app/.venv
-cd ai-app
-.venv\Scripts\activate.ps1
-New-Item main.py
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-```shell
-python3 -m venv ai-app/.venv
-cd ai-app
-.venv\Scripts\activate.bat
-TYPE nul > main.py
-```
-</TabItem>
-</Tabs>
-</article>
+#### 2. Connect to GitHub and Deploy to DBOS Cloud
 
-<article className="col col--6">
-Then, install dependencies and initialize a DBOS config file.
-</article>
+To ensure you can easily update your project after deploying it, DBOS will create a GitHub repository for you.
+You can deploy directly from that GitHub repository to DBOS Cloud.
 
-<article className="col col--6">
-```shell
-pip install dbos llama-index
-dbos init --config
-```
-</article>
+First, sign in to your GitHub account.
+Then, enter your OpenAI API key as an application secret.
+You can obtain an API key [here](https://platform.openai.com/api-keys).
+This key is securely stored and used by your app to make requests on your behalf to the OpenAI API.
+Then, set your repository name and whether it should be public or private.
 
-<article className="col col--6">
-Next, to run this app, you need an OpenAI developer account. Obtain an API key [here](https://platform.openai.com/api-keys). Set the API key as an environment variable.
-</article>
+Next, click "Create GitHub Repo and Deploy" and DBOS will clone a copy of the source code into your GitHub account, then deploy your project to DBOS Cloud.
+In less than a minute, your app should deploy successfully.
 
-<article className="col col--6">
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS/Linux">
-```shell
-export OPENAI_API_KEY=XXXXX
-```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-```shell
-set OPENAI_API_KEY=XXXXX
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-```shell
-set OPENAI_API_KEY=XXXXX
-```
-</TabItem>
-</Tabs>
-</article>
+<img src={require('@site/static/img/ai-starter/2-ready-deploy.png').default} alt="Deploy with GitHub" width="1000" className="custom-img" />
 
-<article className="col col--6">
-Declare the environment variable in `dbos-config.yaml`:
-</article>
+#### 3. View Your Application
 
-<article className="col col--6">
-```yaml title="dbos-config.yaml"
-env:
-  OPENAI_API_KEY: ${OPENAI_API_KEY}
-```
-</article>
+At this point, your new AI application is running in the cloud.
 
-<article className="col col--6">
-Finally, let's download some data. This app uses the text from Paul Graham's ["What I Worked On"](http://paulgraham.com/worked.html). You can download the text from [this link](https://raw.githubusercontent.com/run-llama/llama_index/main/docs/docs/examples/data/paul_graham/paul_graham_essay.txt) and save it under `data/paul_graham_essay.txt` of your app folder.
+To see its code, visit your new GitHub repository and open `app/main.py`.
+This app ingests a document (Paul Graham's essay ["What I Worked On"](https://paulgraham.com/worked.html)) and answers questions about it using RAG.
+Click on the URL to see it answer a question!
 
-Now, your app folder structure should look like this:
-</article>
-
-<article className="col col--6">
-```shell
-ai-app/
-├── dbos-config.yaml
-├── main.py
-└── data/
-    └── paul_graham_essay.txt
-```
-</article>
-</section>
-
-### Load Data and Build a Q&A Engine
-
-Now, let's use LlamaIndex to write a simple AI application in just 5 lines of code.
-Add the following code to your `main.py`:
-
-```python showLineNumbers title="main.py"
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-
-documents = SimpleDirectoryReader("data").load_data()
-index = VectorStoreIndex.from_documents(documents)
-
-query_engine = index.as_query_engine()
-response = query_engine.query("What did the author do growing up?")
-print(response)
-```
-
-This script loads data and builds an index over the documents under the `data/` folder, and it generates an answer by querying the index. You can run this script and it should give you a response, for example:
-```bash
-$ python3 main.py
-
-The author worked on writing short stories and programming...
-```
-
-### HTTP Serving
-
-Now, let's add a FastAPI endpoint to serve responses through HTTP. Modify your `main.py` as follows:
-
-```python showLineNumbers title="main.py"
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-#highlight-next-line
-from fastapi import FastAPI
-
-#highlight-next-line
-app = FastAPI()
-
-documents = SimpleDirectoryReader("data").load_data()
-index = VectorStoreIndex.from_documents(documents)
-query_engine = index.as_query_engine()
-
-#highlight-start
-@app.get("/")
-def get_answer():
-#highlight-end
-    response = query_engine.query("What did the author do growing up?")
-#highlight-next-line
-    return str(response)
-```
-
-Now you can start your app with `fastapi run main.py`. To see that it's working, visit this URL: [http://localhost:8000](http://localhost:8000) 
-<BrowserWindow url="http://localhost:8000">
-"The author worked on writing short stories and programming..."
-</BrowserWindow>
-
-The result may be slightly different every time you refresh your browser window!
-
-### Hosting on DBOS Cloud
-
-To deploy your app to DBOS Cloud, you only need to add two lines to `main.py`:
-
-```python showLineNumbers title="main.py"
+```python
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from fastapi import FastAPI
-#highlight-next-line
 from dbos import DBOS
 
 app = FastAPI()
-#highlight-next-line
 DBOS(fastapi=app)
 
 documents = SimpleDirectoryReader("data").load_data()
@@ -187,35 +58,16 @@ def get_answer():
     return str(response)
 ```
 
-Now, install the DBOS Cloud CLI if you haven't already (requires Node.js):
 
+#### 4. Start Building
 
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
+To start building, edit your application on GitHub (source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" on your [applications page](https://console.dbos.dev/applications) to see your changes reflected in the live application.
 
-<details>
-<summary>Instructions to install Node.js</summary>
+Not sure where to start?
+Try changing the question the app asks and see it give new answers!
+Or, if you're feeling adventerous, build an interface to ask your own questions.
 
-<InstallNode />
-
-</details>
-
-
-Then freeze dependencies to `requirements.txt` and deploy to DBOS Cloud:
-
-```shell
-pip freeze > requirements.txt
-dbos-cloud app deploy
-```
-
-In less than a minute, it should print `Access your application at <URL>`.
-To see that your app is working, visit `<URL>` in your browser.
-<BrowserWindow url="https://<username>-ai-app.cloud.dbos.dev">
-"The author worked on writing short stories and programming..."
-</BrowserWindow>
-
-Congratulations, you've successfully deployed your first AI app to DBOS Cloud! You can see your deployed app in the [cloud console](https://console.dbos.dev/login-redirect).
+<img src={require('@site/static/img/ai-starter/4-app-page.png').default} alt="Deploy with GitHub" width="800" className="custom-img" />
 
 ### Next Steps
 
