@@ -26,18 +26,21 @@ There's nothing special about the `-staging` and `-prod` suffixes&mdash;you can 
 If you manually specify the application database name by setting `app_db_name` in `dbos_config.yaml`, you must ensure each environment uses a different value of `app_db_name`.
 :::
 
-## Secrets management
-To make secrets, such as API keys, available to your application running in DBOS Cloud, we recommend using environment variables.
+## Secrets Management
+To make secrets, such as API keys, available to your application running in DBOS Cloud, DBOS provides secrets management.
 
-First, declare the environment variable in the `env` section of `dbos-config.yaml`:
+You can manage an application's secrets from the secrets page of the [cloud console](https://console.dbos.dev)
 
-```yaml
-env:
-    API_KEY: ${API_KEY}
+<img src={require('@site/static/img/secrets/secrets-page.png').default} alt="Secrets Page" width="1000" className="custom-img" />
+
+You can also create or update a secret using the cloud CLI:
+
+```
+dbos-cloud app secrets create -s <secret-name> -v <secret-value>
 ```
 
-Then the value of `API_KEY` in your client environment will be submitted with your application and supplied to it as an environment variable on DBOS Cloud.
-Only environment variables declared in `dbos-config.yaml` are submitted and supplied like this.
+Secrets are made available to your application as environment variables.
+The name of the environment variable is your secret name, its value is your secret's value.
 
 ## Authentication
 You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
