@@ -29,7 +29,7 @@ If you manually specify the application database name by setting `app_db_name` i
 ## Secrets Management
 To make secrets, such as API keys, available to your application running in DBOS Cloud, DBOS provides secrets management.
 
-You can manage an application's secrets from the secrets page of the [cloud console](https://console.dbos.dev)
+You can manage an application's secrets from the secrets page of the [cloud console](https://console.dbos.dev).
 
 <img src={require('@site/static/img/secrets/secrets-page.png').default} alt="Secrets Page" width="1000" className="custom-img" />
 
