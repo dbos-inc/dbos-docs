@@ -13,7 +13,7 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 #### 1. Install DBOS
 <section className="row list">
 <article className="col col--6">
-`pip install` DBOS into your application, then create a DBOS config file.
+`pip install` DBOS into your application, then create a DBOS configuration file.
 </article>
 
 <article className="col col--6">
@@ -31,7 +31,7 @@ dbos init --config
 <article className="col col--6">
 
 In your program's main function, add these two lines of code.
-This initializes DBOS when your program starts.
+These initialize DBOS when your program starts.
 
 </article>
 
@@ -76,7 +76,7 @@ Congratulations!  You've integrated DBOS into your application.
 
 At this point, you can add any DBOS decorator or method to your application.
 For example, you can annotate one of your functions as a [workflow](./workflow-tutorial.md) and the functions it calls as [steps](./step-tutorial.md).
-DBOS will durably execute the workflow so if it is ever interrupted, upon restart it will automatically recover to the last completed step.
+DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically recovers to the last completed step.
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
