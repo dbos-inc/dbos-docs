@@ -9,7 +9,7 @@
 
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script><link rel="stylesheet" href="/assets/css/styles.2dd66fd9.css">
-<script src="/assets/js/runtime~main.b941bdb6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.1385db7b.js" defer="defer"></script>
 <script src="/assets/js/main.024416f1.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -26,7 +26,7 @@ You&#x27;ll learn how to write a scheduled (cron) function in <strong>just 11 li
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="1-select-the-cloud-cron-starter">1. Select the Cloud Cron Starter<a href="#1-select-the-cloud-cron-starter" class="hash-link" aria-label="Direct link to 1. Select the Cloud Cron Starter" title="Direct link to 1. Select the Cloud Cron Starter">​</a></h4>
 <p>Visit <a href="https://console.dbos.dev/launch" target="_blank" rel="noopener noreferrer">https://console.dbos.dev/launch</a> and select the DBOS Cron Starter.
 When prompted, create a database for your app with default settings.</p>
-<img src="/assets/images/1-pick-template-52e10316c4d304c25138dff4c220bbbd.png" alt="Cloud Console Templates" width="800" class="custom-img">
+<img src="/assets/images/1-pick-template-1881b2907a4dece0d05d91813ac17af4.png" alt="Cloud Console Templates" width="800" class="custom-img">
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="2-connect-to-github-and-deploy-to-dbos-cloud">2. Connect to GitHub and Deploy to DBOS Cloud<a href="#2-connect-to-github-and-deploy-to-dbos-cloud" class="hash-link" aria-label="Direct link to 2. Connect to GitHub and Deploy to DBOS Cloud" title="Direct link to 2. Connect to GitHub and Deploy to DBOS Cloud">​</a></h4>
 <p>To ensure you can easily update your project after deploying it, DBOS will create a GitHub repository for you.
 You can deploy directly from that GitHub repository to DBOS Cloud.</p>
@@ -34,7 +34,7 @@ You can deploy directly from that GitHub repository to DBOS Cloud.</p>
 Then, set your repository name and whether it should be public or private.</p>
 <p>Next, click &quot;Create GitHub Repo and Deploy&quot; and DBOS will clone a copy of the source code into your GitHub account, then deploy your project to DBOS Cloud.
 In less than a minute, your app should deploy successfully.</p>
-<img src="/assets/images/2-ready-deploy-2d54e2e3cb9e1c7d9515f0b5d44f0e20.png" alt="Deploy with GitHub" width="1000" class="custom-img">
+<img src="/assets/images/2-ready-deploy-d8c1db058b5a94e15696f97bfbf54f58.png" alt="Deploy with GitHub" width="1000" class="custom-img">
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="3-view-your-application">3. View Your Application<a href="#3-view-your-application" class="hash-link" aria-label="Direct link to 3. View Your Application" title="Direct link to 3. View Your Application">​</a></h4>
 <p>At this point, your app is running code on a schedule in the cloud!</p>
 <p>To see its code, visit your new GitHub repository and open <code>app/main.py</code>.
@@ -47,7 +47,7 @@ You can visit your app&#x27;s URL to see the current value of the counter.</p>
 Try adding this line to the scheduled function so it logs each time it runs:</p>
 <div class="language-python codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-python codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token plain">DBOS</span><span class="token punctuation" style="color:rgb(199, 146, 234)">.</span><span class="token plain">logger</span><span class="token punctuation" style="color:rgb(199, 146, 234)">.</span><span class="token plain">info</span><span class="token punctuation" style="color:rgb(199, 146, 234)">(</span><span class="token string-interpolation string" style="color:#a6e22e">f&quot;I just ran at </span><span class="token string-interpolation interpolation punctuation" style="color:rgb(199, 146, 234)">{</span><span class="token string-interpolation interpolation">scheduled_time</span><span class="token string-interpolation interpolation punctuation" style="color:rgb(199, 146, 234)">}</span><span class="token string-interpolation string" style="color:#a6e22e">&quot;</span><span class="token punctuation" style="color:rgb(199, 146, 234)">)</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 <p>You can view your application&#x27;s logs from your <a href="https://console.dbos.dev/applications" target="_blank" rel="noopener noreferrer">applications page</a>.</p>
-<img src="/assets/images/4-app-page-79964850f205ec0cdfa0bce8875b95ea.png" alt="Deploy with GitHub" width="800" class="custom-img">
+<img src="/assets/images/4-app-page-e690dec0fa39d55e66fb85012d5a796f.png" alt="Deploy with GitHub" width="800" class="custom-img">
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="next-steps">Next Steps<a href="#next-steps" class="hash-link" aria-label="Direct link to Next Steps" title="Direct link to Next Steps">​</a></h3>
 <p>You can adapt this 6-line starter to implement your own scheduled job.
 Replace <code>scheduled_function</code> with your own function to run it on a schedule!
