@@ -159,6 +159,8 @@ pip freeze > requirements.txt
 Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../reference/configuration.md) to your application's launch command.
 
 If your application includes an HTTP server, configure it to listen on port 8000.
+
+To test that it works, try launching your application with `dbos start`.
 </article>
 
 <article className="col col--6">
