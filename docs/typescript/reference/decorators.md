@@ -76,6 +76,9 @@ Function decorators are affixed to a function, just before its name and modifier
 -   [`@RequiredRole`](#requiredrole)
 -   [`@GetApi`](#getapi)
 -   [`@PostApi`](#postapi)
+-   [`@PutApi`](#putapi)
+-   [`@PatchApi`](#patchapi)
+-   [`@DeleteApi`](#deleteapi)
 
 ### Parameter Decorators
 
@@ -690,7 +693,7 @@ export class SchedulerConfig {
 
 The decorated method must take a Workflow context argument, and the following additional parameters:
 - The time that the run was scheduled (as a `Date`).
-- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow is was started behind schedule.
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow was started behind schedule.
 
 Example:
 ```typescript
