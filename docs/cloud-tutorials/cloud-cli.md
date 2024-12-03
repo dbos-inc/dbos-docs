@@ -325,6 +325,8 @@ It is meant to be used with [`database restore`](#dbos-cloud-db-restore) during 
 
 **Description:**
 Create a new secret associated with an application, or update an existing secret.
+Secrets are made available to your application as environment variables.
+You must redeploy your application for a change in its secrets to take effect.
 
 **Parameters:**
 - `[application-name]`: The name of the application for which to create or update secrets.

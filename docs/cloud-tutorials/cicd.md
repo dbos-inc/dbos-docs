@@ -41,6 +41,7 @@ dbos-cloud app secrets create -s <secret-name> -v <secret-value>
 
 Secrets are made available to your application as environment variables.
 The name of the environment variable is your secret name, its value is your secret's value.
+If you add a new secret or update the value of an existing secret, you must redeploy the application for the change to take effect.
 
 ## Authentication
 You should use [refresh tokens](account-management#authenticating-programatically) to programmatically authenticate your CI/CD user with DBOS Cloud.
