@@ -232,8 +232,10 @@ These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
 @GetApi("/:id")
+@Transaction()
 static async exampleGet(ctxt: TransactionContext, id: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`);
+  // ctxt can be used for database access, as this is also a @Transaction
 }
 ```
 
@@ -272,7 +274,7 @@ Associates a function with an HTTP URL accessed via DELETE. Analogous to [`@GetA
 
 ```typescript
 @DeleteApi("/:id")
-static async exampleDelete(ctxt: TransactionContext, id: string) {
+static async exampleDelete(ctxt: HandlerContext, id: string) {
   ctxt.logger.info(`${id} is parsed from the URL path parameter`)
 }
 ```

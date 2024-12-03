@@ -301,7 +301,7 @@ static async sendToServer(valueToSend: string) {
 }
 ```
 
-## Accessing Context-Based Application Functions
+## Accessing Application Functions Requiring Context Arguments
 Prior versions of the DBOS SDK were based on functions that took a [`context`](./contexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
 
 ```typescript
@@ -312,11 +312,14 @@ DBOS.invoke<T extends object>(targetClass: T): InvokeFuncs<T>
 Example:
 ```typescript
 class MyClass {
+  // Older dercorator, function takes `ctx` for SQL access
   @Transaction()
   static async transactionFunction(ctx: TransactionContext, arg: string) {
     //...
   }
 }
+
+// Call with `DBOS.invoke`
 const res = DBOS.invoke(MyClass).transactionFunction('arg');
 ```
 
@@ -399,7 +402,7 @@ DBOS.getWorkflows(input: GetWorkflowsInput): Promise<GetWorkflowsOutput>
 DBOS.getWorkflowQueue(input: GetWorkflowQueueInput): Promise<GetWorkflowQueueOutput>
 ```
 
-## Accessing Configuration, Logging, and Tracing
+## Accessing Configuration, Logging, and Tracing Facilities
 
 ### `DBOS.getConfig`
 ```typescript
@@ -411,9 +414,11 @@ Optionally accepts a default value, returned when the key cannot be found in the
 
 The entire configuration may also be accessed:
 ```typescript
-DBOS.dbosConfig?: DBOSConfig;
+DBOS.dbosConfig?: DBOSConfig; // The 
 DBOS.runtimeConfig?: DBOSRuntimeConfig;
 ```
+
+Note that `DBOS.dbosConfig` and `DBOS.runtimeConfig` are not fully available util runtime initialization starts and the configuration files are loaded.
 
 ### Accessing Logging
 Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.  It is also possible to access the global logger via `DBOS.globalLogger`.
@@ -446,22 +451,109 @@ DBOS.isWithinWorkflow: boolean
 `DBOS.isWithinWorkflow`: Returns true if the current context is executing a workflow, regardless of whether or not it is currently in a step or transaction
 
 ## HTTP Handling
-The following decorators register the decorated function for handling requests directed at the specified `url`:
+DBOS Transact optionally provides HTTP handling.  This uses a serverless design, based on the Koa framework.  Endpoint functions are simply annotated with HTTP handling decorators.
+
+This provides the following features over using Koa directly:
+* Argument validation
+* A generated list of endpoint functions and their arguments
+* Automatic generation of [OpenAPI](../tutorials/openapi-tutorial.md) clients
+* Automatic configuration from `dbos-config.yaml` or the runtime environment
+* Automatic network configuration in DBOS Cloud
+* Default tracing, parsing, and other middleware, with [additional options](../tutorials/http-serving-tutorial.md#body-parser)
+
+The following sections describe the decorators that can be used to register methods for HTTP serving.  Note that all decorated methods must be `static`, as there is no mechanism to forward function calls to a specific object instance.
+
+### `@DBOS.getApi`
 ```typescript
 @DBOS.getApi(url: string)
+```
+
+Associates a function with an HTTP URL accessed via GET.
+
+```typescript
+@DBOS.getApi("/hello")
+static async hello() {
+  return { message: "hello!" };
+}
+```
+
+The `@DBOS.getApi` decorator can be used by itself, but can also be combined with [`@DBOS.transaction`](#transaction), [`@DBOS.workflow`](#workflow), or [`@DBOS.step`](#step) to serve those operations via HTTP.
+
+Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.  These are represented by a section of the path prefixed with a `:`.
+
+```typescript
+@DBOS.getApi("/:id")
+static async exampleGet(id: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+}
+```
+
+#### `@DBOS.postApi`
+```typescript
 @DBOS.postApi(url: string)
+```
+
+Associates a function with an HTTP URL accessed via POST. Analogous to [`@DBOS.getApi`](#dbosgetapi), but may parse arguments from a request body.
+
+```typescript
+@DBOS.postApi("/:id")
+static async examplePost(id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+}
+```
+
+#### `@DBOS.putApi`
+```typescript
 @DBOS.putApi(url: string)
+```
+
+Associates a function with an HTTP URL accessed via PUT. Analogous to [`@DBOS.getApi`](#dbosgetapi), but may parse arguments from a request body.
+
+```typescript
+@DBOS.putApi("/:id")
+static async examplePut(id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+}
+```
+
+#### `@DBOS.patchApi`
+```typescript
 @DBOS.patchApi(url: string)
+```
+
+Associates a function with an HTTP URL accessed via PATCH. Analogous to [`@DBOS.getApi`](#dbosgetapi), but may parse arguments from a request body.
+
+```typescript
+@DBOS.patchApi("/:id")
+static async examplePatch(id: string, name: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+}
+```
+
+#### `@DBOS.deleteApi`
+```typescript
 @DBOS.deleteApi(url: string)
 ```
 
-The following properties of the `DBOS` class allow HTTP handling functions to access the current request and Koa context:
+Associates a function with an HTTP URL accessed via DELETE. Analogous to [`@DBOS.getApi`](#dbosgetapi).
+
 ```typescript
-DBOS.request: HTTPRequest
-DBOS.koaContext: Koa.Context
+@DBOS.deleteApi("/:id")
+static async exampleDelete(id: string) {
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+}
 ```
 
-For more details, see [HTTP Handling](../tutorials/http-serving-tutorial.md).
+### Accessing HTTP Context
+Methods decorated as above will be called in response to HTTP requests.  Details of the request, and the Koa context, can be accessed by the following properties of the `DBOS` class:
+
+```typescript
+DBOS.request: HTTPRequest // HTTP rquest object
+DBOS.koaContext: Koa.Context // Koa context, including response, any middleware information, and output control
+```
+
+### Middleware
+For details on middleware, argument processing, and data validation, see [HTTP Decorators](../reference/decorators.md#http-api-registration-decorators) or the [HTTP Handling Tutorial](../tutorials/http-serving-tutorial.md).
 
 ## Declarative Role-Based Security
 DBOS supports declarative, role-based security. Functions can be decorated with a list of roles (as strings), and execution of the function is forbidden unless the authenticated user has at least one role in the list.  A list of roles can be provided as a class-level default with `@DBOS.defaultRequiredRole()`, in which case it applies to any DBOS function in the class.  Roles for individual functions can be specified with the `@DBOS.requiredRole()` decorator.  The roles listed in a  `@DBOS.requiredRole()` method decorator will override any class-level defaults.
@@ -471,7 +563,6 @@ The following decorators configure role-based security:
 @DBOS.defaultRequiredRole(anyOf: string[])
 @DBOS.requiredRole(anyOf: string[])
 ```
-
 
 ### `@DBOS.requiredRole`
 Specify the list of required roles for the decorated method. In order to execute the function, the authenticated user must have at least one role on the specified list.
