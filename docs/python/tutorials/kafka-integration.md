@@ -2,7 +2,6 @@
 sidebar_position: 8
 title: Integrating with Kafka
 description: Overview of using DBOS with Kafka
-pagination_next: null
 ---
 
 In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
