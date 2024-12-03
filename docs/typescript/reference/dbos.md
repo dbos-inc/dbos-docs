@@ -338,7 +338,7 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ### Sending And Receiving Messages
 
-`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](./workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
+`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../tutorials/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
 
 #### `DBOS.send`
 ```typescript
@@ -361,7 +361,7 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `DBOS.send()` completes successfully, the destination workflow is guaranteed to be able to `DBOS.recv()` it.  `DBOS.recv()` consumes the message, but also advances the receiving workflow, so messages are received exactly once.
-If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../tutorials/workflow-tutorial#reliability-guarantees).
 If you're sending a message from outside of a workflow, you can run `DBOS.send` with an [idempotency key](#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ### Setting and Getting Events
@@ -463,17 +463,68 @@ DBOS.koaContext: Koa.Context
 
 For more details, see [HTTP Handling](../tutorials/http-serving-tutorial.md).
 
-## Role-Based Security
+## Declarative Role-Based Security
+DBOS supports declarative, role-based security. Functions can be decorated with a list of roles (as strings), and execution of the function is forbidden unless the authenticated user has at least one role in the list.  A list of roles can be provided as a class-level default with `@DBOS.defaultRequiredRole()`, in which case it applies to any DBOS function in the class.  Roles for individual functions can be specified with the `@DBOS.requiredRole()` decorator.  The roles listed in a  `@DBOS.requiredRole()` method decorator will override any class-level defaults.
+
 The following decorators configure role-based security:
 ```typescript
 @DBOS.defaultRequiredRole(anyOf: string[])
 @DBOS.requiredRole(anyOf: string[])
 ```
 
-The following properties on DBOS retrieve the current user:
+
+### `@DBOS.requiredRole`
+Specify the list of required roles for the decorated method. In order to execute the function, the authenticated user must have at least one role on the specified list.
+
+```typescript
+@RequiredRole(['user','guest'])
+@DBOS.getApi("/hello")
+static async helloUser() {
+  return { message: "hello registered user or guest!" };
+}
+```
+
+### `@DefaultRequiredRole`
+Specify default required roles for all methods in the class. This can be overridden at the method level with `@DBOS.requiredRole`.
+
+```typescript
+@DBOS.defaultRequiredRole(['user'])
+class OperationEndpoints {
+  // Authentication / authorization not required for this function
+  @DBOS.requiredRole([])
+  @DBOS.getApi("/hello")
+  static async hello() {
+    return { message: "hello!" };
+  }
+
+  // Role with elevated permissions required for this function
+  @DBOS.requiredRole(['admin'])
+  @DBOS.getApi("/helloadmin")
+  static async helloadmin() {
+    return { message: "hello admin!" };
+  }
+
+  // Required role will be 'user', from DBOS.defaultRequiredRole
+  @DBOS.getApi("/otherfunction")
+  static async otherFunc() {
+    return { message: "hello admin!" };
+  }
+}
+```
+
+### Retrieving The Authenticated User and Roles
+The following property on `DBOS` retrieves the current authenticated user:
 ```typescript
 DBOS.authenticatedUser: string
+```
+
+The authentication system can also provide the list of roles that are granted to the user.  This list is accessed via `DBOS.authenticatedRoles`.
+```typescript
 DBOS.authenticatedRoles: string[]
+```
+
+If the current DBOS function required authorization, the role assumed to access the function can be retrieved via `DBOS.assumedRole`.  This role will be one of the [required roles](#declarative-role-based-security) for the function, and is taken from the `DBOS.authenticatedRoles` list.
+```typescript
 DBOS.assumedRole: string
 ```
 
