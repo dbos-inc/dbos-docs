@@ -394,13 +394,101 @@ Retrieves an event published by `workflowID` for a given `key` using the [events
 All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
 
 ## Finding and Retrieving Workflows
+Information about workflows that are either running or have already been completed can be retrieved from the workflow ID.  The workflow history can also be searched by other criteria.
+
+### DBOS.getWorkflowStatus
+`DBOS.getWorkflowStatus` retrieves the status of a single workflow, given its workflow ID.  If 
 
 ```typescript
-DBOS.getWorkflowStatus(workflowID: string)
+DBOS.getWorkflowStatus(workflowID: string): Promise<WorkflowStatus>
+```
+
+The `WorkflowStatus` returned has the following field definition:
+```typescript
+interface WorkflowStatus {
+  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, ENQUEUED, or CANCELLED.
+  readonly workflowName: string; // The name of the workflow function.
+  readonly workflowClassName: string; // The class name holding the workflow function.
+  readonly workflowConfigName: string; // The name of the configuration, if the class needs configuration
+  readonly queueName?: string; // The name of the queue, if workflow was queued
+  readonly authenticatedUser: string; // The user who ran the workflow. Empty string if not set.
+  readonly assumedRole: string; // The role used to run this workflow.  Empty string if authorization is not required.
+  readonly authenticatedRoles: string[]; // All roles the authenticated user has, if any.
+  readonly request: HTTPRequest; // The parent request for this workflow, if any.
+}
+```
+
+### DBOS.retrieveWorkflow
+Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](../reference/workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
+
+```typescript
 DBOS.retrieveWorkflow(workflowID: string)
+```
+
+### Searching for workflows
+`DBOS.getWorkflows` and `DBOS.getWorkflowQueue` both search for workflows in the system database tables.
+
+#### DBOS.getWorkflows
+`DBOS.getWorkflows` allows querying workflow execution history.
+
+```typescript
 DBOS.getWorkflows(input: GetWorkflowsInput): Promise<GetWorkflowsOutput>
+```
+
+Its `GetWorkflowsInput` argument is an object describing which workflows to retrieve (by default, retrieve all workflows):
+```typescript
+interface GetWorkflowsInput {
+  workflowName?: string; // The name of the workflow function
+  authenticatedUser?: string; // The user who ran the workflow.
+  startTime?: string; // Timestamp in RFC 3339 format
+  endTime?: string; // Timestamp in RFC 3339 format
+  status?: "PENDING" | "SUCCESS" | "ERROR" | "RETRIES_EXCEEDED" | "CANCELLED" ; // The status of the workflow.
+  applicationVersion?: string; // The application version that ran this workflow.
+  limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
+}
+```
+
+`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+
+```typescript
+export interface GetWorkflowsOutput {
+  workflowUUIDs: string[];
+}
+```
+
+To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
+
+#### DBOS.getWorkflowQueue
+`DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](../reference/workflow-queues.md).
+
+```typescript
 DBOS.getWorkflowQueue(input: GetWorkflowQueueInput): Promise<GetWorkflowQueueOutput>
 ```
+
+Its `GetWorkflowQueueInput` argument is an object describing which workflows to retrieve (by default, retrieve all workflows):
+```typescript
+export interface GetWorkflowQueueInput {
+  queueName?: string; // The name of the workflow queue
+  startTime?: string; // Timestamp in ISO 8601 format
+  endTime?: string; // Timestamp in ISO 8601 format
+  limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
+}
+```
+
+`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
+```typescript
+export interface GetWorkflowQueueOutput {
+  workflows: {
+    workflowID: string; // Workflow ID
+    queueName: string; // Workflow queue name
+    createdAt: number; // Time that queue entry was created
+    startedAt?: number; // Time that workflow was started, if started
+    completedAt?: number; // Time that workflow completed, if complete
+  }[];
+}
+```
+
+To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
 
 ## Accessing Configuration, Logging, and Tracing Facilities
 
@@ -484,7 +572,7 @@ Endpoint paths may have placeholders, which are parts of the URL mapped to funct
 ```typescript
 @DBOS.getApi("/:id")
 static async exampleGet(id: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+  DBOS.logger.info(`${id} is parsed from the URL path parameter`)
 }
 ```
 
@@ -498,7 +586,7 @@ Associates a function with an HTTP URL accessed via POST. Analogous to [`@DBOS.g
 ```typescript
 @DBOS.postApi("/:id")
 static async examplePost(id: string, name: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+  DBOS.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
 }
 ```
 
@@ -512,7 +600,7 @@ Associates a function with an HTTP URL accessed via PUT. Analogous to [`@DBOS.ge
 ```typescript
 @DBOS.putApi("/:id")
 static async examplePut(id: string, name: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+  DBOS.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
 }
 ```
 
@@ -526,7 +614,7 @@ Associates a function with an HTTP URL accessed via PATCH. Analogous to [`@DBOS.
 ```typescript
 @DBOS.patchApi("/:id")
 static async examplePatch(id: string, name: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
+  DBOS.logger.info(`${id} is parsed from the URL path parameter, ${name} is parsed from the request body`)
 }
 ```
 
@@ -540,7 +628,7 @@ Associates a function with an HTTP URL accessed via DELETE. Analogous to [`@DBOS
 ```typescript
 @DBOS.deleteApi("/:id")
 static async exampleDelete(id: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+  DBOS.logger.info(`${id} is parsed from the URL path parameter`)
 }
 ```
 
