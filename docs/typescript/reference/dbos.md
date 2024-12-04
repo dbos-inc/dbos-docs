@@ -565,7 +565,7 @@ static async hello() {
 }
 ```
 
-The `@DBOS.getApi` decorator can be used by itself, but can also be combined with [`@DBOS.transaction`](#transaction), [`@DBOS.workflow`](#workflow), or [`@DBOS.step`](#step) to serve those operations via HTTP.
+The `@DBOS.getApi` decorator can be used by itself, but can also be combined with [`@DBOS.transaction`](#dbostransaction), [`@DBOS.workflow`](#dbosworkflow), or [`@DBOS.step`](#dbosstep) to serve those operations via HTTP.
 
 Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.  These are represented by a section of the path prefixed with a `:`.
 
