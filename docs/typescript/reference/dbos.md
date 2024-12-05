@@ -643,6 +643,24 @@ DBOS.koaContext: Koa.Context // Koa context, including response, any middleware 
 ### Middleware
 For details on middleware, argument processing, and data validation, see [HTTP Decorators](../reference/decorators.md#http-api-registration-decorators) or the [HTTP Handling Tutorial](../tutorials/http-serving-tutorial.md).
 
+### HTTP Testing
+```typescript
+DBOS.getHTTPHandlersCallback(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => Promise<void>;
+```
+
+The [node-native](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener) request handler for DBOS Transact's internal HTTP service can be accessed with `DBOS.getHTTPHandlersCallback()`.  This callback can then be used for testing purposes in frameworks such as [supertest](https://www.npmjs.com/package/supertest).
+
+For example, using  to send a `GET` request to the `/greeting/dbos` URL and verify the response:
+```typescript
+import request from "supertest";
+
+const res = await request(DBOS.getHTTPHandlersCallback()).get(
+  "/greeting/dbos"
+);
+expect(res.statusCode).toBe(200);
+expect(res.text).toMatch("Hello, dbos! You have been greeted");
+```
+
 ## Declarative Role-Based Security
 DBOS supports declarative, role-based security. Functions can be decorated with a list of roles (as strings), and execution of the function is forbidden unless the authenticated user has at least one role in the list.  A list of roles can be provided as a class-level default with `@DBOS.defaultRequiredRole()`, in which case it applies to any DBOS function in the class.  Roles for individual functions can be specified with the `@DBOS.requiredRole()` decorator.  The roles listed in a  `@DBOS.requiredRole()` method decorator will override any class-level defaults.
 
