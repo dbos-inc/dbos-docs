@@ -333,6 +333,19 @@ You must redeploy your application for a change in its secrets to take effect.
 - `-s, --secretname <string>` The name of the secret to create or update.
 - `-v, --value`: The value of the secret.
 
+
+### `dbos-cloud app secrets import`
+
+**Description:**
+Import all environment variables defined in a `.env` file as secrets, updating them if they already exist.
+Allowed syntax for the `.env` file is described [here](https://dotenvx.com/docs/env-file), note that interpolation is supported but command substitution and encryption are currently not.
+Secrets are made available to your application as environment variables.
+You must redeploy your application for a change in its secrets to take effect.
+
+**Parameters:**
+- `[application-name]`: The name of the application for which to import secrets.
+- `-d, --dotenv <string>` Path to the `.env` file to import.
+
 ---
 
 ### `dbos-cloud app secrets list`
