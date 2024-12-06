@@ -3,7 +3,7 @@ sidebar_position: 9
 title: Secrets and Environment Variables
 ---
 
-We recommend using secrets to manage your application environments in DBOS Cloud.
+We recommend using _secrets_ to securely manage your application's secrets and environment variables in DBOS Cloud.
 Secrets are key-value pairs that are securely stored in DBOS Cloud and made available to your application as environment variables.
 
 ## Managing and Using Secrets
