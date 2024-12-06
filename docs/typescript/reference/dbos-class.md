@@ -6,14 +6,16 @@ description: API reference for DBOS
 
 # DBOS Class
 
-The `DBOS` class is the heart of the DBOS Transact programming API, providing decorators to identify key application functions, and accessors for context-dependent state.
+The `DBOS` static utility class is the heart of the DBOS Transact programming API.  `DBOS` provides decorators to identify key application functions, and static access to context-dependent state.  `DBOS` has no instance members and is not to be instantiated.
 
-Note that this is the second major version of the API.  The first version of the API was based on passing [contexts](./contexts.md) and used a separate set of [decorators](./decorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
+:::info
+Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./contexts.md) and used a separate set of [decorators](./decorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
+:::
 
 ## Decorating Workflows, Transactions, and Steps
 DBOS provides reliability guarantees for programs that are [written as workflows comprised of steps, transactions, and child workflows](../programming-guide.md).  The workflow, transaction, and step functions are marked with decorators.
 
-### DBOS.workflow
+### `@DBOS.workflow`
 `@DBOS.workflow` registers a function as a DBOS workflow.  
 
 ```typescript
@@ -27,7 +29,7 @@ Workflow functions must be class members, and may be `static`.  To mark a `stati
 
 Example:
 ```typescript
-import { DBOS, ConfiguredInstance, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 class Workflows
 {
@@ -93,6 +95,8 @@ Note that while this will create and register the `myObj` object instance, initi
 
 The following example workflow will be used in the sections below:
 ```typescript
+import { DBOS, ConfiguredInstance, WorkflowQueue } from '@dbos-inc/dbos-sdk';
+
 class Workflows extends ConfiguredInstance
 {
   // Mark a static method as a DBOS workflow (see above)
@@ -215,7 +219,7 @@ interface WorkflowConfig {
 DBOS automatically attempts to recover workflows.  As a safety measure, The `maxRecoveryAttempts` configuration option is used to set the maximum number of times the workflow will be automatically recovered.  If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be retried manually.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
 
-### DBOS.transaction
+### `@DBOS.transaction`
 `@DBOS.transaction` registers a function as a DBOS transaction.  Such functions will be provided with database access via a [SQL client](#accesing-sql-database-clients).
 
 ```typescript
@@ -272,7 +276,7 @@ For more details, see:
 * [Prisma](../tutorials/using-prisma.md)
 * [TypeORM](../tutorials/using-typeorm.md)
 
-### DBOS.step
+### `@DBOS.step`
 `@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../tutorials/workflow-tutorial.md).
 The result of each invocation of a function decorated with `@DBOS.step` is stored in the DBOS system database.  This checkpoint of the execution state allows function calls to be skipped during workflow replay, if the step is known to have completed previously.
 
@@ -396,7 +400,7 @@ All events are persisted to the database, so once an event it set, it is guarant
 ## Finding and Retrieving Workflows
 Information about workflows that are either running or have already been completed can be retrieved from the workflow ID.  The workflow history can also be searched by other criteria.
 
-### DBOS.getWorkflowStatus
+### `DBOS.getWorkflowStatus`
 `DBOS.getWorkflowStatus` retrieves the status of a single workflow, given its workflow ID.  If 
 
 ```typescript
@@ -418,7 +422,7 @@ interface WorkflowStatus {
 }
 ```
 
-### DBOS.retrieveWorkflow
+### `DBOS.retrieveWorkflow`
 Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](../reference/workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
 
 ```typescript
@@ -428,7 +432,7 @@ DBOS.retrieveWorkflow(workflowID: string)
 ### Searching for workflows
 `DBOS.getWorkflows` and `DBOS.getWorkflowQueue` both search for workflows in the system database tables.
 
-#### DBOS.getWorkflows
+#### `DBOS.getWorkflows`
 `DBOS.getWorkflows` allows querying workflow execution history.
 
 ```typescript
@@ -458,7 +462,7 @@ export interface GetWorkflowsOutput {
 
 To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
 
-#### DBOS.getWorkflowQueue
+#### `DBOS.getWorkflowQueue`
 `DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](../reference/workflow-queues.md).
 
 ```typescript
@@ -681,7 +685,7 @@ static async helloUser() {
 }
 ```
 
-### `@DefaultRequiredRole`
+### `@DBOS.DefaultRequiredRole`
 Specify default required roles for all methods in the class. This can be overridden at the method level with `@DBOS.requiredRole`.
 
 ```typescript
