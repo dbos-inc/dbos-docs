@@ -40,4 +40,10 @@ Initialize the local directory with a DBOS template application.
 - `--template, -t <str>`: Specify a template to use. Currently, we have a single "hello" template, which is used by default.
 - `--config, -c`: If this flag is set, only the `dbos-config.yaml` file is added from the template. Useful to add DBOS to an existing project.
 
+### dbos reset
 
+Reset your DBOS [system database](../../explanations/system-tables.md), deleting metadata about past workflows and steps.
+No application data is affected by this.
+
+**Parameters:**
+- `--yes, -y`: Skip confirmation prompt.

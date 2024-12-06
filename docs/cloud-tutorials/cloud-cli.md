@@ -303,7 +303,7 @@ For each previous version of this application, emit:
 It retrieves an application's logs.
 
 **Parameters:**
-- `[application-name]`: The name of the application. By default we obtain the application name from package.json. This argument overrides the package name.
+- `[application-name]`: The name of the application.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
 ---
 
@@ -318,6 +318,43 @@ It is meant to be used with [`database restore`](#dbos-cloud-db-restore) during 
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-d, --database <string>` The name of the new database instance for this application.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. During restoration, we recommend deploying to the version active at the timestamp to which you recovered. You can list previous versions and their IDs and timestamps with the [versions command](#dbos-cloud-app-versions).
+
+---
+
+### `dbos-cloud app secrets create`
+
+**Description:**
+Create a new secret associated with an application, or update an existing secret.
+Secrets are made available to your application as environment variables.
+You must redeploy your application for a change in its secrets to take effect.
+
+**Parameters:**
+- `[application-name]`: The name of the application for which to create or update secrets.
+- `-s, --secretname <string>` The name of the secret to create or update.
+- `-v, --value`: The value of the secret.
+
+
+### `dbos-cloud app secrets import`
+
+**Description:**
+Import all environment variables defined in a `.env` file as secrets, updating them if they already exist.
+Allowed syntax for the `.env` file is described [here](https://dotenvx.com/docs/env-file), note that interpolation is supported but command substitution and encryption are currently not.
+Secrets are made available to your application as environment variables.
+You must redeploy your application for a change in its secrets to take effect.
+
+**Parameters:**
+- `[application-name]`: The name of the application for which to import secrets.
+- `-d, --dotenv <string>` Path to the `.env` file to import.
+
+---
+
+### `dbos-cloud app secrets list`
+
+**Description:**
+List all secrets associated with an application (only their names, not their values).
+
+**Parameters:**
+- `[application-name]`: The name of the application for which to list secrets.
 
 ---
 
