@@ -12,7 +12,7 @@ DBOS provides two workflow communication APIs, the events API and the messages A
 ### Events API
 
 This API allows workflows to emit and listen for events.
-Events are immutable key-value pairs.
+Events are key-value pairs.
 They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
 #### setEvent
@@ -67,7 +67,7 @@ The handler that originally invoked the workflow uses `getEvent()` to await this
 
 #### Reliability Guarantees
 
-All events are persisted to the database and are immutable, so once an event it set, it is guaranteed to always be retrievable.
+All events are persisted to the database durably, so once an event it set, it is guaranteed to always be retrievable.
 
 ### Messages API
 This API allows operations to send messages to a specific [workflow identity](./workflow-tutorial#workflow-identity).
