@@ -66,7 +66,7 @@ If you continue to your [application page](https://console.dbos.dev/applications
 
 To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
-### Developing Locally
+## Develop Locally
 
 You can also develop your DBOS application locally while storing its data in Supabase!  Here's how:
 
