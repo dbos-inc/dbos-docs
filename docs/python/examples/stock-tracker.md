@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 10
-title: Stock Tracker
+title: Stocks Tracker
 ---
 
 In this example, we use DBOS to build and deploy an app that tracks stock prices and send SMS alerts when the price of a stock crosses a certain threshold. We certainly don't want to miss a good opportunity to trade, so it's important this workflow is punctual and reliable!
