@@ -68,7 +68,7 @@ To start building, edit your application on GitHub (for the DBOS + FastAPI start
 
 ### Developing Locally
 
-You can also use develop your DBOS application locally while storing its data in Supabase!  Here's how:
+You can also develop your DBOS application locally while storing its data in Supabase!  Here's how:
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
