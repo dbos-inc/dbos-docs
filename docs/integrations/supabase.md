@@ -201,7 +201,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 
 <article className="col col--6">
 Congratulations, you've started a DBOS+Supabase app locally!
-To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
+To learn more about building DBOS apps, check out our [Python programming guide](../python/programming-guide.md).
 </article>
 
 </section>
@@ -325,7 +325,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 
 <article className="col col--6">
 Congratulations, you've started a DBOS+Supabase app locally!
-To learn more about building DBOS apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
+To learn more about building DBOS apps, check out our [TypeScript programming guide](../typescript/programming-guide.md).
 </article>
 
 </section>
