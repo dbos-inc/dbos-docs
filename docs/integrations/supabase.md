@@ -1,12 +1,16 @@
 ---
 sidebar_position: 5
 title: Supabase
+hide_table_of_contents: true
 ---
+
+import InstallNode from '/docs/partials/_install_node.mdx';
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 #  Use DBOS With Supabase
 
-This guide shows you how to deploy a DBOS application with [Supabase](https://supabase.com/).
-Your application is hosted in DBOS Cloud, but stores its data in Supabase.
+This guide shows you how to build an application with DBOS and [Supabase](https://supabase.com/).
+While Supabase stores your application's data, DBOS serverlessly hosts its code and makes it resilient to any failure.
 
 ### 1. Connect to Supabase
 Visit [https://console.dbos.dev/provision](https://console.dbos.dev/provision) and click "Connect Supabase" to connect your DBOS and Supabase accounts.
@@ -62,6 +66,269 @@ If you continue to your [application page](https://console.dbos.dev/applications
 
 To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
-### Next Steps
+## Develop Locally
 
-To learn more about building reliable applications with DBOS, check out the programming guide ([Python](../python/programming-guide.md), [TypeScript](../typescript/programming-guide.md)).
+You can also develop your DBOS application locally while storing its data in Supabase!  Here's how:
+
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
+
+<section className="row list">
+<article className="col col--6">
+
+#### 1. Git Clone Your Application
+Clone your application from git and enter its directory.
+</article>
+
+<article className="col col--6">
+
+```shell
+git clone <your-git-url> my-app
+cd my-app
+```
+
+</article>
+</section>
+
+<section className="row list">
+<article className="col col--6">
+
+#### 2. Set up a Virtual Environment
+Create a virtual environment and install dependencies.
+
+</article>
+
+<article className="col col--6">
+
+<Tabs groupId="operating-systems" className="small-tabs">
+<TabItem value="maclinux" label="macOS or Linux">
+```shell
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+</TabItem>
+<TabItem value="win-ps" label="Windows (PowerShell)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.ps1
+pip install -r requirements.txt
+```
+</TabItem>
+<TabItem value="win-cmd" label="Windows (cmd)">
+```shell
+python3 -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+```
+</TabItem>
+</Tabs>
+
+</article>
+</section>
+
+
+<section className="row list">
+<article className="col col--6">
+
+#### 3. Install the DBOS Cloud CLI
+
+The Cloud CLI requires Node.js 20 or later.
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+Run this command to install it.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+#### 4. Connect to Supabase
+<section className="row list">
+<article className="col col--6">
+
+Connect your local application to your Supabase database. Enter your Supabase password when prompted.
+
+</article>
+
+<article className="col col--6">
+
+```
+dbos-cloud db local
+```
+</article>
+
+</section>
+
+#### 5. Run the App
+
+<section className="row list">
+
+<article className="col col--6">
+Run these commands to start your app locally!
+</article>
+
+<article className="col col--6">
+```bash
+dbos migrate
+dbos start
+```
+</article>
+
+<article className="col col--6">
+To see that your app is working, visit this URL in your browser: http://localhost:8000/
+</article>
+
+<article className="col col--6">
+<BrowserWindow url="http://localhost:8000/">
+**Welcome to DBOS!**
+</BrowserWindow>
+</article>
+
+<article className="col col--6">
+Congratulations, you've started a DBOS+Supabase app locally!
+To learn more about building DBOS apps, check out our [Python programming guide](../python/programming-guide.md).
+</article>
+
+</section>
+
+</LargeTabItem>
+
+<LargeTabItem value="typescript" label="TypeScript">
+
+<section className="row list">
+<article className="col col--6">
+
+#### 1. Git Clone Your Application
+Clone your application from git and enter its directory.
+</article>
+
+<article className="col col--6">
+
+```shell
+git clone <your-git-url> my-app
+cd my-app
+```
+
+</article>
+</section>
+
+<section className="row list">
+<article className="col col--6">
+
+#### 2. Install Dependencies
+DBOS TypeScript requires Node.js 20 or later.
+
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+
+Install dependencies.
+
+</article>
+
+
+<article className="col col--6">
+
+```shell
+npm install
+```
+
+</article>
+</section>
+
+
+<section className="row list">
+<article className="col col--6">
+
+#### 3. Install the DBOS Cloud CLI
+
+Run this command to install the Cloud CLI globally.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+#### 4. Set up a Postgres Database
+<section className="row list">
+<article className="col col--6">
+
+Connect your local application to your Supabase database. Enter your Supabase password when prompted.
+
+</article>
+
+<article className="col col--6">
+
+```
+dbos-cloud db local
+```
+</article>
+
+</section>
+
+
+#### 5. Run the App
+
+
+<section className="row list">
+
+<article className="col col--6">
+Run these commands to build and start your app locally!
+</article>
+
+<article className="col col--6">
+```bash
+npx dbos migrate
+npm run build
+npx dbos start
+```
+</article>
+
+<article className="col col--6">
+To see that your app is working, visit this URL in your browser: http://localhost:3000/
+</article>
+
+<article className="col col--6">
+<BrowserWindow url="http://localhost:3000/">
+**Welcome to DBOS!**
+</BrowserWindow>
+</article>
+
+
+<article className="col col--6">
+Congratulations, you've started a DBOS+Supabase app locally!
+To learn more about building DBOS apps, check out our [TypeScript programming guide](../typescript/programming-guide.md).
+</article>
+
+</section>
+
+</LargeTabItem>
+</LargeTabs>
