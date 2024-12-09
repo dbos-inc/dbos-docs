@@ -76,6 +76,9 @@ Function decorators are affixed to a function, just before its name and modifier
 -   [`@RequiredRole`](#requiredrole)
 -   [`@GetApi`](#getapi)
 -   [`@PostApi`](#postapi)
+-   [`@PutApi`](#putapi)
+-   [`@PatchApi`](#patchapi)
+-   [`@DeleteApi`](#deleteapi)
 
 ### Parameter Decorators
 
@@ -229,8 +232,10 @@ These are represented by a section of the path prefixed with a `:`.
 
 ```typescript
 @GetApi("/:id")
+@Transaction()
 static async exampleGet(ctxt: TransactionContext, id: string) {
-  ctxt.logger.info(`${id} is parsed from the URL path parameter`)
+  ctxt.logger.info(`${id} is parsed from the URL path parameter`);
+  // ctxt can be used for database access, as this is also a @Transaction
 }
 ```
 
@@ -269,7 +274,7 @@ Associates a function with an HTTP URL accessed via DELETE. Analogous to [`@GetA
 
 ```typescript
 @DeleteApi("/:id")
-static async exampleDelete(ctxt: TransactionContext, id: string) {
+static async exampleDelete(ctxt: HandlerContext, id: string) {
   ctxt.logger.info(`${id} is parsed from the URL path parameter`)
 }
 ```
@@ -690,7 +695,7 @@ export class SchedulerConfig {
 
 The decorated method must take a Workflow context argument, and the following additional parameters:
 - The time that the run was scheduled (as a `Date`).
-- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow is was started behind schedule.
+- The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow was started behind schedule.
 
 Example:
 ```typescript
