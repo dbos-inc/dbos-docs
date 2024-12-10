@@ -24,6 +24,8 @@ DBOS provides reliability guarantees for programs that are [written as workflows
 
 When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../tutorials/idempotency-tutorial.md).
 
+`@DBOS.workflow()` takes an optional [`WorkflowConfig`](#workflow-configuration) object.
+
 #### Decorating Static Methods
 Workflow functions must be class members, and may be `static`.  To mark a `static` member function as a workflow, simply place the `@DBOS.workflow()` decorator above it.
 
@@ -207,7 +209,7 @@ const handle6 = await DBOS.withNextWorkflowID('<wfid_value>', async() => {
 const result6 = await handle6.getResult();
 ```
 
-#### Workflow Recovery Configuration
+#### Workflow Configuration
 `@DBOS.workflow()` takes an optional `WorkflowConfig` object:
 
 ```typescript
