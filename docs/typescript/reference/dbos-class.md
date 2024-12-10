@@ -263,7 +263,7 @@ Within a transaction function, the following read-only property is available fro
 DBOS.sqlClient: UserDatabaseClient
 ```
 
-The following aliases are also available, depending on the database driver or ORM in use:
+The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../reference/configuration.md#database):
 ```typescript
 DBOS.pgClient: PoolClient
 DBOS.prismaClient: PrismaClient
@@ -329,7 +329,7 @@ class MyClass {
 const res = DBOS.invoke(MyClass).transactionFunction('arg');
 ```
 
-## Sleeping
+## Durable Sleep
 
 Within a DBOS workflow, waiting or sleeping should not be done using standard system functions, as these will not be skipped on workflow replay.  Instead, the "durable sleep" functions below should be used.  The wakeup time will be stored in the database when the function is first called, and if the workflow is re-executed, it will not oversleep.
 
@@ -400,13 +400,13 @@ Retrieves an event published by `workflowID` for a given `key` using the [events
 All events are persisted to the database, so once an event it set, it is guaranteed to always be retrievable.
 
 ## Finding and Retrieving Workflows
-Information about workflows that are either running or have already been completed can be retrieved from the workflow ID.  The workflow history can also be searched by other criteria.
+Information about workflows that are either running or have already been completed can be retrieved from the workflow ID.  The workflow history can also be searched by other criteria, such as the user, function, or queue name.
 
 ### `DBOS.getWorkflowStatus`
-`DBOS.getWorkflowStatus` retrieves the status of a single workflow, given its workflow ID.  If 
+`DBOS.getWorkflowStatus` retrieves the status of a single workflow, given its workflow ID.  If the workflow ID specified has not been used to start a workflow, the returned `Promise` will resolve to `null`.
 
 ```typescript
-DBOS.getWorkflowStatus(workflowID: string): Promise<WorkflowStatus>
+DBOS.getWorkflowStatus(workflowID: string): Promise<WorkflowStatus | null>
 ```
 
 The `WorkflowStatus` returned has the following field definition:
@@ -431,10 +431,7 @@ Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWor
 DBOS.retrieveWorkflow(workflowID: string)
 ```
 
-### Searching for workflows
-`DBOS.getWorkflows` and `DBOS.getWorkflowQueue` both search for workflows in the system database tables.
-
-#### `DBOS.getWorkflows`
+### `DBOS.getWorkflows`
 `DBOS.getWorkflows` allows querying workflow execution history.
 
 ```typescript
@@ -464,7 +461,7 @@ export interface GetWorkflowsOutput {
 
 To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
 
-#### `DBOS.getWorkflowQueue`
+### `DBOS.getWorkflowQueue`
 `DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](../reference/workflow-queues.md).
 
 ```typescript
