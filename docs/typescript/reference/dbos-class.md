@@ -141,9 +141,18 @@ const result2 = await workflowsInstance.processInstanceWorkflow("value2");
 Workflow functions can also be started asynchronously using `DBOS.startWorkflow`.  When run with `DBOS.startWorkflow`, the function will run in the background, and a `WorkflowHandle` is returned from `DBOS`.  This [handle](../reference/workflow-handles.md) can be used to [interact with the workflow](#interacting-with-workflows) or await its result with `getResult()`.
 
 ```typescript
-DBOS.startWorkflow<T extends ConfiguredInstance>(targetInstance: T): InvokeFunctionsAsyncInst<T>;
-DBOS.startWorkflow<T extends object>(targetClass: T): InvokeFunctionsAsync<T>;
+DBOS.startWorkflow<T extends ConfiguredInstance>(targetInstance: T, params?: StartWorkflowParams): InvokeFunctionsAsyncInst<T>;
+DBOS.startWorkflow<T extends object>(targetClass: T, params?: StartWorkflowParams): InvokeFunctionsAsync<T>;
+
+interface StartWorkflowParams {
+  workflowID?: string;
+  queueName?: string;
+}
 ```
+
+The optional `StartWorkflowParams` parameter allows the following to be controlled:
+* workflowID: The [workflow ID](#assigning-workflow-ids) for the started workflow
+* queueName: The name of the [workflow queue](#using-workflow-queues) for the workflow
 
 Examples:
 ```typescript
@@ -156,6 +165,12 @@ const result3 = await handle3.getResult();
 const handle4 = await DBOS.startWorkflow(workflowInstance).processInstanceWorkflow("value4");
 // ...
 const result4 = await handle4.getResult();
+
+// Run static functions asynchronously on a queue, with an assigned ID, and get the result later
+const handle5 = await DBOS.startWorkflow(Workflows, {workflowID: 'unique wf id', queueName: wfq.name})
+  .processWorkflow("value5");
+// ...
+const result5 = await handle3.getResult();
 
 ```
 
