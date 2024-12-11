@@ -105,4 +105,12 @@ import { TbClock2 } from "react-icons/tb";
     icon={<TbClock2 color="white" size={50}/>}
     language="python"
   />
+  <CardLink
+    label="Stocks Tracker"
+    href="python/examples/stock-tracker"
+    description="Use DBOS to get alerted you when stock prices cross a certain threshold."
+    index="11"
+    icon={<TbClock2 color="white" size={50}/>}
+    language="python"
+  />
   </section>
