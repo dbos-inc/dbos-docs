@@ -350,11 +350,13 @@ Within a DBOS workflow, waiting or sleeping should not be done using standard sy
 
 ```typescript
 DBOS.sleepms(durationMS: number): Promise<void>
-DBOS.sleep(durationSec: number): Promise<void>
+DBOS.sleepSeconds(durationSec: number): Promise<void>
+DBOS.sleep(durationMS: number): Promise<void>
 ```
 
-* DBOS.sleep: sleep for `durationSec` seconds.
 * DBOS.sleepms: sleep for `durationMS` milliseconds.
+* DBOS.sleepSeconds: sleep for `durationSec` seconds.
+* DBOS.sleep: sleep for `durationMS` milliseconds.
 
 These functions work in any context, and will use the system sleep if no workflow is in progress.
 
@@ -926,46 +928,3 @@ DBOS.executeWorkflowById(workflowId: string, startNewWorkflow: boolean = false):
 
 * `DBOS.recoverPendingWorkflows`: Retrieves a list of workflows to recover, and starts them, returning their handles
 * `DBOS.executeWorkflowById`: Starts executing a workflow given its `workflowId`.  If `startNewWorkflow` is `true`, the workflow is cloned and assigned a new unique workflow ID.
-
-## Extensibility
-DBOS Transact allows libraries, such as those designed to receive external events, to initiate DBOS functions.
-
-### Decorators
-Such libraries may choose to implement method decorators.  If the method decorator is registering a function with DBOS Transact, it should call `DBOS.registerAndWrapContextFreeFunction` for functions that do not accept a context as the first parameter.
-
-```typescript
-DBOS.registerAndWrapContextFreeFunction<This, Args extends unknown[], Return>(
-    target: object,
-    propertyKey: string,
-    descriptor: TypedPropertyDescriptor<(this: This, ...args: Args) => Promise<Return>>,
-)
-```
-
-`DBOS.registerAndWrapContextFreeFunction` registers the function named `propertyKey` on the `target` class, creates a wrapper function, and updates the `descriptor` to use the wrapper function.
-
-### Calling DBOS Functions From Event Dispatchers
-DBOS functions that are decorated as `DBOS.workflow`, `DBOS.transaction`, or `DBOS.step`, can be run directly from event receiver dispatch loops.
-
-For more complex circumstances, such as invoking functions with a context argument, `DBOS.executor` provides access to the [`DBOSExecutorContext` interface](../reference/contexts.md#dbosexecutorcontext).
-
-#### Setting Authenticated User And Roles
-When calling DBOS functions, it may be desired to set context variables, such as the authenticated user, and the current tracing span.  The following functions can be used for these purposes:
-
-```typescript
-// Set the authenticated user, and roles allowed by the authentication system for the scope of the callback() function
-DBOS.withAuthedContext<R>(authedUser: string, authedRoles: string[], callback: () => Promise<R>): Promise<R>
-
-// Set the tracing span for the scope of the callback() function
-DBOS.withTracedContext<R>(callerName: string, span: Span, request: HTTPRequest, callback: () => Promise<R>): Promise<R>
-
-// Set the caller name for the scope of the callback() function
-DBOS.withNamedContext<R>(callerName: string, callback: () => Promise<R>): Promise<R>
-```
-
-#### Example
-In the following example, the `TestSecurity.testWorkflow` function is executed for authenticated user "joe", with role "user". 
-````typescript
-  const hijoe = await DBOS.withAuthedContext('joe', ['user'], async() => {
-    return await TestSecurity.testWorkflow('joe');
-  });
-````
