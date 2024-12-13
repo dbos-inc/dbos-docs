@@ -162,6 +162,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <article className="col col--6">
 
 Connect your local application to your Supabase database. Enter your Supabase password when prompted.
+If you don't remember your Supabase password, you can reset it from the [Supabase dashboard](https://supabase.com/dashboard/projects) under Project Settings -> Database.
 
 </article>
 
@@ -282,6 +283,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <article className="col col--6">
 
 Connect your local application to your Supabase database. Enter your Supabase password when prompted.
+If you don't remember your Supabase password, you can reset it from the [Supabase dashboard](https://supabase.com/dashboard/projects) under Project Settings -> Database.
 
 </article>
 
