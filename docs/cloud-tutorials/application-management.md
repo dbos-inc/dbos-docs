@@ -16,7 +16,7 @@ To deploy your application to DBOS Cloud, run this command in its root directory
 dbos-cloud app deploy
 ```
 
-Your application is deployed using the name in its `dbos-config.yaml`.
+Your application is deployed using the `name` in its [dbos-config.yaml](#configuring-application-deployment).
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
 The first time you deploy an application, you are prompted to choose to which [database instance](../cloud-tutorials/database-management.md) to connect your app, or to provision one if you have none.
@@ -24,14 +24,16 @@ Multiple applications can connect to the same database instance (server)&mdash;t
 
 Each time you deploy an application, the following steps execute:
 
-- An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
-- Your application's dependencies are installed.
-In Python, dependencies are loaded from `requirements.txt`.
-In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if this is not present.
-You must provide one of these files to successfully deploy.
-The maximum size of your app after all dependencies are installed is 2 GB.
-- All database migrations specified in your `dbos-config.yaml` are run on your cloud database.
-- Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default. DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
+1. **Upload**: An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
+2. **Configuration**: Your application's dependencies are installed and the application is built.
+    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the latter is not present. You must provide one of these files to successfully deploy. The maximum size of your app after all dependencies are installed is 2 GB.
+    - In TypeScript, your application is built using `npm run build`.
+    - DBOS Pro subscribers can [configure](#configuring-application-deployment) _setup steps_ to run before the application is built. These steps are meant to customize the runtime environment for your application, for example installing system packages and libraries.
+    - All database migrations specified in your [dbos-config.yaml](#configuring-application-deployment) are run on your cloud database.
+3. **Deployment**:
+    - Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default. DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
+    - You can [configure](#configuring-application-deployment) the behavior of `dbos start` in `dbos-config.yaml`.
+
 MicroVMs expect your application to serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for DBOS Transact and Koa).
 
 After your application is deployed, the URL of your deployed application is printed.
@@ -47,6 +49,18 @@ If you edit your application, run `dbos-cloud app deploy` again to apply the lat
 * You cannot change the database of a deployed application. You must delete and re-deploy the application.
 :::
 
+#### Configuring Application Deployment
+In `dbos-config.yaml`, you can configure the following properties for your application:
+```yaml
+name: <app-name>
+migrate:
+    - "alembic upgrade head"
+runtimeConfig:
+    setup: # Declare steps to run on the cloud before starting the application
+        - "apt install -y <package-name>"
+        - "cd <my_dir> && make install"
+    start: "npm run start" # Command to start the application.
+```
 
 ### Monitoring and Debugging Applications
 
