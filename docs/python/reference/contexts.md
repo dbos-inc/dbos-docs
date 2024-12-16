@@ -166,6 +166,11 @@ DBOS.sql_session: sqlalchemy.Session
 May only be accessed from within a transaction.
 Retrieves the SQLAlchemy session of the transaction, a database connection the transaction can use to interact with the database.
 
+:::tip
+DBOS automatically wraps your transaction function within a SQLAlchemy ["begin once" block](https://docs.sqlalchemy.org/en/20/core/connections.html#connect-and-begin-once-from-the-engine). Therefore, do not use `DBOS.sql_session.commit()` or `DBOS.sql_session.rollback()` in your functions. Otherwise, you might see a `sqlalchemy.exc.InvalidRequestError: Can't operate on closed transaction inside
+context manager` error.
+:::
+
 ### workflow_id
 
 ```python
