@@ -52,14 +52,21 @@ If you edit your application, run `dbos-cloud app deploy` again to apply the lat
 #### Configuring Application Deployment
 In `dbos-config.yaml`, you can configure your application deployment with these properties:
 ```yaml
+# The name of your application.
 name: <app-name>
+# Commands DBOS Cloud executes against the application database before starting the application.
 migrate:
     - "alembic upgrade head"
 runtimeConfig:
-    setup: # Declare steps to run on the cloud before starting the application
+    # Commands DBOS Cloud runs to configure the application runtime, before starting it.
+    # We recommend using a single script to declare commands.
+    # Requires a DBOS Pro subscription.
+    setup:
         - "apt install -y <package-name>"
         - "cd <my_dir> && make install"
-    start: "npm run start" # Command to start the application.
+        - "./build.sh"
+    # Command DBOS Cloud will execute to start your application.
+    start: "npm run start"
 ```
 
 ### Monitoring and Debugging Applications
