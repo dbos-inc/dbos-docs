@@ -50,7 +50,7 @@ If you edit your application, run `dbos-cloud app deploy` again to apply the lat
 :::
 
 #### Configuring Application Deployment
-In `dbos-config.yaml`, you can configure the following properties for your application:
+In `dbos-config.yaml`, you can configure your application deployment with these properties:
 ```yaml
 name: <app-name>
 migrate:
