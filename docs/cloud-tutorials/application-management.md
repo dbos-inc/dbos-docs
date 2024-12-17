@@ -26,12 +26,12 @@ Each time you deploy an application, the following steps execute:
 
 1. **Upload**: An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
 2. **Configuration**: Your application's dependencies are installed and the application is built.
-    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the latter is not present. You must provide one of these files to successfully deploy. The maximum size of your app after all dependencies are installed is 2 GB.
+    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the latter is not present. You must provide one of these files to successfully deploy.
+    - The maximum size of your app after all dependencies are installed is 2 GB.
     - In TypeScript, your application is built using `npm run build`.
-    - All database migrations specified in your [dbos-config.yaml](#configuring-application-deployment) are run on your cloud database.
-3. **Deployment**:
-    - Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default. DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
-    - You can [configure](#configuring-application-deployment) the behavior of `dbos start` in `dbos-config.yaml`.
+    - After dependencies are installed, all database migrations specified in your `dbos-config.yaml` are run on your cloud database.
+3. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default.
+- DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
 
 MicroVMs expect your application to serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for DBOS Transact and Koa).
 
@@ -55,7 +55,6 @@ This script can customize the runtime environment for your application, for exam
 
 A setup script must be specified in your `dbos-config.yaml` like so:
 
-
 ```yaml title="dbos-config.yaml"
 runtimeConfig:
     # Script DBOS Cloud runs to customize your application
@@ -63,7 +62,7 @@ runtimeConfig:
     # Requires a DBOS Pro subscription.
     setup:
         - "./build.sh"
-    # Command DBOS Cloud will execute to start your application.
+    # Command DBOS Cloud executes to start your application.
     start: <your-start-command>
 ```
 
