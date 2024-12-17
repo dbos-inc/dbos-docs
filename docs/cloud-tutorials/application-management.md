@@ -30,7 +30,7 @@ Each time you deploy an application, the following steps execute:
     - In TypeScript, your application is built using `npm run build`.
     - After dependencies are installed, all database migrations specified in your `dbos-config.yaml` are run on your cloud database.
 3. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default.
-- DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
+    - DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
 
 MicroVMs expect your application to serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for DBOS Transact and Koa).
 
