@@ -26,8 +26,7 @@ Each time you deploy an application, the following steps execute:
 
 1. **Upload**: An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
 2. **Configuration**: Your application's dependencies are installed and the application is built.
-    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the former is not present.
-    - The maximum size of your app after all dependencies are installed is 2 GB.
+    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the former is not present. The maximum size of your app after all dependencies are installed is 2 GB.
     - In TypeScript, your application is built using `npm run build`.
     - After dependencies are installed, all database migrations specified in your `dbos-config.yaml` are run on your cloud database.
 3. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default.
