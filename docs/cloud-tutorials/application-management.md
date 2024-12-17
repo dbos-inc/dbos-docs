@@ -66,7 +66,7 @@ runtimeConfig:
     start: <your-start-command>
 ```
 
-A script may install system packages or libraries or otherwise customize the microVM image. For example:
+A setup script may install system packages or libraries or otherwise customize the microVM image. For example:
 
 ```python title="build.sh"
 #!/bin/bash
