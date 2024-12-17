@@ -75,6 +75,7 @@ This section is used to specify DBOS runtime parameters.
 
 - **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./cli#npx-dbos-start) overrides this config parameter.
 - **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
+- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../cloud-tutorials/application-management.md#customizing-microvm-setup)
 
 **Example**:
 

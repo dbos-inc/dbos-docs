@@ -28,7 +28,6 @@ Each time you deploy an application, the following steps execute:
 2. **Configuration**: Your application's dependencies are installed and the application is built.
     - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the latter is not present. You must provide one of these files to successfully deploy. The maximum size of your app after all dependencies are installed is 2 GB.
     - In TypeScript, your application is built using `npm run build`.
-    - DBOS Pro subscribers can [configure](#configuring-application-deployment) _setup steps_ to run before the application is built. These steps are meant to customize the runtime environment for your application, for example installing system packages and libraries.
     - All database migrations specified in your [dbos-config.yaml](#configuring-application-deployment) are run on your cloud database.
 3. **Deployment**:
     - Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default. DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
@@ -49,24 +48,32 @@ If you edit your application, run `dbos-cloud app deploy` again to apply the lat
 * You cannot change the database of a deployed application. You must delete and re-deploy the application.
 :::
 
-#### Configuring Application Deployment
-In `dbos-config.yaml`, you can configure your application deployment with these properties:
-```yaml
-# The name of your application.
-name: <app-name>
-# Commands DBOS Cloud executes against the application database before starting the application.
-migrate:
-    - "alembic upgrade head"
+#### Customizing MicroVM Setup
+
+DBOS Pro subscribers can provide a _setup script_ that runs before their application is built.
+This script can customize the runtime environment for your application, for example installing system packages and libraries.
+
+A setup script must be specified in your `dbos-config.yaml` like so:
+
+
+```yaml title="dbos-config.yaml"
 runtimeConfig:
-    # Commands DBOS Cloud runs to configure the application runtime, before starting it.
-    # We recommend using a single script to declare commands.
+    # Script DBOS Cloud runs to customize your application
+    # runtime before building your application.
     # Requires a DBOS Pro subscription.
     setup:
-        - "apt install -y <package-name>"
-        - "cd <my_dir> && make install"
         - "./build.sh"
     # Command DBOS Cloud will execute to start your application.
-    start: "npm run start"
+    start: <your-start-command>
+```
+
+A script may install system packages or libraries or otherwise customize the microVM image. For example:
+
+```python title="build.sh"
+#!/bin/bash
+
+# Install the traceroute package for use in your application
+apt install traceroute
 ```
 
 ### Monitoring and Debugging Applications
