@@ -16,7 +16,7 @@ To deploy your application to DBOS Cloud, run this command in its root directory
 dbos-cloud app deploy
 ```
 
-Your application is deployed using the `name` in its [dbos-config.yaml](#configuring-application-deployment).
+Your application is deployed using the `name` in its `dbos-config.yaml`.
 Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`). Application names are unique within an [organization](account-management#organization-management).
 
 The first time you deploy an application, you are prompted to choose to which [database instance](../cloud-tutorials/database-management.md) to connect your app, or to provision one if you have none.
