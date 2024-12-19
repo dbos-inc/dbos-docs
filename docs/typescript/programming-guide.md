@@ -182,7 +182,7 @@ Only the **four highlighted lines of code** are needed to enable durable executi
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
 To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
 
-To see the power of durable execution, restart your app with `dbos start`.
+To see the power of durable execution, rebuild your app with `npm run build` and restart your app with `npx dbos start`.
 Then, visit this URL: http://localhost:3000/greeting/Mike.
 In your terminal, you should see an output like:
 
@@ -212,26 +212,26 @@ This is an incredibly powerful guarantee that helps you build complex, reliable 
 ## 3. Optimizing Database Operations
 
 For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace the `insert_greeting` function in `greeting_guestbook/main.py` with the following:
+To see this in action, replace the `insert_greeting` function in `src/operations.ts` with the following:
 
-```python showLineNumbers
-@DBOS.transaction()
-def insert_greeting(name: str) -> str:
-    query = dbos_hello.insert().values(name=name)
-    DBOS.sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
+```javascript showLineNumbers
+  @DBOS.transaction()
+  static async insertGreeting(name: string): Promise<void> {
+    await DBOS.knexClient('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
+  }
 ```
 
 [`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
 It executes your function in a single database transaction.
 We recommend using transactions because:
 
-1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself. You no longer need to configure a SQLAlchemy engine!
+1. They give you access to a pre-configured database client, which is more convenient than connecting to the database yourself. DBOS integrates with most popular TypeScript ORMs, including Knex, Prisma, TypeORM, and Drizzle, and also supports raw SQL.
 2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
 
-Now, restart your app with `dbos start` and visit its URL again: http://localhost:8000/greeting/Mike.
+Now, rebuild your app with with `npm run build`, restart with `npx dbos start`, and visit its URL again: http://localhost:3000/greeting/Mike.
 The app should durably execute your workflow the same as before!
 
-The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
+The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
 
 Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
