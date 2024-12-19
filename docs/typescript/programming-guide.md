@@ -37,58 +37,64 @@ Finally, set up some database tables:
 npx dbos migrate
 ```
 
-Next, let's use FastAPI to write a simple app that greets our friends.
+Next, let's build a simple app that greets our friends using Express.js.
 Every time the app receives a greeting, it performs two steps:
 
 1. Sign an online guestbook with the greeting.
 2. Record the greeting in the database.
 
-We deliberately **won't** use DBOS yet (except to fetch the database connection string) so we can show you how easy it is to add later.
+We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
 
-Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
+Copy the following code into `src/operations.ts`, replacing its existing contents:
 
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
+```javascript showLineNumbers title="src/operations.ts"
+import express, { Request, Response } from 'express';
+import knex from 'knex';
+const knexConfig = require('../knexfile');
 
-import requests
-from dbos import get_dbos_database_url
-from fastapi import FastAPI
-from sqlalchemy import create_engine
+export class Guestbook {
+  static async signGuestbook(name: string): Promise<void> {
+    await fetch("https://demo-guestbook.cloud.dbos.dev/record_greeting", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
+    });
+    console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
+  }
 
-from .schema import dbos_hello
+  static db = knex(knexConfig);
 
-app = FastAPI()
-logging.basicConfig(level=logging.INFO)
+  static async insertGreeting(name: string): Promise<void> {
+    try {
+      await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+      console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
+    } catch (error) {
+      throw error;
+    }
+  }
 
-# Sign the guestbook using an HTTP POST request
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
+  static async greetingEndpoint(name: string): Promise<string> {
+    await Guestbook.signGuestbook(name);
+    await Guestbook.insertGreeting(name);
+    return `Thank you for being awesome, ${name}!`;
+  }
+}
 
-# Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(get_dbos_database_url())
+export const app = express();
+app.use(express.json());
 
-# Record the greeting in the database using SQLAlchemy
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
+app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> => {
+  const { name } = req.params;
+  res.send(await Guestbook.greetingEndpoint(name));
+});
 
-@app.get("/greeting/{name}")
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
 ```
 
-Start your app with `dbos start`.
-To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
-<BrowserWindow url="http://localhost:8000/greeting/Mike">
+Build your app with `npm run build` and start it with `npx dbos start`.
+To see that it's is working, visit this URL: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike)
+<BrowserWindow url="http://localhost:3000/greeting/Mike">
 "Thank you for being awesome, Mike!"
 </BrowserWindow>
 
