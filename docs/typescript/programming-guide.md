@@ -71,12 +71,8 @@ export class Guestbook {
 
   // Record the greeting in the database using Knex.js
   static async insertGreeting(name: string): Promise<void> {
-    try {
-      await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
-      console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
-    } catch (error) {
-      throw error;
-    }
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
   static async greetingEndpoint(name: string): Promise<string> {
@@ -150,12 +146,8 @@ export class Guestbook {
   //highlight-next-line
   @DBOS.step()
   static async insertGreeting(name: string): Promise<void> {
-    try {
-      await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
-      console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
-    } catch (error) {
-      throw error;
-    }
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
 //highlight-next-line
