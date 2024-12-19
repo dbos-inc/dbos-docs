@@ -94,7 +94,7 @@ def sign_guestbook(name: str):
     )
     logging.info(f">>> STEP 1: Signed the guestbook for {name}")
 
-# Create a SQLAlchemy engine. Adjust this connection string for your database.
+# Create a SQLAlchemy engine.
 engine = create_engine(get_dbos_database_url())
 
 # Record the greeting in the database using SQLAlchemy
