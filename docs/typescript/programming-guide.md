@@ -53,6 +53,8 @@ import knex from 'knex';
 const knexConfig = require('../knexfile');
 
 export class Guestbook {
+
+  // Sign the guestbook using an HTTP POST request
   static async signGuestbook(name: string): Promise<void> {
     await fetch("https://demo-guestbook.cloud.dbos.dev/record_greeting", {
       method: 'POST',
@@ -64,8 +66,10 @@ export class Guestbook {
     console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
   }
 
+  // Create a database connection using Knex.js
   static db = knex(knexConfig);
 
+  // Record the greeting in the database using Knex.js
   static async insertGreeting(name: string): Promise<void> {
     try {
       await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
@@ -82,6 +86,7 @@ export class Guestbook {
   }
 }
 
+// Create an HTTP endpoint using Express.js
 export const app = express();
 app.use(express.json());
 
@@ -89,11 +94,10 @@ app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> =>
   const { name } = req.params;
   res.send(await Guestbook.greetingEndpoint(name));
 });
-
 ```
 
 Build your app with `npm run build` and start it with `npx dbos start`.
-To see that it's is working, visit this URL: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike)
+To see that it's is working, visit this URL: http://localhost:3000/greeting/Mike
 <BrowserWindow url="http://localhost:3000/greeting/Mike">
 "Thank you for being awesome, Mike!"
 </BrowserWindow>
@@ -114,72 +118,80 @@ To fix this problem, we'll use DBOS durable execution.
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following code into your `greeting_guestbook/main.py`, replacing its existing contents:
+Copy the following code into your `src/operations.ts`, replacing its existing contents:
 
+```javascript showLineNumbers title="src/operations.ts"
+//highlight-next-line
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import express, { Request, Response } from 'express';
+import knex from 'knex';
+const knexConfig = require('../knexfile');
 
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
+export class Guestbook {
 
-import requests
-#highlight-next-line
-from dbos import DBOS, get_dbos_database_url
-from fastapi import FastAPI
-from sqlalchemy import create_engine
+  // Sign the guestbook using an HTTP POST request
+  //highlight-next-line
+  @DBOS.step()
+  static async signGuestbook(name: string): Promise<void> {
+    await fetch("https://demo-guestbook.cloud.dbos.dev/record_greeting", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
+    });
+    console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
+  }
 
-from .schema import dbos_hello
+  // Create a database connection using Knex.js
+  static db = knex(knexConfig);
 
-app = FastAPI()
-#highlight-next-line
-DBOS(fastapi=app)
+  // Record the greeting in the database using Knex.js
+  //highlight-next-line
+  @DBOS.step()
+  static async insertGreeting(name: string): Promise<void> {
+    try {
+      await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+      console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
+    } catch (error) {
+      throw error;
+    }
+  }
 
-logging.basicConfig(level=logging.INFO)
+//highlight-next-line
+  @DBOS.workflow()
+  static async greetingEndpoint(name: string): Promise<string> {
+    await Guestbook.signGuestbook(name);
+    for (let i = 0; i < 5; i++) {
+      console.log("Press Control + C to stop the app...");
+      await DBOS.sleep(1000);
+  }
+    await Guestbook.insertGreeting(name);
+    return `Thank you for being awesome, ${name}!`;
+  }
+}
 
-# Sign the guestbook using an HTTP POST request
-#highlight-next-line
-@DBOS.step()
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
+// Create an HTTP endpoint using Express.js
+export const app = express();
+app.use(express.json());
 
-# Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(get_dbos_database_url())
-
-# Record the greeting in the database using SQLAlchemy
-#highlight-next-line
-@DBOS.step()
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
-
-@app.get("/greeting/{name}")
-#highlight-next-line
-@DBOS.workflow()
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
-    for _ in range(5):
-        logging.info("Press Control + C to stop the app...")
-        DBOS.sleep(1)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
+app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> => {
+  const { name } = req.params;
+  res.send(await Guestbook.greetingEndpoint(name));
+});
 ```
 
 Only the **four highlighted lines of code** are needed to enable durable execution.
 
-- First, we initialize DBOS on line 12.
-- Then, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 17 and 30.
-- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 38.
+- First, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 9 and 25.
+- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 35.
+- Finally, we launch DBOS on line XX.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
 To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
 
 To see the power of durable execution, restart your app with `dbos start`.
-Then, visit this URL: http://localhost:8000/greeting/Mike.
+Then, visit this URL: http://localhost:3000/greeting/Mike.
 In your terminal, you should see an output like:
 
 ```shell
