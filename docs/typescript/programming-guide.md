@@ -37,7 +37,7 @@ Finally, set up some database tables:
 npx dbos migrate
 ```
 
-Next, let's build a simple app that greets our friends using Express.js.
+Next, let's build a simple app that greets our friends.
 Every time the app receives a greeting, it performs two steps:
 
 1. Sign an online guestbook with the greeting.
