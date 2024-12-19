@@ -17,34 +17,9 @@ Thanks to durable execution, the app will always write to both systems consisten
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS or Linux">
-```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
-source .venv/bin/activate
 ```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
-```shell
-python3 -m venv greeting-guestbook/.venv
+npx @dbos-inc/create -t hello-express -n greeting-guestbook
 cd greeting-guestbook
-.venv\Scripts\activate.ps1
-```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
-```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
-.venv\Scripts\activate.bat
-```
-</TabItem>
-</Tabs>
-
-Then, install and initialize DBOS:
-```shell
-pip install dbos
-dbos init
 ```
 
 DBOS needs a Postgres database to connect to.
@@ -53,13 +28,13 @@ Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud databa
 <details>
 <summary>Instructions to set up Postgres</summary>
 
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
+<LocalPostgres cmd={'node start_postgres_docker.js'} />
 </details>
 
 Finally, set up some database tables:
 
 ```shell
-dbos migrate
+npx dbos migrate
 ```
 
 Next, let's use FastAPI to write a simple app that greets our friends.
