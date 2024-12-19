@@ -203,7 +203,7 @@ main().catch(console.log);
 Only the **four highlighted lines of code** are needed to enable durable execution.
 
 - First, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 9 and 25.
-- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 35.
+- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 31.
 - Finally, we launch DBOS on line 53.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
