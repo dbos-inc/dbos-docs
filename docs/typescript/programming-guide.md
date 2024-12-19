@@ -113,8 +113,8 @@ To see that it's is working, visit this URL: http://localhost:3000/greeting/Mike
 Each time you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
 
 ```
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+>>> STEP 1: Signed the guestbook for Mike
+>>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
 Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
@@ -185,6 +185,7 @@ app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> =>
 });
 
 async function main() {
+//highlight-next-line
   await DBOS.launch({expressApp: app});
 
   const PORT = 3000;
@@ -203,7 +204,7 @@ Only the **four highlighted lines of code** are needed to enable durable executi
 
 - First, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 9 and 25.
 - Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 35.
-- Finally, we launch DBOS on line XX.
+- Finally, we launch DBOS on line 53.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
 To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
@@ -213,22 +214,24 @@ Then, visit this URL: http://localhost:3000/greeting/Mike.
 In your terminal, you should see an output like:
 
 ```shell
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
+🚀 Server is running on http://localhost:3000
+🌟 Environment: development
+>>> STEP 1: Signed the guestbook for Mike
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
 ```
 Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+🚀 Server is running on http://localhost:3000
+🌟 Environment: development
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+>>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
 Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
