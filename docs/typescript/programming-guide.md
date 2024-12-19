@@ -8,7 +8,7 @@ pagination_prev: quickstart
 import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 
-This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
+This tutorial shows you how to use DBOS durable execution to make your TypeScript app **resilient to any failure.**
 First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
@@ -45,9 +45,9 @@ Every time the app receives a greeting, it performs two steps:
 
 We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
 
-Copy the following code into `src/operations.ts`, replacing its existing contents:
+Copy the following code into `src/main.ts`, replacing its existing contents:
 
-```javascript showLineNumbers title="src/operations.ts"
+```javascript showLineNumbers title="src/main.ts"
 import express, { Request, Response } from 'express';
 import knex from 'knex';
 const knexConfig = require('../knexfile');
@@ -82,7 +82,7 @@ export class Guestbook {
   }
 }
 
-// Create an HTTP endpoint using Express.js
+// Create an HTTP server using Express.js
 export const app = express();
 app.use(express.json());
 
@@ -90,6 +90,18 @@ app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> =>
   const { name } = req.params;
   res.send(await Guestbook.greetingEndpoint(name));
 });
+
+async function main() {
+  const PORT = 3000;
+  const ENV = process.env.NODE_ENV || 'development';
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🌟 Environment: ${ENV}`);
+  });
+}
+
+main().catch(console.log);
 ```
 
 Build your app with `npm run build` and start it with `npx dbos start`.
@@ -114,9 +126,9 @@ To fix this problem, we'll use DBOS durable execution.
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
 DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following code into your `src/operations.ts`, replacing its existing contents:
+Copy the following code into your `src/main.ts`, replacing its existing contents:
 
-```javascript showLineNumbers title="src/operations.ts"
+```javascript showLineNumbers title="src/main.ts"
 //highlight-next-line
 import { DBOS } from '@dbos-inc/dbos-sdk';
 import express, { Request, Response } from 'express';
@@ -163,7 +175,7 @@ export class Guestbook {
   }
 }
 
-// Create an HTTP endpoint using Express.js
+// Create an HTTP server using Express.js
 export const app = express();
 app.use(express.json());
 
@@ -171,6 +183,20 @@ app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> =>
   const { name } = req.params;
   res.send(await Guestbook.greetingEndpoint(name));
 });
+
+async function main() {
+  await DBOS.launch({expressApp: app});
+
+  const PORT = 3000;
+  const ENV = process.env.NODE_ENV || 'development';
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🌟 Environment: ${ENV}`);
+  });
+}
+
+main().catch(console.log);
 ```
 
 Only the **four highlighted lines of code** are needed to enable durable execution.
@@ -212,7 +238,7 @@ This is an incredibly powerful guarantee that helps you build complex, reliable 
 ## 3. Optimizing Database Operations
 
 For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace the `insert_greeting` function in `src/operations.ts` with the following:
+To see this in action, replace the `insert_greeting` function in `src/main.ts` with the following:
 
 ```javascript showLineNumbers
   @DBOS.transaction()
@@ -234,4 +260,4 @@ The app should durably execute your workflow the same as before!
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
 
-Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
+Next, to learn how to build more complex applications, check out our TypeScript tutorials and [example apps](../examples/index.md).
