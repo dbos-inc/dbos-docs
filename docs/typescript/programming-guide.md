@@ -1,331 +1,267 @@
 ---
 sidebar_position: 1
 title: Learn DBOS TypeScript
-pagination_next: typescript/tutorials/http-serving-tutorial
+pagination_next: typescript/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
-This tutorial assumes you have finished the [Quickstart](../quickstart.md) and you have a [DBOS Transact](https://github.com/dbos-inc/dbos-ts) app running locally. In this guide we'll modify that example to reliably record events across two different systems: Postgres and a third-party API. This app will write to both systems consistently, even if interrupted or restarted at any point.
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
-## 1. Serving HTTP Requests
 
-Let's start with a simple HTTP GET handler to greet friends. In your app folder, change the file `src/operations.ts` to contain only the following:
+This tutorial shows you how to use DBOS durable execution to make your TypeScript app **resilient to any failure.**
+First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
+Then, we'll add DBOS durable execution to the app in **just four lines of code**.
+Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
 
-```javascript
-import { HandlerContext, GetApi } from '@dbos-inc/dbos-sdk';
+## 1. Setting Up Your App
 
-export class Greetings {
-  @GetApi('/') // Serve a quick readme for the app
-  static async readme(_ctxt: HandlerContext) {
-    const readme = '<html><body><p>' +
-      'Welcome! Visit the route /greeting/:name to be greeted!<br>' +
-      'For example, visit <a href="/greeting/dbos">/greeting/dbos</a>.<br>' +
-      '</p></body></html>';
-    return Promise.resolve(readme);
-  } 
- 
-  @GetApi('/greeting/:friend')
-  static async Greeting(ctxt: HandlerContext, friend: string) {
-    return Promise.resolve(`Greetings, ${friend}!`);
-  }
-}
+Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
+
+```
+npx @dbos-inc/create -t hello-express -n greeting-guestbook
+cd greeting-guestbook
 ```
 
-Rebuild with `npm run build` and start your application with `npx dbos start`. You should see an output similar to:
+DBOS needs a Postgres database to connect to.
+Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud database (if you followed the quickstart to set one up), a Docker container, or a local Postgres installation:
+
+<details>
+<summary>Instructions to set up Postgres</summary>
+
+<LocalPostgres cmd={'node start_postgres_docker.js'} />
+</details>
+
+Finally, set up some database tables:
 
 ```shell
-[info]: Workflow executor initialized
-[info]: HTTP endpoints supported:
-[info]:     GET   :  /greeting/:friend
-[info]: Kafka endpoints supported:
-[info]: Scheduled endpoints:
-[info]: DBOS Server is running at http://localhost:3000
-[info]: DBOS Admin Server is running at http://localhost:3001
-```
-
-To see that your application is working, visit this URL in your browser: [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike). You should see the message `Greetings, Mike!`. If you replace Mike with a different name, your application will greet that name instead. To learn more about HTTP serving in DBOS, see our [HTTP Serving Tutorial](../typescript/tutorials/http-serving-tutorial).
-
-## 2. Creating Database Tables
-
-Let's make a database table to record greetings. In DBOS, we recommend managing database tables using [schema migrations](https://en.wikipedia.org/wiki/Schema_migration). By default, we use [Knex](../typescript/tutorials/using-knex.md#schema-management). We also support [Drizzle](../typescript/tutorials/using-drizzle.md), [TypeORM](../typescript/tutorials/using-typeorm.md#schema-management) and [Prisma](../typescript/tutorials/using-prisma.md#schema-management). To create a new migration file, run the following command:
-
-```
-npx knex migrate:make greetings
-```
-
-This will create a new file named `migrations/<timestamp>_greetings.js`.
-Open that file and replace the contents with the following:
-
-```javascript
-exports.up = function(knex) {
-    return knex.schema.createTable('greetings', table => {
-        table.text('name');
-        table.text('note');
-      });
-};
-
-exports.down = function(knex) {
-    return knex.schema.dropTable('greetings');
-};
-```
-This code instructs the database to create a new table called `greetings` with two text columns: `name` and `note`. Run it like so:
-```
 npx dbos migrate
 ```
-This command should print `Migration successful!`
 
-## 3. Writing to the Database
+Next, let's build a simple app that greets our friends.
+Every time the app receives a greeting, it performs two steps:
 
-Now that we have `greetings` table, let's change our app to write to it. We'll do this with a [transactional function](../typescript/tutorials/transaction-tutorial.md). Change your `src/operations.ts` to contain:
+1. Sign an online guestbook with the greeting.
+2. Record the greeting in the database.
 
-```javascript
-import { TransactionContext, Transaction, HandlerContext, GetApi } from '@dbos-inc/dbos-sdk';
-import { Knex } from 'knex';
+We deliberately **won't** use DBOS yet so we can show you how easy it is to add later.
 
-interface GreetingRecord {
-  name: string;
-  note: string;
-}
+Copy the following code into `src/main.ts`, replacing its existing contents:
 
-export class Greetings {
-  //Omitted for brevity: @GetApi('/') //app readme
+```javascript showLineNumbers title="src/main.ts"
+import express, { Request, Response } from 'express';
+import knex from 'knex';
+const knexConfig = require('../knexfile');
 
-  @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
-    await ctxt.client('greetings').insert(gr);
-    ctxt.logger.info(`Greeting to ${gr.name} recorded in the database!`);
-  }
+export class Guestbook {
 
-  @GetApi('/greeting/:friend')
-  static async Greeting(ctxt: HandlerContext, friend: string) {
-    const noteContent = `Thank you for being awesome, ${friend}!`;
-    await ctxt.invoke(Greetings).InsertGreeting(
-      { name: friend, note: noteContent }
-    );
-    return noteContent;
-  }
-}
-```
-
-Here we define a `GreetingRecord` interface matching a row of data in our `greetings` table. We then define a `@Transaction` called `InsertGreeting` that inserts a new `GreetingRecord` into `greetings`. Finally, we add a line to the GET API function `Greeting` to invoke `InsertGreeting` with the provided `name` and a welcoming `note`.
-
-:::info
-In this quickstart, we run queries using the [Knex query builder](https://knexjs.org/guide/query-builder.html). DBOS Transact also supports [Drizzle](../typescript/tutorials/using-drizzle.md), [TypeORM](../typescript/tutorials/using-typeorm), [Prisma](../typescript/tutorials/using-prisma), and [Raw SQL](../typescript/tutorials/transaction-tutorial).
-:::
-
-Stop your app with CTRL+C. Rebuild with `npm run build` and start with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should print this to the console:
-```
-[info]: Greeting to Mike recorded in the database! 
-```
-
-### 3.1. Reading from the Database
-
-You can add another GET API function to read all the greetings from the database like so:
-
-```javascript
-//export class Greetings {
-//...
-  @Transaction({readOnly: true})
-  @GetApi('/greetings')
-  static async allGreetings(ctxt: TransactionContext<Knex>) {
-    return await ctxt.client<GreetingRecord>('greetings').select('*');
-  }
-//}
-```
-
-Here we use `@GetApi` and `@Transaction` together. This transaction only reads data so we mark it as `{readOnly: true}`. This enables DBOS to execute it faster, with fewer database round-trips.
-
-## 4. Interacting with External Services
-
-Now suppose we also want to send our greetings to a remote system. In this example, we'll use a demo DBOS Guestbook app. It lets us generate an API key and use it to record greetings in an online guestbook.
-
-### 4.1. Create a Guestbook Key
-To generate a guestbook API key, visit https://demo-guestbook.cloud.dbos.dev/key. It should output a 36-character sequence like `12345abc-1234-5678-1234-567890abcdef` (yours will be different).
-
-You can pass this key to your app as a config variable. In your app folder, edit the file `dbos-config.yaml`. Add a new `env:` section at the bottom with the variable `GUESTBOOK_KEY` set to your key in quotes:
-```yaml
-env:
-  GUESTBOOK_KEY: 'your-key-value-here'
-```
-
-For example, if your key is `12345abc-1234-5678-1234-567890abcdef` then you should add:
-```yaml
-env:
-  GUESTBOOK_KEY: '12345abc-1234-5678-1234-567890abcdef'
-```
-::::tip
-In production, we recommend storing API keys and other secrets in an environment variable instead of plaintext. To do this, change the configuration to `GUESTBOOK_KEY: ${ENV_GUESTBOOK_KEY}` and set `ENV_GUESTBOOK_KEY` in your environment prior to starting or deploying the app. See the [Configuration Guide](../typescript/reference/configuration#environment-variables) for more details.
-::::
-
-### 4.2. Sign the Guestbook from the App
-
-Let's update our app to record each greeting in the guestbook.
-In DBOS, we strongly recommend wrapping all such calls to third-party APIs in [Steps](../typescript/tutorials/communicator-tutorial).
-Change your `src/operations.ts` to contain the following:
-
-```javascript
-import {
-  TransactionContext, Transaction, HandlerContext, GetApi,
-  StepContext, Step, DBOSResponseError
-} from "@dbos-inc/dbos-sdk";
-import { Knex } from "knex";
-
-interface GreetingRecord {
-  name: string;
-  note: string;
-}
-
-export class Greetings {
-  //Omitted for brevity: @GetApi('/') //app readme
-  //Omitted for brevity: @GetApi('/greetings') //read greetings from database
-  
-  @Step()
-  static async SignGuestbook(ctxt: StepContext, name: string) {
-    const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
+  // Sign the guestbook using an HTTP POST request
+  static async signGuestbook(name: string): Promise<void> {
+    await fetch("https://demo-guestbook.cloud.dbos.dev/record_greeting", {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json'},
-      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY, 'name': name})
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
     });
-    const responseStr = JSON.stringify(await response.json());
-    if (!response.ok) {
-      throw new DBOSResponseError(responseStr);
-    }
-    ctxt.logger.info(`>>> STEP 1: Signed the Guestbook: ${responseStr}`);
+    console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
   }
 
-  @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
-    await ctxt.client('greetings').insert(gr);
-    ctxt.logger.info(`>>> STEP 2: Greeting to ${gr.name} recorded in the database!`);
+  // Create a database connection using Knex.js
+  static db = knex(knexConfig);
+
+  // Record the greeting in the database using Knex.js
+  static async insertGreeting(name: string): Promise<void> {
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
-  @GetApi('/greeting/:friend')
-  static async Greeting(ctxt: HandlerContext, friend: string) {
-    const noteContent = `Thank you for being awesome, ${friend}!`;
-    await ctxt.invoke(Greetings).SignGuestbook(friend);
-    await ctxt.invoke(Greetings).InsertGreeting(
-      { name: friend, note: noteContent }
-    );
-    return noteContent;
+  static async greetingEndpoint(name: string): Promise<string> {
+    await Guestbook.signGuestbook(name);
+    await Guestbook.insertGreeting(name);
+    return `Thank you for being awesome, ${name}!`;
   }
 }
-```
 
-We add a new `@Step` function called `SignGuestbook` that uses `fetch` to send an HTTP POST request to the guestbook to record a greeting. If the step throws an error, it is automatically retried up to 3 times with exponential backoff. This is configurable [via the `StepConfig` parameter to `@Step`](../typescript/tutorials/communicator-tutorial.md#configurable-retries).
+// Create an HTTP server using Express.js
+export const app = express();
+app.use(express.json());
 
-Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. Make a few visits to the greeting URL in your browser, i.e. http://localhost:3000/greeting/Mike. With every new visit, the app should now print first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
+app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> => {
+  const { name } = req.params;
+  res.send(await Guestbook.greetingEndpoint(name));
+});
 
-```
-[info]: >>> STEP 1: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."}
-[info]: >>> STEP 2: Greeting to Mike recorded in the database!
-```
+async function main() {
+  const PORT = 3000;
+  const ENV = process.env.NODE_ENV || 'development';
 
-You can visit the URL `https://demo-guestbook.cloud.dbos.dev/greetings/your-key-value` to see all the Guestbook greetings made with your key. Old greetings and keys are removed after a few days.
-
-## 5. Composing Reliable Workflows
-
-Next, we want to make our app **reliable**: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted. DBOS makes this easy with [workflows](../typescript/tutorials/workflow-tutorial.md). To see them in action, change your `src/operations.ts` like so:
-
-```javascript
-import {
-    TransactionContext, Transaction, StepContext, Step,
-    WorkflowContext, Workflow, GetApi, HandlerContext, DBOSResponseError
-} from "@dbos-inc/dbos-sdk";
-import { Knex } from "knex";
-
-interface GreetingRecord {
-  name: string;
-  note: string;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🌟 Environment: ${ENV}`);
+  });
 }
 
-export class Greetings {
-  //Omitted for brevity: @GetApi('/') //app readme
-  //Omitted for brevity: @GetApi('/greetings') //read greetings from database
-  
-  @Step()
-  static async SignGuestbook(ctxt: StepContext, name: string) {
-    const response = await fetch('https://demo-guestbook.cloud.dbos.dev/record_greeting', {
+main().catch(console.log);
+```
+
+Build and run your app with `npm run dev`, which uses `nodemon` to automatically build and restart your code as files are changed.  (If you prefer separate steps, you can build your app with `npm run build` and start it with `npx dbos start`.)
+
+To see that it's is working, visit this URL: http://localhost:3000/greeting/Mike
+<BrowserWindow url="http://localhost:3000/greeting/Mike">
+"Thank you for being awesome, Mike!"
+</BrowserWindow>
+
+Each time you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
+
+```
+>>> STEP 1: Signed the guestbook for Mike
+>>> STEP 2: Greeting to Mike recorded in the database!
+```
+
+Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
+This is bad in many real-world situations, for example if a program fails to record making or receiving a payment.
+To fix this problem, we'll use DBOS durable execution.
+
+## 2. Durable Execution with Workflows
+
+Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
+DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
+We can add durable execution to our app with **just four lines of code** and an import statement.
+Copy the following code into your `src/main.ts`, replacing its existing contents:
+
+```javascript showLineNumbers title="src/main.ts"
+//highlight-next-line
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import express, { Request, Response } from 'express';
+import knex from 'knex';
+const knexConfig = require('../knexfile');
+
+export class Guestbook {
+
+  // Sign the guestbook using an HTTP POST request
+  //highlight-next-line
+  @DBOS.step()
+  static async signGuestbook(name: string): Promise<void> {
+    await fetch("https://demo-guestbook.cloud.dbos.dev/record_greeting", {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json'},
-      body: JSON.stringify({ 'key': process.env.GUESTBOOK_KEY, 'name': name})
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
     });
-    const responseStr = JSON.stringify(await response.json());
-    if (!response.ok) {
-      throw new DBOSResponseError(responseStr);
-    }
-    ctxt.logger.info(`>>> STEP 1: Signed the Guestbook: ${responseStr}`);
+    console.log(`>>> STEP 1: Signed the guestbook for ${name}`);
   }
 
-  @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, gr: GreetingRecord) {
-    await ctxt.client('greetings').insert(gr);
-    ctxt.logger.info(`>>> STEP 2: Greeting to ${gr.name} recorded in the database!`);
+  // Create a database connection using Knex.js
+  static db = knex(knexConfig);
+
+  // Record the greeting in the database using Knex.js
+  //highlight-next-line
+  @DBOS.step()
+  static async insertGreeting(name: string): Promise<void> {
+    await Guestbook.db('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
   }
 
-  @Workflow()
-  static async GreetingWorkflow(ctxt: WorkflowContext, friend: string, noteContent: string) {
-      await ctxt.invoke(Greetings).SignGuestbook(friend);
-      for (let i = 0; i < 5; i++) {
-          ctxt.logger.info("Press Control + C to stop the app...");
-          await ctxt.sleepms(1000);
-      }
-      await ctxt.invoke(Greetings).InsertGreeting(
-        { name: friend, note: noteContent }
-      );
+//highlight-next-line
+  @DBOS.workflow()
+  static async greetingEndpoint(name: string): Promise<string> {
+    await Guestbook.signGuestbook(name);
+    for (let i = 0; i < 5; i++) {
+      console.log("Press Control + C to stop the app...");
+      await DBOS.sleep(1000);
   }
-
-  @GetApi('/greeting/:friend')
-  static async Greeting(ctxt: HandlerContext, friend: string) {
-    const noteContent = `Thank you for being awesome, ${friend}!`;
-    await ctxt.startWorkflow(Greetings).GreetingWorkflow(friend, noteContent);
-    return Promise.resolve(noteContent);
+    await Guestbook.insertGreeting(name);
+    return `Thank you for being awesome, ${name}!`;
   }
 }
+
+// Create an HTTP server using Express.js
+export const app = express();
+app.use(express.json());
+
+app.get('/greeting/:name', async (req: Request, res: Response): Promise<void> => {
+  const { name } = req.params;
+  res.send(await Guestbook.greetingEndpoint(name));
+});
+
+async function main() {
+//highlight-next-line
+  await DBOS.launch({expressApp: app});
+
+  const PORT = 3000;
+  const ENV = process.env.NODE_ENV || 'development';
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🌟 Environment: ${ENV}`);
+  });
+}
+
+main().catch(console.log);
 ```
 
-Here we create a `@Workflow` function called `GreetingWorkflow` that invokes `SignGuestbook` and then `InsertGreeting`. We introduce a sleep between them allowing you to interrupt the program midway through the workflow. We then change `Greeting` to start this workflow. Stop your app with CTRL+C, rebuild with `npm run build` and start your application with `npx dbos start`. 
+Only the **four highlighted lines of code** are needed to enable durable execution.
 
-The next step is time-sensitive; you may want to read it over before running. First, visit [http://localhost:3000/greeting/Mike](http://localhost:3000/greeting/Mike) in your browser to send a request to your application. In your terminal, you should see an output like:
+- First, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 9 and 25.
+- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 31.
+- Finally, we launch DBOS on line 53.
+
+Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
+To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
+
+To see the power of durable execution, rebuild your app with `npm run build` and restart your app with `npx dbos start`.
+Then, visit this URL: http://localhost:3000/greeting/Mike.
+In your terminal, you should see an output like:
 
 ```shell
-> npx dbos start
-[info]: Workflow executor initialized
-[info]: HTTP endpoints supported:
-[info]:     GET   :  /greeting/:friend
-[info]: Kafka endpoints supported:
-[info]: Scheduled endpoints:
-[info]: DBOS Server is running at http://localhost:3000
-[info]: DBOS Admin Server is running at http://localhost:3001
-[info]: >>> STEP 1: Signed the Guestbook: {"ip_address":"...","greeted_name":"Mike","greeted_ts":"..."} 
-[info]: Press Control + C to interrupt the workflow...
-[info]: Press Control + C to interrupt the workflow...
+🚀 Server is running on http://localhost:3000
+🌟 Environment: development
+>>> STEP 1: Signed the guestbook for Mike
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
 ```
-Now press Ctrl + C stop your app. Then, run `npx dbos start` to restart it. You should see an output like:
+Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
-> npx dbos start
-[info]: Workflow executor initialized
-[info]: HTTP endpoints supported:
-[info]:     GET   :  /greeting/:friend
-[info]: Kafka endpoints supported:
-[info]: Scheduled endpoints:
-[info]: DBOS Server is running at http://localhost:3000
-[info]: DBOS Admin Server is running at http://localhost:3001
-[info]: Press Control + C to interrupt the workflow...
-[info]: Press Control + C to interrupt the workflow...
-[info]: Press Control + C to interrupt the workflow...
-[info]: Press Control + C to interrupt the workflow...
-[info]: Press Control + C to interrupt the workflow...
-[info]: >>> STEP 2: Greeting to Mike recorded in the database!
+🚀 Server is running on http://localhost:3000
+🌟 Environment: development
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+>>> STEP 2: Greeting to Mike recorded in the database!
 ```
 
-If your app did not use a DBOS `@Workflow` you would expect it to restart with a "clean slate" and completely forget about your interrupted workflow. However, DBOS automatically resumes your workflow from where it left off and properly completes it by recording the greeting to the database. This reliability is a core feature of DBOS: workflows always continue execution from the last completed step and run to completion. To learn more about workflows, check out our [tutorial](../typescript/tutorials/workflow-tutorial.md) and [explainer](../explanations/how-workflows-work.md).
+Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
+By contrast, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
+This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
 
-:::info
-Here we use `startWorkflow` which returns the response to the caller as soon as the workflow starts, without waiting for it to finish. DBOS guarantees that the workflow continues to process to completion. This behavior is preferred when the caller expects a fast response, such as with a [payment webhook](https://www.dbos.dev/blog/open-source-typescript-stripe-processing). To make it synchronous, change `startWorkflow` to `invokeWorkflow`.
-:::
+## 3. Optimizing Database Operations
 
-The code for this guide is available on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
+For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
+To see this in action, replace the `insert_greeting` function in `src/main.ts` with the following:
 
-Next, to learn how to build more complex applications, check out our TypeScript tutorials.
-To walk through a more complex workflow, visit our [checkout workflow tutorial](../typescript/tutorials/checkout-tutorial).
+```javascript showLineNumbers
+  @DBOS.transaction()
+  static async insertGreeting(name: string): Promise<void> {
+    await DBOS.knexClient('dbos_greetings').insert({ greeting_name: name });
+    console.log(`>>> STEP 2: Greeting to ${name} recorded in the database!`);
+  }
+```
+
+[`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
+It executes your function in a single database transaction.
+We recommend using transactions because:
+
+1. They give you access to a pre-configured database client, which is more convenient than connecting to the database yourself. DBOS integrates with most popular TypeScript ORMs, including Knex, Prisma, TypeORM, and Drizzle, and also supports raw SQL.
+2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
+
+Now, rebuild your app with with `npm run build`, restart with `npx dbos start`, and visit its URL again: http://localhost:3000/greeting/Mike.
+The app should durably execute your workflow the same as before!
+
+The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
+
+Next, to learn how to build more complex applications, check out our TypeScript tutorials and [example apps](../examples/index.md).
