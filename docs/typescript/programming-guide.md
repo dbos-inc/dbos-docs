@@ -104,7 +104,8 @@ async function main() {
 main().catch(console.log);
 ```
 
-Build your app with `npm run build` and start it with `npx dbos start`.
+Build and run your app with `npm run dev`, which uses `nodemon` to automatically build and restart your code as files are changed.  (If you prefer separate steps, you can build your app with `npm run build` and start it with `npx dbos start`.)
+
 To see that it's is working, visit this URL: http://localhost:3000/greeting/Mike
 <BrowserWindow url="http://localhost:3000/greeting/Mike">
 "Thank you for being awesome, Mike!"
