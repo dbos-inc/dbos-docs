@@ -51,8 +51,8 @@ We'll start by building the checkout request handler, which initiates checkout i
 The handler is implemented in this `webCheckout` function and served from HTTP POST requests to the URL `<host>/checkout/:key?`.
 
 ```javascript
-@PostApi('/checkout/:key?')
-static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
+@DBOS.postApi('/checkout/:key?')
+static async webCheckout(@ArgOptional key: string): Promise<string> {
 ```
 
 It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/programmingmodel/idempotency-tutorial).
@@ -64,7 +64,7 @@ It obtains a [workflow handle](../reference/transactapi/workflow-handles), used 
 
 ```javascript
 // A workflow handle is immediately returned. The workflow continues in the background.
-const handle = await ctxt.invoke(Shop, key).checkoutWorkflow();`
+const handle = const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();`
 ```
 
 ### Awaiting payment information
@@ -74,31 +74,31 @@ Upon receiving the payment session ID, it generates a link to submit payment and
 
 ```javascript
 // Wait until the payment session is ready
-const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), session_topic);
+const session_id = await DBOS.getEvent<string>(handle.getWorkflowUUID(), session_topic);
 if (session_id === null) {
-  ctxt.logger.error("workflow failed");
+  DBOS.logger.error("workflow failed");
   return;
 }
-return generatePaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
+return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
 ```
 
 ### Full handler code
 
 ```javascript
-@PostApi('/checkout/:key?')
-static async webCheckout(ctxt: HandlerContext, @ArgOptional key: string): Promise<string> {
+@DBOS.postApi('/checkout/:key?')
+static async webCheckout(@ArgOptional key: string): Promise<string> {
   // A workflow handle is immediately returned. The workflow continues in the background.
-  const handle = await ctxt.invoke(Shop, key).checkoutWorkflow();
-  ctxt.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
+  const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();
+  DBOS.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
 
   // Wait until the payment session is ready
-  const session_id = await ctxt.getEvent<string>(handle.getWorkflowUUID(), session_topic);
+  const session_id = await DBOS.getEvent<string>(handle.getWorkflowUUID(), session_topic);
   if (session_id === null) {
-    ctxt.logger.error("workflow failed");
+    DBOS.logger.error("workflow failed");
     return "";
   }
 
-  return generatePaymentUrls(ctxt, handle.getWorkflowUUID(), session_id);
+  return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
 }
 ```
 
@@ -113,11 +113,11 @@ Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/t
 
 ### Registering the workflow
 
-First, we declare the workflow using the `@Workflow` decorator:
+First, we declare the workflow using the `@DBOS.workflow` decorator:
 
 ```javascript
-@Workflow()
-static async checkoutWorkflow(ctxt: WorkflowContext): Promise<void> {
+@DBOS.workflow()
+static async checkoutWorkflow(): Promise<void> {
 ```
 
 ### Reserving inventory
@@ -127,10 +127,10 @@ If this fails (likely because the item is out of stock), the workflow notifies i
 ```javascript
 // Attempt to update the inventory. Signal the handler if it fails.
 try {
-  await ctxt.invoke(ShopUtilities).reserveInventory();
+  await ShopUtilities.reserveInventory();
 } catch (error) {
-  ctxt.logger.error("Failed to update inventory");
-  await ctxt.setEvent(session_topic, null);
+  DBOS.logger.error("Failed to update inventory");
+  await DBOS.setEvent(session_topic, null);
   return;
 }
 ```
@@ -140,11 +140,11 @@ Next, the workflow initiates a payment session using the `createPaymentSession` 
 If this fails, it returns reserved items using the `undoReserveInventory` transaction, notifies its handler, and returns.
 ```javascript
 // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
+const paymentSession = await ShopUtilities.createPaymentSession();
 if (!paymentSession.url) {
-  ctxt.logger.error("Failed to create payment session");
-  await ctxt.invoke(ShopUtilities).undoReserveInventory();
-  await ctxt.setEvent(session_topic, null);
+  DBOS.logger.error("Failed to create payment session");
+  await ShopUtilities.undoReserveInventory();
+  await DBOS.setEvent(session_topic, null);
   return;
 }
 ```
@@ -155,7 +155,7 @@ After initiating a payment ession, the workflow notifies its handler that the pa
 We use [setEvent](../tutorials/programmingmodel/workflow-communication-tutorial#setevent) to publish the payment session ID to the workflow's `session_topic`, on which the handler is awaiting a notification.
 ```javascript
 // Notify the handler of the payment session ID.
-await ctxt.setEvent(session_topic, paymentSession.session_id);
+await DBOS.setEvent(session_topic, paymentSession.session_id);
 ```
 
 ### Waiting for a payment
@@ -165,7 +165,7 @@ When the customer pays, the payment service sends a callback HTTP request to a s
 
 ```javascript
 // Await a notification from the payment service.
-const notification = await ctxt.recv<string>(payment_complete_topic);
+const notification = await DBOS.recv<string>(payment_complete_topic);
 ```
 
 ### Handling payment outcomes
@@ -175,49 +175,49 @@ In a real application, we may want to check with the payment provider in case of
 ```javascript
 if (notification && notification === 'paid') {
   // If the payment succeeds, fulfill the order (code omitted for brevity.)
-  ctxt.logger.info(`Checkout with UUID ${ctxt.workflowUUID} succeeded!`);
+  DBOS.logger.info(`Checkout with UUID ${DBOS.workflowID} succeeded!`);
 } else {
   // If the payment fails or times out, cancel the order and return inventory.
-  ctxt.logger.warn(`Checkout with UUID ${ctxt.workflowUUID} failed or timed out...`);
-  await ctxt.invoke(ShopUtilities).undoReserveInventory();
+  DBOS.logger.warn(`Checkout with UUID ${DBOS.workflowID} failed or timed out...`);
+  await ShopUtilities.undoReserveInventory();
 }
 ```
 
 ### Full workflow code
 ```javascript
-@Workflow()
-static async checkoutWorkflow(ctxt: WorkflowContext): Promise<void> {
+@DBOS.workflow()
+static async checkoutWorkflow(): Promise<void> {
   // Attempt to update the inventory. Signal the handler if it fails.
   try {
-    await ctxt.invoke(ShopUtilities).reserveInventory();
+    await ShopUtilities.reserveInventory();
   } catch (error) {
-    ctxt.logger.error("Failed to update inventory");
-    await ctxt.setEvent(session_topic, null);
+    DBOS.logger.error("Failed to update inventory");
+    await DBOS.setEvent(session_topic, null);
     return;
   }
 
   // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-  const paymentSession = await ctxt.invoke(ShopUtilities).createPaymentSession();
+  const paymentSession = await ShopUtilities.createPaymentSession();
   if (!paymentSession.url) {
-    ctxt.logger.error("Failed to create payment session");
-    await ctxt.invoke(ShopUtilities).undoReserveInventory();
-    await ctxt.setEvent(session_topic, null);
+    DBOS.logger.error("Failed to create payment session");
+    await ShopUtilities.undoReserveInventory();
+    await DBOS.setEvent(session_topic, null);
     return;
   }
 
   // Notify the handler of the payment session ID.
-  await ctxt.setEvent(session_topic, paymentSession.session_id);
+  await DBOS.setEvent(session_topic, paymentSession.session_id);
 
   // Await a notification from the payment service.
-  const notification = await ctxt.recv<string>(payment_complete_topic);
+  const notification = await DBOS.recv<string>(payment_complete_topic);
 
   if (notification && notification === 'paid') {
     // If the payment succeeds, fulfill the order (code omitted for brevity.)
-    ctxt.logger.info(`Checkout with UUID ${ctxt.workflowUUID} succeeded!`);
+    DBOS.logger.info(`Checkout with UUID ${DBOS.workflowUUID} succeeded!`);
   } else {
     // If the payment fails or times out, cancel the order and return inventory.
-    ctxt.logger.warn(`Checkout with UUID ${ctxt.workflowUUID} failed or timed out...`);
-    await ctxt.invoke(ShopUtilities).undoReserveInventory();
+    DBOS.logger.warn(`Checkout with UUID ${DBOS.workflowUUID} failed or timed out...`);
+    await ShopUtilities.undoReserveInventory();
   }
 }
 ```
@@ -229,7 +229,7 @@ First, clone and enter the companion repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps
-cd dbos-demo-apps/shop-guide
+cd dbos-demo-apps/typescript/shop-guide
 ```
 
 Then, start the payment service in the background.
