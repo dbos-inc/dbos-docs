@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 40
 title: Package Library
 description: API reference for library of DBOS Optional Packages
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 20
 title: Steps
 description: Learn how to communicate with external APIs and services
 ---

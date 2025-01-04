@@ -1,5 +1,5 @@
 ---
-sidebar_position: 25
+sidebar_position: 40
 title: Self-Hosting
 description: Learn how to self-host DBOS Transact applications
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 11
+sidebar_position: 40
 title: Creating Custom Event Receivers
 description: Learn how to start DBOS workflows and other functions in response to external events and data sources
 ---

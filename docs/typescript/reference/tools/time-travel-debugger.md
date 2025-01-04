@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 20
 title: Time Travel Debugger
 description: DBOS Time Travel Debugger VS Code extension reference
 pagination_next: null

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 80
 title: Stored Procedures
 description: Learn how to improve database interaction performance with Stored Procedures
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 16
+sidebar_position: 60
 title: Using Libraries
 description: Learn how to use DBOS library functions
 ---

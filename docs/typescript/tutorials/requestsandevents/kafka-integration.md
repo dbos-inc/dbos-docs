@@ -1,5 +1,5 @@
 ---
-sidebar_position: 17
+sidebar_position: 30
 title: Integrating with Kafka
 description: Learn how to integrate DBOS and Kafka.
 ---

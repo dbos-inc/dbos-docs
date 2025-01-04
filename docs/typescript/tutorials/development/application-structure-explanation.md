@@ -1,5 +1,5 @@
 ---
-sidebar_position: 30
+sidebar_position: 10
 title: Project Structure
 description: Learn about the structure of a DBOS project
 pagination_next: null

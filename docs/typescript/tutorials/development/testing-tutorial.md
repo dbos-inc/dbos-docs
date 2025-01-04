@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 20
 title: Testing and Debugging
 description: Learn how to use the testing runtime for unit tests.
 ---

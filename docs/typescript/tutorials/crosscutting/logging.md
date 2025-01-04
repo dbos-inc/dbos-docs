@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 10
 title: Logging
 description: Learn to use logging in DBOS
 ---

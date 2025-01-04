@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 20
 title: Authentication and Authorization
 description: Use declarative security and middleware in DBOS
 ---

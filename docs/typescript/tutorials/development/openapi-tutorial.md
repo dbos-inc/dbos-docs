@@ -1,5 +1,5 @@
 ---
-sidebar_position: 20
+sidebar_position: 70
 title: OpenAPI Support
 description: Learn how to automatically generate clients for DBOS applications.
 ---

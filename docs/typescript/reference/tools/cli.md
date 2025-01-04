@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 10
 title: DBOS Transact CLI
 description: DBOS Transact CLI reference
 pagination_prev: null

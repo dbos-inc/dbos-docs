@@ -1,5 +1,5 @@
 ---
-sidebar_position: 18
+sidebar_position: 20
 title: Scheduled Workflows
 description: Learn how to run DBOS workflows on a schedule.
 ---

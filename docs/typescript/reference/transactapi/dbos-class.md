@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 10
 title: DBOS Class
 description: API reference for DBOS
 ---

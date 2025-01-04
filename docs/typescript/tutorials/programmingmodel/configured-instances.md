@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 70
 title: Configuring Class Instances
 description: Learn how to make workflows, transactions, and steps reusable and configurable
 ---

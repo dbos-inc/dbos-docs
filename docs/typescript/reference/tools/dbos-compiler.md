@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 30
 title: DBOS Compiler
 description: DBOS Compiler reference
 ---

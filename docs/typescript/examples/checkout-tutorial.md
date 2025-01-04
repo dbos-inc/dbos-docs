@@ -1,5 +1,5 @@
 ---
-sidebar_position: 19
+sidebar_position: 10
 title: Checkout Workflow Tutorial
 description: Learn how to implement the checkout button for an online store with DBOS
 ---
