@@ -339,7 +339,7 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
 
-If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/programmingmodel/tutorials/idempotency-tutorial.md).
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/programmingmodel/idempotency-tutorial.md).
 
 If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 

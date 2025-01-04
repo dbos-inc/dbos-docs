@@ -7,7 +7,7 @@ description: Learn how to start DBOS workflows and other functions in response t
 In this guide, you'll learn how to make your DBOS application execute in response to external events.
 
 ## Concepts
-DBOS Transact provides a serverless, stateful framework for durable function execution.  Functions may be executed in response to [HTTP requests](./http-serving-tutorial.md), inbound messages from [Kafka](./kafka-integration.md) or [AWS SQS](../reference/libraries.md#simple-queue-service-sqs), and a clock-based [schedule](./scheduled-workflows.md), among other external sources.  DBOS Transact also provides a straightforward mechanism for adding additional receivers, which extend DBOS to invoke workflow and step functions based on outside event sources.
+DBOS Transact provides a serverless, stateful framework for durable function execution.  Functions may be executed in response to [HTTP requests](./http-serving-tutorial.md), inbound messages from [Kafka](./kafka-integration.md) or [AWS SQS](../../reference/libraries.md#simple-queue-service-sqs), and a clock-based [schedule](./scheduled-workflows.md), among other external sources.  DBOS Transact also provides a straightforward mechanism for adding additional receivers, which extend DBOS to invoke workflow and step functions based on outside event sources.
 
 ### Event Receiver Architecture
 The piece at the top of the stack is a reusable "event receiver".  The "event receiver" code is assigned to run on one or more VMs, and provides code for listening to the external source, collecting the event data and fields, and invoking functions as appropriate.

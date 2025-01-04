@@ -6,10 +6,10 @@ description: Learn how to use the testing runtime for unit tests.
 
 In this guide, you'll learn how to test your DBOS applications.
 
-DBOS provides a [testing runtime](../reference/testing-runtime.md) to make it easier to write unit tests for DBOS applications.
+DBOS provides a [testing runtime](../../reference/transactapi/oldapi/testing-runtime.md) to make it easier to write unit tests for DBOS applications.
 Using the runtime, you can invoke and test your application's functions individually.
 
-We'll show you how to write unit tests for the `Hello` example class shipped by [`npx @dbos-inc/create`](../reference/tools/cli.md#npx-dbos-inccreate).
+We'll show you how to write unit tests for the `Hello` example class shipped by [`npx @dbos-inc/create`](../../reference/tools/cli.md#npx-dbos-inccreate).
 We use [Jest](https://jestjs.io/) in this example, but the testing runtime works with any testing framework.
 
 ### Creating Testing Runtime
@@ -24,7 +24,7 @@ This function optionally takes in a list of classes you want to test. Here, we w
 testRuntime = await createTestingRuntime([Hello]);
 ```
 
-You can also optionally provide a path to a [configuration file](../reference/configuration.md).
+You can also optionally provide a path to a [configuration file](../../reference/configuration.md).
 If no path is provided, the runtime loads a configuration file from the default location (`dbos-config.yaml` in the package root).
 
 ### Testing Functions
@@ -88,5 +88,5 @@ Time:        1.247 s, estimated 2 s
 
 ### Further Reading
 
-To learn the full testing runtime interface, please see [our testing runtime references](../reference/testing-runtime.md).
+To learn the full testing runtime interface, please see [our testing runtime references](../../reference/transactapi/oldapi/testing-runtime.md).
 You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-ts/blob/main/examples/hello/src/operations.test.ts).

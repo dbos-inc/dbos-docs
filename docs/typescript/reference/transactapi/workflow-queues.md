@@ -46,11 +46,11 @@ const queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, period
 ### Enqueueing Workflows
 
 Workflows are enqueued with the `startWorkflow` family of functions, with an additional `queue` argument:
-- [HandlerContext.startWorkflow](../reference/contexts.md#handlerctxtstartworkflow)
-- [WorkflowContext.startWorkflow](../reference/contexts.md#workflowctxtstartworkflow)
-- [TestingRuntime.startWorkflow](../reference/testing-runtime.md#runtimestartworkflowtarget-workflowuuid-params)
+- [HandlerContext.startWorkflow](./oldapi/contexts.md#handlerctxtstartworkflow)
+- [WorkflowContext.startWorkflow](./oldapi/contexts.md#workflowctxtstartworkflow)
+- [TestingRuntime.startWorkflow](./oldapi/testing-runtime.md#runtimestartworkflowtarget-workflowuuid-params)
 
-Enqueue a function for processing and return a [handle](../reference/workflow-handles.md) to it.
+Enqueue a function for processing and return a [handle](./workflow-handles.md) to it.
 The `startWorkflow` method durably enqueues your function; after it returns, your function is guaranteed to eventually execute even if your app is interrupted.
 
 **Example syntax:**

@@ -17,7 +17,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### setEvent
 
-Any workflow can call [`ctxt.setEvent`](../reference/contexts#workflowctxtsetevent) to publish a key-value pair.
+Any workflow can call [`ctxt.setEvent`](../../reference/transactapi/oldapi/contexts#workflowctxtsetevent) to publish a key-value pair.
 
 ```typescript
 ctxt.setEvent<T>(key: string, value: T): Promise<void>
@@ -25,7 +25,7 @@ ctxt.setEvent<T>(key: string, value: T): Promise<void>
 
 #### getEvent
 
-[Handlers](../tutorials/http-serving-tutorial.md#handlers) can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
+[Handlers](../requestsandevents/http-serving-tutorial.md#handlers) can call `ctxt.getEvent()` to retrieve the value published by a particular workflow identity for a particular key.
 A call to `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out:
 
 ```typescript
@@ -126,5 +126,5 @@ static async paymentWebhook(ctxt: HandlerContext): Promise<void> {
 
 All messages are persisted to the database, so if `send()` completes successfully, the destination workflow is guaranteed to be able to `recv()` it.
 If you're sending a message from a workflow, we guarantee exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
-If you're sending a message from a handler, you can supply an [idempotency key](../reference/contexts#handlerctxtsend) to guarantee exactly-once delivery.
+If you're sending a message from a handler, you can supply an [idempotency key](../../reference/transactapi/oldapi/contexts#handlerctxtsend) to guarantee exactly-once delivery.
 

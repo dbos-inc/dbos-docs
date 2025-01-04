@@ -56,15 +56,15 @@ const config = {
           },
           {
             from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/crosscutting/authentication-authorization',
           },
           {
             from: '/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
             from: '/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
           },
           {
             from: '/getting-started/quickstart-programming',

@@ -17,7 +17,7 @@ For correct workflow behavior, it is important to use _steps_ for all functions 
 * Functions that generate UUIDs
 * Cryptographic functions that may generate a salt
 
-Steps must be annotated with the [`@Step`](../reference/decorators#step) decorator and must have a [`StepContext`](../../reference/transactapi/oldapi/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
+Steps must be annotated with the [`@Step`](../../reference/transactapi/oldapi/decorators#step) decorator and must have a [`StepContext`](../../reference/transactapi/oldapi/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
 
 Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to retrieve the contents of `https://example.com`:
 

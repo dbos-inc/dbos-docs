@@ -252,7 +252,7 @@ To see this in action, replace the `insert_greeting` function in `src/main.ts` w
   }
 ```
 
-[`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
+[`@DBOS.transaction()`](./tutorials/programmingmodel/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
 It executes your function in a single database transaction.
 We recommend using transactions because:
 

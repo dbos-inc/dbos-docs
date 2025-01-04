@@ -16,7 +16,7 @@ DBOS supports essentially direct use of TypeORM, but a few additional steps are 
 ### Getting Started
 
 An easy way to get started with TypeORM is to bootstrap your application with our TypeORM template.
-This is similar to the template used in the [quickstart](../../quickstart.md), but built with TypeORM instead of Knex.
+This is similar to the template used in the [quickstart](../../../../quickstart.md), but built with TypeORM instead of Knex.
 To download it, run:
 
 ```bash
@@ -82,7 +82,7 @@ In TypeORM (and many other frameworks), the pattern is to run [transactions](htt
 
 DBOS provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
 
-First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../reference/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../reference/contexts.md#transactioncontextt) with an `EntityManager` named `client` inside.
+First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../../../reference/transactapi/oldapi/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../../../reference/transactapi/oldapi/contexts.md#transactioncontextt) with an `EntityManager` named `client` inside.
 
 ```javascript
 @OrmEntities([KV])
@@ -116,7 +116,7 @@ type TypeORMTransactionContext = TransactionContext<EntityManager>;
 If you are using the [TypeORM template](#getting-started), this is done for you.
 :::
 
-To enable TypeORM, you must set the `app_db_client` field in the [DBOS configuration file](../reference/configuration.md) to `typeorm`.
+To enable TypeORM, you must set the `app_db_client` field in the [DBOS configuration file](../../../reference/configuration.md) to `typeorm`.
 You should also configure TypeORM migration commands.
 Here is an example of a configuration file set up for TypeORM:
 

@@ -113,7 +113,7 @@ interface WorkflowConfig {
 ```
 
 #### `@Transaction`
-Registers a function as a [DBOS transaction](../tutorials/transaction-tutorial.md).
+Registers a function as a [DBOS transaction](../../../tutorials/programmingmodel/transaction-tutorial.md).
 
 The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontextt), which provides access to the database transaction.
 
@@ -147,7 +147,7 @@ A read-only transaction runs faster than a standard read-write transaction becau
 If you mark a transaction function as `readOnly: true` but it contains database writes, it will throw an error (for example `ERROR:  cannot execute INSERT in a read-only transaction`).
 
 #### `@StoredProcedure`
-Registers a function as a [DBOS stored procedure](../../tutorials/stored-proc-tutorial.md).
+Registers a function as a [DBOS stored procedure](../../../tutorials/programmingmodel/stored-proc-tutorial.md).
 
 The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
 
@@ -224,8 +224,8 @@ static async hello(_ctx: HandlerContext) {
 ```
 
 The `@GetApi` decorator can be combined with [`@Transaction`](#transaction), [`@Workflow`](#workflow), or [`@Step`](#step) to serve those operations via HTTP.
-It can also be used by itself in a [DBOS handler function](../tutorials/http-serving-tutorial.md#handlers).
-The first argument to a handler function must be a [`HandlerContext`](contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and steps.
+It can also be used by itself in a [DBOS handler function](../../../tutorials/requestsandevents/http-serving-tutorial.md#handlers).
+The first argument to a handler function must be a [`HandlerContext`](./contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and steps.
 
 Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.
@@ -352,7 +352,7 @@ export interface DBOSHttpAuthReturn {
 }
 ```
 
-The authentication function is provided with a ['MiddlewareContext'](contexts.md#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
+The authentication function is provided with a ['MiddlewareContext'](./contexts.md#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
 
 #### `@KoaBodyParser`
 By default, the DBOS HTTP server uses a [`@koa/bodyparser`](https://github.com/koajs/bodyparser) middleware for parsing JSON message bodies.
@@ -374,7 +374,7 @@ class OperationEndpoints {
 #### `@KoaCors`
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is an integral part of security in web browsers and similar clients.
 
-By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) middleware with a configuration from [`dbos-config.yaml`](../reference/configuration#http).  (The defaults in this file are, in turn, extremely permissive, allowing all cross-origin requests, including those with credentials.)  If your application needs only a coarse configuration of CORS, such as disabling CORS, or enabling CORS only on whitelisted origins, the config file offers a simple option.
+By default, DBOS uses [`@koa/cors`](https://github.com/koajs/cors) middleware with a configuration from [`dbos-config.yaml`](../../configuration#http).  (The defaults in this file are, in turn, extremely permissive, allowing all cross-origin requests, including those with credentials.)  If your application needs only a coarse configuration of CORS, such as disabling CORS, or enabling CORS only on whitelisted origins, the config file offers a simple option.
 
 If more complex logic is needed, or if the CORS configuration differs between operation classes, the `@KoaCors` class-level decorator can be used to specify the CORS middleware in full.
 
@@ -615,9 +615,9 @@ DBOS allows applications to supply functions to be invoked at points in the appl
 #### `@DBOSInitializer`
 This decorator is used to specify functions to be run at application instance initialization time.
 `@DBOSInitializer` is intended for uses such as validating configuration, establishing connections to external (non-database) services, and so on.
-It is not a good place for database schema migration, for that see our [migration commands](cli.md#npx-dbos-migrate).
+It is not a good place for database schema migration, for that see our [migration commands](../../tools/cli.md#npx-dbos-migrate).
 
-The argument to `@DBOSInitializer` should be of type [`InitContext`](contexts.md#initcontext).
+The argument to `@DBOSInitializer` should be of type [`InitContext`](./contexts.md#initcontext).
 
 ```typescript
 
@@ -662,7 +662,7 @@ class KafkaExample{
 ```
 
 #### Concurrency and Rate Limiting
-By default, `@KafkaConsume` workflows are started immediately upon receiving Kafka messages.  If `queueName` is provided to the `@KafkaConsume` decorator, then the workflows will be enqueued in a [workflow queue](https://docs.dbos.dev/typescript/reference/workflow-queues) and subject to rate limits.
+By default, `@KafkaConsume` workflows are started immediately upon receiving Kafka messages.  If `queueName` is provided to the `@KafkaConsume` decorator, then the workflows will be enqueued in a [workflow queue](../../transactapi/workflow-queues) and subject to rate limits.
 
 
 ### Scheduled Workflow Decorators
@@ -715,7 +715,7 @@ class ScheduledExample{
 ```
 
 ### Concurrency and Rate Limiting
-By default, `@Scheduled` workflows are started immediately, including any make-up work identified when a VM starts.  If `queueName` is specified in the `SchedulerConfig`, then the workflow will be enqueued in a [workflow queue](https://docs.dbos.dev/typescript/reference/workflow-queues) and subject to rate limits.
+By default, `@Scheduled` workflows are started immediately, including any make-up work identified when a VM starts.  If `queueName` is specified in the `SchedulerConfig`, then the workflow will be enqueued in a [workflow queue](../../transactapi/workflow-queues) and subject to rate limits.
 
 #### `crontab` Specification
 The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.
@@ -825,7 +825,7 @@ DBOS can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) inter
 This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the handler functions in a class.
 This decorator takes a single parameter defining the security scheme as per the OpenAPI specification.
 This decorator is purely declarative for the purpose of inclusion in the generated interface description.
-You still need to implement authentication as per the [Authentication and Authorization tutorial](../tutorials/authentication-authorization).
+You still need to implement authentication as per the [Authentication and Authorization tutorial](../../../tutorials/crosscutting/authentication-authorization).
 
 ::::info
 DBOS does not support the `oauth2` OpenAPI security scheme at this time.

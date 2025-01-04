@@ -16,7 +16,7 @@ npm install --save-dev @dbos-inc/dbos-compiler
 
 ## Stored Procedure Versioning
 
-Since [@StoredProcedure](../tutorials/stored-proc-tutorial.md) functions must be tied to a specific [application version](../../cloud-tutorials/application-management#managing-application-versions), both DBOS Transact and the DBOS Compiler are version aware. 
+Since [@StoredProcedure](../../tutorials/programmingmodel/stored-proc-tutorial.md) functions must be tied to a specific [application version](../../../cloud-tutorials/application-management#managing-application-versions), both DBOS Transact and the DBOS Compiler are version aware. 
 By default, the application version is specified via the `DBOS__APPVERSION` environment variable, but can also be controlled via command line parameters.
 When a application version is specified, the DBOS Compiler will automatically prefix generated stored procedures with `v` and the application version.
 Likewise, DBOS Transact will automatically invoke prefixed versions of the deployed stored procedures when the application version is specified.
@@ -34,7 +34,7 @@ You do not need to cleanup DBOS cloud deployed stored procedure versions yoursel
 ### `npx dbosc deploy`
 
 **Description:**
-This command deploys the stored procedure functions from a DBOS application to the PostgreSQL database specified in the [configuration file](./configuration).
+This command deploys the stored procedure functions from a DBOS application to the PostgreSQL database specified in the [configuration file](../configuration).
 You must deploy your stored procedures to the database before running your DBOS application.
 
 **Arguments:**
@@ -49,7 +49,7 @@ You must deploy your stored procedures to the database before running your DBOS 
 ---
 
 ### `npx dbosc drop`
-This command drops the DBOS application's stored procedures from the PostgreSQL database specified in the [configuration file](./configuration). 
+This command drops the DBOS application's stored procedures from the PostgreSQL database specified in the [configuration file](../configuration). 
 
 **Arguments:**
 - `tsconfigPath`: path to the DBOS application's [tsconfig.json file](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html).

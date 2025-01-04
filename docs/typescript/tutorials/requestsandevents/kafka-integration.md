@@ -25,8 +25,8 @@ export class KafkaExample{
 }
 ```
 
-Then, annotate your method with a [`@KafkaConsume`](../reference/decorators.md#kafka-consume) decorator specifying which topic to consume from.
-Additionally, annotate your class with a [`@Kafka`](../reference/decorators.md#kafka) decorator defining which brokers to connect to.
+Then, annotate your method with a [`@KafkaConsume`](../../reference/transactapi/oldapi/decorators.md#kafka-consume) decorator specifying which topic to consume from.
+Additionally, annotate your class with a [`@Kafka`](../../reference/transactapi/oldapi/decorators.md#kafka) decorator defining which brokers to connect to.
 DBOS invokes your method exactly-once for each message sent to the topic.
 
 ```javascript
@@ -61,6 +61,6 @@ static async kafkaWorkflow(ctxt: WorkflowContext, topic: string, partition: numb
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../programmingmodel/idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
 This combination is guaranteed to be unique for each Kafka cluster.
 Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.

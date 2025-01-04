@@ -169,14 +169,14 @@ const example_queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50
 
 ### Workflow Management
 
-You can use the [DBOS Transact CLI](../reference/tools/cli.md) to manage your application's workflows.
+You can use the [DBOS Transact CLI](../../reference/tools/cli.md) to manage your application's workflows.
 It provides the following commands:
 
-- [`npx dbos workflow list`](../reference/tools/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
-- [`npx dbos workflow get <uuid>`](../reference/tools/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
-- [`npx dbos workflow cancel <uuid>`](../reference/tools/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
-- [`npx dbos workflow resume <uuid>`](../reference/tools/cli.md#npx-dbos-workflow-resume): Resume a workflow from the last step it executed, keeping its [identity UUID](#workflow-identity).
-- [`npx dbos workflow restart <uuid>`](../reference/tools/cli.md#npx-dbos-workflow-restart): Resubmit a workflow, restarting it from the beginning with the same arguments but a new [identity UUID](#workflow-identity).
+- [`npx dbos workflow list`](../../reference/tools/cli.md#npx-dbos-workflow-list): List workflows run by your application. Takes in parameters to filter on time, status, user, etc.
+- [`npx dbos workflow get <uuid>`](../../reference/tools/cli.md#npx-dbos-workflow-get): Retrieve the status of a workflow.
+- [`npx dbos workflow cancel <uuid>`](../../reference/tools/cli.md#npx-dbos-workflow-cancel): Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted and the workflow can still be manually retried or restarted.
+- [`npx dbos workflow resume <uuid>`](../../reference/tools/cli.md#npx-dbos-workflow-resume): Resume a workflow from the last step it executed, keeping its [identity UUID](#workflow-identity).
+- [`npx dbos workflow restart <uuid>`](../../reference/tools/cli.md#npx-dbos-workflow-restart): Resubmit a workflow, restarting it from the beginning with the same arguments but a new [identity UUID](#workflow-identity).
 
 ### Further Reading
 
