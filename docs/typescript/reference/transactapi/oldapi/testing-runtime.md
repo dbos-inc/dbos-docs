@@ -29,7 +29,7 @@ async function createTestingRuntime(
 ```
 
 Creates a testing runtime and loads user functions from provided `userClasses`.  By default, all classes and dependencies from the test file are loaded and registered.
-Accepts an optional path to a [configuration file](./configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
+Accepts an optional path to a [configuration file](../../configuration.md), uses the default path (`dbos-config.yaml` in the package root) otherwise.
 This method also provides an option to keep system database data across test runs.
 
 The defaults are generally sufficient as long as classes are at least indirectly referenced from the test file:
@@ -82,7 +82,7 @@ const output = await runtime.invoke(Cls).fn(arg);
 
 You don't supply a context to an invoked function&#8212;the testing runtime does this for you.
 
-You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../tutorials/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
+You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../../../tutorials/crosscutting/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
 
 ```typescript
 interface WorkflowInvokeParams {
@@ -115,7 +115,7 @@ As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally p
 startWorkflow<T>(target: T, workflowID?: string, params?: WorkflowInvokeParams, queue?: WorkflowQueue): InvokeFuncs<T>
 ```
 
-Start a workflow and return a [handle](./workflow-handles.md) to it but do not wait for it to complete.
+Start a workflow and return a [handle](../workflow-handles.md) to it but do not wait for it to complete.
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
@@ -126,7 +126,7 @@ You don't supply a context to start a workflow&#8212;the testing runtime does th
 
 As with [invoke](#runtimeinvoketarget-workflowuuid-params), you can optionally provide a workflow idempotency key or workflow invocation parameters.
 
-If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 
 
 ### runtime.retrieveWorkflow(workflowUUID)
@@ -135,7 +135,7 @@ If the `queue` argument is provided, the workflow may not start immediately.  St
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 ```
 
-Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowID_](../tutorials/workflow-tutorial#workflow-identity).
+Returns a [workflow handle](../workflow-handles.md) for workflow [_workflowID_](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).
 `R` is the return type of the target workflow.
 
 ### runtime.getWorkflows(query)
@@ -144,7 +144,7 @@ Returns a [workflow handle](./workflow-handles.md) for workflow [_workflowID_](.
 getWorkflows(query: GetWorkflowsInput): Promise<GetWorkflowsOutput>;
 ```
 
-Returns a list of workflow IDs matching the provided query parameters.  See [`HandlerContext.getWorkflows()`](../reference/contexts.md#handlerctxtgetworkflows) for details.
+Returns a list of workflow IDs matching the provided query parameters.  See [`HandlerContext.getWorkflows()`](./contexts.md#handlerctxtgetworkflows) for details.
 
 ### runtime.send(destinationUUID, message, \[topic, idempotencyKey\])
 
@@ -155,7 +155,7 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 Sends _message_ to _destinationUUID_.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 ### runtime.getEvent(workflowUUID, key, \[timeoutSeconds\])
 
@@ -163,7 +163,7 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
 ```
 
-Retrieves a value published by a _workflowID_ with identifier _key_ using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves a value published by a _workflowID_ with identifier _key_ using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 A call to `getEvent` waits for the value to be published and returns `null` in case of time out.
 
 ### runtime.getHandlersCallback()
@@ -191,7 +191,7 @@ getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-Retrieves a property specified in the application section of the [configuration](./configuration.md#application).
+Retrieves a property specified in the application section of the [configuration](../../configuration.md#application).
 
 ### runtime.queryUserDB(sql, ...params)
 
@@ -202,7 +202,7 @@ queryUserDB<R>(sql: string, ...params: any[]): Promise<R[]>;
 Executes a [parameterized raw SQL query](https://node-postgres.com/features/queries#parameterized-query) on the user database.
 The type `R` is the return type of the database row.
 
-For example, to query the `dbos_hello` table created during [`quickstart`](../../quickstart.md) and check `greet_count`, using [Jest](https://jestjs.io/):
+For example, to query the `dbos_hello` table created during [`quickstart`](../../../../quickstart.md) and check `greet_count`, using [Jest](https://jestjs.io/):
 ```typescript
 const rows = await testRuntime.queryUserDB<dbos_hello>("SELECT * FROM dbos_hello WHERE name=$1", "dbos");
 expect(rows[0].greet_count).toBe(1);

@@ -4,7 +4,7 @@ title: Self-Hosting
 description: Learn how to self-host DBOS Transact applications
 ---
 
-You can run DBOS Transact applications anywhere with [`npx dbos start`](../reference/cli.md#npx-dbos-start) as long as they have a Postgres database to connect to.
+You can run DBOS Transact applications anywhere with [`npx dbos start`](../reference/tools/cli.md#npx-dbos-start) as long as they have a Postgres database to connect to.
 This guide describes tools you can use in your hosting environment to make the most of DBOS Transact.
 
 ## Admin API
@@ -25,7 +25,7 @@ It provides the following endpoints:
 
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](./workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
+- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](../programmingmodel/workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
 - **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json
@@ -62,7 +62,7 @@ It provides the following endpoints:
 
 ## Managing Workflow Recovery
 
-By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](./workflow-tutorial.md#reliability-guarantees).
+By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](../programmingmodel/workflow-tutorial.md#reliability-guarantees).
 This behavior works well when you're only running a single instance of an application, as it guarantees that every time the server is restarted, it resumes all workflows from where they left off.
 However, it is less ideal for a distributed setting where you're running many instances of an application on different servers.
 
@@ -73,10 +73,10 @@ You can also instruct it to recover workflows assigned to other executor IDs thr
 
 ## Configuring OTLP Telemetry
 
-DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](./http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace. Handlers will inject a trace context to responses.
+DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](../requestsandevents/http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace. Handlers will inject a trace context to responses.
 
 Traces are periodically exported from a DBOS application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
-You can configure an exporter in the telemetry section of the [configuration file](../reference/configuration). For example:
+You can configure an exporter in the telemetry section of the [configuration file](../../reference/configuration). For example:
 ```yaml
 telemetry:
     OTLPExporter:
@@ -87,7 +87,7 @@ telemetry:
 You can export traces, out of the box, to any OTLP compliant receiver. Try it out with [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)!
 
 DBOS uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
-You can access trace objects using DBOS [contexts](../reference/contexts). For example, to add a custom event to a workflow span:
+You can access trace objects using DBOS [contexts](../../reference/transactapi/oldapi/contexts). For example, to add a custom event to a workflow span:
 ```javascript
   @Transaction()
   static async txn(ctxt: TransactionContext) {

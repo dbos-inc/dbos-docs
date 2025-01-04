@@ -5,8 +5,8 @@ description: API reference for workflow handles
 ---
 
 A workflow handle represents the state of a particular active or completed workflow execution.
-A workflow handle is obtained when a handler [starts a workflow](../tutorials/workflow-tutorial#asynchronous-workflows) with [`handlerCtxt.startWorkflow`](./contexts.md#handlerctxtstartworkflow) or a workflow starts a child workflow with [`workflowCtxt.startWorkflow`](./contexts.md#workflowctxtstartworkflow).
-Additionally, a handler or workflow can retrieve a workflow handle by calling [`ctxt.retrieveWorkflow`](./contexts#handlerctxtretrieveworkflow) with the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity).
+A workflow handle is obtained when a handler [starts a workflow](../../tutorials/programmingmodel/workflow-tutorial#asynchronous-workflows) with [`handlerCtxt.startWorkflow`](./oldapi/contexts.md#handlerctxtstartworkflow) or a workflow starts a child workflow with [`workflowCtxt.startWorkflow`](./oldapi/contexts.md#workflowctxtstartworkflow).
+Additionally, a handler or workflow can retrieve a workflow handle by calling [`ctxt.retrieveWorkflow`](./oldapi/contexts#handlerctxtretrieveworkflow) with the workflow's [identity UUID](../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).
 
 ---
 
@@ -33,7 +33,7 @@ Waits for the workflow to complete then returns its output.
 
 #### `getWorkflowUUID(): string`
 
-Retrieves the workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string that uniquely identifies this workflow's execution.
+Retrieves the workflow's [identity UUID](../../tutorials/programmingmodel/workflow-tutorial#workflow-identity), a string that uniquely identifies this workflow's execution.
 
 #### `getWorkflowInputs<T extends any []>(): Promise<T>`
 

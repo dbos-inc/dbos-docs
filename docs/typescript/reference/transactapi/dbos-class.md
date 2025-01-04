@@ -9,11 +9,11 @@ description: API reference for DBOS
 The `DBOS` static utility class is the heart of the DBOS Transact programming API.  `DBOS` provides decorators to identify key application functions, and static access to context-dependent state.  `DBOS` has no instance members and is not to be instantiated.
 
 :::info
-Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./contexts.md) and used a separate set of [decorators](./decorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
+Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./oldapi/contexts.md) and used a separate set of [decorators](./oldapi/decorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
 :::
 
 ## Decorating Workflows, Transactions, and Steps
-DBOS provides reliability guarantees for programs that are [written as workflows comprised of steps, transactions, and child workflows](../programming-guide.md).  The workflow, transaction, and step functions are marked with decorators.
+DBOS provides reliability guarantees for programs that are [written as workflows comprised of steps, transactions, and child workflows](../../programming-guide.md).  The workflow, transaction, and step functions are marked with decorators.
 
 ### `@DBOS.workflow`
 `@DBOS.workflow` registers a function as a DBOS workflow.  
@@ -22,7 +22,7 @@ DBOS provides reliability guarantees for programs that are [written as workflows
 @DBOS.workflow(config?: WorkflowConfig)
 ```
 
-When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../tutorials/idempotency-tutorial.md).
+When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../../tutorials/programmingmodel/idempotency-tutorial.md).
 
 `@DBOS.workflow()` takes an optional [`WorkflowConfig`](#workflow-configuration) object.
 
@@ -68,7 +68,7 @@ export abstract class ConfiguredInstance {
 }
 ```
 
-The `ConfiguredInstance` base class provides naming information, and also declares the `initialize` function which will be called after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](../reference/contexts.md#initcontext), which provides access to configuration and other information.
+The `ConfiguredInstance` base class provides naming information, and also declares the `initialize` function which will be called after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](./oldapi/contexts.md#initcontext), which provides access to configuration and other information.
 
 Example:
 ```typescript
@@ -138,7 +138,7 @@ const result2 = await workflowsInstance.processInstanceWorkflow("value2");
 ```
 
 ##### Starting Background Workflows
-Workflow functions can also be started asynchronously using `DBOS.startWorkflow`.  When run with `DBOS.startWorkflow`, the function will run in the background, and a `WorkflowHandle` is returned from `DBOS`.  This [handle](../reference/workflow-handles.md) can be used to [interact with the workflow](#interacting-with-workflows) or await its result with `getResult()`.
+Workflow functions can also be started asynchronously using `DBOS.startWorkflow`.  When run with `DBOS.startWorkflow`, the function will run in the background, and a `WorkflowHandle` is returned from `DBOS`.  This [handle](./workflow-handles.md) can be used to [interact with the workflow](#interacting-with-workflows) or await its result with `getResult()`.
 
 ```typescript
 DBOS.startWorkflow<T extends ConfiguredInstance>(targetInstance: T, params?: StartWorkflowParams): InvokeFunctionsAsyncInst<T>;
@@ -175,7 +175,7 @@ const result5 = await handle3.getResult();
 ```
 
 ##### Using Workflow Queues
-By default, the `startWorkflow` method [described above](#starting-background-workflows) always starts the target workflow immediately.  If it is desired to control the concurrency or rate of workflow invocations, a [`queue`](../reference/workflow-queues.md) can be specified.
+By default, the `startWorkflow` method [described above](#starting-background-workflows) always starts the target workflow immediately.  If it is desired to control the concurrency or rate of workflow invocations, a [`queue`](./workflow-queues.md) can be specified.
 
 ```typescript
 DBOS.withWorkflowQueue<R>(wfq: string, callback: ()=>Promise<R>) : Promise<R>
@@ -202,7 +202,7 @@ const qhres = await qhandle.getResult();
 ```
 
 ##### Assigning workflow IDs
-Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../tutorials/idempotency-tutorial.md) can be done with `DBOS.withNextWorkflowID`.
+Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) can be done with `DBOS.withNextWorkflowID`.
 
 ```typescript
 DBOS.withNextWorkflowID<R>(wfid: string, callback: ()=>Promise<R>) : Promise<R>
@@ -278,7 +278,7 @@ Within a transaction function, the following read-only property is available fro
 DBOS.sqlClient: UserDatabaseClient
 ```
 
-The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../reference/configuration.md#database):
+The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../configuration.md#database):
 ```typescript
 DBOS.pgClient: PoolClient
 DBOS.prismaClient: PrismaClient
@@ -288,13 +288,13 @@ DBOS.drizzleClient: DrizzleClient
 ```
 
 For more details, see:
-* [Drizzle](../tutorials/using-drizzle.md)
-* [Knex](../tutorials/using-knex.md)
-* [Prisma](../tutorials/using-prisma.md)
-* [TypeORM](../tutorials/using-typeorm.md)
+* [Drizzle](../../tutorials/programmingmodel/orms/using-drizzle.md)
+* [Knex](../../tutorials/programmingmodel/orms/using-knex.md)
+* [Prisma](../../tutorials/programmingmodel/orms/using-prisma.md)
+* [TypeORM](../../tutorials/programmingmodel/orms/using-typeorm.md)
 
 ### `@DBOS.step`
-`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../tutorials/workflow-tutorial.md).
+`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/programmingmodel/workflow-tutorial.md).
 The result of each invocation of a function decorated with `@DBOS.step` is stored in the DBOS system database.  This checkpoint of the execution state allows function calls to be skipped during workflow replay, if the step is known to have completed previously.
 
 ```typescript
@@ -323,7 +323,7 @@ static async sendToServer(valueToSend: string) {
 ```
 
 ## Accessing Application Functions Requiring Context Arguments
-Prior versions of the DBOS SDK were based on functions that took a [`context`](./contexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
+Prior versions of the DBOS SDK were based on functions that took a [`context`](./oldapi/contexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
 
 ```typescript
 DBOS.invoke<T extends ConfiguredInstance>(targetInst: T): InvokeFuncsInst<T>;
@@ -364,7 +364,7 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ### Sending And Receiving Messages
 
-`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../tutorials/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
+`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
 
 #### `DBOS.send`
 ```typescript
@@ -372,7 +372,7 @@ DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>
 ```
 `DBOS.send()` to send a message to a workflow, identified by `destinationID`.  Messages can optionally be associated with a topic and are queued on the receiver per topic.  `DBOS.send` may be called from other workflows, or anywhere else, to pass information to a corresponding `DBOS.recv` call.
 
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `DBOS.recv`
 ```typescript
@@ -382,12 +382,12 @@ DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 Messages are dequeued first-in, first-out, from a queue associated with the topic.
 Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `DBOS.send()` completes successfully, the destination workflow is guaranteed to be able to `DBOS.recv()` it.  `DBOS.recv()` consumes the message, but also advances the receiving workflow, so messages are received exactly once.
-If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../tutorials/workflow-tutorial#reliability-guarantees).
+If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../../tutorials/programmingmodel/workflow-tutorial#reliability-guarantees).
 If you're sending a message from outside of a workflow, you can run `DBOS.send` with an [idempotency key](#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ### Setting and Getting Events
@@ -402,14 +402,14 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 Creates or updates an event named `key`, setting its value to `value`.
 The event can then be read by calling [`DBOS.getEvent`](#dbosgetevent) with the workflow's ID, from within another workflow, or elsewhere.
 Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
-For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
+For more information, see our [events API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 
 #### `DBOS.getEvent`
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given `key` using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given `key` using the [events API](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 `getEvent()` returns a `Promise`.  `await`ing the promise will retrieve the value once the workflow has set the key, or return `null` if the wait times out.
 
 #### Reliability Guarantees
@@ -442,7 +442,7 @@ interface WorkflowStatus {
 ```
 
 ### `DBOS.retrieveWorkflow`
-Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](../reference/workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
+Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](./workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
 
 ```typescript
 DBOS.retrieveWorkflow(workflowID: string)
@@ -468,7 +468,7 @@ interface GetWorkflowsInput {
 }
 ```
 
-`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
@@ -479,7 +479,7 @@ export interface GetWorkflowsOutput {
 To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
 
 ### `DBOS.getWorkflowQueue`
-`DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](../reference/workflow-queues.md).
+`DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](./workflow-queues.md).
 
 ```typescript
 DBOS.getWorkflowQueue(input: GetWorkflowQueueInput): Promise<GetWorkflowQueueOutput>
@@ -495,7 +495,7 @@ export interface GetWorkflowQueueInput {
 }
 ```
 
-`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
+`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
 ```typescript
 export interface GetWorkflowQueueOutput {
   workflows: {
@@ -517,7 +517,7 @@ To obtain further information about a particular workflow, call [`retrieveWorkfl
 DBOS.getConfig<T>(key: string): T | undefined
 DBOS.getConfig<T>(key: string, defaultValue: T): T
 ```
-Retrieves an application property specified in the [application section of the configuration](./configuration.md#application).
+Retrieves an application property specified in the [application section of the configuration](../configuration.md#application).
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 The entire configuration may also be accessed:
@@ -564,10 +564,10 @@ DBOS Transact optionally provides HTTP handling.  This uses a serverless design,
 This provides the following features over using Koa directly:
 * Argument validation
 * A generated list of endpoint functions and their arguments
-* Automatic generation of [OpenAPI](../tutorials/openapi-tutorial.md) clients
+* Automatic generation of [OpenAPI](../../tutorials/development/openapi-tutorial.md) clients
 * Automatic configuration from `dbos-config.yaml` or the runtime environment
 * Automatic network configuration in DBOS Cloud
-* Default tracing, parsing, and other middleware, with [additional options](../tutorials/http-serving-tutorial.md#body-parser)
+* Default tracing, parsing, and other middleware, with [additional options](../../tutorials/requestsandevents/http-serving-tutorial.md#body-parser)
 
 The following sections describe the decorators that can be used to register methods for HTTP serving.  Note that all decorated methods must be `static`, as there is no mechanism to forward function calls to a specific object instance.
 
@@ -661,7 +661,7 @@ DBOS.koaContext: Koa.Context // Koa context, including response, any middleware 
 ```
 
 ### Middleware
-For details on middleware, argument processing, and data validation, see [HTTP Decorators](../reference/decorators.md#http-api-registration-decorators) or the [HTTP Handling Tutorial](../tutorials/http-serving-tutorial.md).
+For details on middleware, argument processing, and data validation, see [HTTP Decorators](./oldapi/decorators.md#http-api-registration-decorators) or the [HTTP Handling Tutorial](../../tutorials/requestsandevents/http-serving-tutorial.md).
 
 ### HTTP Testing
 ```typescript
@@ -797,7 +797,7 @@ class ScheduledExample{
 ```
 
 ### Concurrency and Rate Limiting
-By default, `@DBOS.scheduled` workflows are started immediately, including any make-up work identified when a VM starts.  If `queueName` is specified in the `SchedulerConfig`, then the workflow will be enqueued in a [workflow queue](https://docs.dbos.dev/typescript/reference/workflow-queues) and subject to rate limits.
+By default, `@DBOS.scheduled` workflows are started immediately, including any make-up work identified when a VM starts.  If `queueName` is specified in the `SchedulerConfig`, then the workflow will be enqueued in a [workflow queue](./workflow-queues) and subject to rate limits.
 
 ### `crontab` Specification
 The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.
@@ -898,7 +898,7 @@ A time matches the pattern if all fields of the time match the pattern.
 Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
 
 ## Application Lifecycle
-For DBOS applications using entrypoint classes specified in [`dbos-config.yaml`](../reference/configuration), a "serverless" application lifecycle is handled automatically.  However, it is possible to build a custom application lifecycle.
+For DBOS applications using entrypoint classes specified in [`dbos-config.yaml`](../configuration), a "serverless" application lifecycle is handled automatically.  However, it is possible to build a custom application lifecycle.
 
 ### Setting The Application Configuration
 If the DBOS configuration should not be loaded from `dbos-config.yaml`, it may be provided programatically with `DBOS.setConfig`:

@@ -17,14 +17,14 @@ While most database management systems provide support for stored procedures, th
 They typically need to be written in a custom language such as [PL/pgSQL](https://www.postgresql.org/docs/current/plpgsql.html).
 Additionally, they are not usually integrated into the application development process.
 DBOS stored procedure functions, in contrast, are written in TypeScript like the rest of your DBOS application.
-The [DBOS Compiler](../reference/dbos-compiler.md) deploys the stored procedure functions from your application to your application database.
+The [DBOS Compiler](../../reference/tools/dbos-compiler.md) deploys the stored procedure functions from your application to your application database.
 
 Here's an example of a stored procedure function.
 You'll notice it is similar to the [example transaction function](./transaction-tutorial.md) from the transaction tutorial. 
 
 :::warning
 Because stored procedures run inside the database, only raw database queries are supported. 
-Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./using-typeorm.md) and [Prisma](./using-prisma.md) are not supported in stored procedure functions.
+Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./orms/using-typeorm.md) and [Prisma](./orms/using-prisma.md) are not supported in stored procedure functions.
 :::
 
 ```javascript
@@ -44,12 +44,12 @@ For running locally, we recommend using the [`sibedge/postgres-plv8` Docker imag
 For using DBOS Stored Procedures on your own PostgreSQL server, please see the [official PLV8 documentation](https://plv8.github.io/#building) for installation instructions.
 
 :::info
-As of version 1.17, the [@dbos-inc/create](../reference/cli#npx-dbos-inccreate) templates have been updated to use `sibedge/postgres-plv8` in the `start_postgres_docker.js` script.
+As of version 1.17, the [@dbos-inc/create](../../reference/tools/cli#npx-dbos-inccreate) templates have been updated to use `sibedge/postgres-plv8` in the `start_postgres_docker.js` script.
 Older DBOS applications using Docker will need to switch their PostgreSQL image from `postgres:16.1` to `sibedge/postgres-plv8` manually to support Stored Procedures.
 :::
 
 Before running your DBOS application that uses stored procedures, you need to deploy those stored procedures to the database.
-To deploy your stored procedure functions to the database, you need the [DBOS Compiler](../reference/dbos-compiler.md). 
+To deploy your stored procedure functions to the database, you need the [DBOS Compiler](../../reference/tools/dbos-compiler.md). 
 Add the DBOS Compiler package as a devDependency of your app via NPM:
 
 ```
@@ -57,17 +57,17 @@ npm install --save-dev @dbos-inc/dbos-compiler
 ```
 
 Once the DBOS Compiler is installed, you can use it to deploy the stored procedures to the database server specified 
-in the [`dbos-config.yaml` file](../reference/configuration.md) with the following command:
+in the [`dbos-config.yaml` file](../../reference/configuration.md) with the following command:
 
 ```
 npx dbosc deploy
 ```
 
 :::info
-For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../reference/dbos-compiler.md)
+For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../../reference/tools/dbos-compiler.md)
 :::
 
-You can add `npx dbosc deploy` to your [database migration commands](../reference/configuration.md#database) to run it alongside other schema migrations.
+You can add `npx dbosc deploy` to your [database migration commands](../../reference/configuration.md#database) to run it alongside other schema migrations.
 Deploying your app's stored procedures via Database Schema Management is required for DBOS Cloud deployment.
 
 ```yaml

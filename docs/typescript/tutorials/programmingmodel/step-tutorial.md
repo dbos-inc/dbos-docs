@@ -4,7 +4,7 @@ title: Steps
 description: Learn how to communicate with external APIs and services
 ---
 
-In this guide, you'll learn how to use _steps_.  Along with [transactions](./transaction-tutorial.md), _steps_ are functions used to build reliable [workflows](./workflow-tutorial.md).  A _step_ is just a function, but when executed to completion, the result of the _step_ will be stored durably in the DBOS system database, so that retried workflows will skip the step and use the stored output.  The stored output can also be used for [time travel](../reference/time-travel-debugger.md).  Thus, it is important to use _steps_ for all functions that read or update external state that may change between invocations.
+In this guide, you'll learn how to use _steps_.  Along with [transactions](./transaction-tutorial.md), _steps_ are functions used to build reliable [workflows](./workflow-tutorial.md).  A _step_ is just a function, but when executed to completion, the result of the _step_ will be stored durably in the DBOS system database, so that retried workflows will skip the step and use the stored output.  The stored output can also be used for [time travel](../../reference/tools/time-travel-debugger.md).  Thus, it is important to use _steps_ for all functions that read or update external state that may change between invocations.
 
 One primary use of steps is to communicate with external APIs and services from a DBOS application.  For this reason, steps were often referred to as "communicators" in the past.  We recommend that all communication with external services be done in _step_ functions.
 
@@ -17,7 +17,7 @@ For correct workflow behavior, it is important to use _steps_ for all functions 
 * Functions that generate UUIDs
 * Cryptographic functions that may generate a salt
 
-Steps must be annotated with the [`@Step`](../reference/decorators#step) decorator and must have a [`StepContext`](../reference/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
+Steps must be annotated with the [`@Step`](../reference/decorators#step) decorator and must have a [`StepContext`](../../reference/transactapi/oldapi/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
 
 Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to retrieve the contents of `https://example.com`:
 
@@ -32,7 +32,7 @@ Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/do
 
 DBOS automatically retries any step function that throws an exception.
 It retries step functions a set number of times with exponential backoff, throwing an exception if the maximum number of retries is exceed.
-You can configure the retry policy by passing a `StepConfig` to your [`@Step`](../reference/decorators.md#step) decorator:
+You can configure the retry policy by passing a `StepConfig` to your [`@Step`](../../reference/transactapi/oldapi/decorators.md#step) decorator:
 
 ```typescript
 export interface StepConfig {

@@ -67,7 +67,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-The current workflow's [identity UUID](../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
+The current workflow's [identity UUID](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
 In a transaction or step, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
@@ -78,7 +78,7 @@ readonly authenticatedUser: string
 ```
 
 The identity of the authenticated user who ran this function.
-Authenticated users are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
+Authenticated users are set by [authentication middleware](../../../tutorials/crosscutting/authentication-authorization) and inherited through the calling chain.
 
 #### `ctxt.authenticatedRoles`
 
@@ -87,7 +87,7 @@ readonly authenticatedRoles: string[];
 ```
 
 A list of roles the authenticated user has, if any.
-Authenticated roles are set by [authentication middleware](../tutorials/authentication-authorization) and inherited through the calling chain.
+Authenticated roles are set by [authentication middleware](../../../tutorials/crosscutting/authentication-authorization) and inherited through the calling chain.
 
 #### `ctxt.assumedRole`
 
@@ -97,7 +97,7 @@ readonly assumedRole: string;
 
 The role used to run this function.
 Empty string if authorization is not required.
-DBOS's [authorization](../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
+DBOS's [authorization](../../../tutorials/crosscutting/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
 
 #### `ctxt.logger`
 
@@ -106,7 +106,7 @@ readonly logger: DBOSLogger
 ```
 
 A reference to DBOS's logger.
-Please see our [logging tutorial](../tutorials/logging.md) for more information.
+Please see our [logging tutorial](../../../tutorials/crosscutting/logging.md) for more information.
 
 #### `ctxt.span`
 
@@ -125,7 +125,7 @@ getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-Retrieves an application property specified in the [application section of the configuration](./configuration.md#application).
+Retrieves an application property specified in the [application section of the configuration](../../configuration.md#application).
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 ---
@@ -171,7 +171,7 @@ const output = await handlerCtxt.invoke(Cls).fn(arg);
 
 You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 You can optionally provide an idempotency key to the invoked function.
-For more information, see our [idempotency tutorial](../tutorials/idempotency-tutorial.md).
+For more information, see our [idempotency tutorial](../../../tutorials/programmingmodel/idempotency-tutorial.md).
 
 #### `handlerCtxt.invokeWorkflow`
 
@@ -195,10 +195,10 @@ You don't supply a context to the invoked workflow&#8212;the DBOS Transact runti
 startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue): InvokeFuncs<T>
 ```
 
-Start or enqueue a workflow and return a [handle](./workflow-handles.md) to it.
+Start or enqueue a workflow and return a [handle](../workflow-handles.md) to it.
 This does not wait for the workflow to complete, though the resulting handle can be used to wait for the workflow result.
 To start a workflow and wait for the result, see [`invokeWorkflow`](#handlerctxtinvokeworkflow).
-The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/programmingmodel/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
@@ -206,9 +206,9 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
 
-If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../tutorials/idempotency-tutorial.md).
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/programmingmodel/idempotency-tutorial.md).
 
-If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 
 You don't supply a context to the newly started workflow&#8212;the DBOS Transact runtime does this for you.
 
@@ -218,7 +218,7 @@ You don't supply a context to the newly started workflow&#8212;the DBOS Transact
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `handlerCtxt.send`
@@ -230,7 +230,7 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 Sends a message to workflow `destinationUUID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `handlerCtxt.getEvent`
 
@@ -238,7 +238,7 @@ For more information, see our [messages API tutorial](../tutorials/workflow-comm
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
@@ -263,7 +263,7 @@ export interface GetWorkflowsInput {
 }
 ```
 
-It returns as output an object containing a list of the [UUIDs](../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+It returns as output an object containing a list of the [UUIDs](../../../tutorials/programmingmodel/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
@@ -271,7 +271,7 @@ export interface GetWorkflowsOutput {
 }
 ```
 
-To obtain further information about a particular workflow, call [`retrieveWorkflow`](#handlerctxtretrieveworkflow) on its UUID to obtain its [handle](./workflow-handles.md).
+To obtain further information about a particular workflow, call [`retrieveWorkflow`](#handlerctxtretrieveworkflow) on its UUID to obtain its [handle](../workflow-handles.md).
 
 ---
 
@@ -331,17 +331,17 @@ You don't supply a context to the invoked child workflow&#8212;the DBOS Transact
 startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue).workflowFunction(args)
 ```
 
-Start a child workflow and return a [handle](./workflow-handles.md) to it but do not wait for the workflow to complete.
-This method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../tutorials/workflow-tutorial.md#reliability-guarantees).
+Start a child workflow and return a [handle](../workflow-handles.md) to it but do not wait for the workflow to complete.
+This method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/programmingmodel/workflow-tutorial.md#reliability-guarantees).
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
 const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
 
-If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../tutorials/idempotency-tutorial.md).
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/programmingmodel/tutorials/idempotency-tutorial.md).
 
-If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../reference/workflow-queues.md#class-workflowqueue) and its contents.
+If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 
 
 You don't supply a context to the newly started child workflow&#8212;the DBOS Transact runtime does this for you.
@@ -362,7 +362,7 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 
 Sends a message to `destinationUUID`.
 Messages can optionally be associated with a topic.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `workflowCtxt.recv`
 
@@ -374,7 +374,7 @@ Receive messages sent to the workflow, optionally for a particular topic.
 Messages are dequeued first-in, first-out, from a queue associated with the topic.
 Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `workflowCtxt.setEvent`
 
@@ -385,7 +385,7 @@ setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 Creates or updates an event named `key` with value `value`.
 Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgetevent) with the workflow's UUID.
 Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
-For more information, see our [events API tutorial](../tutorials/workflow-communication-tutorial#events-api).
+For more information, see our [events API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 
 #### `workflowCtxt.getEvent`
 
@@ -393,7 +393,7 @@ For more information, see our [events API tutorial](../tutorials/workflow-commun
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `workflowCtxt.retrieveWorkflow`
@@ -402,7 +402,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) _workflowID_.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) _workflowID_.
 `R` is the return type of the target workflow.
 
 #### `WorkflowContext.sleep`
@@ -434,31 +434,31 @@ Transactions use `TransactionContext` to interact with the database.
 ### Generic Type Parameter
 
 `TransactionContext` is typed generically based on the application database client in use.
-The application database client is configurable in a project's [configuration file](./configuration) (`app_db_client`).
+The application database client is configurable in a project's [configuration file](../../configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
-**[Knex](../tutorials/using-knex.md)**
+**[Knex](../../../tutorials/programmingmodel/orms/using-knex.md)**
 
 ```typescript
 import { Knex } from "knex";
 static async exampleTransaction(ctxt: TransactionContext<Knex>, ...)
 ```
 
-**[TypeORM](../tutorials/using-typeorm.md)**
+**[TypeORM](../../../tutorials/programmingmodel/orms/using-typeorm.md)**
 
 ```typescript
 import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
-**[Prisma](../tutorials/using-prisma.md)**
+**[Prisma](../../../tutorials/programmingmodel/orms/using-prisma.md)**
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
 static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
 ```
 
-**[Drizzle](../tutorials/using-drizzle.md)**
+**[Drizzle](../../../tutorials/programmingmodel/orms/using-drizzle.md)**
 
 ```typescript
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -701,7 +701,7 @@ readonly logger: Logger
 ```
 
 A reference to DBOS's global logger.  Event receivers may log information related to event dispatch to this logger.
-Please see our [logging tutorial](../tutorials/logging.md) for more information.
+Please see our [logging tutorial](../../../tutorials/crosscutting/logging.md) for more information.
 
 #### `DBOSExecutorContext.tracer`
 
@@ -710,7 +710,7 @@ readonly tracer: Tracer;
 ```
 
 A reference to DBOS's tracer.  Event receivers may initiate or propagate tracing information via `tracer`.
-Please see our [logging tutorial](../tutorials/logging.md) for more information.
+Please see our [logging tutorial](../../../tutorials/crosscutting/logging.md) for more information.
 
 
 #### `DBOSExecutorContext.getConfig`
@@ -744,10 +744,10 @@ workflow<T extends unknown[], R>(
 ```
 
 Invokes the provided `wf` workflow function, with inputs specified by `args`.  The `WorkflowParams` control how the workflow is started:
-* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../tutorials/idempotency-tutorial.md#manually-setting-idempotency-keys), for OAOO.
-* `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../reference/workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
+* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/programmingmodel/idempotency-tutorial.md#manually-setting-idempotency-keys), for OAOO.
+* `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
 
-The return value of `workflow` is a [`WorkflowHandle`](../reference/workflow-handles.md) for the running or queued workflow.
+The return value of `workflow` is a [`WorkflowHandle`](../workflow-handles.md) for the running or queued workflow.
 
 #### `DBOSExecutorContext.transaction`
 ```typescript
@@ -775,14 +775,14 @@ send<T extends NonNullable<any>>(destinationID: string, message: T, topic?: stri
 Sends a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../tutorials/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `DBOSExecutorContext.getEvent`
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../tutorials/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `DBOSExecutorContext.retrieveWorkflow`
@@ -790,7 +790,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`

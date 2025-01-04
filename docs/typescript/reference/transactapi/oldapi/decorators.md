@@ -41,7 +41,7 @@ is the same as this:
 ### Enabling Decorators
 
 DBOS uses [TypeScript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
-If you initialize your project with [`npx -y @dbos-inc/create`](../reference/cli.md#npx-dbos-inccreate), these are automatically enabled.
+If you initialize your project with [`npx -y @dbos-inc/create`](../../tools/cli.md#npx-dbos-inccreate), these are automatically enabled.
 Otherwise, you must enable them by supplying the following configuration to the TypeScript compiler (usually via the file `tsconfig.json`):
 
 ```json
@@ -147,7 +147,7 @@ A read-only transaction runs faster than a standard read-write transaction becau
 If you mark a transaction function as `readOnly: true` but it contains database writes, it will throw an error (for example `ERROR:  cannot execute INSERT in a read-only transaction`).
 
 #### `@StoredProcedure`
-Registers a function as a [DBOS stored procedure](../tutorials/stored-proc-tutorial.md).
+Registers a function as a [DBOS stored procedure](../../tutorials/stored-proc-tutorial.md).
 
 The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
 
@@ -176,7 +176,7 @@ However, for debugging scenarios, it can be helpful to step through the procedur
 When `executeLocally` is set to true, the stored procedure function gets executed locally on the application server, similar to transaction functions.
 
 :::info
-The `executeLocally` field can be changed without redeploying the application with the [DBOS Compiler](dbos-compiler.md).
+The `executeLocally` field can be changed without redeploying the application with the [DBOS Compiler](../../tools/dbos-compiler.md).
 DBOS Compiler will deploy all `@StoredProcedure()` functions, even those marked with `executeLocally` set to true.
 :::
 
@@ -186,7 +186,7 @@ There can be slight differences between the query results returned by PLV8 and `
 :::
 
 #### `@Step`
-Registers a function as a [DBOS step](../tutorials/communicator-tutorial.md).
+Registers a function as a [DBOS step](../../../tutorials/programmingmodel/step-tutorial.md).
 
 ```typescript
 @Step()

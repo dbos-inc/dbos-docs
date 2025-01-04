@@ -14,7 +14,7 @@ description: API, tool, and rule documentation for DBOS static code analysis
 Unsafe use of user input, hardcoded/exposed security credentials, improper format strings, construction of SQL statements via string concatenation, and slow regular expressions, are all examples of tactical mistakes that have been exploited "in the wild" to compromise or disable systems.
 - While the list of "gotchas" is long and easily neglected, the good news is that many of these anti-patterns can be detected quickly and automatically by modern static code analysis tools.
 
-- DBOS recommends using static analysis as an ingredient in a comprehensive security strategy.  As adding rule enforcement to a large, established codebase can be a hassle, DBOS recommends using tools from the beginning of a project, and therefore includes tool configuration in its [demo applications](https://github.com/dbos-inc/dbos-demo-apps) and [quickstart templates](../../quickstart.md).
+- DBOS recommends using static analysis as an ingredient in a comprehensive security strategy.  As adding rule enforcement to a large, established codebase can be a hassle, DBOS recommends using tools from the beginning of a project, and therefore includes tool configuration in its [demo applications](https://github.com/dbos-inc/dbos-demo-apps) and [quickstart templates](../../../quickstart.md).
 
 DBOS uses several techniques to ensure that static analysis is as productive as possible, with minimal hassle:
 * DBOS Transact builds on popular frameworks, thereby leveraging community best-practices and tools integration.
@@ -31,7 +31,7 @@ Many DBOS-suggested coding practices can be enforced by a combination of `eslint
 ### Installing and configuring the plugin
 
 ::::tip
-If you got started with the [quickstart](../../quickstart.md), the plugin is already installed.
+If you got started with the [quickstart](../../../quickstart.md), the plugin is already installed.
 If you encounter any errors, please make sure you install the right versions of `eslint` and `typescript-eslint` (`npm` will tell you if there's a peer dependency conflict).
 ::::
 
@@ -153,7 +153,7 @@ One custom rule from DBOS, `@dbos-inc/dbos-static-analysis`, is provided in the 
 ___
 
 Running a database query with a string that's vulnerable to SQL injection will result in an error.
-This would typically happen inside of a [transaction](https://docs.dbos.dev/tutorials/transaction-tutorial).
+This would typically happen inside of a [transaction](../programmingmodel/transaction-tutorial).
 - SQL injection happens when a bad actor puts SQL code as a field into something like an online form,
 and if a programmer builds a raw query from SQL and this data, the bad actor's supposed data may allow them to run
 arbitrary SQL commands over your database.
@@ -185,13 +185,13 @@ export class Greetings {
 
 ___
 
-These function calls are currently flagged as [nondeterministic](https://docs.dbos.dev/tutorials/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
+These function calls are currently flagged as [nondeterministic](../programmingmodel/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
 - `Math.random()`
 - `Date()`, `new Date()`, `Date.now()`
 - `setTimeout(...)`
 
-*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [step](../tutorials/communicator-tutorial).*
+*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [step](../programmingmodel/step-tutorial).*
 
 These function calls are not necessarily nondeterministic, but are still warned about:
 

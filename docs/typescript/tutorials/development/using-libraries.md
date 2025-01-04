@@ -25,7 +25,7 @@ ctx.invoke(BcryptStep).bcryptHash('myString');
 ```
 
 ### Working With Configured Classes
-While libraries such as `@dbos-inc/communicator-bcrypt` or `@dbos-inc/communicator-datetime` have simple functions that can be called directly from their classes, more complex DBOS libraries use ["configured instances"](./configured-instances) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
+While libraries such as `@dbos-inc/communicator-bcrypt` or `@dbos-inc/communicator-datetime` have simple functions that can be called directly from their classes, more complex DBOS libraries use ["configured instances"](../programmingmodel/configured-instances) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
 
 ```typescript
 import { configureInstance } from "@dbos-inc/dbos-sdk";
