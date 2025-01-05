@@ -6,58 +6,73 @@ description: Learn how to use the testing runtime for unit tests.
 
 In this guide, you'll learn how to test your DBOS applications.
 
-DBOS provides a [testing runtime](../../reference/transactapi/oldapi/testing-runtime.md) to make it easier to write unit tests for DBOS applications.
-Using the runtime, you can invoke and test your application's functions individually.
+DBOS code can be easily tested in any unit-testing framework.
+We'll show you how to write unit tests for the `Hello` example class shipped by [`npx @dbos-inc/create`](../../reference/tools/cli.md#npx-dbos-inccreate), using [Jest](https://jestjs.io/).
 
-We'll show you how to write unit tests for the `Hello` example class shipped by [`npx @dbos-inc/create`](../../reference/tools/cli.md#npx-dbos-inccreate).
-We use [Jest](https://jestjs.io/) in this example, but the testing runtime works with any testing framework.
+### Launching DBOS
 
-### Creating Testing Runtime
-
-First, let's create a `TestingRuntime` object:
+Before executing any test code that uses DBOS, DBOS should be launched:
 ```typescript
-testRuntime = await createTestingRuntime();
+    await DBOS.launch();
+    // Optional, only do this if you are testing built-in DBOS HTTP handlers
+    await DBOS.launchAppHTTPServer();
 ```
 
-This function optionally takes in a list of classes you want to test. Here, we want to test the methods of the `Hello` class, so we could have specified:
-```typescript
-testRuntime = await createTestingRuntime([Hello]);
-```
+See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-and-shutting-down) for launch options.
 
-You can also optionally provide a path to a [configuration file](../../reference/configuration.md).
-If no path is provided, the runtime loads a configuration file from the default location (`dbos-config.yaml` in the package root).
+#### Configuring DBOS Prior To Launch
+
+By default, `DBOS.launch` loads the configuration from `dbos-config.yaml` in the package root and uses this information to set up the runtime.
+
+To load configuration from a different file, or to create a configuration in another way, call [`DBOS.setConfig`](../../reference/transactapi/dbos-class#setting-the-application-configuration) prior to launch:
+```typescript
+    const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'});
+    DBOS.setConfig(cfg, rtCfg);
+    await DBOS.launch();
+```
 
 ### Testing Functions
 
-A testing runtime object can invoke workflows, transactions, and steps using the `invoke` method.
-The syntax for invoking function `foo(ctxt, args)` in class `Bar` is `testRuntime.invoke(Bar).foo(args)`.
-You don't need to supply the context to an invoked function&#8212;the testing runtime does this for you.
+Once DBOS is launched, a test can invoke workflows, transactions, and steps directly.
+
 For example:
 ```typescript
-const res = await testRuntime.invoke(Hello).helloTransaction("dbos");
+const res = await Hello.helloTransaction("dbos");
 expect(res).toMatch("Hello, dbos! You have been greeted");
 ```
-In this code, we invoke `helloTransaction` with the input string `"dbos"`, and verify its output is as expected.
+In this code, we invoke `Hello.helloTransaction` with the input string `"dbos"`, and verify its output is as expected.
 
 ### Testing HTTP Endpoints
 
-The testing runtime provides a `getHandlersCallback()` function, which  returns a callback function for node's native `http/http2` server. This allows you to test HTTP handlers, for example, with [supertest](https://www.npmjs.com/package/supertest):
+If you are using DBOS's built-in HTTP handling capabilities, these can be tested using a framework such as [supertest](https://www.npmjs.com/package/supertest).  (If you are using another method to handle HTTP, such as Express.js, follow the usual methods for testing with that server.)
+
+DBOS provides `DBOS.getHTTPHandlersCallback()`, which returns a callback function for node's native `http/http2` server.  This allows you to test HTTP handlers using common tools for node.js.
+
+First, add setup code to ensure that DBOS is launched, and that HTTP endpoints are also set up:
+```typescript
+    await DBOS.launch();
+    await DBOS.launchAppHTTPServer();
+```
+
+Import the testing package:
 ```typescript
 import request from "supertest";
+```
 
-const res = await request(testRuntime.getHandlersCallback()).get(
+Use the handler callback during the course of unit-testing.  In this code, we send a `GET` request to our `/greeting/dbos` URL and verify its response:
+```typescript
+const res = await request(DBOS.getHTTPHandlersCallback()).get(
   "/greeting/dbos"
 );
 expect(res.statusCode).toBe(200);
 expect(res.text).toMatch("Hello, dbos! You have been greeted");
 ```
-In this code, we send a `GET` request to our `/greeting/dbos` URL and verify its response.
 
 ### Cleaning Up
 
-Finally, after your tests, you can clean up the testing runtime and release its resources:
+Finally, after your tests, you should clean up DBOS and release its resources:
 ```typescript
-await testRuntime.destroy();
+await DBOS.shutdown();
 ```
 
 ### Run Tests
@@ -88,5 +103,4 @@ Time:        1.247 s, estimated 2 s
 
 ### Further Reading
 
-To learn the full testing runtime interface, please see [our testing runtime references](../../reference/transactapi/oldapi/testing-runtime.md).
-You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-ts/blob/main/examples/hello/src/operations.test.ts).
+You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-transact-ts/blob/main/packages/create/templates/hello-v2/src/operations.test.ts).

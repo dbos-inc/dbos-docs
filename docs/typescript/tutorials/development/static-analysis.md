@@ -162,9 +162,9 @@ arbitrary SQL commands over your database.
 Here's how you should make a parameterized query:
 ```ts
 export class Greetings {
-  @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-    await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+  @DBOS.transaction()
+  static async InsertGreeting(friend: string, note: string) {
+    await DBOS.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
   }
 }
 ```
@@ -172,9 +172,9 @@ export class Greetings {
 This example is vulnerable to SQL injection:
 ```ts
 export class Greetings {
-  @Transaction()
-  static async VulnerableGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-    await ctxt.client.raw(`INSERT INTO greetings (name, note) VALUES (${friend}, ${note})`); // Don't do this!
+  @DBOS.transaction()
+  static async VulnerableGreeting(friend: string, note: string) {
+    await DBOS.knexClient.raw(`INSERT INTO greetings (name, note) VALUES (${friend}, ${note})`); // Don't do this!
   }
 }
 ```

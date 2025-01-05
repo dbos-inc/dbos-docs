@@ -87,12 +87,12 @@ telemetry:
 You can export traces, out of the box, to any OTLP compliant receiver. Try it out with [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)!
 
 DBOS uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
-You can access trace objects using DBOS [contexts](../../reference/transactapi/oldapi/contexts). For example, to add a custom event to a workflow span:
+You can access trace objects using [`DBOS.span`](../../reference/transactapi/dbos-class#accessing-the-tracing-span). For example, to add a custom event to a workflow span:
 ```javascript
-  @Transaction()
-  static async txn(ctxt: TransactionContext) {
+  @DBOS.transaction()
+  static async txn() {
     ...
-    ctxt.span.addEvent("An important event")
+    DBOS.span.addEvent("An important event")
     ...
   }
 ```
