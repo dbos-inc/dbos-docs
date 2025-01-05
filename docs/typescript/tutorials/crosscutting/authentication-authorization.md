@@ -6,7 +6,7 @@ description: Use declarative security and middleware in DBOS
 
 This section covers declarative authentication and authorization in DBOS.
 
-DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](../../reference/transactapi/oldapi/decorators#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@RequiredRole`](../../reference/transactapi/oldapi/decorators#requiredrole) API.
+DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](../../reference/transactapi/oldapi/decorators#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@DBOS.requiredRole`](../../reference/transactapi/dbos-class.md#dbosrequiredrole) API.
 
 :::info note
 You can fully implement authentication and authorization using custom [HTTP middleware](../requestsandevents/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms DBOS provides to make it easier.
@@ -29,13 +29,13 @@ return {
 };
 ```
 
-When serving a request from an HTTP endpoint, DBOS runs the authentication middleware before running the requested operation and makes this information available in the operation's [context](../../reference/transactapi/oldapi/contexts#dboscontext).
+When serving a request from an HTTP endpoint, DBOS runs the authentication middleware before running the requested operation and makes this information available in the [context](../../reference/transactapi/dbos-class#accessing-http-context).
 
 ## Authorization Decorators
-To declare a list of roles that are authorized to run the methods in a class, use the [`@DefaultRequiredRole`](../../reference/transactapi/oldapi/decorators#defaultrequiredrole) class decorator:
+To declare a list of roles that are authorized to run the methods in a class, use the [`@DBOS.defaultRequiredRole`](../../reference/transactapi/dbos-class.md#dbosdefaultrequiredrole) class decorator:
 
 ```javascript
-@DefaultRequiredRole(['user'])
+@DBOS.defaultRequiredRole(['user'])
 class Operations
 {
   // Most operations will be user-level
@@ -43,21 +43,21 @@ class Operations
 ```
 
 At runtime, before running an operation, DBOS verifies that the operation context contains an authenticated role listed in its required roles.
-For exceptions, requiring more or less privilege than the default, you can specify [`@RequiredRole`](../../reference/transactapi/oldapi/decorators#requiredrole) at the method level
+For exceptions, requiring more or less privilege than the default, you can specify [`@DBOS.requiredRole`](../../reference/transactapi/dbos-class#dbosrequiredrole) at the method level
 
 ```javascript
-@DefaultRequiredRole(['user'])
+@DBOS.defaultRequiredRole(['user'])
 class Operations
 {
   // Most operations will be user-level
 
   // Registering a new user doesn't require privilege
-  @RequiredRole([])
-  static async doRegister(ctx: DBOSContext, firstName: string, lastName: string){}
+  @DBOS.requiredRole([])
+  static async doRegister(firstName: string, lastName: string){}
 
   // Deleting a user requires escalated privilege
-  @RequiredRole(['admin'])
-  static async deleteOtherUser(ctx: DBOSContext, otherUser: string){}
+  @DBOS.requiredRole(['admin'])
+  static async deleteOtherUser(otherUser: string){}
 }
 ```
 
@@ -77,7 +77,7 @@ const authenticationMiddleware = (ctx: MiddlewareContext) => {
 };
 
 @Authentication(authenticationMiddleware)
-@DefaultRequiredRole("appUser")
+@DBOS.defaultRequiredRole("appUser")
 export class Hello {
   ...
 }

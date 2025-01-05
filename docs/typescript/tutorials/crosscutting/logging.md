@@ -5,14 +5,14 @@ description: Learn to use logging in DBOS
 ---
 
 In this section we will learn to use DBOS's built-in logging system.
-The DBOS runtime comes with a global logger you can access through any operation's [context](../../reference/transactapi/oldapi/contexts.md).
+The DBOS runtime comes with a context-specific logger you can access through [`DBOS.logger`](../../reference/transactapi/dbos-class#accessing-logging).
 
 ### Usage
 
 ```javascript
-@GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, @ArgSource(ArgSources.URL) name: string) {
-    ctx.logger.info("Logging from the greeting handler");
+@DBOS.getApi('/greeting/:name')
+static async greetingEndpoint(@ArgSource(ArgSources.URL) name: string) {
+    dbos.logger.info("Logging from the greeting handler");
     return `Greeting, ${name}`;
 }
 ```
@@ -53,10 +53,4 @@ npx dbos start --loglevel debug
 
 ### Global Logger
 
-Wherever possible, the logger should be taken from the DBOS Context, as the context logger may have information about the current operation being performed.  `InitContext`, `MiddlewareContext`, and all subtypes of `DBOSContext` provide `logger`s.
-
-However, there are exceptional cases where logging is desired outside of the scope of a context, such as in a Koa middleware, or a background task.  For that, it is possible to use [`DBOS.logger`](../../reference/transactapi/oldapi/contexts.md#information-available-outside-of-contexts):
-
-```typescript
-  DBOS.logger.info("There is no context here, but I need to log something anyway!");
-```
+It is not necessary to be in a DBOS operation to use `DBOS.logger`.  After DBOS is launched, all such logs will go to the global DBOS logger; prior to DBOS launch all logs will go to the console.
