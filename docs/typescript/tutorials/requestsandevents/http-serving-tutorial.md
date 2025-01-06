@@ -4,31 +4,35 @@ title: HTTP Serving
 description: Learn how to serve HTTP requests
 ---
 
-In this guide, you'll learn how to make DBOS applications accessible through HTTP.
+In this guide, you'll learn how to make DBOS applications accessible through DBOS's built-in, [koa](https://koajs.com/)-based HTTP server.
 
-Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../../reference/transactapi/oldapi/decorators#http-api-registration-decorators), causing DBOS to use that function to serve that endpoint.
+:::note
+There is no need to use the DBOS HTTP server.  DBOS functions can be embedded in other HTTP servers, and there is no need to use HTTP in DBOS applications at all.  However, the DBOS HTTP handler service is the simplest way to get started in a new HTTP application, offering simple route handling, parameter parsing and validation, security, logging, etc.
+:::
 
-You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with an [`@Transaction`](../../reference/transactapi/oldapi/decorators#transaction), [`@Workflow`](../../reference/transactapi/oldapi/decorators#workflow), or [`@Step`](../../reference/transactapi/oldapi/decorators#step) decorator.
+Any function can be made into an HTTP endpoint by annotating it with an [endpoint decorator](../../reference/transactapi/dbos-class#http-handling), causing DBOS to use that function to serve that endpoint.
+
+You can apply an endpoint decorator either to a new function without any other decorators or to an existing function with a [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction), [`@DBOS.workflow`](../../reference/transactapi/dbos-class#dbosworkflow), or [`DBOS.step`](../../reference/transactapi/dbos-class#dbosstep) decorator.
 
 Here's an example of a new function with an endpoint decorator:
 
 ```javascript
-@GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, name: string) {
+@DBOS.getApi('/greeting/:name')
+static async greetingEndpoint(name: string) {
   return `Greeting, ${name}`;
 }
 ```
 Here's an example applying an endpoint decorator to an existing transaction (the order of the decorators doesn't matter):
 
 ```javascript
-@PostApi('/greeting/:friend')
-@Transaction()
-static async insertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-  await ctxt.client.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+@DBOS.postApi('/greeting/:friend')
+@DBOS.transaction()
+static async insertGreeting(friend: string, note: string) {
+  await DBOS.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
 }
 ```
 
-DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@GetApi`](../../reference/transactapi/oldapi/decorators#getapi), [`@PostApi`](../../reference/transactapi/oldapi/decorators#postapi), [`@PutApi`](../../reference/transactapi/oldapi/decorators.md#putapi), [`@PatchApi`](../../reference/transactapi/oldapi/decorators.md#patchapi), and [`@DeleteApi`](../../reference/transactapi/oldapi/decorators.md#deleteapi).
+DBOS provides endpoint decorators for all HTTP verbs used in APIs: [`@DBOS.getApi`](../../reference/transactapi/dbos-class#dbosgetapi), [`@DBOS.postApi`](../../reference/transactapi/dbos-class#dbospostapi), [`@DBOS.putApi`](../../reference/transactapi/dbos-class#dbosputapi), [`@DBOS.patchApi`](../../reference/transactapi/dbos-class#dbospatchapi), and [`@DBOS.deleteApi`](../../reference/transactapi/dbos-class#dbosdeleteapi).
 Each associates a function with an HTTP URL.
 
 
@@ -43,8 +47,8 @@ Arguments can be parsed from three places:
 You can include a path parameter placeholder in a URL by prefixing it with a colon, like `name` in this example:
 
 ```javascript
-@GetApi('/greeting/:name')
-static async greetingEndpoint(ctx: HandlerContext, name: string) {
+@DBOS.getApi('/greeting/:name')
+static async greetingEndpoint(name: string) {
   return `Greeting, ${name}`;
 }
 ```
@@ -59,13 +63,13 @@ GET /greeting/dbos
 
 #### 2. URL Query String Parameters
 
-[`GET`](../../reference/transactapi/oldapi/decorators#getapi) and [`DELETE`](../../reference/transactapi/oldapi/decorators.md#deleteapi) endpoints automatically parse arguments from query strings.
+[`GET`](../../reference/transactapi/dbos-class#dbosgetapi) and [`DELETE`](../../reference/transactapi/dbos-class#dbosdeleteapi) endpoints automatically parse arguments from query strings.
 
 For example, the following endpoint expects the `id` and `name` parameters to be passed through a query string:
 
 ```javascript
-@GetApi('/example')
-static async exampleGet(ctx: HandlerContext, id: number, name: string) {
+@DBOS.getApi('/example')
+static async exampleGet(id: number, name: string) {
   return `${id} and ${name} are parsed from URL query string parameters`;
 }
 ```
@@ -78,13 +82,13 @@ GET /example?id=123&name=dbos
 
 #### 3. HTTP Body Fields
 
-[`POST`](../../reference/transactapi/oldapi/decorators#postapi), [`PATCH`](../../reference/transactapi/oldapi/decorators#patchapi), and [`PUT`](../../reference/transactapi/oldapi/decorators#putapi) endpoints automatically parse arguments from the HTTP request body.
+[`POST`](../../reference/transactapi/dbos-class#dbospostapi), [`PATCH`](../../reference/transactapi/dbos-class#dbospatchapi), and [`PUT`](../../reference/transactapi/dbos-class#dbosputapi) endpoints automatically parse arguments from the HTTP request body.
 
 For example, the following endpoint expects the `id` and `name` parameters to be passed through the HTTP request body:
 
 ```javascript
-@PostApi('/example')
-static async examplePost(ctx: HandlerContext, id: number, name: string) {
+@DBOS.postApi('/example')
+static async examplePost(id: number, name: string) {
   return `${id} and ${name} are parsed from the HTTP request body`;
 }
 ```
@@ -118,7 +122,7 @@ You can use the [`@ArgSource()`](../../reference/transactapi/oldapi/decorators.m
 
 #### Raw Requests
 
-If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from its [`context.request`](../../reference/transactapi/oldapi/contexts#ctxtrequest) field. This returns the following information:
+If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from [`DBOS.request`](../../reference/transactapi/dbos-class#accessing-http-context). This returns the following information:
 
 ```typescript
 interface HTTPRequest {
@@ -142,14 +146,14 @@ If the function throws an exception, the error message is sent in the response b
 If the error contains a `status` field, the response uses that status code instead.
 
 If you need custom HTTP response behavior, you can use a handler to access the HTTP response directly.
-DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via the `.koaContext.response` field of [`HandlerContext`](../../reference/transactapi/oldapi/contexts#handlercontext), which provides a [Koa response](https://koajs.com/#response).
+DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw response can be accessed via [`DBOS.koaContext.response`](../../reference/transactapi/dbos-class#accessing-http-context), which provides a [Koa response](https://koajs.com/#response).
 
 ### Handlers
 
-A function annotated with an endpoint decorator but no other decorators is called a _handler_ and must take a [`HandlerContext`](../../reference/transactapi/oldapi/contexts#handlercontext) as its first argument, like in the first example above.
-Handlers can [invoke](../../reference/transactapi/oldapi/contexts#handlerctxtinvoke) other functions and directly access HTTP requests and responses.
+A function annotated with an endpoint decorator but no other decorators is called a _handler_.
+Handlers can call other DBOS functions and directly access HTTP requests and responses.
 However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
-You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the strong guarantees of transactions and workflows.
+You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the [strong guarantees of transactions and workflows](../programmingmodel/workflow-tutorial#reliability-guarantees).
 
 ### Body Parser
 By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../../reference/transactapi/oldapi/decorators#koabodyparser) decorator.
@@ -237,9 +241,9 @@ While it is generally advised to serve static content from a CDN, [S3 Bucket](ht
 
 ```typescript
 export class Serve {
-    @GetApi('/static/:item') // Adjust route, or recursive wildcard, to suit
-    static async serve(ctx: HandlerContext, item: string) {
-        return send(ctx.koaContext, item, {root: 'static'}); // Adjust root to point to directory w/ files
+    @DBOS.getApi('/static/:item') // Adjust route, or recursive wildcard, to suit
+    static async serve(item: string) {
+        return send(DBOS.koaContext, item, {root: 'static'}); // Adjust root to point to directory w/ files
     }
 }
 ```

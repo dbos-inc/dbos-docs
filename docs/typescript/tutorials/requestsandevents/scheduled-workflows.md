@@ -8,17 +8,16 @@ In this guide, you'll learn how to execute DBOS workflows exactly once per time 
 
 ### Defining A Workflow Function For Scheduling
 First, define your workflow.  Its parameters must be:
-- The `WorkflowContext`
 - The time that the run was scheduled (as a `Date`).
 - The time that the run was actually started (as a `Date`).  This can be used to tell if an exactly-once workflow was started behind schedule.
 
 ```typescript
-import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 class ScheduledExample{
-  @Workflow()
-  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
-    ctxt.logger.info(`
+  @DBOS.workflow()
+  static async scheduledFunc(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`
         Running a workflow every 5 seconds -
           scheduled time: ${schedTime.toISOString()} /
           actual start time: ${startTime.toISOString()}
@@ -28,16 +27,16 @@ class ScheduledExample{
 ```
 
 ### Scheduling The Workflow
-Then, annotate your method with a [`@Scheduled`](../../reference/transactapi/oldapi/decorators.md#scheduled) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run every 30 seconds:
+Then, annotate your method with a [`@DBOS.scheduled`](../../reference/transactapi/dbos-class#scheduled-workflows) decorator specifiying the schedule in a [`crontab`](https://en.wikipedia.org/wiki/Cron)-like format, which optionally specifies a constraint for seconds, followed by constraints for minutes, hours, day of month, month of year, and day of week.  For example, the following workflow will run every 30 seconds:
 
 ```typescript
-import { Scheduled, Workflow, WorkflowContext } from '@dbos-inc/dbos-sdk';
+import { DBOS } from '@dbos-inc/dbos-sdk';
 
 class ScheduledExample{
-  @Workflow()
-  @Scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledFunc(ctxt: WorkflowContext, schedTime: Date, startTime: Date) {
-    ctxt.logger.info(``);
+  @DBOS.workflow()
+  @DBOS.scheduled({crontab: '*/30 * * * * *'})
+  static async scheduledFunc(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(``);
   }
 }
 ```
@@ -57,10 +56,10 @@ Under the hood, DBOS constructs an [idempotency key](../programmingmodel/idempot
 ### Skipping Scheduled Workflows
 By default, scheduled workflows are executed exactly once per interval.  This means that, if an application is stopped for an extended period, DBOS Transact could initiate a significant number of workflows upon restart.  If it is known by the application developer that "makeup work" should not be scheduled for a given workflow function, the mode for that function should be changed in its configuration:
 ```typescript
-    @Scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '...'})
+    @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerIntervalWhenActive, crontab: '...'})
 ```
 
 If the mode is set to `ExactlyOncePerIntervalWhenActive` , DBOS Transact will not consult the system database to figure out if scheduled workflows were missed, but will instead start the schedule at the current time.
 
 ### `crontab` Specification
-The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.  The specification for the DBOS variant can be found in the [decorator reference](../../reference/transactapi/oldapi/decorators.md#crontab-specification).
+The `crontab` format is based on the well-known format used in the [`cron`](https://en.wikipedia.org/wiki/Cron) scheduler.  The specification for the DBOS variant can be found in the [DBOS API reference](../../reference/transactapi/dbos-class#crontab-specification).
