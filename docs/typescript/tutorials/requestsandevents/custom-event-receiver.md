@@ -56,8 +56,8 @@ The [`DBOSExecutorContext`](../../reference/transactapi/oldapi/contexts.md#dbose
 
 The following functions on `executor` can then be used to invoke DBOS Transact functions:
 *[`workflow`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
-*[`transaction`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../programmingmodel/transaction-tutorial.md)
-*[`external`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../programmingmodel/step-tutorial.md)
+*[`transaction`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../transaction-tutorial.md)
+*[`external`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../step-tutorial.md)
 
 #### Waiting vs. Queueing
 The `workflow` method provided by `executor` accepts a `params` argument, of type `WorkflowParams`.  `WorkflowParams.queueName`, if provided, is the name of a [workflow queue](../../reference/transactapi/workflow-queues.md) that will be used to rate-limit execution of the workflows in the specified queue.  Otherwise, the function will be started immediately and the event receiver should `await` the result.
@@ -65,7 +65,7 @@ The `workflow` method provided by `executor` accepts a `params` argument, of typ
 ### Running Event Processing Exactly Once
 DBOS Transact provides guarantees that workflows run exactly once.  For event receivers, this guarantee can be met by ensuring the following two properties are implemented:
 * "At least once" invocation: the event receiver must have a way to "backfill" any events that may have been missed for any reason, such as no VM executing the receiver code when the event arrived.  The DBOS functions must be called at least once.
-* "At most once" execution: the event receiver should specify the [workflow ID](../programmingmodel/idempotency-tutorial.md#manually-setting-idempotency-keys) so that the DBOS Transact runtime can deduplicate function calls.
+* "At most once" execution: the event receiver should specify the [workflow ID](../idempotency-tutorial.md#manually-setting-idempotency-keys) so that the DBOS Transact runtime can deduplicate function calls.
 
 Because the functions are invoked at least once and executed at most once, they are run to completion exactly once.
 

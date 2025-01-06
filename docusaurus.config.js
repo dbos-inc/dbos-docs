@@ -156,11 +156,11 @@ const config = {
           },
           {
             from: '/typescript/tutorials/step-tutorial',
-            to: '/typescript/tutorials/programmingmodel/step-tutorial',
+            to: '/typescript/tutorials/step-tutorial',
           },
           {
             from: '/typescript/tutorials/configured-instances',
-            to: '/typescript/tutorials/programmingmodel/configured-instances',
+            to: '/typescript/tutorials/development/configured-instances',
           },
           {
             from: '/typescript/tutorials/http-serving-tutorial',
@@ -168,7 +168,7 @@ const config = {
           },
           {
             from: '/typescript/tutorials/idempotency-tutorial',
-            to: '/typescript/tutorials/programmingmodel/idempotency-tutorial',
+            to: '/typescript/tutorials/idempotency-tutorial',
           },
           {
             from: '/typescript/tutorials/using-drizzle',
@@ -188,11 +188,11 @@ const config = {
           },
           {
             from: '/typescript/tutorials/stored-proc-tutorial',
-            to: '/typescript/tutorials/programmingmodel/stored-proc-tutorial',
+            to: '/typescript/tutorials/stored-proc-tutorial',
           },
           {
             from: '/typescript/tutorials/transaction-tutorial',
-            to: '/typescript/tutorials/programmingmodel/transaction-tutorial',
+            to: '/typescript/tutorials/transaction-tutorial',
           },
           {
             from: '/typescript/tutorials/workflow-communication-tutorial',

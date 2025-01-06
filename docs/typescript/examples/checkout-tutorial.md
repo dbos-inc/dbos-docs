@@ -55,7 +55,7 @@ The handler is implemented in this `webCheckout` function and served from HTTP P
 static async webCheckout(@ArgOptional key: string): Promise<string> {
 ```
 
-It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/programmingmodel/idempotency-tutorial).
+It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/idempotency-tutorial).
 If a workflow is invoked many times with the same idempotency key (for example, because a customer pressed the buy button many times), it only executes once.
 
 ### Invoking the checkout workflow
@@ -136,7 +136,7 @@ try {
 ```
 
 ### Initiating a payment session
-Next, the workflow initiates a payment session using the `createPaymentSession` [step](../tutorials/programmingmodel/step-tutorial).
+Next, the workflow initiates a payment session using the `createPaymentSession` [step](../tutorials/step-tutorial).
 If this fails, it returns reserved items using the `undoReserveInventory` transaction, notifies its handler, and returns.
 ```javascript
 // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
@@ -160,8 +160,8 @@ await DBOS.setEvent(session_topic, paymentSession.session_id);
 
 ### Waiting for a payment
 After notifying its handler, the checkout workflow waits for the payment service to notify it whether the customer has paid.
-We await this notification using the [`recv`](../tutorials/programmingmodel/workflow-communication-tutorial#recv) method from the DBOS [messages API](../tutorials/programmingmodel/workflow-communication-tutorial.md).
-When the customer pays, the payment service sends a callback HTTP request to a separate callback handler (omitted for brevity, source code in `src/utilities.ts`), which notifies the checkout workflow via [`send`](../tutorials/programmingmodel/workflow-communication-tutorial.md#send).
+We await this notification using the [`recv`](../tutorials/programmingmodel/workflow-communication-tutorial#recv) method from the DBOS [messages API](../tutorials/workflow-communication-tutorial).
+When the customer pays, the payment service sends a callback HTTP request to a separate callback handler (omitted for brevity, source code in `src/utilities.ts`), which notifies the checkout workflow via [`send`](../tutorials/workflow-communication-tutorial#send).
 
 ```javascript
 // Await a notification from the payment service.

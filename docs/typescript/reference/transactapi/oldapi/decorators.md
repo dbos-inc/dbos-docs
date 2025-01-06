@@ -113,7 +113,7 @@ interface WorkflowConfig {
 ```
 
 #### `@Transaction`
-Registers a function as a [DBOS transaction](../../../tutorials/programmingmodel/transaction-tutorial.md).
+Registers a function as a [DBOS transaction](../../../tutorials/transaction-tutorial.md).
 
 The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontextt), which provides access to the database transaction.
 
@@ -147,7 +147,7 @@ A read-only transaction runs faster than a standard read-write transaction becau
 If you mark a transaction function as `readOnly: true` but it contains database writes, it will throw an error (for example `ERROR:  cannot execute INSERT in a read-only transaction`).
 
 #### `@StoredProcedure`
-Registers a function as a [DBOS stored procedure](../../../tutorials/programmingmodel/stored-proc-tutorial.md).
+Registers a function as a [DBOS stored procedure](../../../tutorials/stored-proc-tutorial.md).
 
 The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
 
@@ -186,7 +186,7 @@ There can be slight differences between the query results returned by PLV8 and `
 :::
 
 #### `@Step`
-Registers a function as a [DBOS step](../../../tutorials/programmingmodel/step-tutorial.md).
+Registers a function as a [DBOS step](../../../tutorials/step-tutorial.md).
 
 ```typescript
 @Step()

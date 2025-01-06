@@ -153,7 +153,7 @@ One custom rule from DBOS, `@dbos-inc/dbos-static-analysis`, is provided in the 
 ___
 
 Running a database query with a string that's vulnerable to SQL injection will result in an error.
-This would typically happen inside of a [transaction](../programmingmodel/transaction-tutorial).
+This would typically happen inside of a [transaction](../transaction-tutorial).
 - SQL injection happens when a bad actor puts SQL code as a field into something like an online form,
 and if a programmer builds a raw query from SQL and this data, the bad actor's supposed data may allow them to run
 arbitrary SQL commands over your database.
@@ -191,7 +191,7 @@ These function calls are currently flagged as [nondeterministic](../workflow-tut
 - `Date()`, `new Date()`, `Date.now()`
 - `setTimeout(...)`
 
-*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [step](../programmingmodel/step-tutorial).*
+*All such operations should use functions provided by DBOS Transact, or at a minimum, be encapsulated in a [step](../step-tutorial).*
 
 These function calls are not necessarily nondeterministic, but are still warned about:
 
