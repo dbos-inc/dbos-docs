@@ -9,7 +9,7 @@ All are accessed through the syntax `DBOS.<method>` and can only be used once a 
 
 ## Context Methods
 
-### send
+### send / send_async
 
 ```python
 DBOS.send(
@@ -17,23 +17,36 @@ DBOS.send(
     message: Any,
     topic: Optional[str] = None
 ) -> None
+
+DBOS.send_async(
+    destination_id: str,
+    message: Any,
+    topic: Optional[str] = None
+) -> Coroutine[Any, Any, None]
 ```
 
 Send a message to the workflow identified by `destination_id`.
 Messages can optionally be associated with a topic.
+The `send` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `send_async` should be used instead.
+
 
 **Parameters:**
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 
-### recv
+### recv / recv_async
 
 ```python
 DBOS.recv(
     topic: Optional[str] = None,
     timeout_seconds: float = 60,
 ) -> Any
+
+DBOS.recv_async(
+    topic: Optional[str] = None,
+    timeout_seconds: float = 60,
+) -> Coroutine[Any, Any, Any]
 ```
 
 Receive and return a message sent to this workflow.
@@ -41,6 +54,7 @@ Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
+The `recv` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `recv_async` should be used instead.
 
 **Parameters:**
 - `topic`: A topic queue on which to wait.
@@ -49,36 +63,49 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 **Returns:**
 - The first message enqueued on the input topic, or `None` if the wait times out.
 
-### set_event
+### set_event / set_event_async
 
 ```python
 DBOS.set_event(
     key: str,
     value: Any,
 ) -> None
+
+DBOS.set_event(
+    key: str,
+    value: Any,
+) -> Coroutine[Any, Any, None]
 ```
 
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
 Can only be called from within a workflow.
+The `set_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `set_event_async` should be used instead.
 
 
 **Parameters:**
 - `key`: The key of the event.
 - `value`: The value of the event. Must be serializable.
 
-### get_event
+### get_event / get_event_async
 
 ```python
 DBOS.get_event(
     workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
-) -> None
+) -> Any
+
+DBOS.get_event_async(
+    workflow_id: str,
+    key: str,
+    timeout_seconds: float = 60,
+) -> Coroutine[Any, Any, Any]
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflow_id` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning `None` if the wait times out.
+The `get_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `get_event_async` should be used instead.
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
@@ -89,17 +116,22 @@ If the event does not yet exist, wait for it to be published, returning `None` i
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
 
 
-### sleep
+### sleep / sleep_async
 
 ```python
 DBOS.sleep(
     seconds: float
 ) -> None
+
+DBOS.sleep_async(
+    seconds: float
+) -> Coroutine[Any, Any, None]
 ```
 
 Sleep for the given number of seconds.
 May only be called from within a workflow.
 This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+The `sleep` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `sleep_async` should be used instead.
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
@@ -114,6 +146,7 @@ DBOS.retrieve_workflow(
 ```
 
 Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workflow_id`.
+
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.
