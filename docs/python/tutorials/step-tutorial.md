@@ -46,3 +46,22 @@ For example, we configure this step to retry exceptions (such as if `example.com
 def example_step():
     return requests.get("https://example.com").text
 ```
+
+
+### Coroutine Steps
+
+You can optionally define DBOS steps as [coroutine funcitons](https://docs.python.org/3/glossary.html#term-coroutine-function).
+Coroutine steps may use Python's asynchronous language capabilities such as [await](https://docs.python.org/3/reference/expressions.html#await), [async for](https://docs.python.org/3/reference/compound_stmts.html#async-for) and [async with](https://docs.python.org/3/reference/compound_stmts.html#async-with).
+Coroutine steps are decorated with `@DBOS.step`, require its inputs and outputs should be serializable and suppport [configurable automatic retries](#configurable-retries) like syncronous step functions.  
+
+For example, here is the same `example_step` function from above, but using the [`aiohttp`](https://docs.aiohttp.org/en/stable/) library instead of [`requests`](https://requests.readthedocs.io/en/latest/).
+
+```python
+import aiohttp
+
+@DBOS.step(retries_allowed=True, max_attempts=10)
+async def example_step():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://example.com") as response:
+            return await response.text()
+```
