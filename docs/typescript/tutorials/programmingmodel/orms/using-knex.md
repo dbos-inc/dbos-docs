@@ -66,17 +66,16 @@ npx dbos migrate
 
 ### Using Knex
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../../../reference/transactapi/oldapi/decorators#transaction) decorator and must have a [`TransactionContext<Knex>`](../../../reference/transactapi/oldapi/contexts#transactioncontextt) as their first argument.
-Note that we specify `Knex` in angle brackets.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator.
 
-Within the transaction function, access your [Knex client](https://knexjs.org/guide/query-builder.html) from the `.client` field of your transaction context.
+Within the transaction function, access your [Knex client](https://knexjs.org/guide/query-builder.html) from `DBOS.knexClient`.
 For example, this function inserts a new row into the `greetings` table:
 
 ```javascript
 export class Greetings {
-  @Transaction()
-  static async InsertGreeting(ctxt: TransactionContext<Knex>, friend: string, note: string) {
-    await ctxt.client('greetings').insert({
+  @DBOS.transaction()
+  static async InsertGreeting(friend: string, note: string) {
+    await DBOS.knexClient('greetings').insert({
       name: friend,
       note: note
     });

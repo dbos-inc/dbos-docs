@@ -67,8 +67,7 @@ This automatically generates a new migration (under `prisma/migrations/`) contai
 
 ### Using Prisma
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../../../reference/transactapi/oldapi/decorators#transaction) decorator and must have a [`TransactionContext<PrismaClient>`](../../../reference/transactapi/oldapi/contexts#transactioncontextt) as their first argument.
-Note that we specify `PrismaClient` in angle brackets.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator, and can then access the client with `DBOS.prismaClient`.  Note that as `PrismaClient` is generated for your application, `DBOS.prismaClient` should be cast to `PrismaClient` for tab-completion and type checking.  You can make a helper function to do this.
 
 Within the transaction function, access your Prisma client from the `.client` field of your transaction context.
 For example:
@@ -76,11 +75,13 @@ For example:
 ```javascript
 import { PrismaClient } from "@prisma/client";
 
+function getClient() {return DBOS.prismaClient as PrismaClient;}
+
 export class Hello {
-  @Transaction()
-  static async helloTransaction(txnCtxt: TransactionContext<PrismaClient>, name: string)  {
+  @DBOS.transaction()
+  static async helloTransaction(name: string)  {
     const greeting = `Hello, ${name}!`;
-    const res = await txnCtxt.client.dbosHello.create({
+    const res = await getClient().dbosHello.create({
       data: {
         greeting: greeting,
       },

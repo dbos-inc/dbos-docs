@@ -60,10 +60,10 @@ You can implement your migration in SQL in this file.
 
 ### Using Drizzle
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@Transaction`](../../../reference/transactapi/oldapi/decorators#transaction) decorator and must have a [`TransactionContext<NodePgDatabase>`](../../../reference/transactapi/oldapi/contexts#transactioncontextt) as their first argument.
-Note that we specify `NodePgDatabase` in angle brackets to use Drizzle.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator.
 
-Within the transaction function, access your [Drizzle client](https://orm.drizzle.team/docs/overview) from the `.client` field of your transaction context.
+Within the transaction function, access your [Drizzle client](https://orm.drizzle.team/docs/overview) from `DBOS.sqlClient` or `DBOS.drizzleClient`.  Note that we cast to `NodePgDatabase` in angle brackets to make the best use of type checking and tab completion.
+
 For example, this function inserts a new row into the `greetings` table:
 
 ```javascript
@@ -73,9 +73,9 @@ export const greetings = pgTable('greetings', {
 });
 
 export class DBOSGreetings {
-  @Transaction()
-  static async insertGreeting(ctxt: TransactionContext<NodePgDatabase>, name: string, note: string) {
-    await ctxt.client.insert(greetings).values({name: name, note: note});
+  @DBOS.transaction()
+  static async insertGreeting(name: string, note: string) {
+    await (DBOS.drizzleClient as NodePgDatabase).insert(greetings).values({name: name, note: note});
   }
 }
 ```

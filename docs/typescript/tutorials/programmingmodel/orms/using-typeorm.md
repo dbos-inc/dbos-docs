@@ -82,32 +82,27 @@ In TypeORM (and many other frameworks), the pattern is to run [transactions](htt
 
 DBOS provides a wrapper around TypeORM's transaction functionality so that its workflow state can be kept consistent with the application database.
 
-First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@Transaction`](../../../reference/transactapi/oldapi/decorators.md#transaction), and the first argument will be a [`TransactionContext`](../../../reference/transactapi/oldapi/contexts.md#transactioncontextt) with an `EntityManager` named `client` inside.
+First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction).  `DBOS.typeORMClient` can then be used to access the database using TypeORM.  For the best results with type checking and tab completion, `DBOS.typeORMClient` should be cast to `EntityManager`.
 
 ```javascript
 @OrmEntities([KV])
 class KVOperations {
-  @Transaction()
-  static async writeTxn(txnCtxt: TransactionContext<EntityManager>, id: string, value: string) {
+  @DBOS.transaction()
+  static async writeTxn(id: string, value: string) {
     const kv: KV = new KV();
     kv.id = id;
     kv.value = value;
-    const res = await txnCtxt.client.save(kv);
+    const res = await (DBOS.typeORMClient as EntityManger).save(kv);
     return res.id;
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  @Transaction({ readOnly: true })
-  static async readTxn(txnCtxt: TransactionContext<EntityManager>, id: string) {
-    const kvp = await txnCtxt.client.findOneBy(KV, {id: id});
+  @DBOS.transaction({ readOnly: true })
+  static async readTxn(id: string) {
+    const kvp = await (DBOS.typeORMClient as EntityManger).findOneBy(KV, {id: id});
     return kvp?.value || "<Not Found>";
   }
 }
-```
-
-If preferred, it is possible to define a `type` to clean up the transaction method prototypes a little bit.
-```javascript
-type TypeORMTransactionContext = TransactionContext<EntityManager>;
 ```
 
 ### Configuring TypeORM
