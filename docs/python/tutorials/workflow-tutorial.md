@@ -231,6 +231,13 @@ Coroutine workflows provide the same [reliability guarantees](#reliability-guara
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) with [await expressions](https://docs.python.org/3/reference/expressions.html#await).
 Additionally, coroutine workflows should use the asyncronous versions of the workflow [events](#workflow-events) and [messaging and notifications](#workflow-messaging-and-notifications) APIs with await.
 
+
+:::info
+
+At this time, DBOS does not support coroutine [transactions](./transaction-tutorial.md). 
+
+:::
+
 ```python
 @DBOS.step()
 async def example_step():
