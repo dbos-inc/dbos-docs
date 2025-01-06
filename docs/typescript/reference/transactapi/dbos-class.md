@@ -368,9 +368,11 @@ These functions work in any context, and will use the system sleep if no workflo
 
 #### `DBOS.send`
 ```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>
+DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey ?: string): Promise<void>
 ```
 `DBOS.send()` to send a message to a workflow, identified by `destinationID`.  Messages can optionally be associated with a topic and are queued on the receiver per topic.  `DBOS.send` may be called from other workflows, or anywhere else, to pass information to a corresponding `DBOS.recv` call.
+
+If `DBOS.send()` is being called from outside of a workflow, an `idempotencyKey` can be set for exactly-once behavior.  (From within a workflow, exactly-once behavior is guaranteed automatically.)
 
 For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 

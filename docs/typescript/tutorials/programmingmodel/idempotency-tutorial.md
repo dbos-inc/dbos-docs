@@ -20,7 +20,7 @@ No matter how many times you send that request, as long as each request has the 
 
 :::info
 
-It's not a coincidence that both idempotency keys and [workflow identities](./workflow-tutorial#workflow-identity) are UUIDs.
+It's not a coincidence that [workflow identities](./workflow-tutorial#workflow-identity) can be UUIDs.
 If you run a workflow with an idempotency key UUID, the identity of that execution is set to that UUID.
 
 :::
@@ -28,14 +28,17 @@ If you run a workflow with an idempotency key UUID, the identity of that executi
 ### Manually Setting Idempotency Keys
 
 Idempotency keys are not automatically used for [handlers](../requestsandevents/http-serving-tutorial#handlers).
-Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`context.invoke`](../../reference/transactapi/oldapi/contexts#handlerctxtinvoke).
+Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`startWorkflow`](../../reference/transactapi/dbos-class#starting-background-workflows).
 The syntax for invoking `Class.operation` with an idempotency key is:
 
 ```javascript
-  @GetApi(...)
-  static async exampleHandler(ctxt: HandlerContext, ...) {
+  @DBOS.getApi(...)
+  static async exampleHandler(...) {
     const idempotencyKey = ...;
-    await ctxt.invoke(Class, idempotencyKey).operation(...);
+    await DBOS.startWorkflow(Class, idempotencyKey).operation(...);
+    await DBOS.withNextWorkflowID(wfUUID, async () => {
+      return await Class.operation(...);
+    });
   }
 ```
 
@@ -44,10 +47,10 @@ The syntax for invoking `Class.operation` with an idempotency key is:
 Let's look at this workflow endpoint:
 
 ```javascript
-  @GetApi('/greeting/:user')
-  @Workflow()
-  static async helloWorkflow(ctxt: WorkflowContext, @ArgSource(ArgSources.URL) user: string) {
-    return await ctxt.invoke(Hello).helloTransaction(user);
+  @DBOS.getApi('/greeting/:user')
+  @DBOS.workflow()
+  static async helloWorkflow(@ArgSource(ArgSources.URL) user: string) {
+    return await Hello.helloTransaction(user);
   }
 ```
 

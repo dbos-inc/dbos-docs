@@ -17,13 +17,13 @@ For correct workflow behavior, it is important to use _steps_ for all functions 
 * Functions that generate UUIDs
 * Cryptographic functions that may generate a salt
 
-Steps must be annotated with the [`@Step`](../../reference/transactapi/oldapi/decorators#step) decorator and must have a [`StepContext`](../../reference/transactapi/oldapi/contexts#communicatorcontext) as their first argument.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
+Steps must be annotated with the [`@DBOS.step`](../../reference/transactapi/dbos-class.md#dbosstep) decorator.  As with other DBOS functions, step inputs and outputs must be serializable to JSON.
 
 Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to retrieve the contents of `https://example.com`:
 
 ```javascript
-  @Step()
-  static async exampleStep(ctxt: StepContext) {
+  @DBOS.step()
+  static async exampleStep() {
     return await fetch("https://example.com").then(r => r.text());
   }
 ```
@@ -32,7 +32,7 @@ Here's a simple example using [`fetch()`](https://developer.mozilla.org/en-US/do
 
 DBOS automatically retries any step function that throws an exception.
 It retries step functions a set number of times with exponential backoff, throwing an exception if the maximum number of retries is exceed.
-You can configure the retry policy by passing a `StepConfig` to your [`@Step`](../../reference/transactapi/oldapi/decorators.md#step) decorator:
+You can configure the retry policy by passing a `StepConfig` to your [`@DBOS.step`](../../reference/transactapi/dbos-class#dbosstep) decorator:
 
 ```typescript
 export interface StepConfig {
@@ -46,8 +46,8 @@ export interface StepConfig {
 For example, to set the maximum number of retries to 10:
 
 ```javascript
-  @Step({maxAttempts: 10})
-  static async exampleStep(ctxt: StepContext) {
+  @DBOS.step({maxAttempts: 10})
+  static async exampleStep() {
     return await fetch("https://example.com").then(r => r.text());
   }
 ```

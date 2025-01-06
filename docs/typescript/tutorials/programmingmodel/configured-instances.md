@@ -25,8 +25,8 @@ Configured class instances should be created and named when the application star
 ### Creating
 To create and register a class instance, the `configureInstance` function is used:
 ```typescript
-import { configureInstance } from "@dbos-inc/dbos-sdk";
-const myObj = configureInstance(MyClass, 'myname', args);
+import { DBOS } from "@dbos-inc/dbos-sdk";
+const myObj = DBOS.configureInstance(MyClass, 'myname', args);
 ```
 
 The arguments to `configureInstance` are:
@@ -35,17 +35,17 @@ The arguments to `configureInstance` are:
 * Any additional arguments to pass to the class constructor
 
 ```typescript
-configureInstance(cls: Constructor, name: string, ...args: unknown[]) : R
+DBOS.configureInstance(cls: Constructor, name: string, ...args: unknown[]) : R
 ```
 
 Note that while this will create and register the object instance, initialization via the object's `initialize()` method will not occur until later, after database connections have been established.
 
 ### Invoking
-Methods of configured instances can be invoked from contexts (and the testing runtime) in a manner syntactically similar to static class methods:
+Methods of configured instances can be invoked directly:
 
 ```typescript
-ctx.invoke(MyClass).myStaticFunction(args); // Use on a static function
-ctx.invoke(myObj).myMemberFunction(args); // Use on a configured object instance
+MyClass.myStaticFunction(args); // Use on a static function
+myOb).myMemberFunction(args); // Use on a configured object instance
 ```
 
 ## Writing New Configured Classes
@@ -55,7 +55,7 @@ All configured classes must:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
 * Have an `initialize(ctx: InitContext)` that will be called after all objects have been created, but before request handling commences
-* Have `@Transaction`, `@Step`, and/or `@Workflow` methods to be called on the instances
+* Have `@DBOS.transaction`, `@DBOS.step`, and/or `@DBOS.workflow` methods to be called on the instances
 
 ```typescript
 class MyConfiguredClass extends ConfiguredInstance {
@@ -70,20 +70,20 @@ class MyConfiguredClass extends ConfiguredInstance {
     return Promise.resolve();
   }
 
-  @Transaction()
-  testTransaction(_txnCtxt: TestTransactionContext) {
+  @DBOS.transaction()
+  testTransaction() {
     // Operations that use this.cfg
     return Promise.resolve();
   }
 
-  @Step()
-  testStep(_ctxt: StepContext) {
+  @DBOS.step()
+  testStep() {
     // Operations that use this.cfg
     return Promise.resolve();
   }
 
-  @Workflow()
-  async testWorkflow(ctxt: WorkflowContext, p: string): Promise<void> {
+  @DBOS.workflow()
+  async testWorkflow(p: string): Promise<void> {
     // Operations that use this.cfg
     return Promise.resolve();
   }
@@ -94,6 +94,6 @@ class MyConfiguredClass extends ConfiguredInstance {
 The `initialize(ctx: InitContext)` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  The `InitContext` argument provides configuration file, logging, and database access services, so any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-As `@GetApi`, `@PutApi`, and similar handler registration decorators specify the URL directly, it does not make sense to use these on configured class instances, as there is no way to tell which instance is to handle the request.
+As `@DBOS.getApi`, `@DBOS.putApi`, and similar handler registration decorators specify the URL directly, it does not make sense to use these on configured class instances, as there is no way to tell which instance is to handle the request.
 
 The name of a workflow, and the name of the configuration in use, is kept in the DBOS system database so that interrupted workflows can be resumed.  It is therefore important to keep names consistent across application deployments, unless there is no chance that a pending workflow will need to be recovered.

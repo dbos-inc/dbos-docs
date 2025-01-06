@@ -11,7 +11,7 @@ Workflows are _reliable_: if their execution is interrupted for any reason (e.g.
 You can use workflows to coordinate multiple operations that must all complete for a program to be correct.
 For example, in our [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), we use a workflow for payment processing.
 
-Workflows must be annotated with the [`@Workflow`](../../reference/transactapi/oldapi/decorators#workflow) decorator and must have a [`WorkflowContext`](../../reference/transactapi/oldapi/contexts#workflowcontext) as their first argument.
+Workflows must be annotated with the [`@DBOS.workflow`](../../reference/transactapi/oldapi/decorators#workflow) decorator.
 Like for other functions, inputs and outputs must be serializable to JSON.
 Additionally, workflows must be [deterministic](#determinism).
 
@@ -23,12 +23,12 @@ class Greetings {
 
   // Other function implementations
 
-    @Workflow()
-    @GetApi("/greeting/:friend")
-    static async Greeting(ctxt: HandlerContext, friend: string) {
+    @DBOS.workflow()
+    @DBOS.getApi("/greeting/:friend")
+    static async Greeting(friend: string) {
       const noteContent = `Thank you for being awesome, ${friend}!`;
-      await ctxt.invoke(Greetings).SignGuestbook(friend);
-      await ctxt.invoke(Greetings).InsertGreeting(
+      await Greetings.signGuestbook(friend);
+      await Greetings.insertGreeting(
         { name: friend, note: noteContent }
       );
       return noteContent;
@@ -39,21 +39,20 @@ class Greetings {
 
 ### Invoking Functions from Workflows
 
-Workflows can invoke transactions and steps using their [`ctxt.invoke()`](../../reference/transactapi/oldapi/contexts#workflowctxtinvoke) method.
+Workflows can invoke transactions and steps by calling them.
 For example, this line from our above example invokes the transaction `InsertGreeting`:
 
 ```javascript
-await ctxt.invoke(Greetings).InsertGreeting(friend, noteContent);
+await Greetings.insertGreeting(friend, noteContent);
 ```
 
-The syntax for invoking function `fn(args)` in class `Cls` is `ctxt.invoke(Cls).fn(args)`.
-
-You can also invoke other workflows with the [`ctxt.invokeWorkflow()`](../../reference/transactapi/oldapi/contexts#workflowctxtinvokeworkflow) method.
-The syntax for invoking workflow `wf` in class `Cls` with argument `arg` is:
+You can also call other workflows from a workflow.
 
 ```typescript
-const output = await ctxt.invokeWorkflow(Cls).wf(arg);
+const result = await Cls.workflowFunction(arg);
 ```
+
+When called directly, the behavior is synchronous.  To start a "parallel" workflow in the background and return its handle, see [Asynchronous Workflows](#asynchronous-workflows) below.
 
 ### Reliability Guarantees
 
@@ -67,24 +66,24 @@ These guarantees assume that the application and database may crash and go offli
 For safety, DBOS automatically attempts to recover a workflow a set number of times.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be [retried manually](#workflow-management).
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
-The maximum number of retries is by default 50, but this may be configured through arguments to the [`@Workflow`](../../reference/transactapi/oldapi/decorators.md#workflow) decorator.
+The maximum number of retries is by default 50, but this may be configured through arguments to the [`DBOS.workflow`](../../reference/transactapi/dbos-class#dbosworkflow) decorator.
 
 ### Determinism
 
 A workflow implementation must be deterministic: if called multiple times with the same inputs, it should invoke the same transactions and steps with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial).
-You can safely [invoke](../../reference/transactapi/oldapi/contexts.md#workflowctxtinvoke) these methods from a workflow.
+You can then call these methods from a workflow.
 
 For example, **don't do this**:
 
 ```javascript
 class Example {
-    @Workflow()
-    static async exampleWorkflow(ctxt: WorkflowContext) {
+    @DBOS.workflow()
+    static async exampleWorkflow() {
         // Don't make an HTTP request in a workflow function
         const body = await fetch("https://example.com").then(r => r.text()); 
-        await ctxt.invoke(Example).exampleTransaction(body);
+        await Example.exampleTransaction(body);
     }
 }
 ```
@@ -93,36 +92,36 @@ Do this instead:
 
 ```javascript
 class Example {
-    @Step()
-    static async fetchBody(ctxt: StepContext) {
+    @DBOS.step()
+    static async fetchBody() {
       // Instead, make HTTP requests in steps
       return await fetch("https://example.com").then(r => r.text());
     }
 
-    @Workflow()
-    static async exampleWorkflow(ctxt: WorkflowContext) {
-        const body = await ctxt.invoke(Example).fetchBody();
-        await ctxt.invoke(Example).exampleTransaction(body);
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        const body = await Example.fetchBody();
+        await Example.exampleTransaction(body);
     }
 }
 ```
 
 ### Workflow Identity
 
-Every time you execute a workflow, that execution is assigned a unique identity, represented as a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this UUID through the `context.workflowUUID` field.
+Every time you execute a workflow, that execution is assigned a unique identity, represented as a string such as a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this identifier through the `DBOS.workflowID` field.
 Workflow identities are important for communicating with workflows and developing interactive workflows.
 For more information on workflow communication, see [our guide](./workflow-communication-tutorial.md).
 
 ### Asynchronous Workflows
 
 Because workflows are often long-running, DBOS supports starting workflows asynchronously without waiting for them to complete.
-When you start a workflow from a handler or another workflow with [`handlerCtxt.startWorkflow`](../../reference/transactapi/oldapi/contexts.md#handlerctxtstartworkflow) or [`workflowCtxt.startWorkflow`](../../reference/transactapi/oldapi/contexts.md#workflowctxtstartworkflow), the invocation returns a [workflow handle](../../reference/transactapi/workflow-handles):
+When you start a workflow with [`DBOS.startWorkflow`](../../reference/transactapi/dbos-class#starting-background-workflows), the invocation returns a [workflow handle](../../reference/transactapi/workflow-handles):
 
 ```javascript
-  @GetApi(...)
-  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
-    const handle = await handlerCtxt.startWorkflow(Class).workflow(...);
+  @DBOS.getApi(...)
+  static async exampleHandler(...) {
+    const handle = await DBOS.startWorkflow(Class).workflow(...);
   }
 ```
 
@@ -132,16 +131,16 @@ This behavior is useful if you need to quickly acknowledge receipt of an event t
 You can also retrieve another workflow's handle using its identity:
 
 ```javascript
-  @GetApi(...)
-  static async exampleHandler(ctxt: HandlerContext, workflowIdentity: string, ...) {
-    const handle = await ctxt.retrieveWorkflow(workflowIdentity);
+  @DBOS.getApi(...)
+  static async exampleHandler(workflowIdentity: string, ...) {
+    const handle = await DBOS.retrieveWorkflow(workflowIdentity);
   }
 ```
 
 To wait for a workflow to complete and retrieve its result, await `handle.getResult()`:
 
 ```javascript
-const handle = await ctxt.retrieveWorkflow(workflowIdentity)
+const handle = await DBOS.retrieveWorkflow(workflowIdentity)
 const result = await handle.getResult();
 ```
 
@@ -160,9 +159,9 @@ const example_queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50
 
 // ...
 
-  @GetApi(...)
-  static async exampleHandler(handlerCtxt: HandlerContext, ...) {
-    const handle = await handlerCtxt.startWorkflow(Class, undefined, example_queue).workflow(...);
+  @DBOS.getApi(...)
+  static async exampleHandler(...) {
+    const handle = await DBOS.startWorkflow(Class, {queueNam: example_queue.name}).workflow(...);
   }
 
 ```
