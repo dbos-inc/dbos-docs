@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 40
 title: Idempotency
 description: Learn how to make operations idempotent.
 ---
