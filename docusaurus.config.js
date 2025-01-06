@@ -56,15 +56,15 @@ const config = {
           },
           {
             from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/crosscutting/authentication-authorization',
           },
           {
             from: '/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
             from: '/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
           },
           {
             from: '/getting-started/quickstart-programming',
@@ -77,6 +77,142 @@ const config = {
           {
             from: '/python/reference/task_queues',
             to: '/python/reference/queues',
+          },
+          {
+            from: '/typescript/tutorials/checkout-tutorial',
+            to: '/typescript/examples/checkout-tutorial',
+          },
+          {
+            from: '/typescript/reference/communicatorlib',
+            to: '/typescript/reference/libraries',
+          },
+          {
+            from: '/typescript/reference/cli',
+            to: '/typescript/reference/tools/cli',
+          },
+          {
+            from: '/typescript/reference/dbos-compiler',
+            to: '/typescript/reference/tools/dbos-compiler',
+          },
+          {
+            from: '/typescript/reference/time-travel-debugger',
+            to: '/typescript/reference/tools/time-travel-debugger',
+          },
+          {
+            from: '/typescript/reference/dbos-class',
+            to: '/typescript/reference/transactapi/dbos-class',
+          },
+          {
+            from: '/typescript/reference/contexts',
+            to: '/typescript/reference/transactapi/oldapi/contexts',
+          },
+          {
+            from: '/typescript/reference/decorators',
+            to: '/typescript/reference/transactapi/oldapi/decorators',
+          },
+          {
+            from: '/typescript/reference/testing-runtime',
+            to: '/typescript/reference/transactapi/oldapi/testing-runtime',
+          },
+          {
+            from: '/typescript/reference/workflow-handles',
+            to: '/typescript/reference/transactapi/workflow-handles',
+          },
+          {
+            from: '/typescript/reference/workflow-queues',
+            to: '/typescript/reference/transactapi/workflow-queues',
+          },
+          {
+            from: '/typescript/tutorials/authentication-authorization',
+            to: '/typescript/tutorials/crosscutting/authentication-authorization',
+          },
+          {
+            from: '/typescript/tutorials/logging',
+            to: '/typescript/tutorials/crosscutting/logging',
+          },
+          {
+            from: '/typescript/tutorials/application-structure-explanation',
+            to: '/typescript/tutorials/development/application-structure-explanation',
+          },
+          {
+            from: '/typescript/tutorials/openapi-tutorial',
+            to: '/typescript/tutorials/development/openapi-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/self-hosting',
+            to: '/typescript/tutorials/development/self-hosting',
+          },
+          {
+            from: '/typescript/tutorials/using-libraries',
+            to: '/typescript/tutorials/development/using-libraries',
+          },
+          {
+            from: '/typescript/reference/static-analysis',
+            to: '/typescript/tutorials/development/static-analysis',
+          },
+          {
+            from: '/typescript/tutorials/testing-tutorial',
+            to: '/typescript/tutorials/development/testing-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/step-tutorial',
+            to: '/typescript/tutorials/programmingmodel/step-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/configured-instances',
+            to: '/typescript/tutorials/programmingmodel/configured-instances',
+          },
+          {
+            from: '/typescript/tutorials/http-serving-tutorial',
+            to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/idempotency-tutorial',
+            to: '/typescript/tutorials/programmingmodel/idempotency-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/using-drizzle',
+            to: '/typescript/tutorials/programmingmodel/orms/using-drizzle',
+          },
+          {
+            from: '/typescript/tutorials/using-knex',
+            to: '/typescript/tutorials/programmingmodel/orms/using-knex',
+          },
+          {
+            from: '/typescript/tutorials/using-prisma',
+            to: '/typescript/tutorials/programmingmodel/orms/using-prisma',
+          },
+          {
+            from: '/typescript/tutorials/using-typeorm',
+            to: '/typescript/tutorials/programmingmodel/orms/using-typeorm',
+          },
+          {
+            from: '/typescript/tutorials/stored-proc-tutorial',
+            to: '/typescript/tutorials/programmingmodel/stored-proc-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/transaction-tutorial',
+            to: '/typescript/tutorials/programmingmodel/transaction-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/workflow-communication-tutorial',
+            to: '/typescript/tutorials/programmingmodel/workflow-communication-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/workflow-tutorial',
+            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
+          },
+          {
+            from: '/typescript/tutorials/custom-event-receiver',
+            to: '/typescript/tutorials/requestsandevents/custom-event-receiver',
+          },
+          {
+            from: '/typescript/tutorials/kafka-integration',
+            to: '/typescript/tutorials/requestsandevents/kafka-integration',
+          },
+          {
+            from: '/typescript/tutorials/scheduled-workflows',
+            to: '/typescript/tutorials/requestsandevents/scheduled-workflows',
           },
         ],
       },
