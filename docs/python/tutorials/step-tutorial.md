@@ -57,8 +57,6 @@ Coroutine steps are decorated with `@DBOS.step`, require its inputs and outputs 
 For example, here is the same `example_step` function from above, but using the [`aiohttp`](https://docs.aiohttp.org/en/stable/) library instead of [`requests`](https://requests.readthedocs.io/en/latest/).
 
 ```python
-import aiohttp
-
 @DBOS.step(retries_allowed=True, max_attempts=10)
 async def example_step():
     async with aiohttp.ClientSession() as session:
