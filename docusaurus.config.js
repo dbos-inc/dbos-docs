@@ -172,19 +172,19 @@ const config = {
           },
           {
             from: '/typescript/tutorials/using-drizzle',
-            to: '/typescript/tutorials/programmingmodel/orms/using-drizzle',
+            to: '/typescript/tutorials/orms/using-drizzle',
           },
           {
             from: '/typescript/tutorials/using-knex',
-            to: '/typescript/tutorials/programmingmodel/orms/using-knex',
+            to: '/typescript/tutorials/orms/using-knex',
           },
           {
             from: '/typescript/tutorials/using-prisma',
-            to: '/typescript/tutorials/programmingmodel/orms/using-prisma',
+            to: '/typescript/tutorials/orms/using-prisma',
           },
           {
             from: '/typescript/tutorials/using-typeorm',
-            to: '/typescript/tutorials/programmingmodel/orms/using-typeorm',
+            to: '/typescript/tutorials/orms/using-typeorm',
           },
           {
             from: '/typescript/tutorials/stored-proc-tutorial',

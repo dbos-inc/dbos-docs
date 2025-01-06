@@ -437,28 +437,28 @@ Transactions use `TransactionContext` to interact with the database.
 The application database client is configurable in a project's [configuration file](../../configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
-**[Knex](../../../tutorials/programmingmodel/orms/using-knex.md)**
+**[Knex](../../../tutorials/orms/using-knex.md)**
 
 ```typescript
 import { Knex } from "knex";
 static async exampleTransaction(ctxt: TransactionContext<Knex>, ...)
 ```
 
-**[TypeORM](../../../tutorials/programmingmodel/orms/using-typeorm.md)**
+**[TypeORM](../../../tutorials/orms/using-typeorm.md)**
 
 ```typescript
 import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
-**[Prisma](../../../tutorials/programmingmodel/orms/using-prisma.md)**
+**[Prisma](../../../tutorials/orms/using-prisma.md)**
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
 static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
 ```
 
-**[Drizzle](../../../tutorials/programmingmodel/orms/using-drizzle.md)**
+**[Drizzle](../../../tutorials/orms/using-drizzle.md)**
 
 ```typescript
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';

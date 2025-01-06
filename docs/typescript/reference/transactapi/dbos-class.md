@@ -288,10 +288,10 @@ DBOS.drizzleClient: DrizzleClient
 ```
 
 For more details, see:
-* [Drizzle](../../tutorials/programmingmodel/orms/using-drizzle.md)
-* [Knex](../../tutorials/programmingmodel/orms/using-knex.md)
-* [Prisma](../../tutorials/programmingmodel/orms/using-prisma.md)
-* [TypeORM](../../tutorials/programmingmodel/orms/using-typeorm.md)
+* [Drizzle](../../tutorials/orms/using-drizzle.md)
+* [Knex](../../tutorials/orms/using-knex.md)
+* [Prisma](../../tutorials/orms/using-prisma.md)
+* [TypeORM](../../tutorials/orms/using-typeorm.md)
 
 ### `@DBOS.step`
 `@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/workflow-tutorial.md).
