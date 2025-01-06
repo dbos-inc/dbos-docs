@@ -4,16 +4,16 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-Use _transaction functions_ to read and write from your database. A transaction function may contain multiple queries as well as TypeScript business logic and executes as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction). 
+We recommend performing database operations in _transactions_.
+These are a special type of [step](./step-tutorial.md) that are optimized for database accesses.
+They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
 
-Transaction functions must be annotated with the [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction) decorator.
-As with other DBOS functions, inputs and outputs must be serializable to JSON.
+To make a TypeScript function a transaction, annotate it with the [`DBOS.transaction`](../reference/transactapi/dbos-class.md#dbostransaction) decorator.
+Then, access the database using raw SQL or one of several supported ORMs, including [Knex.js](./orms/using-knex.md), [Drizzle](./orms/using-drizzle.md), [TypeORM](./orms/using-typeorm.md), and [Prisma](./orms/using-prisma.md).
+You can configure which ORM to use in your [`dbos-config.yaml`](../../reference/configuration.md) file.
+Knex is the default.
 
-[`DBOS`](../../reference/transactapi/dbos-class#accesing-sql-database-clients) provides a `DBOS.sqlClient` field you can use to interact with the database, so you don't need to worry about managing connections.
-DBOS supports [Knex.js](./orms/using-knex.md), [Drizzle](./orms/using-drizzle.md), [TypeORM](./orms/using-typeorm.md), and [Prisma](./orms/using-prisma.md) clients as well as raw SQL.
-You can configure which client to use in your [`dbos-config.yaml`](../../reference/configuration.md) file.  Knex is the default.
-
-Here are examples of a write and a read transaction function using each client.
+Here are some examples:
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
@@ -38,8 +38,6 @@ export class Greetings {
 }
 ```
 
-See our [Knex guide](./orms/using-knex.md) for more information.
-
 </TabItem>
 <TabItem value="drizzle" label="Drizzle">
 
@@ -62,8 +60,6 @@ export class Greetings {
   }
 }
 ```
-
-See our [Drizzle guide](./orms/using-drizzle.md) for more information.
 
 </TabItem>
 <TabItem value="typeorm" label="TypeORM">
@@ -98,9 +94,6 @@ export class Greetings {
   }  
 }
 ```
-
-See our [TypeORM guide](./orms/using-typeorm) for more information.
-
 
 </TabItem>
 <TabItem value="prisma" label="Prisma">
@@ -137,9 +130,6 @@ export class Greetings {
 }
 ```
 
-See our [Prisma guide](./orms/using-prisma.md) for more information.
-
-
 </TabItem>
 <TabItem value="raw" label="Raw SQL w/ Knex">
 
@@ -174,18 +164,12 @@ As shown above, we suggest decorating read transactions as `@DBOS.transaction({r
 ## Schema Management
 
 We strongly recommend you manage your database schema using migrations.
-Knex, TypeORM, and Prisma all provide rich support for schema management through migrations.
-Please see their guides for more detail:
+
+Migration commands are configured in your [`dbos-config.yaml`](../reference/configuration.md) file.
+At migration time, DBOS runs all migration commands.
+Please see these guides for details on how to configure migrations with each supported ORM:
 
 - [Knex schema management guide.](./orms/using-knex.md#schema-management)
 - [Drizzle schema management guide.](./orms/using-drizzle.md#schema-management)
 - [TypeORM schema management guide.](./orms/using-typeorm.md#schema-management)
 - [Prisma schema management guide.](./orms/using-prisma.md#schema-management)
-
-If you are not using database transactions, you may wish to disable database migrations.
-In [`dbos-config.yaml`](../../reference/configuration.md), set your `migrate:` section as below:
-
-```yaml
-migrate:
-    - echo 'No migrations'  
-```
