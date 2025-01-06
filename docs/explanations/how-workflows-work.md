@@ -72,22 +72,22 @@ If the payment doesn't go through, it releases the ticket.
 <TabItem value="ts" label="TypeScript">
 
 ```javascript
-  @Workflow()
-  static async checkoutWorkflow(ctxt: WorkflowContext, ticketInfo: TicketInfo, paymentInfo: PaymentInfo) {
+  @DBOS.workflow()
+  static async checkoutWorkflow(ticketInfo: TicketInfo, paymentInfo: PaymentInfo) {
     // Invoke a transaction to reserve the ticket
-    const reserved = await ctxt.invoke(Ticket).reserveTicket(ticketInfo)
+    const reserved = await Ticket.reserveTicket(ticketInfo)
     if (!reserved) {
       // If the ticket can't be reserved, return failure
       return false
     }
     // Invoke a step to pay for the ticket
-    const paymentSuccessful = ctxt.invoke(Ticket).processPayment(paymentInfo)
+    const paymentSuccessful = Ticket.processPayment(paymentInfo)
     if (paymentSuccessful) {
       // If the payment succeeded, return success
       return true
     } else {
       // If the payment didn't go through, invoke a transaction to undo the reservation and return failure
-      await ctxt.invoke(Ticket).undoReserveTicket(ticketInfo)
+      await Ticket.undoReserveTicket(ticketInfo)
       return false
     }
   }

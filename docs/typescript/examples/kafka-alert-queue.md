@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 1
+sidebar_position: 20
 title: Kafka Alert Queue
 ---
 
@@ -32,7 +32,7 @@ export enum AlertStatus {
 }
 ```
 
-In this app we use [Knex](../tutorials/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert_id and the alert table has a nullable employee_name. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
+In this app we use [Knex](../tutorials/programmingmodel/orms/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert_id and the alert table has a nullable employee_name. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
 ```typescript
 exports.up = async function(knex) {
   await knex.schema.createTable('employee', table => {
@@ -66,7 +66,7 @@ env:
 ```
 This passes the value of `KAFKA_BROKER` to the app when running locally and also to DBOS Cloud when deploying the app.
 
-Following the [Kafka Integration](../tutorials/kafka-integration.md) guide, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
+Following the [Kafka Integration](../tutorials/requestsandevents/kafka-integration.md) guide, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
 ```typescript
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -98,9 +98,9 @@ export class AlertCenter {
     const payload = JSON.parse(message.value!.toString()) as {
       alerts: AlertWithMessage[],
     };
-    ctxt.logger.info(`Received alert: ${JSON.stringify(payload)}`); 
+    DBOS.logger.info(`Received alert: ${JSON.stringify(payload)}`); 
     for (const detail of payload.alerts) {
-      await ctxt.invoke(RespondUtilities).addAlert(detail); //insert
+      await RespondUtilities.addAlert(detail); //insert
     }
     return Promise.resolve();
   }
@@ -110,9 +110,9 @@ export class AlertCenter {
 Here's the code for `addAlert` in utilities.ts:
 ```typescript
 //in utilities.ts/RespondUtilities
-@Transaction()
-static async addAlert(ctx: KnexTransactionContext, message: AlertWithMessage) {
-  await ctx.client<AlertEmployee>('alert_employee').insert({
+@DBOS.transaction()
+static async addAlert(message: AlertWithMessage) {
+  await DBOS.knexClient<AlertEmployee>('alert_employee').insert({
     alert_id: message.alert_id,
     alert_status: message.alert_status,
     message: message.message,
@@ -127,7 +127,7 @@ This workflow is guaranteed to handle every Kafka message exactly once, even if 
 To send messages, we create a KafkaProducerCommunicator object like so:
 ```typescript
 //A configured instance used to produce messages (operations.ts)
-const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, respondTopic, {
+const producerConfig: KafkaProduceCommunicator =  DBOS.configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, respondTopic, {
   createPartitioner: Partitioners.DefaultPartitioner
 });
 ```
@@ -135,11 +135,11 @@ const producerConfig: KafkaProduceCommunicator =  configureInstance(KafkaProduce
 We then create PostAPI route that accepts a message string and uses `producerConfig` to produce a new message:
 ```typescript
 //Produce a new alert message to our broker (in operations.ts/AlertCenter)
-@PostApi('/do_send')
-@Workflow()
-static async sendAlert(ctxt: WorkflowContext, message: string) {
-  const max_id = await ctxt.invoke(RespondUtilities).getMaxId(); //select max(alert_id) from alerts; -1 if empty
-  await ctxt.invoke(producerConfig).sendMessage(   
+@DBOS.postApi('/do_send')
+@DBOS.workflow()
+static async sendAlert(message: string) {
+  const max_id = await RespondUtilities.getMaxId(); //select max(alert_id) from alerts; -1 if empty
+  await producerConfig.sendMessage(   
   {
     value: JSON.stringify({
       alerts: [
@@ -186,28 +186,28 @@ const timeToRespondToAlert = 30; //default alert time window, in seconds
 Then we add the following `getUserAssignment` transaction:
 ```typescript
 //in utilities.ts/RespondUtilities
-@Transaction()
-static async getUserAssignment(ctx: KnexTransactionContext, employee_name: string, currentTime: number) {
-  let employees = await ctx.client<Employee>('employee').where({employee_name}).select();
+@DBOS.transaction()
+static async getUserAssignment(employee_name: string, currentTime: number) {
+  let employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
   let newAssignment = false;
   if (employees.length === 0) { 
     //First time on duty? Add to the employees table
-    employees = await ctx.client<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
+    employees = await DBOS.knexClient<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
   }
 
   const expirationTime = new Date(currentTime + timeToRespondToAlert * 1000);
 
   if (!employees[0].alert_id) { 
     //This employee does not have a current assignment. Let's find a new one!
-    const op = await ctx.client<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
+    const op = await DBOS.knexClient<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
     
     if (op) { //found an alert that needs work - set expiration time and assign it!
       op.employee_name = employee_name;
       const alert_id = op.alert_id;
       employees[0].alert_id = op.alert_id;
       employees[0].expiration = expirationTime;
-      await ctx.client<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
-      await ctx.client<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
+      await DBOS.knexClient<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
+      await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
       newAssignment = true;
     }
   }
@@ -215,7 +215,7 @@ static async getUserAssignment(ctx: KnexTransactionContext, employee_name: strin
   //If we have an assignment (new or existing) - return it
   let alert : AlertEmployee[] = [];
   if (employees[0].alert_id) {
-    alert = await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
+    alert = await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
   } 
   return {employee: employees[0], newAssignment, alert};
 }
@@ -229,9 +229,9 @@ We define another transaction to check whether an existing assignment has run ou
 
 ```typescript
 //in utilities.ts/RespondUtilities
-@Transaction()
-static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_name: string, currentDate: Date) : Promise<Date | null> {
-  const employees = await ctx.client<Employee>('employee').where({employee_name}).select();
+@DBOS.transaction()
+static async checkForExpiredAssignment(employee_name: string, currentDate: Date) : Promise<Date | null> {
+  const employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
 
   if (!employees[0].alert_id) {
     // This employee is not assigned
@@ -244,18 +244,18 @@ static async checkForExpiredAssignment(ctx: KnexTransactionContext, employee_nam
   }
 
   //This assigment expired - free up the alert for other employees to take
-  await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({employee_name: null});
-  await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
+  await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({employee_name: null});
+  await DBOS.knexClient<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
   return null;
 }
 ```
 
 ## 6. The Workflow to Assign and Release
 
-We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time. It does the following
-1. use the [CurrentTimeStep](../reference/communicatorlib.md#currenttimestep) to durably retrieve the workflow start time
+We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time.  It does the following:
+1. use [DBOSDateTime](../reference/libraries.md#currenttimestep) to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
-3. use [setEvent](../tutorials/workflow-communication-tutorial#setevent) to return the assignment status to the caller
+3. use [DBOS.setEvent](../tutorials/programmingmodel/workflow-communication-tutorial#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to release this assignment when time is up.
 
 In other words, if this is a new assignment, then the workflow runs longer, until the assignment is over. Else, it simply checks the status and returns quickly. We can do this with DBOS because workflows are guaranteed to continue executing to completion. 
@@ -263,26 +263,26 @@ In other words, if this is a new assignment, then the workflow runs longer, unti
 The code looks like so:
 ```typescript
 //in operations.ts/AlertCenter
-@Workflow()
-static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOptional more_time: boolean | undefined) {
-  let ctime = await ctxt.invoke(CurrentTimeStep).getCurrentTime();
+@DBOS.workflow()
+static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
+  let ctime = await DBOSDateTime.getCurrentTime();
 
   //Get new assignment, extend time or simply return current assignment
-  const userRec = await ctxt.invoke(RespondUtilities).getUserAssignment(name, ctime, more_time);
+  const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
   
   //Get the expiration time (if there is a current assignment); pass it to the caller
   const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
-  await ctxt.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
+  await DBOS.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
 
   if (userRec.newAssignment) {
     //Start a loop that checks for expiration
     let expirationMS = userRec.employee.expiration.getTime();
 
     while (expirationMS > ctime) {
-      await ctxt.sleepms(expirationMS - ctime); //durable sleep
-      const curDate = await ctxt.invoke(CurrentTimeStep).getCurrentDate();
+      await DBOS.sleepms(expirationMS - ctime); //durable sleep
+      const curDate = await DBOSDateTime.getCurrentDate();
       ctime = curDate.getTime();
-      const nextTime = await ctxt.invoke(RespondUtilities).checkForExpiredAssignment(name, curDate);
+      const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
       if (!nextTime) {
         //This assignment has been released and we can stop monitoring it
         break;
@@ -298,16 +298,16 @@ static async userAssignmentWorkflow(ctxt: WorkflowContext, name: string, @ArgOpt
 An employee may also release an assignment by fixing the alert! We add a transaction to do this like so:
 ```typescript
 //in utilities.ts/RespondUtilities
-@Transaction()
-static async employeeCompleteAssignment(ctx: KnexTransactionContext, employee_name: string) {
-  const employees = await ctx.client<Employee>('employee').where({employee_name}).select();
+@DBOS.transaction()
+static async employeeCompleteAssignment(employee_name: string) {
+  const employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
   
   if (!employees[0].alert_id) {
     throw new Error(`Employee ${employee_name} completed an assignment that did not exist`);
   }
 
-  await ctx.client<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({alert_status: AlertStatus.RESOLVED});
-  await ctx.client<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
+  await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).update({alert_status: AlertStatus.RESOLVED});
+  await DBOS.knexClient<Employee>('employee').where({employee_name}).update({alert_id: null, expiration: null});
 }
 ```
 We write a very analogous `employeeAbandonAssignment` for when an employee logs out [here](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/utilities.ts#L132). It mainly differs in not setting alert status to `RESOLVED`.
@@ -317,25 +317,25 @@ We write a very analogous `employeeAbandonAssignment` for when an employee logs 
 Finally we define routes for these actions in `frontend.ts` that our UI invokes. Like so:
 ```typescript
 //Serve public/app.html as the main endpoint
-@GetApi('/')
-  static frontend(_ctxt: HandlerContext) {
+@DBOS.getApi('/')
+  static frontend() {
   return render("app.html", {});
 }
 
 //For a new employee to get / check their assignment or ask for more time
-@GetApi('/assignment')
-static async getAssignment(ctxt: HandlerContext, name: string, @ArgOptional more_time: boolean | undefined) {
-  const userRecWF = await ctxt.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
+@DBOS.getApi('/assignment')
+static async getAssignment(name: string, @ArgOptional more_time: boolean | undefined) {
+  const userRecWF = await DBOS.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
 
   //This Workflow Event lets us know if we have an assignment and, if so, how much time is left
-  const userRec = await ctxt.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
+  const userRec = await DBOS.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
   return userRec;
 }
 
 //An employee request to mark the current assignment as completed
-@PostApi('/respond/fixed') 
-static async fixAlert(ctxt: HandlerContext, name: string) {
-  await ctxt.invoke(RespondUtilities).employeeCompleteAssignment(name);
+@DBOS.postApi('/respond/fixed') 
+static async fixAlert(name: string) {
+  await RespondUtilities.employeeCompleteAssignment(name);
 }
 
 //And so on for respond/cancel, respond/more_time, etc...

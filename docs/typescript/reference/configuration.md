@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 20
 title: Configuration
 description: DBOS configuration reference
 ---
@@ -42,11 +42,11 @@ Every field is required unless otherwise specified.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
 - **app_db_name**: (optional): Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
 - **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../reference/contexts#transactioncontextt).
+- **app_db_client** (optional): Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../reference/transactapi/oldapi/contexts#transactioncontextt).
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a TypeScript-based migration tool like [Knex](../tutorials/using-knex.md#schema-management), [Drizzle](../tutorials/using-drizzle.md#schema-management), [TypeORM](../tutorials/using-typeorm.md#schema-management), or [Prisma](../tutorials/using-prisma.md#schema-management).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a TypeScript-based migration tool like [Knex](../tutorials/programmingmodel/orms/using-knex.md#schema-management), [Drizzle](../tutorials/programmingmodel/orms/using-drizzle.md#schema-management), [TypeORM](../tutorials/programmingmodel//orms/using-typeorm.md#schema-management), or [Prisma](../tutorials/programmingmodel/orms/using-prisma.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:
@@ -73,7 +73,7 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 
 This section is used to specify DBOS runtime parameters.
 
-- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./cli#npx-dbos-start) overrides this config parameter.
+- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./tools/cli#npx-dbos-start) overrides this config parameter.
 - **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
 - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../cloud-tutorials/application-management.md#customizing-microvm-setup)
 
@@ -110,7 +110,7 @@ http:
 ### Application
 
 Applications can optionally use the application configuration to define custom properties as key-value pairs.
-These properties can be retrieved from any [context](./contexts) via the [`getConfig`](../reference/contexts#ctxtgetconfig) method.
+These properties can be retrieved from any [context](./transactapi/oldapi/contexts) via the [`getConfig`](./transactapi/oldapi/contexts#ctxtgetconfig) method.
 
 **Example**:
 ```yaml
@@ -139,7 +139,7 @@ You can use the configuration file to tune the behavior of DBOS logging facility
 Note all options in this section are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
-- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx dbos start -l <logLevel>`](./cli#npx-dbos-start) overrides this config parameter.
+- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'info'`. Using [`npx dbos start -l <logLevel>`](./tools/cli#npx-dbos-start) overrides this config parameter.
 - **addContextMetadata**: Enables the addition of contextual information, such as workflow identity UUID, to each log entry. Defaults to `true`.
 - **silent**: Silences the logger. Defaults to `false`.
 
