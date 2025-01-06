@@ -15,23 +15,17 @@ DBOS comes with several libraries for common purposes.
 
 To use a package from the library, first install it with `npm`:
 ```
-npm install --save @dbos-inc/communicator-datetime
+npm install --save @dbos-inc/dbos-datetime
 ```
 
 Import the functions and/or classes into your TypeScript code:
 ```typescript
-import { CurrentTimeStep } from '@dbos-inc/communicator-datetime';
+import { DBOSDateTime } from '@dbos-inc/dbos-datetime';
 ```
 
-Invoke the step from a `WorkflowContext`:
+Invoke the step:
 ```typescript
-const curDate = await wfCtx.invoke(CurrentTimeStep).getCurrentDate();
-```
-
-When using the DBOS testing runtime, if you are explicitly providing the list of classes to register, it will be necessary to register any library classes also:
-```typescript
-  testRuntime = await createTestingRuntime(); // No explicit registration, classes referenced by test will be registered
-  testRuntime = await createTestingRuntime([Operations, CurrentTimeStep], "dbos-config.yaml"); // Specify everything
+const curDate = await DBOSDateTime.getCurrentDate();
 ```
 
 ---
@@ -39,7 +33,7 @@ When using the DBOS testing runtime, if you are explicitly providing the list of
 ## `BcryptStep`
 The functions in the [`bcryptjs`](https://www.npmjs.com/package/bcryptjs) package are non-deterministic because the salt is generated randomly.  To ensure consistent workflow behavior, bcrypt should therefore be run in a step so that the output can be recorded.
 
-This step is provided in the `@dbos-inc/communicator-bcrypt` package.
+The following steps are provided in the `@dbos-inc/dbos-bcrypt` package, in the `BcryptStep` class.
 
 ### `bcryptGenSalt(saltRounds?:number)`
 `bcryptGenSalt` produces a random salt.  Optional parameter is the number of rounds.
@@ -47,10 +41,10 @@ This step is provided in the `@dbos-inc/communicator-bcrypt` package.
 ### `bcryptHash(txt: string, saltRounds?:number)`
 `bcryptHash` generates a random salt and uses it to create a hash of `txt`.
 
-## `CurrentTimeStep`
+## `DBOSDateTime`
 For workflows to make consistent decisions based on time, reading the current time should be done via a step so that the value can be recorded and is available for workflow restart or replay.
 
-This step is provided in the `@dbos-inc/communicator-datetime` package.
+This step is provided in the `@dbos-inc/dbos-datetime` package, in the `DBOSDateTime` class.
 
 ### `getCurrentDate()`
 
@@ -59,10 +53,10 @@ This function returns a `Date` object representing the current clock time.
 ### `getCurrentTime()`
 This function returns a `number` of milliseconds since January 1, 1970, UTC, in the same manner as `new Date().getTime()`.
 
-## `RandomStep`
+## `DBOSRandom`
 For consistent workflow execution, the results of anything random should be recorded by running the logic in a step.
 
-This step is provided in the `@dbos-inc/communicator-random` package.
+This step is provided in the `@dbos-inc/dbos-random` package in the `DBOSRandom` class.
 
 ### `random()`
 `random` is a wrapper for `Math.random()` and similarly produces a `number` in the range from 0 to 1.
@@ -116,18 +110,18 @@ application:
 The application code will then have to specify which configuration to use when initializing the step:
 ```typescript
     // Initialize once per config used...
-    const sesDef = configureInstance(SendEmailStep, 'default'});
-    const userSES = configureInstance(SendEmailStep, 'userSES', {awscfgname: 'aws_config_ses_user'});
-    const adminSES = configureInstance(SendEmailStep, 'adminSES', {awscfgname: 'aws_config_ses_admin'});
+    const sesDef = configureInstance(DBOS_SES, 'default'});
+    const userSES = configureInstance(DBOS_SES, 'userSES', {awscfgname: 'aws_config_ses_user'});
+    const adminSES = configureInstance(DBOS_SES, 'adminSES', {awscfgname: 'aws_config_ses_admin'});
     // Use configured object ...
-    const msgid = await worflowCtx.invoke(userSES).sendTemplatedEmail(
+    const msgid = await userSES.sendTemplatedEmail(
         mailMsg,
     );
 ```
 
 ### Simple Email Service (SES)
 
-DBOS provides a step for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/communicator-email-ses](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/communicator-email-ses) package.
+DBOS provides a step for sending email using AWS SES.  This library is for sending email, with or without a template.  For details of the functionality, see the documentation accompanying the [@dbos-inc/dbos-email-ses](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/communicator-email-ses) package.
 
 ## Simple Storage Service (S3)
 
