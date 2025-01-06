@@ -4,67 +4,28 @@ title: Idempotency
 description: Learn how to make operations idempotent.
 ---
 
-In this guide, you'll learn how to make operations idempotent.
-
-DBOS allows users to send any request with an _idempotency key_ to guarantee it only executes once, even if the request is sent multiple times.
+You can set an idempotency key for a workflow to guarantee it executes only once, even if called multiple times with that key.
 This is especially useful if your operations have side effects like making a payment or sending an email.
 
-### Setting Idempotency Keys
+An idempotency key can be any string, but we recommend using [UUIDs](https://docs.python.org/3/library/uuid.html).
+Idempotency keys are required to be **globally unique** for your application.
 
-DBOS idempotency keys are [UUIDs](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-Idempotency keys are required to be globally unique for your application.
-There are many popular libraries for generating UUIDs in TypeScript, such as [uuid.js](https://www.npmjs.com/package/uuid).
-
-To make a request idempotent, generate a UUID and set the request's `dbos-idempotency-key` header field to that UUID.
-No matter how many times you send that request, as long as each request has the idempotency key set, the operation will only execute once (if the request is for a [step](./step-tutorial.md), it may be retried multiple times, but will not re-execute after successfully completing).
-
-:::info
-
-It's not a coincidence that [workflow identities](./workflow-tutorial#workflow-identity) can be UUIDs.
-If you run a workflow with an idempotency key UUID, the identity of that execution is set to that UUID.
-
-:::
-
-### Manually Setting Idempotency Keys
-
-Idempotency keys are not automatically used for [handlers](../requestsandevents/http-serving-tutorial#handlers).
-Instead, if you invoke an operation from a handler, you can manually pass in an idempotency key as an argument to [`startWorkflow`](../../reference/transactapi/dbos-class#starting-background-workflows).
-The syntax for invoking `Class.operation` with an idempotency key is:
+Use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to set an idempotency key for a workflow.
+This will also set the [workflow ID](./workflow-tutorial.md#workflow-ids) of that operation.
+For example:
 
 ```javascript
-  @DBOS.getApi(...)
-  static async exampleHandler(...) {
-    const idempotencyKey = ...;
-    await DBOS.startWorkflow(Class, idempotencyKey).operation(...);
-    await DBOS.withNextWorkflowID(wfUUID, async () => {
-      return await Class.operation(...);
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: str, var2: str) {
+        return var1 + var2;
+    }
+}
+
+async function main() {
+    // This sets the ID of the workflow to the supplied key
+    await DBOS.withNextWorkflowID("very-unique-id", async () => {
+      return await Example.exampleWorkflow("one", "two");
     });
-  }
-```
-
-### Idempotency Example
-
-Let's look at this workflow endpoint:
-
-```javascript
-  @DBOS.getApi('/greeting/:user')
-  @DBOS.workflow()
-  static async helloWorkflow(@ArgSource(ArgSources.URL) user: string) {
-    return await Hello.helloTransaction(user);
-  }
-```
-
-Each request to this endpoint has the side effect of incrementing a database counter.
-However, if we set the idempotency key, we can resend a request multiple times without side effects:
-
-If we `curl` this endpoint normally multiple times, each request increments the counter:
-
-```bash
-curl http://localhost:3000/greeting/dbos
-```
-
-However, if we set the idempotency key in the header and resend the request many times, each request returns the same response and the workflow only executes once:
-
-```bash
-curl -H "dbos-idempotency-key: 123e4567-e89b-12d3-a456-426614174000" http://localhost:3000/greeting/dbos
+}
 ```
