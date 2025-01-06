@@ -294,7 +294,7 @@ For more details, see:
 * [TypeORM](../../tutorials/programmingmodel/orms/using-typeorm.md)
 
 ### `@DBOS.step`
-`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/programmingmodel/workflow-tutorial.md).
+`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/workflow-tutorial.md).
 The result of each invocation of a function decorated with `@DBOS.step` is stored in the DBOS system database.  This checkpoint of the execution state allows function calls to be skipped during workflow replay, if the step is known to have completed previously.
 
 ```typescript
@@ -364,7 +364,7 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ### Sending And Receiving Messages
 
-`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
+`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
 
 #### `DBOS.send`
 ```typescript
@@ -389,7 +389,7 @@ For more information, see our [messages API tutorial](../../tutorials/programmin
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `DBOS.send()` completes successfully, the destination workflow is guaranteed to be able to `DBOS.recv()` it.  `DBOS.recv()` consumes the message, but also advances the receiving workflow, so messages are received exactly once.
-If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../../tutorials/programmingmodel/workflow-tutorial#reliability-guarantees).
+If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../../tutorials/workflow-tutorial#reliability-guarantees).
 If you're sending a message from outside of a workflow, you can run `DBOS.send` with an [idempotency key](#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ### Setting and Getting Events

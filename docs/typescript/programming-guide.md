@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Learn DBOS TypeScript
-pagination_next: typescript/tutorials/programmingmodel/workflow-tutorial
+pagination_next: typescript/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
@@ -125,7 +125,7 @@ To fix this problem, we'll use DBOS durable execution.
 ## 2. Durable Execution with Workflows
 
 Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
-DBOS makes this easy with [workflows](./tutorials/programmingmodel/workflow-tutorial.md).
+DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
 We can add durable execution to our app with **just four lines of code** and an import statement.
 Copy the following code into your `src/main.ts`, replacing its existing contents:
 
@@ -204,7 +204,7 @@ main().catch(console.log);
 Only the **four highlighted lines of code** are needed to enable durable execution.
 
 - First, we annotate `sign_guestbook` and `insert_greeting` as _workflow steps_ on lines 9 and 25.
-- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/programmingmodel/workflow-tutorial.md) on line 31.
+- Then, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 31.
 - Finally, we launch DBOS on line 53.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.

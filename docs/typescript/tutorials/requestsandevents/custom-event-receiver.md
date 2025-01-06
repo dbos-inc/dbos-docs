@@ -55,7 +55,7 @@ The primary purpose of the interface is to manage the event receiver lifecycle.
 The [`DBOSExecutorContext`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontext) interface provides the services event receivers need to invoke workflows, transactions, and other step functions.  During `initialize`, the event receiver is provided with an instance implementing `DBOSExecutorContext` as the `executor` parameter, and can store this reference in its `executor` field.
 
 The following functions on `executor` can then be used to invoke DBOS Transact functions:
-*[`workflow`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../programmingmodel/workflow-tutorial.md)
+*[`workflow`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
 *[`transaction`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../programmingmodel/transaction-tutorial.md)
 *[`external`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../programmingmodel/step-tutorial.md)
 

@@ -135,7 +135,7 @@ If the `queue` argument is provided, the workflow may not start immediately.  St
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 ```
 
-Returns a [workflow handle](../workflow-handles.md) for workflow [_workflowID_](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).
+Returns a [workflow handle](../workflow-handles.md) for workflow [_workflowID_](../../../tutorials/workflow-tutorial#workflow-identity).
 `R` is the return type of the target workflow.
 
 ### runtime.getWorkflows(query)

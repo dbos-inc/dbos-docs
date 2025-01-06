@@ -185,7 +185,7 @@ export class Greetings {
 
 ___
 
-These function calls are currently flagged as [nondeterministic](../programmingmodel/workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
+These function calls are currently flagged as [nondeterministic](../workflow-tutorial#determinism) (they may interfere with consistent workflow results or the debugger):
 
 - `Math.random()`
 - `Date()`, `new Date()`, `Date.now()`

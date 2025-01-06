@@ -67,7 +67,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-The current workflow's [identity UUID](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
+The current workflow's [identity UUID](../../../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
 In a transaction or step, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
@@ -198,7 +198,7 @@ startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue): InvokeF
 Start or enqueue a workflow and return a [handle](../workflow-handles.md) to it.
 This does not wait for the workflow to complete, though the resulting handle can be used to wait for the workflow result.
 To start a workflow and wait for the result, see [`invokeWorkflow`](#handlerctxtinvokeworkflow).
-The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/programmingmodel/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
+The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/workflow-tutorial.md#reliability-guarantees) even if the handler is interrupted.
 
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
@@ -218,7 +218,7 @@ You don't supply a context to the newly started workflow&#8212;the DBOS Transact
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `handlerCtxt.send`
@@ -332,7 +332,7 @@ startWorkflow<T>(target: T, workflowID?: string, queue?: WorkflowQueue).workflow
 ```
 
 Start a child workflow and return a [handle](../workflow-handles.md) to it but do not wait for the workflow to complete.
-This method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/programmingmodel/workflow-tutorial.md#reliability-guarantees).
+This method resolves after the handle is durably created; at this point the workflow is guaranteed to [run to completion](../../../tutorials/workflow-tutorial.md#reliability-guarantees).
 The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 
 ```typescript
@@ -402,7 +402,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) _workflowID_.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) _workflowID_.
 `R` is the return type of the target workflow.
 
 #### `WorkflowContext.sleep`
@@ -790,7 +790,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`

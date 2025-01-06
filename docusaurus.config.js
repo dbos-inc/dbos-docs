@@ -64,7 +64,7 @@ const config = {
           },
           {
             from: '/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
           },
           {
             from: '/getting-started/quickstart-programming',
@@ -197,10 +197,6 @@ const config = {
           {
             from: '/typescript/tutorials/workflow-communication-tutorial',
             to: '/typescript/tutorials/programmingmodel/workflow-communication-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
           },
           {
             from: '/typescript/tutorials/custom-event-receiver',
