@@ -156,7 +156,7 @@ const config = {
           },
           {
             from: '/typescript/tutorials/configured-instances',
-            to: '/typescript/tutorials/development/configured-instances',
+            to: '/typescript/tutorials/instantiated-objects',
           },
           {
             from: '/typescript/tutorials/http-serving-tutorial',
