@@ -68,7 +68,7 @@ const handle = const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).
 ```
 
 ### Awaiting payment information
-After invoking the checkout workflow, the handler uses the DBOS [events API](../tutorials/programmingmodel/workflow-communication-tutorial#events-api) to await a notification from the checkout workflow that the payment session is ready.
+After invoking the checkout workflow, the handler uses the DBOS [events API](../tutorials/workflow-tutorial.md#workflow-events) to await a notification from the checkout workflow that the payment session is ready.
 We will see in the next section how the checkout workflow notifies the handler.
 Upon receiving the payment session ID, it generates a link to submit payment and returns it to the customer.
 
@@ -122,7 +122,7 @@ static async checkoutWorkflow(): Promise<void> {
 
 ### Reserving inventory
 Before purchasing an item, the checkout workflow reserves inventory for the order using the `reserveInventory` transaction.
-If this fails (likely because the item is out of stock), the workflow notifies its handler of the failure using the [events API](../tutorials/programmingmodel/workflow-communication-tutorial#events-api) and returns.
+If this fails (likely because the item is out of stock), the workflow notifies its handler of the failure using the [events API](../tutorials/workflow-tutorial.md#workflow-events) and returns.
 
 ```javascript
 // Attempt to update the inventory. Signal the handler if it fails.
@@ -152,7 +152,7 @@ if (!paymentSession.url) {
 ### Notifying the handler
 
 After initiating a payment ession, the workflow notifies its handler that the payment session is ready.
-We use [setEvent](../tutorials/programmingmodel/workflow-communication-tutorial#setevent) to publish the payment session ID to the workflow's `session_topic`, on which the handler is awaiting a notification.
+We use `DBOS.setEvent` to publish the payment session ID to the workflow's `session_topic`, on which the handler is awaiting a notification.
 ```javascript
 // Notify the handler of the payment session ID.
 await DBOS.setEvent(session_topic, paymentSession.session_id);
@@ -160,8 +160,8 @@ await DBOS.setEvent(session_topic, paymentSession.session_id);
 
 ### Waiting for a payment
 After notifying its handler, the checkout workflow waits for the payment service to notify it whether the customer has paid.
-We await this notification using the [`recv`](../tutorials/programmingmodel/workflow-communication-tutorial#recv) method from the DBOS [messages API](../tutorials/workflow-communication-tutorial).
-When the customer pays, the payment service sends a callback HTTP request to a separate callback handler (omitted for brevity, source code in `src/utilities.ts`), which notifies the checkout workflow via [`send`](../tutorials/workflow-communication-tutorial#send).
+We await this notification using the `DBOS.recv` method from the DBOS [messages API](../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
+When the customer pays, the payment service sends a callback HTTP request to a separate callback handler (omitted for brevity, source code in `src/utilities.ts`), which notifies the checkout workflow via [`DBOS.send`].
 
 ```javascript
 // Await a notification from the payment service.

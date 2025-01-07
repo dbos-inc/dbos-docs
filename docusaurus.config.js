@@ -155,20 +155,12 @@ const config = {
             to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
-            from: '/typescript/tutorials/step-tutorial',
-            to: '/typescript/tutorials/step-tutorial',
-          },
-          {
             from: '/typescript/tutorials/configured-instances',
             to: '/typescript/tutorials/development/configured-instances',
           },
           {
             from: '/typescript/tutorials/http-serving-tutorial',
             to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/idempotency-tutorial',
-            to: '/typescript/tutorials/idempotency-tutorial',
           },
           {
             from: '/typescript/tutorials/using-drizzle',
@@ -187,16 +179,8 @@ const config = {
             to: '/typescript/tutorials/orms/using-typeorm',
           },
           {
-            from: '/typescript/tutorials/stored-proc-tutorial',
-            to: '/typescript/tutorials/stored-proc-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/transaction-tutorial',
-            to: '/typescript/tutorials/transaction-tutorial',
-          },
-          {
             from: '/typescript/tutorials/workflow-communication-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-communication-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
           },
           {
             from: '/typescript/tutorials/custom-event-receiver',

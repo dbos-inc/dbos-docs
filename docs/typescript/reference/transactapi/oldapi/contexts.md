@@ -230,7 +230,6 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 Sends a message to workflow `destinationUUID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 #### `handlerCtxt.getEvent`
 
@@ -238,7 +237,7 @@ For more information, see our [messages API tutorial](../../../tutorials/program
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/workflow-tutorial.md#workflow-events).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to publish the key, returning `null` if the wait times out.
 
 ---
@@ -362,7 +361,7 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 
 Sends a message to `destinationUUID`.
 Messages can optionally be associated with a topic.
-For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see the [messages API tutorial](../../../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
 
 #### `workflowCtxt.recv`
 
@@ -374,7 +373,7 @@ Receive messages sent to the workflow, optionally for a particular topic.
 Messages are dequeued first-in, first-out, from a queue associated with the topic.
 Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see the [messages API tutorial](../../../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
 
 #### `workflowCtxt.setEvent`
 
@@ -385,7 +384,7 @@ setEvent<T extends NonNullable<any>>(key: string, value: T): Promise<void>
 Creates or updates an event named `key` with value `value`.
 Workflows and HTTP handlers can read events by calling [`getEvent`](#handlerctxtgetevent) with the workflow's UUID.
 Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
-For more information, see our [events API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+For more information, see the [events API tutorial](../../../tutorials/workflow-tutorial.md#workflow-events).
 
 #### `workflowCtxt.getEvent`
 
@@ -393,7 +392,7 @@ For more information, see our [events API tutorial](../../../tutorials/programmi
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/workflow-tutorial.md#workflow-events).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `workflowCtxt.retrieveWorkflow`
@@ -775,14 +774,14 @@ send<T extends NonNullable<any>>(destinationID: string, message: T, topic?: stri
 Sends a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see the [messages API tutorial](../../../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
 
 #### `DBOSExecutorContext.getEvent`
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/workflow-tutorial.md#workflow-events).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `DBOSExecutorContext.retrieveWorkflow`

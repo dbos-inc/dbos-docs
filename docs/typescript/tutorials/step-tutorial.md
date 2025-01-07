@@ -31,7 +31,7 @@ Therefore, making a function a step guarantees that a workflow will never re-exe
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
-Retries are configurable through arguments to the [step decorator](../reference/decorators.md#step):
+Retries are configurable through arguments to the [step decorator](../reference/transactapi/dbos-class.md#dbosstep):
 
 ```typescript
 export interface StepConfig {

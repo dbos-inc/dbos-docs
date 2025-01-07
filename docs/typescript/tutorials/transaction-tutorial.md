@@ -10,7 +10,7 @@ They execute as a single [database transaction](https://en.wikipedia.org/wiki/Da
 
 To make a TypeScript function a transaction, annotate it with the [`DBOS.transaction`](../reference/transactapi/dbos-class.md#dbostransaction) decorator.
 Then, access the database using raw SQL or one of several supported ORMs, including [Knex.js](./orms/using-knex.md), [Drizzle](./orms/using-drizzle.md), [TypeORM](./orms/using-typeorm.md), and [Prisma](./orms/using-prisma.md).
-You can configure which ORM to use in your [`dbos-config.yaml`](../../reference/configuration.md) file.
+You can configure which ORM to use in your [`dbos-config.yaml`](../reference/configuration.md) file.
 Knex is the default.
 
 Here are some examples:

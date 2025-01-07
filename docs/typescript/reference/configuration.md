@@ -46,7 +46,7 @@ Every field is required unless otherwise specified.
 - **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis** (optional): Database connection timeout in milliseconds. Defaults to `3000`.
 - **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a TypeScript-based migration tool like [Knex](../tutorials/orms/using-knex.md#schema-management), [Drizzle](../tutorials/orms/using-drizzle.md#schema-management), [TypeORM](../tutorials/programmingmodel//orms/using-typeorm.md#schema-management), or [Prisma](../tutorials/orms/using-prisma.md#schema-management).
+- **migrate** (optional): A list of commands to run to apply your application's schema to the database. We recommend using a TypeScript-based migration tool as documented [here](../tutorials/transaction-tutorial.md#schema-management).
 - **rollback** (optional) A list of commands to run to roll back the last batch of schema migrations.
 
 **Example**:

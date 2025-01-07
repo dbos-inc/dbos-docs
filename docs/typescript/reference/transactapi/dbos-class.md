@@ -374,7 +374,7 @@ DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey ?
 
 If `DBOS.send()` is being called from outside of a workflow, an `idempotencyKey` can be set for exactly-once behavior.  (From within a workflow, exactly-once behavior is guaranteed automatically.)
 
-For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/workflow-tutorial.md#messages-example).
 
 #### `DBOS.recv`
 ```typescript
@@ -384,7 +384,7 @@ DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 Messages are dequeued first-in, first-out, from a queue associated with the topic.
 Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/workflow-tutorial.md#messages-example).
 
 #### Reliability Guarantees
 
@@ -404,14 +404,14 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 Creates or updates an event named `key`, setting its value to `value`.
 The event can then be read by calling [`DBOS.getEvent`](#dbosgetevent) with the workflow's ID, from within another workflow, or elsewhere.
 Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
-For more information, see our [events API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+For more information, see our [events API tutorial](../../tutorials/workflow-tutorial.md#workflow-events).
 
 #### `DBOS.getEvent`
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given `key` using the [events API](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given `key` using the [events API](../../tutorials/workflow-tutorial.md#workflow-events).
 `getEvent()` returns a `Promise`.  `await`ing the promise will retrieve the value once the workflow has set the key, or return `null` if the wait times out.
 
 #### Reliability Guarantees

@@ -111,16 +111,16 @@ You can also use [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.
 Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
 They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
-#### set_event
+#### setEvent
 
-Any workflow can call [`DBOS.set_event`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to publish a key-value pair, or update its value if has already been published.
 
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
-#### get_event
+#### getEvent
 
-You can call [`DBOS.get_event`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to retrieve the value published by a particular workflow ID for a particular key.
+You can call [`DBOS.getEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 ```typescript
