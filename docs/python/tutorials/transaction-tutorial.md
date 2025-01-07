@@ -62,7 +62,7 @@ def example_select(name: str) -> Optional[str]:
 :::warning
 
 At this time, DBOS does not support coroutine transactions. 
-Decorating a coroutine with `@DBOS.transaction` will raise an error at runtime.
+Decorating an `async def` function with `@DBOS.transaction` will raise an error at runtime.
 
 :::
 

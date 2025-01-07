@@ -50,11 +50,11 @@ def example_step():
 
 ### Coroutine Steps
 
-You can optionally define DBOS steps as [coroutine funcitons](https://docs.python.org/3/glossary.html#term-coroutine-function).
-Coroutine steps may use Python's asynchronous language capabilities such as [await](https://docs.python.org/3/reference/expressions.html#await), [async for](https://docs.python.org/3/reference/compound_stmts.html#async-for) and [async with](https://docs.python.org/3/reference/compound_stmts.html#async-with).
-Coroutine steps are decorated with `@DBOS.step`, require its inputs and outputs should be serializable and suppport [configurable automatic retries](#configurable-retries) like syncronous step functions.  
+You may also decorate coroutines (functions defined with `async def`, also known as async functions) with `@DBOS.step`.
+Coroutine steps can use Python's asynchronous language capabilities such as [await](https://docs.python.org/3/reference/expressions.html#await), [async for](https://docs.python.org/3/reference/compound_stmts.html#async-for) and [async with](https://docs.python.org/3/reference/compound_stmts.html#async-with).
+Like syncronous step functions, async steps suppport [configurable automatic retries](#configurable-retries) and require its inputs and outputs to be serializable.  
 
-For example, here is the same `example_step` function from above, but using the [`aiohttp`](https://docs.aiohttp.org/en/stable/) library instead of [`requests`](https://requests.readthedocs.io/en/latest/).
+For example, here is an asyncronous version of the `example_step` function from above, using the [`aiohttp`](https://docs.aiohttp.org/en/stable/) library instead of [`requests`](https://requests.readthedocs.io/en/latest/).
 
 ```python
 @DBOS.step(retries_allowed=True, max_attempts=10)

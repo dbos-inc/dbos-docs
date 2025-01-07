@@ -226,10 +226,10 @@ If you're sending a message from normal Python code, you can use [`SetWorkflowID
 
 ## Coroutine Workflows
 
-You can optionally define DBOS workflows as [coroutine functions](https://docs.python.org/3/glossary.html#term-coroutine-function). 
-Coroutine workflows provide the same [reliability guarantees](#reliability-guarantees) and [determinism](#determinism) as syncronous workflow functions. 
-Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) with [await expressions](https://docs.python.org/3/reference/expressions.html#await).
-Additionally, coroutine workflows should use the asyncronous versions of the workflow [events](#workflow-events) and [messaging and notifications](#workflow-messaging-and-notifications) context methods with await.
+Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
+These asyncronous workflows provide the same [reliability guarantees](#reliability-guarantees) as syncronous workflow functions. 
+Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
+Additionally, coroutine workflows can and should use the asyncronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
 
 
 :::info
