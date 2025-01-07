@@ -1,7 +1,6 @@
 ---
-sidebar_position: 20
+sidebar_position: 60
 title: Authentication and Authorization
-description: Use declarative security and middleware in DBOS
 ---
 
 This section covers declarative authentication and authorization in DBOS.

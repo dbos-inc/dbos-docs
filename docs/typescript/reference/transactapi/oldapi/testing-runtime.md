@@ -82,7 +82,7 @@ const output = await runtime.invoke(Cls).fn(arg);
 
 You don't supply a context to an invoked function&#8212;the testing runtime does this for you.
 
-You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../../../tutorials/crosscutting/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
+You can also optionally provide additional parameters for `invoke()` including the [authenticated user and roles](../../../tutorials/development/authentication-authorization.md) and an [HTTPRequest](./contexts.md#ctxtrequest). This is especially helpful if you want to test individual functions without running end-to-end HTTP serving. The parameters have the following structure:
 
 ```typescript
 interface WorkflowInvokeParams {

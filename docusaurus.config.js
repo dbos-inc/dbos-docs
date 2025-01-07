@@ -56,7 +56,7 @@ const config = {
           },
           {
             from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/crosscutting/authentication-authorization',
+            to: '/typescript/tutorials/development/authentication-authorization',
           },
           {
             from: '/tutorials/testing-tutorial',
@@ -124,11 +124,7 @@ const config = {
           },
           {
             from: '/typescript/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/crosscutting/authentication-authorization',
-          },
-          {
-            from: '/typescript/tutorials/logging',
-            to: '/typescript/tutorials/crosscutting/logging',
+            to: '/typescript/tutorials/development/authentication-authorization',
           },
           {
             from: '/typescript/tutorials/application-structure-explanation',
