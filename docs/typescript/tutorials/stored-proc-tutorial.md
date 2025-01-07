@@ -31,7 +31,7 @@ Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./orm
 export class Greetings {
   @StoredProcedure()
   static async InsertGreeting(ctxt: StoredProcedureContext, friend: string, note: string) {
-    await ctxt.query('INSERT INTO greetings (name, note) VALUES (?, ?)', [friend, note]);
+    await ctxt.query('INSERT INTO greetings (name, note) VALUES ($1, $2)', [friend, note]);
   }
 }
 ```
