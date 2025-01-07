@@ -232,9 +232,10 @@ Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-st
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
 
 
-:::info
+:::tip
 
-At this time, DBOS does not support coroutine [transactions](./transaction-tutorial.md). 
+At this time, DBOS does not support coroutine [transactions](./transaction-tutorial.md).
+To execute transaction functions without blocking the event loop, use [`asyncio.to_thread`](https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread).
 
 :::
 
@@ -249,5 +250,6 @@ async def example_step():
 async def example_workflow(friend: str):
     await DBOS.sleep_async(10)
     body = await example_step()
-    return example_transaction(body)
+    result = await asyncio.to_thread(example_transaction, body)
+    return result
 ```
