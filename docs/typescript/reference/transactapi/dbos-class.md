@@ -364,7 +364,7 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ### Sending And Receiving Messages
 
-`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
+`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/workflow-tutorial#workflow-ids).  Workflows may wait for the message to be received before proceeding.
 
 #### `DBOS.send`
 ```typescript

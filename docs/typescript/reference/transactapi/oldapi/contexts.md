@@ -67,7 +67,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-The current workflow's [identity UUID](../../../tutorials/workflow-tutorial#workflow-identity), a string uniquely identifying a workflow execution.
+The current workflow's [identity UUID](../../../tutorials/workflow-tutorial#workflow-ids), a string uniquely identifying a workflow execution.
 In a transaction or step, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
@@ -218,7 +218,7 @@ You don't supply a context to the newly started workflow&#8212;the DBOS Transact
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `handlerCtxt.send`
@@ -401,7 +401,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) _workflowID_.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) _workflowID_.
 `R` is the return type of the target workflow.
 
 #### `WorkflowContext.sleep`
@@ -743,7 +743,7 @@ workflow<T extends unknown[], R>(
 ```
 
 Invokes the provided `wf` workflow function, with inputs specified by `args`.  The `WorkflowParams` control how the workflow is started:
-* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/idempotency-tutorial.md#manually-setting-idempotency-keys), for OAOO.
+* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/idempotency-tutorial.md), for OAOO.
 * `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
 
 The return value of `workflow` is a [`WorkflowHandle`](../workflow-handles.md) for the running or queued workflow.
@@ -789,7 +789,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-identity) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`
