@@ -158,7 +158,7 @@ export class Greetings {
 </Tabs>
 
 :::note
-As shown above, we suggest decorating read-only transactions as `@DBOS.transaction({readOnly: true})` for better performance.
+As shown above, we suggest decorating read-only transactions with `@DBOS.transaction({readOnly: true})` for better performance.
 :::
 
 ## Schema Management
