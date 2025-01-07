@@ -78,7 +78,7 @@ readonly authenticatedUser: string
 ```
 
 The identity of the authenticated user who ran this function.
-Authenticated users are set by [authentication middleware](../../../tutorials/development/authentication-authorization) and inherited through the calling chain.
+Authenticated users are set by [authentication middleware](../../../tutorials/authentication-authorization) and inherited through the calling chain.
 
 #### `ctxt.authenticatedRoles`
 
@@ -87,7 +87,7 @@ readonly authenticatedRoles: string[];
 ```
 
 A list of roles the authenticated user has, if any.
-Authenticated roles are set by [authentication middleware](../../../tutorials/development/authentication-authorization) and inherited through the calling chain.
+Authenticated roles are set by [authentication middleware](../../../tutorials/authentication-authorization) and inherited through the calling chain.
 
 #### `ctxt.assumedRole`
 
@@ -97,7 +97,7 @@ readonly assumedRole: string;
 
 The role used to run this function.
 Empty string if authorization is not required.
-DBOS's [authorization](../../../tutorials/development/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
+DBOS's [authorization](../../../tutorials/authentication-authorization#authorization-decorators) sets the assumed role right before executing a function and this property is *not* inherited through the calling chain.
 
 #### `ctxt.logger`
 

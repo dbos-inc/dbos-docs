@@ -56,7 +56,7 @@ const config = {
           },
           {
             from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/development/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
           },
           {
             from: '/tutorials/testing-tutorial',
@@ -121,10 +121,6 @@ const config = {
           {
             from: '/typescript/reference/workflow-queues',
             to: '/typescript/reference/transactapi/workflow-queues',
-          },
-          {
-            from: '/typescript/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/development/authentication-authorization',
           },
           {
             from: '/typescript/tutorials/application-structure-explanation',
