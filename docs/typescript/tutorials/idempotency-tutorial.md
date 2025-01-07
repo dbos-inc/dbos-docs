@@ -29,3 +29,5 @@ async function main() {
     });
 }
 ```
+
+When starting a workflow with [`DBOS.startWorkflow`](../reference/transactapi/dbos-class#starting-background-workflows), the idempotency key can either be passed directly to `DBOS.startWorkflow`, or `DBOS.withNextWorkflowID` can be used.

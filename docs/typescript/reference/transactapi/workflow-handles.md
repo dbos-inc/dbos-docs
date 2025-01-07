@@ -31,7 +31,7 @@ export interface WorkflowStatus {
 
 Waits for the workflow to complete then returns its output.
 
-#### `getWorkflowUUID(): string`
+#### `workflowID: string`
 
 Retrieves the workflow's [unique ID](../../tutorials/workflow-tutorial#workflow-ids).
 

@@ -30,7 +30,7 @@ Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from the last completed step.
-2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
 3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
 ## Determinism
@@ -151,7 +151,7 @@ The HTTP handler that originally started the workflow uses `getEvent()` to await
   @DBOS.postApi('/api/checkout_session')
   static async webCheckout(...): Promise<void> {
     const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
-    const url = await DBOS.getEvent<string>(handle.getWorkflowUUID(), PAYMENT_URL);
+    const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
     if (url === null) {
       DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
     } else {

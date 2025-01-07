@@ -74,12 +74,12 @@ Upon receiving the payment session ID, it generates a link to submit payment and
 
 ```javascript
 // Wait until the payment session is ready
-const session_id = await DBOS.getEvent<string>(handle.getWorkflowUUID(), session_topic);
+const session_id = await DBOS.getEvent<string>(handle.workflowID, session_topic);
 if (session_id === null) {
   DBOS.logger.error("workflow failed");
   return;
 }
-return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
+return generatePaymentUrls(handle.workflowID, session_id);
 ```
 
 ### Full handler code
@@ -89,16 +89,16 @@ return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
 static async webCheckout(@ArgOptional key: string): Promise<string> {
   // A workflow handle is immediately returned. The workflow continues in the background.
   const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();
-  DBOS.logger.info(`Checkout workflow started with UUID: ${handle.getWorkflowUUID()}`);
+  DBOS.logger.info(`Checkout workflow started with UUID: ${handle.workflowID}`);
 
   // Wait until the payment session is ready
-  const session_id = await DBOS.getEvent<string>(handle.getWorkflowUUID(), session_topic);
+  const session_id = await DBOS.getEvent<string>(handle.workflowID, session_topic);
   if (session_id === null) {
     DBOS.logger.error("workflow failed");
     return "";
   }
 
-  return generatePaymentUrls(handle.getWorkflowUUID(), session_id);
+  return generatePaymentUrls(handle.workflowID, session_id);
 }
 ```
 
