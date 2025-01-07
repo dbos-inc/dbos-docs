@@ -24,8 +24,8 @@ Libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` are compr
 BcryptStep.bcryptHash('myString');
 ```
 
-### Working With Configured Classes
-While libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` have simple functions that can be called directly from their classes, more complex DBOS libraries use ["configured instances"](../programmingmodel/configured-instances) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
+### Working With Instantiated Objects
+While libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` have simple functions that can be called directly from their classes, more complex DBOS libraries use ["instantiated objects"](../instantiated-objects) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
 
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";

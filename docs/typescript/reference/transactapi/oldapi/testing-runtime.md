@@ -135,7 +135,7 @@ If the `queue` argument is provided, the workflow may not start immediately.  St
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>;
 ```
 
-Returns a [workflow handle](../workflow-handles.md) for workflow [_workflowID_](../../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).
+Returns a [workflow handle](../workflow-handles.md) for workflow [_workflowID_](../../../tutorials/workflow-tutorial#workflow-ids).
 `R` is the return type of the target workflow.
 
 ### runtime.getWorkflows(query)
@@ -155,7 +155,6 @@ send<T extends NonNullable<any>>(destinationUUID: string, message: T, topic?: st
 Sends _message_ to _destinationUUID_.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see our [messages API tutorial](../../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
 
 ### runtime.getEvent(workflowUUID, key, \[timeoutSeconds\])
 
@@ -163,7 +162,7 @@ For more information, see our [messages API tutorial](../../../tutorials/program
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
 ```
 
-Retrieves a value published by a _workflowID_ with identifier _key_ using the [events API](../../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves a value published by a _workflowID_ with identifier _key_ using the [events API](../../../tutorials/workflow-tutorial.md#workflow-events).
 A call to `getEvent` waits for the value to be published and returns `null` in case of time out.
 
 ### runtime.getHandlersCallback()

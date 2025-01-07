@@ -51,7 +51,7 @@ The DBOS crontab format supports some common extensions, as seen in the followin
 - `10-19/2 * * January,Feb *`: At 10, 12, 14, 16, and 18 minutes into each hour of every day, only in the months of January and February
 
 ### How Scheduling Works
-Under the hood, DBOS constructs an [idempotency key](../programmingmodel/idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs at most once.  The DBOS system database tracks the last time that the workflow was known to have started; this implementation ensures that the workflow is started at least once.  The combination of mechanisms can therefore ensure that the scheduled workflow occurs exactly once per time interval.
+Under the hood, DBOS constructs an [idempotency key](../idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs at most once.  The DBOS system database tracks the last time that the workflow was known to have started; this implementation ensures that the workflow is started at least once.  The combination of mechanisms can therefore ensure that the scheduled workflow occurs exactly once per time interval.
 
 ### Skipping Scheduled Workflows
 By default, scheduled workflows are executed exactly once per interval.  This means that, if an application is stopped for an extended period, DBOS Transact could initiate a significant number of workflows upon restart.  If it is known by the application developer that "makeup work" should not be scheduled for a given workflow function, the mode for that function should be changed in its configuration:

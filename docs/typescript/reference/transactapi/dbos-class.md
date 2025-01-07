@@ -22,7 +22,7 @@ DBOS provides reliability guarantees for programs that are [written as workflows
 @DBOS.workflow(config?: WorkflowConfig)
 ```
 
-When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../../tutorials/programmingmodel/idempotency-tutorial.md).
+When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../../tutorials/idempotency-tutorial.md).
 
 `@DBOS.workflow()` takes an optional [`WorkflowConfig`](#workflow-configuration) object.
 
@@ -202,7 +202,7 @@ const qhres = await qhandle.getResult();
 ```
 
 ##### Assigning workflow IDs
-Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) can be done with `DBOS.withNextWorkflowID`.
+Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../../tutorials/idempotency-tutorial.md) can be done with `DBOS.withNextWorkflowID`.
 
 ```typescript
 DBOS.withNextWorkflowID<R>(wfid: string, callback: ()=>Promise<R>) : Promise<R>
@@ -288,13 +288,13 @@ DBOS.drizzleClient: DrizzleClient
 ```
 
 For more details, see:
-* [Drizzle](../../tutorials/programmingmodel/orms/using-drizzle.md)
-* [Knex](../../tutorials/programmingmodel/orms/using-knex.md)
-* [Prisma](../../tutorials/programmingmodel/orms/using-prisma.md)
-* [TypeORM](../../tutorials/programmingmodel/orms/using-typeorm.md)
+* [Drizzle](../../tutorials/orms/using-drizzle.md)
+* [Knex](../../tutorials/orms/using-knex.md)
+* [Prisma](../../tutorials/orms/using-prisma.md)
+* [TypeORM](../../tutorials/orms/using-typeorm.md)
 
 ### `@DBOS.step`
-`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/programmingmodel/workflow-tutorial.md).
+`@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/workflow-tutorial.md).
 The result of each invocation of a function decorated with `@DBOS.step` is stored in the DBOS system database.  This checkpoint of the execution state allows function calls to be skipped during workflow replay, if the step is known to have completed previously.
 
 ```typescript
@@ -364,7 +364,7 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ### Sending And Receiving Messages
 
-`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/programmingmodel/workflow-tutorial#workflow-identity).  Workflows may wait for the message to be received before proceeding.
+`DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/workflow-tutorial#workflow-ids).  Workflows may wait for the message to be received before proceeding.
 
 #### `DBOS.send`
 ```typescript
@@ -374,7 +374,7 @@ DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey ?
 
 If `DBOS.send()` is being called from outside of a workflow, an `idempotencyKey` can be set for exactly-once behavior.  (From within a workflow, exactly-once behavior is guaranteed automatically.)
 
-For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/workflow-tutorial.md#messages-example).
 
 #### `DBOS.recv`
 ```typescript
@@ -384,12 +384,12 @@ DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 Messages are dequeued first-in, first-out, from a queue associated with the topic.
 Calls to `recv()` wait for the next message in the queue, returning `null` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-For more information, see our [messages API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#messages-api).
+For more information, see our [messages API tutorial](../../tutorials/workflow-tutorial.md#messages-example).
 
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `DBOS.send()` completes successfully, the destination workflow is guaranteed to be able to `DBOS.recv()` it.  `DBOS.recv()` consumes the message, but also advances the receiving workflow, so messages are received exactly once.
-If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../../tutorials/programmingmodel/workflow-tutorial#reliability-guarantees).
+If you're sending a message from within a workflow, we guarantee exactly-once delivery because [workflows are reliable](../../tutorials/workflow-tutorial#reliability-guarantees).
 If you're sending a message from outside of a workflow, you can run `DBOS.send` with an [idempotency key](#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ### Setting and Getting Events
@@ -404,14 +404,14 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 Creates or updates an event named `key`, setting its value to `value`.
 The event can then be read by calling [`DBOS.getEvent`](#dbosgetevent) with the workflow's ID, from within another workflow, or elsewhere.
 Events are mutable.  Attempting to emit an event twice from a given workflow instance will update the value, but care should be taken to ensure that the value is calculated deterministically for consistency when workflows are recovered.
-For more information, see our [events API tutorial](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+For more information, see our [events API tutorial](../../tutorials/workflow-tutorial.md#workflow-events).
 
 #### `DBOS.getEvent`
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given `key` using the [events API](../../tutorials/programmingmodel/workflow-communication-tutorial#events-api).
+Retrieves an event published by `workflowID` for a given `key` using the [events API](../../tutorials/workflow-tutorial.md#workflow-events).
 `getEvent()` returns a `Promise`.  `await`ing the promise will retrieve the value once the workflow has set the key, or return `null` if the wait times out.
 
 #### Reliability Guarantees
@@ -470,7 +470,7 @@ interface GetWorkflowsInput {
 }
 ```
 
-`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
@@ -497,7 +497,7 @@ export interface GetWorkflowQueueInput {
 }
 ```
 
-`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/programmingmodel/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
+`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
 ```typescript
 export interface GetWorkflowQueueOutput {
   workflows: {

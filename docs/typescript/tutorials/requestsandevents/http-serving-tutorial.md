@@ -153,7 +153,7 @@ DBOS uses [Koa](https://koajs.com/) for HTTP serving internally and the raw resp
 A function annotated with an endpoint decorator but no other decorators is called a _handler_.
 Handlers can call other DBOS functions and directly access HTTP requests and responses.
 However, DBOS makes no guarantees about handler execution: if a handler fails, it is not automatically retried.
-You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the [strong guarantees of transactions and workflows](../programmingmodel/workflow-tutorial#reliability-guarantees).
+You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the [strong guarantees of transactions and workflows](../workflow-tutorial#reliability-guarantees).
 
 ### Body Parser
 By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../../reference/transactapi/oldapi/decorators#koabodyparser) decorator.
