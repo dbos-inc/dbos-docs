@@ -32,12 +32,12 @@ If you are using FastAPI or Flask, it also automatically traces each HTTP reques
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if a FastAPI HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
-You can access your current span via [`DBOS.span`](../reference/contexts.md#span)
+You can access your current span via [`DBOS.span`](../reference/contexts.md#span).
 
 ### OpenTelemetry Export
 
 You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
-In DBOS Cloud, this is done automatically, and you can view your logs and traces in your [cloud console](https://console.dbos.dev/login-redirect) and [monitoring dashboard](../../cloud-tutorials/monitoring-dashboard.md).
+In DBOS Cloud, this is done automatically, and you can view your logs and traces in the [cloud console](https://console.dbos.dev/login-redirect).
 
 Locally, you can configure exporters in your [`dbos-config.yaml`](../reference/configuration.md):
 

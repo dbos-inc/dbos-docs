@@ -3,53 +3,56 @@ sidebar_position: 50
 title: Logging & Tracing
 ---
 
-In this section we will learn to use DBOS's built-in logging system.
-The DBOS runtime comes with a context-specific logger you can access through [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
+### Logging
 
-### Usage
+When building a DBOS app, we recommend using the built-in DBOS logger.
+This allows DBOS Cloud to collect and display your logs.
+You can access the logger through [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
 
 ```javascript
-@DBOS.getApi('/greeting/:name')
-static async greetingEndpoint(@ArgSource(ArgSources.URL) name: string) {
-    dbos.logger.info("Logging from the greeting handler");
-    return `Greeting, ${name}`;
-}
+DBOS.logger.info("Welcome to DBOS!");
 ```
 
 The logger provides four logging levels: `info()`, `debug()`, `warn()` and `error()`.
 Each accepts and logs any output that can be serialized to JSON.
 `error()` additionally logs a stack trace.
 
-### Viewing Logs in DBOS Cloud
+In your [`dbos-config.yaml`](../reference/configuration.md), you can configure the log level and whether to add metadata such as the workflow ID to logs:
 
-You can view your applications' logs in DBOS Cloud through our [monitoring dashboard](../../cloud-tutorials/monitoring-dashboard.md). It allows you to filter for particular applications or time ranges.
-
-You can also retrieve logs through the [`dbos-cloud app logs`](../../cloud-tutorials/cloud-cli.md#dbos-cloud-app-logs) command.
-In your package root directory, run:
-
-```shell
-dbos-cloud app logs
-```
-
-### Configuration
-
-In the [configuration file](../reference/configuration), you can configure the logging level, silence the logger, and request to add context metadata to log entries:
 ```yaml
-...
 telemetry:
   logs:
-    logLevel: 'info' # info (default) | debug | warn | emerg | alert | crit | error
+    logLevel: 'info' # info (default) | debug | warn | error
     addContextMetadata: 'true' # true (default) | false
-    silent: 'false' # false (default) | true
 ```
 
-Context metadata includes the workflow identity UUID and the name of the user running the workflow.
+You can also configure the logging level from the command line:
 
-You can also configure the logging level as a CLI argument to the runtime:
 ```shell
 npx dbos start --loglevel debug
 ```
 
-### Global Logger
+### Tracing
 
-It is not necessary to be in a DBOS operation to use `DBOS.logger`.  After DBOS is launched, all such logs will go to the global DBOS logger; prior to DBOS launch all logs will go to the console.
+DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all workflows and their steps.
+
+DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
+For example, if an HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
+The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
+You can access your current span via [`DBOS.span`](../../reference/transactapi/dbos-class#accessing-the-tracing-span).
+
+### OpenTelemetry Export
+
+You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
+In DBOS Cloud, this is done automatically, and you can view your logs and traces in the [cloud console](https://console.dbos.dev/login-redirect).
+
+Locally, you can configure exporters in your [`dbos-config.yaml`](../reference/configuration.md):
+
+```yaml
+telemetry:
+    OTLPExporter:
+        logsEndpoint: http://localhost:4318/v1/logs
+        tracesEndpoint: http://localhost:4318/v1/traces
+```
+
+For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application.
