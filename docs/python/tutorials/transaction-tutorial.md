@@ -59,6 +59,12 @@ def example_select(name: str) -> Optional[str]:
 </TabItem>
 </Tabs>
 
+:::warning
+
+At this time, DBOS does not support coroutine transactions. 
+Decorating an `async def` function with `@DBOS.transaction` will raise an error at runtime.
+
+:::
 
 ## Schema Management
 

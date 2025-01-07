@@ -221,3 +221,35 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
+
+
+
+## Coroutine Workflows
+
+Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
+Asynchronous workflows provide the same [reliability guarantees](#reliability-guarantees) as synchronous workflow functions. 
+Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
+Additionally, coroutine workflows should use the asynchronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
+
+
+:::tip
+
+At this time, DBOS does not support coroutine [transactions](./transaction-tutorial.md).
+To execute transaction functions without blocking the event loop, use [`asyncio.to_thread`](https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread).
+
+:::
+
+```python
+@DBOS.step()
+async def example_step():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://example.com") as response:
+            return await response.text()
+
+@DBOS.workflow()
+async def example_workflow(friend: str):
+    await DBOS.sleep_async(10)
+    body = await example_step()
+    result = await asyncio.to_thread(example_transaction, body)
+    return result
+```
