@@ -84,6 +84,8 @@ DBOS provides a wrapper around TypeORM's transaction functionality so that its w
 First, DBOS transactions are declared.  The easiest way is with a class method decorated with [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction).  `DBOS.typeORMClient` can then be used to access the database using TypeORM.  For the best results with type checking and tab completion, `DBOS.typeORMClient` should be cast to `EntityManager`.
 
 ```javascript
+function getClient() {return DBOS.typeORMClient as EntityManager;}
+
 @OrmEntities([KV])
 class KVOperations {
   @DBOS.transaction()
@@ -91,14 +93,14 @@ class KVOperations {
     const kv: KV = new KV();
     kv.id = id;
     kv.value = value;
-    const res = await (DBOS.typeORMClient as EntityManger).save(kv);
+    const res = await getClient().save(kv);
     return res.id;
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   @DBOS.transaction({ readOnly: true })
   static async readTxn(id: string) {
-    const kvp = await (DBOS.typeORMClient as EntityManger).findOneBy(KV, {id: id});
+    const kvp = await getClient().findOneBy(KV, {id: id});
     return kvp?.value || "<Not Found>";
   }
 }
