@@ -10,8 +10,7 @@ It also supports querying the database with [raw SQL](https://orm.drizzle.team/d
 
 ### Getting Started
 
-An easy way to get started with Drizzle is to bootstrap your application with our Drizzle template.
-This is similar to the template used in the [quickstart](../../../../quickstart.md), but built with Drizzle instead of Knex.
+An easy way to get started with Drizzle is to bootstrap your application with the Drizzle template.
 To download it, run:
 
 ```bash
@@ -60,7 +59,7 @@ You can implement your migration in SQL in this file.
 
 ### Using Drizzle
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction) decorator.
 
 Within the transaction function, access your [Drizzle client](https://orm.drizzle.team/docs/overview) from `DBOS.sqlClient` or `DBOS.drizzleClient`.  Note that we cast to `NodePgDatabase` in angle brackets to make the best use of type checking and tab completion.
 
@@ -86,7 +85,7 @@ export class DBOSGreetings {
 If you are using the [Drizzle template](#getting-started), this configuration is done for you.
 :::
 
-To enable Drizzle, you must set the `app_db_client` field in the [DBOS configuration file](../../../reference/configuration.md) to `drizzle`.
+To enable Drizzle, you must set the `app_db_client` field in the [DBOS configuration file](../../reference/configuration.md) to `drizzle`.
 You should also configure Drizzle migration commands.
 Here is an example of a configuration file set up for Drizzle:
 
@@ -107,7 +106,7 @@ runtimeConfig:
 ```
 
 Many Drizzle commands, such as those for [schema migration](#schema-management), require a [`drizzle.config.ts`](https://orm.drizzle.team/kit-docs/conf) configuration file.
-To avoid managing your configuration in two places, we recommend `drizzle.config.ts` load configuration information from your [DBOS configuration file](../../../reference/configuration.md).
+To avoid managing your configuration in two places, we recommend `drizzle.config.ts` load configuration information from your [DBOS configuration file](../../reference/configuration.md).
 Here is an example of a `drizzle.config.ts` that does this:
 
 ```typescript

@@ -25,7 +25,7 @@ It provides the following endpoints:
 
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](../programmingmodel/workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
+- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](../workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
 - **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json
@@ -62,7 +62,7 @@ It provides the following endpoints:
 
 ## Managing Workflow Recovery
 
-By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](../programmingmodel/workflow-tutorial.md#reliability-guarantees).
+By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](../workflow-tutorial.md#reliability-guarantees).
 This behavior works well when you're only running a single instance of an application, as it guarantees that every time the server is restarted, it resumes all workflows from where they left off.
 However, it is less ideal for a distributed setting where you're running many instances of an application on different servers.
 

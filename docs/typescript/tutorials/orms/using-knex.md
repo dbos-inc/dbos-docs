@@ -11,7 +11,7 @@ It also supports querying the database with [raw SQL](https://knexjs.org/guide/r
 
 ### Getting Started
 
-The default DBOS template application, used in the [quickstart](../../../../quickstart.md) uses Knex.
+An easy way to get started with Knex is to bootstrap your application with the Knex template.
 To download it, run:
 
 ```bash
@@ -41,7 +41,7 @@ npx knex migrate:make <migration-name>
 
 This will create a new migration file named `migrations/<timestamp>_<migration-name>.js`.
 You can implement your migration in this file.
-Here is a simple example from the [programming guide](../../../programming-guide.md) of a migration that creates a `greetings` table with `name` and `note` text fields:
+Here is a simple example from the [programming guide](../../programming-guide.md) of a migration that creates a `greetings` table with `name` and `note` text fields:
 
 ```javascript
 exports.up = function(knex) {
@@ -66,7 +66,7 @@ npx dbos migrate
 
 ### Using Knex
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction) decorator.
 
 Within the transaction function, access your [Knex client](https://knexjs.org/guide/query-builder.html) from `DBOS.knexClient`.
 For example, this function inserts a new row into the `greetings` table:
@@ -92,7 +92,7 @@ Instead, transactions automatically commit when the function successfully return
 If you are using the [Knex template](#getting-started), this is done for you.
 :::
 
-To enable Knex, you must set the `app_db_client` field in the [DBOS configuration file](../../../reference/configuration.md) to `knex`.
+To enable Knex, you must set the `app_db_client` field in the [DBOS configuration file](../../reference/configuration.md) to `knex`.
 You should also configure Knex migration commands.
 Here is an example of a configuration file set up for Knex:
 
@@ -114,7 +114,7 @@ runtimeConfig:
 ```
 
 Many Knex commands, such as those for [schema migration](#schema-management), require a [`knexfile.js`](https://knexjs.org/guide/migrations.html#knexfile-js) configuration file.
-To avoid managing your configuration in two places, we recommend `knexfile.js` load configuration information from your [DBOS configuration file](../../../reference/configuration.md).
+To avoid managing your configuration in two places, we recommend `knexfile.js` load configuration information from your [DBOS configuration file](../../reference/configuration.md).
 Here is an example of a `knexfile.js` that does this:
 
 ```typescript

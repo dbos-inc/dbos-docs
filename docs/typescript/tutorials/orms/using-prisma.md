@@ -10,8 +10,7 @@ DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeO
 
 ### Getting Started
 
-An easy way to get started with Prisma is to bootstrap your application with our Prisma template.
-This is similar to the template used in the [quickstart](../../../../quickstart.md), but built with Prisma instead of Knex.
+An easy way to get started with Prisma is to bootstrap your application with the Prisma template.
 To download it, run:
 
 ```bash
@@ -67,7 +66,7 @@ This automatically generates a new migration (under `prisma/migrations/`) contai
 
 ### Using Prisma
 
-When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../../reference/transactapi/dbos-class#dbostransaction) decorator, and can then access the client with `DBOS.prismaClient`.  Note that as `PrismaClient` is generated for your application, `DBOS.prismaClient` should be cast to `PrismaClient` for tab-completion and type checking.  You can make a helper function to do this.
+When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction) decorator, and can then access the client with `DBOS.prismaClient`.  Note that as `PrismaClient` is generated for your application, `DBOS.prismaClient` should be cast to `PrismaClient` for tab-completion and type checking.  You can make a helper function to do this.
 
 Within the transaction function, access your Prisma client from the `.client` field of your transaction context.
 For example:
@@ -97,7 +96,7 @@ export class Hello {
 If you are using the [Prisma template](#getting-started), this is done for you.
 :::
 
-To enable Prisma, you must set the `app_db_client` field in the [DBOS configuration file](../../../reference/configuration.md) to `prisma`.
+To enable Prisma, you must set the `app_db_client` field in the [DBOS configuration file](../../reference/configuration.md) to `prisma`.
 You should also configure Prisma migration commands.
 Here is an example of a configuration file set up for Prisma:
 
@@ -151,6 +150,3 @@ Therefore, we recommend that you set the build script in your `package.json` fil
   }
 }
 ```
-
-### Known Issues
-- Currently we do not support [time travel debugging](../../../../cloud-tutorials/timetravel-debugging.md) for cloud deployed Prisma applications. However, you can still perform [interactive time travel queries](../../../../cloud-tutorials/interactive-timetravel.md).

@@ -1,10 +1,10 @@
 ---
-sidebar_position: 70
-title: Configuring Class Instances
-description: Learn how to make workflows, transactions, and steps reusable and configurable
+sidebar_position: 85
+title: Using Instantiated Objects
+description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-In this guide, you'll learn how to make your DBOS functions configurable using instances.
+In this guide, you'll learn how to make your DBOS functions configurable using by usingb objects.  Each instance can contain configuration information, available to instance methods that are registered DBOS workflow, step, or transaction functions.
 
 ## Concepts
 Basic DBOS transactions, steps, and workflows are just functions - they accept input parameters, apply those parameters to the database, or use them to place calls to external services.
@@ -17,13 +17,13 @@ If a function needs more than one configuration, such global settings are not ad
 Configured class instances are the DBOS Transact mechanism for creating multiple configurations for the same code.  Rather than having `static` class member functions, configured instances have non-static member functions that can access configuration information through `this`.
 
 ### Names
-Configured instances have names, which are simple strings identifying the configuration.  These names are used by DBOS Transact internally, but are also potentially useful for monitoring, tracing, and debugging.
+While configured instances are basically regular TypeScript objects, they must have names.  Names are simply strings identifying the configuration.  These names are used by DBOS Transact internally to find the correct object instance across system restarts, but are also potentially useful for monitoring, tracing, and debugging.
 
 ## Using Configured Class Instances
-Configured class instances should be created and named when the application starts, before any workflows can run.  This ensures that they weill all be initialized before any processing begins.
+Configured class instances should be created and named when the application starts, before any workflows can run.  This ensures that they will all be initialized before any processing begins.
 
 ### Creating
-To create and register a class instance, the `configureInstance` function is used:
+To create and register a class instance, the `DBOS.configureInstance` function is used:
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 const myObj = DBOS.configureInstance(MyClass, 'myname', args);
@@ -45,7 +45,7 @@ Methods of configured instances can be invoked directly:
 
 ```typescript
 MyClass.myStaticFunction(args); // Use on a static function
-myOb).myMemberFunction(args); // Use on a configured object instance
+myObj.myMemberFunction(args); // Use on a configured object instance
 ```
 
 ## Writing New Configured Classes

@@ -64,7 +64,7 @@ const config = {
           },
           {
             from: '/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
           },
           {
             from: '/getting-started/quickstart-programming',
@@ -155,52 +155,32 @@ const config = {
             to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
-            from: '/typescript/tutorials/step-tutorial',
-            to: '/typescript/tutorials/programmingmodel/step-tutorial',
-          },
-          {
             from: '/typescript/tutorials/configured-instances',
-            to: '/typescript/tutorials/programmingmodel/configured-instances',
+            to: '/typescript/tutorials/instantiated-objects',
           },
           {
             from: '/typescript/tutorials/http-serving-tutorial',
             to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
           },
           {
-            from: '/typescript/tutorials/idempotency-tutorial',
-            to: '/typescript/tutorials/programmingmodel/idempotency-tutorial',
-          },
-          {
             from: '/typescript/tutorials/using-drizzle',
-            to: '/typescript/tutorials/programmingmodel/orms/using-drizzle',
+            to: '/typescript/tutorials/orms/using-drizzle',
           },
           {
             from: '/typescript/tutorials/using-knex',
-            to: '/typescript/tutorials/programmingmodel/orms/using-knex',
+            to: '/typescript/tutorials/orms/using-knex',
           },
           {
             from: '/typescript/tutorials/using-prisma',
-            to: '/typescript/tutorials/programmingmodel/orms/using-prisma',
+            to: '/typescript/tutorials/orms/using-prisma',
           },
           {
             from: '/typescript/tutorials/using-typeorm',
-            to: '/typescript/tutorials/programmingmodel/orms/using-typeorm',
-          },
-          {
-            from: '/typescript/tutorials/stored-proc-tutorial',
-            to: '/typescript/tutorials/programmingmodel/stored-proc-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/transaction-tutorial',
-            to: '/typescript/tutorials/programmingmodel/transaction-tutorial',
+            to: '/typescript/tutorials/orms/using-typeorm',
           },
           {
             from: '/typescript/tutorials/workflow-communication-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-communication-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/workflow-tutorial',
-            to: '/typescript/tutorials/programmingmodel/workflow-tutorial',
+            to: '/typescript/tutorials/workflow-tutorial',
           },
           {
             from: '/typescript/tutorials/custom-event-receiver',
