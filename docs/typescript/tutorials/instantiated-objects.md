@@ -4,14 +4,14 @@ title: Using Instantiated Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-In this guide, you'll learn how to make your DBOS functions configurable using objects.  Each instance can contain configuration information, available to instance methods that are registered DBOS workflow, step, or transaction functions.
+In this guide, you'll learn how to make your DBOS functions configurable using class objects.
+Each object can contain configuration information, available to instance methods that are registered DBOS workflow, step, or transaction functions.
 
 ## Concepts
 Basic DBOS transactions, steps, and workflows are just functions - they accept input parameters, apply those parameters to the database, or use them to place calls to external services.
 
-However, it is sometimes desirable to have configuration information available to DBOS functions.  Using function parameters for items such as access URLs, API keys, port numbers, and so on is a bad idea, so these are generally stored as configuration data in `dbos-config.yaml` or otherwise accessed from context.
-
-If a function needs more than one configuration, such global settings are not adequate.  For example, an email-sending function may send email with one set of addresses and credentials for promotional materials to prospects, or another set of credentials for replies to support inquiries from existing customers.
+However, it is sometimes desirable to have configuration information available to DBOS functions.
+For example, an email-sending function may send email with one set of addresses and credentials for promotional materials to prospects, or another set of credentials for replies to support inquiries from existing customers.
 
 ### Instances
 Configured class instances are the DBOS Transact mechanism for creating multiple configurations for the same code.  Rather than having `static` class member functions, configured instances have non-static member functions that can access configuration information through `this`.
