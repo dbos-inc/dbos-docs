@@ -25,8 +25,7 @@ A simple middleware for FastAPI may pass authentication information to DBOS in a
 There are several things happening in this code snippet.
 * `authMiddleware` - The middleware function responsible for taking information from the `Request` and providing it to DBOS via the context
 * `@app.middleware("http")` - Registers the middleware function with `app`, which is a FastAPI instance, so that the function is called on inbound requests
-* `with DBOSContextEnsure():` - Ensures that a DBOS context is associated with the request, creating one if none exists
-* `DBOS.set_authentication` - Sets the authenticated user and roles into the DBOS context, for use in authorization determinations
+* `with DBOSContextSetAuth("user1", ["user", "engineer"]):` - Ensures that a DBOS context is associated with the request, and sets the authenticated user and roles into the context.  This authentication information will be used to make authorization checks for any function calls within the scope of the `with`.  Use of `with` also ensures that authentication information will be cleared when the code block finishes.
 * `response = await call_next(request)` - Proceeds down the handler call chain, with the authentication information in place
 
 ## Authorization Decorators
