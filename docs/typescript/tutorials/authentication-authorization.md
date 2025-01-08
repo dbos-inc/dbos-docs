@@ -1,25 +1,24 @@
 ---
-sidebar_position: 20
-title: Authentication and Authorization
-description: Use declarative security and middleware in DBOS
+sidebar_position: 60
+title: Authentication & Authorization
 ---
 
 This section covers declarative authentication and authorization in DBOS.
 
-DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](../../reference/transactapi/oldapi/decorators#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@DBOS.requiredRole`](../../reference/transactapi/dbos-class.md#dbosrequiredrole) API.
+DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](../reference/transactapi/oldapi/decorators#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@DBOS.requiredRole`](../reference/transactapi/dbos-class.md#dbosrequiredrole) API.
 
 :::info note
-You can fully implement authentication and authorization using custom [HTTP middleware](../requestsandevents/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms DBOS provides to make it easier.
+You can fully implement authentication and authorization using custom [HTTP middleware](./requestsandevents/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms DBOS provides to make it easier.
 :::
 
 :::tip
 If you're generating an [OpenAPI interface definition](https://spec.openapis.org/oas/v3.0.3) for your DBOS application, 
 you can specify security scheme information via the `@OpenApiSecurityScheme` decorator. 
-Please see the [OpenAPI Tutorial](../development/openapi-tutorial.md#specify-openapi-security-scheme-and-requirements) for more information.
+Please see the [OpenAPI Tutorial](./development/openapi-tutorial.md#specify-openapi-security-scheme-and-requirements) for more information.
 :::
 
 ## Authentication Middleware
-To instruct DBOS to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](../../reference/transactapi/oldapi/decorators#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
+To instruct DBOS to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](../reference/transactapi/oldapi/decorators#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
 The decorator should return a structure containing identity and claimed roles:
 
 ```javascript
@@ -29,10 +28,10 @@ return {
 };
 ```
 
-When serving a request from an HTTP endpoint, DBOS runs the authentication middleware before running the requested operation and makes this information available in the [context](../../reference/transactapi/dbos-class#accessing-http-context).
+When serving a request from an HTTP endpoint, DBOS runs the authentication middleware before running the requested operation and makes this information available in the [context](../reference/transactapi/dbos-class#accessing-http-context).
 
 ## Authorization Decorators
-To declare a list of roles that are authorized to run the methods in a class, use the [`@DBOS.defaultRequiredRole`](../../reference/transactapi/dbos-class.md#dbosdefaultrequiredrole) class decorator:
+To declare a list of roles that are authorized to run the methods in a class, use the [`@DBOS.defaultRequiredRole`](../reference/transactapi/dbos-class.md#dbosdefaultrequiredrole) class decorator:
 
 ```javascript
 @DBOS.defaultRequiredRole(['user'])
@@ -43,7 +42,7 @@ class Operations
 ```
 
 At runtime, before running an operation, DBOS verifies that the operation context contains an authenticated role listed in its required roles.
-For exceptions, requiring more or less privilege than the default, you can specify [`@DBOS.requiredRole`](../../reference/transactapi/dbos-class#dbosrequiredrole) at the method level
+For exceptions, requiring more or less privilege than the default, you can specify [`@DBOS.requiredRole`](../reference/transactapi/dbos-class#dbosrequiredrole) at the method level
 
 ```javascript
 @DBOS.defaultRequiredRole(['user'])

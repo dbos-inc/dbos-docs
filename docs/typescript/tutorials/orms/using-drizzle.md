@@ -71,10 +71,12 @@ export const greetings = pgTable('greetings', {
   note: text('note')
 });
 
+function getClient() {DBOS.drizzleClient as NodePgDatabase;}
+
 export class DBOSGreetings {
   @DBOS.transaction()
   static async insertGreeting(name: string, note: string) {
-    await (DBOS.drizzleClient as NodePgDatabase).insert(greetings).values({name: name, note: note});
+    await getClient().insert(greetings).values({name: name, note: note});
   }
 }
 ```

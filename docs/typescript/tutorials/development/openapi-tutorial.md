@@ -102,7 +102,7 @@ Path item operations optionally include security requirements, which map to secu
 `components.securitySchemes` section of the  OpenAPI definition file.
 Some OpenAPI generators use this information to automatically manage user credentials in the generated client code.
 
-[Authentication](../crosscutting/authentication-authorization.md) in DBOS is done via the middleware function passed to `@Authentication`.
+[Authentication](../authentication-authorization.md) in DBOS is done via the middleware function passed to `@Authentication`.
 Parsing the authentication logic to determine the OpenAPI security scheme information is not feasible.
 To include authentication information in the OpenAPI file, declare the security scheme via the `@OpenApiSecurityScheme` class decorator.
 
@@ -126,7 +126,7 @@ The `@OpenApiSecurityScheme` decorator takes a single parameter, matching a supp
 ::::
 
 All handler methods on a class use the same `@OpenApiSecurityScheme` in the generated OpenAPI definition,
-except for methods that have no specified [`@RequiredRoles`](../crosscutting/authentication-authorization#authorization-decorators).
+except for methods that have no specified [`@RequiredRoles`](../authentication-authorization#authorization-decorators).
 DBOS does not check authentication or authorization info for methods without any required roles.
 Methods without any required roles do not emit security requirements in the generated OpenAPI definition file.
 

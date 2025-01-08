@@ -825,7 +825,7 @@ DBOS can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) inter
 This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the handler functions in a class.
 This decorator takes a single parameter defining the security scheme as per the OpenAPI specification.
 This decorator is purely declarative for the purpose of inclusion in the generated interface description.
-You still need to implement authentication as per the [Authentication and Authorization tutorial](../../../tutorials/crosscutting/authentication-authorization).
+You still need to implement authentication as per the [Authentication and Authorization tutorial](../../../tutorials/authentication-authorization).
 
 ::::info
 DBOS does not support the `oauth2` OpenAPI security scheme at this time.

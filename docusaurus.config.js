@@ -56,7 +56,7 @@ const config = {
           },
           {
             from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/crosscutting/authentication-authorization',
+            to: '/typescript/tutorials/authentication-authorization',
           },
           {
             from: '/tutorials/testing-tutorial',
@@ -123,14 +123,6 @@ const config = {
             to: '/typescript/reference/transactapi/workflow-queues',
           },
           {
-            from: '/typescript/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/crosscutting/authentication-authorization',
-          },
-          {
-            from: '/typescript/tutorials/logging',
-            to: '/typescript/tutorials/crosscutting/logging',
-          },
-          {
             from: '/typescript/tutorials/application-structure-explanation',
             to: '/typescript/tutorials/development/application-structure-explanation',
           },
@@ -189,10 +181,6 @@ const config = {
           {
             from: '/typescript/tutorials/kafka-integration',
             to: '/typescript/tutorials/requestsandevents/kafka-integration',
-          },
-          {
-            from: '/typescript/tutorials/scheduled-workflows',
-            to: '/typescript/tutorials/requestsandevents/scheduled-workflows',
           },
         ],
       },

@@ -70,29 +70,3 @@ To manage recovery in a distributed setting, you can assign each instance of an 
 This causes the application instance to associate every workflow it executes with that executor ID.
 When an application instance with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
 You can also instruct it to recover workflows assigned to other executor IDs through the [admin API](#managing-workflow-recovery).
-
-## Configuring OTLP Telemetry
-
-DBOS operations emit [OpenTelemetry](https://opentelemetry.io/) traces. When a [handler](../requestsandevents/http-serving-tutorial) receives a request, it attempts to load a [trace context](https://opentelemetry.io/docs/concepts/context-propagation/). If none is found, the handler will create a new trace. Handlers will inject a trace context to responses.
-
-Traces are periodically exported from a DBOS application using the [OpenTelemetry Protocol](https://opentelemetry.io/docs/specs/otlp/) (OTLP)
-You can configure an exporter in the telemetry section of the [configuration file](../../reference/configuration). For example:
-```yaml
-telemetry:
-    OTLPExporter:
-        logsEndpoint: http://localhost:4318/v1/logs
-        tracesEndpoint: http://localhost:4318/v1/traces
-```
-
-You can export traces, out of the box, to any OTLP compliant receiver. Try it out with [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)!
-
-DBOS uses the [opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js/) package to implement tracing.
-You can access trace objects using [`DBOS.span`](../../reference/transactapi/dbos-class#accessing-the-tracing-span). For example, to add a custom event to a workflow span:
-```javascript
-  @DBOS.transaction()
-  static async txn() {
-    ...
-    DBOS.span.addEvent("An important event")
-    ...
-  }
-```

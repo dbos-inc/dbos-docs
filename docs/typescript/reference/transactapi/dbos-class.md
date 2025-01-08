@@ -307,7 +307,7 @@ Functions decorated with `@DBOS.step` may be called directly, either inside or o
 
 ```typescript
 export interface StepConfig {
-  retriesAllowed?: boolean; // Should failures be retried? (default true)
+  retriesAllowed?: boolean; // Should failures be retried? (default false)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
   maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).

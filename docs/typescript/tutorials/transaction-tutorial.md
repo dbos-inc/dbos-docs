@@ -47,16 +47,18 @@ export const GreetingRecord = pgTable('greetings', {
   note: text('note'),
 });
 
+function getClient() {DBOS.drizzleClient as NodePgDatabase;}
+
 export class Greetings {
   //..
   @DBOS.transaction()
   static async insertGreeting(name: string, note: string) {
-    await (DBOS.drizzleClient as NodePgDatabase).insert(GreetingRecord).values({name: name, note: note});
+    await getClient().insert(GreetingRecord).values({name: name, note: note});
   }
 
   @DBOS.transaction({ readOnly:true })
   static async getGreetings(): Promise<{name: string | null, note: string | null}[]> {
-    return (DBOS.drizzleClient as NodePgDatabase).select().from(GreetingRecord);
+    return getClient().select().from(GreetingRecord);
   }
 }
 ```
@@ -77,6 +79,8 @@ export class GreetingRecord {
     note!: string;
 }
 
+function getClient() {return DBOS.typeORMClient as EntityManager;}
+
 @OrmEntities([GreetingRecord])
 export class Greetings {
   //...
@@ -85,12 +89,12 @@ export class Greetings {
     const greeting = new GreetingRecord();
     greeting.name = name;
     greeting.note = note;
-    await (DBOS.typeORMClient as EntityManager).save(greeting);
+    await getClient().save(greeting);
   }
 
   @DBOS.transaction({ readOnly:true })
   static async getGreetings(): Promise<GreetingRecord[]> {
-    return await (DBOS.typeORMClient as EntityManager).getRepository(GreetingRecord).find();
+    return await getClient().getRepository(GreetingRecord).find();
   }  
 }
 ```
@@ -111,11 +115,13 @@ export class Greetings {
 // Use the generated Prisma client and GreetingRecord class
 import { PrismaClient, GreetingRecord } from "@prisma/client";
 
+function getClient() {return DBOS.prismaClient as PrismaClient;}
+
 export class Greetings {
   //...
   @DBOS.transaction()
   static async insertGreeting(name: string, note: string) {
-    await (DBOS.prismaClient as PrismaClient).greetingRecord.create({
+    await getClient().greetingRecord.create({
       data: {
         name: name,
         note: note
@@ -125,7 +131,7 @@ export class Greetings {
 
   @DBOS.transaction({ readOnly:true })
   static async getGreetings(): Promise<GreetingRecord[]> {
-    return await (DBOS.prismaClient as PrismaClient).greetingRecord.findMany();
+    return await getClient().greetingRecord.findMany();
   }
 }
 ```
