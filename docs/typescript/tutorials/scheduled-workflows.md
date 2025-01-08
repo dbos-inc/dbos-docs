@@ -1,10 +1,10 @@
 ---
-sidebar_position: 20
+sidebar_position: 48
 title: Scheduled Workflows
 ---
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run exactly once per time interval.
-To do this, annotate the workflow with the [`@DBOS.scheduled`](../../reference/transactapi/dbos-class#scheduled-workflows) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
+To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference/transactapi/dbos-class#scheduled-workflows) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
 
 ```typescript
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -21,7 +21,7 @@ class ScheduledExample{
 Scheduled workflows must take in exactly two arguments: the time that the run was scheduled (as a `Date`) and the time the run was actually started (as a `Date`).
 
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-The specification for the DBOS variant can be found in the [DBOS API reference](../../reference/transactapi/dbos-class#crontab-specification).
+The specification for the DBOS variant can be found in the [DBOS API reference](../reference/transactapi/dbos-class#crontab-specification).
 
 The DBOS crontab format supports some common extensions, as seen in the following examples:
 - `* * * * *`: Every minute of every day

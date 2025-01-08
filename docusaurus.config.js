@@ -182,10 +182,6 @@ const config = {
             from: '/typescript/tutorials/kafka-integration',
             to: '/typescript/tutorials/requestsandevents/kafka-integration',
           },
-          {
-            from: '/typescript/tutorials/scheduled-workflows',
-            to: '/typescript/tutorials/requestsandevents/scheduled-workflows',
-          },
         ],
       },
     ],

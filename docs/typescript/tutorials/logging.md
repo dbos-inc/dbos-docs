@@ -39,7 +39,7 @@ DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces 
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if an HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
-You can access your current span via [`DBOS.span`](../../reference/transactapi/dbos-class#accessing-the-tracing-span).
+You can access your current span via [`DBOS.span`](../reference/transactapi/dbos-class#accessing-the-tracing-span).
 
 ### OpenTelemetry Export
 
