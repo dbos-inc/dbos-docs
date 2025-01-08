@@ -4,7 +4,7 @@ title: Using Instantiated Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-In this guide, you'll learn how to make your DBOS functions configurable using by usingb objects.  Each instance can contain configuration information, available to instance methods that are registered DBOS workflow, step, or transaction functions.
+In this guide, you'll learn how to make your DBOS functions configurable using objects.  Each instance can contain configuration information, available to instance methods that are registered DBOS workflow, step, or transaction functions.
 
 ## Concepts
 Basic DBOS transactions, steps, and workflows are just functions - they accept input parameters, apply those parameters to the database, or use them to place calls to external services.
