@@ -47,7 +47,7 @@ export const GreetingRecord = pgTable('greetings', {
   note: text('note'),
 });
 
-function getClient() {DBOS.drizzleClient as NodePgDatabase;}
+function getClient() { return DBOS.drizzleClient as NodePgDatabase; }
 
 export class Greetings {
   //..
