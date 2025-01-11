@@ -71,7 +71,7 @@ export const greetings = pgTable('greetings', {
   note: text('note')
 });
 
-function getClient() {DBOS.drizzleClient as NodePgDatabase;}
+function getClient() { return DBOS.drizzleClient as NodePgDatabase; }
 
 export class DBOSGreetings {
   @DBOS.transaction()
