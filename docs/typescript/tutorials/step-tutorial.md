@@ -7,7 +7,7 @@ description: Learn how to communicate with external APIs and services
 When using DBOS workflows, we recommend annotating any function that accesses external APIs or services as a _step_.
 
 You can turn **any** TypeScript function into a step by annotating it with the [`@DBOS.step`](../reference/transactapi/dbos-class.md#dbosstep) decorator.
-The only requirement is that its inputs and outputs should be serializable to JSON.
+The only requirements are that it must be a static class member function and that its inputs and outputs should be serializable to JSON.
 Here's a simple example:
 
 ```javascript
