@@ -280,67 +280,16 @@ pip install -r requirements.txt
 </section>
 
 
-<section className="row list">
-<article className="col col--6">
-
-#### 3. Install the DBOS Cloud CLI
-
-The Cloud CLI requires Node.js 20 or later.
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
-
-<article className="col col--6">
-Run this command to install it.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Set up a Postgres Database
-<section className="row list">
-<article className="col col--6">
-
-Your app needs a Postgres database to connect to.
-You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
-
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
-</details>
-</article>
-
-</section>
-
-#### 5. Run the App
+#### 3. Run the App
 
 <section className="row list">
 
 <article className="col col--6">
-Next, run a schema migration to create tables for your app in your database.
-After that, start the app.
+Now, start your app!
 </article>
 
 <article className="col col--6">
 ```bash
-dbos migrate
 dbos start
 ```
 </article>
