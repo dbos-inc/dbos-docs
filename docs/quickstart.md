@@ -378,7 +378,7 @@ Now, build and start your app!
 <article className="col col--6">
 ```bash
 npm run build
-npx dbos start
+npm run start
 ```
 </article>
 
