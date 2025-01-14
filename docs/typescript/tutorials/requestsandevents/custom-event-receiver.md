@@ -31,7 +31,7 @@ In the case of database triggers, which listen for records inserted into a table
 *  The key and timestamp columns of the source table records
 *  The function to be executed for each record received
 
-Because it is highly variable, configuration is conveyed by purpose-built class and method [decorators](../../reference/transactapi/oldapi/decorators.md#function-decorators) that accompany the event receiver, and are specific to its configuration needs.
+Because it is highly variable, configuration is conveyed by purpose-built class and method [decorators](../../reference/transactapi/dbos-class#decorating-workflows-transactions-and-steps) that accompany the event receiver, and are specific to its configuration needs.
 
 ### Event Receiver Lifecycle
 An event receiver implements the `DBOSEventReceiver` interface:
@@ -141,10 +141,10 @@ In the following example, a `@KafkaConsume(topic, ...)` method decorator is defi
 // Decorator factory function
 export function KafkaConsume(topic: string, consumerConfig?: ConsumerConfig) {
   // Decorator function
-  function kafkadec<This, Ctx extends DBOSContext, Return>(
+  function kafkadec<This, Return>(
     target: object,
     propertyKey: string,
-    inDescriptor: TypedPropertyDescriptor<(this: This, ctx: Ctx, ...args: KafkaArgs) => Promise<Return>>
+    inDescriptor: TypedPropertyDescriptor<(this: This, ...args: KafkaArgs) => Promise<Return>>
   ) {
     const {descriptor, receiverInfo} = associateMethodWithEventReceiver(kafkaInst, target, propertyKey, inDescriptor);
 
