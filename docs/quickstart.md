@@ -186,7 +186,7 @@ dbos-cloud app deploy
 From [https://console.dbos.dev/launch](https://console.dbos.dev/launch), select the template you'd like to deploy.
 When prompted, create a database for your app with default settings.
 
-Not sure which template to use? We recommend the DBOS + FastAPI starter.
+Not sure which template to use? We recommend the DBOS Web App Starter.
 
 <img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 

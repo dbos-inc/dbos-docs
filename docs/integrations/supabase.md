@@ -33,7 +33,7 @@ Visit [https://console.dbos.dev/launch](https://console.dbos.dev/launch). At the
 
 Then, choose a template you'd like to deploy.
 
-Not sure which template to use? We recommend the DBOS + FastAPI starter.
+Not sure which template to use? We recommend the DBOS Web App Starter.
 
 <img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
