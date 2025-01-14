@@ -15,7 +15,7 @@ An easy way to get started with Knex is to bootstrap your application with the K
 To download it, run:
 
 ```bash
-npx -y @dbos-inc/create@latest -t hello -n <app-name>
+npx -y @dbos-inc/create@latest -t dbos-knex -n <app-name>
 ```
 
 Then, build it, run schema migrations, and start the sample app:
