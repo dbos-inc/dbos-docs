@@ -566,7 +566,6 @@ DBOS Transact optionally provides HTTP handling.  This uses a serverless design,
 This provides the following features over using Koa directly:
 * Argument validation
 * A generated list of endpoint functions and their arguments
-* Automatic generation of [OpenAPI](../../tutorials/development/openapi-tutorial.md) clients
 * Automatic configuration from `dbos-config.yaml` or the runtime environment
 * Automatic network configuration in DBOS Cloud
 * Default tracing, parsing, and other middleware, with [additional options](../../tutorials/requestsandevents/http-serving-tutorial.md#body-parser)

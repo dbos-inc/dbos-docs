@@ -11,12 +11,6 @@ DBOS supports modular, built-in declarative security: you can use the [`@Authent
 You can fully implement authentication and authorization using custom [HTTP middleware](./requestsandevents/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms DBOS provides to make it easier.
 :::
 
-:::tip
-If you're generating an [OpenAPI interface definition](https://spec.openapis.org/oas/v3.0.3) for your DBOS application, 
-you can specify security scheme information via the `@OpenApiSecurityScheme` decorator. 
-Please see the [OpenAPI Tutorial](./development/openapi-tutorial.md#specify-openapi-security-scheme-and-requirements) for more information.
-:::
-
 ## Authentication Middleware
 To instruct DBOS to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](../reference/transactapi/oldapi/decorators#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
 The decorator should return a structure containing identity and claimed roles:
