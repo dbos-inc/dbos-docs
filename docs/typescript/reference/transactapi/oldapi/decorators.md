@@ -815,33 +815,6 @@ For a scheduled workflow to run at a given time, the time must match the crontab
 A time matches the pattern if all fields of the time match the pattern.
 Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
 
-
-### OpenAPI Decorators
-
-DBOS can generate an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.0.3) interface description for an application.
-
-#### `@OpenApiSecurityScheme`
-
-This decorator is used to declare an [OpenAPI security scheme](https://spec.openapis.org/oas/v3.0.3#security-scheme-object) for the handler functions in a class.
-This decorator takes a single parameter defining the security scheme as per the OpenAPI specification.
-This decorator is purely declarative for the purpose of inclusion in the generated interface description.
-You still need to implement authentication as per the [Authentication and Authorization tutorial](../../../tutorials/authentication-authorization).
-
-::::info
-DBOS does not support the `oauth2` OpenAPI security scheme at this time.
-::::
-
-```typescript
-@OpenApiSecurityScheme({ type: 'http', scheme: 'bearer' })
-@Authentication(authMiddleware)
-export class Operations {
-  @GetApi("/post/:id")
-  static async getPost(ctx: TransactionContext, @ArgSource(ArgSources.URL) id: string) {
-    ...
-  }
-}
-```
-
 ### Other Decorators
 
 #### TypeORM Decorators

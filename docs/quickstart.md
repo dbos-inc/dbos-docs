@@ -142,7 +142,7 @@ It creates and initializes a new folder named `my-app/` with a sample app. Enter
 
 <article className="col col--6">
 ```bash
-npx -y @dbos-inc/create@latest -n my-app
+npx -y @dbos-inc/create@latest -n my-app -t dbos-node-starter
 cd my-app/
 ```
 </article>
@@ -186,7 +186,7 @@ dbos-cloud app deploy
 From [https://console.dbos.dev/launch](https://console.dbos.dev/launch), select the template you'd like to deploy.
 When prompted, create a database for your app with default settings.
 
-Not sure which template to use? We recommend the DBOS + FastAPI starter.
+Not sure which template to use? We recommend the DBOS Web App Starter.
 
 <img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
@@ -217,7 +217,7 @@ If you continue to your [application page](https://console.dbos.dev/applications
 
 <img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
 
-To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
+To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
 
 ### Run Your App Locally
@@ -280,67 +280,16 @@ pip install -r requirements.txt
 </section>
 
 
-<section className="row list">
-<article className="col col--6">
-
-#### 3. Install the DBOS Cloud CLI
-
-The Cloud CLI requires Node.js 20 or later.
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
-
-<article className="col col--6">
-Run this command to install it.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Set up a Postgres Database
-<section className="row list">
-<article className="col col--6">
-
-Your app needs a Postgres database to connect to.
-You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
-
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
-</details>
-</article>
-
-</section>
-
-#### 5. Run the App
+#### 3. Start Your App
 
 <section className="row list">
 
 <article className="col col--6">
-Next, run a schema migration to create tables for your app in your database.
-After that, start the app.
+Now, start your app!
 </article>
 
 <article className="col col--6">
 ```bash
-dbos migrate
 dbos start
 ```
 </article>
@@ -356,8 +305,8 @@ To see that it's working, visit this URL in your browser: http://localhost:8000/
 </article>
 
 <article className="col col--6">
-Congratulations, you've started a DBOS app locally!
-To learn more about building DBOS apps, check out our [Python programming guide](./python/programming-guide.md).
+Congratulations, you're running DBOS locally!
+To learn more about building DBOS apps, check out the [Python programming guide](./python/programming-guide.md).
 </article>
 
 </section>
@@ -418,57 +367,18 @@ npm install
 </section>
 
 
-<section className="row list">
-<article className="col col--6">
-
-#### 3. Install the DBOS Cloud CLI
-
-Run this command to install the Cloud CLI globally.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Set up a Postgres Database
-<section className="row list">
-<article className="col col--6">
-
-Your app needs a Postgres database to connect to.
-You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
-
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'node start_postgres_docker.js'} />
-</details>
-</article>
-
-</section>
-
-
-#### 5. Run the App
-
+#### 3. Start Your App
 
 <section className="row list">
 
 <article className="col col--6">
-Next, run a schema migration to create tables for your app in your database.
-After that, build and start the app.
+Now, build and start your app!
 </article>
 
 <article className="col col--6">
 ```bash
-npx dbos migrate
 npm run build
-npx dbos start
+npm run start
 ```
 </article>
 
@@ -484,8 +394,8 @@ To see that it's working, visit this URL in your browser: http://localhost:3000/
 
 
 <article className="col col--6">
-Congratulations, you've started a DBOS app locally!
-To learn more about building DBOS apps, check out our [TypeScript programming guide](./typescript/programming-guide.md).
+Congratulations, you're running DBOS locally!
+To learn more about building DBOS apps, check out the [TypeScript programming guide](./typescript/programming-guide.md).
 </article>
 
 </section>

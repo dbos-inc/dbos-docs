@@ -15,29 +15,15 @@ Thanks to durable execution, the app will always write to both systems consisten
 
 ## 1. Setting Up Your App
 
-Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
-
-```
-npx @dbos-inc/create -t hello-express -n greeting-guestbook
-cd greeting-guestbook
-```
-
-DBOS needs a Postgres database to connect to.
-Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud database (if you followed the quickstart to set one up), a Docker container, or a local Postgres installation:
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'node start_postgres_docker.js'} />
-</details>
-
-Finally, set up some database tables:
+First, initialize a DBOS template app and install dependencies:
 
 ```shell
-npx dbos migrate
+npx @dbos-inc/create -t dbos-knex -n greeting-guestbook-ts
+cd greeting-guestbook-ts
+npm install
 ```
 
-Next, let's build a simple app that greets our friends.
+Then, let's build a simple app that greets our friends.
 Every time the app receives a greeting, it performs two steps:
 
 1. Sign an online guestbook with the greeting.
@@ -104,7 +90,13 @@ async function main() {
 main().catch(console.log);
 ```
 
-Build and run your app with `npm run dev`, which uses `nodemon` to automatically build and restart your code as files are changed.  (If you prefer separate steps, you can build your app with `npm run build` and start it with `npx dbos start`.)
+Now, run these commands to set up your database and start your app:
+
+```shell
+npx dbos migrate
+npm run build
+npm run start
+```
 
 To see that it's is working, visit this URL: http://localhost:3000/greeting/Mike
 <BrowserWindow url="http://localhost:3000/greeting/Mike">
@@ -210,7 +202,7 @@ Only the **four highlighted lines of code** are needed to enable durable executi
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
 To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
 
-To see the power of durable execution, rebuild your app with `npm run build` and restart your app with `npx dbos start`.
+To see the power of durable execution, rebuild your app with `npm run build` and restart your app with `npm run start`.
 Then, visit this URL: http://localhost:3000/greeting/Mike.
 In your terminal, you should see an output like:
 
@@ -259,7 +251,7 @@ We recommend using transactions because:
 1. They give you access to a pre-configured database client, which is more convenient than connecting to the database yourself. DBOS integrates with most popular TypeScript ORMs, including Knex, Prisma, TypeORM, and Drizzle, and also supports raw SQL.
 2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
 
-Now, rebuild your app with with `npm run build`, restart with `npx dbos start`, and visit its URL again: http://localhost:3000/greeting/Mike.
+Now, rebuild your app with with `npm run build`, restart with `npm run start`, and visit its URL again: http://localhost:3000/greeting/Mike.
 The app should durably execute your workflow the same as before!
 
 The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/greeting-guestbook).
