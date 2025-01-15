@@ -158,7 +158,7 @@ The Debug Proxy listens on port 2345 by default. This port can be changed via th
 
 ### dbos-ttdbg.debug_pre_launch_task
 
-By default, the [Time Travel Debugging CodeLens](http://localhost:3000/cloud-tutorials/timetravel-debugging#launching-a-debug-session) will use
+By default, the [Time Travel Debugging CodeLens](../../../cloud-tutorials/timetravel-debugging#launching-a-debug-session) will use
 the settings from the first [VS Code launch configuration](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations)
 that includes `dbos-cloud debug` in the command string. If there are no such launch configurations, the extension will create
 a launch configuration from scratch. The `dbos-ttdbg.debug_pre_launch_task` configuration setting is used as the 
