@@ -78,6 +78,17 @@ You must compile your code (`npm run build`) and start the debug proxy before ru
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 
+---
+
+### `npx dbos-openapi generate`
+**Description:**
+This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a DBOS application.
+For more information, please see the [OpenAPI Tutorial](../../tutorials/development/openapi-tutorial.md).
+**Arguments:**
+- `<entrypoints>`: Path to the application's TypeScript entrypoint files or folders (for example, `src/a.ts src/operations/`)
+
+For a single entrypoint, the generated file is named `openapi.yaml` and is saved to the same directory as the TypeScript entrypoint file.  If multiple files are specified, multiple `.yaml` files are generated.
+
 ## Workflow Management Commands
 
 ### `npx dbos workflow list`
