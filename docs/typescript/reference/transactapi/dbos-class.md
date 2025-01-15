@@ -910,6 +910,17 @@ DBOS.setConfig(config: DBOSConfig, runtimeConfig?: DBOSRuntimeConfig)
 
 If `runtimeConfig` is provided, the runtime will be started when the app is launched with `DBOS.launch`, including HTTP handling for decorated methods.  If `runtimeConfig` is not provided, this will not occur.
 
+`parseConfigFile` can be used to load a configuration file.
+```typescript
+import { parseConfigFile } from '@dbos-inc/dbos-sdk';
+const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'});
+```
+
+Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loaded and programmatic modifications or checks to be performed prior to calling `DBOS.setConfig`.
+
+### Loading classes
+TODO!!!
+
 ### Launching and Shutting Down
 The DBOS app can be started with `launch` and stopped with `shutdown`.
 ```typescript
@@ -919,6 +930,9 @@ DBOS.shutdown()
 
 * `launch`: This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
 * `shutdown`: This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
+
+### Starting HTTP services
+TODO!!!
 
 ### Recovering Workflows
 DBOS generally recovers workflows automatically.  However, this process can be initiated externally.

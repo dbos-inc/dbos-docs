@@ -25,7 +25,7 @@ dbos-hello-app/
 └── tsconfig.json
 ```
 
-The two most important files in a DBOS project are `dbos-config.yaml` and `src/operations.ts`.
+The two most important files in a DBOS project are `dbos-config.yaml` and `src/operations.ts`. TODO!!!
 
 `dbos-config.yaml` defines the configuration of a DBOS project, including database connection information, migration configuration, and global logging configuration.
 All options are documented in our [configuration reference](../../reference/configuration).
