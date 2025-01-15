@@ -934,7 +934,7 @@ await DBOS.loadClasses(runtimeConfig.entrypoints);
 ### Launching and Shutting Down
 The DBOS app can be started with `launch` and stopped with `shutdown`.
 ```typescript
-await DBOS.launch(httpApps?: DBOSHttpApps);
+await DBOS.launch();
 await DBOS.shutdown();
 ```
 
