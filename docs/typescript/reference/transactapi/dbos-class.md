@@ -901,11 +901,11 @@ Each field matches the pattern if its numerical value is within any of the inclu
 ## Application Lifecycle
 For DBOS applications using entrypoint classes specified in [`dbos-config.yaml`](../configuration), a "serverless" application lifecycle is handled automatically.  However, it is possible to build a custom application lifecycle.
 
-The steps are:
-* Load classes with DBOS functions and provide DBOS configuration information.  This can be done in any order.
-* Launch DBOS.  This will initialize DBOS functions and start workflow recovery, scheduled workflows, etc.
-* Start DBOS internal HTTP request handlers, if used by your application.
-* Shut DBOS down gracefully (if desired).
+The steps in a custom lifecycle are:
+* [Load classes with DBOS functions](#loading-classes) and [provide DBOS configuration information](#setting-the-application-configuration).  Note that these can be intermixed, it is not necessary to load classes first, or to provide configuration first.
+* [Launch DBOS](#launching-dbos).  This will initialize DBOS functions and start workflow recovery, scheduled workflows, etc.
+* [Start DBOS internal HTTP request handlers](#starting-http-handler-services), if used by your application.
+* [Shut DBOS down](#shutting-down-dbos) gracefully, if desired.
 
 ### Setting The Application Configuration
 If the DBOS configuration should not be loaded from `dbos-config.yaml`, it may be provided programatically with `DBOS.setConfig`:
@@ -930,20 +930,27 @@ Before a DBOS app is launched, all classes with DBOS methods should be loaded, g
 await DBOS.loadClasses(runtimeConfig.entrypoints);
 ```
 
-### Launching and Shutting Down
-The DBOS app can be started with `launch` and stopped with `shutdown`.
+### Launching DBOS
+The DBOS app can be started with `launch`.
 ```typescript
 await DBOS.launch();
+```
+
+This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
+
+### Starting HTTP Handler Services
+If DBOS functions include [handler decorators](./dbos-class.md#http-handling) such as `@DBOS.getApi` and `@DBOS.postApi`, DBOS HTTP should be started to serve them.
+
+`DBOS.launchAppHTTPServer()` sets up routing for all handlers, and creates a server that listens on the port specified in the `runtimeConfig` passed to `DBOS.setConfig`.  If this server is not desired, such as in testing or if DBOS handlers are to be combined with those of another framework, `DBOS.setUpHandlerCallback()` can be used to return the server, without connecting it to a listening socket.
+
+### Shutting Down DBOS
+DBOS services can be shut down gracefully with `shutdown`.
+
+```typescript
 await DBOS.shutdown();
 ```
 
-* `launch`: This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
-* `shutdown`: This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
-
-### Starting HTTP Handler Services
-If DBOS functions include [handler decorators](./dbos-class.md#http-handling) such as `@DBOS.getApi` and `@DBOS.postApi`, the DBOS HTTP handler should be started to serve them.
-
-`DBOS.launchAppHTTPServer()` sets up routing for all handlers, and creates a server that listens on the port specified in the `runtimeConfig` passed to `DBOS.setConfig`.  If this server is not desired, such as in testing or if DBOS handlers are to be combined with those of another framework, `DBOS.setUpHandlerCallback()` can be used to return the server, without connecting it to a listening socket.
+This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
 
 ### Recovering Workflows
 DBOS generally recovers workflows automatically.  However, this process can be initiated externally.
