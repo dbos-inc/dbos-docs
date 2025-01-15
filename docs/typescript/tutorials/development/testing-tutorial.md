@@ -15,7 +15,7 @@ Before executing any test code that uses DBOS, DBOS should be launched:
 ```typescript
     await DBOS.launch();
     // Optional, only do this if you are testing built-in DBOS HTTP handlers
-    await DBOS.launchAppHTTPServer();
+    await DBOS.setUpHandlerCallback();
 ```
 
 See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-and-shutting-down) for launch options.
@@ -51,7 +51,7 @@ DBOS provides `DBOS.getHTTPHandlersCallback()`, which returns a callback functio
 First, add setup code to ensure that DBOS is launched, and that HTTP endpoints are also set up:
 ```typescript
     await DBOS.launch();
-    await DBOS.launchAppHTTPServer();
+    await DBOS.setUpHandlerCallback();
 ```
 
 Import the testing package:
