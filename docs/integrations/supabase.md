@@ -33,7 +33,7 @@ Visit [https://console.dbos.dev/launch](https://console.dbos.dev/launch). At the
 
 Then, choose a template you'd like to deploy.
 
-Not sure which template to use? We recommend the DBOS + FastAPI starter.
+Not sure which template to use? We recommend the DBOS Web App Starter.
 
 <img src={require('@site/static/img/quickstart/1-pick-template.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 
@@ -64,7 +64,7 @@ If you continue to your [application page](https://console.dbos.dev/applications
 
 <img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
 
-To start building, edit your application on GitHub (for the DBOS + FastAPI starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
+To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
 ## Develop Locally
 
@@ -127,65 +127,16 @@ pip install -r requirements.txt
 </article>
 </section>
 
-
-<section className="row list">
-<article className="col col--6">
-
-#### 3. Install the DBOS Cloud CLI
-
-The Cloud CLI requires Node.js 20 or later.
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
-
-<article className="col col--6">
-Run this command to install it.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Connect to Supabase
-<section className="row list">
-<article className="col col--6">
-
-Connect your local application to your Supabase database. Enter your Supabase password when prompted.
-If you don't remember your Supabase password, you can reset it from the [Supabase dashboard](https://supabase.com/dashboard/projects) under Project Settings -> Database.
-
-</article>
-
-<article className="col col--6">
-
-```
-dbos-cloud db local
-```
-</article>
-
-</section>
-
-#### 5. Run the App
+#### 3. Start Your App
 
 <section className="row list">
 
 <article className="col col--6">
-Run these commands to start your app locally!
+Now, start your app!
 </article>
 
 <article className="col col--6">
 ```bash
-dbos migrate
 dbos start
 ```
 </article>
@@ -262,55 +213,19 @@ npm install
 </article>
 </section>
 
-
-<section className="row list">
-<article className="col col--6">
-
-#### 3. Install the DBOS Cloud CLI
-
-Run this command to install the Cloud CLI globally.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Set up a Postgres Database
-<section className="row list">
-<article className="col col--6">
-
-Connect your local application to your Supabase database. Enter your Supabase password when prompted.
-If you don't remember your Supabase password, you can reset it from the [Supabase dashboard](https://supabase.com/dashboard/projects) under Project Settings -> Database.
-
-</article>
-
-<article className="col col--6">
-
-```
-dbos-cloud db local
-```
-</article>
-
-</section>
-
-
-#### 5. Run the App
+#### 3. Start Your App
 
 
 <section className="row list">
 
 <article className="col col--6">
-Run these commands to build and start your app locally!
+Now, build and start your app!
 </article>
 
 <article className="col col--6">
 ```bash
-npx dbos migrate
 npm run build
-npx dbos start
+npm run start
 ```
 </article>
 
@@ -326,7 +241,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 
 
 <article className="col col--6">
-Congratulations, you've started a DBOS+Supabase app locally!
+Congratulations, you've started your DBOS+Supabase app locally!
 To learn more about building DBOS apps, check out our [TypeScript programming guide](../typescript/programming-guide.md).
 </article>
 

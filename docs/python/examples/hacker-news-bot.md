@@ -149,18 +149,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-DBOS requires a Postgres database.
-If you don't already have one, you can start one with Docker:
-
-```shell
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
-```
-
-Then run the app in the virtual environment:
+Then start your app:
 
 ```shell
 pip install -r requirements.txt
-dbos migrate
 dbos start
 ```

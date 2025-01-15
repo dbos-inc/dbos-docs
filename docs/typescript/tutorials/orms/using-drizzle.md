@@ -14,7 +14,7 @@ An easy way to get started with Drizzle is to bootstrap your application with th
 To download it, run:
 
 ```bash
-npx -y @dbos-inc/create@latest -t hello-drizzle -n <app-name>
+npx -y @dbos-inc/create@latest -t dbos-drizzle -n <app-name>
 ```
 
 Then, build it, run schema migrations, and start the sample app:
@@ -61,7 +61,7 @@ You can implement your migration in SQL in this file.
 
 When using DBOS, database operations are performed in [transaction functions](../transaction-tutorial). Transaction functions must be annotated with the [`@DBOS.transaction`](../../reference/transactapi/dbos-class#dbostransaction) decorator.
 
-Within the transaction function, access your [Drizzle client](https://orm.drizzle.team/docs/overview) from `DBOS.sqlClient` or `DBOS.drizzleClient`.  Note that we cast to `NodePgDatabase` in angle brackets to make the best use of type checking and tab completion.
+Within the transaction function, access your [Drizzle client](https://orm.drizzle.team/docs/overview) from `DBOS.sqlClient` or `DBOS.drizzleClient`.
 
 For example, this function inserts a new row into the `greetings` table:
 
