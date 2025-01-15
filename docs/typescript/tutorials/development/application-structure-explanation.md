@@ -20,7 +20,8 @@ dbos-knex/
 ├── package.json
 ├── package-lock.json
 ├── src/
-│   └── main.ts
+│   |── main.ts
+│   └── main.test.ts
 ├── start_postgres_docker.js
 └── tsconfig.json
 ```
