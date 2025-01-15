@@ -142,7 +142,7 @@ It creates and initializes a new folder named `my-app/` with a sample app. Enter
 
 <article className="col col--6">
 ```bash
-npx -y @dbos-inc/create@latest -n my-app
+npx -y @dbos-inc/create@latest -n my-app -t dbos-node-starter
 cd my-app/
 ```
 </article>
