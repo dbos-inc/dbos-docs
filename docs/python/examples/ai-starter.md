@@ -135,55 +135,7 @@ pip install -r requirements.txt
 </article>
 </section>
 
-#### 3. Install the DBOS Cloud CLI
-<section className="row list">
-<article className="col col--6">
-
-The Cloud CLI requires Node.js 20 or later.
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
-
-<article className="col col--6">
-Run this command to install it.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 4. Connect Your Application to Postgres
-<section className="row list">
-<article className="col col--6">
-
-Under the hood, DBOS uses Postgres for scheduling, so you need to connect your app to a Postgres database—you can use a DBOS Cloud database, a Docker container, or a local Postgres installation:
-
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
-</details>
-</article>
-
-</section>
-
-
-#### 5. Start Your Appliation
+#### 3. Start Your Appliation
 <section className="row list">
 <article className="col col--6">
 

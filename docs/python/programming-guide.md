@@ -47,22 +47,7 @@ pip install dbos
 dbos init
 ```
 
-DBOS needs a Postgres database to connect to.
-Just like in the [quickstart](../quickstart.md), you can use a DBOS Cloud database (if you followed the quickstart to set one up), a Docker container, or a local Postgres installation:
-
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
-</details>
-
-Finally, set up some database tables:
-
-```shell
-dbos migrate
-```
-
-Next, let's use FastAPI to write a simple app that greets our friends.
+Now, let's use FastAPI to write a simple app that greets our friends.
 Every time the app receives a greeting, it performs two steps:
 
 1. Sign an online guestbook with the greeting.
@@ -111,8 +96,13 @@ def greeting_endpoint(name: str):
     return f"Thank you for being awesome, {name}!"
 ```
 
-Start your app with `dbos start`.
-To see that it's is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
+Now, run these commands to set up your database and start your app:
+
+```shell
+dbos migrate
+dbos start
+```
+To see that your app is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
 <BrowserWindow url="http://localhost:8000/greeting/Mike">
 "Thank you for being awesome, Mike!"
 </BrowserWindow>
@@ -191,8 +181,8 @@ def greeting_endpoint(name: str):
 Only the **four highlighted lines of code** are needed to enable durable execution.
 
 - First, we initialize DBOS on line 12.
-- Then, we annotate `sign_guestbook` and `insert_greeting` as [_workflow steps_](./tutorials/step-tutorial.md) on lines 17 and 30.
-- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 38.
+- Then, we annotate `sign_guestbook` and `insert_greeting` as [_workflow steps_](./tutorials/step-tutorial.md) on lines 16 and 29.
+- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 37.
 
 Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
 To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.

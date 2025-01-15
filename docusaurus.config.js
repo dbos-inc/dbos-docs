@@ -127,10 +127,6 @@ const config = {
             to: '/typescript/tutorials/development/application-structure-explanation',
           },
           {
-            from: '/typescript/tutorials/openapi-tutorial',
-            to: '/typescript/tutorials/development/openapi-tutorial',
-          },
-          {
             from: '/typescript/tutorials/self-hosting',
             to: '/typescript/tutorials/development/self-hosting',
           },

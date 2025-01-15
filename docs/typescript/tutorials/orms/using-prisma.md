@@ -6,7 +6,6 @@ description: Learn how to use Prisma with DBOS
 
 [Prisma](https://www.prisma.io/) is a popular open-source TypeScript ORM.
 The main idea is to define your application data models (entities) in the [Prisma Schema](https://www.prisma.io/docs/orm/prisma-schema/overview), and then use Prisma to automatically generate [schema migrations](https://www.prisma.io/docs/orm/prisma-migrate/getting-started) as well as the corresponding [Prisma Client](https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/introduction) for you to manage your data.
-DBOS supports Prisma as an alternative to [Knex](https://knexjs.org/) and [TypeORM](https://typeorm.io) for transactional data management.
 
 ### Getting Started
 
@@ -14,7 +13,7 @@ An easy way to get started with Prisma is to bootstrap your application with the
 To download it, run:
 
 ```bash
-npx -y @dbos-inc/create@latest -t hello-prisma -n <app-name>
+npx -y @dbos-inc/create@latest -t dbos-prisma -n <app-name>
 ```
 
 Then, build it, run schema migrations, and start the Prisma sample app:

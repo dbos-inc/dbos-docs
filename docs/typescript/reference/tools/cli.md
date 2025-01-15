@@ -28,15 +28,12 @@ You must compile your code (`npm run build`) before running this command.
 
 ### `npx @dbos-inc/create`
 
-**Synonyms**
-`npm create @dbos-inc` and `npm init @dbos-inc` are synonyms for `npx @dbos-inc/create`.  When using `npm create @dbos-inc` with any of the command line switches below, be sure to use `--` to separate `npm` arguments from the arguments intended for `@dbos-inc/create`.
-
 **Description:**
-This command initializes a new DBOS application from a template into a target directory. By default, it instantiates the "Hello, Database!" application used in the [quickstart](../../../quickstart).
+This command initializes a new DBOS application from a template into a target directory.
 
 **Parameters:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-- `-t, --templateName <template>`: The template to use for project creation, such as 'hello'.
+- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
 
 ---
 
@@ -80,18 +77,6 @@ You must compile your code (`npm run build`) and start the debug proxy before ru
 - `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
-
----
-
-### `npx dbos-openapi generate`
-
-**Description:**
-This command generates an [OpenAPI 3.0.x](https://www.openapis.org/) definition file for a DBOS application.
-The generated file is named `openapi.yaml` and is saved to the same directory as the TypeScript entrypoint file.
-For more information, please see the [OpenAPI Tutorial](../../tutorials/development/openapi-tutorial.md).
-
-**Arguments:**
-- `<entrypoints>`: Path to the application's TypeScript entrypoints (for example, `src/a.ts src/b.ts`)
 
 ## Workflow Management Commands
 

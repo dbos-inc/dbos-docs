@@ -73,8 +73,9 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 
 This section is used to specify DBOS runtime parameters.
 
-- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./tools/cli#npx-dbos-start) overrides this config parameter.
-- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
+- **start**: The command to run to start your application. For example, if your main function is compiled to `dist/main.js`, your start command would be `node dist/main.js`. Mutually exclusive with entrypoints.
+- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. Mutually exclusive with a start command, should only be used if you are using the DBOS HTTP decorators. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
+- **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./tools/cli#npx-dbos-start) overrides this config parameter. Only used if you are using the DBOS HTTP decorators.
 - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../cloud-tutorials/application-management.md#customizing-microvm-setup)
 
 **Example**:
@@ -89,7 +90,7 @@ runtimeConfig:
 
 ### HTTP
 
-This section is used to specify DBOS HTTP parameters.
+This section is used to specify DBOS HTTP parameters. Only used if you are using the DBOS HTTP decorators.
 
 - **cors_middleware** (optional): Whether to allow cross-origin requests (via CORS middleware).  Default is `true`.
 - **credentials** (optional): If `cors_middleware` is enabled, whether to allow cross-origin requests that include credentials.  Default is `true`.
@@ -173,7 +174,7 @@ telemetry:
 
 ### Configuration Schema File
 
-There is a schema file available for the DBOS configuration file schema [in our GitHub repo](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
+There is a schema file available for the DBOS configuration file schema [in GitHub](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
 This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
 For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files.
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
