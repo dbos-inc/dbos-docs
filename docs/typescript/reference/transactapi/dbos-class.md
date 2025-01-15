@@ -927,7 +927,7 @@ Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loade
 Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that will actually be run during by the application.
 
 ```typescript
-await DBOS.loadClasses(runtimeConfig.entrypoints);
+await DBOS.loadClasses(['dist/kafka_conumer.js','dist/background_jobs.js']);
 ```
 
 ### Launching DBOS
