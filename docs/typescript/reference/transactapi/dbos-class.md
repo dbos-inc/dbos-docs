@@ -899,16 +899,19 @@ A time matches the pattern if all fields of the time match the pattern.
 Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
 
 ## Application Lifecycle
-For DBOS applications using entrypoint classes specified in [`dbos-config.yaml`](../configuration), a "serverless" application lifecycle is handled automatically.  However, it is possible to build a custom application lifecycle.
 
-The steps in a custom lifecycle are:
-* [Load classes with DBOS functions](#loading-classes) and [provide DBOS configuration information](#setting-the-application-configuration).  Note that these can be intermixed, it is not necessary to load classes first, or to provide configuration first.
+The steps in a DBOS application's lifecycle are:
+* [Provide DBOS configuration information](#setting-the-application-configuration), if not using `dbos-config.yaml`.
+* [Load classes with DBOS functions](#loading-classes), if they are not already loaded by your program.
 * [Launch DBOS](#launching-dbos).  This will initialize DBOS functions and start workflow recovery, scheduled workflows, etc.
 * [Start DBOS internal HTTP request handlers](#starting-http-handler-services), if used by your application.
 * [Shut DBOS down](#shutting-down-dbos) gracefully, if desired.
 
+Note that these steps are handled automatically for DBOS applications using entrypoints specified in [`dbos-config.yaml`](../configuration).
+
 ### Setting The Application Configuration
-If the DBOS configuration should not be loaded from `dbos-config.yaml`, it may be provided programatically with `DBOS.setConfig`:
+By default, the DBOS configuration is automatically loaded from `dbos-config.yaml`.
+However, it may also be provided programatically with `DBOS.setConfig`:
 ```typescript
 DBOS.setConfig(config: DBOSConfig, runtimeConfig?: DBOSRuntimeConfig)
 ```
@@ -924,7 +927,7 @@ const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'}
 Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loaded and programmatic modifications or checks to be performed prior to calling `DBOS.setConfig`.
 
 ### Loading Classes
-Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that will actually be run during by the application.
+Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that are actually loaded by the application.
 
 ```typescript
 await DBOS.loadClasses(['dist/kafka_conumer.js','dist/background_jobs.js']);
