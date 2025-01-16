@@ -65,7 +65,7 @@ class Tasks {
   }
 
   @DBOS.workflow()
-  async function processTasks(tasks) {
+  static async processTasks(tasks) {
     const handles = []
 
     // Enqueue each task so all tasks are processed concurrently.
