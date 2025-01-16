@@ -74,7 +74,7 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 This section is used to specify DBOS runtime parameters.
 
 - **start**: The command to run to start your application. For example, if your main function is compiled to `dist/main.js`, your start command would be `node dist/main.js`. Mutually exclusive with entrypoints.
-- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. Mutually exclusive with a start command, should only be used if you are using the DBOS HTTP decorators. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to `[dist/operations.js]`.
+- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code.  This should only be used if you are using [scheduled workflows](./transactapi/dbos-class.md#scheduled-workflows), [Kafka consumers](../tutorials/requestsandevents/kafka-integration.md), or DBOS HTTP decorators in files that are not referenced by your `start` command.  At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions.  Defaults to `[dist/operations.js]`.
 - **port** (optional): The port from which to serve your functions. Defaults to `3000`. Using [`npx dbos start -p <port>`](./tools/cli#npx-dbos-start) overrides this config parameter. Only used if you are using the DBOS HTTP decorators.
 - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../cloud-tutorials/application-management.md#customizing-microvm-setup)
 

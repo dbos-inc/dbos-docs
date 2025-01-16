@@ -158,7 +158,7 @@ DBOS.kafka_consumer(
 ```
 
 Runs a function for each Kafka message received on the specified topic(s). 
-Uses the Kafka message's topic, partition and offset to create a unique [workflow id](http://localhost:3000/python/reference/contexts#setworkflowid) to ensure once and only once execution.
+Uses the Kafka message's topic, partition and offset to create a unique [workflow id](../reference/contexts#setworkflowid) to ensure once and only once execution.
 Takes a configuration dictionary and a list of topics to consume. 
 The decorated function must take a KafkaMessage as its only parameter.
 
