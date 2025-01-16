@@ -21,12 +21,11 @@ Queued tasks are started in first-in, first-out (FIFO) order.
 ```javascript
 const queue = new WorkflowQueue("example_queue");
 
-class Tasks
-{
-    @DBOS.workflow()
-    static async processTask(task: Task) {
-      // ...
-    }
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task) {
+    // ...
+  }
 }
 
 async function main() {
@@ -39,33 +38,32 @@ async function main() {
 
 Here's an example of a workflow using a queue to process tasks in parallel:
 
-```typescript
+```javascript
 const queue = new WorkflowQueue("example_queue");
 
-class Tasks
-{
-    @DBOS.workflow()
-    static async processTask(task: Task) {
-      // ...
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task) {
+    // ...
+  }
+
+  @DBOS.workflow()
+  async function processTasks(tasks) {
+    const handles = []
+
+    // Enqueue each task so all tasks are processed concurrently.
+    for (const task of tasks) {
+      handles.push(await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task));
     }
 
-    @DBOS.workflow()
-    async function processTasks(tasks) {
-      const handles = []
-
-      // Enqueue each task so all tasks are processed concurrently.
-      for (const task of tasks) {
-        handles.push(await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task));
-      }
-
-      // Wait for each task to complete and retrieve its result.
-      // Return the results of all tasks.
-      const results = [];
-      for (const h of handles) {
-        results.push(await h.getResult());
-      }
-      return results;
+    // Wait for each task to complete and retrieve its result.
+    // Return the results of all tasks.
+    const results = [];
+    for (const h of handles) {
+      results.push(await h.getResult());
     }
+    return results;
+  }
 }
 ```
 
@@ -91,8 +89,41 @@ You can set _rate limits_ for a queue, limiting the number of functions that it 
 Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
 
-```typescript
+```javascript
 const queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, periodSec: 30});
 ```
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+
+### In-Order Processing
+
+You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+Only a single event will be processed at a time.
+For example, this app processes events sequentially in the order of their arrival:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+const serialQueue = new WorkflowQueue("in_order_queue", 1);
+const app = express();
+
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task){
+    // ...
+  }
+}
+
+app.get("/events/:event", async (req, res) => {
+  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
+});
+
+// Launch DBOS and start the Express.js server
+async function main() {
+  await DBOS.launch({ expressApp: app });
+  app.listen(3000, () => {});
+}
+
+main().catch(console.log);
+```
