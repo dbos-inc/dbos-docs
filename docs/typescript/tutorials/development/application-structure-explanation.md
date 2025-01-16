@@ -5,8 +5,7 @@ description: Learn about the structure of a DBOS project
 pagination_next: null
 ---
 
-When you initialize a DBOS project with `npx @dbos-inc/create` or another template, it typically has the following structure:
-Here is the structure of the DBOS Knex starter app, initialized with `npx @dbos-inc/create -t dbos-knex`:
+When you initialize a DBOS project with `npx @dbos-inc/create` (such as the `dbos-knex` starter here), it typically has the following structure:
 
 ```bash
 dbos-knex/
