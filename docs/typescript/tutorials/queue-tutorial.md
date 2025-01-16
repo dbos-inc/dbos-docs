@@ -111,12 +111,13 @@ const app = express();
 class Tasks {
   @DBOS.workflow()
   static async processTask(task){
-    // ...
+    // ... process task
   }
 }
 
 app.get("/events/:event", async (req, res) => {
   await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
+  await res.send("Workflow Started!");
 });
 
 // Launch DBOS and start the Express.js server
