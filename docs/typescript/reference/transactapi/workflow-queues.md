@@ -31,8 +31,8 @@ class WorkflowQueue {
 This concurrency limit is global across all DBOS processes using this queue.
 If not provided, any number of functions may run concurrently.
 - `rateLimit`: A limit on the maximum number of functions which may be started in a given period.
-- `rateLimit.limitPerPeriod`: The number of workflows that may be started within the specified time period.
-- `rateLimit.periodSec`: The time period across which `limitPerPeriod` applies.
+  - `rateLimit.limitPerPeriod`: The number of workflows that may be started within the specified time period.
+  - `rateLimit.periodSec`: The time period across which `limitPerPeriod` applies.
 
 **Example syntax:**
 
@@ -53,51 +53,33 @@ The `DBOS.startWorkflow` method durably enqueues your function; after it returns
 
 **Example syntax:**
 
-In the example below, a `WorkflowQueue` is used to process tasks serially, without concurrency:
-
-```typescript
+```javascript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
-const serialqueue = new WorkflowQueue("serialQ", 1);
+const queue = new WorkflowQueue("example_queue");
 
-class TaskWFs
-{
-    @DBOS.workflow()
-    static async processTask(task: MyTask): Promise<MyResult> {
-      // ...
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task) {
+    // ...
+  }
+
+  @DBOS.workflow()
+  static async processTasks(tasks) {
+    const handles = []
+
+    // Enqueue each task so all tasks are processed concurrently.
+    for (const task of tasks) {
+      handles.push(await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task));
     }
+
+    // Wait for each task to complete and retrieve its result.
+    // Return the results of all tasks.
+    const results = [];
+    for (const h of handles) {
+      results.push(await h.getResult());
+    }
+    return results;
+  }
 }
-
-const handles: WorkflowHandle<MyResult>[] = []
-
-// Enqueue each task so all tasks are processed sequentially.
-for (const task of tasks) {
-  handles.push(await DBOS.startWorkflow(TaskWFs, {queueName: serialqueue.name}).processTask({task:"Do it"}));
-}
-
-// Wait for each task to complete and retrieve its result.
-// Return the results of all tasks.
-const results: Result[] = [];
-for (const h of handles) {
-  results.push(await h.getResult());
-}
-return results;
-```
-
-### Syncronously Running Workflows On Queues
-
-The [`DBOS.withWorkflowQueue`](./dbos-class#using-workflow-queues) wrapper function executes all workflows within the callback function on the specified queue.
-
-```typescript
-// Run a workflow on the queue, and await the result
-const qres = await DBOS.withWorkflowQueue(wfq.name, async ()=>{
-  // Each workflow below will be run synchronously on the queue.
-  // 1. "Value A" will be queued/started as a separate task
-  const va = await Workflows.processWorkflow("value A");
-  // 2.  When it returns, execution proceeds to the next line
-  // 3. "Value B" will be queued/started as a separate task
-  const vb = await Workflows.processWorkflow("value B");
-  // 4.  When it returns, execution proceeds to the next line
-  return [va, vb];
-});
 ```
