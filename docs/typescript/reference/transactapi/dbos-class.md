@@ -900,25 +900,61 @@ A time matches the pattern if all fields of the time match the pattern.
 Each field matches the pattern if its numerical value is within any of the inclusive ranges provided in the field, and is also divisible by the divisor.
 
 ## Application Lifecycle
-For DBOS applications using entrypoint classes specified in [`dbos-config.yaml`](../configuration), a "serverless" application lifecycle is handled automatically.  However, it is possible to build a custom application lifecycle.
+
+The steps in a DBOS application's lifecycle are:
+* [Provide DBOS configuration information](#setting-the-application-configuration), if not using `dbos-config.yaml`.
+* [Load classes with DBOS functions](#loading-classes), if they are not already loaded by your program.
+* [Launch DBOS](#launching-dbos).  This will initialize DBOS functions and start workflow recovery, scheduled workflows, etc.
+* [Start DBOS internal HTTP request handlers](#starting-http-handler-services), if used by your application.
+* [Shut DBOS down](#shutting-down-dbos) gracefully, if desired.
+
+Note that these steps are handled automatically for DBOS applications using entrypoints specified in [`dbos-config.yaml`](../configuration).
 
 ### Setting The Application Configuration
-If the DBOS configuration should not be loaded from `dbos-config.yaml`, it may be provided programatically with `DBOS.setConfig`:
+By default, the DBOS configuration is automatically loaded from `dbos-config.yaml`.
+However, it may also be provided programatically with `DBOS.setConfig`:
 ```typescript
 DBOS.setConfig(config: DBOSConfig, runtimeConfig?: DBOSRuntimeConfig)
 ```
 
 If `runtimeConfig` is provided, the runtime will be started when the app is launched with `DBOS.launch`, including HTTP handling for decorated methods.  If `runtimeConfig` is not provided, this will not occur.
 
-### Launching and Shutting Down
-The DBOS app can be started with `launch` and stopped with `shutdown`.
+`parseConfigFile` can be used to load a configuration file.
 ```typescript
-DBOS.launch(httpApps?: DBOSHttpApps)
-DBOS.shutdown()
+import { parseConfigFile } from '@dbos-inc/dbos-sdk';
+const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'});
 ```
 
-* `launch`: This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
-* `shutdown`: This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
+Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loaded and programmatic modifications or checks to be performed prior to calling `DBOS.setConfig`.
+
+### Loading Classes
+Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that are actually loaded by the application.
+
+```typescript
+await DBOS.loadClasses(['dist/kafka_conumer.js','dist/background_jobs.js']);
+```
+
+### Launching DBOS
+The DBOS app can be started with `launch`.
+```typescript
+await DBOS.launch();
+```
+
+This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
+
+### Starting HTTP Handler Services
+If DBOS functions include [handler decorators](./dbos-class.md#http-handling) such as `@DBOS.getApi` and `@DBOS.postApi`, DBOS HTTP should be started to serve them.
+
+`DBOS.launchAppHTTPServer()` sets up routing for all handlers, and creates a server that listens on the port specified in the `runtimeConfig` passed to `DBOS.setConfig`.  If this server is not desired, such as in testing or if DBOS handlers are to be combined with those of another framework, `DBOS.setUpHandlerCallback()` can be used to return the server, without connecting it to a listening socket.
+
+### Shutting Down DBOS
+DBOS services can be shut down gracefully with `shutdown`.
+
+```typescript
+await DBOS.shutdown();
+```
+
+This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
 
 ### Recovering Workflows
 DBOS generally recovers workflows automatically.  However, this process can be initiated externally.
