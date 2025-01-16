@@ -71,36 +71,48 @@ Following the [Kafka Integration](../tutorials/requestsandevents/kafka-integrati
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
 
+// KAFKA_BROKER is passed via dbos-config.yaml
+const kbroker = process.env['KAFKA_BROKER'] ? process.env['KAFKA_BROKER'] : 'localhost:9092';
+
 const kafkaConfig: KafkaConfig = {
   clientId: 'dbos-kafka-test',
-  brokers: [`${process.env['KAFKA_BROKER'] ?? 'localhost:9092'}`],  //this is passed via dbos-config.yaml
+  brokers: [kbroker],
+  ssl: process.env['KAFKA_USERNAME'] ? true : false,
+  sasl: process.env['KAFKA_USERNAME'] ? {
+    mechanism: 'plain',
+    username: process.env['KAFKA_USERNAME']!,
+    password: process.env['KAFKA_PASSWORD']!,
+  } : undefined,
+  connectionTimeout: 45000,
   logLevel: logLevel.ERROR
 };
 ```
 
 We can trigger a DBOS Workflow every time a message arrives with the `@KafkaConsume` decorator like so. In this workflow we call a transaction to add all incoming alerts to our `alerts` table:
 ```typescript
-//The expected structure of incoming Kafka messages (utilities.ts)
-export interface AlertWithMessage {
-  alert_id: number;
-  alert_status: AlertStatus;
-  message: string;
+//The structure returned to the frontend when an employee asks for an assignment
+export interface AlertEmployeeInfo
+{
+  employee: Employee;
+  alert: AlertEmployee[];
+  expirationSecs: number | null;
+  newAssignment: boolean;
 }
 
-//Create the main app class with the above kafkaConfig (operations.ts) 
 @Kafka(kafkaConfig)
 export class AlertCenter {
-  //...
-  //Workflow to receive a kafka message and invoke the addAlert transaction
-  @Workflow()
+
+  //This is invoked when a new alert message arrives using the @KafkaConsume decorator
+  @DBOS.workflow()
   @KafkaConsume(respondTopic)
-  static async inboundAlertWorkflow(ctxt: WorkflowContext, topic: string, _partition: number, message: KafkaMessage) {
+  static async inboundAlertWorkflow(topic: string, _partition: number, message: KafkaMessage) {
     const payload = JSON.parse(message.value!.toString()) as {
       alerts: AlertWithMessage[],
     };
-    DBOS.logger.info(`Received alert: ${JSON.stringify(payload)}`); 
+    DBOS.logger.info(`Received alert: ${JSON.stringify(payload)}`);
+    //Add to the database
     for (const detail of payload.alerts) {
-      await RespondUtilities.addAlert(detail); //insert
+      await RespondUtilities.addAlert(detail);
     }
     return Promise.resolve();
   }
@@ -127,29 +139,32 @@ This workflow is guaranteed to handle every Kafka message exactly once, even if 
 To send messages, we create a KafkaProducerCommunicator object like so:
 ```typescript
 //A configured instance used to produce messages (operations.ts)
-const producerConfig: KafkaProduceCommunicator =  DBOS.configureInstance(KafkaProduceCommunicator, 'wfKafka', kafkaConfig, respondTopic, {
-  createPartitioner: Partitioners.DefaultPartitioner
-});
+const producerConfig: KafkaProduceStep =  DBOS.configureInstance(KafkaProduceStep, 
+  'wfKafka', kafkaConfig, respondTopic, {
+    createPartitioner: Partitioners.DefaultPartitioner
+  });
 ```
 
-We then create PostAPI route that accepts a message string and uses `producerConfig` to produce a new message:
+We then create an HTTP handler that accepts a message string and uses `producerConfig` to produce a new message:
 ```typescript
 //Produce a new alert message to our broker (in operations.ts/AlertCenter)
 @DBOS.postApi('/do_send')
 @DBOS.workflow()
 static async sendAlert(message: string) {
-  const max_id = await RespondUtilities.getMaxId(); //select max(alert_id) from alerts; -1 if empty
-  await producerConfig.sendMessage(   
-  {
-    value: JSON.stringify({
-      alerts: [
-      { 
-        alert_id: max_id+1,
-        alert_status: AlertStatus.ACTIVE,
-        message: message
-      }]
-    })
-  });
+  const max_id = await RespondUtilities.getMaxId();
+  await producerConfig.send(
+    {
+      value: JSON.stringify({
+        alerts: [
+          { 
+            alert_id: max_id+1,
+            alert_status: AlertStatus.ACTIVE,
+            message: message
+          }
+        ]
+      })
+    }
+  );
 }
 ```
 We now have a very simple app that can send and recieve Kafka messages!
@@ -186,42 +201,48 @@ const timeToRespondToAlert = 30; //default alert time window, in seconds
 Then we add the following `getUserAssignment` transaction:
 ```typescript
 //in utilities.ts/RespondUtilities
-@DBOS.transaction()
-static async getUserAssignment(employee_name: string, currentTime: number) {
-  let employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
-  let newAssignment = false;
-  if (employees.length === 0) { 
-    //First time on duty? Add to the employees table
-    employees = await DBOS.knexClient<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
-  }
+  @DBOS.transaction()
+  static async getUserAssignment(employee_name: string, currentTime: number, @ArgOptional more_time: boolean | undefined) {
+    let employees = await DBOS.knexClient<Employee>('employee').where({employee_name}).select();
+    let newAssignment = false;
 
-  const expirationTime = new Date(currentTime + timeToRespondToAlert * 1000);
-
-  if (!employees[0].alert_id) { 
-    //This employee does not have a current assignment. Let's find a new one!
-    const op = await DBOS.knexClient<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
-    
-    if (op) { //found an alert that needs work - set expiration time and assign it!
-      op.employee_name = employee_name;
-      const alert_id = op.alert_id;
-      employees[0].alert_id = op.alert_id;
-      employees[0].expiration = expirationTime;
-      await DBOS.knexClient<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
-      await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
-      newAssignment = true;
+    if (employees.length === 0) {
+      //Is this the first getUserAssignment for this employee? Add them to the employee table
+      employees = await DBOS.knexClient<Employee>('employee').insert({employee_name, alert_id: null, expiration: null}).returning('*');
     }
+
+    const expirationTime = new Date(currentTime + timeToRespondToAlert * 1000);
+
+    if (!employees[0].alert_id) { 
+      //This employee does not have a current assignment. Let's find a new one!
+      const op = await DBOS.knexClient<AlertEmployee>('alert_employee').whereNull('employee_name').orderBy(['alert_id']).first();
+
+      if (op) { //found an alert - assign it
+        op.employee_name = employee_name;
+        const alert_id = op.alert_id;
+        employees[0].alert_id = op.alert_id;
+        employees[0].expiration = expirationTime;
+        await DBOS.knexClient<Employee>('employee').where({employee_name}).update({alert_id, expiration: expirationTime});
+        await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id}).update({employee_name});
+        newAssignment = true;
+        DBOS.logger.info(`New Assignment for ${employee_name}: ${alert_id}`);
+      }
+    }
+    else if (employees[0].alert_id && more_time) {
+      //This employee has an assignment and is asking for more time.
+      DBOS.logger.info(`Extending time for ${employee_name} on ${employees[0].alert_id}`);
+      employees[0].expiration = expirationTime;
+      await DBOS.knexClient<Employee>('employee').where({employee_name}).update({expiration: expirationTime});
+    }
+
+    //If we have an assignment (new or existing), retrieve and return it
+    let alert : AlertEmployee[] = [];
+    if (employees[0].alert_id) {
+      alert = await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
+    }
+    return {employee: employees[0], newAssignment, alert};
   }
-
-  //If we have an assignment (new or existing) - return it
-  let alert : AlertEmployee[] = [];
-  if (employees[0].alert_id) {
-    alert = await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_id: employees[0].alert_id}).select();
-  } 
-  return {employee: employees[0], newAssignment, alert};
-}
 ```
-
-Note the final [implementation of this transaction on Github](https://github.com/dbos-inc/dbos-demo-apps/blob/59357e56792e668c8315fb4859674827c7dce9eb/typescript/alert-center/src/operations.ts#L55) has a few lines of additional logic to handle the case of employee asking for more time.
 
 ## 5. Releasing Assignments When Time is Up
 
@@ -240,6 +261,7 @@ static async checkForExpiredAssignment(employee_name: string, currentDate: Date)
 
   if ((employees[0].expiration?.getTime() ?? 0) > currentDate.getTime()) {
     //This employee is assigned and their time is not yet expired
+    DBOS.logger.info(`Not yet expired: ${employees[0].expiration?.getTime()} > ${currentDate.getTime()}`);
     return employees[0].expiration;
   }
 
@@ -265,29 +287,40 @@ The code looks like so:
 //in operations.ts/AlertCenter
 @DBOS.workflow()
 static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
+  
+  // Get the current time from a checkpointed step;
+  //   This ensures the same time is used for recovery or in the time-travel debugger
   let ctime = await DBOSDateTime.getCurrentTime();
 
-  //Get new assignment, extend time or simply return current assignment
+  //Assign, extend time or simply return current assignment
   const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
   
-  //Get the expiration time (if there is a current assignment); pass it to the caller
+  //Get the expiration time (if there is a current assignment); use setEvent to provide it to the caller
   const expirationSecs = userRec.employee.expiration ? (userRec.employee.expiration!.getTime()-ctime) / 1000 : null;
   await DBOS.setEvent<AlertEmployeeInfo>('rec', {...userRec, expirationSecs});
 
   if (userRec.newAssignment) {
-    //Start a loop that checks for expiration
-    let expirationMS = userRec.employee.expiration.getTime();
+
+    //First time we assigned this alert to this employee. 
+    //Here we start a loop that sleeps, wakes up and checks if the assignment has expired
+    DBOS.logger.info(`Start watch workflow for ${name}`);
+    let expirationMS = userRec.employee.expiration ? userRec.employee.expiration.getTime() : 0;
 
     while (expirationMS > ctime) {
-      await DBOS.sleepms(expirationMS - ctime); //durable sleep
+      DBOS.logger.debug(`Sleeping ${expirationMS-ctime}`);
+      await DBOS.sleepms(expirationMS - ctime);
       const curDate = await DBOSDateTime.getCurrentDate();
       ctime = curDate.getTime();
       const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
+
       if (!nextTime) {
-        //This assignment has been released and we can stop monitoring it
+        //The time on this assignment expired, and we can stop monitoring it
+        DBOS.logger.info(`Assignment for ${name} ended; no longer watching.`);
         break;
       }
+
       expirationMS = nextTime.getTime();
+      DBOS.logger.info(`Going around again: ${expirationMS} / ${ctime}`);
     }
   }
 }
@@ -318,24 +351,19 @@ Finally we define routes for these actions in `frontend.ts` that our UI invokes.
 ```typescript
 //Serve public/app.html as the main endpoint
 @DBOS.getApi('/')
-  static frontend() {
+static frontend() {
   return render("app.html", {});
 }
 
-//For a new employee to get / check their assignment or ask for more time
+
+//For a new employee to get an assignment or for an assigned employee to ask for more time
 @DBOS.getApi('/assignment')
 static async getAssignment(name: string, @ArgOptional more_time: boolean | undefined) {
   const userRecWF = await DBOS.startWorkflow(AlertCenter).userAssignmentWorkflow(name, more_time);
 
   //This Workflow Event lets us know if we have an assignment and, if so, how much time is left
-  const userRec = await DBOS.getEvent<AlertEmployeeInfo>(userRecWF.workflowID, 'rec');
+  const userRec = await DBOS.getEvent<AlertEmployeeInfo>(userRecWF.getWorkflowUUID(), 'rec');
   return userRec;
-}
-
-//An employee request to mark the current assignment as completed
-@DBOS.postApi('/respond/fixed') 
-static async fixAlert(name: string) {
-  await RespondUtilities.employeeCompleteAssignment(name);
 }
 
 //And so on for respond/cancel, respond/more_time, etc...
