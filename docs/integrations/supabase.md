@@ -66,6 +66,17 @@ If you continue to your [application page](https://console.dbos.dev/applications
 
 To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
+:::info
+
+For isolation, DBOS deploys applications to non-default databases on your Supabase Postgres server.
+As a result, they aren't visible in the Supabase web UI.
+You can see the DBOS tables by running SQL queries in the Supabase web console:
+
+<img src={require('@site/static/img/supabase-starter/databases.png').default} alt="Application page" width="800" className="custom-img" />
+
+:::
+
+
 ## Develop Locally
 
 You can also develop your DBOS application locally while storing its data in Supabase!  Here's how:
