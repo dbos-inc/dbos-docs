@@ -74,6 +74,21 @@ A setup script may install system packages or libraries or otherwise customize t
 apt install traceroute
 ```
 
+#### Ignoring files with .dbosignore
+
+You can create a .dbosignore file in your repository's root directory to tell deploy which files and directories to ignore when creating the zip file to deploy.
+
+The syntax for this file is similar to the popular .gitignore.
+
+Some examples:
+
+foo.txt # The file is ignored
+somedir # directory is ignored
+anotherdir/file.txt # file in the directory is ignored
+
+Lines starting with # are comments and not processed
+
+
 ### Monitoring and Debugging Applications
 
 DBOS provides many tools to monitor and debug applications:
