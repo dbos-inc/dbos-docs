@@ -62,14 +62,14 @@ Here are some useful tools to monitor and debug applications:
 
 - The [cloud console](https://console.dbos.dev) provides a web UI for viewing your applications and their traces and logs.
 
-- To retrieve the last `N` seconds of your application's logs, run in your application root directory [`dbos-cloud app logs -l <N>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
+- To retrieve the last `N` seconds of your application's logs, run [`dbos-cloud app logs -l <N>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
 
-- To retrieve the status of a particular application, run [`dbos-cloud app status <app-name>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-status). To retrieve the statuses of all applications, run [`dbos-cloud app list`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-list).
+- To retrieve the status of a particular application, run [`dbos-cloud app status <app-name>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-status). To list all applications, run [`dbos-cloud app list`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-list).
 
 ### Managing Application Versions
 
 Each time you deploy an application, it creates a new version with a unique ID.
-To list all previous versions of your application, run:
+You can view all previous versions of your application from the [cloud console](https://console.dbos.dev) or list them by running:
 
 ```
 dbos-cloud app versions <app-name>
@@ -81,7 +81,7 @@ You can redeploy a previous version of your application by passing `--previous-v
 dbos-cloud app deploy --previous-version <version-id>
 ```
 
-This will fail if the previous and current versions have different database schemas.
+This will fail if the previous and current versions use different database schemas.
 
 ### Updating Applications
 
@@ -101,7 +101,8 @@ To delete an application, run:
 dbos-cloud app delete <app-name>
 ```
 
-You can also delete the application database (`app_db_name`) with the `--dropdb` argument:
+You can also drop the application database with the `--dropdb` argument.
+As each application has its own isolated database, this does not affect your other applications.
 
 ```shell
 dbos-cloud app delete <app-name> --dropdb
