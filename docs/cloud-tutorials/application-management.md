@@ -22,6 +22,9 @@ Each time you deploy an application, the following steps execute:
 By default, these have 1 vCPU and 512MB of RAM.
 The amount of memory allocated to each microVM is [configurable](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-update).
 
+After an application is deployed, it is assigned a domain of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
+If your account is part of an [organization](./account-management.md#organization-management), organization name is used instead of username.
+
 :::tip
 * Applications should serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for Express and Koa).
 * Multiple applications can connect to the same Postgres database server&mdash;they are deployed to isolated databases on that server.
