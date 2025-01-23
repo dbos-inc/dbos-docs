@@ -18,7 +18,7 @@ Before executing any test code that uses DBOS, DBOS should be launched:
     await DBOS.setUpHandlerCallback();
 ```
 
-See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-and-shutting-down) for launch options.
+See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-dbos) for launch options.
 
 #### Configuring DBOS Prior To Launch
 

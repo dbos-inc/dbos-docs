@@ -3,8 +3,8 @@ sidebar_position: 45
 title: Queues & Parallelism
 ---
 
-Queues allow you to ensure that functions will be run, without starting them immediately.
-Queues are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+Queues allow you to run functions with managed concurrency.
+They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
 
 To create a queue, specify its name:
 
@@ -66,6 +66,15 @@ class Tasks {
   }
 }
 ```
+
+### Reliability Guarantees
+
+Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Enqueued functions always run to completion.  If a DBOS process crashes and is restarted at any point after a function is enqueued, it resumes the enqueued function from the last completed step.
+2.  [Steps](./step-tutorial.md) called from enqueued workflows are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) called from enqueued workflows commit _exactly once_.
 
 ### Managing Concurrency
 

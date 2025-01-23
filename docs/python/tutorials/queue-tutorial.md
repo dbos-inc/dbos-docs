@@ -3,8 +3,8 @@ sidebar_position: 4
 title: Queues & Parallelism
 ---
 
-Queues allow you to ensure that functions will be run, without starting them immediately.
-Queues are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+Queues allow you to run functions with managed concurrency.
+They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
 
 To create a queue, specify its name:
 
@@ -31,7 +31,7 @@ handle = queue.enqueue(process_task, task)
 
 ### Queue Example
 
-Here's an example of a workflow using a queue to process tasks in parallel:
+Here's an example of a workflow using a queue to process tasks concurrently:
 
 ```python
 from dbos import DBOS, Queue
@@ -54,7 +54,15 @@ def process_tasks(tasks):
   return [handle.get_result() for handle in task_handles]
 ```
 
-While something similar to this could have been accomplished with `start_workflow`, use of a `Queue` allows the dispatch behavior to be controlled.
+### Reliability Guarantees
+
+Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Enqueued functions always run to completion.  If a DBOS process crashes and is restarted at any point after a function is enqueued, it resumes the enqueued function from the last completed step.
+2.  Enqueued [steps](./step-tutorial.md) (or steps called from enqueued workflows) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+3.  Enqueued [transactions](./transaction-tutorial.md) (or transactions called from enqueued workflows) commit _exactly once_.
+
 
 ### Managing Concurrency
 
@@ -82,7 +90,7 @@ For example, this queue has a limit of 50 with a period of 30 seconds, so it may
 queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
 ```
 
-You can use rate limits when working with a rate-limited API (for example, most LLM APIs, including OpenAI's) so that you do not exhaust your limit.
+Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
 
 ### In-Order Processing
 
