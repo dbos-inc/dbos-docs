@@ -402,4 +402,12 @@ Rename your organization. Only the organization admin (the original creator of t
 :::info
 Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs. The old URLs are no longer accessible.
 :::
+
+### `dbos-cloud org remove`
+
+**Description:**
+Remove a user from an organization. Only the organization admin (the original creator of the organization) can run this command.
+
+**Parameters:**
+- `<username>`: The user to remove from your organization.
 ---

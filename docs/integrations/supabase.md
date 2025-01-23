@@ -9,6 +9,12 @@ import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 #  Use DBOS With Supabase
 
+:::info
+
+To learn more about how DBOS and Supabase are working together, check out [this blog post](https://supabase.com/blog/durable-workflows-in-postgres-dbos)!
+
+:::
+
 This guide shows you how to build an application with DBOS and [Supabase](https://supabase.com/).
 While Supabase stores your application's data, DBOS serverlessly hosts its code and makes it resilient to any failure.
 
@@ -65,6 +71,17 @@ If you continue to your [application page](https://console.dbos.dev/applications
 <img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
 
 To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
+
+:::info
+
+For isolation, DBOS deploys applications to non-default databases on your Supabase Postgres server.
+As a result, they aren't visible in the Supabase web UI.
+You can see the DBOS tables by running SQL queries in the Supabase web console:
+
+<img src={require('@site/static/img/supabase-starter/databases.png').default} alt="Application page" width="800" className="custom-img" />
+
+:::
+
 
 ## Develop Locally
 
