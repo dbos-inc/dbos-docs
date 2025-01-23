@@ -16,12 +16,11 @@ dbos-cloud app deploy
 Each time you deploy an application, the following steps execute:
 
 1. **Upload**: An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
-2. **Configuration**: Your application's dependencies are installed and the application is built.
-    - In Python, dependencies are loaded from `requirements.txt`. In TypeScript, they are loaded from `package-lock.json`, or from `package.json` if the former is not present. The maximum size of your app after all dependencies are installed is 2 GB.
-    - In TypeScript, your application is built using `npm run build`.
-    - After dependencies are installed, all database migrations specified in your `dbos-config.yaml` are run on your cloud database.
-3. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) with 1vCPU and 512MB of RAM by default.
-    - DBOS Pro subscribers can [configure](../cloud-tutorials/cloud-cli#dbos-cloud-app-update) the amount of memory allocated to each microVM.
+2. **Configuration**: Your application's dependencies [are installed](#dependency-management).
+3. **Migration**: If you specify database migrations in your `dbos-config.yaml`, these are run on your cloud database.
+4. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/).
+By default, these have 1 vCPU and 512MB of RAM.
+The amount of memory allocated to each microVM is [configurable](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-update).
 
 :::tip
 * Applications should serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for Express and Koa).
@@ -30,9 +29,28 @@ Each time you deploy an application, the following steps execute:
 * You cannot change the database of a deployed application. You must delete and re-deploy the application.
 :::
 
+#### Dependency Management
+
+<Tabs groupId="database-clients">
+<TabItem value="python" label="Python">
+
+For Python applications, DBOS Cloud installs all dependencies from your `requirements.txt` file.
+The maximum size of your application after all dependencies are installed is 2 GB.
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+For TypeScript applications, DBOS Cloud installs all dependencies from your `package-lock.json` file (or from `package.json` if no lockfile is provided).
+The maximum size of your application after all dependencies are installed is 2 GB.
+
+After all dependencies are installed, your application is compiled using `npm run build`.
+
+</TabItem>
+</Tabs>
+
 #### Customizing MicroVM Setup
 
-DBOS Pro subscribers can provide a _setup script_ that runs before their application is built.
+DBOS Pro subscribers can provide a _setup script_ that runs before their application is configured.
 This script can customize the runtime environment for your application, for example installing system packages and libraries.
 
 A setup script must be specified in your `dbos-config.yaml` like so:
