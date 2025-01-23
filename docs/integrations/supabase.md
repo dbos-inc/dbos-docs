@@ -9,6 +9,12 @@ import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 #  Use DBOS With Supabase
 
+:::info
+
+To learn more about how DBOS and Supabase are working together, check out [this blog post](https://supabase.com/blog/durable-workflows-in-postgres-dbos)!
+
+:::
+
 This guide shows you how to build an application with DBOS and [Supabase](https://supabase.com/).
 While Supabase stores your application's data, DBOS serverlessly hosts its code and makes it resilient to any failure.
 
