@@ -29,7 +29,7 @@ class WorkflowQueue {
 
 **Parameters:**
 - `name`: The name of the queue.  Must be unique among all queues in the application.
-- `concurrency`: The maximum number of workflows from this queue that may run concurrently. Default to infinity.
+- `concurrency`: The maximum number of workflows from this queue that may run concurrently. Defaults to no limit.
 This concurrency limit is global across all DBOS processes using this queue.
 - `workerConcurrency`: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `concurrency`.
 - `rateLimit`: A limit on the maximum number of functions which may be started in a given period.
