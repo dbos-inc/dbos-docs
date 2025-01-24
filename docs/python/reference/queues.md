@@ -28,7 +28,7 @@ class Limiter(TypedDict):
 This concurrency limit is global across all DBOS processes using this queue.
 If not provided, any number of functions may run concurrently.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single worker. Must be less than or equal to `concurrency`.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`.
 
 **Example syntax:**
 
