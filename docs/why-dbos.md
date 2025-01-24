@@ -4,15 +4,14 @@ hide_table_of_contents: false
 
 # Why DBOS?
 
-## What Is DBOS?
+## Build Reliable Programs With DBOS
 
-DBOS helps you write **reliable** and **fault-tolerant** applications.
+DBOS is an open-source library for building **reliable** and **fault-tolerant** applications.
 
 Let's look at a common situation where this is useful.
 Imagine you're running an e-commerce platform where an order goes through multiple "steps":
 
 <img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="800" className="custom-img"/>
-
 
 This program looks simple, but making it _robust_ is deceptively difficult.
 Here are some potential problems:
@@ -20,34 +19,33 @@ Here are some potential problems:
 - Your program crashes after Step 1, "Validate Payment". The customer has been charged, but their order is never shipped.
 - You get to step 2, "Check Inventory", and you're out of stock. You need to wait 24 hours for the new inventory before you can ship your order. You need that "step" to sleep for a day.
 
+DBOS makes those problems easier to solve because you can add decorators like `DBOS.workflow()` and `DBOS.step()` to your program:
 
-DBOS makes it easier to write reliable programs because you can add decorators like `DBOS.step()` and `DBOS.workflow()`:
 
 ```python
 @DBOS.step()
-def step_one():
-    ...
-
-@DBOS.step()
-def step_two():
+def validate_payment():
     ...
 
 @DBOS.workflow()
-def workflow()
-    step_one()
-    step_two()
+def checkout_workflow()
+    validate_payment()
+    check_inventory()
+    ship_order()
+    notify_customer()
 ```
 
-These decorators persist the state of your program and its steps in a Postgres database:
+
+These decorators **durably execute** your program, persisting its state to a Postgres database:
 
 <img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="800" className="custom-img"/> 
 
 You can think of this stored state as a "checkpoint" or "save point" for your program.
 If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
 For example, if your checkout program crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
-Thus, DBOS makes your programs **reliable by default**.
+Thus, DBOS makes your application **resilient to any failure**.
 
-## Using DBOS
+## DBOS Is Lightweight
 
 All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
 
@@ -120,7 +118,7 @@ class Example {
 
 If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
 
-Here are some examples of problems DBOS helps solve:
+## What Can You Build With DBOS?
 
 <Tabs groupId="examples">
 
@@ -254,29 +252,6 @@ def process_kafka_alerts(msg: KafkaMessage):
   alerts = msg.value.decode()
   for alert in alerts:
     respond_to_alert(alert)
-```
-
-</article>
-</section>
-</TabItem>
-
-<TabItem value="webhooks" label="Webhooks">
-<section className="row list">
-<article className="col col--4">
-
-Effortlessly mix synchronous webhook code with asynchronous event processing. Reliably wait weeks or months for events, then use idempotency and durable execution to process them exactly once.
-
-[See an example ↗️](./python/examples/rag-slackbot.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@slackapp.message()
-def handle_message(request: BoltRequest) -> None:
-  event_id = request.body["event_id"]
-  with SetWorkflowID(event_id):
-    DBOS.start_workflow(message_workflow, request.body["event"])
 ```
 
 </article>
