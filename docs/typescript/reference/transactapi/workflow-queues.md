@@ -16,20 +16,22 @@ interface QueueRateLimit {
     periodSec: number;
 }
 
+interface QueueParameters {
+    workerConcurrency?: number;
+    concurrency?: number;
+    rateLimit?: QueueRateLimit;
+}
+
 class WorkflowQueue {
-    constructor(
-        readonly name: string,
-        readonly concurrency?: number,
-        readonly rateLimit?: QueueRateLimit
-    );
+   constructor(name: string, queueParameters: QueueParameters);
 }
 ```
 
 **Parameters:**
 - `name`: The name of the queue.  Must be unique among all queues in the application.
-- `concurrency`: The maximum number of workflows from this queue that may run concurrently.
+- `concurrency`: The maximum number of workflows from this queue that may run concurrently. Default to infinity.
 This concurrency limit is global across all DBOS processes using this queue.
-If not provided, any number of functions may run concurrently.
+- `workerConcurrency`: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `concurrency`.
 - `rateLimit`: A limit on the maximum number of functions which may be started in a given period.
   - `rateLimit.limitPerPeriod`: The number of workflows that may be started within the specified time period.
   - `rateLimit.periodSec`: The time period across which `limitPerPeriod` applies.
@@ -39,7 +41,14 @@ If not provided, any number of functions may run concurrently.
 This queue may run no more than 10 functions concurrently and may not start more than 50 functions per 30 seconds:
 
 ```typescript
-const queue = new WorkflowQueue("example_queue", 10, {limitPerPeriod: 50, periodSec: 30});
+const queue = new WorkflowQueue(
+    "example_queue",
+    {
+        concurrency: 10,
+        workerConcurrency: 5,
+        rateLimit: { limitPerPeriod: 50, periodSec: 30 }
+    },
+);
 ```
 
 
