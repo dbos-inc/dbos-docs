@@ -78,8 +78,7 @@ These guarantees assume that the application and database may crash and go offli
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently.
-Queues support two scopes for concurrency: global and per process.
+You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
 Global concurrency limits are applied across all DBOS processes using this queue.
 Per process concurrency limits are applied to each DBOS process using this queue.
 If no limit is provided, any number of functions may run concurrently.
