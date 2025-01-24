@@ -1,13 +1,126 @@
 ---
-hide_table_of_contents: true
+hide_table_of_contents: false
 ---
 
 # Why DBOS?
 
-DBOS helps you write code that is **reliable** and **fault-tolerant** by default.
-DBOS **durably executes** your programs, so that if they fail, upon restart they automatically resume from where they left off.
-This makes all sorts of programs easier to write:
+## What Is DBOS?
 
+DBOS helps you write **reliable** and **fault-tolerant** applications.
+
+Let's look at a common situation where this is useful.
+Imagine you're running an e-commerce platform where an order goes through multiple "steps":
+
+<img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="800" className="custom-img"/>
+
+
+This program looks simple, but making it _robust_ is deceptively difficult.
+Here are some potential problems:
+
+- Your program crashes after Step 1, "Validate Payment". The customer has been charged, but their order is never shipped.
+- You get to step 2, "Check Inventory", and you're out of stock. You need to wait 24 hours for the new inventory before you can ship your order. You need that "step" to sleep for a day.
+
+
+DBOS makes it easier to write reliable programs because you can add decorators like `DBOS.step()` and `DBOS.workflow()`:
+
+```python
+@DBOS.step()
+def step_one():
+    ...
+
+@DBOS.step()
+def step_two():
+    ...
+
+@DBOS.workflow()
+def workflow()
+    step_one()
+    step_two()
+```
+
+These decorators persist the state of your program and its steps in a Postgres database:
+
+<img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="800" className="custom-img"/> 
+
+You can think of this stored state as a "checkpoint" or "save point" for your program.
+If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
+For example, if your checkout program crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
+Thus, DBOS makes your programs **reliable by default**.
+
+## Using DBOS
+
+All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
+
+You can run these commands to quickly try out a DBOS demo yourself:
+
+
+<Tabs groupId="language">
+<TabItem value="python" label="Python">
+
+```shell
+pip install dbos
+dbos init
+dbos start
+```
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```shell
+npx @dbos-inc/create -t dbos-node-starter
+cd dbos-node-starter
+npm run build
+npm run start
+```
+</TabItem>
+</Tabs>
+
+
+To add DBOS to your application, simply annotate _workflows_ and _steps_ in your program like this:
+<Tabs groupId="language">
+<TabItem value="python" label="Python">
+
+```python
+@DBOS.step()
+def step_one():
+    ...
+
+@DBOS.step()
+def step_two():
+    ...
+
+@DBOS.workflow()
+def workflow()
+    step_one()
+    step_two()
+```
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```javascript
+class Example {
+  @DBOS.step()
+  static async step_one() {
+    ...
+  }
+
+  @DBOS.step()
+  static async step_two() {
+    ...
+  }
+
+  @DBOS.workflow()
+  static async workflow() {
+    await Example.step_one()
+    await Example.step_two()
+  }
+}
+```
+</TabItem>
+</Tabs>
+
+If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
+
+Here are some examples of problems DBOS helps solve:
 
 <Tabs groupId="examples">
 
@@ -203,39 +316,6 @@ def agentic_refund(purchase):
 
 </Tabs>
 
-## Using DBOS
-
-All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
-To use the library, annotate _workflows_ and _steps_ in your program like this:
-
-```python
-@DBOS.step()
-def step_one():
-    ...
-
-@DBOS.step()
-def step_two():
-    ...
-
-@DBOS.workflow()
-def workflow()
-    step_one()
-    step_two()
-```
-
-If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
-
-Under the hood, DBOS works by storing your program's execution state (e.g., which workflows are currently executing and which steps they've completed) in a Postgres database.
-So all DBOS needs to work is a Postgres database to connect to&mdash;there's no need for a separate "workflow server."
-
-DBOS provides many powerful features you can use to build reliable programs, including:
-
-- **Durable queues**: Run many durable workflows in parallel, with controlled concurrency.
-- **Durable sleeps and notifications**: Workflows can wait for days or weeks, or for a notification, and will always resume on schedule.
-- **Scheduled workflows**: Start a workflow exactly-once per time interval.
-- **Exactly-once event processing**: Start a durable workflow exactly-once per incoming event, for example from Kafka.
-- **Idempotency**: Use built-in idempotency keys to start a workflow only once, no matter how many times it is called with that key.
-
 ## DBOS Cloud
 
 Any program you build with DBOS you can deploy for free to DBOS Cloud.
@@ -249,4 +329,6 @@ Your program runs the same in the cloud as it does locally, but operating it is 
 
 ## Get Started
 
-What are you waiting for?  Check out the [quickstart](./quickstart.md) to get started!
+Want to try DBOS out? Check out the [quickstart](./quickstart.md) to get started!
+
+Thanks to Paul Copplestone from Supabase, whose [blog post on DBOS](https://supabase.com/blog/durable-workflows-in-postgres-dbos) inspired this page.
