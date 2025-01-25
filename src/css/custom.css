@@ -98,6 +98,14 @@
   font-size: small;
 }
 
+.medium-tabs .tabs__item {
+  line-height: 1rem;
+  margin-right: 0;
+  padding: 0.5rem;
+  margin: 0;
+  font-size: medium;
+}
+
 .custom-details {
   background-color: var(--ifm-card-background-color);
 }

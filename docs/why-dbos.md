@@ -1,23 +1,23 @@
 ---
 hide_table_of_contents: false
+hide_title: false
+title: Why DBOS?
 ---
 
-# Why DBOS?
+<p style={{ fontSize: '20px', color: 'var(--ifm-color-primary-darkest)' }}>DBOS is an open-source library for building **reliable** and **fault-tolerant** applications.</p>
 
-## Build Reliable Programs With DBOS
-
-DBOS is an open-source library for building **reliable** and **fault-tolerant** applications.
+### Build Reliable Programs
 
 Let's look at a common situation where this is useful.
-Imagine you're running an e-commerce platform where an order goes through multiple "steps":
+Imagine you're running an e-commerce platform where an order goes through multiple steps:
 
 <img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="800" className="custom-img"/>
 
-This program looks simple, but making it _robust_ is deceptively difficult.
+This program looks simple, but making it _reliable_ is deceptively difficult.
 Here are some potential problems:
 
-- Your program crashes after Step 1, "Validate Payment". The customer has been charged, but their order is never shipped.
-- You get to step 2, "Check Inventory", and you're out of stock. You need to wait 24 hours for the new inventory before you can ship your order. You need that "step" to sleep for a day.
+- Your program crashes after step 1, "Validate Payment". The customer has been charged, but their order is never shipped.
+- You get to step 2, "Check Inventory", and you're out of stock. You need to wait 24 hours for the new inventory before you can ship your order. You need that step to sleep for a day.
 
 DBOS makes those problems easier to solve because you can add decorators like `DBOS.workflow()` and `DBOS.step()` to your program:
 
@@ -40,14 +40,15 @@ These decorators **durably execute** your program, persisting its state to a Pos
 
 <img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="800" className="custom-img"/> 
 
-You can think of this stored state as a "checkpoint" or "save point" for your program.
+You can think of this stored state as a checkpoint for your program.
 If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
-For example, if your checkout program crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
+
+For example, if your checkout workflow crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
 Thus, DBOS makes your application **resilient to any failure**.
 
-## DBOS Is Lightweight
+### DBOS Is Lightweight
 
-All you need to do to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
+All you need to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
 
 You can run these commands to quickly try out a DBOS demo yourself:
 
@@ -118,15 +119,17 @@ class Example {
 
 If your program is ever interrupted or crashed, all your workflows automatically resume from the last completed step.
 
-## What Can You Build With DBOS?
+### Use Cases
 
-<Tabs groupId="examples">
+DBOS makes all sorts of programs easier to write. For example:
+
+<Tabs groupId="examples" className="medium-tabs">
 
 <TabItem value="workflow" label="Reliable Workflows">
 <section className="row list">
 <article className="col col--4">
 
-Write your business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
+Write business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
 
 [See an example ↗️](./python/examples/widget-store.md)
 
@@ -134,16 +137,16 @@ Write your business logic in normal code, with branches, loops, subtasks, and re
 <article className="col col--8">
 
 ```python
+@DBOS.step()
+def validate_payment():
+    ...
+
 @DBOS.workflow()
-def checkout_workflow(items):
-   order = create_order()
-   reserve_inventory(order, items)
-   payment_status = process_payment(order, items)
-   if payment_status == 'paid':
-       fulfill_order(order)
-   else:
-       undo_reserve_inventory(order, items)
-       cancel_order(order)
+def checkout_workflow()
+    validate_payment()
+    check_inventory()
+    ship_order()
+    notify_customer()
 ```
 
 </article>
@@ -155,7 +158,7 @@ def checkout_workflow(items):
 <article className="col col--4">
 
 Launch any task to run in the background and guarantee it eventually completes.
-Wait for days or weeks, or for a notification, before continuing&mdash;it just works.
+Wait for days or weeks, or for a notification, before continuing.
 
 [See an example ↗️](./python/examples/scheduled-reminders.md)
 
@@ -164,8 +167,8 @@ Wait for days or weeks, or for a notification, before continuing&mdash;it just w
 
 ```python
 @DBOS.workflow()
-def schedule_reminder(to_email: str, days_to_wait: int):
-    DBOS.sleep(days_to_seconds(days_to_wait))
+def schedule_reminder(to_email, days_to_wait):
+    DBOS.recv(days_to_seconds(days_to_wait))
     send_reminder_email(to_email, days_to_wait)
 
 @app.post("/email")
@@ -182,7 +185,7 @@ def email_endpoint(request):
 <article className="col col--4">
 
 Schedule functions to run at specific times.
-Host them completely serverlessly.
+Host them serverlessly on DBOS Cloud.
 
 [Get started ↗️](./python/examples/cron-starter.md)
 
@@ -192,10 +195,10 @@ Host them completely serverlessly.
 ```python
 @DBOS.scheduled("0 * * * *") # Run once an hour
 @DBOS.workflow()
-def run_hourly(scheduled_time: datetime, actual_time: datetime):
-   results = search_hackernews("serverless")
-   for comment, url in results:
-      post_to_slack(comment, url)
+def run_hourly(scheduled_time, actual_time):
+    results = search_hackernews("serverless")
+    for comment, url in results:
+        post_to_slack(comment, url)
 ```
 
 </article>
@@ -218,15 +221,11 @@ DBOS durable queues guarantee all your tasks complete.
 queue = Queue("indexing_queue")
 
 @DBOS.workflow()
-def indexing_workflow(urls: List[HttpUrl]):
-  handles: List[WorkflowHandle] = []
-  for url in urls:
-     handle = queue.enqueue(index_document, url)
-     handles.append(handle)
-indexed_pages = 0
-for handle in handles:
-     indexed_pages += handle.get_result()
-logger.info(f"Indexed {len(urls)} documents, {indexed_pages} pages")
+def indexing_workflow(urls):
+    handles = []
+    for url in urls:
+        handles.append(queue.enqueue(index_step, url))
+    return [h.get_result() for h in handles]
 ```
 
 </article>
@@ -248,10 +247,10 @@ Consume Kafka messages exactly-once, no need to worry about timeouts or offsets.
 ```python
 @DBOS.kafka_consumer(config,["alerts-topic"])
 @DBOS.workflow()
-def process_kafka_alerts(msg: KafkaMessage):
-  alerts = msg.value.decode()
-  for alert in alerts:
-    respond_to_alert(alert)
+def process_kafka_alerts(msg):
+    alerts = msg.value.decode()
+    for alert in alerts:
+        respond_to_alert(alert)
 ```
 
 </article>
@@ -262,7 +261,7 @@ def process_kafka_alerts(msg: KafkaMessage):
 <section className="row list">
 <article className="col col--4">
 
-Enhance your AI agents with tools that can run asynchronous tasks and keep a human in the loop.
+Enhance your AI agents with reliable asynchronous tasks and human in the loop.
 Integrate with popular frameworks like LangChain and LlamaIndex.
 
 [See an example ↗️](./python/examples/reliable-ai-agent.md)
@@ -273,16 +272,12 @@ Integrate with popular frameworks like LangChain and LlamaIndex.
 ```python
 @DBOS.workflow()
 def agentic_refund(purchase):
-    # Escalate refunds of expensive items to a human for approval
-    if purchase.price > 1000:
-        email_human_for_approval(purchase)
-        status = DBOS.recv(timeout_seconds=APPROVAL_TIMEOUT)
-        if status == "approve":
-            approve_refund(purchase)
-        else:
-            reject_refund(purchase)
-    else:
+    email_human_for_approval(purchase)
+    status = DBOS.recv(timeout_seconds=APPROVAL_TIMEOUT)
+    if status == "approve":
         approve_refund(purchase)
+    else:
+        reject_refund(purchase)
 ```
 
 </article>
@@ -291,7 +286,7 @@ def agentic_refund(purchase):
 
 </Tabs>
 
-## DBOS Cloud
+### DBOS Cloud
 
 Any program you build with DBOS you can deploy for free to DBOS Cloud.
 You can deploy any program with a single command&mdash;no configuration required.
@@ -302,8 +297,6 @@ Your program runs the same in the cloud as it does locally, but operating it is 
 - **Pay only for the CPU time you actually use**: Pay only when you're using your app, and nothing at all for idle time.
 - **Built-in observability**: View your logs and traces and manage your application from the [cloud console](https://console.dbos.dev).
 
-## Get Started
-
-Want to try DBOS out? Check out the [quickstart](./quickstart.md) to get started!
-
+:::note
 Thanks to Paul Copplestone from Supabase, whose [blog post on DBOS](https://supabase.com/blog/durable-workflows-in-postgres-dbos) inspired this page.
+:::
