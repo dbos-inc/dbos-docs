@@ -569,6 +569,7 @@ This provides the following features over using Koa directly:
 * Automatic configuration from `dbos-config.yaml` or the runtime environment
 * Automatic network configuration in DBOS Cloud
 * Default tracing, parsing, and other middleware, with [additional options](../../tutorials/requestsandevents/http-serving-tutorial.md#body-parser)
+* Automatic generation of [OpenAPI](../../tutorials/development/openapi-tutorial.md) clients
 
 The following sections describe the decorators that can be used to register methods for HTTP serving.  Note that all decorated methods must be `static`, as there is no mechanism to forward function calls to a specific object instance.
 
