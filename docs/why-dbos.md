@@ -11,7 +11,7 @@ title: Why DBOS?
 Let's look at a common situation where this is useful.
 Imagine you're running an e-commerce platform where an order goes through multiple steps:
 
-<img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="800" className="custom-img"/>
+<img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
 
 This program looks simple, but making it _reliable_ is deceptively difficult.
 Here are some potential problems:
@@ -38,7 +38,7 @@ def checkout_workflow()
 
 These decorators **durably execute** your program, persisting its state to a Postgres database:
 
-<img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="800" className="custom-img"/> 
+<img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
 
 You can think of this stored state as a checkpoint for your program.
 If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
