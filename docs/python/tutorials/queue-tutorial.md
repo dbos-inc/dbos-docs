@@ -66,15 +66,16 @@ These guarantees assume that the application and database may crash and go offli
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently.
-Concurrency limits are global across all DBOS processes using this queue.
+You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
+Global concurrency limits are applied across all DBOS processes using this queue.
+Per process concurrency limits are applied to each DBOS process using this queue.
 If no limit is provided, any number of functions may run concurrently.
-For example, this queue has a maximum concurrency of 10, so at most 10 functions submitted to it may run at once:
+For example, this queue has a maximum global concurrency of 10 and a per process maximum concurrency of 5, so at most 10 functions submitted to it may run at once, up to 5 per process:
 
 ```python
 from dbos import Queue
 
-queue = Queue("example_queue", concurrency=10)
+queue = Queue("example_queue", concurrency=10, worker_concurrency=5)
 ```
 
 You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
