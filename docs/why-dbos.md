@@ -6,9 +6,7 @@ title: Why DBOS?
 
 <p style={{ fontSize: '20px', color: 'var(--ifm-color-primary-darkest)' }}>DBOS is an open-source library for building **reliable** and **fault-tolerant** applications.</p>
 
-### Build Reliable Programs
-
-Let's look at a common situation where this is useful.
+Let's look at a common situation where reliability is critical.
 Imagine you're running an e-commerce platform where an order goes through multiple steps:
 
 <img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
@@ -42,7 +40,6 @@ These decorators **durably execute** your program, persisting its state to a Pos
 
 You can think of this stored state as a checkpoint for your program.
 If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
-
 For example, if your checkout workflow crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
 Thus, DBOS makes your application **resilient to any failure**.
 
@@ -121,7 +118,7 @@ If your program is ever interrupted or crashed, all your workflows automatically
 
 ### Use Cases
 
-DBOS makes all sorts of programs easier to write. For example:
+DBOS helps you write complex programs in remarkably few lines of code. For example:
 
 <Tabs groupId="examples" className="medium-tabs">
 
