@@ -60,13 +60,7 @@ Click "Create GitHub Repo and Deploy" and DBOS will clone a copy of the source c
 In less than a minute, your app should deploy successfully.
 
 Congratulations, you've successfully deployed an app to DBOS Cloud and Supabase!
-
-<img src={require('@site/static/img/quickstart/4-deploy-success.png').default} alt="Deploy Success" width="800" className="custom-img" />
-
-### 5. View Your Application
-
-At this point, your app is deployed, with its very own URL assigned.
-If you continue to your [application page](https://console.dbos.dev/applications), you can click on the URL to see your application live on the Internet.
+Click the URL on your application page to see your application live on the Internet.
 
 <img src={require('@site/static/img/quickstart/5-app-page.png').default} alt="Application page" width="800" className="custom-img" />
 
