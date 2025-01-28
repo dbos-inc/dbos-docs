@@ -38,7 +38,7 @@ All fields are optional.
 Note that applications deployed to DBOS Cloud do not use the connection parameters here, but instead are automatically connected to your cloud database.
 
 - **hostname**: Database server hostname. Defaults to `localhost`.
-- **port**: Database server port. Defaults to 5432.
+- **port**: Database server port. Defaults to `5432`.
 - **username**: Username with which to connect to the database server. Defaults to `postgres`.
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. Defaults to the `PGPASSWORD` environment variable.
 - **app_db_name**: Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
