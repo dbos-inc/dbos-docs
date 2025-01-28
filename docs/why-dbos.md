@@ -12,12 +12,13 @@ Imagine you're running an e-commerce platform where an order goes through multip
 <img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
 
 This program looks simple, but making it _reliable_ is deceptively difficult.
-Here are some potential problems:
+Here are two out of many potential problems:
 
 - Your program crashes after step 1, "Validate Payment". The customer has been charged, but their order is never shipped.
 - You get to step 2, "Check Inventory", and you're out of stock. You need to wait 24 hours for the new inventory before you can ship your order. You need that step to sleep for a day.
 
-DBOS makes those problems easier to solve because you can add decorators like `DBOS.workflow()` and `DBOS.step()` to your program:
+These situations can cause hours (or even days!) of debugging and may require deep distributed systems expertise to solve.
+DBOS makes them easier to solve because you can add decorators like `DBOS.workflow()` and `DBOS.step()` to your program:
 
 
 ```python
