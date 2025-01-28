@@ -13,7 +13,7 @@ Queue(
     name: str = None,
     concurrency: Optional[int] = None,
     limiter: Optional[Limiter] = None
-    *, # Disable positional arguments from here on
+    *,
     worker_concurrency: Optional[int] = None,
 )
 
