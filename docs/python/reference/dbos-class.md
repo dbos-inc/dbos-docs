@@ -34,6 +34,11 @@ Launch DBOS, initializing database connections and starting scheduled workflows.
 Should be called after all decorators run.
 If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
 
+`DBOS.launch()` connects your app to a Postgres database.
+It looks for database connection parameters in your [`dbos-config.yaml`](./configuration.md) and `.dbos/db_connection` files.
+If those parameters are set to default values and no database is found, it prompts you to launch a local Postgres database using Docker.
+If Docker is not found, it prompts you to connect to a database hosted on DBOS Cloud.
+
 **Example:**
 ```python
 from dbos import DBOS
