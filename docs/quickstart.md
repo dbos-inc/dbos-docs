@@ -280,6 +280,7 @@ pip install -r requirements.txt
 
 <article className="col col--6">
 Now, start your app!
+DBOS will automatically guide you through connecting to your app to a Postgres database.
 </article>
 
 <article className="col col--6">
@@ -367,6 +368,8 @@ npm install
 
 <article className="col col--6">
 Now, build and start your app!
+DBOS will automatically guide you through connecting to your app to a Postgres database.
+
 </article>
 
 <article className="col col--6">
