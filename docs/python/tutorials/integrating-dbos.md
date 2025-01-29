@@ -47,26 +47,22 @@ DBOS.launch()
 </article>
 </section>
 
-#### 3. Connect Your Application to Postgres
+#### 3. Start Your Application
 <section className="row list">
 <article className="col col--6">
 
-DBOS is backed by Postgres, so you need to connect your app to a Postgres database.
-You can use a DBOS Cloud database, a Docker container, or a local Postgres installation.
+Try starting your application.
+When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
+If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](../reference/configuration.md).
+Otherwise, DBOS will automatically guide you through launching a new database and connecting to it.
 
-After you've connected to Postgres, try launching your application.
-It should run normally, but log `Initializing DBOS` and `DBOS launched` on startup.
+After you've connected to Postgres, your app should run normally, but log `Initializing DBOS` and `DBOS launched` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
 </article>
 
 <article className="col col--6">
 
-<details>
-<summary>Instructions to set up Postgres</summary>
-
-<LocalPostgres cmd={'python3 start_postgres_docker.py'} />
-</details>
 </article>
 
 </section>
