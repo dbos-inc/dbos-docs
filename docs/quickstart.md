@@ -222,11 +222,10 @@ To start building, edit your application on GitHub (for the web app starter, sou
 <section className="row list">
 <article className="col col--6">
 
-#### 1. Install and Initialize DBOS
-Create a virtual environment, `pip install dbos`, and initialize a DBOS starter app.
+#### 1. Create a Virtual Environment
+In a clean directory, create a Python virtual environment
 
-If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there.
-If you do that, you don't need to `dbos init` a template.
+If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there instead.
 
 </article>
 
@@ -235,29 +234,20 @@ If you do that, you don't need to `dbos init` a template.
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv dbos-app-starter/.venv
-cd dbos-app-starter
+python3 -m venv .venv
 source .venv/bin/activate
-pip install dbos
-dbos init --template dbos-app-starter
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-python3 -m venv dbos-app-starter/.venv
-cd dbos-app-starter
+python3 -m venv .venv
 .venv\Scripts\activate.ps1
-pip install dbos
-dbos init --template dbos-app-starter
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-python3 -m venv dbos-app-starter/.venv
-cd dbos-app-starter
+python3 -m venv .venv
 .venv\Scripts\activate.bat
-pip install dbos
-dbos init --template dbos-app-starter
 ```
 </TabItem>
 </Tabs>
@@ -265,8 +255,28 @@ dbos init --template dbos-app-starter
 </article>
 </section>
 
+<section className="row list">
+<article className="col col--6">
 
-#### 2. Start Your App
+#### 2. Install and Initialize DBOS
+Install DBOS with `pip`, then initialize a starter application.
+
+If you cloned a git repository, you don't need to run `dbos init`&mdash;your app is already initialized.
+
+</article>
+
+<article className="col col--6">
+
+```shell
+pip install dbos
+dbos init --template dbos-app-starter
+```
+
+</article>
+</section>
+
+
+#### 3. Start Your App
 
 <section className="row list">
 
