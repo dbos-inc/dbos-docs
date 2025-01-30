@@ -223,9 +223,10 @@ To start building, edit your application on GitHub (for the web app starter, sou
 <article className="col col--6">
 
 #### 1. Install and Initialize DBOS
-In a clean directory, create a virtual environment, install DBOS into it, and initialize a DBOS starter app.
+Create a virtual environment, `pip install dbos`, and initialize a DBOS starter app.
 
-If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there instead of running `dbos init`.
+If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there.
+If you do that, you don't need to `dbos init` a template.
 
 </article>
 
@@ -234,7 +235,8 @@ If you already created a git repository from the cloud console, you can clone yo
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 source .venv/bin/activate
 pip install dbos
 dbos init --template dbos-app-starter
@@ -242,7 +244,8 @@ dbos init --template dbos-app-starter
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.ps1
 pip install dbos
 dbos init --template dbos-app-starter
@@ -251,6 +254,7 @@ dbos init --template dbos-app-starter
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
 python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.bat
 pip install dbos
 dbos init --template dbos-app-starter
