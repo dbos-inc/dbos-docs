@@ -315,15 +315,17 @@ To learn more about building DBOS apps, check out the [Python programming guide]
 <section className="row list">
 <article className="col col--6">
 
-#### 1. Git Clone Your Application
-Clone your application from git and enter its directory.
+#### 1. Initialize an Application
+Initalize a starter application and enter its directory.
+
+If you previously created a git repository from the cloud console, you can clone your repository and use it instead.
 </article>
 
 <article className="col col--6">
 
 ```shell
-git clone <your-git-url> my-app
-cd my-app
+npx @dbos-inc/create@latest --template dbos-node-starter
+cd dbos-node-starter
 ```
 
 </article>
@@ -332,7 +334,7 @@ cd my-app
 <section className="row list">
 <article className="col col--6">
 
-#### 2. Install Dependencies
+#### 2. Build Your Application
 DBOS TypeScript requires Node.js 20 or later.
 
 </article>
@@ -349,7 +351,7 @@ DBOS TypeScript requires Node.js 20 or later.
 
 <article className="col col--6">
 
-Install dependencies.
+Install dependencies and build your application.
 
 </article>
 
@@ -358,6 +360,7 @@ Install dependencies.
 
 ```shell
 npm install
+npm run build
 ```
 
 </article>
@@ -369,14 +372,13 @@ npm install
 <section className="row list">
 
 <article className="col col--6">
-Now, build and start your app!
+Now, start your app!
 DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
 <article className="col col--6">
 ```bash
-npm run build
 npm run start
 ```
 </article>
