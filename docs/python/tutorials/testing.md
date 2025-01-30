@@ -5,7 +5,7 @@ title: Testing Your App
 
 ### Testing DBOS Functions
 
-Because DBOS workflows and steps are ordinary Python functions, you can unit test them using popular testing frameworks like [pytest](https://docs.pytest.org/en/stable/) or [unittest](https://docs.python.org/3/library/unittest.html).
+Because DBOS workflows, steps, and transactions are ordinary Python functions, you can unit test them using any Python testing framework, like [pytest](https://docs.pytest.org/en/stable/) or [unittest](https://docs.python.org/3/library/unittest.html).
 
 You must reset the DBOS runtime between each test like this:
 
