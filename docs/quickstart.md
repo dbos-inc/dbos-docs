@@ -214,7 +214,7 @@ Click the URL on your application page to see your application live on the Inter
 To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
 
-### Run Your App Locally
+### Run DBOS Locally
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
@@ -222,25 +222,10 @@ To start building, edit your application on GitHub (for the web app starter, sou
 <section className="row list">
 <article className="col col--6">
 
-#### 1. Git Clone Your Application
-Clone your application from git and enter its directory.
-</article>
+#### 1. Install and Initialize DBOS
+In a clean directory, create a virtual environment, install DBOS into it, and initialize a DBOS starter app.
 
-<article className="col col--6">
-
-```shell
-git clone <your-git-url> my-app
-cd my-app
-```
-
-</article>
-</section>
-
-<section className="row list">
-<article className="col col--6">
-
-#### 2. Set up a Virtual Environment
-Create a virtual environment and install dependencies.
+If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there instead of running `dbos init`.
 
 </article>
 
@@ -251,21 +236,24 @@ Create a virtual environment and install dependencies.
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install dbos
+dbos init --template dbos-app-starter
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
 python3 -m venv .venv
 .venv\Scripts\activate.ps1
-pip install -r requirements.txt
+pip install dbos
+dbos init --template dbos-app-starter
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
 .venv\Scripts\activate.bat
-pip install -r requirements.txt
+pip install dbos
+dbos init --template dbos-app-starter
 ```
 </TabItem>
 </Tabs>
@@ -274,7 +262,7 @@ pip install -r requirements.txt
 </section>
 
 
-#### 3. Start Your App
+#### 2. Start Your App
 
 <section className="row list">
 
