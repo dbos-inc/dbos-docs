@@ -7,7 +7,7 @@ The DBOS class is a singleton&mdash;you must instantiate it (by calling its cons
 Here, we document its constructor and lifecycle methods.
 Decorators are documented [here](./decorators.md) and context methods and variables [here](./contexts.md).
 
-### class dbos.DBOS
+## class dbos.DBOS
 
 ```python
 DBOS(
@@ -21,7 +21,7 @@ DBOS(
 **Parameters:**
 - `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
 - `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
-- `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed in its contents are used instead. We recommend using this for testing only.
+- `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed its contents are used instead. We recommend using this for testing only.
 
 
 ### launch
@@ -33,6 +33,11 @@ DBOS.launch()
 Launch DBOS, initializing database connections and starting scheduled workflows.
 Should be called after all decorators run.
 If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
+
+`DBOS.launch()` connects your app to a Postgres database.
+It looks for database connection parameters in your [`dbos-config.yaml`](./configuration.md) and `.dbos/db_connection` files.
+If those parameters are set to default values and no database is found, it prompts you to launch a local Postgres database using Docker.
+If Docker is not found, it prompts you to connect to a database hosted on DBOS Cloud.
 
 **Example:**
 ```python
@@ -75,10 +80,45 @@ Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -
 
 ### destroy
 
-```
-DBOS.destroy()
+```python
+DBOS.destroy(
+    destroy_registry: bool = True
+)
 ```
 
 Destroy the DBOS singleton, terminating all active workflows and closing database connections.
 After this completes, the singleton can be re-initialized.
 Useful for testing.
+
+**Parameters:**
+- `destroy_registry`: Whether to destroy the global registry of decorated functions. If you plan to call `DBOS.launch()` again, you likely want to set this to `False`.
+
+## Configuration Management
+
+### load_config
+
+```python
+load_config(
+    config_file_path: str = "dbos-config.yaml",
+    use_db_wizard: bool = True
+) -> ConfigFile:
+```
+
+Load and parse a DBOS configuration file into a `ConfigFile` object.
+
+**Parameters:**
+- `config_file_path`: The path to the DBOS configuration file to parse.
+- `use_db_wizard`: If the configuration file specifies default database connection parameters and there is no Postgres database there, whether to prompt the user to connect to a different database.
+
+### get_dbos_database_url
+
+```python
+get_dbos_database_url(
+    config_file_path: str = "dbos-config.yaml"
+) -> str
+```
+
+Parse database connection information from a DBOS configuration file into a Postgres database connection string.
+
+**Parameters:**
+- `config_file_path`: The path to the DBOS configuration file to parse.
