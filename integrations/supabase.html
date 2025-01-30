@@ -9,7 +9,7 @@
 
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script><link rel="stylesheet" href="/assets/css/styles.e8a6be79.css">
-<script src="/assets/js/runtime~main.f1c9c5bd.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2a2a86f0.js" defer="defer"></script>
 <script src="/assets/js/main.db33e69f.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -40,11 +40,8 @@ Then, set your repository name and whether it should be public or private.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="4-deploy-to-dbos-cloud">4. Deploy to DBOS Cloud<a href="#4-deploy-to-dbos-cloud" class="hash-link" aria-label="Direct link to 4. Deploy to DBOS Cloud" title="Direct link to 4. Deploy to DBOS Cloud">​</a></h3>
 <p>Click &quot;Create GitHub Repo and Deploy&quot; and DBOS will clone a copy of the source code into your GitHub account, then deploy your project to DBOS Cloud.
 In less than a minute, your app should deploy successfully.</p>
-<p>Congratulations, you&#x27;ve successfully deployed an app to DBOS Cloud and Supabase!</p>
-<img src="/assets/images/4-deploy-success-d0bcc0f9692da8fdab1acc6dc445011d.png" alt="Deploy Success" width="800" class="custom-img">
-<h3 class="anchor anchorWithStickyNavbar_LWe7" id="5-view-your-application">5. View Your Application<a href="#5-view-your-application" class="hash-link" aria-label="Direct link to 5. View Your Application" title="Direct link to 5. View Your Application">​</a></h3>
-<p>At this point, your app is deployed, with its very own URL assigned.
-If you continue to your <a href="https://console.dbos.dev/applications" target="_blank" rel="noopener noreferrer">application page</a>, you can click on the URL to see your application live on the Internet.</p>
+<p>Congratulations, you&#x27;ve successfully deployed an app to DBOS Cloud and Supabase!
+Click the URL on your application page to see your application live on the Internet.</p>
 <img src="/assets/images/5-app-page-7fdd8e1ce2b44794862b520a0f654b51.png" alt="Application page" width="800" class="custom-img">
 <p>To start building, edit your application on GitHub (for the web app starter, source code is in <code>app/main.py</code>), commit your changes, then press &quot;Deploy From GitHub&quot; to see your changes reflected in the live application.</p>
 <div class="theme-admonition theme-admonition-info admonition_xJq3 alert alert--info"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg></span>info</div><div class="admonitionContent_BuS1"><p>For isolation, DBOS deploys applications to non-default databases on your Supabase Postgres server.
