@@ -33,17 +33,18 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 The database section is used to set up the connection to the database.
 DBOS currently only supports Postgres-compatible databases.
-Every field is required unless otherwise specified.
+All fields are optional.
+Note that applications deployed to DBOS Cloud do not use the connection parameters here, but instead are automatically connected to your cloud database.
 
-- **hostname**: Database server hostname. For local deployment only, not used in DBOS Cloud.
-- **port**: Database server port. For local deployment only, not used in DBOS Cloud.
-- **username**: Username with which to connect to the database server. For local deployment only, not used in DBOS Cloud.
-- **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. For local deployment only, not used in DBOS Cloud.
-- **app_db_name**: (optional): Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
-- **sys_db_name** (optional): Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **ssl_ca** (optional): If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
-- **local_suffix** (optional): Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
-- **migrate** (optional): A list of commands to run to apply your application's schema to the database. 
+- **hostname**: Database server hostname. Defaults to `localhost`.
+- **port**: Database server port. Defaults to `5432`.
+- **username**: Username with which to connect to the database server. Defaults to `postgres`.
+- **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. Defaults to the `PGPASSWORD` environment variable.
+- **app_db_name**: Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
+- **sys_db_name**: Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
+- **ssl_ca**: If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
+- **local_suffix**: Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
+- **migrate**: A list of commands to run to apply your application's schema to the database. 
 
 
 **Example**:
