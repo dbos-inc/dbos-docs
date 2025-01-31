@@ -7,14 +7,16 @@ title: Testing Your App
 
 Because DBOS workflows, steps, and transactions are ordinary Python functions, you can unit test them using any Python testing framework, like [pytest](https://docs.pytest.org/en/stable/) or [unittest](https://docs.python.org/3/library/unittest.html).
 
-You must reset the DBOS runtime between each test like this:
+**You must reset the DBOS runtime between each test like this:**
 
 ```python
 def reset_dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     DBOS()
     DBOS.launch()
 ```
+
+This function first cleans up any existing DBOS instance (for example, left over from a previous test or an imported file), then initializes and launches DBOS.
 
 For example, if using pytest, declare `reset_dbos` as a fixture and require it from every test of a DBOS function:
 

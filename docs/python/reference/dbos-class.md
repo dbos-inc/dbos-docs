@@ -32,6 +32,7 @@ DBOS.launch()
 
 Launch DBOS, initializing database connections and starting scheduled workflows.
 Should be called after all decorators run.
+**You should not call a DBOS function until after DBOS is launched.**
 If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
 
 `DBOS.launch()` connects your app to a Postgres database.
@@ -82,7 +83,7 @@ Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -
 
 ```python
 DBOS.destroy(
-    destroy_registry: bool = True
+    destroy_registry: bool = False
 )
 ```
 
@@ -91,7 +92,7 @@ After this completes, the singleton can be re-initialized.
 Useful for testing.
 
 **Parameters:**
-- `destroy_registry`: Whether to destroy the global registry of decorated functions. If you plan to call `DBOS.launch()` again, you likely want to set this to `False`.
+- `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
 
 ## Configuration Management
 
