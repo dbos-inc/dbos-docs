@@ -143,3 +143,100 @@ Step two completed!
 ```
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
+
+## 2. Queues and Parallelism
+
+You can use DBOS queues to run many tasks concurrently.
+To try it out, copy this code into `main.py`:
+
+```python showLineNumbers title="main.py"
+import time
+
+from dbos import DBOS, Queue
+from fastapi import FastAPI
+
+app = FastAPI()
+DBOS(fastapi=app)
+
+queue = Queue("example-queue")
+
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(5)
+    print(f"Step {n} completed!")
+
+@app.get("/")
+@DBOS.workflow()
+def dbos_workflow():
+    print("Enqueueing steps")
+    handles = []
+    for i in range(10):
+        handle = queue.enqueue(dbos_step, i)
+        handles.append(handle)
+    results = [handle.get_result() for handle in handles]
+    print(f"Successfully completed {len(results)} steps")
+```
+
+When you enqueue a function (you can enqueue both steps and workflows) with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`enqueue` returns a handle representing the state of the enqueued function.
+This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
+
+Start your app with `dbos start`.
+Then, visit this URL: http://localhost:8000.
+Wait ten seconds and you should see an output like:
+
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 0 completed!
+Step 1 completed!
+Step 2 completed!
+Step 3 completed!
+Step 4 completed!
+Step 5 completed!
+Step 6 completed!
+Step 7 completed!
+Step 8 completed!
+Step 9 completed!
+Successfully completed 10 steps
+```
+
+You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
+
+DBOS also provides durable execution for queues. To see this in action, change the definition of `dbos_step` to this so each step takes a different amount of time to run:
+
+```python
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(n)
+    print(f"Step {n} completed!")
+```
+
+Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+After about five seconds, you should see an output like:
+
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 0 completed!
+Step 1 completed!
+Step 2 completed!
+Step 3 completed!
+Step 4 completed!
+```
+
+Next, press CTRL+C stop your app. Then, run `dbos start` to restart it. Wait ten seconds and you should see an output like:
+
+
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 5 completed!
+Step 6 completed!
+Step 7 completed!
+Step 8 completed!
+Step 9 completed!
+Successfully completed 10 steps
+```
+
+You can see how DBOS again **recovered your workflow from the last completed step**, restarting steps 5-9 without re-executing steps 0-4.
