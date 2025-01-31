@@ -144,10 +144,10 @@ Step two completed!
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
 
-## 2. Queues and Parallelism
+## 3. Queues and Parallelism
 
-You can use DBOS queues to run many tasks concurrently.
-To try it out, copy this code into `main.py`:
+If you need to run many functions concurrently, use DBOS _queues_.
+To try them out, copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
 import time
@@ -240,3 +240,29 @@ Successfully completed 10 steps
 ```
 
 You can see how DBOS again **recovered your workflow from the last completed step**, restarting steps 5-9 without re-executing steps 0-4.
+
+## 4. Scheduled Workflows
+
+Sometimes, you need to run a workflow **on a schedule**: for example, once per hour or once per week.
+In DBOS, you can schedule workflows with the `@DBOS.scheduled()` decorator.
+To try it out, add this code to your `main.py`:
+
+```python
+@DBOS.scheduled("* * * * * *")
+@DBOS.workflow()
+def scheduled_workflow(scheduled_time, actual_time):
+    print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+```
+
+The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, defined in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+The schedule in the example, `* * * * * *` means "run this workflow every second."
+Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
+
+Now, start your app with `dbos start`.
+The workflow should run every second, with output like:
+
+```shell
+I am a scheduled workflow. It is currently 2025-01-31 23:00:14+00:00.
+I am a scheduled workflow. It is currently 2025-01-31 23:00:15+00:00.
+I am a scheduled workflow. It is currently 2025-01-31 23:00:16+00:00.
+```
