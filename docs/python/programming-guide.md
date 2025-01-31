@@ -13,29 +13,29 @@ First, without using DBOS, we'll build an app that records greetings to two diff
 Then, we'll add DBOS durable execution to the app in **just four lines of code**.
 Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
 
-## 1. Setting Up Your App
+## 1. Setting Up Your Environment
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 .venv\Scripts\activate.bat
 ```
 </TabItem>
@@ -44,199 +44,102 @@ cd greeting-guestbook
 Then, install and initialize DBOS:
 ```shell
 pip install dbos
-dbos init
+dbos init --config
 ```
 
-Now, let's use FastAPI to write a simple app that greets our friends.
-Every time the app receives a greeting, it performs two steps:
+## 2. Workflows and Steps
 
-1. Sign an online guestbook with the greeting.
-2. Record the greeting in the database.
+Now, let's create the simplest interesting DBOS program.
+Create a `main.py` file and add this code to it:
 
-We deliberately **won't** use DBOS yet (except to fetch the database connection string) so we can show you how easy it is to add later.
+```python showLineNumbers title="main.py"
+from dbos import DBOS
 
-Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
+DBOS()
 
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
 
-import requests
-from dbos import get_dbos_database_url
-from fastapi import FastAPI
-from sqlalchemy import create_engine
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
 
-from .schema import dbos_hello
+@DBOS.workflow()
+def dbos_workflow():
+    step_one()
+    step_two()
 
-app = FastAPI()
-logging.basicConfig(level=logging.INFO)
-
-# Sign the guestbook using an HTTP POST request
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
-
-# Create a SQLAlchemy engine.
-engine = create_engine(get_dbos_database_url())
-
-# Record the greeting in the database using SQLAlchemy
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
-
-@app.get("/greeting/{name}")
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
+if __name__ == "__main__":
+    DBOS.launch()
+    dbos_workflow()
 ```
 
-Now, run these commands to set up your database and start your app:
+In DBOS, you write programs using **workflows** of **steps**.
+Workflows and steps are ordinary Python functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
+DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
+
+Run this code with `python3 main.py` and it should print output like:
 
 ```shell
-dbos migrate
-dbos start
-```
-To see that your app is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
-<BrowserWindow url="http://localhost:8000/greeting/Mike">
-"Thank you for being awesome, Mike!"
-</BrowserWindow>
-
-Each time you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
-
-```
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+13:47:09 [    INFO] (dbos:_dbos.py:272) Initializing DBOS
+13:47:09 [    INFO] (dbos:_dbos.py:401) DBOS launched
+Step one completed!
+Step two completed!
 ```
 
-Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
-This is bad in many real-world situations, for example if a program fails to record making or receiving a payment.
-To fix this problem, we'll use DBOS durable execution.
+To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint.
+Copy this code into `main.py`:
 
-## 2. Durable Execution with Workflows
-
-Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
-DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
-We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following code into your `greeting_guestbook/main.py`, replacing its existing contents:
-
-
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
-
-import requests
-#highlight-next-line
-from dbos import DBOS, get_dbos_database_url
+```python showLineNumbers title="main.py"
 from fastapi import FastAPI
-from sqlalchemy import create_engine
-
-from .schema import dbos_hello
+from dbos import DBOS
 
 app = FastAPI()
-#highlight-next-line
 DBOS(fastapi=app)
 
-logging.basicConfig(level=logging.INFO)
-
-# Sign the guestbook using an HTTP POST request
-#highlight-next-line
 @DBOS.step()
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
+def step_one():
+    print("Step one completed!")
 
-# Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(get_dbos_database_url())
-
-# Record the greeting in the database using SQLAlchemy
-#highlight-next-line
 @DBOS.step()
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
+def step_two():
+    print("Step two completed!")
 
-@app.get("/greeting/{name}")
-#highlight-next-line
+@app.get("/")
 @DBOS.workflow()
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
+def dbos_workflow():
+    step_one()
     for _ in range(5):
-        logging.info("Press Control + C to stop the app...")
+        print("Press Control + C to stop the app...")
         DBOS.sleep(1)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
+    step_two()
 ```
 
-Only the **four highlighted lines of code** are needed to enable durable execution.
+Start your app with `dbos start`.
+This calls the start command defined in your `dbos-config.yaml`, which by default is `fastapi run main.py`.
+Then, visit this URL: http://localhost:8000.
 
-- First, we initialize DBOS on line 12.
-- Then, we annotate `sign_guestbook` and `insert_greeting` as [_workflow steps_](./tutorials/step-tutorial.md) on lines 16 and 29.
-- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 37.
-
-Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
-To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
-
-To see the power of durable execution, restart your app with `dbos start`.
-Then, visit this URL: http://localhost:8000/greeting/Mike.
 In your terminal, you should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
+Step one completed!
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
 ```
+
 Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Step two completed!
 ```
 
-Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
-By contrast, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
-This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
-
-## 3. Optimizing Database Operations
-
-For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace the `insert_greeting` function in `greeting_guestbook/main.py` with the following:
-
-```python showLineNumbers
-@DBOS.transaction()
-def insert_greeting(name: str) -> str:
-    query = dbos_hello.insert().values(name=name)
-    DBOS.sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
-```
-
-[`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
-It executes your function in a single database transaction.
-We recommend using transactions because:
-
-1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself. You no longer need to configure a SQLAlchemy engine!
-2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
-
-Now, restart your app with `dbos start` and visit its URL again: http://localhost:8000/greeting/Mike.
-The app should durably execute your workflow the same as before!
-
-The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
-
-Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
+You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
