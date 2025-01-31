@@ -259,7 +259,7 @@ python3 -m venv .venv
 <article className="col col--6">
 
 #### 2. Install and Initialize DBOS
-Install DBOS with `pip`, then initialize a starter application.
+Install DBOS with `pip install dbos`, then initialize a starter application.
 
 If you cloned a git repository, you don't need to run `dbos init`&mdash;your app is already initialized.
 
