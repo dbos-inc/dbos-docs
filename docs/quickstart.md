@@ -214,7 +214,7 @@ Click the URL on your application page to see your application live on the Inter
 To start building, edit your application on GitHub (for the web app starter, source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" to see your changes reflected in the live application.
 
 
-### Run Your App Locally
+### Run DBOS Locally
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
@@ -222,25 +222,10 @@ To start building, edit your application on GitHub (for the web app starter, sou
 <section className="row list">
 <article className="col col--6">
 
-#### 1. Git Clone Your Application
-Clone your application from git and enter its directory.
-</article>
+#### 1. Create a Virtual Environment
+In a clean directory, create a Python virtual environment
 
-<article className="col col--6">
-
-```shell
-git clone <your-git-url> my-app
-cd my-app
-```
-
-</article>
-</section>
-
-<section className="row list">
-<article className="col col--6">
-
-#### 2. Set up a Virtual Environment
-Create a virtual environment and install dependencies.
+If you already created a git repository from the cloud console, you can clone your repository and create a virtual environment there instead.
 
 </article>
 
@@ -251,24 +236,41 @@ Create a virtual environment and install dependencies.
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
 python3 -m venv .venv
 .venv\Scripts\activate.ps1
-pip install -r requirements.txt
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
 python3 -m venv .venv
 .venv\Scripts\activate.bat
-pip install -r requirements.txt
 ```
 </TabItem>
 </Tabs>
+
+</article>
+</section>
+
+<section className="row list">
+<article className="col col--6">
+
+#### 2. Install and Initialize DBOS
+Install DBOS with `pip install dbos`, then initialize a starter application.
+
+If you cloned a git repository, you don't need to run `dbos init`&mdash;your app is already initialized.
+
+</article>
+
+<article className="col col--6">
+
+```shell
+pip install dbos
+dbos init --template dbos-app-starter
+```
 
 </article>
 </section>
@@ -313,15 +315,17 @@ To learn more about building DBOS apps, check out the [Python programming guide]
 <section className="row list">
 <article className="col col--6">
 
-#### 1. Git Clone Your Application
-Clone your application from git and enter its directory.
+#### 1. Initialize an Application
+Initalize a starter application and enter its directory.
+
+If you previously created a git repository from the cloud console, you can clone your repository and use it instead.
 </article>
 
 <article className="col col--6">
 
 ```shell
-git clone <your-git-url> my-app
-cd my-app
+npx @dbos-inc/create@latest --template dbos-node-starter
+cd dbos-node-starter
 ```
 
 </article>
@@ -330,7 +334,7 @@ cd my-app
 <section className="row list">
 <article className="col col--6">
 
-#### 2. Install Dependencies
+#### 2. Build Your Application
 DBOS TypeScript requires Node.js 20 or later.
 
 </article>
@@ -347,7 +351,7 @@ DBOS TypeScript requires Node.js 20 or later.
 
 <article className="col col--6">
 
-Install dependencies.
+Install dependencies and build your application.
 
 </article>
 
@@ -356,6 +360,7 @@ Install dependencies.
 
 ```shell
 npm install
+npm run build
 ```
 
 </article>
@@ -367,14 +372,13 @@ npm install
 <section className="row list">
 
 <article className="col col--6">
-Now, build and start your app!
+Now, start your app!
 DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
 <article className="col col--6">
 ```bash
-npm run build
 npm run start
 ```
 </article>
