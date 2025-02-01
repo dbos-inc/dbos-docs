@@ -77,6 +77,43 @@ A setup script may install system packages or libraries or otherwise customize t
 apt install traceroute
 ```
 
+#### Ignoring files with .dbosignore
+
+The .dbosignore file allows you to specify files and directories that should be excluded when packaging files into a zip for deployment. It functions similarly to a .gitignore file, using patterns to define which files and directories to skip.
+
+##### How to Use .dbosignore
+
+Create a .dbosignore File
+
+In the root of your project directory, create a file named .dbosignore.
+Define Patterns
+
+Add patterns to the .dbosignore file to specify files or directories to ignore.
+Patterns follow glob syntax.
+
+The syntax for this file is similar to the popular .gitignore.
+
+##### Pattern Examples
+
+Here are examples of patterns you can include in .dbosignore:
+
+- file.txt — Excludes the file.txt file in the project root.
+
+- **/file.txt — Excludes all file.txt files anywhere in the project.
+
+- folder/ — Excludes the folder directory and all its contents.
+
+- **/folder/ — Excludes all directories named folder, regardless of their location.
+
+- *.log — Excludes all .log files.
+
+- **/*.tmp — Excludes all .tmp files anywhere in the project.
+
+- .* — Excludes all hidden files (e.g., .env, .DS_Store).
+
+- .folder/ — Excludes a hidden directory named .folder and its contents.
+
+
 ### Monitoring and Debugging Applications
 
 Here are some useful tools to monitor and debug applications:
