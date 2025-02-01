@@ -7,11 +7,7 @@ pagination_prev: quickstart
 
 import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
-
-This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
-First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
-Then, we'll add DBOS durable execution to the app in **just four lines of code**.
-Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
+This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 
 ## 1. Setting Up Your Environment
 
@@ -41,7 +37,7 @@ cd dbos-starter
 </TabItem>
 </Tabs>
 
-Then, install and initialize DBOS:
+Then, install DBOS and create a DBOS configuration file:
 ```shell
 pip install dbos
 dbos init --config
@@ -75,7 +71,7 @@ if __name__ == "__main__":
     dbos_workflow()
 ```
 
-In DBOS, you write programs using **workflows** of **steps**.
+In DBOS, you write programs as **workflows** of **steps**.
 Workflows and steps are ordinary Python functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
 DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
 
@@ -88,7 +84,7 @@ Step one completed!
 Step two completed!
 ```
 
-To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint.
+To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using FastAPI.
 Copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
@@ -177,7 +173,7 @@ def dbos_workflow():
     print(f"Successfully completed {len(results)} steps")
 ```
 
-When you enqueue a function (you can enqueue both steps and workflows) with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `enqueue` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
 
@@ -203,7 +199,7 @@ Successfully completed 10 steps
 
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
 
-DBOS also provides durable execution for queues. To see this in action, change the definition of `dbos_step` to this so each step takes a different amount of time to run:
+DBOS durably executes queued operations. To see this in action, change the definition of `dbos_step` to this so each step takes a different amount of time to run:
 
 ```python
 @DBOS.step()
@@ -250,7 +246,7 @@ To try it out, add this code to your `main.py`:
 ```python
 @DBOS.scheduled("* * * * * *")
 @DBOS.workflow()
-def scheduled_workflow(scheduled_time, actual_time):
+def run_every_second(scheduled_time, actual_time):
     print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
 ```
 
@@ -288,7 +284,7 @@ example_table = Table(
 ```
 
 Next, let's create a schema migration that will create the table in your database.
-We'll do that using a tool called Alembic.
+We'll do that using Alembic, a popular tool for database migrations in Python.
 First, intialize Alembic:
 
 ```
@@ -345,7 +341,7 @@ INFO  [alembic.runtime.migration] Will assume transactional DDL.
 INFO  [alembic.runtime.migration] Running upgrade  -> f05ae9138107, example_table
 ```
 
-You've just created your new table in your Postgres database!
+You just created your new table in your Postgres database!
 
 Now, let's write a DBOS workflow that operates on that table. Copy the following code into `main.py`:
 
@@ -374,7 +370,7 @@ def dbos_workflow():
     count_rows()
 ```
 
-This workflow first inserts a new row into your table, then prints the total number of rows inserted into your table.
+This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
 The database operations are done in DBOS _transactions_. These are a special kind of step optimized for database accesses.
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
@@ -392,4 +388,5 @@ Every time you visit http://localhost:8000, your workflow should insert another 
 
 Congratulations!  You've finished the DBOS Python guide.
 You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-toolbox) template app.
+
 Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
