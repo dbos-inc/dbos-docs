@@ -279,7 +279,7 @@ from sqlalchemy import Column, Integer, MetaData, String, Table
 
 metadata = MetaData()
 
-dbos_hello = Table(
+example_table = Table(
     "example_table",
     metadata,
     Column("count", Integer, primary_key=True, autoincrement=True),
