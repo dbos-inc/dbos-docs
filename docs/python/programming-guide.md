@@ -391,4 +391,5 @@ Row count: 1
 Every time you visit http://localhost:8000, your workflow should insert another row, and the printed row count should go up by one.
 
 Congratulations!  You've finished the DBOS Python guide.
+You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-toolbox) template app.
 Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
