@@ -183,7 +183,7 @@ This example enqueues ten functions, then waits for them all to finish using `ha
 
 Start your app with `dbos start`.
 Then, visit this URL: http://localhost:8000.
-Wait ten seconds and you should see an output like:
+Wait five seconds and you should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -266,3 +266,129 @@ I am a scheduled workflow. It is currently 2025-01-31 23:00:14+00:00.
 I am a scheduled workflow. It is currently 2025-01-31 23:00:15+00:00.
 I am a scheduled workflow. It is currently 2025-01-31 23:00:16+00:00.
 ```
+
+## 5. Database Operations and Transactions
+
+Often, applications need to manage database tables in Postgres.
+We'll show you how to do that from scratch&mdash;first, defining a new table in SQLAlchemy, then creating a schema migration for it in Alembic, then operating on it from a DBOS workflow.
+
+First, create a file named `schema.py` and in it define a new Postgres database table using SQLAlchemy:
+
+```python showLineNumbers title="schema.py"
+from sqlalchemy import Column, Integer, MetaData, String, Table
+
+metadata = MetaData()
+
+dbos_hello = Table(
+    "example_table",
+    metadata,
+    Column("count", Integer, primary_key=True, autoincrement=True),
+    Column("name", String, nullable=False),
+)
+```
+
+Next, let's create a schema migration that will create the table in your database.
+We'll do that using a tool called Alembic.
+First, intialize Alembic:
+
+```
+alembic init migrations
+```
+
+This creates a `migrations/` directory in your application.
+Next, add the following code to `migrations/env.py` right before the `run_migrations_offline` function:
+
+```python showLineNumbers title="migrations/env.py"
+from dbos import get_dbos_database_url
+import re
+from schema import metadata
+
+target_metadata = metadata
+
+# Programmatically set the sqlalchemy.url field from the DBOS config
+# Alembic requires the % in URL-escaped parameters be escaped to %%.
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    get_dbos_database_url(),
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
+```
+
+This code imports your table schema into Alembic and tells it to load its database connection parameters from DBOS.
+
+Next, generate your migration files:
+
+```
+alembic revision --autogenerate -m "example_table"
+```
+
+Edit your `dbos-config.yaml` to add a migration command:
+
+```yaml
+database:
+  migrate:
+    - alembic upgrade head
+```
+
+Finally, run your migrations with:
+
+```shell
+dbos migrate
+```
+
+You should see output like:
+
+```shell
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> f05ae9138107, example_table
+```
+
+You've just created your new table in your Postgres database!
+
+Now, let's write a DBOS workflow that operates on that table. Copy the following code into `main.py`:
+
+```python showLineNumbers title="main.py"
+from dbos import DBOS
+from fastapi import FastAPI
+
+from schema import example_table
+
+app = FastAPI()
+DBOS(fastapi=app)
+
+@DBOS.transaction()
+def insert_row():
+        DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
+
+@DBOS.transaction()
+def count_rows():
+    count = DBOS.sql_session.execute(example_table.select()).rowcount
+    print(f"Row count: {count}")
+
+@app.get("/")
+@DBOS.workflow()
+def dbos_workflow():
+    insert_row()
+    count_rows()
+```
+
+This workflow first inserts a new row into your table, then prints the total number of rows inserted into your table.
+The database operations are done in DBOS _transactions_. These are a special kind of step optimized for database accesses.
+They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
+Learn more about transactions [here](./tutorials/transaction-tutorial.md).
+
+Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+
+You should see an output like:
+
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Row count: 1
+```
+
+Every time you visit http://localhost:8000, your workflow should insert another row, and the printed row count should go up by one.
+
+Congratulations!  You've finished the DBOS Python guide.
+Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
