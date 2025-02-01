@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 8
-title: Reliable Customer Service Agent
+title: Durable Swarm Agent
 ---
 
 In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and OpenAI's [Swarm](https://github.com/openai/swarm/tree/main) framework.
