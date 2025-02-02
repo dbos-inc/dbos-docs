@@ -27,7 +27,7 @@ from dbos import DBOS
 
 @pytest.fixture()
 def reset_dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     DBOS()
     DBOS.launch()
 ```
@@ -50,7 +50,7 @@ To do this, save your custom configuration to a file (for example, `dbos-config.
 
 ```python
 def reset_dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     config = load_config("dbos-config.testing.yaml")
     DBOS(config=config)
     DBOS.launch()
@@ -60,7 +60,7 @@ Alternatively, you can load your default config then modify its values programat
 
 ```python
 def reset_dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     config = load_config()
     config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
     DBOS(config=config)
@@ -139,7 +139,7 @@ def run_migrations(config: ConfigFile):
 
 @pytest.fixture()
 def dbos():
-    DBOS.destroy(destroy_registry=False)
+    DBOS.destroy()
     config = load_config()
     config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
     reset_database(config)
