@@ -394,7 +394,7 @@ Here's what everything looks like put together:
 <details>
 <summary>Putting it all together</summary>
 
-```python
+```python showLineNumbers title="main.py"
 import time
 
 from dbos import DBOS, Queue

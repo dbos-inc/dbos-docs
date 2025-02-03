@@ -442,3 +442,132 @@ Congratulations!  You've finished the DBOS TypeScript guide.
 You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-node-toolbox) template app.
 
 Here's what everything looks like put together:
+
+<details>
+<summary>Putting it all together</summary>
+
+```javascript showLineNumbers title="src/main.ts"
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+export const app = express();
+app.use(express.json());
+
+const queue = new WorkflowQueue("example_queue");
+
+export class Toolbox {
+
+  //////////////////////////////////
+  //// Workflows and steps
+  //////////////////////////////////
+
+  @DBOS.step()
+  static async stepOne() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.step()
+  static async stepTwo() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.workflow()
+  static async exampleWorkflow() {
+    await Toolbox.stepOne();
+    await Toolbox.stepTwo();
+  }
+
+  //////////////////////////////////
+  //// Queues
+  //////////////////////////////////
+
+  @DBOS.workflow()
+  static async taskWorkflow(n: number) {
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Sleep 5 seconds
+    DBOS.logger.info(`Task ${n} completed!`)
+  }
+
+  @DBOS.workflow()
+  static async queueWorkflow() {
+    DBOS.logger.info("Enqueueing tasks!")
+    const handles = []
+    for (let i = 0; i < 10; i++) {
+      handles.push(await DBOS.startWorkflow(Toolbox, { queueName: queue.name }).taskWorkflow(i))
+    }
+    const results = []
+    for (const h of handles) {
+      results.push(await h.getResult())
+    }
+    DBOS.logger.info(`Successfully completed ${results.length} tasks`)
+  }
+
+  //////////////////////////////////
+  //// Scheduled workflows
+  //////////////////////////////////
+
+  @DBOS.scheduled({ crontab: "* * * * *" })
+  @DBOS.workflow()
+  static async runEveryMinute(scheduledTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
+  }
+
+  //////////////////////////////////
+  //// Transactions
+  //////////////////////////////////
+
+  @DBOS.transaction()
+  static async insertRow() {
+    await DBOS.knexClient.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  }
+
+  @DBOS.transaction({ readOnly: true })
+  static async countRows() {
+    const result = await DBOS.knexClient.raw('SELECT COUNT(*) as count FROM example_table');
+    const count = result.rows[0].count;
+    DBOS.logger.info(`Row count: ${count}`);
+  }
+
+  @DBOS.workflow()
+  static async transactionWorkflow() {
+    await Toolbox.insertRow()
+    await Toolbox.countRows()
+  }
+}
+
+/////////////////////////////////////
+//// Express.js HTTP endpoints
+/////////////////////////////////////
+
+app.get("/workflow", async (req, res) => {
+  await Toolbox.exampleWorkflow();
+  res.send();
+});
+
+app.get("/queue", async (req, res) => {
+  await Toolbox.queueWorkflow();
+  res.send();
+});
+
+app.get("/transaction", async (req, res) => {
+  await Toolbox.transactionWorkflow();
+  res.send();
+});
+
+/////////////////////////////////////
+//// Starting Express.js and DBOS
+/////////////////////////////////////
+
+async function main() {
+  await DBOS.launch({ expressApp: app });
+  const PORT = DBOS.runtimeConfig?.port || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  });
+}
+
+main().catch(console.log);
+```
+
+</details>
+
+Next, to learn how to build more complex applications, check out the TypeScript tutorials and [example apps](../examples/index.md).
