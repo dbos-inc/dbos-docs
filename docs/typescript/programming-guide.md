@@ -268,3 +268,30 @@ Next, press CTRL+C stop your app. Then, run `npm run dev` to restart it. Wait te
 
 You can see how DBOS again **recovered your workflow from the last completed task**, restarting steps 5-9 without re-executing steps 0-4 (you may not see exactly this result&mdash;a task may appear twice if you interrupt DBOS between when it logs success and when its status is written to Postgres).
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
+
+## 4. Scheduled Workflows
+
+Sometimes, you need to run a workflow **on a schedule**: for example, once per hour or once per week.
+In DBOS, you can schedule workflows with the `@DBOS.scheduled()` decorator.
+To try it out, add this code to your `src/main.ts`:
+
+```javascript
+  @DBOS.scheduled({ crontab: "* * * * * *" })
+  @DBOS.workflow()
+  static async runEverySecond(scheduledTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
+  }
+```
+
+The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, defined in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+The schedule in the example, `* * * * * *` means "run this workflow every second."
+Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
+
+Now, start your app with `npm run dev`.
+The workflow should run every second, with output like:
+
+```shell
+2025-02-03 23:10:58 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:10:58 GMT-0800 (Pacific Standard Time).
+2025-02-03 23:10:59 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:10:59 GMT-0800 (Pacific Standard Time).
+2025-02-03 23:11:00 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:11:00 GMT-0800 (Pacific Standard Time).
+```
