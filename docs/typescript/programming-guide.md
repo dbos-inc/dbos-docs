@@ -55,6 +55,7 @@ main().catch(console.log)
 
 In DBOS, you write programs as **workflows** of **steps**.
 Workflows and steps are ordinary TypeScript functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
+In order to support decorators, workflows and steps must be static class member functions.
 DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
 
 Now, build and run this code with:
@@ -169,7 +170,7 @@ export class Example {
 
   @DBOS.workflow()
   static async taskWorkflow(n: number) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Sleep 5 seconds
+    await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
 
@@ -229,44 +230,6 @@ Wait five seconds and you should see an output like:
 ```
 
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
-
-DBOS durably executes queued operations. To see this in action, change the definition of `taskWorkflow` to this so each step takes a different amount of time to run:
-
-```javascript
-  @DBOS.workflow()
-  static async taskWorkflow(n: number) {
-    await new Promise(resolve => setTimeout(resolve, n * 1000));
-    DBOS.logger.info(`Task ${n} completed!`);
-  }
-```
-
-Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
-After about five seconds, you should see an output like:
-
-```
-🚀 Server is running on http://localhost:3000
-2025-02-03 22:59:08 [info]: Enqueueing tasks!
-2025-02-03 22:59:08 [info]: Task 0 completed!
-2025-02-03 22:59:09 [info]: Task 1 completed!
-2025-02-03 22:59:10 [info]: Task 2 completed!
-2025-02-03 22:59:11 [info]: Task 3 completed!
-2025-02-03 22:59:12 [info]: Task 4 completed!
-```
-
-Next, press CTRL+C stop your app. Then, run `npm run dev` to restart it. Wait ten seconds and you should see an output like:
-
-
-```shell
-🚀 Server is running on http://localhost:3000
-2025-02-03 23:01:03 [info]: Task 5 completed!
-2025-02-03 23:01:04 [info]: Task 6 completed!
-2025-02-03 23:01:05 [info]: Task 7 completed!
-2025-02-03 23:01:06 [info]: Task 8 completed!
-2025-02-03 23:01:07 [info]: Task 9 completed!
-2025-02-03 23:01:08 [info]: Successfully completed 10 tasks
-```
-
-You can see how DBOS again **recovered your workflow from the last completed task**, restarting steps 5-9 without re-executing steps 0-4 (you may not see exactly this result&mdash;a task may appear twice if you interrupt DBOS between when it logs success and when its status is written to Postgres).
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
 ## 4. Scheduled Workflows
@@ -276,11 +239,11 @@ In DBOS, you can schedule workflows with the `@DBOS.scheduled()` decorator.
 To try it out, add this code to your `src/main.ts`:
 
 ```javascript
-  @DBOS.scheduled({ crontab: "* * * * * *" })
-  @DBOS.workflow()
-  static async runEverySecond(scheduledTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
-  }
+@DBOS.scheduled({ crontab: "* * * * * *" })
+@DBOS.workflow()
+static async runEverySecond(scheduledTime: Date, startTime: Date) {
+  DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
+}
 ```
 
 The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, defined in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
@@ -299,7 +262,9 @@ The workflow should run every second, with output like:
 ## 5. Database Operations and Transactions
 
 Often, applications need to manage database tables in Postgres.
-We'll show you how to do that from scratch using [Knex.js](./tutorials/orms/using-knex.md) to first define a schema migration to create a new table then to operate on the table from a DBOS workflow.
+We'll show you how to do that from scratch using [Knex.js](./tutorials/orms/using-knex.md).
+First, we'll define a schema migration to create a new table.
+Then, we'll operate on the table using a DBOS workflow.
 DBOS also supports other popular ORMs such as [Drizzle](./tutorials/orms/using-drizzle.md), [Prisma](./tutorials/orms/using-prisma.md), and [TypeORM](./tutorials/orms/using-typeorm.md).
 
 First, create a file named `knexfile.js` and add the following code to it.
@@ -351,6 +316,7 @@ exports.up = function(knex) {
     return knex.schema.dropTable('example_table');
   };
 ```
+
 Then, edit your `dbos-config.yaml` to add a migration command:
 
 ```yaml
@@ -419,7 +385,6 @@ async function main() {
 }
 
 main().catch(console.log);
-
 ```
 
 This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
@@ -483,7 +448,7 @@ export class Toolbox {
 
   @DBOS.workflow()
   static async taskWorkflow(n: number) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Sleep 5 seconds
+    await DBOS.sleep(5000):
     DBOS.logger.info(`Task ${n} completed!`)
   }
 
