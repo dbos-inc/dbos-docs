@@ -5,8 +5,6 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
-import LocalPostgres from '/docs/partials/_local_postgres.mdx';
-
 This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 
 ## 1. Setting Up Your Environment
