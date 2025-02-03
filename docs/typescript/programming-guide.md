@@ -53,10 +53,14 @@ async function main() {
 main().catch(console.log)
 ```
 
-In DBOS, you write programs as **workflows** of **steps**.
-Workflows and steps are ordinary TypeScript functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
-In order to support decorators, workflows and steps must be static class member functions.
-DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
+DBOS helps you build reliable TypeScript programs as **workflows** of **steps**.
+A workflow is a sequence of operations, with each step representing a discrete task.
+You create workflows and steps by adding special annotations (`@DBOS.workflow()` and `@DBOS.step()`) to your TypeScript functions.
+Workflows and steps must be static class methods.
+
+The key benefit of DBOS is **durability**&mdash;it automatically saves the state of your workflows to a database.
+If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
+Thus, DBOS makes your application **resilient to any failure**.
 
 Now, build and run this code with:
 
