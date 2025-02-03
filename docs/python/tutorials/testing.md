@@ -13,10 +13,14 @@ Because DBOS workflows, steps, and transactions are ordinary Python functions, y
 def reset_dbos():
     DBOS.destroy()
     DBOS()
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
-This function first cleans up any existing DBOS instance (for example, left over from a previous test or an imported file), then initializes and launches DBOS.
+First, destroy any existing DBOS instance.
+Then, create a new DBOS instance.
+Next, reset the internal state of DBOS in Postgres, cleaning up any state left over from previous tests.
+Finally, launch a new DBOS instance.
 
 For example, if using pytest, declare `reset_dbos` as a fixture and require it from every test of a DBOS function:
 
@@ -29,6 +33,7 @@ from dbos import DBOS
 def reset_dbos():
     DBOS.destroy()
     DBOS()
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
@@ -53,6 +58,7 @@ def reset_dbos():
     DBOS.destroy()
     config = load_config("dbos-config.testing.yaml")
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
@@ -64,12 +70,13 @@ def reset_dbos():
     config = load_config()
     config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
 ### Resetting Your Database For Testing
 
-It is often useful to reset your testing database betwen unit tests, to ensure tests are fully isolated.
+If your application extensively uses the database, it may be useful to reset your testing database between tests, to ensure tests are fully isolated.
 This can be involved, as you must destroy your testing database then recreate it programatically using your migrations.
 Here is some example code for how to do it using SQLAlchemy, Alembic, and pytest:
 
@@ -145,6 +152,7 @@ def dbos():
     reset_database(config)
     run_migrations(config)
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 </details>
