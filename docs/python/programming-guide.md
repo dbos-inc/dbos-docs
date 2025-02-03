@@ -139,6 +139,7 @@ Step two completed!
 ```
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
+Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
 
 ## 3. Queues and Parallelism
 
@@ -236,6 +237,7 @@ Successfully completed 10 steps
 ```
 
 You can see how DBOS again **recovered your workflow from the last completed step**, restarting steps 5-9 without re-executing steps 0-4.
+Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
 ## 4. Scheduled Workflows
 
