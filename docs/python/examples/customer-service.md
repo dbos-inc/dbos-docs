@@ -21,6 +21,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/durable-swa
 ## Overview
 
 The agent is a stateful graph constructed with LangGraph. The architecture diagram is shown below:
+
 ![LangGraph diagram](assets/langgraph-agent-architect.png)
 
 The `tools` include two DBOS decorated functions:
@@ -110,6 +111,11 @@ We decorate the `tool_get_purchase_by_id` and `process_refund` functions with La
 DBOS guarantees that once the agent's workflow starts, you will always get a refund, and never be refunded twice!
 
 ### Asynchronous Human-in-the-Loop Workflow
+
+The architecture diagram of the refund processing workflow looks like bellow:
+
+![refund workflow](assets/langgraph-agent-workflow.png)
+
 
 If an order exceeds a certain cost threshold, the refund request will be escalated for manual review. In this case, the `process_refund` workflow starts a child workflow called `approval_workflow` which contains the following step:
 - An email is sent to an admin for approval.
