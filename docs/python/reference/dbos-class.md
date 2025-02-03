@@ -94,6 +94,18 @@ Useful for testing.
 **Parameters:**
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
 
+
+### reset_system_database
+
+```python
+DBOS.reset_system_database()
+```
+
+Destroy the DBOS [system database](../../explanations/how-workflows-work.md), resetting DBOS's internal state in Postgres.
+Useful when testing a DBOS application to reset the internal state of DBOS between tests.
+For example, see its use in the [Python testing tutorial](../tutorials/testing.md).
+**This is a destructive operation and should only be used in a test environment.**
+
 ## Configuration Management
 
 ### load_config
