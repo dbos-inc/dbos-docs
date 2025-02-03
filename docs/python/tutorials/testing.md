@@ -13,10 +13,14 @@ Because DBOS workflows, steps, and transactions are ordinary Python functions, y
 def reset_dbos():
     DBOS.destroy()
     DBOS()
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
-This function first cleans up any existing DBOS instance (for example, left over from a previous test or an imported file), then initializes and launches DBOS.
+First, this function cleans up any existing DBOS instance (for example, left over from a previous test or an imported file).
+Then, it creates a new DBOS instance.
+Next, it resets DBOS's internal state in Postgres, cleaning up any state left over from previous tests.
+Finally, it launches the new DBOS instance.
 
 For example, if using pytest, declare `reset_dbos` as a fixture and require it from every test of a DBOS function:
 
@@ -29,6 +33,7 @@ from dbos import DBOS
 def reset_dbos():
     DBOS.destroy()
     DBOS()
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
@@ -53,6 +58,7 @@ def reset_dbos():
     DBOS.destroy()
     config = load_config("dbos-config.testing.yaml")
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
@@ -64,6 +70,7 @@ def reset_dbos():
     config = load_config()
     config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 
@@ -145,6 +152,7 @@ def dbos():
     reset_database(config)
     run_migrations(config)
     DBOS(config=config)
+    DBOS.reset_system_database()
     DBOS.launch()
 ```
 </details>
