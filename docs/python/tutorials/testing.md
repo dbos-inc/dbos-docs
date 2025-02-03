@@ -17,10 +17,10 @@ def reset_dbos():
     DBOS.launch()
 ```
 
-First, this function cleans up any existing DBOS instance (for example, left over from a previous test or an imported file).
-Then, it creates a new DBOS instance.
-Next, it resets DBOS's internal state in Postgres, cleaning up any state left over from previous tests.
-Finally, it launches the new DBOS instance.
+First, clean up any existing DBOS instance (for example, left over from a previous test or an imported file).
+Then, create a new DBOS instance.
+Next, reset the internal state of DBOS in Postgres, cleaning up any state left over from previous tests.
+Finally, launch a new DBOS instance.
 
 For example, if using pytest, declare `reset_dbos` as a fixture and require it from every test of a DBOS function:
 
