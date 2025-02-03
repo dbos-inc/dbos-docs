@@ -76,7 +76,7 @@ def reset_dbos():
 
 ### Resetting Your Database For Testing
 
-It is often useful to reset your testing database betwen unit tests, to ensure tests are fully isolated.
+If your application extensively uses the database, it may be useful to reset your testing database between tests, to ensure tests are fully isolated.
 This can be involved, as you must destroy your testing database then recreate it programatically using your migrations.
 Here is some example code for how to do it using SQLAlchemy, Alembic, and pytest:
 
