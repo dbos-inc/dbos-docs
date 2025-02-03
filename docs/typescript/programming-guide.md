@@ -54,7 +54,7 @@ main().catch(console.log)
 ```
 
 In DBOS, you write programs as **workflows** of **steps**.
-Workflows and steps are ordinary Python functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
+Workflows and steps are ordinary TypeScript functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
 DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
 
 Now, build and run this code with:
@@ -122,7 +122,7 @@ async function main() {
 main().catch(console.log);
 ```
 
-Build your app with `npm run build` and start it with `npm run start`.
+Start your app with `npm run dev`.
 Then, visit this URL: http://localhost:3000.
 
 In your terminal, you should see an output like:
