@@ -17,7 +17,7 @@ def reset_dbos():
     DBOS.launch()
 ```
 
-First, clean up any existing DBOS instance.
+First, destroy any existing DBOS instance.
 Then, create a new DBOS instance.
 Next, reset the internal state of DBOS in Postgres, cleaning up any state left over from previous tests.
 Finally, launch a new DBOS instance.
