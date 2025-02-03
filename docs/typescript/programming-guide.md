@@ -295,3 +295,150 @@ The workflow should run every second, with output like:
 2025-02-03 23:10:59 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:10:59 GMT-0800 (Pacific Standard Time).
 2025-02-03 23:11:00 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:11:00 GMT-0800 (Pacific Standard Time).
 ```
+
+## 5. Database Operations and Transactions
+
+Often, applications need to manage database tables in Postgres.
+We'll show you how to do that from scratch using [Knex.js](./tutorials/orms/using-knex.md) to first define a schema migration to create a new table then to operate on the table from a DBOS workflow.
+DBOS also supports other popular ORMs such as [Drizzle](./tutorials/orms/using-drizzle.md), [Prisma](./tutorials/orms/using-prisma.md), and [TypeORM](./tutorials/orms/using-typeorm.md).
+
+First, create a file named `knexfile.js` and add the following code to it.
+This configures Knex and instructs it to read its database connection parameters from DBOS.
+
+```javascript showLineNumbers title="knexfile.js"
+const { parseConfigFile } = require('@dbos-inc/dbos-sdk');
+
+const [dbosConfig, ] = parseConfigFile();
+
+const config = {
+  client: 'pg',
+  connection: {
+    host: dbosConfig.poolConfig.host,
+    port: dbosConfig.poolConfig.port,
+    user: dbosConfig.poolConfig.user,
+    password: dbosConfig.poolConfig.password,
+    database: dbosConfig.poolConfig.database,
+    ssl: dbosConfig.poolConfig.ssl,
+  },
+  migrations: {
+    directory: './migrations'
+  }
+};
+
+module.exports = config;
+
+```
+
+Next, let's create a schema migration that will create a table in your database.
+Create a new migration file with:
+
+```shell
+npx knex migrate:make example_table
+```
+
+This creates a file named `migrations/XXXXX_example_table.js`.
+Add the following code to that file to define your new table:
+
+```javascript showLineNumbers title="migrations/XXXXX_example_table.js"
+exports.up = function(knex) {
+    return knex.schema.createTable('example_table', function(table) {
+      table.increments('count').primary();
+      table.string('name').notNullable();
+    });
+  };
+  
+  exports.down = function(knex) {
+    return knex.schema.dropTable('example_table');
+  };
+```
+Then, edit your `dbos-config.yaml` to add a migration command:
+
+```yaml
+database:
+  migrate:
+    - npx knex migrate:latest
+```
+
+Finally, run your new migration with:
+
+```shell
+npx dbos migrate
+```
+
+You should see output like:
+
+```shell
+2025-02-03 23:30:52 [info]: Executing migration command: npx knex migrate:latest
+Batch 1 run: 1 migrations
+2025-02-03 23:30:53 [info]: Creating DBOS tables and system database.
+2025-02-03 23:30:53 [info]: Migration successful!
+```
+
+You just created your new table in your Postgres database!
+
+Now, let's write a DBOS workflow that operates on that table. Copy the following code into `src/main.ts`:
+
+```javascript showLineNumbers title="src/main.ts"
+import { DBOS, } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+export const app = express();
+app.use(express.json());
+
+export class Toolbox {
+  @DBOS.transaction()
+  static async insertRow() {
+    await DBOS.knexClient.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  }
+
+  @DBOS.transaction({ readOnly: true })
+  static async countRows() {
+    const result = await DBOS.knexClient.raw('SELECT COUNT(*) as count FROM example_table');
+    const count = result.rows[0].count;
+    DBOS.logger.info(`Row count: ${count}`);
+  }
+
+  @DBOS.workflow()
+  static async transactionWorkflow() {
+    await Toolbox.insertRow()
+    await Toolbox.countRows()
+  }
+}
+
+app.get("/", async (req, res) => {
+  await Toolbox.transactionWorkflow();
+  res.send();
+});
+
+async function main() {
+  await DBOS.launch({ expressApp: app });
+  const PORT = DBOS.runtimeConfig?.port || 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  });
+}
+
+main().catch(console.log);
+
+```
+
+This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
+The database operations are done in DBOS _transactions_. These are a special kind of step optimized for database accesses.
+They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.knexClient`).
+Learn more about transactions [here](./tutorials/transaction-tutorial.md).
+
+Now, start your app with `dbos start`, then visit this URL: http://localhost:3000.
+
+You should see an output like:
+
+```shell
+🚀 Server is running on http://localhost:3000
+2025-02-03 23:32:31 [info]: Row count: 1
+```
+
+Every time you visit http://localhost:3000, your workflow should insert another row, and the printed row count should go up by one.
+
+Congratulations!  You've finished the DBOS TypeScript guide.
+You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-node-toolbox) template app.
+
+Here's what everything looks like put together:
