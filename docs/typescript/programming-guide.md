@@ -266,5 +266,5 @@ Next, press CTRL+C stop your app. Then, run `npm run dev` to restart it. Wait te
 2025-02-03 23:01:08 [info]: Successfully completed 10 tasks
 ```
 
-You can see how DBOS again **recovered your workflow from the last completed task**, restarting steps 5-9 without re-executing steps 0-4 (you may not see exactly this result&mdash;a task may appear twice if you happen to crash DBOS between when it logs success and when its status is written to Postgres).
+You can see how DBOS again **recovered your workflow from the last completed task**, restarting steps 5-9 without re-executing steps 0-4 (you may not see exactly this result&mdash;a task may appear twice if you interrupt DBOS between when it logs success and when its status is written to Postgres).
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
