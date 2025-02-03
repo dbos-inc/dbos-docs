@@ -391,4 +391,103 @@ Every time you visit http://localhost:8000, your workflow should insert another 
 Congratulations!  You've finished the DBOS Python guide.
 You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-toolbox) template app.
 
+Here's what everything looks like put together:
+
+<details>
+<summary>Putting it all together</summary>
+
+```python
+import time
+
+from dbos import DBOS, Queue
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+
+from schema import example_table
+
+app = FastAPI()
+DBOS(fastapi=app)
+
+##################################
+#### Workflows and Steps
+##################################
+
+
+@DBOS.step()
+def step_one():
+    DBOS.logger.info("Step one completed!")
+
+
+@DBOS.step()
+def step_two():
+    DBOS.logger.info("Step two completed!")
+
+
+@app.get("/workflow")
+@DBOS.workflow()
+def dbos_workflow():
+    step_one()
+    step_two()
+
+
+##################################
+#### Queues
+##################################
+
+queue = Queue("example-queue")
+
+
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(5)
+    DBOS.logger.info(f"Step {n} completed!")
+
+
+@app.get("/queue")
+@DBOS.workflow()
+def dbos_workflow():
+    DBOS.logger.info("Enqueueing steps")
+    handles = []
+    for i in range(10):
+        handle = queue.enqueue(dbos_step, i)
+        handles.append(handle)
+    results = [handle.get_result() for handle in handles]
+    DBOS.logger.info(f"Successfully completed {len(results)} steps")
+
+
+##################################
+#### Scheduled Workflows
+##################################
+
+
+@DBOS.scheduled("* * * * *")
+@DBOS.workflow()
+def run_every_minute(scheduled_time, actual_time):
+    DBOS.logger.info(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+
+
+##################################
+#### Transactions
+##################################
+
+
+@DBOS.transaction()
+def insert_row():
+    DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
+
+
+@DBOS.transaction()
+def count_rows():
+    count = DBOS.sql_session.execute(example_table.select()).rowcount
+    DBOS.logger.info(f"Row count: {count}")
+
+
+@app.get("/transaction")
+@DBOS.workflow()
+def dbos_workflow():
+    insert_row()
+    count_rows()
+```
+</details>
+
 Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
