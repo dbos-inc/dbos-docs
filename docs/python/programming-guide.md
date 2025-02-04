@@ -69,9 +69,12 @@ if __name__ == "__main__":
     dbos_workflow()
 ```
 
-In DBOS, you write programs as **workflows** of **steps**.
-Workflows and steps are ordinary Python functions annotated with the `@DBOS.workflow()` and `@DBOS.step()` decorators.
-DBOS **durably executes** workflows, persisting their state to a database so if they are interrupted or crash, they automatically recover from the last completed step.
+DBOS helps you write reliable Python programs as **workflows** of **steps**.
+You create workflows and steps by adding special annotations (`@DBOS.workflow()` and `@DBOS.step()`) to your Python functions.
+
+The key benefit of DBOS is **durability**&mdash;it automatically saves the state of your workflows and steps to a database.
+If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
+Thus, DBOS makes your application **resilient to any failure**.
 
 Run this code with `python3 main.py` and it should print output like:
 
@@ -371,7 +374,7 @@ def dbos_workflow():
 ```
 
 This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
-The database operations are done in DBOS _transactions_. These are a special kind of step optimized for database accesses.
+The database operations are done in DBOS _transactions_. These are special steps optimized for database accesses.
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
