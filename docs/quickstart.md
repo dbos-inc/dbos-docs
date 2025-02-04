@@ -269,7 +269,7 @@ If you cloned a git repository, you don't need to run `dbos init`&mdash;your app
 
 ```shell
 pip install dbos
-dbos init --template dbos-app-starter
+dbos init --template dbos-toolbox
 ```
 
 </article>
@@ -281,12 +281,13 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-Now, start your app!
+Now, create some database tables, then start your app!
 DBOS will automatically guide you through connecting to your app to a Postgres database.
 </article>
 
 <article className="col col--6">
 ```bash
+dbos migrate
 dbos start
 ```
 </article>
@@ -351,7 +352,8 @@ DBOS TypeScript requires Node.js 20 or later.
 
 <article className="col col--6">
 
-Install dependencies and build your application.
+Install dependencies, then create some database tables.
+DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
@@ -360,7 +362,7 @@ Install dependencies and build your application.
 
 ```shell
 npm install
-npm run build
+npx dbos migrate
 ```
 
 </article>
@@ -373,13 +375,12 @@ npm run build
 
 <article className="col col--6">
 Now, start your app!
-DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
 <article className="col col--6">
 ```bash
-npm run start
+npm run dev
 ```
 </article>
 
