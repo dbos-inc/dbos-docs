@@ -260,6 +260,7 @@ python3 -m venv .venv
 
 #### 2. Install and Initialize DBOS
 Install DBOS with `pip install dbos`, then initialize a starter application.
+We recommend `dbos-toolbox`, which contains example code for useful DBOS features.
 
 If you cloned a git repository, you don't need to run `dbos init`&mdash;your app is already initialized.
 
@@ -318,6 +319,7 @@ To learn more about building DBOS apps, check out the [Python programming guide]
 
 #### 1. Initialize an Application
 Initalize a starter application and enter its directory.
+We recommend initializing `dbos-node-toolbox`, which contains example code for useful DBOS features.
 
 If you previously created a git repository from the cloud console, you can clone your repository and use it instead.
 </article>
@@ -325,8 +327,8 @@ If you previously created a git repository from the cloud console, you can clone
 <article className="col col--6">
 
 ```shell
-npx @dbos-inc/create@latest --template dbos-node-starter
-cd dbos-node-starter
+npx @dbos-inc/create@latest --template dbos-node-toolbox
+cd dbos-node-toolbox
 ```
 
 </article>
