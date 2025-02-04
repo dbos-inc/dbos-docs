@@ -260,6 +260,7 @@ python3 -m venv .venv
 
 #### 2. Install and Initialize DBOS
 Install DBOS with `pip install dbos`, then initialize a starter application.
+We recommend `dbos-toolbox`, which contains example code for useful DBOS features.
 
 If you cloned a git repository, you don't need to run `dbos init`&mdash;your app is already initialized.
 
@@ -269,7 +270,7 @@ If you cloned a git repository, you don't need to run `dbos init`&mdash;your app
 
 ```shell
 pip install dbos
-dbos init --template dbos-app-starter
+dbos init --template dbos-toolbox
 ```
 
 </article>
@@ -281,12 +282,13 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-Now, start your app!
+Now, create some database tables, then start your app!
 DBOS will automatically guide you through connecting to your app to a Postgres database.
 </article>
 
 <article className="col col--6">
 ```bash
+dbos migrate
 dbos start
 ```
 </article>
@@ -317,6 +319,7 @@ To learn more about building DBOS apps, check out the [Python programming guide]
 
 #### 1. Initialize an Application
 Initalize a starter application and enter its directory.
+We recommend initializing `dbos-node-toolbox`, which contains example code for useful DBOS features.
 
 If you previously created a git repository from the cloud console, you can clone your repository and use it instead.
 </article>
@@ -324,8 +327,8 @@ If you previously created a git repository from the cloud console, you can clone
 <article className="col col--6">
 
 ```shell
-npx @dbos-inc/create@latest --template dbos-node-starter
-cd dbos-node-starter
+npx @dbos-inc/create@latest --template dbos-node-toolbox
+cd dbos-node-toolbox
 ```
 
 </article>
@@ -351,7 +354,8 @@ DBOS TypeScript requires Node.js 20 or later.
 
 <article className="col col--6">
 
-Install dependencies and build your application.
+Install dependencies, then create some database tables.
+DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
@@ -360,7 +364,7 @@ Install dependencies and build your application.
 
 ```shell
 npm install
-npm run build
+npx dbos migrate
 ```
 
 </article>
@@ -373,13 +377,12 @@ npm run build
 
 <article className="col col--6">
 Now, start your app!
-DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
 <article className="col col--6">
 ```bash
-npm run start
+npm run dev
 ```
 </article>
 

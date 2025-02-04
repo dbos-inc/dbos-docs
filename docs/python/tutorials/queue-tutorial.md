@@ -14,7 +14,7 @@ from dbos import Queue
 queue = Queue("example_queue")
 ```
 
-You can then enqueue any DBOS-annotated function.
+You can then enqueue any DBOS workflow, step, or transaction.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 

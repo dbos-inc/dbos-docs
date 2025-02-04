@@ -5,238 +5,490 @@ pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
 ---
 
-import LocalPostgres from '/docs/partials/_local_postgres.mdx';
+This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 
-
-This tutorial shows you how to use DBOS durable execution to make your Python app **resilient to any failure.**
-First, without using DBOS, we'll build an app that records greetings to two different systems: Postgres and an online guestbook.
-Then, we'll add DBOS durable execution to the app in **just four lines of code**.
-Thanks to durable execution, the app will always write to both systems consistently, even if it is interrupted or restarted at any point.
-
-## 1. Setting Up Your App
+## 1. Setting Up Your Environment
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-python3 -m venv greeting-guestbook/.venv
-cd greeting-guestbook
+python3 -m venv dbos-starter/.venv
+cd dbos-starter
 .venv\Scripts\activate.bat
 ```
 </TabItem>
 </Tabs>
 
-Then, install and initialize DBOS:
+Then, install DBOS and create a DBOS configuration file:
 ```shell
 pip install dbos
-dbos init
+dbos init --config
 ```
 
-Now, let's use FastAPI to write a simple app that greets our friends.
-Every time the app receives a greeting, it performs two steps:
+## 2. Workflows and Steps
 
-1. Sign an online guestbook with the greeting.
-2. Record the greeting in the database.
+Now, let's create the simplest interesting DBOS program.
+Create a `main.py` file and add this code to it:
 
-We deliberately **won't** use DBOS yet (except to fetch the database connection string) so we can show you how easy it is to add later.
+```python showLineNumbers title="main.py"
+from dbos import DBOS
 
-Copy the following code into `greeting_guestbook/main.py`, replacing its existing contents:
+DBOS()
 
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
 
-import requests
-from dbos import get_dbos_database_url
-from fastapi import FastAPI
-from sqlalchemy import create_engine
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
 
-from .schema import dbos_hello
+@DBOS.workflow()
+def dbos_workflow():
+    step_one()
+    step_two()
 
-app = FastAPI()
-logging.basicConfig(level=logging.INFO)
-
-# Sign the guestbook using an HTTP POST request
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
-
-# Create a SQLAlchemy engine.
-engine = create_engine(get_dbos_database_url())
-
-# Record the greeting in the database using SQLAlchemy
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
-
-@app.get("/greeting/{name}")
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
+if __name__ == "__main__":
+    DBOS.launch()
+    dbos_workflow()
 ```
 
-Now, run these commands to set up your database and start your app:
+DBOS helps you write reliable Python programs as **workflows** of **steps**.
+You create workflows and steps by adding special annotations (`@DBOS.workflow()` and `@DBOS.step()`) to your Python functions.
+
+The key benefit of DBOS is **durability**&mdash;it automatically saves the state of your workflows and steps to a database.
+If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
+Thus, DBOS makes your application **resilient to any failure**.
+
+Run this code with `python3 main.py` and it should print output like:
 
 ```shell
-dbos migrate
-dbos start
-```
-To see that your app is working, visit this URL: [http://localhost:8000/greeting/Mike](http://localhost:8000/greeting/Mike)
-<BrowserWindow url="http://localhost:8000/greeting/Mike">
-"Thank you for being awesome, Mike!"
-</BrowserWindow>
-
-Each time you visit, your app should log first that it has recorded your greeting in the guestbook, then that it has recorded your greeting in the database.
-
-```
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+13:47:09 [    INFO] (dbos:_dbos.py:272) Initializing DBOS
+13:47:09 [    INFO] (dbos:_dbos.py:401) DBOS launched
+Step one completed!
+Step two completed!
 ```
 
-Now, this app has a problem: if it is interrupted after signing the guestbook, but before recording the greeting in the database, then **the greeting, though sent, will never be recorded**.
-This is bad in many real-world situations, for example if a program fails to record making or receiving a payment.
-To fix this problem, we'll use DBOS durable execution.
+To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using FastAPI.
+Copy this code into `main.py`:
 
-## 2. Durable Execution with Workflows
-
-Next, we want to **durably execute** our application: guarantee that it inserts exactly one database record per guestbook signature, even if interrupted or restarted.
-DBOS makes this easy with [workflows](./tutorials/workflow-tutorial.md).
-We can add durable execution to our app with **just four lines of code** and an import statement.
-Copy the following code into your `greeting_guestbook/main.py`, replacing its existing contents:
-
-
-```python showLineNumbers title="greeting_guestbook/main.py"
-import logging
-
-import requests
-#highlight-next-line
-from dbos import DBOS, get_dbos_database_url
+```python showLineNumbers title="main.py"
 from fastapi import FastAPI
-from sqlalchemy import create_engine
-
-from .schema import dbos_hello
+from dbos import DBOS
 
 app = FastAPI()
-#highlight-next-line
 DBOS(fastapi=app)
 
-logging.basicConfig(level=logging.INFO)
-
-# Sign the guestbook using an HTTP POST request
-#highlight-next-line
 @DBOS.step()
-def sign_guestbook(name: str):
-    requests.post(
-        "https://demo-guestbook.cloud.dbos.dev/record_greeting",
-        headers={"Content-Type": "application/json"},
-        json={"name": name},
-    )
-    logging.info(f">>> STEP 1: Signed the guestbook for {name}")
+def step_one():
+    print("Step one completed!")
 
-# Create a SQLAlchemy engine. Adjust this connection string for your database.
-engine = create_engine(get_dbos_database_url())
-
-# Record the greeting in the database using SQLAlchemy
-#highlight-next-line
 @DBOS.step()
-def insert_greeting(name: str) -> str:
-    with engine.begin() as sql_session:
-        query = dbos_hello.insert().values(name=name)
-        sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
+def step_two():
+    print("Step two completed!")
 
-@app.get("/greeting/{name}")
-#highlight-next-line
+@app.get("/")
 @DBOS.workflow()
-def greeting_endpoint(name: str):
-    sign_guestbook(name)
+def dbos_workflow():
+    step_one()
     for _ in range(5):
-        logging.info("Press Control + C to stop the app...")
+        print("Press Control + C to stop the app...")
         DBOS.sleep(1)
-    insert_greeting(name)
-    return f"Thank you for being awesome, {name}!"
+    step_two()
 ```
 
-Only the **four highlighted lines of code** are needed to enable durable execution.
+Start your app with `dbos start`.
+This calls the start command defined in your `dbos-config.yaml`, which by default is `fastapi run main.py`.
+Then, visit this URL: http://localhost:8000.
 
-- First, we initialize DBOS on line 12.
-- Then, we annotate `sign_guestbook` and `insert_greeting` as [_workflow steps_](./tutorials/step-tutorial.md) on lines 16 and 29.
-- Finally, we annotate `greeting_endpoint` as a [_durable workflow_](./tutorials/workflow-tutorial.md) on line 37.
-
-Because `greeting_endpoint` is now a durably executed workflow, if it's ever interrupted, it automatically resumes from the last completed step.
-To help demonstrate this, we also add a sleep so you can interrupt your app midway through the workflow.
-
-To see the power of durable execution, restart your app with `dbos start`.
-Then, visit this URL: http://localhost:8000/greeting/Mike.
 In your terminal, you should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:>>> STEP 1: Signed the guestbook for Mike
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
+Step one completed!
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
 ```
+
 Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:Press Control + C to stop the app...
-INFO:root:>>> STEP 2: Greeting to Mike recorded in the database!
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Step two completed!
 ```
 
-Without durable execution&mdash;if you remove the four highlighted lines&mdash;your app would restart with a "clean slate" and completely forget about your interrupted workflow.
-By contrast, DBOS **automatically resumes your workflow from where it left off** and correctly completes it by recording the greeting to the database without re-signing the guestbook.
-This is an incredibly powerful guarantee that helps you build complex, reliable applications without worrying about error handling or interruptions.
+You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
+Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
 
-## 3. Optimizing Database Operations
+## 3. Queues and Parallelism
 
-For workflow steps that access the database, like `insert_greeting` in the example, DBOS provides powerful optimizations.
-To see this in action, replace the `insert_greeting` function in `greeting_guestbook/main.py` with the following:
+If you need to run many functions concurrently, use DBOS _queues_.
+To try them out, copy this code into `main.py`:
 
-```python showLineNumbers
+```python showLineNumbers title="main.py"
+import time
+
+from dbos import DBOS, Queue
+from fastapi import FastAPI
+
+app = FastAPI()
+DBOS(fastapi=app)
+
+queue = Queue("example-queue")
+
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(5)
+    print(f"Step {n} completed!")
+
+@app.get("/")
+@DBOS.workflow()
+def dbos_workflow():
+    print("Enqueueing steps")
+    handles = []
+    for i in range(10):
+        handle = queue.enqueue(dbos_step, i)
+        handles.append(handle)
+    results = [handle.get_result() for handle in handles]
+    print(f"Successfully completed {len(results)} steps")
+```
+
+When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`enqueue` returns a handle representing the state of the enqueued function.
+This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
+
+Start your app with `dbos start`.
+Then, visit this URL: http://localhost:8000.
+Wait five seconds and you should see an output like:
+
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 0 completed!
+Step 1 completed!
+Step 2 completed!
+Step 3 completed!
+Step 4 completed!
+Step 5 completed!
+Step 6 completed!
+Step 7 completed!
+Step 8 completed!
+Step 9 completed!
+Successfully completed 10 steps
+```
+
+You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
+
+DBOS durably executes queued operations. To see this in action, change the definition of `dbos_step` to this so each step takes a different amount of time to run:
+
+```python
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(n)
+    print(f"Step {n} completed!")
+```
+
+Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+After about five seconds, you should see an output like:
+
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 0 completed!
+Step 1 completed!
+Step 2 completed!
+Step 3 completed!
+Step 4 completed!
+```
+
+Next, press CTRL+C stop your app. Then, run `dbos start` to restart it. Wait ten seconds and you should see an output like:
+
+
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Enqueueing steps
+Step 5 completed!
+Step 6 completed!
+Step 7 completed!
+Step 8 completed!
+Step 9 completed!
+Successfully completed 10 steps
+```
+
+You can see how DBOS again **recovered your workflow from the last completed step**, restarting steps 5-9 without re-executing steps 0-4.
+Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
+
+## 4. Scheduled Workflows
+
+Sometimes, you need to run a workflow **on a schedule**: for example, once per hour or once per week.
+In DBOS, you can schedule workflows with the `@DBOS.scheduled()` decorator.
+To try it out, add this code to your `main.py`:
+
+```python
+@DBOS.scheduled("* * * * * *")
+@DBOS.workflow()
+def run_every_second(scheduled_time, actual_time):
+    print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+```
+
+The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, defined in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+The schedule in the example, `* * * * * *` means "run this workflow every second."
+Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
+
+Now, start your app with `dbos start`.
+The workflow should run every second, with output like:
+
+```shell
+I am a scheduled workflow. It is currently 2025-01-31 23:00:14+00:00.
+I am a scheduled workflow. It is currently 2025-01-31 23:00:15+00:00.
+I am a scheduled workflow. It is currently 2025-01-31 23:00:16+00:00.
+```
+
+## 5. Database Operations and Transactions
+
+Often, applications need to manage database tables in Postgres.
+We'll show you how to do that from scratch&mdash;first, defining a new table in SQLAlchemy, then creating a schema migration for it in Alembic, then operating on it from a DBOS workflow.
+
+First, create a file named `schema.py` and in it define a new Postgres database table using SQLAlchemy:
+
+```python showLineNumbers title="schema.py"
+from sqlalchemy import Column, Integer, MetaData, String, Table
+
+metadata = MetaData()
+
+example_table = Table(
+    "example_table",
+    metadata,
+    Column("count", Integer, primary_key=True, autoincrement=True),
+    Column("name", String, nullable=False),
+)
+```
+
+Next, let's create a schema migration that will create the table in your database.
+We'll do that using Alembic, a popular tool for database migrations in Python.
+First, intialize Alembic:
+
+```
+alembic init migrations
+```
+
+This creates a `migrations/` directory in your application.
+Next, add the following code to `migrations/env.py` right before the `run_migrations_offline` function:
+
+```python showLineNumbers title="migrations/env.py"
+from dbos import get_dbos_database_url
+import re
+from schema import metadata
+
+target_metadata = metadata
+
+# Programmatically set the sqlalchemy.url field from the DBOS config
+# Alembic requires the % in URL-escaped parameters be escaped to %%.
+escaped_conn_string = re.sub(
+    r"%(?=[0-9A-Fa-f]{2})",
+    "%%",
+    get_dbos_database_url(),
+)
+config.set_main_option("sqlalchemy.url", escaped_conn_string)
+```
+
+This code imports your table schema into Alembic and tells it to load its database connection parameters from DBOS.
+
+Next, generate your migration files:
+
+```
+alembic revision --autogenerate -m "example_table"
+```
+
+Edit your `dbos-config.yaml` to add a migration command:
+
+```yaml
+database:
+  migrate:
+    - alembic upgrade head
+```
+
+Finally, run your migrations with:
+
+```shell
+dbos migrate
+```
+
+You should see output like:
+
+```shell
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> f05ae9138107, example_table
+```
+
+You just created your new table in your Postgres database!
+
+Now, let's write a DBOS workflow that operates on that table. Copy the following code into `main.py`:
+
+```python showLineNumbers title="main.py"
+from dbos import DBOS
+from fastapi import FastAPI
+
+from schema import example_table
+
+app = FastAPI()
+DBOS(fastapi=app)
+
 @DBOS.transaction()
-def insert_greeting(name: str) -> str:
-    query = dbos_hello.insert().values(name=name)
-    DBOS.sql_session.execute(query)
-    logging.info(f">>> STEP 2: Greeting to {name} recorded in the database!")
+def insert_row():
+        DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
+
+@DBOS.transaction()
+def count_rows():
+    count = DBOS.sql_session.execute(example_table.select()).rowcount
+    print(f"Row count: {count}")
+
+@app.get("/")
+@DBOS.workflow()
+def dbos_workflow():
+    insert_row()
+    count_rows()
 ```
 
-[`@DBOS.transaction()`](./tutorials/transaction-tutorial.md) is a special annotation for workflow steps that access the database.
-It executes your function in a single database transaction.
-We recommend using transactions because:
+This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
+The database operations are done in DBOS _transactions_. These are special steps optimized for database accesses.
+They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
+Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-1. They give you access to a pre-configured database client (`DBOS.sql_session`), which is more convenient than connecting to the database yourself. You no longer need to configure a SQLAlchemy engine!
-2. Under the hood, transactions are highly optimized because DBOS can update its record of your program's execution _inside_ your transaction. For more info, see our ["how workflows work"](../explanations/how-workflows-work.md) explainer.
+Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
 
-Now, restart your app with `dbos start` and visit its URL again: http://localhost:8000/greeting/Mike.
-The app should durably execute your workflow the same as before!
+You should see an output like:
 
-The code for this guide is available [on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/greeting-guestbook).
+```shell
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Row count: 1
+```
 
-Next, to learn how to build more complex applications, check out our Python tutorials and [example apps](../examples/index.md).
+Every time you visit http://localhost:8000, your workflow should insert another row, and the printed row count should go up by one.
+
+Congratulations!  You've finished the DBOS Python guide.
+You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-toolbox) template app.
+
+Here's what everything looks like put together:
+
+<details>
+<summary>Putting it all together</summary>
+
+```python showLineNumbers title="main.py"
+import time
+
+from dbos import DBOS, Queue
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+
+from schema import example_table
+
+app = FastAPI()
+DBOS(fastapi=app)
+
+##################################
+#### Workflows and Steps
+##################################
+
+
+@DBOS.step()
+def step_one():
+    DBOS.logger.info("Step one completed!")
+
+
+@DBOS.step()
+def step_two():
+    DBOS.logger.info("Step two completed!")
+
+
+@app.get("/workflow")
+@DBOS.workflow()
+def dbos_workflow():
+    step_one()
+    step_two()
+
+
+##################################
+#### Queues
+##################################
+
+queue = Queue("example-queue")
+
+
+@DBOS.step()
+def dbos_step(n: int):
+    time.sleep(5)
+    DBOS.logger.info(f"Step {n} completed!")
+
+
+@app.get("/queue")
+@DBOS.workflow()
+def dbos_workflow():
+    DBOS.logger.info("Enqueueing steps")
+    handles = []
+    for i in range(10):
+        handle = queue.enqueue(dbos_step, i)
+        handles.append(handle)
+    results = [handle.get_result() for handle in handles]
+    DBOS.logger.info(f"Successfully completed {len(results)} steps")
+
+
+##################################
+#### Scheduled Workflows
+##################################
+
+
+@DBOS.scheduled("* * * * *")
+@DBOS.workflow()
+def run_every_minute(scheduled_time, actual_time):
+    DBOS.logger.info(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+
+
+##################################
+#### Transactions
+##################################
+
+
+@DBOS.transaction()
+def insert_row():
+    DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
+
+
+@DBOS.transaction()
+def count_rows():
+    count = DBOS.sql_session.execute(example_table.select()).rowcount
+    DBOS.logger.info(f"Row count: {count}")
+
+
+@app.get("/transaction")
+@DBOS.workflow()
+def dbos_workflow():
+    insert_row()
+    count_rows()
+```
+</details>
+
+Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
