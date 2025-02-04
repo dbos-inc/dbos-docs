@@ -415,7 +415,7 @@ Here's what everything looks like put together:
 <summary>Putting it all together</summary>
 
 ```javascript showLineNumbers title="src/main.ts"
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS, SchedulerMode, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 import express from "express";
 
 export const app = express();
@@ -436,7 +436,7 @@ export class Toolbox {
 
   @DBOS.step()
   static async stepTwo() {
-    DBOS.logger.info("Step one completed!");
+    DBOS.logger.info("Step two completed!");
   }
 
   @DBOS.workflow()
@@ -451,7 +451,7 @@ export class Toolbox {
 
   @DBOS.workflow()
   static async taskWorkflow(n: number) {
-    await DBOS.sleep(5000):
+    await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
 
@@ -473,7 +473,7 @@ export class Toolbox {
   //// Scheduled workflows
   //////////////////////////////////
 
-  @DBOS.scheduled({ crontab: "* * * * *" })
+  @DBOS.scheduled({ crontab: "* * * * *", mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
   @DBOS.workflow()
   static async runEveryMinute(scheduledTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
