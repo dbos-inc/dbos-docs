@@ -12,7 +12,7 @@ This guide shows you how to use DBOS to build TypeScript apps that are **resilie
 To get started, initialize a DBOS template and install dependencies:
 
 ```shell
-npx @dbos-inc/create -t dbos-node-starter -n dbos-starter
+npx @dbos-inc/create@latest -t dbos-node-starter -n dbos-starter
 cd dbos-starter
 npm install
 ```
@@ -395,7 +395,7 @@ The database operations are done in DBOS _transactions_. These are a special kin
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.knexClient`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-Now, start your app with `dbos start`, then visit this URL: http://localhost:3000.
+Now, start your app with `npm run dev`, then visit this URL: http://localhost:3000.
 
 You should see an output like:
 
