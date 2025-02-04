@@ -162,7 +162,8 @@ The HTTP handler that originally started the workflow uses `getEvent()` to await
 
 #### Reliability Guarantees
 
-All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated later.
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow ID.

@@ -233,8 +233,8 @@ interface WorkflowConfig {
 }
 ```
 
-DBOS automatically attempts to recover workflows.  As a safety measure, The `maxRecoveryAttempts` configuration option is used to set the maximum number of times the workflow will be automatically recovered.  If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer retried automatically, though it may be retried manually.
-This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) is not retried infinitely.
+DBOS automatically attempts to recover workflows.  As a safety measure, The `maxRecoveryAttempts` configuration option is used to set the maximum number of times the workflow will be automatically recovered.  If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is not longer automatically recovered.
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 
 ### `@DBOS.transaction`
 `@DBOS.transaction` registers a function as a DBOS transaction.  Such functions will be provided with database access via a [SQL client](#accesing-sql-database-clients).
