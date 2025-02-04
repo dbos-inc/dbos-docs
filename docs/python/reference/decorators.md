@@ -31,7 +31,7 @@ def greeting_workflow(name: str, note: str):
 **Parameters:**
 - `max_recovery_attempts`: The maximum number of times the workflow may be automatically recovered.
 For safety, DBOS automatically attempts to recover a workflow a set number of times.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is not longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 
 ### step
