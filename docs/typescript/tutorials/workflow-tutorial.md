@@ -80,11 +80,11 @@ Workflow IDs are useful for communicating with workflows and developing interact
 
 ## Starting Workflows Asynchronously
 
-You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to start a workflow in the background without waiting for it to complete.
+You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to durably start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
 
 `DBOS.startWorkflow` returns a [workflow handle](../reference/transactapi/workflow-handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `DBOS.startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+When you `await DBOS.startWorkflow`, the method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if your app is interrupted.
 
 Here's an example:
 
