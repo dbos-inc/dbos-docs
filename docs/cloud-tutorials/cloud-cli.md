@@ -199,7 +199,7 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 **Parameters:**
 - `[application-name]`: The name of the application to deploy. By default we obtain the application name from `dbos-config.yaml`. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
-- `--enable-timetravel`: Enable time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
+- `--enable-timetravel`: Enable experimental time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
 

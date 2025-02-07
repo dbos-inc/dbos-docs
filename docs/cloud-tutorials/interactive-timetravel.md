@@ -4,6 +4,10 @@ title: Interactive Time Travel
 description: Learn how to run interactive time-travelled queries on your database
 ---
 
+:::info
+Interactive time travel is only available for DBOS Cloud applications using the **experimental** time travel feature.
+:::
+
 In this guide, you'll learn how to interactively time travel with DBOS Cloud: how to query your application's database as of any past point in time within the time travel [data retention period](https://www.dbos.dev/pricing) of your current plan.
 
 ### Preliminaries

@@ -4,8 +4,6 @@ title: DBOS System Tables
 description: DBOS system tables reference
 ---
 
-DBOS Transact and Cloud maintain several system tables to track application execution history and data changes.
-
 ## System Tables
 DBOS Transact records application execution history in several system tables.
 Most of these tables are in the system database, whose name is your application database name suffixed with `_dbos_sys`.
@@ -63,8 +61,8 @@ This table stores the outputs of step functions:
 
 ## Provenance Tables
 
-:::tip
-The provenance database is only available for applications configured to enable time travel. To enable time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#dbos-cloud-app-deploy).
+:::info
+The provenance database is only available for DBOS Cloud applications using the **experimental** time travel feature. To enable experimental time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#dbos-cloud-app-deploy).
 :::
 
 DBOS Cloud maintains a provenance database for your application, which is an append-only versioned replica of your application database.
