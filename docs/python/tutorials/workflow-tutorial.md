@@ -252,3 +252,50 @@ async def example_workflow(friend: str):
     result = await asyncio.to_thread(example_transaction, body)
     return result
 ```
+
+## Workflow Management
+
+Because DBOS stores the execution state of workflows in Postgres, you can view and manage them from the command line.
+These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
+
+#### Listing Workflows
+
+You can list all your application's workflows with:
+
+```shell
+dbos workflow list
+```
+
+By default, this returns your ten most recently started workflows.
+You can parameterize this command to search your workflow history (including active workflows), see full documentation [here](../reference/cli.md#dbos-workflow-list).
+
+#### Cancelling Workflows
+
+You can cancel the execution of a workflow with:
+
+```shell
+dbos workflow cancel <workflow-id>
+```
+
+Currently, this does not halt execution, but prevents the workflow from being automatically recovered.
+
+#### Resuming Workflows
+
+You can resume a workflow from its last completed step with:
+
+```shell
+dbos workflow resume <workflow-id>
+```
+
+You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+#### Restarting Workflows
+
+You can start a new execution of a workflow with the same inputs with:
+
+```shell
+dbos workflow restart <workflow-id>
+```
+
+The new workflow has a new workflow ID.
