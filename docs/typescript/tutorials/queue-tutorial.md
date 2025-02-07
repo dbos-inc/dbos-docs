@@ -1,6 +1,7 @@
 ---
 sidebar_position: 45
 title: Queues & Parallelism
+toc_max_heading_level: 3
 ---
 
 Queues allow you to run functions with managed concurrency.
@@ -138,3 +139,40 @@ async function main() {
 
 main().catch(console.log);
 ```
+
+### Queue Management
+
+Because DBOS manages queues in Postgres, you can view and manage queued functions from the command line.
+These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
+
+#### Listing Queued Functions
+
+You can list all currently enqueued functions with:
+
+```shell
+npx dbos workflow list
+```
+
+By default, this lists all currently enqueued functions, including queued functions that are currently executing, but not completed functions
+You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#dbos-workflow-queue-list).
+
+#### Removing Queued Functions
+
+You can remove a function from a queue with:
+
+```shell
+npx dbos workflow cancel <workflow-id>
+```
+
+This removes the function from its queue and transitions it to a `CANCELLED` state, so it will not run unless manually resumed.
+
+#### Resuming Workflows
+
+You can start execution of an enqueued function with:
+
+```shell
+npx dbos workflow resume <workflow-id>
+```
+
+This starts execution immediately, bypassing the queue and transitioning the function to a `PENDING` state.
+It also removes the function from its queue.
