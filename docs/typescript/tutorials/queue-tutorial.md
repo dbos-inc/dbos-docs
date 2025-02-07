@@ -154,7 +154,7 @@ npx dbos workflow list
 ```
 
 By default, this lists all currently enqueued functions, including queued functions that are currently executing, but not completed functions
-You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#dbos-workflow-queue-list).
+You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list).
 
 #### Removing Queued Functions
 

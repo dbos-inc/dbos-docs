@@ -71,7 +71,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../reference/decorators.md#dbosconfiguredinstance), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
@@ -96,7 +96,7 @@ A JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../reference/decorators.md#dbosconfiguredinstance), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
@@ -155,7 +155,7 @@ For each retrieved function, emit a JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../reference/decorators.md#dbosconfiguredinstance), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
