@@ -260,7 +260,7 @@ These commands are also available for applications deployed to DBOS Cloud using 
 
 #### Listing Workflows
 
-You can list all your application's workflows with:
+You can list your application's workflows with:
 
 ```shell
 dbos workflow list
@@ -292,10 +292,10 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 
 #### Restarting Workflows
 
-You can start a new execution of a workflow with the same inputs with:
+You can start a new execution of a workflow with:
 
 ```shell
 dbos workflow restart <workflow-id>
 ```
 
-The new workflow has a new workflow ID.
+The new workflow has the same inputs as the original, but a new workflow ID.
