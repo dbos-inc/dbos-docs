@@ -83,7 +83,7 @@ You must compile your code (`npm run build`) and start the debug proxy before ru
 ### `npx dbos workflow list`
 
 **Description:**
-This command lists workflows run by your application in JSON format ordered by recency (most recently started workflows last).
+List workflows run by your application in JSON format ordered by recency (most recently started workflows last).
 
 **Arguments:**
 - `-n, --name <string>`                 Retrieve functions with this name
@@ -149,7 +149,9 @@ A JSON whose fields are:
 ### `npx dbos workflow resume`
 
 **Description:**
-Retries a workflow from the last step it executed, keeping its UUID.
+Resume a workflow from its last completed step.
+You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
+You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to resume.
@@ -158,7 +160,8 @@ Retries a workflow from the last step it executed, keeping its UUID.
 ### `npx dbos workflow restart`
 
 **Description:**
-Resubmits a workflow, restarting it from the beginning with the same arguments but a new UUID.
+Start a new execution of a workflow with the same inputs.
+This new workflow has a new workflow ID.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to restart.
@@ -167,7 +170,7 @@ Resubmits a workflow, restarting it from the beginning with the same arguments b
 ### `npx dbos workflow queue list`
 
 **Description:**
-This command lists all currently enqueued workflows in JSON format ordered by recency (most recently enqueued workflows last).
+Lists all currently enqueued workflows in JSON format ordered by recency (most recently enqueued workflows last).
 
 **Arguments:**
 - `-n, --name <string>`        Retrieve functions with this name
