@@ -126,7 +126,7 @@ DBOS.get_event(
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in our [widget store demo](../examples/widget-store.md), the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
+For example, in the [widget store demo](../examples/widget-store.md), the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
 To communicate the payment ID to the customer, it uses events.
 
 The payments workflow emits the payment ID using `set_event()`:
@@ -157,7 +157,8 @@ def checkout_endpoint(idempotency_key: str) -> Response:
 
 #### Reliability Guarantees
 
-All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow ID.
@@ -192,7 +193,7 @@ DBOS.recv(
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in our [widget store demo](../examples/widget-store.md), the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
+For example, in the [widget store demo](../examples/widget-store.md), the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
@@ -221,8 +222,6 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
-
-
 
 ## Coroutine Workflows
 

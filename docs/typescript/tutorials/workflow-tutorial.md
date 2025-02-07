@@ -80,11 +80,11 @@ Workflow IDs are useful for communicating with workflows and developing interact
 
 ## Starting Workflows Asynchronously
 
-You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to start a workflow in the background without waiting for it to complete.
+You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to durably start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
 
 `DBOS.startWorkflow` returns a [workflow handle](../reference/transactapi/workflow-handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `DBOS.startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+When you `await DBOS.startWorkflow`, the method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if your app is interrupted.
 
 Here's an example:
 
@@ -162,7 +162,8 @@ The HTTP handler that originally started the workflow uses `getEvent()` to await
 
 #### Reliability Guarantees
 
-All events are persisted to the database, so once an event is set, it is guaranteed to always be retrievable.
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated later.
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow ID.
