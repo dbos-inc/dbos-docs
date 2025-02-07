@@ -238,7 +238,7 @@ npx dbos workflow list
 ```
 
 By default, this returns your ten most recently started workflows.
-You can parameterize this command to search your workflow history (including active workflows), see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-list).
+You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list).
 
 #### Cancelling Workflows
 
