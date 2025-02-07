@@ -24,7 +24,7 @@ You can click on a trace or span to see detailed information about it.
 
 ### Grafana Dashboard
 
-You can also launch a Grafana dashboard for DBOS Cloud from the cloud console [dashboard page](https://console.dbos.dev/dashboard).
+You can launch a Grafana dashboard for DBOS Cloud from the cloud console [dashboard page](https://console.dbos.dev/dashboard).
 
 #### Time Selection
 
