@@ -65,6 +65,16 @@ If parameters are not specified, it prompts for them.
 
 ---
 
+### `npx dbos reset`
+
+Reset your DBOS [system database](../../../explanations/system-tables.md), deleting metadata about past workflows and steps.
+No application data is affected by this.
+
+**Parameters:**
+- `--yes, -y`: Skip confirmation prompt.
+
+---
+
 ### `npx dbos debug`
 
 **Description:**
