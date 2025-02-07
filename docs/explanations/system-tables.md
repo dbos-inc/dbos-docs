@@ -6,14 +6,16 @@ description: DBOS system tables reference
 
 ## System Tables
 DBOS Transact records application execution history in several system tables.
-Most of these tables are in the system database, whose name is your application database name suffixed with `_dbos_sys`.
-For example, if your application database is named `hello`, your system database is named `hello_dbos_sys`.
+Most of these tables are in the system database, whose name is your application name suffixed with `_dbos_sys`.
+For example, if your application is named `dbos_app_starter`, your system database is named `dbos_app_starter_dbos_sys`.
 One exception is the `dbos.transaction_outputs` table which is stored in your application database.
 
 ### dbos.workflow_status
 
-This table stores workflow execution information. It has the following columns:
+This table stores workflow execution information.
+Each row represents a different workflow execution.
 
+**Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution.
 - `status`: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, or `CANCELLED`.
 - `name`: The name (in Python, fully qualified name) of the workflow function.
@@ -34,14 +36,18 @@ This table stores workflow execution information. It has the following columns:
 - `executor_id`: (Internal use) The ID of the executor that ran this workflow.
 
 ### dbos.workflow_inputs
-This table stores workflow input information:
+This table stores workflow input information.
+Each row represents the input of a different workflow execution.
 
+**Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution.
 - `inputs`: The serialized inputs of the workflow execution.
 
 ### dbos.transaction_outputs
-This table stores the outputs of transaction functions:
+This table stores the outputs of transaction functions.
+Each row represents a different transaction function execution.
 
+**Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
 - `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.
 - `output`: The serialized transaction output, if any.
@@ -51,10 +57,13 @@ This table stores the outputs of transaction functions:
 - `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
 
 ### dbos.operation_outputs
-This table stores the outputs of workflow steps:
+This table stores the outputs of workflow steps.
+Each row represents a different workflow step execution.
+Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded here as steps.
 
+**Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
-- `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.
+- `function_id`: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.
 - `output`: The serialized transaction output, if any.
 - `error`: The serialized error thrown by the transaction, if any.
 
@@ -62,6 +71,7 @@ This table stores the outputs of workflow steps:
 This table stores currently enqueued functions.
 Functions are removed from this table after completing execution, but remain in the `dbos.workflow_status` table.
 
+**Columns:**
 - `workflow_uuid`: The workflow ID of this enqueued function.
 - `queue_name`: The name of the queue on which this function is enqueued.
 - `created_at_epoch_ms`: The epoch timestamp when this function was enqueued.
@@ -69,6 +79,25 @@ Functions are removed from this table after completing execution, but remain in 
 - `completed_at_epoch_ms`: The epoch timestamp at which this function completed execution.
 - `executor_id`: (Internal use) The ID of the executor that enqueued this function.
 
+### dbos.notifications
+This table stores workflow messages/notifications.
+Each entry represents a different message.
+
+**Columns:**
+- `destination_uuid`: The ID of the workflow to which the message is sent.
+- `topic`: The topic to which the message is sent.
+- `message`: The serialized contents of the message.
+- `created_at_epoch_ms`: The epoch timestamp when this message was created.
+- `message_uuid`: The unique ID of the message.
+
+### dbos.workflow_events
+This table stores workflow events.
+Each entry represents a different event.
+
+**Columns:**
+- `workflow_uuid`: The ID of the workflow that published this event.
+- `key`: The serialized key of the event.
+- `value`: The serialized value of the event.
 
 ## Provenance Tables
 
