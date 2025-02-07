@@ -108,6 +108,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
+- `workflowUUID`: The ID of the workflow
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
@@ -115,7 +116,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
-- `workflowUUID`: The ID of the workflow
+- `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
@@ -127,12 +128,13 @@ For each retrieved workflow, emit a JSON whose fields are:
 Retrieve information on a workflow run by your application.
 
 **Arguments:**
-- `<workflow-uuid>`: The ID of the workflow to retrieve.
+- `<workflow-id>`: The ID of the workflow to retrieve.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 - `--request`: Display workflow request information.
 
 **Output:**
 A JSON whose fields are:
+- `workflowUUID`: The ID of the workflow
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
@@ -140,7 +142,6 @@ A JSON whose fields are:
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
-- `workflowUUID`: The ID of the workflow
 - `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
@@ -194,6 +195,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
+- `workflowUUID`: The ID of the workflow
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
@@ -201,7 +203,6 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
-- `workflowUUID`: The ID of the workflow
 - `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
