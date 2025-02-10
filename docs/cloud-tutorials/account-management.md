@@ -2,6 +2,7 @@
 sidebar_position: 2
 title:  Account Management
 description: Learn how to manage DBOS Cloud users
+toc_max_heading_level: 3
 ---
 
 In this guide, you'll learn how to manage DBOS Cloud accounts.
@@ -51,32 +52,32 @@ This feature is currently only available to [DBOS Pro or Enterprise](https://www
 Organizations allow multiple users to collaboratively manage applications.
 When a user creates an account, they are automatically added to an organization containing only them, where the organization name is the same as their username.
 
-To invite a new user to your organization, run:
+You can manage your organization from the [cloud console organizations page](https://console.dbos.dev/settings/organization):
 
-```
-dbos-cloud org invite
-```
+![Organizations](./assets/cc-orgs.png)
 
-This command retrieves a **single-use** organization secret that expires in 24 hours. To invite multiple users, create multiple secrets.
+#### Organization Admins
 
-Using this organization secret, another user can register a new account in your organization by running:
+The original creator of an organization is the organization admin.
+Only the organization admin can invite new users, delete existing users, or rename the organization.
+All users have full access to organization resources, including databases and applications.
 
-```
-dbos-cloud register -u <username> -s <organization-secret>
-```
+#### Inviting New Users
 
-Alternatively, if a user has an existing account, they can join your organization by running:
+To invite a new user to your organization, click the "Generate Invite Link" button.
+This generates a **single-use** URL for joining your organization.
 
-```
-dbos-cloud org join <organization-name> <organization-secret>
-```
+When a user signs in to the cloud console using that URL, they are prompted to join your organization.
+If they do not have an account, they are prompted to create one.
+If they already have an account, they must delete all resources (applications and databases) before joining your organization.
 
-All users in an organization have full access to its resources, including databases and applications.
+#### Renaming Your Organization
 
-An organization admin (the user who created the organization) can rename the organization by running:
+You can rename your organization by clicking the icon next to your organization name.
+Note that applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`.
+**Therefore, renaming your organization changes your application URLs**.
 
-```
-dbos-cloud org rename <current-org-name> <new-org-name>
-```
+#### Removing Users
 
-Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs.
+The organization admin can remove any other user from their organization.
+This immediately terminates their access to all organization resources.

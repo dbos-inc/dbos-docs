@@ -223,3 +223,50 @@ static async paymentWebhook(): Promise<void> {
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](#reliability-guarantees).
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
+
+## Workflow Management
+
+Because DBOS stores the execution state of workflows in Postgres, you can view and manage your workflows from the command line.
+These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
+
+#### Listing Workflows
+
+You can list your application's workflows with:
+
+```shell
+npx dbos workflow list
+```
+
+By default, this returns your ten most recently started workflows.
+You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list).
+
+#### Cancelling Workflows
+
+You can cancel the execution of a workflow with:
+
+```shell
+npx dbos workflow cancel <workflow-id>
+```
+
+Currently, this does not halt execution, but prevents the workflow from being automatically recovered.
+
+#### Resuming Workflows
+
+You can resume a workflow from its last completed step with:
+
+```shell
+npx dbos workflow resume <workflow-id>
+```
+
+You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+#### Restarting Workflows
+
+You can start a new execution of a workflow with:
+
+```shell
+npx dbos workflow restart <workflow-id>
+```
+
+The new workflow has the same inputs as the original, but a new workflow ID.

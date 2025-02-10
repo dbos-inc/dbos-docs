@@ -199,7 +199,7 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 **Parameters:**
 - `[application-name]`: The name of the application to deploy. By default we obtain the application name from `dbos-config.yaml`. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
-- `--enable-timetravel`: Enable time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
+- `--enable-timetravel`: Enable experimental time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
 
@@ -403,6 +403,8 @@ Rename your organization. Only the organization admin (the original creator of t
 Applications belonging to organizations are hosted at the URL `https://<organization-name>-<app-name>.cloud.dbos.dev/`, so renaming your organization changes your application URLs. The old URLs are no longer accessible.
 :::
 
+---
+
 ### `dbos-cloud org remove`
 
 **Description:**
@@ -411,3 +413,39 @@ Remove a user from an organization. Only the organization admin (the original cr
 **Parameters:**
 - `<username>`: The user to remove from your organization.
 ---
+
+## Workflow Management Commands
+
+### `dbos-cloud workflow list`
+
+**Description:**
+List workflows run by your application in JSON format ordered by recency (most recently started workflows last).
+
+**Arguments:**
+- `[application-name]`: The name of your application
+- `-l, --limit <number>`                Limit the results returned (default: "10")
+- `-o, --offset <number>`               Skip workflows from the results returned.
+- `-u, --workflowUUIDs <uuid...>  `     Retrieve specific UUIDs
+- `-U, --user <string>`                 Retrieve workflows run by this user
+- `-s, --start-time <string>`           Retrieve workflows starting after this timestamp (ISO 8601 format)
+- `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
+- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
+- `-v, --application-version <string>`  Retrieve workflows with this application version
+- `-n, --name <string>`        Retrieve functions with this name
+
+---
+
+### `dbos-cloud workflow queue list`
+
+**Description:**
+Lists all currently enqueued functions in JSON format ordered by recency (most recently enqueued functions last).
+
+**Arguments:**
+- `[application-name]`: The name of your application
+- `-n, --name <string>`        Retrieve functions with this name
+- `-s, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
+- `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
+- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
+- `-l, --limit <number>`       Limit the results returned
+- `-o, --offset <number>`      Skip functions from the results returned (for pagination)
+- `-q, --queue <string>`       Retrieve functions run on this queue
