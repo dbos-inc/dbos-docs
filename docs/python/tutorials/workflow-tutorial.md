@@ -255,7 +255,7 @@ async def example_workflow(friend: str):
 
 ## Workflow Management
 
-Because DBOS stores the execution state of workflows in Postgres, you can view and manage them from the command line.
+Because DBOS stores the execution state of workflows in Postgres, you can view and manage your workflows from the command line.
 These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
 
 #### Listing Workflows
