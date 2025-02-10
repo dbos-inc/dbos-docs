@@ -60,15 +60,15 @@ You can manage your organization from the [cloud console organizations page](htt
 
 The original creator of an organization is the organization admin.
 Only the organization admin can invite new users, delete existing users, or rename the organization.
-However, all users have full access to organization resources, including databases and applications.
+All users have full access to organization resources, including databases and applications.
 
 #### Inviting New Users
 
 To invite a new user to your organization, click the "Generate Invite Link" button.
 This generates a **single-use** URL for joining your organization.
 
-When the user signs in to the cloud console using that URL, they will be prompted to join your organization.
-If they do not have an account, they will be prompted to create one.
+When a user signs in to the cloud console using that URL, they are prompted to join your organization.
+If they do not have an account, they are prompted to create one.
 If they already have an account, they must delete all resources (applications and databases) before joining your organization.
 
 #### Renaming Your Organization
