@@ -77,6 +77,26 @@ A setup script may install system packages or libraries or otherwise customize t
 apt install traceroute
 ```
 
+#### Ignoring files with .dbosignore
+
+A `.dbosignore` file at the root of your project instructs the DBOS Cloud CLI to exclude resources from application deployment.
+The syntax for this file is similar to `.gitignore`:
+
+- Patterns are compatible with the [fast-glob library](https://www.npmjs.com/package/fast-glob)
+- Lines ending with `/` are transformed into a recursive ignore `/**` to exclude everything within a directory.
+- Lines starting with `#` are ignored.
+- Some patterns are automatically excluded:
+```shell
+**/.dbos/**
+**/node_modules/**
+**/dist/**
+**/.git/**
+**/dbos-config.yaml
+**/venv/**
+**/.venv/**
+**/.python-version
+```
+
 ### Monitoring and Debugging Applications
 
 Here are some useful tools to monitor and debug applications:
