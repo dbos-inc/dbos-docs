@@ -87,14 +87,14 @@ The syntax for this file is similar to `.gitignore`:
 - Lines starting with `#` are ignored.
 - Some patterns are automatically excluded:
 ```shell
-  **/.dbos/**
-  **/node_modules/**
-  **/dist/**
-  **/.git/**
-  **/dbos-config.yaml
-  **/venv/**
-  **/.venv/**
-  **/.python-version
+**/.dbos/**
+**/node_modules/**
+**/dist/**
+**/.git/**
+**/dbos-config.yaml
+**/venv/**
+**/.venv/**
+**/.python-version
 ```
 
 ### Monitoring and Debugging Applications
