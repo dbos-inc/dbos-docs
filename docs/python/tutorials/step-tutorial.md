@@ -24,6 +24,8 @@ Therefore, making a function a step guarantees that a workflow will never re-exe
 
 2. DBOS provides [configurable automatic retries](#configurable-retries) for steps to more easily handle transient errors.
 
+(A `step` called from outside a `workflow` will be upgraded to `workflow` and
+therefore the inputs must also be serializable.)
 
 ### Configurable Retries
 
