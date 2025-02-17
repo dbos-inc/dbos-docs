@@ -15,6 +15,7 @@ import { IoIosChatboxes } from "react-icons/io";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { RiCustomerService2Line } from "react-icons/ri";
 import { TbClock2 } from "react-icons/tb";
+import { VscGraphLine } from "react-icons/vsc";
 
   <section className="row list">
   <CardLink
@@ -28,23 +29,23 @@ import { TbClock2 } from "react-icons/tb";
   <CardLink
     label="Document Ingestion Pipeline"
     href="python/examples/document-detective"
-    description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
+    description="Use DBOS to build a reliable and scalable document ingestion pipeline for a RAG-based chat agent."
     index="2"
     icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
     language="python"
   />
   <CardLink
-    label="Stocks Tracker"
+    label="Stock Tracker"
     href="python/examples/stock-tracker"
-    description="Use DBOS to get alerted you when stock prices cross a certain threshold."
+    description="Use DBOS to track stock prices and receive alerts when they cross a certain threshold."
     index="3"
-    icon={<TbClock2 color="white" size={50}/>}
+    icon={<VscGraphLine color="white" size={50}/>}
     language="python"
   />
   <CardLink
     label="Kafka Alert Queue"
     href="typescript/examples/kafka-alert-queue"
-    description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
+    description="Use DBOS and Kafka to create an alerts management application that handles each alert exactly once."
     index="4"
     icon={<SiApachekafka color="white" size={50}/>}
     language="typescript"
