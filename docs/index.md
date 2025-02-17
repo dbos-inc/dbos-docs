@@ -46,30 +46,30 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 
 ### Example Applications
 import { MdOutlineShoppingCart } from "react-icons/md";
-import { IoEarth } from "react-icons/io5";
-import { SiOpenai } from "react-icons/si";
+import { PiFileMagnifyingGlassBold } from "react-icons/pi";
+import { VscGraphLine } from "react-icons/vsc";
 
 <section className="row list">
   <NarrowCardLink
-    label="OpenAI Quickstart"
-    href="python/examples/ai-starter"
-    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
-    index="1"
-    icon={<SiOpenai color="white" size={30}/>}
-  />
-  <NarrowCardLink
-    label="Widget Store"
+    label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
-    index="2"
-    icon={<MdOutlineShoppingCart color="white" size={30}/>}
+    index="1"
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
   <NarrowCardLink
-    label="Scheduled Reminders"
-    href="python/examples/scheduled-reminders"
-    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
+    label="Document Pipeline"
+    href="python/examples/document-detective"
+    description="Use DBOS to build a reliable and scalable document ingestion pipeline for a RAG-based chat agent."
+    index="2"
+    icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
+  />
+  <NarrowCardLink
+    label="Stock Tracker"
+    href="python/examples/stock-tracker"
+    description="Use DBOS to track stock prices and receive alerts when they cross a certain threshold."
     index="3"
-    icon={<RiCalendarScheduleLine color="white" size={30}/>}
+    icon={<VscGraphLine color="white" size={50}/>}
   />
 </section>
 
@@ -80,50 +80,50 @@ import { IoIosRocket } from "react-icons/io";
 import { BsDatabaseCheck } from "react-icons/bs";
 import { SiOpentelemetry, SiApachekafka } from "react-icons/si";
 import { RiCalendarScheduleLine, RiRewindStartMiniLine } from "react-icons/ri";
-
+import { PiQueueBold } from "react-icons/pi";
 
 <section className="row list">
   <IndexCardLink
-    label="Fast, Efficient Serverless"
-    href="https://console.dbos.dev/login-redirect"
-    description="Experience serverless hosting 25x faster and 15x cheaper than AWS Lambda"
+    label="Lightweight Durable Execution"
+    href="/why-dbos"
+    description="Annotate your code to make it resilient to any failure"
     index="1"
+    icon={<BsDatabaseCheck color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Fast, Efficient Serverless"
+    href="https://console.dbos.dev/launch"
+    description="Experience serverless hosting 25x faster than AWS Lambda, with no charge for idle CPU time"
+    index="2"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Lightweight Durable Execution"
-    href="/python/tutorials/workflow-tutorial"
-    description="Annotate your code to make it resilient to any failure"
-    index="2️"
-    icon={<BsDatabaseCheck color="var(--ifm-color-primary-lightest)" size={30}/>}
+    label="Reliable Queues"
+    href="/python/tutorials/queue-tutorial"
+    description="Lightweight, durable, distributed queues with no dependencies except Postgres"
+    index="3"
+    icon={<PiQueueBold color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Built-in Observability"
     href="/python/tutorials/logging-and-tracing"
     description="All your workflows automatically emit OpenTelemetry traces"
-    index="3"
+    index="4"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Exactly-Once Event Processing"
     href="/python/tutorials/kafka-integration"
     description="Use durable workflows to process incoming events exactly-once"
-    index="4"
+    index="5"
     icon={<SiApachekafka color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Scheduled Jobs"
     href="/python/tutorials/scheduled-workflows"
     description="Run your workflows exactly-once per time interval"
-    index="5"
-    icon={<RiCalendarScheduleLine color="var(--ifm-color-primary-lightest)" size={30}/>}
-  />
-  <IndexCardLink
-    label="Time Travel"
-    href="/cloud-tutorials/interactive-timetravel"
-    description="Query your database as of any past point in time"
     index="6"
-    icon={<RiRewindStartMiniLine color="var(--ifm-color-primary-lightest)" size={30}/>}
+    icon={<RiCalendarScheduleLine color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
 </section>
 
