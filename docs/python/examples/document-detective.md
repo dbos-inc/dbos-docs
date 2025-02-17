@@ -4,11 +4,11 @@ sidebar_position: 2
 title: Document Ingestion Pipeline
 ---
 
-In this example, you'll learn how to use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.
+In this example, we'll use DBOS to build a **reliable and scalable data processing pipeline**.
+Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
 
-This example highlights how to use DBOS to build a **reliable data processing pipeline** that can run many tasks concurrently, in this case performing parallel ingestion of many documents.
-
-For example, here's what the app looks like after ingesting the last three years of Apple 10-K filings.
+Then, to show the pipeline works, we'll build a chat agent that can accurately answer questions about the indexed documents.
+For example, here's what the chat agent looks like after ingesting the last three years of Apple 10-K filings.
 It can accurately answer questions about Apple's financials:
 
 ![Document Detective UI](./assets/document_detective.png)
@@ -39,7 +39,7 @@ app = FastAPI()
 DBOS(fastapi=app)
 ```
 
-Next, let's initialize LlamaIndex to use Postgres with pgvector as its vector store:
+Next, let's initialize LlamaIndex to store and query the vector index we'll be constructing.
 
 ```python
 def configure_index():
@@ -93,8 +93,9 @@ def indexing_workflow(urls: List[HttpUrl]):
 Now, let's write the key step of this pipeline: the function that ingests a PDF document from a URL.
 This function downloads a document, scans it into pages, then uses LlamaIndex to embed it and store the embedding in Postgres.
 
-We annotate this function with [`@DBOS.step()`](../tutorials/step-tutorial.md) to mark it as a step in our indexing workflow.
+Because this entire procedure is implemented in a single function, we annotate it with [`@DBOS.step()`](../tutorials/step-tutorial.md) to mark it as a _step_ of the indexing workflow.
 Additionally, in case of transient failures (for example in downloading the document) we set it to automatically retry up to 5 times with exponential backoff.
+In a more complex pipeline, we might process each document with a durable workflow of several steps; this would be a _child workflow_ of the indexing workflow.
 
 ```python
 @DBOS.step(retries_allowed=True, max_attempts=5)
