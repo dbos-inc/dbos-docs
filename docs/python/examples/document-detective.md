@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 5
-title: Document Detective
+sidebar_position: 2
+title: Document Ingestion Pipeline
 ---
 
 In this example, you'll learn how to use DBOS and LlamaIndex to build and serverlessly deploy a chat agent that can index PDF documents and answer questions about them.

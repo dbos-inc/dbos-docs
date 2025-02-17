@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 1
-title: Widget Store
+title: Fault-Tolerant Checkout
 ---
 
 In this example, we use DBOS and FastAPI to deploy an online storefront that's resilient to any failure.

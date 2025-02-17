@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 10
+sidebar_position: 3
 title: Stocks Tracker
 ---
 

@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 11
+sidebar_position: 10
 title: Cloud Cron Quickstart
 hide_table_of_contents: true
 ---

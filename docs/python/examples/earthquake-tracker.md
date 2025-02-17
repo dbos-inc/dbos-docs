@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 8
+sidebar_position: 9
 title: Earthquake Tracker
 ---
 
