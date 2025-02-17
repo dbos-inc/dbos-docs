@@ -1,10 +1,11 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 3
-title: Stocks Tracker
+title: Stock Tracker
 ---
 
-In this example, we use DBOS to build and deploy an app that tracks stock prices and send SMS alerts when the price of a stock crosses a certain threshold. We certainly don't want to miss a good opportunity to trade, so it's important this workflow is punctual and reliable!
+In this example, we use DBOS to build and deploy an app that tracks stock prices and send SMS alerts when the price of a stock crosses a certain threshold.
+We don't want to miss a good opportunity to trade, so it's important this workflow is punctual and reliable!
 
 You can see the application live [here](https://max-stock-prices.cloud.dbos.dev/). All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/stock-prices).
 
@@ -26,8 +27,9 @@ DBOS()
 
 ## Stock Prices Watcher as an online cron job
 
-We'll use a [DBOS Scheduled Workflow](../tutorials/scheduled-workflows) to make this job punctual and reliable.
-Under the hood, DBOS leverages Postgres to store the job's execution status and schedule, ensuring that the job is executed even if the server is restarted.
+Next, let's configure a DBOS [scheduled workflow](../tutorials/scheduled-workflows.md) to check stock prices every minute and send alerts if stock prices are above a configured threshold.
+The [`@DBOS.scheduled`](../tutorials/scheduled-workflows.md) decorator tells DBOS to run this function on a schedule defined in [crontab syntax](https://en.wikipedia.org/wiki/Cron), in this case once per minute.
+The [`@DBOS.workflow`](../tutorials/workflow-tutorial.md) decorator tells DBOS to durably execute this function, so it runs exactly-once per minute and you'll never miss a stock price update or record a duplicate.
 
 ```python
 @DBOS.scheduled('* * * * *')
@@ -49,7 +51,8 @@ def fetch_stock_prices_workflow(scheduled_time: datetime, actual_time: datetime)
 
 ## Fetching stock prices
 
-We'll use the `yfinance` library to fetch stock prices and write a DBOS [step](../tutorials/step-tutorial) to make it durable.
+Let's write a function that fetches stock prices using the `yfinance` library.
+We annotate it with [`DBOS.step`](../tutorials/step-tutorial.md) to call it from the durable workflow above.
 
 ```python
 @DBOS.step()
@@ -64,7 +67,7 @@ def fetch_stock_price(symbol):
 
 ## Sending SMS alerts
 
-We'll use the Twilio API to send SMS alerts and write a DBOS [step](../tutorials/step-tutorial) to make it durable. You can sign up for a free Twilio account at https://www.twilio.com/try-twilio. We'll need a few environment variables to store our Twilio account SID, auth token and phone number. The alerts themselves are configured on the app's streamlit frontend.
+Now, we'll use the Twilio API to send SMS alerts and write a DBOS [step](../tutorials/step-tutorial) to make it durable. You can sign up for a free Twilio account at https://www.twilio.com/try-twilio. We'll need a few environment variables to store our Twilio account SID, auth token and phone number.
 
 ```python
 twilio_account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -84,7 +87,7 @@ def send_sms_alert(symbol, price, to_phone_number):
 ## Saving stock prices to the database and fetching registered alerts
 
 Let's write two small functions to retrieve registered alerts and save stock prices to the database.
-We'll use DBOS [Transactions](../tutorials/transaction-tutorial) to make these steps durable and ensure they happen exactly once.
+We annotate these functions with [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to get access to a pre-configured database client (`DBOS.sql_session`) and to call them from the durable workflow above.
 
 ```python
 @DBOS.transaction()
@@ -100,7 +103,8 @@ def fetch_alerts():
 
 ## Initializing the app
 
-Finally, let's initialize the app. We'll launch DBOS and have the main thread sleep forever while the background threads run.
+Finally, in our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
+
 ```python
 if __name__ == "__main__":
     DBOS.launch()
