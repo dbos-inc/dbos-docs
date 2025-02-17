@@ -26,14 +26,6 @@ import { TbClock2 } from "react-icons/tb";
     language="python"
   />
   <CardLink
-    label="OpenAI Quickstart"
-    href="python/examples/ai-starter"
-    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
-    index="2"
-    icon={<SiOpenai color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
     label="Kafka Alert Queue"
     href="typescript/examples/kafka-alert-queue"
     description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
