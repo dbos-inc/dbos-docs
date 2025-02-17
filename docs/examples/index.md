@@ -29,7 +29,7 @@ import { VscGraphLine } from "react-icons/vsc";
   <CardLink
     label="Document Ingestion Pipeline"
     href="python/examples/document-detective"
-    description="Use DBOS to build a reliable and scalable document ingestion pipeline for a RAG-based chat agent."
+    description="Use DBOS to build a reliable and scalable document ingestion pipeline."
     index="2"
     icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
     language="python"
