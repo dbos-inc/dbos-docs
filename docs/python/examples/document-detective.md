@@ -7,7 +7,7 @@ title: Document Ingestion Pipeline
 In this example, we'll use DBOS to build a **reliable and scalable data processing pipeline**.
 Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
 
-Then, to show the pipeline works, we'll build a chat agent that can accurately answer questions about the indexed documents.
+To show the pipeline works, we'll also build a chat agent that can accurately answer questions about the indexed documents.
 For example, here's what the chat agent looks like after ingesting the last three years of Apple 10-K filings.
 It can accurately answer questions about Apple's financials:
 
