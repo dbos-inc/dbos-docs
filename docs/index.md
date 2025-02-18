@@ -100,7 +100,7 @@ import { PiQueueBold } from "react-icons/pi";
   <IndexCardLink
     label="Reliable Queues"
     href="/python/tutorials/queue-tutorial"
-    description="Lightweight, durable, distributed queues with no dependencies except Postgres"
+    description="Lightweight, durable, distributed queues backed by Postgres"
     index="3"
     icon={<PiQueueBold color="var(--ifm-color-primary-lightest)" size={30}/>}
   />

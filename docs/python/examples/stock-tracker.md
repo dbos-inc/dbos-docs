@@ -52,7 +52,7 @@ def fetch_stock_prices_workflow(scheduled_time: datetime, actual_time: datetime)
 ## Fetching stock prices
 
 Let's write a function that fetches stock prices using the `yfinance` library.
-We annotate it with [`DBOS.step`](../tutorials/step-tutorial.md) to call it from the durable workflow above.
+We annotate it with [`DBOS.step`](../tutorials/step-tutorial.md) to durably call it from the workflow above.
 
 ```python
 @DBOS.step()
@@ -87,7 +87,7 @@ def send_sms_alert(symbol, price, to_phone_number):
 ## Saving stock prices to the database and fetching registered alerts
 
 Let's write two small functions to retrieve registered alerts and save stock prices to the database.
-We annotate these functions with [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to get access to a pre-configured database client (`DBOS.sql_session`) and to call them from the durable workflow above.
+We annotate these functions with [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to get access to a pre-configured database client (`DBOS.sql_session`) and to durably call them from the workflow above.
 
 ```python
 @DBOS.transaction()
