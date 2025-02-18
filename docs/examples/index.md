@@ -15,10 +15,11 @@ import { IoIosChatboxes } from "react-icons/io";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { RiCustomerService2Line } from "react-icons/ri";
 import { TbClock2 } from "react-icons/tb";
+import { VscGraphLine } from "react-icons/vsc";
 
   <section className="row list">
   <CardLink
-    label="Widget Store"
+    label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     index="1"
@@ -26,35 +27,35 @@ import { TbClock2 } from "react-icons/tb";
     language="python"
   />
   <CardLink
-    label="OpenAI Quickstart"
-    href="python/examples/ai-starter"
-    description="Build an interactive AI application and deploy it to the cloud in just 9 lines of code."
+    label="Document Ingestion Pipeline"
+    href="python/examples/document-detective"
+    description="Use DBOS to build a reliable and scalable document ingestion pipeline."
     index="2"
-    icon={<SiOpenai color="white" size={50}/>}
+    icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Stock Tracker"
+    href="python/examples/stock-tracker"
+    description="Use DBOS to track stock prices and receive alerts when they cross a certain threshold."
+    index="3"
+    icon={<VscGraphLine color="white" size={50}/>}
     language="python"
   />
   <CardLink
     label="Kafka Alert Queue"
     href="typescript/examples/kafka-alert-queue"
-    description="Use DBOS and Kafka to create an alert queue application that reliably handles each message exactly once."
-    index="3"
+    description="Use DBOS and Kafka to create an alerts management application that handles each alert exactly once."
+    index="4"
     icon={<SiApachekafka color="white" size={50}/>}
     language="typescript"
   />
   <CardLink
-    label="LLM-Powered Chatbot"
-    href="python/examples/chatbot"
-    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
-    index="4"
-    icon={<IoIosChatboxes color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Reliable Customer Service Agent"
-    href="python/examples/reliable-ai-agent"
-    description="Use DBOS and OpenAI's Swarm to build a reliable AI-powered customer service agent."
+    label="Scheduled Reminders"
+    href="python/examples/scheduled-reminders"
+    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
     index="5"
-    icon={<RiCustomerService2Line color="white" size={50}/>}
+    icon={<RiCalendarScheduleLine color="white" size={50}/>}
     language="python"
   />
   <CardLink
@@ -73,20 +74,20 @@ import { TbClock2 } from "react-icons/tb";
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
-    <CardLink
-    label="Document Detective"
-    href="python/examples/document-detective"
-    description="Use DBOS and LlamaIndex to build a reliable and scalable data ingestion pipeline for a RAG-based chat agent."
+  <CardLink
+    label="LLM-Powered Chatbot"
+    href="python/examples/chatbot"
+    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
     index="8"
-    icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
+    icon={<IoIosChatboxes color="white" size={50}/>}
     language="python"
   />
   <CardLink
-    label="Scheduled Reminders"
-    href="python/examples/scheduled-reminders"
-    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
+    label="Reliable Customer Service Agent"
+    href="python/examples/reliable-ai-agent"
+    description="Use DBOS and OpenAI's Swarm to build a reliable AI-powered customer service agent."
     index="9"
-    icon={<RiCalendarScheduleLine color="white" size={50}/>}
+    icon={<RiCustomerService2Line color="white" size={50}/>}
     language="python"
   />
   <CardLink
@@ -101,14 +102,6 @@ import { TbClock2 } from "react-icons/tb";
     label="Cloud Cron Quickstart"
     href="python/examples/cron-starter"
     description="Use DBOS to write a cron job in just six lines of code and host it in the cloud with a single command."
-    index="10"
-    icon={<TbClock2 color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Stocks Tracker"
-    href="python/examples/stock-tracker"
-    description="Use DBOS to get alerted you when stock prices cross a certain threshold."
     index="11"
     icon={<TbClock2 color="white" size={50}/>}
     language="python"
