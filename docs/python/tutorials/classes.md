@@ -1,6 +1,6 @@
 ---
 sidebar_position: 15
-title: Classes
+title: Decorating Class Methods
 ---
 
 You can add DBOS workflow, step, and transaction decorators to your Python class methods.
