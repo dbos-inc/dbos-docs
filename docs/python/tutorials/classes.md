@@ -30,4 +30,24 @@ When you create a new instance of a DBOS-decorated class,  `DBOSConfiguredInstan
 This `config_name` should be a unique identifier of the instance.
 The reason DBOS-decorated classes need `config_name` is to enable workflow recovery.
 When you create a new instance of a DBOS-decorated class, DBOS stores it in a global registry indexed by `config_name`.
-When DBOS needs to recover a class instance method workflow, it looks up the class instance using the `config_name` associated with the workflow so it can run the workflow using the right instance of its class.
+When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
+
+### Static Methods and Class Methods
+
+You can add DBOS workflow, step, and transaction decorators to static methods and class methods of any class, even if it does not inherit from `DBOSConfiguredInstance`, because such methods do not access class instance variables.
+You must still decorate the class with `@DBOS.dbos_class()`.
+For example:
+
+```python
+@DBOS.dbos_class()
+class ExampleClass()
+        @staticmethod
+        @DBOS.workflow()
+        def staticmethod_workflow():
+            return
+
+        @classmethod
+        @DBOS.workflow()
+        def classmethod_workflow(cls) -> int:
+            return
+```
