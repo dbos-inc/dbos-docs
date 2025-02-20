@@ -28,6 +28,7 @@ print(example_fetcher.fetch_workflow())
 
 When you create a new instance of a DBOS-decorated class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
 This `config_name` should be a unique identifier of the instance.
+
 The reason DBOS-decorated classes need `config_name` is to enable workflow recovery.
 When you create a new instance of a DBOS-decorated class, DBOS stores it in a global registry indexed by `config_name`.
 When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
