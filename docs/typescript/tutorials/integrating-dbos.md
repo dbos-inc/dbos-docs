@@ -28,50 +28,26 @@ telemetry:
     logLevel: 'info'
 ```
 
-You can change `runtimeConfig.start` to your own start script of your application.
-
-Finally, to use DBOS decorators, enable the following compiler options in your `tsconfig.json` file:
+Also, set the following settings in your `tsconfig.json` file, which enable TypeScript decorators:
 
 ```json title="tsconfig.json"
-{
   "compilerOptions": {
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
   }
-}
 ```
 
 
-#### 2. Add DBOS to Your App
+#### 2. Initialize DBOS in Your App
 
-Now, you can add some basic DBOS workflows in your app.
+In your app's main entrypoint, add the following lines of code.
+This initializes DBOS when your app starts.
 
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-export class Example {
-
-  @DBOS.step()
-  static async stepOne() {
-    DBOS.logger.info("Step one completed!");
-  }
-
-  @DBOS.step()
-  static async stepTwo() {
-    DBOS.logger.info("Step two completed!");
-  }
-
-  @DBOS.workflow()
-  static async exampleWorkflow() {
-    await Example.stepOne();
-    await Example.stepTwo();
-  }
-}
+await DBOS.launch();
 ```
-
-Then, add [`await DBOS.launch()`](../reference/transactapi/dbos-class#launching-dbos) in your app's main entrypoint before invoking any DBOS operations. This initializes DBOS (e.g., database connections) and registers decorated functions. Ensure `DBOS.launch()` is called **after declaring all DBOS-decorated functions**. If DBOS functions are spread across multiple files, reference them in the main entrypoint file before calling `DBOS.launch()`.
-
-After that, you can simply invoke the DBOS workflow as a normal function. For example, try to add `await Example.exampleWorkflow()` in your app.
 
 #### 3. Start Your Application
 
@@ -81,7 +57,7 @@ Try starting your application:
 npm start # Or use your own start command
 ```
 
-When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
+When [`await DBOS.launch()`](../reference/transactapi/dbos-class#launching-dbos) is called, it will attempt to connect to a Postgres database.
 If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](../reference/configuration#database).
 Otherwise, DBOS will automatically guide you through launching a new database and connecting to it.
 
@@ -94,10 +70,28 @@ At this point, you can add any DBOS decorator or method to your application.
 For example, you can annotate one of your functions as a [workflow](./workflow-tutorial.md) and the functions it calls as [steps](./step-tutorial.md).
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically recovers to the last completed step.
 
+```typescript
+export class Example {
+
+  @DBOS.step()
+  static async myStep(n) {
+    DBOS.logger.info(`Step ${n} completed!`);
+  }
+
+  @DBOS.workflow()
+  static async exampleWorkflow() {
+    await Example.myStep(1);
+    await Example.myStep(2);
+  }
+}
+```
+
+To ensure that DBOS registers all decorated functions, **declare all DBOS-decorated functions before running `await DBOS.launch()`.**
+
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
 
-To learn more about programming with DBOS, check out [the guide](../programming-guide.md).
+To learn more about programming with DBOS, check out [the programming guide](../programming-guide.md).
 
 ### Deploying to DBOS Cloud
 
