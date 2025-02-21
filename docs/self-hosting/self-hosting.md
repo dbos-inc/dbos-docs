@@ -60,3 +60,11 @@ It provides the following endpoints:
     ```json
     ["workflow-uuid-1", "workflow-uuid-2", "..."]
     ```
+
+### Deactivate
+
+- **Endpoint**: `/deactivate`
+- **Method**: GET
+- **Description**: Deactivate an executor. A deactivated executor may complete active workflows and recover `PENDING` workflows, but may not start new workflows or dequeue workflows.
+- **Response**:
+  - **Status Code**: 200 OK if the request succeeeded; otherwise, appropriate error codes.
