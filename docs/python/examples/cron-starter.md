@@ -16,7 +16,7 @@ Let's say you want to run some code **on a schedule**.  For example, you want to
 This kind of code isn't easy to manage because the server running it has to always be "on"&mdash;you can't just run it on your laptop.
 
 In this tutorial, we'll show you how to use DBOS to **run code on a schedule in the cloud** so you don't have to worry about maintaining it.
-You'll learn how to write a scheduled (cron) function in **just 11 lines of Python code** and deploy it to the cloud with **a single click**.
+You'll learn how to write a scheduled (cron) function in **just 6 lines of Python code** and deploy it to the cloud with **a single click**.
 
 ### Tutorial
 
@@ -42,43 +42,19 @@ In less than a minute, your app should deploy successfully.
 #### 3. View Your Application
 
 At this point, your app is running code on a schedule in the cloud!
+Visit its URL to see it&mdash;it should look like this:
 
-To see its code, visit your new GitHub repository and open `app/main.py`.
+![Cloud Cron Starter](./assets/cron-starter.png)
+
+To see your new app's code, visit your new GitHub repository and open `app/main.py`.
 The app schedules a function incrementing a counter to run once a minute (the cron syntax `* * * * *` means "once a minute").
-You can visit your app's URL to see the current value of the counter.
+The app page displays the current value of the counter.
 
-```python
-from dbos import DBOS
-from fastapi import FastAPI
-
-app = FastAPI()
-DBOS(fastapi=app)
-counter = 0
-
-@DBOS.scheduled("* * * * *")
-@DBOS.step()
-def scheduled_function(scheduled_time, actual_time):
-    global counter
-    counter += 1
-
-@app.get("/")
-def endpoint():
-    return f"The scheduled function has run {counter} times!"
-```
 
 
 #### 4. Start Building
 
 To start building, edit your application on GitHub (source code is in `app/main.py`), commit your changes, then press "Deploy From GitHub" on your [applications page](https://console.dbos.dev/applications) to see your changes reflected in the live application.
-
-Not sure where to start?
-Try adding this line to the scheduled function so it logs each time it runs:
-
-```python
-DBOS.logger.info(f"I just ran at {scheduled_time}")
-```
-
-You can view your application's logs from your [applications page](https://console.dbos.dev/applications).
 
 <img src={require('@site/static/img/cron-starter/4-app-page.png').default} alt="Deploy with GitHub" width="800" className="custom-img" />
 
