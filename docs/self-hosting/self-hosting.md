@@ -1,7 +1,6 @@
 ---
-sidebar_position: 40
-title: Self-Hosting
-description: Learn how to self-host DBOS Transact applications
+sidebar_position: 1
+title: Self-Hosting DBOS Apps
 ---
 
 You can run DBOS Transact applications anywhere with [`npx dbos start`](../../reference/tools/cli.md#npx-dbos-start) as long as they have a Postgres database to connect to.
