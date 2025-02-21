@@ -1,10 +1,10 @@
 ---
 sidebar_position: 15
-title: Decorating Class Methods
+title: Working With Python Classes
 ---
 
-You can add DBOS workflow, step, and transaction decorators to your Python class methods.
-To add DBOS decorators to a Python class, the class must inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
+You can add DBOS workflow, step, and transaction decorators to your Python class instance methods.
+To add DBOS decorators to your methods, their class must inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
 For example:
 
 ```python
