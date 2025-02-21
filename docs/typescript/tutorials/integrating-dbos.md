@@ -17,7 +17,7 @@ It also shows you how to serverlessly deploy your application to DBOS Cloud and 
 npm install @dbos-inc/dbos-sdk
 ```
 
-Then, create a basic `dbos-config.yaml` file in your app's root directory:
+Then, create a `dbos-config.yaml` file in your app's root directory:
 
 ```yaml title="dbos-config.yaml"
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-ts/main/dbos-config.schema.json
