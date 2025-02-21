@@ -114,7 +114,7 @@ A JSON whose fields are:
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to cancel.
 
-### dbos workflow
+### dbos workflow resume
 
 **Description:**
 Resume a workflow from its last completed step.

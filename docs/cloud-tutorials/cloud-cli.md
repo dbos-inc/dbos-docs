@@ -449,3 +449,33 @@ Lists all currently enqueued functions in JSON format ordered by recency (most r
 - `-l, --limit <number>`       Limit the results returned
 - `-o, --offset <number>`      Skip functions from the results returned (for pagination)
 - `-q, --queue <string>`       Retrieve functions run on this queue
+
+### `dbos workflow cancel`
+
+**Description:**
+ Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
+
+**Arguments:**
+- `[application-name]`: The name of your application
+- `-w, --workflowid`: The ID of the workflow to cancel.
+
+### `dbos workflow resume`
+
+**Description:**
+Resume a workflow from its last completed step.
+You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
+You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
+
+**Arguments:**
+- `[application-name]`: The name of your application
+- `-w, --workflowid`: The ID of the workflow to resume.
+
+### `dbos workflow restart`
+
+**Description:**
+Start a new execution of a workflow with the same inputs.
+This new workflow has a new workflow ID.
+
+**Arguments:**
+- `[application-name]`: The name of your application
+- `-w, --workflowid`: The ID of the workflow to restart.
