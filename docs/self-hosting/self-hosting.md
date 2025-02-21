@@ -3,12 +3,36 @@ sidebar_position: 1
 title: Self-Hosting DBOS Apps
 ---
 
-You can run DBOS Transact applications anywhere with [`npx dbos start`](../../reference/tools/cli.md#npx-dbos-start) as long as they have a Postgres database to connect to.
-This guide describes tools you can use in your hosting environment to make the most of DBOS Transact.
+Because DBOS is implemented in lightweight TypeScript and Python libraries, you can run your DBOS application anywhere as long as it has a Postgres server to connect to.
+This guide provides information on operating a self-hosted DBOS application.
 
-## Admin API
+## Self-Hosting On A Single Server
 
-DBOS applications expose an admin API, fixed at one above the main DBOS application port (the main port defaults to port 3000, so the admin API defaults to port 3001).
+Self-hosting a DBOS application on a single server is simple: each time you restart your application's process, it recovers all workflows that were executing before the restart (all `PENDING` workflows).
+
+However, it is important to be careful when upgrading your application's code.
+When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through the `DBOS__APPVERSION` environment variable).
+Each workflow is tagged with the version of the application that started it.
+When a DBOS application starts, it does not recover workflows tagged with a different application version.
+Thus, to safely recover workflows started on an older version of your code, you should start a process running that code version.
+
+## Self-Hosting on Multiple Servers
+
+When self-hosting in a distributed setting, it is important to manage workflow recovery so that when an executor crashes, restarts, or is shut down, its workflows are recovered.
+You should assign each executor running a DBOS application an executor ID by setting the `DBOS__VMID` environment variable.
+Each workflow is tagged with the ID of the executor that started it.
+When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
+You can also instruct your executor to recover workflows assigned to other executor IDs through the [workflow recovery endpoint of the admin API](#workflow-recovery).
+
+It is also important to be careful when upgrading your application's code.
+When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through the `DBOS__APPVERSION` environment variable).
+Each workflow is tagged with the version of the application that started it.
+When a DBOS application starts, it does not recover workflows tagged with a different application version.
+To safely recover workflows started on an older version of your code, you should start a process running that code version and use the [workflow recovery endpoint of the admin API](#workflow-recovery) to instruct it to recover workflows belonging to executors that ran old versions of DBOS.
+
+## Admin API Reference
+
+DBOS applications expose an admin API on port 3001.
 It provides the following endpoints:
 
 ### Health Check
@@ -21,10 +45,9 @@ It provides the following endpoints:
 
 ### Workflow Recovery
 
-
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recovers all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Following our [reliability guarantees](../workflow-tutorial.md#reliability-guarantees), all workflows will resume from where they left off. Returns the UUIDs of all workflows recovered.
+- **Description**: Recover all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Returns the IDs of all workflows queued for recovery.
 - **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json
@@ -32,40 +55,8 @@ It provides the following endpoints:
     ```
 - **Response**:
   - **Status Code**: 200 OK on successful recovery initiation; otherwise, appropriate error codes.
-  - **Body Format**: JSON list of UUIDs representing the workflows that were successfully queued for recovery.
+  - **Body Format**: JSON list of the IDs of workflows queued for recovery.
   - **Example**:
     ```json
     ["workflow-uuid-1", "workflow-uuid-2", "..."]
     ```
-
-### Performance Metrics
-
-- **Endpoint**: `/dbos-perf`
-- **HTTP Method**: GET
-- **Description**: Provides a snapshot of the application's event loop utilization since the last request to `/dbos-perf`. Implemented using the [Node.js performance API](https://nodejs.org/api/perf_hooks.html#performanceeventlooputilizationutilization1-utilization2).
-- **Response**:
-  - **Status Code**: 200 OK if metrics are successfully fetched; otherwise, appropriate error codes.
-  - **Body Format**: JSON
-    - **Fields**:
-      - `active`: Time in milliseconds the event loop has been active since the last call to `/dbos-perf`.
-      - `idle`: Time in milliseconds the event loop has been idle since the last call to `/dbos-perf`.
-      - `utilization`: The percentage of time the event loop is active.
-  - **Example**:
-    ```json
-    {
-      "active": "200",
-      "idle": "800",
-      "utilization": "0.2"
-    }
-    ```
-
-## Managing Workflow Recovery
-
-By default, when a DBOS application starts up, it recovers all pending workflows, resuming them from where they left off following our [reliability guarantees](../workflow-tutorial.md#reliability-guarantees).
-This behavior works well when you're only running a single instance of an application, as it guarantees that every time the server is restarted, it resumes all workflows from where they left off.
-However, it is less ideal for a distributed setting where you're running many instances of an application on different servers.
-
-To manage recovery in a distributed setting, you can assign each instance of an application an executor ID by setting the `DBOS__VMID` environment variable.
-This causes the application instance to associate every workflow it executes with that executor ID.
-When an application instance with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
-You can also instruct it to recover workflows assigned to other executor IDs through the [admin API](#managing-workflow-recovery).
