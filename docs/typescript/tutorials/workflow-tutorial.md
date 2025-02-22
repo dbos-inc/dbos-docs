@@ -224,6 +224,23 @@ All messages are persisted to the database, so if `send` completes successfully,
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](#reliability-guarantees).
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
 
+## Workflow Versioning and Recovery
+
+Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
+To guard against this, DBOS _versions_ applications and their workflows.
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden by setting the `DBOS__APPVERSION` environment variable).
+All workflows are tagged with the application version on which they started.
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents unsafe recovery of workflows that depend on different code.
+
+On DBOS Cloud, when an application is redeployed, executors running old versions are retained until they have completed all workflows that started on those versions.
+When self-hosting, to safely recover workflows started on an older version of your code, you should start a process running that code version.
+You can also manually recover a workflow on your current version with:
+
+```shell
+npx dbos workflow resume <workflow-id>
+```
+
 ## Workflow Management
 
 Because DBOS stores the execution state of workflows in Postgres, you can view and manage your workflows from the command line.
