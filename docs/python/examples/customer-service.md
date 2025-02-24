@@ -11,7 +11,7 @@ You can see the customer service agent live [here](https://demo-reliable-refunds
 You can chat with this LLM-powered AI agent to check the status of your purchase order, or request a refund for your order.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.
 
-<iframe width="640" height="407" src="https://drive.google.com/file/d/15EDs6-2J5LZ1ygKM0uKbrZThPrHTXCYQ/preview" title="Google Drive video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="90%" height="480" src="https://www.youtube.com/embed/ll1sMIs_wx0?si=u3qSWInf9kJLwJpH" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowFullScreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
 
 Try running this agent and pressing the `Crash System` button at any time. You can see that when it restarts, it resumes its pending refund processing.
 
