@@ -3,8 +3,12 @@ sidebar_position: 1
 title: Self-Hosting DBOS Apps
 ---
 
-Because DBOS is implemented in lightweight TypeScript and Python libraries, you can run your DBOS application anywhere as long as it has a Postgres server to connect to.
-This guide provides information on operating a self-hosted DBOS application.
+Because DBOS is implemented in lightweight TypeScript and Python libraries, you can **run your DBOS application anywhere** as long as it has a Postgres server to connect to.
+DBOS runs entirely inside your process, executing your workflows and recording their state in Postgres.
+By default, when your process restarts, DBOS recovers all its pending workflows.
+However, care must be taken when upgrading your application's code or when managing many DBOS processes at scale to ensure all your workflows are efficiently recovered.
+
+This guide will describe best practices for self-hosting an application that uses DBOS, explaining how to manage workflow recovery both when operating on a single server and when operating at scale.
 
 ## Self-Hosting On A Single Server
 
