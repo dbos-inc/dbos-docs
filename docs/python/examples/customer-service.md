@@ -15,7 +15,7 @@ Even if the agent is interrupted during refund processing, upon restart it autom
 
 Try running this agent and pressing the `Crash System` button at any time. You can see that when it restarts, it resumes its pending refund processing.
 
-All source code is [available on GitHub](https://github.com/dbos-inc/durable-swarm/tree/main/examples/reliable_refund_langchain).
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/reliable-refunds-langchain).
 
 ## Overview
 

@@ -262,7 +262,7 @@ def process_kafka_alerts(msg):
 Enhance your AI agents with reliable asynchronous tasks and human in the loop.
 Integrate with popular frameworks like LangChain and LlamaIndex.
 
-[See an example ↗️](./python/examples/reliable-ai-agent.md)
+[See an example ↗️](./python/examples/customer-service.md)
 
 </article>
 <article className="col col--8">
