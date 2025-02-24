@@ -178,6 +178,10 @@ const config = {
             from: '/typescript/tutorials/kafka-integration',
             to: '/typescript/tutorials/requestsandevents/kafka-integration',
           },
+          {
+            from: '/python/examples/reliable-ai-agent',
+            to: '/python/examples/customer-service',
+          },
         ],
       },
     ],
