@@ -62,15 +62,23 @@ import { VscGraphLine } from "react-icons/vsc";
     label="Hacker News Bot"
     href="python/examples/hacker-news-bot"
     description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
-    index="6"
+    index="7"
     icon={<FaHackerNews color="white" size={50} />}
+    language="python"
+  />
+  <CardLink
+    label="Reliable Customer Service Agent"
+    href="python/examples/customer-service"
+    description="Use DBOS and LangGraph to build a reliable AI-powered customer service agent."
+    index="8"
+    icon={<RiCustomerService2Line color="white" size={50}/>}
     language="python"
   />
   <CardLink
     label="AI-Powered Slackbot"
     href="python/examples/rag-slackbot"
     description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
-    index="7"
+    index="9"
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
@@ -78,23 +86,15 @@ import { VscGraphLine } from "react-icons/vsc";
     label="LLM-Powered Chatbot"
     href="python/examples/chatbot"
     description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
-    index="8"
+    index="10"
     icon={<IoIosChatboxes color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Reliable Customer Service Agent"
-    href="python/examples/reliable-ai-agent"
-    description="Use DBOS and OpenAI's Swarm to build a reliable AI-powered customer service agent."
-    index="9"
-    icon={<RiCustomerService2Line color="white" size={50}/>}
     language="python"
   />
   <CardLink
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
-    index="10"
+    index="11"
     icon={<IoEarth color="white" size={50}/>}
     language="python"
   />
