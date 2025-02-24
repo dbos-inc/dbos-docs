@@ -1,35 +1,40 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 4
+sidebar_position: 7
 title: Reliable Customer Service Agent
 ---
 
-In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS simplifies complex workflows**, making it easier to integrate human decision-making into automated processes.
+In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
 
 You can see the customer service agent live [here](https://demo-reliable-refunds-langchain.cloud.dbos.dev/).
 
 You can chat with this LLM-powered AI agent to check the status of your purchase order, or request a refund for your order.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.
 
-![Reliable Customer Service](assets/custom_service_demo.png)
+<iframe width="640" height="407" src="https://drive.google.com/file/d/15EDs6-2J5LZ1ygKM0uKbrZThPrHTXCYQ/preview" title="Google Drive video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 Try running this agent and pressing the `Crash System` button at any time. You can see that when it restarts, it resumes its pending refund processing.
-
 
 All source code is [available on GitHub](https://github.com/dbos-inc/durable-swarm/tree/main/examples/reliable_refund_langchain).
 
 ## Overview
 
-The agent is a stateful graph constructed with LangGraph. The architecture diagram is shown below:
+This customer service AI agent allows users to chat and check the status of their purchase order or request a refund.
+If the order exceeds a certain cost threshold, the refund request will be automatically escalated to a customer service admin via email for manual review. Based on the admin's decision (approval or rejection), the agent will either process the refund or decline the request accordingly.
 
-![LangGraph diagram](assets/langgraph-agent-architect.png)
+Let's zoom in to the refund process. The refund process is asynchronous, meaning the user can continue chatting (or leaving and coming back in a few days) with the agent for other tasks while a background process handles the refund workflow. This ensures that the chatbot remains responsive and is not blocked by the potentially long manual review process, which could take hours or even days.
 
-The `tools` include two DBOS decorated functions:
-1. `get_purchase_by_id`: a database transaction function to retrieve order status.
-2. `process_refund`: a workflow process the refund request.
+The architecture diagram of the refund processing workflow:
 
-What makes this agent unique is its ability to leverage DBOS for asynchronous human-in-the-loop processing. This is typically challenging to write, but DBOS makes it simple and reliable.
+![refund workflow](assets/langgraph-agent-workflow.png)
 
+There are two main challenges in implementing this process within an AI agent:
+1. **Asynchronous Processing**: The approval process may take days, so the workflow must be invoked asynchronously in the background. This ensures that the chatbot can respond to user input quickly and continue handling other interactions without being blocked.
+2. **Workflow Reliability**: The workflow must be durable and fault tolerant. If the agent is interrupted during refund processing (e.g., server crashes, network connectivity issues), it should automatically recover upon restart, complete the refund, and seamlessly proceed to the next step.
+
+Traditional solutions typically require setting up a **job queue** and separate **queue consumers** to process tasks asynchronously, along with an **external orchestrator** like AWS Step Functions to coordinate multiple subprocesses, guaranteeing the workflow runs to completion.
+
+DBOS provides a simpler solution - [durable execution as an open source library](https://www.dbos.dev/blog/what-is-lightweight-durable-execution), so you can control durable execution more simply and entirely within your application code There’s no need to run and stitch together external orchestration services. In the following sections of this tutorial, we'll walk you through how we built a reliable customer service agent using DBOS + LangGraph.
 
 ## Writing an AI-Powered Refund Agent
 
@@ -62,6 +67,9 @@ callback_domain = os.environ.get("DBOS_APP_HOSTNAME", "http://localhost:8000")
 ```
 
 ### Defining Tools for the Agent
+
+One great feature of DBOS is that it provides durable execution as a library, allowing seamless integration with popular AI frameworks like LangGraph.
+To use the DBOS decorated functions as tools for this agent, you simply decorate the function with `@tool` and provide a docstring so that the LLM can correctly identify when to invoke it.
 
 This agent has two tools:
 1. `tool_get_purchase_by_id`: invokes a database transaction function to retrieve order status.
@@ -112,17 +120,11 @@ DBOS guarantees that once the agent's workflow starts, you will always get a ref
 
 ### Asynchronous Human-in-the-Loop Workflow
 
-The architecture diagram of the refund processing workflow looks like bellow:
-
-![refund workflow](assets/langgraph-agent-workflow.png)
-
-
 If an order exceeds a certain cost threshold, the refund request will be escalated for manual review. In this case, the `process_refund` workflow starts a child workflow called `approval_workflow` which contains the following step:
-- An email is sent to an admin for approval.
+- An email is sent to an admin for manual review.
 - The approval workflow **pauses** until a human decision is made.
 - When the admin clicks approve or reject, it sends an HTTP request to the `/approval/{workflow_id}/{status}` endpoint, which then notifies the pending workflow about the decision.
 - Based on the response, the workflow either proceeds with the refund or rejects the request.
-as an email to the admin for a manual review.
 
 ```python showLineNumbers
 # This workflow manages manual review. It sends an email to a reviewer, then waits up to a week
@@ -185,7 +187,7 @@ def update_purchase_status(order_id: int, status: OrderStatus):
     DBOS.sql_session.execute(query)
 ```
 
-The `process_refund` tool invokes the refund workflow to execute asynchronously and returns back to the chatbot as soon as the workflow is started, so the chatbot is not blocked by the potentially long review period.
+The `process_refund` tool uses `DBOS.start_workflow` to execute the approval workflow asynchronously and returns back to the chatbot as soon as the workflow is started, so the chatbot is not blocked by the potentially long review period.
 
 ### Setting Up LangGraph
 
@@ -249,6 +251,10 @@ class ChatSchema(BaseModel):
 chat_config = {"configurable": {"thread_id": "1"}}
 compiled_agent = create_agent()
 ```
+
+Each time a user inputs a message, the agent traverses the DAG until it reaches the "end" node, then responds to the user. The agent diagram (generated by LangGraph) looks simple because DBOS handles all the complex workflows in the "tools" node.
+
+![LangGraph diagram](assets/langgraph-agent-architect.png)
 
 ### Handling Chats
 
