@@ -128,7 +128,11 @@ const config = {
           },
           {
             from: '/typescript/tutorials/self-hosting',
-            to: '/typescript/tutorials/development/self-hosting',
+            to: '/self-hosting',
+          },
+          {
+            from: '/typescript/tutorials/development/self-hosting',
+            to: '/self-hosting',
           },
           {
             from: '/typescript/tutorials/using-libraries',
