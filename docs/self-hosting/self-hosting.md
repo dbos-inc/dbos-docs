@@ -8,17 +8,11 @@ DBOS runs entirely inside your process, executing your workflows and recording t
 By default, when your process restarts, DBOS recovers all its pending workflows.
 However, care must be taken when upgrading your application's code or when managing many DBOS processes at scale to ensure all your workflows are efficiently recovered.
 
-This guide will describe best practices for self-hosting an application that uses DBOS, explaining how to manage workflow recovery both when operating on a single server and when operating at scale.
+This guide will describe best practices for self-hosting an application that uses the open-source DBOS libraries, explaining how to manage workflow recovery both when operating on a single server and when operating at scale.
 
 ## Self-Hosting On A Single Server
 
 Self-hosting a DBOS application on a single server is simple: each time you restart your application's process, it recovers all workflows that were executing before the restart (all `PENDING` workflows).
-
-However, it is important to be careful when upgrading your application's code.
-When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through the `DBOS__APPVERSION` environment variable).
-Each workflow is tagged with the version of the application that started it.
-When a DBOS application starts, it does not recover workflows tagged with a different application version.
-Thus, to safely recover workflows started on an older version of your code, you should start a process running that code version.
 
 ## Self-Hosting on Multiple Servers
 
@@ -28,11 +22,16 @@ Each workflow is tagged with the ID of the executor that started it.
 When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
 You can also instruct your executor to recover workflows assigned to other executor IDs through the [workflow recovery endpoint of the admin API](#workflow-recovery).
 
-It is also important to be careful when upgrading your application's code.
+## Managing Application versions
+
+When self-hosting, it is important to be careful when upgrading your application's code.
 When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through the `DBOS__APPVERSION` environment variable).
 Each workflow is tagged with the version of the application that started it.
-When a DBOS application starts, it does not recover workflows tagged with a different application version.
-To safely recover workflows started on an older version of your code, you should start a process running that code version and use the [workflow recovery endpoint of the admin API](#workflow-recovery) to instruct it to recover workflows belonging to executors that ran old versions of DBOS.
+To prevent code compatibility issues, DBOS does not attempt to recover workflows tagged with a different application version.
+
+To safely recover workflows started on an older version of your code, you should start a process running that code version.
+If self-hosting on a single server, that process will automatically recover all pending workflows of that code version.
+If self-hosting in a distributed setting, you should use the [workflow recovery endpoint of the admin API](#workflow-recovery) to instruct that process to recover workflows belonging to executors that ran old code versions.
 
 ## Admin API Reference
 
