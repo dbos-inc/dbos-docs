@@ -61,7 +61,7 @@ When [`await DBOS.launch()`](../reference/transactapi/dbos-class#launching-dbos)
 If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](../reference/configuration#database).
 Otherwise, DBOS will automatically guide you through launching a new database and connecting to it.
 
-After you've connected to Postgres, your app should run normally, but log ` Workflow executor initialized` and `DBOS Admin Server is running at...` on startup.
+After you've connected to Postgres, your app should run normally, but log `DBOS launched` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
 #### 4. Start Building With DBOS
