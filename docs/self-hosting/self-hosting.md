@@ -50,7 +50,7 @@ It provides the following endpoints:
 
 - **Endpoint**: `/dbos-workflow-recovery`
 - **Method**: POST
-- **Description**: Recover all pending workflows associated with input [executor IDs](#managing-workflow-recovery). Returns the IDs of all workflows queued for recovery.
+- **Description**: Recover all pending workflows associated with input [executor IDs](#self-hosting-on-multiple-servers). Returns the IDs of all workflows queued for recovery.
 - **Request Body Format**: JSON list of executors whose pending workflows to recover.
   - **Example**:
     ```json

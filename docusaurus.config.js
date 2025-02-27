@@ -197,6 +197,14 @@ const config = {
         enableInDevelopment: false,
       },
     ],
+    [
+      "@stackql/docusaurus-plugin-hubspot",
+      {
+        hubId: 45237820,
+        async: true,
+        defer: true,
+      },
+    ],
   ],
 
   presets: [
