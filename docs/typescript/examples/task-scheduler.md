@@ -10,20 +10,19 @@ DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/
 
 If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
 
-![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
+## Why Add DBOS To a Next.js Application?
 
-## Why Use Next.js With DBOS?
-DBOS Transact + Next.js is a powerful backend and frontend pairing that is easily deployed to DBOS Cloud or other clouds that allow long-lived server-side jobs.
-
-While DBOS Transact provides durable backend execution, it does not include a user interface.  Next.js is an excellent complement, offering a [React](https://react.dev/)-based UI, [server-side rendering (SSR)](https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering) for performance, and [server actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) for convenient data fetching and interaction.
-
-Many existing Next.js hosting options focus on serverless, CDN-heavy applications.  Running Next.js with DBOS Transact on DBOS Cloud unlocks additional benefits:
+Existing Next.js hosting options focus on serverless, CDN-heavy applications.  Running Next.js with DBOS Transact in a suitable hosting environment (such as DBOS Cloud) unlocks additional benefits:
 - Lightweight durable execution – DBOS [workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial) run to completion exactly once.
 - Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client.
 - External systems integration – [Place calls to external services](https://docs.dbos.dev/typescript/tutorials/step-tutorial) with much simpler error recovery.
 - Simple, powerful database integration – [Manage database data](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial) with DBOS.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows).
 - Built-in tracing and replay debugging – [Find workflows in the dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) and [re-run them locally](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
+
+
+# Running DBOS Task Scheduler
+![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
 
 ## Running DBOS Task Scheduler in DBOS Cloud
 Provisioning an instance of DBOS Task Scheduler in DBOS Cloud is easy:
