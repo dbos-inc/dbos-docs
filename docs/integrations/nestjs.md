@@ -4,9 +4,9 @@ title: Nest.js
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 
-This guide shows you how to integrate the DBOS Transact library with your existing [Nest.js](https://nestjs.com/) application.
+This guide shows you how to integrate [DBOS Transact](https://github.com/dbos-inc/dbos-transact) with your existing [Nest.js](https://nestjs.com/) application.
 
-Nest.js architectures heavily use Dependency Injection (an [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) technique) and encourages you to write your business logic in services that can be injected into your controllers or other services. Such injectable servicess are exported by Nest.js modules as "providers".
+Nest.js uses Dependency Injection (an [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) technique) and encourages you to write your business logic in services that can be injected into your controllers or other services. Such injectable services are exported by Nest.js modules as "providers".
 
 In this guide, we will show you how to make Nest.js services reliable with DBOS Transact and export them as Nest.js providers.
 
