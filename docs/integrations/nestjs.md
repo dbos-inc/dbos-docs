@@ -49,10 +49,11 @@ async function bootstrap() {
 bootstrap();
 ```
 
-Optionally, you can pass a `nestApp` to `DBOS.launch()` to install an opentelemetry tracing middleware to your app:
+Optionally, you can pass a `nestApp` to `DBOS.launch()` to install an [OpenTelemetry](https://opentelemetry.io/) tracing middleware to your app:
 ```typescript
 await DBOS.launch({ nestApp: app });
 ```
+DBOS natively generates OTel traces for your workflows. This middleware wires them with the traces context of external requests.
 
 ### 3. DBOS-ify your services
 
