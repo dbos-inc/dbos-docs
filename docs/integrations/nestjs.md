@@ -163,7 +163,7 @@ import { PrismaModule } from 'nestjs-prisma';
 export class AppModule {}
 ```
 
-We will need to create a [custom provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory) to replace the `AppService` provider.
+We will need to create a [custom provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory) to instantiate our DBOS-ified `AppService`.
 
 ```typescript
 import { Module } from '@nestjs/common';
@@ -190,7 +190,7 @@ export class AppModule {}
 ```
 
 A few noteworthy points:
-- We inject the prisma service to the Provider so we can use it to instantiate the class
+- We inject the Prisma service to the provider so we can use it to instantiate the class.
 - We use a class token (`provide: AppService`). This can be customized with a [non-class-based, custom token](https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens).
 
 Of course, the name `dbosService` itself can be configured, either through another provider (which you'll have to inject alongside `PrismaService`) or by wrapping the provider creation in a utility function:
@@ -207,6 +207,8 @@ export function createDBOSProvider(name: string): Provider {
 }
 const dbosProvider = createDBOSProvider('dbosProvider');
 ````
+
+You can test the application by running `npm run build` and starting it with `nest start`. Your business logic is now reliable!
 
 ## Running in DBOS Cloud
 Applications importing DBOS Transact can be serverlessly deployed to DBOS Cloud.
