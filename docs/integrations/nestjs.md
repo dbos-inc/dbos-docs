@@ -141,7 +141,7 @@ Now, we can make the `businessLogic` function reliable with a few DBOS annotatio
   }
 ```
 
-Finally, we need to tell nest how to automatically instantiate this service when doing dependency injection. We'll do this by updating the application `app.modules.ts` file.
+Finally, we need to tell Nest how to automatically instantiate this service when doing dependency injection. We'll do this by updating the provider declared in `app.modules.ts`.
 
 ### 4. DBOS provider
 
