@@ -147,7 +147,7 @@ Finally, we need to tell Nest how to automatically instantiate this service when
 
 Nest.js supports a variety of patterns to regiter service providers. The default _Class providers_ where Nest.js automatically instantiate the class, will *not* work because DBOS providers require a `name` argument. We will need to use _Factory providers_. This section provide a few implementations.
 
-The original provider for the our project is
+The original provider of the project is:
 
 ```typescript
 import { Module } from '@nestjs/common';
