@@ -35,7 +35,7 @@ DBOS Cloud uses this command during application deployment to migrate your datab
 
 Initialize the local directory with a DBOS template application.
 
-**Parameters:**
+**Arguments:**
 - `<application-name>`: The name of your application. If not specified, will be prompted for.
 - `--template, -t <str>`: Specify a template to use. Currently, we have a single "hello" template, which is used by default.
 - `--config, -c`: If this flag is set, only the `dbos-config.yaml` file is added from the template. Useful to add DBOS to an existing project.
@@ -45,8 +45,15 @@ Initialize the local directory with a DBOS template application.
 Reset your DBOS [system database](../../explanations/system-tables.md), deleting metadata about past workflows and steps.
 No application data is affected by this.
 
-**Parameters:**
+**Arguments:**
 - `--yes, -y`: Skip confirmation prompt.
+
+### dbos debug
+
+Execute a DBOS application in debug mode to replay a specified workflow. 
+
+**Arguments:**
+- `<workflow-id>`: The ID of the workflow to debug.
 
 ## Workflow Management Commands
 
