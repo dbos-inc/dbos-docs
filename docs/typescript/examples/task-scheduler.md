@@ -340,7 +340,7 @@ Another thing that is not generally possible in Next.js is real-time updates to 
 ```
 
 ### Database Notifications
-While WebSockets can be used to deliver notifications from DBOS to the client, a challenge arises if the database update was running on another viratual machine in the application group.  To detect this, we can watch for changes in the underlying database table, and use those updates to broadcast notifications to the WebSockets.
+While WebSockets can be used to deliver notifications from DBOS to the client, a challenge arises if the database update was running on another virtual machine in the application group.  To detect this, we can watch for changes in the underlying database table, and use those updates to broadcast notifications to the WebSockets.
 
 ```typescript
   @DBTrigger({tableName: 'schedule', useDBNotifications: true, installDBTrigger: true})
