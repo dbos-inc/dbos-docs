@@ -108,7 +108,7 @@ export class AppService extends ConfiguredInstance {
   async initialize(ctx: InitContext): Promise<void> {
     DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
   }
-  ....
+  ...
 ```
 
 Now, we can make the `businessLogic` function reliable with a few DBOS annotations:
