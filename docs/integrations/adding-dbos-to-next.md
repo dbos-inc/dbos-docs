@@ -8,19 +8,19 @@ description: Learn how to integrate DBOS into Next.js applications.
 
 ## Why Add DBOS To a Next.js Application?
 [Next.js](https://nextjs.org/) is a solid choice for full-stack applications, but popular Next.js hosting options focus on serverless, CDN-heavy deployments that do not allow long-running tasks or other “heavy lifting”.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), the following additional features are available:
-- Lightweight durable execution – DBOS [workflows](../workflow-tutorial) run to completion exactly once.
-- External systems integration – [Place calls to external services](../step-tutorial) with much simpler error recovery.
-- Simple, powerful database integration – [Manage database data](../transaction-tutorial) with DBOS.
-- Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../scheduled-workflows).
+- Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
+- External systems integration – [Place calls to external services](../typescript/tutorials/step-tutorial) with much simpler error recovery.
+- Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
+- Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
 - Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client.
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](../../../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../../../cloud-tutorials/timetravel-debugging).
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/timetravel-debugging).
 
 ## Architectural Overview
 Next.js is a framework that optimizes where and when React UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
 ![Serverless Next.js architecture](./assets/serverlessnext.png)
 
 However, Next.js also supports “custom server” deployments, which do not have limitations on long-running tasks and long-lived state.  The custom server loads code when launched, and the optimized request handler bundles can then interact with this server-side code:
-![Serverlful Next.js architecture](./assets/serverful.png)
+![Serverlful Next.js architecture](./assets/serverfulnext.png)
 
 The latter architecture is a requirement for using Next.js with DBOS.  This guide covers switching to a deployment with a custom `server.ts` file, and creating, calling, building, and deploying the logic within it.
 
@@ -34,7 +34,7 @@ The high-level steps for adding DBOS to a Next.JS application are:
 
 # Adding DBOS To Next.JS Applications
 ## Coding `server.ts`
-The `server.ts` file (note that, while any file name can be used, `server.ts` is the common convention that is used in this guide)
+The `server.ts` file (note that, while any file name can be used, `server.ts` is the common convention that is used in this guide) is responsible for initializing DBOS, and launching Next.js.
 
 ### Creating a `server.ts` From Scratch
 
