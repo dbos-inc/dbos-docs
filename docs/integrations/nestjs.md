@@ -57,6 +57,7 @@ To integrate a Nest.js service with DBOS, your service class must extend the DBO
 Here is an example with a Nest.js service implementing a simple two-steps workflow:
 
 ```typescript
+// app.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 // highlight-next-line
