@@ -1,26 +1,16 @@
 ---
 sidebar_position: 2
-title: Nest.js
+title: Make your Nest.js backend reliable
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 
-This guide shows you how to integrate [DBOS Transact](https://github.com/dbos-inc/dbos-transact) with your existing [Nest.js](https://nestjs.com/) application.
-
-Nest.js uses Dependency Injection (an [inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) technique) and encourages you to write your business logic in services that can be injected into your controllers or other services. Such injectable services are exported by Nest.js modules as "providers".
-
-In this guide, we will show you how to make Nest.js services reliable with DBOS Transact and export them as Nest.js providers.
+This guide demonstrates how to make your existing [Nest.js](https://nestjs.com/) application reliable and crash-proof with [DBOS Transact](https://github.com/dbos-inc/dbos-transact).
 
 ## DBOS-ify your Nest.js application
 
 ### 1. Installation and requirements
 
-:::info
-The example in this guide is based of a new Nest.js application, initialized with `nest new nest-starter` and configured to use [NPM](https://www.npmjs.com/).
-:::
-
-First, install the DBOS typecript SDK with `npm install @dbos-inc/dbos-sdk`.
-
-DBOS requires a postgres database. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
+Install the DBOS typecript SDK with `npm install @dbos-inc/dbos-sdk`. DBOS requires a [Postgres](https://www.postgresql.org/) database. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
 ```yaml
 database:
   hostname: localhost
@@ -32,9 +22,14 @@ database:
 
 ### 2. Bootstraping DBOS
 
+:::info
+This example is based of a new Nest.js application initialized with `nest new nest-starter` and configured to use [NPM](https://www.npmjs.com/).
+:::
+
 Modify your bootstrap function to import the DBOS SDK and launch DBOS Transact:
 
 ```typescript
+// main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 // highlight-next-line
@@ -57,115 +52,56 @@ DBOS natively generates OTel traces for your workflows. This middleware wires th
 
 ### 3. DBOS-ify your services
 
-For this demonstration, we will use a simple service that does two things: sending an HTTP request and inserting a record in the database. You can find the full code for this example on [github](TODO).
+To integrate a Nest.js service with DBOS, your service class must extend the DBOS [ConfiguredInstance](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods) class. This extension is required to register your class instance methods with DBOS Transact's internal registry. During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registration enables DBOS to locate and recover pending workflows.
+
+Here is an example with a Nest.js service implementing a simple two-steps workflow:
 
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-
-@Injectable()
-export class AppService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async businessLogic() {
-    await this.sendRequest();
-    await this.DBWrite();
-    return 'done';
-  }
-
-  async sendRequest() {
-    const response = await fetch('https://example.com');
-    const data = await response.text();
-    return data;
-  }
-
-  async DBWrite(): Promise<void> {
-    await this.prisma.user.create({
-      data: {
-        name: 'Alice',
-      },
-    });
-  }
-}
-```
-
-To integrate this service with DBOS, we need to make `AppService` extend the DBOS `ConfiguredInstance` class. Specifically, we'll need to update the class constructor and add a new `initialize` method.
-
-```typescript
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'nestjs-prisma';
+// highlight-next-line
 import { ConfiguredInstance, DBOS, InitContext } from '@dbos-inc/dbos-sdk';
 
 @Injectable()
+// highlight-next-line
 export class AppService extends ConfiguredInstance {
   constructor(
-    name: string,
-    private readonly prisma: PrismaService,
+    name: string, // A name used by DBOS internal registry
+    private readonly prisma: PrismaService, // An example service dependency
   ) {
     super(name);
   }
 
-  async initialize(ctx: InitContext): Promise<void> {
-    DBOS.logger.info(`Initializing DBOS provider ${this.name}`);
-  }
-  ...
-```
+  // Optionally perform some asynchronous setup work
+  async initialize(): Promise<void> {}
 
-Now, we can make the `businessLogic` function reliable with a few DBOS annotations:
-
-```typescript
   // highlight-next-line
   @DBOS.workflow()
   async businessLogic() {
-    await this.sendRequest();
-    await this.DBWrite();
-    return 'done';
+    await this.step1();
+    await this.step2();
   }
 
   // highlight-next-line
   @DBOS.step()
-  async sendRequest() {
-    const response = await fetch('https://example.com');
-    const data = await response.text();
-    return data;
+  async step1() {
+    ...
   }
 
   // highlight-next-line
   @DBOS.step()
-  async DBWrite(): Promise<void> {
-    await this.prisma.user.create({
-      data: {
-        name: 'Alice',
-      },
-    });
-  }
+  async step2() {
+    ...
+  };
+}
 ```
-
-Finally, we need to tell Nest how to automatically instantiate this service when doing dependency injection. We'll do this by updating the provider declared in `app.modules.ts`.
 
 ### 4. DBOS provider
 
-Nest.js supports a variety of patterns to regiter service providers. The default _Class providers_ where Nest.js automatically instantiate the class, will *not* work because DBOS providers require a `name` argument. We will need to use _Factory providers_. This section provide a few implementations.
-
-The original provider of the project is:
+Finally, we need to instruct Nest how to instantiate this service during dependency injection. We'll do this with a [custom _Factory Provider_](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory). Here is an example:
 
 ```typescript
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaModule } from 'nestjs-prisma';
-
-@Module({
-  imports: [PrismaModule.forRoot()],
-  controllers: [AppController],
-  providers: [AppService],
-})
-export class AppModule {}
-```
-
-We will need to create a [custom provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory) to instantiate our DBOS-ified `AppService`.
-
-```typescript
+// app.modules.ts
 import { Module } from '@nestjs/common';
 import { Provider } from '@nestjs/common/interfaces';
 import { AppController } from './app.controller';
@@ -189,24 +125,7 @@ export const dbosProvider: Provider = {
 export class AppModule {}
 ```
 
-A few noteworthy points:
-- We inject the Prisma service to the provider so we can use it to instantiate the class.
-- We use a class token (`provide: AppService`). This can be customized with a [non-class-based, custom token](https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens).
-
-Of course, the name `dbosService` itself can be configured, either through another provider (which you'll have to inject alongside `PrismaService`) or by wrapping the provider creation in a utility function:
-
-```typescript
-export function createDBOSProvider(name: string): Provider {
-  return {
-    provide: AppService,
-    useFactory: (prisma: PrismaService) => {
-      return DBOS.configureInstance(AppService, name, prisma);
-    },
-    inject: [PrismaService],
-  };
-}
-const dbosProvider = createDBOSProvider('dbosProvider');
-````
+You can configure the `dbosService` name if you need multiple instances of this provider, for example by injecting a name provider - as you'd do in any other Nest.js Factory Provider.
 
 You can test the application by running `npm run build` and starting it with `nest start`. Your business logic is now reliable!
 
