@@ -7,7 +7,7 @@ description: Learn how to integrate DBOS into Next.js applications.
 # Introduction
 
 ## Why Add DBOS To a Next.js Application?
-[Next.js](https://nextjs.org/) is a solid choice for full-stack applications, but popular Next.js hosting options focus on serverless, CDN-heavy deployments that do not allow long-running tasks or other “heavy lifting”.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), the following additional features are available:
+[Next.js](https://nextjs.org/) is a solid choice for full-stack applications, but popular Next.js hosting options focus on serverless, CDN-heavy deployments that do not allow long-running tasks or other “heavy lifting” in the server.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), the following additional features are available:
 - Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
 - External systems integration – [Place calls to external services](../typescript/tutorials/step-tutorial) with much simpler error recovery.
 - Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
@@ -104,9 +104,35 @@ The following shows very basic scripts for `package.json`:
 These scripts can be more sophisticated, allowing for database migrations and `nodemon`.  See the [demo apps] for examples.
 
 ### DBOS Configuration
-By default, `DBOS.launch()` will read [`dbos-config.yaml`](../typescript/reference/configuration.md) to get key information, such as database settings.  To configure DBOS programatically, see [`DBOS.setConfig`](../typescript/reference/transactapi/dbos-class#setting-the-application-configuration).
+By default, `DBOS.launch()` will read [`dbos-config.yaml`](../typescript/reference/configuration) to get key information, such as database settings.  To configure DBOS programatically, see [`DBOS.setConfig`](../typescript/reference/transactapi/dbos-class#setting-the-application-configuration).
 
 ## Calling DBOS Code From Next.js
+The DBOS Transact library and application workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
+
+The following example shows a  server action that starts a workflow:
+```typescript
+"use server";
+
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { MyWorkflow } from "@dbos/operations";
+
+// This action uses DBOS to idempotently launch a crashproof background task with N steps.
+export async function startBackgroundTask(taskID: string, steps: number) {
+  await DBOS.startWorkflow(MyWorkflow, { workflowID: taskID }).backgroundTask(steps);
+  return "Background task started!";
+}
+```
+
+This example executes DBOS code from within a route:
+```typescript
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  // Note: DBOSBored.getActivity() is a DBOS workflow function
+  const dbb = await globalThis.DBOSBored!.getActivity();
+  return NextResponse.json(dbb);
+}
+```
 
 ## Preventing Bundling
 As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles and be loaded at startup.  If DBOS code gets bundled, it will lead to duplicate incomplete functions, instances, and queues being loaded at runtime in response to Next.js requests.
@@ -202,3 +228,10 @@ For example, to allow server actions to work in DBOS Cloud, the following was ad
     },
   },
 ```
+
+# Next Steps
+- If your DBOS code is accessing the application database, check out the [transactions tutorial](../typescript/tutorials/transaction-tutorial) and consider database setup using [schema migration](../typescript/programming-guide#5-database-operations-and-transactions).
+- Review the [programming guide](../typescript/programming-guide) for information on job scheduling, queues, and other DBOS features.
+- Check out DBOS [programming examples](../examples)
+- Launch your Next.js app to [DBOS Cloud](../cloud-tutorials/application-management).
+
