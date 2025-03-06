@@ -12,11 +12,11 @@ description: Learn how to integrate DBOS into Next.js applications.
 - External systems integration – [Place calls to external services](../typescript/tutorials/step-tutorial) with much simpler error recovery.
 - Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
-- Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client.
+- Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client in real time.
 - Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/timetravel-debugging).
 
 ## Architectural Overview
-Next.js is a framework that optimizes where and when React UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
+Next.js is a framework that optimizes where and when [React](https://react.dev/) UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
 ![Serverless Next.js architecture](./assets/serverlessnext.png)
 
 However, Next.js also supports “custom server” deployments, which do not have limitations on long-running tasks and long-lived state.  The custom server loads code when launched, and the optimized request handler bundles can then interact with this server-side code:
@@ -25,17 +25,18 @@ However, Next.js also supports “custom server” deployments, which do not hav
 The latter architecture is a requirement for using Next.js with DBOS.  This guide covers switching to a deployment with a custom `server.ts` file, and creating, calling, building, and deploying the logic within it.
 
 ## Integration Overview
-The high-level steps for adding DBOS to a Next.JS application are:
-- Using your package manager to install `@dbos-inc/dbos-sdk` into your project.
-- Placing DBOS startup code in the custom server file, often named ‘server.ts’ or similar.  If a custom server is not in use, it will be necessary to add one.  This may also affect how Next.js is launched, and additional build steps may be required.
-- Adding files containing workflow logic implemented with DBOS. Ensure that the files are being compiled, and load the code from ‘server.ts’ at startup.
-- Adding calls to the DBOS code from Next.js code.  This can include server-side render code, server actions, and route handlers.
-- Ensuring that your workflow functions and the DBOS library code do not get bundled into the bundles used by Next.js to handle the requests.  (Failure to do this will lead to a wide variety of error messages.)  This guide covers two techniques: configuring `webpack` to treat the files and modules as external, or using `globalThis` to get a reference to shared objects and code set up in `server.ts`.
-- Running and troubleshooting the development environment and production build.
+To add DBOS to a Next.JS application:
+- Use your package manager to install `@dbos-inc/dbos-sdk` into your project.
+- Add DBOS startup code to the custom server file, often named `server.ts` or similar.  (If a custom server is not in use in your project, it will be necessary to add one.  This may also affect how Next.js is launched, and additional build steps may be required.)
+- Add files containing workflow logic implemented with DBOS. Ensure that the files are being compiled, and load the code from `server.ts` at startup.
+- Add calls to the DBOS code from Next.js code.  This can include server-side page renders, server actions, and route handlers.
+- Ensure that your workflow functions and the DBOS library code do not get bundled into the bundles used by Next.js to handle the requests.  (Failure to do this will lead to a wide variety of error messages.)  This guide covers two techniques: configuring `webpack` to treat the files and modules as external, or using `globalThis` to get a reference to the shared objects and code set up in `server.ts`.
+- Run and troubleshoot the development environment and production build.
 
 # Adding DBOS To Next.JS Applications
+
 ## Coding `server.ts`
-The `server.ts` file (note that, while any file name can be used, `server.ts` is the common convention that is used in this guide) is responsible for initializing DBOS, and launching Next.js.
+`server.ts` (note that, while any file name can be used, `server.ts` is the common convention that is used in this guide) is responsible for initializing DBOS, and launching Next.js.
 
 ### Adding DBOS Code To An Existing `server.ts`
 If you already have a `server.ts` or similar file, add the following code to it:
@@ -53,16 +54,16 @@ async function main() { // Adjust if your entrypoint is not named 'main'
   // Launch DBOS after initializing DBOS logic, and before starting 'next'
   await DBOS.launch();
 
-  // ... Then proceed to start the next.js server ...
+  // ... Then proceed to start the Next.js server ...
 }
 ```
 
 ### Adding `server.ts` To A Project
 If your project does not currently have a `server.ts` file or similar, or if you are using the default `server.js` provided by Next.js, the first step is to create one.   This file can be created in the top level of your project, inside `src/`, or in any sensible place within your app structure.
 
-The DBOS demo apps contain example `server.ts` files to draw from:
--[DBOS Next.js Template](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/dbos-nextjs-starter/src/server.ts): This project uses a basic `server.ts` file
--[DBOS Task Scheduler](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/nextjs-calendar/src/server.ts): This project uses a more sophisticated `server.ts` file with WebSocket support, etc.
+The DBOS demo apps contain example `server.ts` files to copy:
+- [DBOS Next.js Template](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/dbos-nextjs-starter/src/server.ts): This project uses a basic `server.ts` file.
+- [DBOS Task Scheduler](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/nextjs-calendar/src/server.ts): This project uses a more sophisticated `server.ts` file with WebSocket support, etc.
 
 ### Compilation Settings For DBOS Code
 Using DBOS with Next.js requires some TypeScript compiler settings that do not match Next.js defaults.  These can either be added to your existing `tsconfig.json`, or if they are incompatible with the existing `tsconfig.json` settings, a separate `tsconfig.server.json` file can be created for use with the server builds.
@@ -86,8 +87,7 @@ While `tsconfig.json` is described in detail elsewhere, please note that the fol
 Noteworthy settings:
 - `experimentalDecorators`: Used by the DBOS decorator framework
 - `emitDecoratorMetadata`: Used by the DBOS decorator framework
-- `noEmit`, `outDir`, and `exclude`: Many Next.js projects do not emit the `.js` files corresponding to the `.ts` files as the bundles hold all the code.  With a custom `server.ts`, `.js` files are needed for server code for execution by the `node` runtime.
-- `paths`: These are set to allow `@` and `@dbos` as module aliases within the code.  `@dbos` is handy for identifying imports that should not be subject to bundling.
+- `noEmit`, `outDir`, and `exclude`: Many Next.js projects do not emit the `.js` files corresponding to the `.ts` files; the bundles hold all the code.  With a custom `server.ts`, `.js` files are needed for server code for execution by the `node` runtime.
 
 ### `package.json` Scripts
 Scripts such as `build`, `dev`, and `start` may require modification to work with `server.ts`.  Commands such as `next dev` and `next start` will not load `server.ts`; Next.js should be started via the `server.js` file produced by compiling your `server.ts` file.
@@ -101,13 +101,13 @@ The following shows very basic scripts for `package.json`:
   },
 ```
 
-These scripts can be more sophisticated, allowing for database migrations and `nodemon`.  See the [demo apps] for examples.
+These scripts can be more sophisticated, allowing for database migrations and `nodemon`.  See the [demo apps](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript) for examples.
 
 ### DBOS Configuration
 By default, `DBOS.launch()` will read [`dbos-config.yaml`](../typescript/reference/configuration) to get key information, such as database settings.  To configure DBOS programatically, see [`DBOS.setConfig`](../typescript/reference/transactapi/dbos-class#setting-the-application-configuration).
 
 ## Calling DBOS Code From Next.js
-The DBOS Transact library and application workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
+The DBOS Transact library and application your workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
 
 The following example shows a  server action that starts a workflow:
 ```typescript
@@ -135,7 +135,7 @@ export async function GET() {
 ```
 
 ## Preventing Bundling
-As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles and be loaded at startup.  If DBOS code gets bundled, it will lead to duplicate incomplete functions, instances, and queues being loaded at runtime in response to Next.js requests.
+As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles and be loaded at startup.  If DBOS code gets bundled, the bundles will contain incomplete functions, object instances, queue definitions, etc., many of which will be duplicated across bundles.  These bundles will be loaded at runtime in response to Next.js requests, leading to a confusing mess of DBOS registration errors.
 
 Bundlers determine which code to include by tracing `import` dependencies from pages, actions, or routes and minimizing them into bundles. To prevent this, two approaches are outlined below:
 - Marking Modules as External – Configuring webpack to treat DBOS modules and files as external, ensuring they are not bundled.
@@ -143,7 +143,7 @@ Bundlers determine which code to include by tracing `import` dependencies from p
 
 ### webpack Configuration in `next.config.ts`
 
-The `webpack` section of `next.config.ts` can accept lists, regular expressions, and callback functions that determine whether an `import` request is to be treated as an external.  For example, if we `import` all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), a regular expression can be used to treat such files as external:
+The `webpack` `config.externals` section of `next.config.ts` can accept lists, regular expressions, and callback functions that determine whether an `import` request is to be treated as an external; otherwise it may be bundled.  For example, if we `import` all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), a regular expression can be used to treat such files as external:
 
 ```typescript
   webpack: (config, { isServer, dev: _dev }) => {
@@ -162,7 +162,7 @@ The `webpack` section of `next.config.ts` can accept lists, regular expressions,
   },
 ```
 
-Note that for aliases such as `@dbos/` to work, two additional components are required.  Paths must be set up in `tsconfig.json` so that `tsc` resolves the imports at compile time, and [`module-alias`](https://www.npmjs.com/package/module-alias) or similar should be used so that the alias is resolved by the `node` runtime.
+Note that for aliases such as `@dbos/` to work, two additional components are required.  Paths must be set up in `tsconfig.json` so that `tsc` resolves the imports at compile time, and [`module-alias`](https://www.npmjs.com/package/module-alias) or similar should be used so that the alias is resolved by `node` at runtime.
 
 ### Using `globalThis`
 Code and data can also be shared between `server.ts` and the Next.js bundles by way of global variables.  Note that plain global variables do not work, as each bundle can have its own set of "global" variables.  Instead, use [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis).
@@ -183,7 +183,7 @@ globalThis.DBOSBored = DBOSBored;
 ```
 
 #### Retrieving Items From `globalThis`
-Items may be read from `globalThis` from within DBOS code and Next.js server-side renders, server actions, and route handlers.  (Obviously they are not available in client code.)
+Items may be read from `globalThis` from within DBOS code and Next.js server-side renders, server actions, and route handlers.  Items stored in the server's `globalThis` are not available on the client.
 
 ```typescript
 const gss = globalThis.webSocketClients;
@@ -191,8 +191,8 @@ await globalThis.reportSes.sendEmail({/*...*/});
 await globalThis.DBOSBored!.getActivity();
 ```
 
-#### Applying TypeScript Typing To `globalThis`
-By default, `globalThis` has the `any` type, which is not ideal for type safety.  While `globalThis` can be cast to an interface at each place it is used, another solution is to place a `global.d.ts` in your project, and list any globals.
+#### Applying TypeScript Types To `globalThis`
+By default, `globalThis` has the `any` type, which is not ideal for type safety.  While `globalThis` can be cast to an interface at each place it is used, another solution is to place a `global.d.ts` in your project, and list any globals there.
 
 ```typescript
 /* eslint-disable no-var */
@@ -211,16 +211,14 @@ export declare global {
 In case of any issues, the following troubleshooting steps are suggested.  Start by diagnosing `dev`, and then proceed to production.
 - Check and see if compilation is succeeding.  Check `tsc`, `next build`, and any other steps individually.
 - Ensure that the `server.js` file and others are is available for execution by `node`.  If not, check `tsconfig.json` settings, and look for any compiler errors from `tsc`.
-- Check for errors in the startup of `node` via the `dev` target in `package.json`.  Ensure that database credentials are available, that migrations have been run, and that the `.js` files are where they should be.
+- Check for errors in the startup of `node` via the `dev` or `start` target in `package.json`.  Ensure that database credentials are available, that migrations have been run, and that the `.js` files are where they should be.
 - If server startup is not working, look for any signs that module resolution or other settings are not correct in `tsconfig.json`.
-- If server startup is hitting an error, ensure that there are adequate logging statements in `main` or other server startup function.  This will narrow down whether any problems are with DBOS, Next.js, or something else.
-- If DBOS is reporting errors prior to launch, the issue is likely with incomplete code in `server.ts`, or a registration error in the decorators of the DBOS functions.
-- If DBOS errors indicating duplicate or missing registrations are occurring during request processing, the cause is almost always with DBOS code getting bundled.  Use `next build` with `analyze` Mode, or another approach, to ensure that this is not happening.  Also ensure that all code is available and loaded (directly or indirectly) from `server.ts` prior to `DBOS.launch()`, which in turn should precede Next.js startup.
+- If the server is starting but is hitting an error during initialization, ensure that there are adequate logging statements in the `main` (or similar) function.  This will narrow down whether any problems are with DBOS, Next.js, or something else.
+- If DBOS is reporting errors prior to `launch()`, the issue is likely with incomplete code in `server.ts`, or a registration error in the decorators of the DBOS functions.
+- If DBOS errors indicating duplicate or missing registrations are occurring during request processing, the cause is almost always with DBOS code getting bundled.  Use `next build` with `analyze` mode, or another approach, to ensure that this is not happening.  Also ensure that all code is available and loaded (directly or indirectly) from `server.ts` prior to `DBOS.launch()`, which in turn should precede Next.js startup.
 
 ### Other `next.config.ts` Options
-For Next.js server actions to work, it may be necessary to configure allowed origins in `next.config.ts`.
-
-For example, to allow server actions to work in DBOS Cloud, the following was added:
+For Next.js server actions to work, it may be necessary to configure allowed origins in `next.config.ts`.  For example, to allow server actions to work in DBOS Cloud, the following was added:
 ```typescript
   experimental: {
     serverActions: {
