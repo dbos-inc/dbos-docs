@@ -1,16 +1,16 @@
 ---
 sidebar_position: 2
-title: Make your Nest.js backend reliable
+title: Reliable Nest.js backends
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 
-This guide demonstrates how to make your existing [Nest.js](https://nestjs.com/) application reliable and crash-proof with [DBOS Transact](https://github.com/dbos-inc/dbos-transact).
+This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
 
 ## DBOS-ify your Nest.js application
 
 ### 1. Installation and requirements
 
-Install the DBOS typecript SDK with `npm install @dbos-inc/dbos-sdk`. DBOS requires a [Postgres](https://www.postgresql.org/) database. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
+Install DBOS typecript with `npm install @dbos-inc/dbos-sdk`. DBOS requires a [Postgres](https://www.postgresql.org/) database. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
 ```yaml
 database:
   hostname: localhost
@@ -20,13 +20,13 @@ database:
   app_db_client: knex
 ```
 
-### 2. Bootstraping DBOS
+### 2. Bootstrapping DBOS
 
 :::info
 This example is based of a new Nest.js application initialized with `nest new nest-starter` and configured to use [NPM](https://www.npmjs.com/).
 :::
 
-Modify your bootstrap function to import the DBOS SDK and launch DBOS Transact:
+Modify your bootstrap function to import and launch DBOS:
 
 ```typescript
 // main.ts
@@ -38,23 +38,17 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // highlight-next-line
-  await DBOS.launch();
+  await DBOS.launch({ nestApp: app });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
 ```
 
-Optionally, you can pass a `nestApp` to `DBOS.launch()` to install an [OpenTelemetry](https://opentelemetry.io/) tracing middleware to your app:
-```typescript
-await DBOS.launch({ nestApp: app });
-```
-DBOS natively generates OTel traces for your workflows. This middleware wires them with the traces context of external requests.
-
 ### 3. DBOS-ify your services
 
-To integrate a Nest.js service with DBOS, your service class must extend the DBOS [ConfiguredInstance](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods) class. This extension is required to register your class instance methods with DBOS Transact's internal registry. During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registration enables DBOS to locate and recover pending workflows.
+To integrate a Nest.js service with DBOS, your service class must extend the DBOS [ConfiguredInstance](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods) class. By extending `ConfiguredInstance`, you add your class instance methods to DBOS Transact's internal registry. During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registry enables DBOS to recover workflows using the right class instance.
 
-Here is an example with a Nest.js service implementing a simple two-steps workflow:
+Here is an example with a Nest.js service implementing a simple two-step workflow:
 
 ```typescript
 // app.service.ts
@@ -67,7 +61,7 @@ import { ConfiguredInstance, DBOS, InitContext } from '@dbos-inc/dbos-sdk';
 // highlight-next-line
 export class AppService extends ConfiguredInstance {
   constructor(
-    name: string, // A name used by DBOS internal registry
+    name: string, // You must provide a name for this class instance to uniquely identify it in DBOS's internal registry.
     private readonly prisma: PrismaService, // An example service dependency
   ) {
     super(name);
@@ -126,9 +120,9 @@ export const dbosProvider: Provider = {
 export class AppModule {}
 ```
 
-You can configure the `dbosService` name if you need multiple instances of this provider, for example by injecting a name provider - as you'd do in any other Nest.js Factory Provider.
+If you need multiple instances of your DBOS-ified provider, you must give each a distinct name (here, the name is `dbosService`).
 
-You can test the application by running `npm run build` and starting it with `nest start`. Your business logic is now reliable!
+Your reliable business logic is now reliable!
 
 ## Running in DBOS Cloud
 Applications importing DBOS Transact can be serverlessly deployed to DBOS Cloud.
