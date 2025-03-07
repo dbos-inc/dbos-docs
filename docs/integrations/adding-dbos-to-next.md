@@ -155,7 +155,7 @@ These scripts can be more sophisticated, allowing for database migrations and `n
 By default, `DBOS.launch()` will read [`dbos-config.yaml`](../typescript/reference/configuration) to get key information, such as database settings.  To configure DBOS programatically, see [`DBOS.setConfig`](../typescript/reference/transactapi/dbos-class#setting-the-application-configuration).
 
 ## Calling DBOS Code From Next.js
-The DBOS Transact library and application your workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
+The DBOS Transact library and your workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
 
 The following example shows a  server action that starts a workflow:
 ```typescript
