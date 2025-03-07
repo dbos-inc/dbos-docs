@@ -30,7 +30,7 @@ information in a tooltip.
 These commands can be invoked via the [VS Code Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette)
 or from menu items in the DBOS Cloud Resources view. 
 
-### Login to DBOS Cloud
+### Log Into to DBOS Cloud
 
 You must log into DBOS Cloud from VS Code to populate the DBOS Cloud resources view and to use the [Cloud Replay Debugger](../tutorials/debugging.md#cloud-replay-debugging). 
 

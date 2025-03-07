@@ -57,13 +57,13 @@ When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database
 and passes it to the `dbos debug` command via environment variables, 
 overriding the database connection information in the `dbos-config.yaml` file.
 
-## Login to DBOS Cloud
+## Log Into to DBOS Cloud
 
-To login to DBOS Cloud in the DBOS Debugger, navigate to the DBOS Cloud view and select the `Login to DBOS Cloud` menu item.
+To login to DBOS Cloud in the DBOS Debugger, navigate to the DBOS Cloud view and select the `Log Into DBOS Cloud` menu item.
 
-![Login to DBOS Cloud](../../assets/ttdbg-login-cloud.png)
+![Log Into DBOS Cloud](../../assets/ttdbg-login-cloud.png)
 
 Alternatively, you can open the VS Code [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) 
-and run the `DBOS: Login to DBOS Cloud` command directly.
+and run the `DBOS: Log Into DBOS Cloud` command directly.
 
-![Login to DBOS Cloud Command Palette](../../assets/ttdbg-login-cmd-palette.png)
+![Log Into DBOS Cloud Command Palette](../../assets/ttdbg-login-cmd-palette.png)
