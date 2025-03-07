@@ -101,7 +101,7 @@ DBOS.scheduled(
 
 Run a function on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax. See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
 
-The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).
+The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).  Functions within classes may be marked as `@staticmethod` to meet this requirement.
 
 **Example:**
 ```python
