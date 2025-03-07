@@ -1,7 +1,7 @@
 ---
-sidebar_position: 18
+sidebar_position: 105
 title: Debugging
-description: Learn how to debug your DBOS Python workflows.
+description: Learn how to debug your DBOS TypeScript workflows.
 ---
 
 DBOS applications automatically save their state to Postgres every time a workflow step is executed.
@@ -18,13 +18,10 @@ or or by searching the [Extension Marketplace](https://code.visualstudio.com/doc
 
 ![Installing the DBOS Time Travel Extension Screenshot](../../assets/ttdbg-ext-install.png)
 
-Additionally, the official [VS Code Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) is needed to debug DBOS Python applications. 
-For more information about this extension, please see the [official VS Code documentation](https://code.visualstudio.com/docs/python/python-quick-start).
-
 ## Local Replay Debugging
 
 Once the DBOS Debugger extension is installed, VS Code will display a [CodeLens](https://code.visualstudio.com/blogs/2017/02/12/code-lens-roundup)
-labeled `🔁 Replay Debug` on every [workflow function](./workflow-tutorial.md) in your application.
+labeled `🔁 Replay Debug` on every [workflow method](./workflow-tutorial.md) in your application.
 
 ![Local Replay Debugging Code Lens](./assets/ttdbg-local-replay.png)
 
@@ -34,23 +31,23 @@ If the workflow you wish to debug does not appear in the list, select the pencil
 
 ![Workflow ID picker](./assets/ttdb-wfid-picker.png)
 
-After selecting a workflow ID, the DBOS debugger will automatically launch your application with the [`dbos debug`](../reference/cli#dbos-debug) 
-command with the VS Code Python debugger attached. 
-From here, you can step through your DBOS workflow and inspect variables as you would when debugging any other Python application.
+After selecting a workflow ID, the DBOS debugger will automatically launch your application with the [`npx dbos debug`](../reference/cli#dbos-debug) 
+command with the VS Code TypeScript debugger attached. 
+From here, you can step through your DBOS workflow and inspect variables as you would when debugging any other TypeScript application.
 
 :::info Note
 You can only step through workflow code when using the Replay Debugger.
-[Step](./step-tutorial.md) and [transaction](./transaction-tutorial.md) functions are skipped when Replay Debugging.
-The results returned from step and transaction functions when the workflow originally ran are retrieved and returned automatically without excecuting the function body.
+[Step](./step-tutorial.md) and [transaction](./transaction-tutorial.md) methods are skipped when Replay Debugging.
+The results returned from step and transaction methods when the workflow originally ran are retrieved and returned automatically without excecuting the function body.
 :::
 
-![Python debugger at breakpoint](./assets/ttdb-debug-breakpoint.png)
+![TypeScript debugger at breakpoint](./assets/ttdb-debug-breakpoint.png)
 
 ## Cloud Replay Debugging
 
 You can also replay debug DBOS applications deployed to [DBOS Cloud](../../cloud-tutorials/application-management.md).
 If your application is deployed to DBOS Cloud and you are logged into DBOS Cloud in the DBOS Debugger, you will see an additional 
-`☁️ Cloud Replay Debug` CodeLens attached to your DBOS workflow functions.
+`☁️ Cloud Replay Debug` CodeLens attached to your DBOS workflow methods.
 
 ![Cloud Replay Debugging Code Lens](./assets/ttdbg-cloud-replay.png)
 

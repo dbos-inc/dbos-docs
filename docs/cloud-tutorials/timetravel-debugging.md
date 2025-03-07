@@ -31,7 +31,7 @@ The extension can be installed from the link above or by searching the
 [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
 inside VS Code for "DBOS"
 
-![Installing the DBOS Time Travel Extension Screenshot](./assets/ttdbg-ext-install.png)
+![Installing the DBOS Time Travel Extension Screenshot](../assets/ttdbg-ext-install.png)
 
 Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
 
