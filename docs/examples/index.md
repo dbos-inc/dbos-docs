@@ -27,6 +27,14 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
+    label="DBOS Task Scheduler"
+    href="typescript/examples/task-scheduler"
+    description="Use DBOS + Next.js to reliably schedule tasks in the cloud."
+    index="1"
+    icon={<RiCalendarScheduleLine color="white" size={50}/>}
+    language="typescript"
+  />
+  <CardLink
     label="Document Ingestion Pipeline"
     href="python/examples/document-detective"
     description="Use DBOS to build a reliable and scalable document ingestion pipeline."
@@ -105,5 +113,13 @@ import { VscGraphLine } from "react-icons/vsc";
     index="11"
     icon={<TbClock2 color="white" size={50}/>}
     language="python"
+  />
+  <CardLink
+    label="Fault-Tolerant Checkout"
+    href="typescript/examples/checkout-tutorial"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    index="1"
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+    language="typescript"
   />
   </section>

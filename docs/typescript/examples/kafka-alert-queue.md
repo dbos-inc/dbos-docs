@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 20
+sidebar_position: 10
 title: Kafka Alert Queue
 ---
 
