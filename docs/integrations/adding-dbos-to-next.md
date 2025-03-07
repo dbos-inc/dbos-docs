@@ -115,9 +115,8 @@ The DBOS demo apps contain example `server.ts` files to copy:
 - [DBOS Task Scheduler](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/nextjs-calendar/src/server.ts): This project uses a more sophisticated `server.ts` file with WebSocket support, etc.
 
 ### Compilation Settings For DBOS Code
-Using DBOS with Next.js requires some TypeScript compiler settings that do not match Next.js defaults.  These can either be added to your existing `tsconfig.json`, or if they are incompatible with the existing `tsconfig.json` settings, a separate `tsconfig.server.json` file can be created for use with the server builds.
+DBOS and `server.ts` require some TypeScript compiler settings.  These can either be added to your existing `tsconfig.json`, or if they are incompatible with the existing `tsconfig.json` settings, a separate `tsconfig.server.json` file can be created for use with the server builds.
 
-While `tsconfig.json` is described in detail elsewhere, please note that the following uncommon settings are needed by this project:
 ```json
 {
   "compilerOptions": {
