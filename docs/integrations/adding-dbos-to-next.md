@@ -184,21 +184,28 @@ export async function GET() {
 As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles.  If DBOS code gets bundled, the bundles will contain incomplete functions, object instances, queue definitions, etc., many of which will be duplicated across bundles.  These bundles will be loaded at runtime in response to Next.js requests, leading to a confusing mess of DBOS registration errors.
 
 The Next.js bundling process traces `import`ed dependencies from pages, actions, and API routes and then minimizes them.  To prevent DBOS code from being bundled, applications can take either or both of the following approaches, as desired:
-- Mark Modules as External – Configure webpack to treat DBOS modules and files as external, ensuring they are not pulled into the bundles.
+- Mark Modules as External – Configure `webpack` to treat DBOS modules and files as external, ensuring they are not pulled into the bundles.
 - Use `globalThis` – Accessing code and data through [`globalThis`](https://ja-visser.medium.com/globalreferences-in-nodejs-75f095962596) instead of `import` effectively bypasses the bundler.
 
-### webpack Configuration in `next.config.ts`
-The `webpack` `config.externals` section of `next.config.ts` can accept lists, regular expressions, and callback functions that determine whether an `import` request is to be treated as an external; otherwise it may be bundled.  For example, if we `import` all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), a regular expression can be used to treat such files as external:
+### Configuring `webpack` to Treat `import`s as External
+`webpack` should be configured to treat the following as external dependencies:
+- The DBOS Transact library: `@dbos-inc/dbos-sdk`
+- Any DBOS [package libraries](../typescript/reference/libraries.md), such as `@dbos-inc/dbos-ses`
+- Any application source files implementing steps, transactions, or workflows
+- Any application source files that create or accesses DBOS [queues](../typescript/reference/transactapi/workflow-queues.md), [object instances](../typescript/tutorials/instantiated-objects), or other DBOS objects
+
+Ensure that each such module or file is covered in `next.config.ts`, within `webpack`'s `config.externals` array.  Entries in `config.extenals` must match the names used in `import` statements for recognition to work correctly.  It is not necessary to list each external file individually, as the `config.externals` array can also accept regular expressions and callback functions.  For example, if an application `import`s all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), only a single regular expression of `/^@dbos\/.+$/` is needed to treat all files as external:
 
 ```typescript
   webpack: (config, { isServer, dev: _dev }) => {
-    // Treat @dbos-inc/dbos-sdk and code using it as an external package for builds
     if (isServer) {
       config.externals = [
         ...config.externals,
         {
-          "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk",
+          // highlight-next-line
+          "@dbos-inc/dbos-sdk": "commonjs @dbos-inc/dbos-sdk", // Treat the @dbos-inc/dbos-sdk module as an external
         },
+        // highlight-next-line
         /^@dbos\/.+$/, // Treat ALL `@dbos/*` imports (from src/dbos) as external
       ];
     }
@@ -210,7 +217,7 @@ The `webpack` `config.externals` section of `next.config.ts` can accept lists, r
 Note that for aliases such as `@dbos/` to work, two additional components are required.  Paths must be set up in `tsconfig.json` so that `tsc` resolves the imports at compile time, and [`module-alias`](https://www.npmjs.com/package/module-alias) or similar should be used so that the alias is resolved by `node` at runtime.
 
 ### Using `globalThis`
-Code and data can also be shared between `server.ts` and the Next.js bundles by way of global variables.  Note that plain global variables do not work, as each bundle can have its own set of "global" variables.  Instead, use [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis).
+Instead of using `import` statements, code for Next.js actions and routes can use `globalThis` to access data and code that has been set up by `server.ts`.  (Unscoped variables will not work, as each bundle will have its own set of such "global" variables; [`globalThis`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis) should be used.)
 
 #### Placing Items In `globalThis`
 Items may be placed in `globalThis` directly.  This should generally be done before DBOS and Next.js are started.
