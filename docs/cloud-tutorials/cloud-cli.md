@@ -21,7 +21,7 @@ npm install -g @dbos-inc/dbos-cloud@latest
 This command creates and registers a new DBOS Cloud account.
 It provides a URL to a secure login portal you can use to create an account from your browser.
 
-**Parameters:**
+**Arguments:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
 - `-s, --secret [string]`: (Optional) An [organization secret](../cloud-tutorials/account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
 
@@ -58,7 +58,7 @@ This command logs you out of your DBOS Cloud account.
 **Description:**
 This command provisions a Postgres database instance to which your applications can connect.
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance to provision. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
 - `-U, --username <string>`: Your username for this database instance.  Must be between 3 and 16 characters and contain only lowercase letters, numbers, and underscores.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
@@ -70,7 +70,7 @@ This command provisions a Postgres database instance to which your applications 
 **Description:**
 This command lists all Postgres database instances provisioned by your account.
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -88,7 +88,7 @@ For each provisioned Postgres database instance, emit:
 **Description:**
 This command retrieves the status of a Postgres database instance
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance whose status to retrieve.
 - `--json`: Emit JSON output
 
@@ -106,7 +106,7 @@ This command retrieves the status of a Postgres database instance
 **Description:**
 This command resets your password for a Postgres database instance.
 
-**Parameters:**
+**Arguments:**
 - `[database-instance-name]`: The name of the database instance to provision.
 - `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
@@ -117,7 +117,7 @@ This command resets your password for a Postgres database instance.
 **Description:**
 This command destroys a previously-provisioned Postgres database instance.
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance to destroy.
 
 ---
@@ -130,7 +130,7 @@ This command also sets the `local_suffix` field in `dbos-config.yaml`, so your a
 This isolates the database you use for local development from the database used by your app deployed to DBOS Cloud even though both use the same Postgres server.
 
 
-**Parameters:**
+**Arguments:**
 - `[database-instance-name]`: The name of the database instance to which to connect.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
@@ -141,7 +141,7 @@ This isolates the database you use for local development from the database used 
 **Description:**
 This command loads your cloud database's connection parameters into your local `dbos-config.yaml`.
 
-**Parameters:**
+**Arguments:**
 - `[database-instance-name]`: The name of the database instance to which to connect.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
@@ -153,7 +153,7 @@ This command loads your cloud database's connection parameters into your local `
 This command performs [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to create a new database instance containing the state of your database instance at a previous point in time.
 After restoration is complete, we recommend using [`change-database-instance`](#dbos-cloud-app-change-database-instance) to redeploy your applications to the new database instance, then [destroying](#dbos-cloud-db-destroy) the original.
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance to restore from.
 - `-t, --restore-time <string>`: The timestamp to restore from, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339). Must be within the backup retention period of your database (24 hours for free-tier users).
 - `-n, --target-name <string>`: The name of the new database instance to create.
@@ -169,7 +169,7 @@ Before running this command, please first follow our [tutorial](../cloud-tutoria
 This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.
 :::
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance to link. Must be between 3 and 30 characters and contain only lowercase letters, numbers, underscores, and dashes.
 - `-H, --hostname <string>`: The hostname for your Postgres database instance (required).
 - `-p, --port [number]`: The connection port for your Postgres database instance (default: `5432`).
@@ -183,7 +183,7 @@ This feature is currently only available to [DBOS Pro or Enterprise](https://www
 **Description:**
 This command unlinks a previously linked Postgres database instance.
 
-**Parameters:**
+**Arguments:**
 - `<database-instance-name>`: The name of the database instance to unlink.
 
 ---
@@ -196,7 +196,7 @@ This command unlinks a previously linked Postgres database instance.
 This command must be run from an application root directory.
 It executes the migration commands declared in `dbos-config.yaml`, deploys the application to DBOS Cloud (or updates its code if already deployed), and emits the URL at which the application is hosted, which is `https://<username>-<app-name>.cloud.dbos.dev/`.
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application to deploy. By default we obtain the application name from `dbos-config.yaml`. This argument overrides the package name.
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--enable-timetravel`: Enable experimental time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
@@ -210,7 +210,7 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 **Description:**
 Update an application metadata in DBOS Cloud.
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application to update.
 - `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription.
 
@@ -222,7 +222,7 @@ This command does not trigger a redeployment of the application. To apply change
 
 ### `dbos-cloud app delete`
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application to delete.
 - `--dropdb`: Drop the application's database during deletion.
 
@@ -240,7 +240,7 @@ To destroy the previously-provisioned Postgres instance, please use [`dbos-cloud
 **Description:**
 List all applications you have registered with DBOS Cloud.
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -256,7 +256,7 @@ For each registered application, emit:
 
 ### `dbos-cloud app status`
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application to retrieve.
 
 **Description:**
@@ -264,7 +264,7 @@ Retrieve an application's status.
 If run in an application root directory with no application name provided, retrieve the local application's status.
 
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -279,7 +279,7 @@ If run in an application root directory with no application name provided, retri
 
 ### `dbos-cloud app versions`
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application to retrieve.
 
 **Description:**
@@ -287,7 +287,7 @@ Retrieve a list of an application's past versions.
 A new version is created each time an application is deployed.
 If run in an application root directory with no application name provided, retrieve versions of the local application.
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 **Output:**
@@ -302,7 +302,7 @@ For each previous version of this application, emit:
 **Description:**
 It retrieves an application's logs.
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
 ---
@@ -314,7 +314,7 @@ This command must be run from an application root directory.
 It redeploys the application to a new database instance.
 It is meant to be used with [`database restore`](#dbos-cloud-db-restore) during disaster recovery to transfer the application to the restored database instance.
 
-**Parameters:**
+**Arguments:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-d, --database <string>` The name of the new database instance for this application.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. During restoration, we recommend deploying to the version active at the timestamp to which you recovered. You can list previous versions and their IDs and timestamps with the [versions command](#dbos-cloud-app-versions).
@@ -328,7 +328,7 @@ Create a new secret associated with an application, or update an existing secret
 Secrets are made available to your application as environment variables.
 You must redeploy your application for a change in its secrets to take effect.
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application for which to create or update secrets.
 - `-s, --secretname <string>` The name of the secret to create or update.
 - `-v, --value`: The value of the secret.
@@ -342,7 +342,7 @@ Allowed syntax for the `.env` file is described [here](https://dotenvx.com/docs/
 Secrets are made available to your application as environment variables.
 You must redeploy your application for a change in its secrets to take effect.
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application for which to import secrets.
 - `-d, --dotenv <string>` Path to the `.env` file to import.
 
@@ -353,7 +353,7 @@ You must redeploy your application for a change in its secrets to take effect.
 **Description:**
 List all secrets associated with an application (only their names, not their values).
 
-**Parameters:**
+**Arguments:**
 - `[application-name]`: The name of the application for which to list secrets.
 
 ---
@@ -365,7 +365,7 @@ List all secrets associated with an application (only their names, not their val
 **Description:**
 List users in your organization
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 ---
@@ -375,7 +375,7 @@ List users in your organization
 **Description:**
 Generate an organization secret with which to invite another user into your organization. Organization secrets are single-use and expire after 24 hours.
 
-**Parameters:**
+**Arguments:**
 - `--json`: Emit JSON output
 
 ---
@@ -385,7 +385,7 @@ Generate an organization secret with which to invite another user into your orga
 **Description:**
 Join your account to an organization. This gives you full access to the organization's resources.
 
-**Parameters:**
+**Arguments:**
 - `<organization>`: The name of the organization you intend to join.
 - `<secret>`: An organization secret given to you by an organization admin.
 ---
@@ -395,7 +395,7 @@ Join your account to an organization. This gives you full access to the organiza
 **Description:**
 Rename your organization. Only the organization admin (the original creator of the organization) can run this command. After running this command, [log out](#dbos-cloud-logout) and [log back in](#dbos-cloud-login) to refresh your local context.
 
-**Parameters:**
+**Arguments:**
 - `<oldname>`: The current name of your organization.
 - `<newname>`: The new name for your organization.
 
@@ -410,7 +410,7 @@ Applications belonging to organizations are hosted at the URL `https://<organiza
 **Description:**
 Remove a user from an organization. Only the organization admin (the original creator of the organization) can run this command.
 
-**Parameters:**
+**Arguments:**
 - `<username>`: The user to remove from your organization.
 ---
 

@@ -41,7 +41,7 @@ You must deploy your stored procedures to the database before running your DBOS 
 - `tsconfigPath`: path to the DBOS application's [tsconfig.json file](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html).
   If this argument is not provided, `dbosc` will use the tsconfig.json file from the appDirectory (if specified) or the current directory.
 
-**Parameters:**
+**Arguments:**
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 - `--app-version <string>` / `--no-app-version`: Overrides the `DBOS__APPVERSION` environment variable.
   For more details, see [Stored Procedure Versioning](#stored-procedure-versioning) above.
@@ -55,7 +55,7 @@ This command drops the DBOS application's stored procedures from the PostgreSQL 
 - `tsconfigPath`: path to the DBOS application's [tsconfig.json file](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html).
   If this argument is not provided, `dbosc` will use the tsconfig.json file from the appDirectory (if specified) or the current directory.
 
-**Parameters:**
+**Arguments:**
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 - `--app-version <string>` / `--no-app-version`: Overrides the `DBOS__APPVERSION` environment variable.
   For more details, see [Stored Procedure Versioning](#stored-procedure-versioning) above.
@@ -74,7 +74,7 @@ This command will overwrite existing `create.sql` and `drop.sql` files in the ou
 - `tsconfigPath`: path to the DBOS application's [tsconfig.json file](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html).
   If this argument is not provided, `dbosc` will use the tsconfig.json file from the current directory.
 
-**Parameters:**
+**Arguments:**
 - `-o, --out <string>`: The path of the directory where the compiler will generate the `create.sql` and `drop.sql` files. Defaults to current directory if not specified.
 - `--app-version <string>` / `--no-app-version`: Overrides the `DBOS__APPVERSION` environment variable.
   For more details, see [Stored Procedure Versioning](#stored-procedure-versioning) above.

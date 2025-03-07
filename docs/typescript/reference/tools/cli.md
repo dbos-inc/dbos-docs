@@ -19,7 +19,7 @@ It registers all functions and serves all endpoints in classes and dependencies 
 Parameters set from the command line take precedence over parameters set in the [configuration file](../configuration).
 You must compile your code (`npm run build`) before running this command.
 
-**Parameters:**
+**Arguments:**
 - `-p, --port <port-number>`: The port on which to serve your functions.
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
@@ -31,7 +31,7 @@ You must compile your code (`npm run build`) before running this command.
 **Description:**
 This command initializes a new DBOS application from a template into a target directory.
 
-**Parameters:**
+**Arguments:**
 - `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 - `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
 
@@ -58,7 +58,7 @@ This command configures which database server your application connects to.
 It applies changes to your [configuration file](../configuration).
 If parameters are not specified, it prompts for them.
 
-**Parameters:**
+**Arguments:**
 - `-h, --host <string>`: Your Postgres server hostname (Default: `localhost`).
 - `-p, --port <number>`: Your Postgres server port (Default: `5432`).
 - `-U, --username <string>`: Your Postgres username (Default: `postgres`).
@@ -70,7 +70,7 @@ If parameters are not specified, it prompts for them.
 Reset your DBOS [system database](../../../explanations/system-tables.md), deleting metadata about past workflows and steps.
 No application data is affected by this.
 
-**Parameters:**
+**Arguments:**
 - `--yes, -y`: Skip confirmation prompt.
 
 ---
@@ -82,7 +82,7 @@ This command launches the DBOS runtime in debug mode to replay a specified workf
 It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../../../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
 You must compile your code (`npm run build`) and start the debug proxy before running this command.
 
-**Parameters:**
+**Arguments:**
 - `-u, --uuid <string>`: The workflow identity to replay.
 - `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
