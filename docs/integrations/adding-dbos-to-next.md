@@ -7,12 +7,10 @@ description: Learn how to integrate DBOS into Next.js applications.
 # Introduction
 
 ## Why Add DBOS To a Next.js Application?
-[Next.js](https://nextjs.org/) is a solid choice for full-stack applications, but popular Next.js hosting options focus on serverless, CDN-heavy deployments that do not allow long-running tasks or other “heavy lifting” in the server.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), the following additional features are available:
+[Next.js](https://nextjs.org/) is a solid choice for high-performance interactive web frontends.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), your Next.js application can implement "heavy lifting" tasks with:
 - Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
-- External systems integration – [Place calls to external services](../typescript/tutorials/step-tutorial) with much simpler error recovery.
 - Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
-- Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client in real time.
 - Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/timetravel-debugging).
 
 ## Architectural Overview
