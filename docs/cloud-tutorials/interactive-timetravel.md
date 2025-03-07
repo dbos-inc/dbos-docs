@@ -118,7 +118,7 @@ Can be shortened to `DBOS WF`
 
 Sets the time travel debugger to the specific point in time when a specified workflow started. 
 Workflows are identified by their workflow UUID, which can be found in the
-[Monitoring Dashboard](../../../cloud-tutorials/monitoring-dashboard.md).
+[Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md).
 The workflow UUID must be enclosed in quotes when using this command.
 
 Examples:
