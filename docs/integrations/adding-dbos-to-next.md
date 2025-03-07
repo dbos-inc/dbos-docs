@@ -38,10 +38,11 @@ To add DBOS to a Next.JS application:
 ## Coding `server.ts`
 `server.ts` (note that, while any file name can be used, `server.ts` is the common convention that is used in this guide) is responsible for initializing DBOS, and launching Next.js.
 
-### Adding DBOS Code To An Existing `server.ts`
+### Adding DBOS Code To an Existing `server.ts`
 If you already have a `server.ts` or similar file, add the following code to it:
 ```typescript
 // ... Other library imports ...
+// highlight-next-line
 import { DBOS } from '@dbos-inc/dbos-sdk'; // Import DBOS
 
 //
@@ -52,14 +53,62 @@ async function main() { // Adjust if your entrypoint is not named 'main'
   // ... Configure anything DBOS needs prior to launch ...
 
   // Launch DBOS after initializing DBOS logic, and before starting 'next'
+  // highlight-next-line
   await DBOS.launch();
 
   // ... Then proceed to start the Next.js server ...
 }
 ```
 
-### Adding `server.ts` To A Project
+### Adding `server.ts` To a Project
 If your project does not currently have a `server.ts` file or similar, or if you are using the default `server.js` provided by Next.js, the first step is to create one.   This file can be created in the top level of your project, inside `src/`, or in any sensible place within your app structure.
+
+```typescript
+import next from 'next';
+import http, { IncomingMessage, ServerResponse } from 'http';
+
+// highlight-next-line
+import { DBOS } from '@dbos-inc/dbos-sdk';
+// highlight-next-line
+// imports of DBOS workflows and other code will go here...
+
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
+
+async function main() {
+  DBOS.logger.info('Launching...');
+  // highlight-next-line
+  await DBOS.launch();
+  DBOS.logger.info('  ...launched.');
+
+  DBOS.logger.info(`Doing Next App Prepare...`);
+  await app.prepare();
+  DBOS.logger.info(`  ...prepared.`);
+
+  // Create HTTP server
+  const server = http.createServer((req, res) => {
+    handle(req, res as ServerResponse<IncomingMessage>);
+  });
+
+  const PORT = DBOS.runtimeConfig?.port ?? 3000;
+  const ENV = process.env.NODE_ENV || 'development';
+
+  server.listen(PORT, () => {
+    DBOS.logger.info(`🚀 Server is running on http://localhost:${PORT}`);
+    DBOS.logger.info(`🌟 Environment: ${ENV}`);
+  });
+}
+
+// Only start the server when this file is run directly from Node
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('❌ Server failed to start:', error);
+    DBOS.logger.error('❌ Server failed to start:', error);
+    process.exit(1);  // Ensure the process exits on failure
+  });
+}
+```
 
 The DBOS demo apps contain example `server.ts` files to copy:
 - [DBOS Next.js Template](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/dbos-nextjs-starter/src/server.ts): This project uses a basic `server.ts` file.
@@ -142,7 +191,6 @@ Bundlers determine which code to include by tracing `import` dependencies from p
 - Using globalThis – Accessing code and data through [`globalThis`](https://ja-visser.medium.com/globalreferences-in-nodejs-75f095962596) instead of import, effectively bypassing the bundler.
 
 ### webpack Configuration in `next.config.ts`
-
 The `webpack` `config.externals` section of `next.config.ts` can accept lists, regular expressions, and callback functions that determine whether an `import` request is to be treated as an external; otherwise it may be bundled.  For example, if we `import` all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), a regular expression can be used to treat such files as external:
 
 ```typescript
