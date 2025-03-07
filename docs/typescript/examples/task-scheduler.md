@@ -8,21 +8,20 @@ description: Learn how to combine DBOS + Next.js with this cloud scheduling tool
 # DBOS Task Scheduler
 DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/) and [DBOS](https://dbos.dev).  It serves as both a demo for learning DBOS concepts and a template for building your own DBOS-powered Next.js applications.
 
+![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
+
 If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
 
 ## Why Add DBOS To a Next.js Application?
+[Next.js](https://nextjs.org/) is a solid choice for full-stack applications, but popular Next.js hosting options focus on serverless, CDN-heavy deployments that do not allow long-running tasks or other “heavy lifting” in the server.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), the following additional features are available:
+- Lightweight durable execution – DBOS [workflows](../tutorials/workflow-tutorial) run to completion exactly once.
+- External systems integration – [Place calls to external services](../tutorials/step-tutorial) with much simpler error recovery.
+- Simple, powerful database integration – [Manage database data](../tutorials/transaction-tutorial) with DBOS.
+- Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../tutorials/scheduled-workflows).
+- Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client in real time.
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../../cloud-tutorials/timetravel-debugging).
 
-Existing Next.js hosting options focus on serverless, CDN-heavy applications.  Running Next.js with DBOS Transact in a suitable hosting environment (such as DBOS Cloud) unlocks additional benefits:
-- Lightweight durable execution – DBOS [workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial) run to completion exactly once.
-- Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client.
-- External systems integration – [Place calls to external services](https://docs.dbos.dev/typescript/tutorials/step-tutorial) with much simpler error recovery.
-- Simple, powerful database integration – [Manage database data](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial) with DBOS.
-- Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows).
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](https://docs.dbos.dev/cloud-tutorials/monitoring-dashboard) and [re-run them locally](https://docs.dbos.dev/cloud-tutorials/timetravel-debugging).
-
-
-# Running DBOS Task Scheduler
-![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
+# Using DBOS Task Scheduler
 
 ## Running DBOS Task Scheduler in DBOS Cloud
 Provisioning an instance of DBOS Task Scheduler in DBOS Cloud is easy:
@@ -61,7 +60,7 @@ npx dbos migrate
 npm run start
 ```
 
-# Using The App
+## DBOS Task Scheduler's Web UI
 Once the app is running, open it in a web browser.  In DBOS Cloud, the URL will be provided.  If running locally, the default will be at [http://localhost:3000/](http://localhost:3000/), but check your startup logs for confirmation.
 
 Upon opening the web browser (and perhaps dismissing the help popup), the main screen should open:
@@ -99,13 +98,15 @@ To view results and errors, click on the result calendar items.
 
 ![Screen shot of popup for viewing results](./assets/dbos-task-scheduler-result-box.png)
 
-## Setting Up Email Notifications
-The DBOS Task Scheduler app will send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables:
+## Setting Up Email Notifications (Optional)
+The DBOS Task Scheduler app will *optionally* send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables:
 - AWS_REGION: The AWS region for SES service
 - AWS_ACCESS_KEY_ID: The AWS access key provisioned for SES access
 - AWS_SECRET_ACCESS_KEY: The access secret corresponding to AWS_ACCESS_KEY_ID
 - REPORT_EMAIL_FROM_ADDRESS: The email address to use as the "from" address for results reports
 - REPORT_EMAIL_TO_ADDRESS: The email address to use as the "to" address for results reports
+
+If these environment variables aren't set, email will not be sent.
 
 # Code Tour
 
@@ -115,7 +116,7 @@ The DBOS Task Scheduler app is somewhat complex, showcasing many features.  For 
 ::::
 
 This app uses the following:
-- [DBOS Workflows, Transactions, and Steps](../tutorials/step-tutorial.md) – Complete actions exactly once, record the results, and send notifications, without worrying about server disruptions
+- DBOS [Workflows](../tutorials/workflow-tutorial.md), [Transactions](../tutorials/transaction-tutorial.md), and [Steps](../tutorials/step-tutorial.md) – Complete actions [exactly once](../tutorials/idempotency-tutorial.md), record the results, and send notifications, without worrying about server disruptions
 - [Knex](https://knexjs.org/) – Type-safe database access and schema management
 - [DBOS Scheduled Workflows](../tutorials/scheduled-workflows.md) – Ensure tasks are run as scheduled
 - React, with [Material](https://mui.com) and [react-big-calendar](https://github.com/jquense/react-big-calendar) – Present a calendar of tasks and results
