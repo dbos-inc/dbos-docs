@@ -181,11 +181,11 @@ export async function GET() {
 ```
 
 ## Preventing Bundling
-As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles and be loaded at startup.  If DBOS code gets bundled, the bundles will contain incomplete functions, object instances, queue definitions, etc., many of which will be duplicated across bundles.  These bundles will be loaded at runtime in response to Next.js requests, leading to a confusing mess of DBOS registration errors.
+As explained in the [Architectural Overview](#architectural-overview) above, the DBOS library, workflow functions, and related code must remain external to Next.js bundles.  If DBOS code gets bundled, the bundles will contain incomplete functions, object instances, queue definitions, etc., many of which will be duplicated across bundles.  These bundles will be loaded at runtime in response to Next.js requests, leading to a confusing mess of DBOS registration errors.
 
-Bundlers determine which code to include by tracing `import` dependencies from pages, actions, or routes and minimizing them into bundles. To prevent this, two approaches are outlined below:
-- Marking Modules as External – Configuring webpack to treat DBOS modules and files as external, ensuring they are not bundled.
-- Using globalThis – Accessing code and data through [`globalThis`](https://ja-visser.medium.com/globalreferences-in-nodejs-75f095962596) instead of import, effectively bypassing the bundler.
+The Next.js bundling process traces `import`ed dependencies from pages, actions, and API routes and then minimizes them.  To prevent DBOS code from being bundled, applications can take either or both of the following approaches, as desired:
+- Mark Modules as External – Configure webpack to treat DBOS modules and files as external, ensuring they are not pulled into the bundles.
+- Use `globalThis` – Accessing code and data through [`globalThis`](https://ja-visser.medium.com/globalreferences-in-nodejs-75f095962596) instead of `import` effectively bypasses the bundler.
 
 ### webpack Configuration in `next.config.ts`
 The `webpack` `config.externals` section of `next.config.ts` can accept lists, regular expressions, and callback functions that determine whether an `import` request is to be treated as an external; otherwise it may be bundled.  For example, if we `import` all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), a regular expression can be used to treat such files as external:
