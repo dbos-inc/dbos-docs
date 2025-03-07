@@ -57,7 +57,6 @@ In the top-right corner of the Grafana dashboard, there are filtering selectors:
 When turning on these filters, the time window filter also still applies. You may see more data for your selection if you "zoom out" in time.
 :::
 
-Clicking on a value in the Trace ID column will sets the filter for that trace. Clicking on a value in the Workflow UUID column runs that workflow in the Time Travel Debugger. Please see the [Time Travel Debugger Tutorial](./timetravel-debugging#debugging-from-the-monitoring-dashboard) for more information
 
 When filtering the `Workflow UUID` use `_` to match any one character and `%` to match any string (SQL 'like' notation). This is useful for selecting groups of scheduled workflows. For example you can use a string like `sched%T19%` to match any scheduled workflows that ran at 7PM on any of the days in the selected time interval. 
 

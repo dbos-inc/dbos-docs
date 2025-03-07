@@ -96,7 +96,11 @@ const config = {
           },
           {
             from: '/typescript/reference/time-travel-debugger',
-            to: '/typescript/reference/tools/time-travel-debugger',
+            to: '/typescript/reference/tools/dbos-debugger',
+          },
+          {
+            from: '/typescript/reference/tools/time-travel-debugger',
+            to: '/typescript/reference/tools/dbos-debugger',
           },
           {
             from: '/typescript/reference/dbos-class',
