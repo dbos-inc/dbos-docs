@@ -5,6 +5,8 @@ title: DBOS Task Scheduler
 description: Learn how to combine DBOS + Next.js with this cloud scheduling tool
 ---
 
+import LocalPostgres from '/docs/partials/_local_postgres.mdx';
+
 # DBOS Task Scheduler
 DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/) and [DBOS](https://dbos.dev).  It serves as both a demo for learning DBOS concepts and a template for building your own DBOS-powered Next.js applications.
 
@@ -39,14 +41,17 @@ After a bit of launch activity, you will be presented with:
 ## Running DBOS Task Scheduler Locally
 If you [started out in DBOS Cloud](#running-dbos-task-scheduler-in-dbos-cloud), you can download your code to continue local development.  Or, you can [clone the code from the git repository](https://github.com/dbos-inc/dbos-demo-apps) and change to the `typescript/nextjs-calendar` directory.
 
+### Setting Up A Database
+DBOS requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  You can also start a Postgres docker image, or provision a cloud instance of Postgres.
+<LocalPostgres/>
+
+### Running In Development
 Once you have a local copy of the DBOS Task Scheduler, run the following:
 
 ```
 npm install
 npm run dev
 ```
-
-Note that this requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  Otherwise, the database wizard will try to start a Postgres docker image, or provision a cloud instance of Postgres for you.
 
 When running under `npm run dev`, any changes to source files will cause the application to reload (if UI components were changed) or restart (if DBOS server components were changed).
 
