@@ -175,7 +175,7 @@ npm install @nestjs/cli
 </article>
 
 <article className="col col--6">
-Then, set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../reference/configuration.md) to `npx nest start`
+Then, set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../typescript/reference/configuration.md) to `npx nest start`
 
 To test that it works, try launching your application locally with `npx dbos start`.
 </article>
