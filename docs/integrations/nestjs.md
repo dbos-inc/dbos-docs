@@ -91,7 +91,7 @@ export class AppService extends ConfiguredInstance {
 ```
 
 ### Add Nest.js Providers
-Finally, we need to write the code that Nest will use to instantiate this service during dependency injection. We'll do this with a [custom _Factory Provider_](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory). Here is an example:
+We also need to write the code that Nest will use to instantiate this service during dependency injection. We'll do this with a [custom Factory Provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory). Here is an example:
 
 ```typescript
 // app.modules.ts
