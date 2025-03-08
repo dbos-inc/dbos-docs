@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Reliable Nest.js backends
+title: Nest.js
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 
