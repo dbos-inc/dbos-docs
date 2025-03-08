@@ -10,7 +10,7 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 
 ### Installation and requirements
 
-Install DBOS typecript with `npm install @dbos-inc/dbos-sdk`. DBOS requires a [Postgres](https://www.postgresql.org/) database. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
+Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk`. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
 ```yaml
 database:
   hostname: localhost
