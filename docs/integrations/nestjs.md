@@ -6,9 +6,7 @@ description: Learn how to integrate DBOS into Nest.js applications.
 
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
 
-# DBOS-ify your Nest.js application
-
-## Installation and requirements
+## Installation and Requirements
 
 Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk` and add a `dbos-config.yaml` file to the root of your project:
 ```yaml
