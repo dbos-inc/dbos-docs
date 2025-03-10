@@ -6,9 +6,9 @@ description: Learn how to integrate DBOS into Nest.js applications.
 
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
 
-## DBOS-ify your Nest.js application
+# DBOS-ify your Nest.js application
 
-### Installation and requirements
+## Installation and requirements
 
 Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk` and add a `dbos-config.yaml` file to the root of your project:
 ```yaml
@@ -18,7 +18,7 @@ telemetry:
     logLevel: 'info'
 ```
 
-### Bootstrapping DBOS
+## Bootstrapping DBOS
 
 :::info
 This example was bootstrapped with `nest new nest-starter` and configured to use [NPM](https://www.npmjs.com/).
@@ -42,7 +42,7 @@ async function bootstrap() {
 bootstrap();
 ```
 
-### Register Services With DBOS
+## Register Services With DBOS
 To integrate a Nest.js service with DBOS, your service class must extend the DBOS [ConfiguredInstance](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods) class. By extending `ConfiguredInstance`, you add your class instance methods to DBOS Transact's internal registry. During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registry enables DBOS to recover workflows using the right class instance.
 
 Here is an example of a Nest.js service implementing a simple two-step workflow:
@@ -88,7 +88,7 @@ export class AppService extends ConfiguredInstance {
 }
 ```
 
-### Add Nest.js Providers
+## Add Nest.js Providers
 We also need to write the code that Nest will use to instantiate this service during dependency injection. We'll do this with a [custom Factory Provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory). Here is an example:
 
 ```typescript
