@@ -2,7 +2,6 @@
 sidebar_position: 2
 title: Nest.js
 ---
-import InstallNode from '/docs/partials/_install_node.mdx';
 
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
 
@@ -125,20 +124,6 @@ DBOS Cloud seamlessly autoscales your application to millions of users and provi
 
 #### 1. Install the DBOS Cloud CLI
 <section className="row list">
-<article className="col col--6">
-
-The Cloud CLI requires Node.js 20 or later.
-</article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
 
 <article className="col col--6">
 Run this command to install it.
