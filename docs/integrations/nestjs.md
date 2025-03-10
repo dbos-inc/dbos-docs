@@ -10,7 +10,7 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 
 ### Installation and requirements
 
-Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk`. Add a `dbos-config.yaml` file to the root of your project:
+Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk` and add a `dbos-config.yaml` file to the root of your project:
 ```yaml
 language: node
 telemetry:
@@ -58,7 +58,7 @@ import { ConfiguredInstance, DBOS, InitContext } from '@dbos-inc/dbos-sdk';
 // highlight-next-line
 export class AppService extends ConfiguredInstance {
   constructor(
-    name: string, // You must provide a name for this class instance to uniquely identify it in DBOS's internal registry.
+    name: string, // You must provide a name to uniquely identify this class instance in DBOS's internal registry.
     private readonly prisma: PrismaService, // An example service dependency
   ) {
     super(name);
