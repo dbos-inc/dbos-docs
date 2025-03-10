@@ -116,7 +116,7 @@ export const dbosProvider: Provider = {
 export class AppModule {}
 ```
 
-If you need multiple instances of your DBOS class, you must give them distinct names (`dbosService` in this case) and create a dedicated provider for each.
+If you need multiple instances of your DBOS class, you must give them distinct names (`dbosService` in this case). You can create a dedicated provider for each or use a single provider for multiple classes, at your convenience.
 
 Your reliable business logic is now reliable!
 
