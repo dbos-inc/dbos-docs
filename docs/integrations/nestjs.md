@@ -10,14 +10,12 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 
 ### Installation and requirements
 
-Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk`. Add a `dbos-config.yaml` file to the root of your project with your database connection information:
+Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk`. Add a `dbos-config.yaml` file to the root of your project:
 ```yaml
-database:
-  hostname: localhost
-  port: 5432
-  username: ${PGUSER}
-  password: ${PGPASSWORD}
-  app_db_client: knex
+language: node
+telemetry:
+  logs:
+    logLevel: 'info'
 ```
 
 ### Bootstrapping DBOS
