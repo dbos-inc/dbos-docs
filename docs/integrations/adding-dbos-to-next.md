@@ -11,7 +11,7 @@ description: Learn how to integrate DBOS into Next.js applications.
 - Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
 - Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/timetravel-debugging).
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/interactive-timetravel).
 
 ## Architectural Overview
 Next.js is a framework that optimizes where and when [React](https://react.dev/) UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
