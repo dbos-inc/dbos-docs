@@ -131,7 +131,7 @@ DBOS and `server.ts` require some TypeScript compiler settings.  These can eithe
 ```
 
 Noteworthy settings:
-- `experimentalDecorators`: Used by the DBOS decorator framework
+- `experimentalDecorators`: Required to use TypeScript decorators
 - `noEmit`, `outDir`, and `exclude`: Many Next.js projects do not emit the `.js` files corresponding to the `.ts` files; the bundles hold all the code.  With a custom `server.ts`, `.js` files are needed for server code for execution by the `node` runtime.
 
 ### `package.json` Scripts
