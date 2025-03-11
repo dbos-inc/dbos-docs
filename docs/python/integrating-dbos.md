@@ -1,7 +1,6 @@
 ---
 sidebar_position: 20
 title: Add DBOS To Your App
-pagination_next: null
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 import LocalPostgres from '/docs/partials/_local_postgres.mdx';
@@ -73,7 +72,7 @@ Congratulations!  You've integrated DBOS into your application.
 
 At this point, you can add any DBOS decorator or method to your application.
 For example, you can annotate one of your functions as a [workflow](./workflow-tutorial.md) and the functions it calls as [steps](./step-tutorial.md).
-DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically recovers to the last completed step.
+DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.

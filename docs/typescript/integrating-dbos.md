@@ -1,11 +1,9 @@
 ---
-sidebar_position: 100
-title: Adding DBOS To Your App
-pagination_next: null
+sidebar_position: 20
+title: Add DBOS To Your App
 ---
 
-This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application to **durably execute** it and make it resilient to any failure.
-It also shows you how to serverlessly deploy your application to DBOS Cloud and scale it to millions of users.
+This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### Using DBOS Transact
 
@@ -28,19 +26,18 @@ telemetry:
     logLevel: 'info'
 ```
 
-Also, set the following settings in your `tsconfig.json` file, which enable TypeScript decorators:
+Also, enable TypeScript decorators in your `tsconfig.json` file:
 
 ```json title="tsconfig.json"
   "compilerOptions": {
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
   }
 ```
 
 
 #### 2. Initialize DBOS in Your App
 
-In your app's main entrypoint, add the following lines of code.
+In your app's main entrypoint, add the following code.
 This initializes DBOS when your app starts.
 
 ```javascript
@@ -68,7 +65,7 @@ Congratulations!  You've integrated DBOS into your application.
 
 At this point, you can add any DBOS decorator or method to your application.
 For example, you can annotate one of your functions as a [workflow](./workflow-tutorial.md) and the functions it calls as [steps](./step-tutorial.md).
-DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically recovers to the last completed step.
+DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```typescript
 export class Example {
