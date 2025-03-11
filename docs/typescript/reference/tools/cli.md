@@ -79,12 +79,11 @@ No application data is affected by this.
 
 **Description:**
 This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow and connects to a locally running DBOS [time travel debug proxy](../../../cloud-tutorials/timetravel-debugging.md#time-travel-with-dbos-cli-non-vs-code-users).
+It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow in debug mode.
 You must compile your code (`npm run build`) and start the debug proxy before running this command.
 
 **Arguments:**
 - `-u, --uuid <string>`: The workflow identity to replay.
-- `-x, --proxy <string>`: The time travel debug proxy URL (default: "postgresql://localhost:2345").
 - `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
 - `-d, --appDir <application-directory>`: The path to your application root directory.
 
