@@ -5,6 +5,12 @@ title: Add DBOS To Your App
 
 This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application to **durably execute** it and make it resilient to any failure.
 
+:::info
+Also check out the integration guides for popular TypeScript frameworks:
+- [Next.js + DBOS](../integrations/adding-dbos-to-next.md)
+- [Nest.js + DBOS](../integrations/nestjs.md)
+:::
+
 ### Using DBOS Transact
 
 #### 1. Install DBOS
