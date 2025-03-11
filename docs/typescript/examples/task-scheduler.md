@@ -21,7 +21,7 @@ If you like the idea of a cloud-based task scheduler with a calendar UI, you can
 - Simple, powerful database integration – [Manage database data](../tutorials/transaction-tutorial) with DBOS.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../tutorials/scheduled-workflows).
 - Background tasks and WebSockets – Keep execution and state across UI calls, with the ability to send results back to the client in real time.
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](../../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../../cloud-tutorials/timetravel-debugging).
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../../cloud-tutorials/interactive-timetravel).
 
 # Using DBOS Task Scheduler
 
