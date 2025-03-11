@@ -1,17 +1,18 @@
 ---
 sidebar_position: 40
-title: Adding DBOS to Next.js Apps
-description: Learn how to integrate DBOS into Next.js applications.
+title: Next.js + DBOS
 ---
 
 # Introduction
 
+This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing Next.js application to **durably execute** it and make it resilient to any failure.
+
 ## Why Add DBOS To a Next.js Application?
-[Next.js](https://nextjs.org/) is a solid choice for high-performance interactive web frontends.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), your Next.js application can implement "heavy lifting" tasks with:
+[Next.js](https://nextjs.org/) is a solid choice for high-performance interactive web frontends.  By adding DBOS Transact, and running in a suitable hosting environment (such as [DBOS Cloud](https://www.dbos.dev/dbos-cloud)), your Next.js application can also implement "heavy lifting" backend tasks with:
 - Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
-- Simple, powerful database integration – [Manage database data](../typescript/tutorials/transaction-tutorial) with DBOS.
+- Reliable background tasks - Use DBOS [queues](../typescript/tutorials/queue-tutorial.md) to run any task in the background and guarantee it eventually completes, no matter how long it takes.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../cloud-tutorials/interactive-timetravel).
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../typescript/tutorials/debugging.md).
 
 ## Architectural Overview
 Next.js is a framework that optimizes where and when [React](https://react.dev/) UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
