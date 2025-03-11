@@ -194,7 +194,7 @@ The Next.js bundling process traces `import`ed dependencies from pages, actions,
 - Any application source files implementing steps, transactions, or workflows
 - Any application source files that create or accesses DBOS [queues](../typescript/reference/transactapi/workflow-queues.md), [object instances](../typescript/tutorials/instantiated-objects), or other DBOS objects
 
-Ensure that each such module or file is covered in `next.config.ts`, within `webpack`'s `config.externals` array.  Entries in `config.extenals` must match the names used in `import` statements for recognition to work correctly.  It is not necessary to list each external file individually, as the `config.externals` array can also accept regular expressions and callback functions.  For example, if an application `import`s all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), only a single regular expression of `/^@dbos\/.+$/` is needed to treat all files as external:
+Ensure that each such module or file is covered in `next.config.ts`, within `webpack`'s `config.externals` array.  Entries in `config.externals` must match the names used in `import` statements for recognition to work correctly.  It is not necessary to list each external file individually, as the `config.externals` array can also accept regular expressions and callback functions.  For example, if an application `import`s all DBOS logic with the module alias `@dbos/` (such as `import { MyWorkflow } from "@dbos/operations"`), only a single regular expression of `/^@dbos\/.+$/` is needed to treat all files as external:
 
 ```typescript
   webpack: (config, { isServer, dev: _dev }) => {
