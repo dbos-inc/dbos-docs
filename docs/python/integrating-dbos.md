@@ -1,14 +1,13 @@
 ---
-sidebar_position: 100
-title: Adding DBOS To Your App
+sidebar_position: 20
+title: Add DBOS To Your App
 pagination_next: null
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
 import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 
-This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
-It also shows you how to serverlessly deploy your application to DBOS Cloud and scale it to millions of users.
+This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### Using DBOS Transact
 
