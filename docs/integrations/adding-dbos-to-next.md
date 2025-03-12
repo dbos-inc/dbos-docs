@@ -3,8 +3,6 @@ sidebar_position: 40
 title: Next.js + DBOS
 ---
 
-# Introduction
-
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing Next.js application to **durably execute** it and make it resilient to any failure.
 
 ## Why Add DBOS To a Next.js Application?

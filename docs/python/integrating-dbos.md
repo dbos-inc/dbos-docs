@@ -3,7 +3,6 @@ sidebar_position: 20
 title: Add DBOS To Your App
 ---
 import InstallNode from '/docs/partials/_install_node.mdx';
-import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 
 This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
