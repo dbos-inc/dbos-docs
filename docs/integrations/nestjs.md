@@ -1,7 +1,6 @@
 ---
 sidebar_position: 2
-title: Nest.js
-description: Learn how to integrate DBOS into Nest.js applications.
+title: Nest.js + DBOS
 ---
 
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
@@ -115,8 +114,6 @@ export class AppModule {}
 ```
 
 If you need multiple instances of your DBOS class, you must give them distinct names (`dbosService` in this case). You can create a dedicated provider for each or use a single provider for multiple classes, at your convenience.
-
-Your reliable business logic is now reliable!
 
 ## Running in DBOS Cloud
 DBOS Cloud seamlessly autoscales your application to millions of users and provides built-in dashboards for observability and monitoring.
