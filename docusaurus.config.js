@@ -190,6 +190,14 @@ const config = {
             from: '/python/examples/reliable-ai-agent',
             to: '/python/examples/customer-service',
           },
+          {
+            from: '/python/tutorials/integrating-dbos',
+            to: '/python/integrating-dbos',
+          },
+          {
+            from: '/typescript/tutorials/integrating-dbos',
+            to: '/typescript/integrating-dbos',
+          },
         ],
       },
     ],

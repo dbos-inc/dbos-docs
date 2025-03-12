@@ -1,11 +1,15 @@
 ---
-sidebar_position: 100
-title: Adding DBOS To Your App
-pagination_next: null
+sidebar_position: 20
+title: Add DBOS To Your App
 ---
 
-This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application to **durably execute** it and make it resilient to any failure.
-It also shows you how to serverlessly deploy your application to DBOS Cloud and scale it to millions of users.
+This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing application to **durably execute** it and make it resilient to any failure.
+
+:::info
+Also check out the integration guides for popular TypeScript frameworks:
+- [Next.js + DBOS](../integrations/adding-dbos-to-next.md)
+- [Nest.js + DBOS](../integrations/nestjs.md)
+:::
 
 ### Using DBOS Transact
 
@@ -28,19 +32,18 @@ telemetry:
     logLevel: 'info'
 ```
 
-Also, set the following settings in your `tsconfig.json` file, which enable TypeScript decorators:
+Also, enable TypeScript decorators in your `tsconfig.json` file:
 
 ```json title="tsconfig.json"
   "compilerOptions": {
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
   }
 ```
 
 
 #### 2. Initialize DBOS in Your App
 
-In your app's main entrypoint, add the following lines of code.
+In your app's main entrypoint, add the following code.
 This initializes DBOS when your app starts.
 
 ```javascript
@@ -57,8 +60,8 @@ Try starting your application:
 npm start # Or use your own start command
 ```
 
-When [`await DBOS.launch()`](../reference/transactapi/dbos-class#launching-dbos) is called, it will attempt to connect to a Postgres database.
-If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](../reference/configuration#database).
+When [`await DBOS.launch()`](./reference/transactapi/dbos-class#launching-dbos) is called, it will attempt to connect to a Postgres database.
+If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](./reference/configuration#database).
 Otherwise, DBOS will automatically guide you through launching a new database and connecting to it.
 
 After you've connected to Postgres, your app should run normally, but log `DBOS launched` on startup.
@@ -67,8 +70,8 @@ Congratulations!  You've integrated DBOS into your application.
 #### 4. Start Building With DBOS
 
 At this point, you can add any DBOS decorator or method to your application.
-For example, you can annotate one of your functions as a [workflow](./workflow-tutorial.md) and the functions it calls as [steps](./step-tutorial.md).
-DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically recovers to the last completed step.
+For example, you can annotate one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and the functions it calls as [steps](./tutorials/step-tutorial.md).
+DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```typescript
 export class Example {
@@ -91,7 +94,7 @@ To ensure that DBOS registers all decorated functions, **declare all DBOS-decora
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
 
-To learn more about programming with DBOS, check out [the programming guide](../programming-guide.md).
+To learn more about programming with DBOS, check out [the programming guide](./programming-guide.md).
 
 ### Deploying to DBOS Cloud
 
@@ -110,7 +113,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 
 #### 2. Define a Start Command
 
-Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../reference/configuration.md) to your application's launch command.
+Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](./reference/configuration.md) to your application's launch command.
 
 ```yaml title="dbos-config.yaml"
 runtimeConfig:

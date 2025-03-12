@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 10
 title: Learn DBOS Python
 pagination_next: python/tutorials/workflow-tutorial
 pagination_prev: quickstart
