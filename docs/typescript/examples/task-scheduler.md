@@ -18,8 +18,6 @@ For general information about integrating DBOS with Next.js, see ["Adding DBOS t
 
 If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
 
-# Using DBOS Task Scheduler
-
 ## Running DBOS Task Scheduler in DBOS Cloud
 Provisioning an instance of DBOS Task Scheduler in DBOS Cloud is easy:
 - Go to [DBOS Cloud Console](https://console.dbos.dev/launch)
@@ -37,8 +35,12 @@ After a bit of launch activity, you will be presented with:
 If you [started out in DBOS Cloud](#running-dbos-task-scheduler-in-dbos-cloud), you can download your code to your development environment.  Or, you can [clone the code from the git repository](https://github.com/dbos-inc/dbos-demo-apps) and change to the `typescript/nextjs-calendar` directory.
 
 ### Setting Up A Database
-DBOS requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  You can also start a Postgres docker image, or provision a cloud instance of Postgres.
-<LocalPostgres/>
+DBOS requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  If not, the "database wizard" will help establish a connection.
+
+<details>
+  <summary>You can also start a Postgres docker image, or provision a cloud instance of Postgres.</summary>
+  <LocalPostgres cmd="node start_postgres_docker.js"/>
+</details>
 
 ### Running In Development
 Once you have a local copy of the DBOS Task Scheduler, run the following:
@@ -61,45 +63,15 @@ npm run start
 ```
 
 ## DBOS Task Scheduler's Web UI
-Once the app is running, open it in a web browser.  In DBOS Cloud, the URL will be provided.  If running locally, the default will be at [http://localhost:3000/](http://localhost:3000/), but check your startup logs for confirmation.
+Once the app is running, open it in a web browser.
+- If the app is running In DBOS Cloud, the URL will be shown [in the cloud console](https://console.dbos.dev/applications) under "Visit your app", and the URL will also be reported in the output of [`dbos-cloud app deploy`](../../cloud-tutorials/application-management#deploying-applications).
+- If running locally, the default will be at [http://localhost:3000/](http://localhost:3000/), but check your startup logs for confirmation.
 
-Upon opening the web browser (and perhaps dismissing the help popup), the main screen should open:
-
+Upon opening the web browser (and perhaps dismissing the help popup), the main screen should be shown:
 ![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
 
-### Adding Tasks
-To schedule a task, or repeating series, click on open space on the calendar.  (The date and time clicked will be used for the initial population of the "Start Time" field.)
-
-![Screen shot of the popup for adding a new task](./assets/dbos-task-scheduler-new-task-screen.png)
-
-First, select a task from the "Task" dropdown.  All tasks involve fetching a URL and saving the contents.  To see what one does, select it, and press "Test".  The choices are:
-- Fetch Current Time: Gets the GMT time from `http://worldtimeapi.org`
-- Fetch Weather Data (New York): Gets weather data for New York from `https://api.open-meteo.com`
-- Make Sure Cloud Is Up: Pulls data from a demo app on DBOS Cloud: `https://demo-guestbook.cloud.dbos.dev/`
-- Fetch Random Joke: Gets a joke from `https://official-joke-api.appspot.com/random_joke`
-- Stave Off Boredom: Attempts to get a random activity from `https://www.boredapi.com/api/activity` (Or DBOS equivalent; more on this below)
-- Impossible Task: Tests errors by fetching `http://example.invalid`
-
-Then, ensure that the "Start Time" is correct.  If not, change it.
-
-If the task is to be a repeating task, set "Repetition" to "Daily", "Weekly", or "Monthly" and select an "End Time" as appropriate.
-
-Selecting "Add Schedule" will put the task on the calendar, and save it to the application database, where the DBOS scheduler will pick it up and run it at the appropriate times.
-
-### Editing/Removing Tasks
-To edit or remove a task, click on the task's calendar item to reveal the "Edit/Delete Task" dialog.
-
-![Screen shot of the popup for editing tasks](./assets/dbos-task-scheduler-edit-task-screen.png)
-
-Changes can be made to all fields except "Task".  Clicking "Test" will execute the task and add the result to the calendar.  Clicking "Update Schedule" will save any changes.  Clicking "Delete" will delete the task, along with all results for the task.
-
-### Viewing Results
-To view results and errors, click on the result calendar items.
-
-![Screen shot of popup for viewing results](./assets/dbos-task-scheduler-result-box.png)
-
 ## Setting Up Email Notifications (Optional)
-The DBOS Task Scheduler app will *optionally* send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables:
+The DBOS Task Scheduler app will *optionally* send notifications using Amazon Simple Email Service (SES).  To use this, set the following environment variables prior to launching the app:
 - AWS_REGION: The AWS region for SES service
 - AWS_ACCESS_KEY_ID: The AWS access key provisioned for SES access
 - AWS_SECRET_ACCESS_KEY: The access secret corresponding to AWS_ACCESS_KEY_ID
@@ -109,8 +81,6 @@ The DBOS Task Scheduler app will *optionally* send notifications using Amazon Si
 If these environment variables aren't set, email will not be sent.
 
 # Code Tour
-
-## Technologies and Concepts Demonstrated
 ::::tip
 The DBOS Task Scheduler app is somewhat complex, showcasing many features.  For a simpler starting point, see [dbos-nextjs-starter](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nextjs-starter#readme).
 ::::
@@ -176,7 +146,7 @@ The main workflow for executing tasks is in `src/dbos/operations.ts`, in the `Sc
   }
 ```
 
-While it may be overkill for this demo application, `runJob` will be executed durably.  That is, if the server crashes after `runTask` is complete, but the result hasn't been recorded in the database with `setResult`, or if the email hasn't been sent by `sendStatusEmail`, DBOS Transact will finish the workflow during recovery and execute those steps.
+Because it is a `@DBOS.workflow`, `runJob` will be [executed durably](../tutorials/workflow-tutorial.md).  That is, if the server crashes after `runTask` is complete, but the result hasn't been recorded in the database with `setResult`, or if the email hasn't been sent by `sendStatusEmail`, DBOS Transact will finish the workflow during recovery and execute those steps.
 
 ### Scheduling
 
@@ -185,7 +155,18 @@ Scheduling a workflow in DBOS is quite simple; simply affix the [`@DBOS.schedule
 ```typescript
   @DBOS.scheduled({crontab: '* * * * *', mode: SchedulerMode.ExactlyOncePerIntervalWhenActive })
   @DBOS.workflow()
-  static async runSchedule(schedTime: Date, _atTime: Date) { /*...*/ }
+  static async runSchedule(schedTime: Date, _atTime: Date) {
+    // Retrieve schedule from database
+    const schedule = await ScheduleDBOps.getSchedule();
+    for (const sched of schedule) {
+      // See if this schedule should be triggered now
+      const occurrences = getOccurrencesAt(sched, schedTime);
+      for (const occurrence of occurrences) {
+        // Start each job in the background
+        await DBOS.startWorkflow(SchedulerOps).runJob(sched.id, sched.task, occurrence);
+      }
+    }
+  }
 ```
 
 Note that the use of `mode: SchedulerMode.ExactlyOncePerIntervalWhenActive` means that makeup work will not be performed if DBOS is down at the time that tasks are scheduled.  To make up for missed intervals, ensuring the scheduled workflows run exactly once, use `mode: SchedulerMode.ExactlyOncePerInterval`.
