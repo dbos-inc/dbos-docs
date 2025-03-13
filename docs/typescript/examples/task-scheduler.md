@@ -11,7 +11,7 @@ import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/) and [DBOS](https://dbos.dev).  It serves as both a demo for learning DBOS concepts and a template for building your own DBOS-powered Next.js applications.
 
 :::tip
-For general information about integrating DBOS with Next.js, see ["Adding DBOS to Next.js Apps"](../../integrations/adding-dbos-to-next.md) in the integration guide.
+For general information about integrating DBOS with Next.js, see the ["Adding DBOS to Next.js Apps"](../../integrations/adding-dbos-to-next.md) guide.
 :::
 
 ![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
