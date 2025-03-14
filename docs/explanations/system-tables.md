@@ -102,11 +102,11 @@ Each entry represents a different event.
 ## Provenance Tables
 
 :::info
-The provenance database is only available for DBOS Cloud applications using the **experimental** time travel feature. To enable experimental time travel for your application, please specify `--enable-timetravel` [during deploy](../cloud-tutorials/cloud-cli#dbos-cloud-app-deploy).
+The provenance database is only available for DBOS Cloud applications using the **experimental** time travel feature. To enable experimental time travel for your application, please specify `--enable-timetravel` [during deploy](../production/dbos-cloud/cloud-cli#dbos-cloud-app-deploy).
 :::
 
 DBOS Cloud optionally maintains a provenance database for your application, which is an append-only versioned replica of your application database.
-It is the key enabler of [Interactive Time Travel](../cloud-tutorials/interactive-timetravel.md).
+It is the key enabler of [Interactive Time Travel](../production/dbos-cloud/interactive-timetravel.md).
 The provenance database name is your application database suffixed with `_dbos_prov`.
 For example, if your application database is named `hello`, then your provenance database is named `hello_dbos_prov`.
 The provenance database contains the history (within the time travel [data retention period](https://www.dbos.dev/pricing)) of each of your database tables.

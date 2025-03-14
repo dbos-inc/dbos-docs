@@ -95,39 +95,3 @@ You can add DBOS to your application incrementally&mdash;it won't interfere with
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
 
 To learn more about programming with DBOS, check out [the programming guide](./programming-guide.md).
-
-### Deploying to DBOS Cloud
-
-Any application you build with DBOS can be serverlessly deployed to DBOS Cloud.
-DBOS Cloud can seamlessly autoscale your application to millions of users and provides built-in dashboards for observability and monitoring.
-
-#### 1. Install the DBOS Cloud CLI
-
-
-Run this command to install the cloud CLI globally.
-
-
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-
-#### 2. Define a Start Command
-
-Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](./reference/configuration.md) to your application's launch command.
-
-```yaml title="dbos-config.yaml"
-runtimeConfig:
-  start:
-    - npm start
-```
-If your application includes an HTTP server, configure it to listen on port 3000.
-To test that it works, try launching your application with `npx dbos start`.
-
-
-#### 3. Deploy to DBOS Cloud
-
-Run this single command to deploy your application to DBOS Cloud!
-
-```shell
-dbos-cloud app deploy
-```

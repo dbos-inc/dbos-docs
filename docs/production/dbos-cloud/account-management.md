@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 30
 title:  Account Management
 description: Learn how to manage DBOS Cloud users
 toc_max_heading_level: 3

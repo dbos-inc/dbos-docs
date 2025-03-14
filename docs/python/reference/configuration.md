@@ -71,7 +71,7 @@ If either does not exist, the Postgres role must have the [`CREATEDB`](https://w
 This section is used to specify DBOS runtime parameters.
 
 - **start**: The command(s) with which to start your app. Called from `dbos start`.
-- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../cloud-tutorials/application-management.md#customizing-microvm-setup)
+- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup)
 
 **Example**:
 

@@ -4,9 +4,8 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-DBOS is a serverless platform for building reliable backend applications.
-Add lightweight annotations to your app to _durably execute_ it, making it resilient to any failure.
-Then, deploy your app to the cloud with a single command.
+DBOS is a library for building incredibly reliable programs.
+Add a few annotations to your application to **durably execute** it and make it **resilient to any failure**.
 
 ### Get Started
 
