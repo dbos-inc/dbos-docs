@@ -100,7 +100,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 export const dbosProvider: Provider = {
   provide: AppService,
   useFactory: (prisma: PrismaService) => {
-    return DBOS.configureInstance(AppService, "dbosService", prisma);
+    return new AppService("dbosService", prisma);
   },
   inject: [PrismaService],
 };

@@ -139,7 +139,7 @@ This workflow is guaranteed to handle every Kafka message exactly once, even if 
 To send messages, we create a KafkaProducerCommunicator object like so:
 ```typescript
 //A configured instance used to produce messages (operations.ts)
-const producerConfig: KafkaProduceStep =  DBOS.configureInstance(KafkaProduceStep, 
+const producerConfig: KafkaProduceStep = new KafkaProduceStep( 
   'wfKafka', kafkaConfig, respondTopic, {
     createPartitioner: Partitioners.DefaultPartitioner
   });

@@ -31,13 +31,8 @@ While libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` hav
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { DBOS_SES } from "@dbos-inc/dbos-email-ses";
 
-const sesMailer = DBOS.configureInstance(DBOS_SES, 'marketing', {awscfgname: 'marketing_email_aws_config'});
+const sesMailer = new DBOS_SES('marketing', {awscfgname: 'marketing_email_aws_config'});
 ```
-
-Note that the `configureInstance` call above serves multiple purposes:
-* Creates an instance of `DBOS_SES`
-* Provides the instance with enough information to find essential configuration information (AWS region, access key, and secret) from the configuration file
-* Registers the instance under the name 'marketing'
 
 Methods can then be called on the object instance:
 ```typescript

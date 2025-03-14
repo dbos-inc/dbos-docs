@@ -46,29 +46,19 @@ class Workflows
 #### Decorating Instance Methods
 Workflow functions may also be instance methods.
 
-This requires a few more steps.  For instance methods to work, each class instance must be given a name and registered with DBOS, so that a corresponding instance can be found for workflow recovery.  This is done with `DBOS.configureInstance`:
-
-```typescript
-DBOS.configureInstance(cls: Constructor, name: string, ...args: unknown[]) : R
-```
-
-The arguments to `DBOS.configureInstance` are:
-* `cls`: The class to be instantiated and configured.  This class must extend `ConfiguredInstance`.
-* `name`: The name for the configured instance (which must be unique within the set of instances of the same class)
-* `...args`: Any additional arguments to pass to the constructor function `cls`.
-
-Configured classes must extend from the following abstract class:
+For instance methods to work, the class must extend from the following abstract class:
 ```typescript
 export abstract class ConfiguredInstance {
   readonly name: string;
   constructor(name: string) {
     this.name = name;
+    // ... registration occurs ...
   }
   abstract initialize(ctx: InitContext): Promise<void>;
 }
 ```
 
-The `ConfiguredInstance` base class provides naming information, and also declares the `initialize` function which will be called after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](./oldapi/contexts.md#initcontext), which provides access to configuration and other information.
+The `ConfiguredInstance` base class constructor registers the instance under the given `name`.   The `initialize` function will be called on each registered instance after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](./oldapi/contexts.md#initcontext), which provides access to configuration and other information.
 
 Example:
 ```typescript
@@ -76,7 +66,7 @@ import { DBOS, ConfiguredInstance } from '@dbos-inc/dbos-sdk';
 
 class MyClass extends ConfiguredInstance
 {
-  constructor(name: string) {
+  constructor(name: string, args: string[]) {
     super(name);
   }
 
@@ -88,7 +78,7 @@ class MyClass extends ConfiguredInstance
   // Define workflows, transactions, steps, ...
 }
 
-const myObj = DBOS.configureInstance(MyClass, 'myname', args);
+const myObj = new MyClass('myname', []);
 ```
 
 Note that while this will create and register the `myObj` object instance, initialization via the object's `initialize()` method will be deferred until later, after database connections have been established.
@@ -125,7 +115,7 @@ class Workflows extends ConfiguredInstance
 }
 
 // Create and register an object instance for executing workflows
-const workflowInstance = DBOS.configureInstance(Workflows, 'InstanceA');
+const workflowInstance = new(Workflows, 'InstanceA');
 ```
 
 #### Calling Workflow Functions
