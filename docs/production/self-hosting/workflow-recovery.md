@@ -23,7 +23,7 @@ When self-hosting in a distributed setting without Conductor, it is important to
 You should assign each executor running a DBOS application an executor ID by setting the `DBOS__VMID` environment variable.
 Each workflow is tagged with the ID of the executor that started it.
 When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
-You can also instruct your executor to recover workflows assigned to other executor IDs through the [workflow recovery endpoint of the admin API](#workflow-recovery).
+You can also instruct your executor to recover workflows assigned to other executor IDs through the [workflow recovery endpoint of the admin API](./admin-api.md#workflow-recovery).
 
 ## Managing Application versions
 
@@ -34,4 +34,4 @@ To prevent code compatibility issues, DBOS does not attempt to recover workflows
 
 To safely recover workflows started on an older version of your code, you should start a process running that code version.
 If self-hosting using Conductor, that process will automatically recover all pending workflows of that code version.
-If self-hosting without Conductor, you should use the [workflow recovery endpoint of the admin API](#workflow-recovery) to instruct that process to recover workflows belonging to executors that ran old code versions.
+If self-hosting without Conductor, you should use the [workflow recovery endpoint of the admin API](./admin-api.md#workflow-recovery) to instruct that process to recover workflows belonging to executors that ran old code versions.
