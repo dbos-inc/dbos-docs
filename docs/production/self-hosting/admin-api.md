@@ -3,8 +3,6 @@ sidebar_position: 100
 title: Admin API Reference
 ---
 
-## Admin API Reference
-
 The DBOS library exposes an admin API to perform operations on durable workflows.
 By default, this API is on port 3001, though this is configurable.
 
