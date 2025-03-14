@@ -131,14 +131,6 @@ const config = {
             to: '/typescript/tutorials/development/application-structure-explanation',
           },
           {
-            from: '/typescript/tutorials/self-hosting',
-            to: '/self-hosting',
-          },
-          {
-            from: '/typescript/tutorials/development/self-hosting',
-            to: '/self-hosting',
-          },
-          {
             from: '/typescript/tutorials/using-libraries',
             to: '/typescript/tutorials/development/using-libraries',
           },

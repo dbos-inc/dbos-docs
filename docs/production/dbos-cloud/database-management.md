@@ -28,7 +28,7 @@ Each application is deployed to an isolated database by default; you can configu
 :::
 
 :::info
-If you forget your database password, you can always [reset it](../cloud-tutorials/cloud-cli.md#dbos-cloud-db-reset-password).
+If you forget your database password, you can always [reset it](./cloud-cli.md#dbos-cloud-db-reset-password).
 :::
 
 To see a list of all provisioned instances and their statuses, run:
@@ -72,7 +72,7 @@ Database recovery is not available for [linked databases](./byod-management.md)
 :::
 
 DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
-First, run the [`database restore`](../cloud-tutorials/cloud-cli.md#dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
+First, run the [`database restore`](./cloud-cli.md#dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
 
 ```shell
 dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
@@ -80,7 +80,7 @@ dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
 
 The timestamp must be in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format and must be within the backup retention period of your database (24 hours for free-tier users).
 
-After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-change-database-instance).
+After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](./cloud-cli.md#dbos-cloud-app-change-database-instance).
 For each application connected to the original database instance, run:
 
 ```shell

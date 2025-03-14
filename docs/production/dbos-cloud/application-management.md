@@ -20,7 +20,7 @@ Each time you deploy an application, the following steps execute:
 3. **Migration**: If you specify database migrations in your `dbos-config.yaml`, these are run on your cloud database.
 4. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/).
 By default, these have 1 vCPU and 512MB of RAM.
-The amount of memory allocated to each microVM is [configurable](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-update).
+The amount of memory allocated to each microVM is [configurable](./cloud-cli.md#dbos-cloud-app-update).
 
 After an application is deployed, it is assigned a domain of the form `https://<username>-<app-name>.cloud.dbos.dev/`.
 If your account is part of an [organization](./account-management.md#organization-management), organization name is used instead of username.
@@ -103,9 +103,9 @@ Here are some useful tools to monitor and debug applications:
 
 - The [cloud console](https://console.dbos.dev) provides a web UI for viewing your applications and their traces and logs.
 
-- To retrieve the last `N` seconds of your application's logs, run [`dbos-cloud app logs -l <N>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
+- To retrieve the last `N` seconds of your application's logs, run [`dbos-cloud app logs -l <N>`](./cloud-cli.md#dbos-cloud-app-logs). Note that new log entries take a few seconds to appear.
 
-- To retrieve the status of a particular application, run [`dbos-cloud app status <app-name>`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-status). To list all applications, run [`dbos-cloud app list`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-list).
+- To retrieve the status of a particular application, run [`dbos-cloud app status <app-name>`](./cloud-cli.md#dbos-cloud-app-status). To list all applications, run [`dbos-cloud app list`](./cloud-cli.md#dbos-cloud-app-list).
 
 ### Managing Application Versions
 
@@ -116,7 +116,7 @@ You can view all previous versions of your application from the [cloud console](
 dbos-cloud app versions <app-name>
 ```
 
-You can redeploy a previous version of your application by passing `--previous-version <version-id>` to the [`app deploy`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-deploy) command.
+You can redeploy a previous version of your application by passing `--previous-version <version-id>` to the [`app deploy`](./cloud-cli.md#dbos-cloud-app-deploy) command.
 
 ```shell
 dbos-cloud app deploy --previous-version <version-id>
@@ -132,7 +132,7 @@ To update your application metadata, run:
 dbos-cloud app update <app-name>
 ```
 
-See the [DBOS Cloud CLI reference](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-update) for a list of properties you can update. Note that updating an application metadata does not trigger a redeploy of the code, which you can do with the [`app deploy`](../cloud-tutorials/cloud-cli.md#dbos-cloud-app-deploy) command.
+See the [DBOS Cloud CLI reference](./cloud-cli.md#dbos-cloud-app-update) for a list of properties you can update. Note that updating an application metadata does not trigger a redeploy of the code, which you can do with the [`app deploy`](./cloud-cli.md#dbos-cloud-app-deploy) command.
 
 ### Deleting Applications
 
