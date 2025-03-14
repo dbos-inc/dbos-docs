@@ -14,11 +14,11 @@ To simplify managing and recovering your durable workflows in production, we rec
 Conductor is a managed service for operating DBOS applications.
 It provides:
 
-- **Distributed workflow recovery**: If one of the servers hosting your DBOS application becomes unhealthy (for example, it is restarted, interrupted, or crashes), Conductor automatically recovers each of its workflows on exactly one healthy server.
-- **Workflow and queue observability**: Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
-- **Workflow and queue management**: From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Distributed workflow recovery**](./self-hosting/workflow-recovery.md): If one of the servers hosting your DBOS application becomes unhealthy (for example, it is restarted, interrupted, or crashes), Conductor automatically recovers each of its workflows on exactly one healthy server.
+- [**Workflow and queue observability**](./self-hosting/workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
+- [**Workflow and queue management**](./self-hosting/workflow-management.md): From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
 
-Conductor runs totally out-of-band, so if your connection to it is interrupted your applications will continue operating normally. It does **not** orchestrate durable execution of your workflows (that's done entirely by the open-source DBOS library) but rather provides tools for efficiently managing durable workflows at scale.
+Conductor runs totally out-of-band, so if your connection to it is interrupted your applications will continue operating normally.
 
 ## DBOS Cloud
 
@@ -26,7 +26,7 @@ Any application built with DBOS can be deployed for free to DBOS Cloud.
 DBOS Cloud is a serverless platform for durably executed applications.
 It provides:
 
-- **Application hosting and autoscaling**: Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
-- **Managed workflow recovery**: If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
+- [**Application hosting and autoscaling**](./dbos-cloud/application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
+- [**Managed workflow recovery**](./dbos-cloud/application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
 - **Workflow and queue observability**: Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
 - **Workflow and queue management**: From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
