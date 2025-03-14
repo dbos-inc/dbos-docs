@@ -224,7 +224,7 @@ Items may be placed in `globalThis` directly.  This should generally be done bef
 globalThis.webSocketClients = gss;
 
 // Share a DBOS configured object globally
-globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
 
 // Share an entire class globally
 import { DBOSBored } from "./dbos_bored";
