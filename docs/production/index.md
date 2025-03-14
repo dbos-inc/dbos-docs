@@ -1,6 +1,6 @@
 ---
 sidebar_position: 10
-title: Deploy To Production
+title: Deploying To Production
 ---
 
 Once you've made your application durable with DBOS, there are two ways to take it into production:
