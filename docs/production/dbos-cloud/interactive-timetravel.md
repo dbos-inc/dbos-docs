@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 80
 title: Interactive Time Travel
 description: Learn how to run interactive time-travelled queries on your database
 ---

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 30
+sidebar_position: 1000
 title: Cloud CLI Reference
 description: DBOS Cloud CLI reference
 pagination_next: null
