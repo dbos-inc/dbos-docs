@@ -272,8 +272,7 @@ dbos workflow resume <workflow-id>
 
 ## Workflow Management
 
-Because DBOS stores the execution state of workflows in Postgres, you can easily view and manage your workflows.
-Workflow management commands are available via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
+You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
 
 #### Listing Workflows
 
