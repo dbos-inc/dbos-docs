@@ -110,9 +110,9 @@ application:
 The application code will then have to specify which configuration to use when initializing the step:
 ```typescript
     // Initialize once per config used...
-    const sesDef = configureInstance(DBOS_SES, 'default'});
-    const userSES = configureInstance(DBOS_SES, 'userSES', {awscfgname: 'aws_config_ses_user'});
-    const adminSES = configureInstance(DBOS_SES, 'adminSES', {awscfgname: 'aws_config_ses_admin'});
+    const sesDef = new DBOS_SES('default');
+    const userSES = new DBOS_SES('userSES', {awscfgname: 'aws_config_ses_user'});
+    const adminSES = new DBOS_SES('adminSES', {awscfgname: 'aws_config_ses_admin'});
     // Use configured object ...
     const msgid = await userSES.sendTemplatedEmail(
         mailMsg,
