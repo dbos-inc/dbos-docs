@@ -264,7 +264,7 @@ const config = {
           },
           {
             to: 'https://console.dbos.dev/login-redirect',
-            label: 'Cloud Console',
+            label: 'DBOS Console',
             position: 'right',
             className: 'dbos-button-blue',
           },
