@@ -111,10 +111,6 @@ def dbos_workflow():
         print("Press Control + C to stop the app...")
         DBOS.sleep(1)
     step_two()
-
-if __name__ == "__main__":
-    DBOS.launch()
-    dbos_workflow()
 ```
 
 Start your app with `dbos start`.
@@ -177,10 +173,6 @@ def dbos_workflow():
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     print(f"Successfully completed {len(results)} steps")
-
-if __name__ == "__main__":
-    DBOS.launch()
-    dbos_workflow()
 ```
 
 When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
