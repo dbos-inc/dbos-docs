@@ -3,7 +3,8 @@ sidebar_position: 50
 title: Workflow Recovery
 ---
 
-When an executor running DBOS durable workflows fails, crashes, or is interrupted, another executor must recover its workflows and resume their execution.
+When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
+To prevent duplicate work, it is important to detect interruptions promptly and to recover each workflow only once.
 This guide describes how to manage workflow recovery in a production environment.
 
 ## Managing Recovery
