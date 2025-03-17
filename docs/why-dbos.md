@@ -284,17 +284,6 @@ def agentic_refund(purchase):
 
 </Tabs>
 
-### DBOS Cloud
-
-Any program you build with DBOS you can deploy for free to DBOS Cloud.
-You can deploy any program with a single command&mdash;no configuration required.
-Your program runs the same in the cloud as it does locally, but operating it is much simpler thanks to:
-
-- **No servers to manage**: We serverlessly deploy your applications for you.
-- **Autoscaling**: Your application automatically scales with load, potentially to millions of users.
-- **Pay only for the CPU time you actually use**: Pay only when you're using your app, and nothing at all for idle time.
-- **Built-in observability**: View your logs and traces and manage your application from the [cloud console](https://console.dbos.dev).
-
 :::note
 Thanks to Paul Copplestone from Supabase, whose [blog post on DBOS](https://supabase.com/blog/durable-workflows-in-postgres-dbos) inspired this page.
 :::
