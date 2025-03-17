@@ -14,15 +14,37 @@ DBOS(
     *,
     fastapi: Optional[FastAPI] = None,
     flask: Optional[Flask] = None,
-    config: Optional[ConfigFile] = None,
+    config: Optional[DBOSConfig] = None,
 )
 ```
 
 **Parameters:**
 - `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
 - `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
-- `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed its contents are used instead. We recommend using this for testing only.
+- `config`: A configuration object. See the [DBOSConfig section](#dbosconfig).
 
+
+### DBOSConfig
+You can configure a DBOS instance with a `DBOSConfig` object. All fields, except your application's `name`, are optional and defaults will be provided when constructing the DBOS singleton.
+
+```python
+class DBOSConfig(TypedDict):
+    name: str
+    database_url: Optional[str]
+    sys_db_name: Optional[str]
+    log_level: Optional[str]
+    otlp_traces_endpoints: Optional[List[str]]
+    admin_port: Optional[int]
+```
+
+- `name`: Your application's name. This field is used by tools from the DBOS ecosystem, like the [DBOS debugger](../tutorials/debugging).
+- `database_url`: A connection string pointing to your application's database. See the [Postgres docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS) for examples. We support the `sslmode`, `sslrootcert` and `connect_timeout` parameter keywords. The default parameters are `postgres://postgres:${PGPASSWORD}@localhost:5432`.
+- `sys_db_name`: An optional name for [DBOS' system database](../../explanations/system-tables). Defaults to your application database name + `_dbos_sys`.
+- `log_level`: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
+- `otlp_traces_endpoints`: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
+- `admin_port`: DBOS starts an [admin web server](../../self-hosting#admin-api-reference), by default on port 3001, for workflow management operations. Use this property to set a custom port.
+
+If you do not provide a `DBOSConfig` object, DBOS will look for a [dbos-config.yaml file](./configuration.md). We recommend using `DBOSConfig` except if you use other tools from the DBOS ecosystem such as `dbos migrate`.
 
 ### launch
 
