@@ -1,7 +1,6 @@
 ---
 sidebar_position: 20
 title: Application Management
-description: Learn how to manage DBOS Cloud applications
 pagination_prev: null
 ---
 
