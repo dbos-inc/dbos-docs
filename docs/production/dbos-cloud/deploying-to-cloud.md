@@ -11,7 +11,7 @@ It provides:
 
 - [**Application hosting and autoscaling**](./application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
 - [**Managed workflow recovery**](./application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
-- **Workflow and queue management**: Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps. Cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue management**](./workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps. Cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
 
 ## Deploying Your App to DBOS Cloud
 

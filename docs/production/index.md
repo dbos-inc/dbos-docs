@@ -28,5 +28,5 @@ It provides:
 
 - [**Application hosting and autoscaling**](./dbos-cloud/application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
 - [**Managed workflow recovery**](./dbos-cloud/application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
-- **Workflow and queue observability**: Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
-- **Workflow and queue management**: From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue observability**](./dbos-cloud/workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
+- [**Workflow and queue management**](./dbos-cloud/workflow-management.md): From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
