@@ -19,7 +19,7 @@ Conductor runs totally out-of-band, so if your connection is interrupted your ap
 :::
 
 To connect your application to Conductor, first register your application on the [DBOS console](https://console.dbos.dev).
-The name you register must match the name you give your application in its code.
+The name you register must match the name you give your application in its configuration.
 
 Next, generate an API key.
 By default, API keys do not expire, though they may be revoked at any time:
