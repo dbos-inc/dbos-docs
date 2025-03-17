@@ -58,7 +58,7 @@ In DBOS Cloud, `database_url` is ignored in favor of your application's database
 
 The database section is used to configure database parameters not related to connections:
 - **migrate**: A list of commands to run to apply your application's schema to the database. 
-- **sys_db_name**: Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
+- **sys_db_name**: Name of the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`. For local deployment only, not used in DBOS Cloud.
 - **local_suffix**: Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database. For local development only, not used in DBOS Cloud.
 
 **Example**:
@@ -94,7 +94,7 @@ You can use the configuration file to tune the behavior of DBOS logging facility
 Note all options in this section are optional and will, if not specified, use the default values indicated in the example below.
 
 #### Logs
-- **logLevel**: Filters, by severity, what logs should be printed. Defaults to `'INFO'`.
+- **logLevel**: Filters, by severity, what logs should be printed by the [DBOS logger](../tutorials/logging-and-tracing#logging). Defaults to `'INFO'`.
 
 **Example**:
 
