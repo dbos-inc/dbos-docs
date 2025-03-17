@@ -1,6 +1,6 @@
 ---
 sidebar_position: 85
-title: Using Instantiated Objects
+title: Using Typescript Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
@@ -51,10 +51,9 @@ All configured classes must:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
 * Have an `initialize(ctx: InitContext)` that will be called after all objects have been created, but before request handling commences
-* Have `@DBOS.transaction`, `@DBOS.step`, and/or `@DBOS.workflow` methods to be called on the instances
 
 ### `initialize()` Method
 The `initialize(ctx: InitContext)` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  The `InitContext` argument provides configuration file, logging, and database access services, so any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-As `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, `@DBOS.putApi`, and similar handler registration decorators cannot be applied to instance methods.
+Event and handler registration decorators such as `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, and `@DBOS.putApi` cannot be applied to instance methods.
