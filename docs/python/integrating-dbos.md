@@ -29,7 +29,7 @@ dbos init --config
 <section className="row list">
 <article className="col col--6">
 
-In your program's main function, add these two lines of code.
+In your program's main function, import DBOS and add these two lines of code.
 These initialize DBOS when your program starts.
 
 </article>
@@ -37,6 +37,8 @@ These initialize DBOS when your program starts.
 <article className="col col--6">
 
 ```python
+from dbos import DBOS
+
 DBOS()
 DBOS.launch()
 ```
