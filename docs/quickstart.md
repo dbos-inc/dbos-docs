@@ -95,8 +95,8 @@ Then, restart it with `fastapi run app/main.py` and watch it seamlessly recover 
 Congratulations, you've run your first durable workflow with DBOS!
 Next:
 
-- Check out the [DBOS programming guide](./python/programming-guide.md) to learn how to build incredibly reliable applications with DBOS.
-- Learn how to [add DBOS to your application](./python/integrating-dbos.md) to make it reliable in just a few lines of code.
+- Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build incredibly reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable in just a few lines of code.
 
 </article>
 
