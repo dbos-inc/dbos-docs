@@ -15,16 +15,16 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 <LargeTabItem value="python" label="Python">
 <section className="row list">
   <IndexCardLink
-    label="Run Your First Workflow"
+    label="Run Your First Durable App"
     href="/quickstart#deploy-your-first-app-to-the-cloud"
-    description="Install DBOS on your computer and run your first app"
+    description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Learn DBOS Python"
     href="/python/programming-guide"
-    description="Learn how to build incredibly reliable applications with DBOS"
+    description="Learn how to build reliable applications with DBOS"
     index="2️"
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -36,9 +36,9 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore Examples"
-    href="/examples"
-    description="See what you can build with DBOS"
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -47,16 +47,16 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 <LargeTabItem value="typescript" label="TypeScript">
 <section className="row list">
   <IndexCardLink
-    label="Run Your First Workflow"
+    label="Run Your First Durable App"
     href="/quickstart#deploy-your-first-app-to-the-cloud"
-    description="Install DBOS on your computer and run your first app"
+    description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
     label="Learn DBOS TypeScript"
     href="/typescript/programming-guide"
-    description="Learn how to build incredibly reliable applications with DBOS"
+    description="Learn how to build reliable applications with DBOS"
     index="2️"
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -68,9 +68,9 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore Examples"
-    href="/examples"
-    description="See what you can build with DBOS"
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />

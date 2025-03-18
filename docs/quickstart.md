@@ -19,7 +19,8 @@ This guide shows you how to install and run it on your computer.
 <article className="col col--6">
 
 #### 1. Create a Virtual Environment
-In a clean directory, create a Python virtual environment
+In a clean directory, create a Python virtual environment.
+DBOS requires Python 3.9 or later.
 
 </article>
 
@@ -120,6 +121,7 @@ Next:
 
 #### 1. Initialize an Application
 Initalize a starter application and enter its directory.
+DBOS requires Node v20 or later.
 </article>
 
 <article className="col col--6">
