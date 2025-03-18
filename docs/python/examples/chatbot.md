@@ -297,7 +297,6 @@ Then start your app:
 
 ```shell
 pip install -r requirements.txt
-export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432/chatbot
 dbos migrate
 dbos start
 ```

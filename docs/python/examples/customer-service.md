@@ -384,7 +384,6 @@ pip install -r requirements.txt
 Then start your app in the virtual environment:
 
 ```shell
-export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```
