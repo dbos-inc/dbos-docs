@@ -125,9 +125,9 @@ import { PiQueueBold } from "react-icons/pi";
     icon={<BsDatabaseCheck color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Fast, Efficient Serverless"
-    href="https://console.dbos.dev/launch"
-    description="Experience serverless hosting 25x faster than AWS Lambda, with no charge for idle CPU time"
+    label="Run Anywhere"
+    href="/production"
+    description="Run DBOS workflows in any environment, or serverlessly deploy them to DBOS Cloud"
     index="2"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -140,8 +140,8 @@ import { PiQueueBold } from "react-icons/pi";
   />
   <IndexCardLink
     label="Built-in Observability"
-    href="/python/tutorials/logging-and-tracing"
-    description="All your workflows automatically emit OpenTelemetry traces"
+    href="/production/self-hosting/workflow-management"
+    description="Interactively view, search, and manage your workflows from a graphical UI."
     index="4"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
