@@ -14,7 +14,8 @@ DBOS(
     *,
     fastapi: Optional[FastAPI] = None,
     flask: Optional[Flask] = None,
-    config: Optional[DBOSConfig] = None,
+    config: Optional[ConfigFile] = None,
+    conductor_key: Optional[str] = None,
 )
 ```
 
@@ -22,7 +23,7 @@ DBOS(
 - `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
 - `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
 - `config`: A configuration object. See the [DBOSConfig section](#dbosconfig).
-
+- `conductor_key`: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
 ### DBOSConfig
 You can configure a DBOS instance with a `DBOSConfig` object. All fields, except your application's `name`, are optional and defaults will be provided when constructing the DBOS singleton.

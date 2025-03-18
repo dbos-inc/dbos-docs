@@ -131,14 +131,6 @@ const config = {
             to: '/typescript/tutorials/development/application-structure-explanation',
           },
           {
-            from: '/typescript/tutorials/self-hosting',
-            to: '/self-hosting',
-          },
-          {
-            from: '/typescript/tutorials/development/self-hosting',
-            to: '/self-hosting',
-          },
-          {
             from: '/typescript/tutorials/using-libraries',
             to: '/typescript/tutorials/development/using-libraries',
           },
@@ -199,6 +191,13 @@ const config = {
             to: '/typescript/integrating-dbos',
           },
         ],
+        // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
+        createRedirects(existingPath) {
+          if (existingPath.startsWith('/production/dbos-cloud')) {
+            return [existingPath.replace('/production/dbos-cloud', '/cloud-tutorials')];
+          }
+          return undefined;
+        },
       },
     ],
     [
@@ -272,7 +271,7 @@ const config = {
           },
           {
             to: 'https://console.dbos.dev/login-redirect',
-            label: 'Cloud Console',
+            label: 'DBOS Console',
             position: 'right',
             className: 'dbos-button-blue',
           },

@@ -64,7 +64,7 @@ npm run start
 
 ## DBOS Task Scheduler's Web UI
 Once the app is running, open it in a web browser.
-- If the app is running In DBOS Cloud, the URL will be shown [in the cloud console](https://console.dbos.dev/applications) under "Visit your app", and the URL will also be reported in the output of [`dbos-cloud app deploy`](../../cloud-tutorials/application-management#deploying-applications).
+- If the app is running In DBOS Cloud, the URL will be shown [in the cloud console](https://console.dbos.dev/applications) under "Visit your app", and the URL will also be reported in the output of the deploy command.
 - If running locally, the default will be at [http://localhost:3000/](http://localhost:3000/), but check your startup logs for confirmation.
 
 Upon opening the web browser (and perhaps dismissing the help popup), the main screen should be shown:
@@ -214,7 +214,7 @@ The optional sending of task results emails is done using Amazon SES, and the [@
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
 if (!globalThis.reportSes && (process.env['REPORT_EMAIL_TO_ADDRESS'] && process.env['REPORT_EMAIL_FROM_ADDRESS'])) {
-  globalThis.reportSes = DBOS.configureInstance(DBOS_SES, 'reportSES', {awscfgname: 'aws_config'});
+  globalThis.reportSes = new DBOS_SES('reportSES', {awscfgname: 'aws_config'});
 }
 ```
 

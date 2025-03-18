@@ -100,7 +100,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 export const dbosProvider: Provider = {
   provide: AppService,
   useFactory: (prisma: PrismaService) => {
-    return DBOS.configureInstance(AppService, "dbosService", prisma);
+    return new AppService("dbosService", prisma);
   },
   inject: [PrismaService],
 };
@@ -114,64 +114,3 @@ export class AppModule {}
 ```
 
 If you need multiple instances of your DBOS class, you must give them distinct names (`dbosService` in this case). You can create a dedicated provider for each or use a single provider for multiple classes, at your convenience.
-
-## Running in DBOS Cloud
-DBOS Cloud seamlessly autoscales your application to millions of users and provides built-in dashboards for observability and monitoring.
-
-#### 1. Install the DBOS Cloud CLI
-<section className="row list">
-
-<article className="col col--6">
-Run this command to install it.
-</article>
-
-<article className="col col--6">
-```shell
-npm i -g @dbos-inc/dbos-cloud@latest
-```
-</article>
-</section>
-
-#### 2. Define a Start Command
-<section className="row list">
-<article className="col col--6">
-First, install the Nest.js CLI alongside your project's dependencies:
-</article>
-
-<article className="col col--6">
-```shell
-npm install @nestjs/cli
-```
-</article>
-
-<article className="col col--6">
-Then, set the `start` command in the `runtimeConfig` section of your [`dbos-config.yaml`](../typescript/reference/configuration.md) to `npx nest start`
-
-To test that it works, try launching your application locally with `npx dbos start`.
-</article>
-
-<article className="col col--6">
-
-```yaml
-runtimeConfig:
-  start:
-    - "npx nest start"
-```
-
-</article>
-</section>
-
-#### 3. Deploy to DBOS Cloud
-<section className="row list">
-<article className="col col--6">
-Run this single command to deploy your application to DBOS Cloud!
-</article>
-
-<article className="col col--6">
-
-```shell
-dbos-cloud app deploy
-```
-
-</article>
-</section>
