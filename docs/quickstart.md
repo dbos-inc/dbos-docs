@@ -96,7 +96,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 Next:
 
 - Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build incredibly reliable applications with DBOS.
-- Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable in just a few lines of code.
+- Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
 
 </article>
 
@@ -180,7 +180,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 Next:
 
 - Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build incredibly reliable applications with DBOS.
-- Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable in just a few lines of code.
+- Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
 </article>
 
 <article className="col col--6">
