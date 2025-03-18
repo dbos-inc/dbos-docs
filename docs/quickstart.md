@@ -86,7 +86,7 @@ fastapi run app/main.py
 <article className="col col--6">
 To see that it's working, visit this URL in your browser: http://localhost:8000/
 
-This application lets you test DBOS's reliability for yourself.
+This application lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the application.
 Then, restart it with `fastapi run app/main.py` and watch it seamlessly recover from where it left off.
@@ -170,7 +170,7 @@ npm run start
 <article className="col col--6">
 To see that it's working, visit this URL in your browser: http://localhost:3000/
 
-This application lets you test DBOS's reliability for yourself.
+This application lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the application.
 Then, restart it with `npm run start` and watch it seamlessly recover from where it left off.
