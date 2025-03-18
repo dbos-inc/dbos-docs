@@ -191,6 +191,13 @@ const config = {
             to: '/typescript/integrating-dbos',
           },
         ],
+        // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
+        createRedirects(existingPath) {
+          if (existingPath.startsWith('/production/dbos-cloud')) {
+            return [existingPath.replace('/production/dbos-cloud', '/cloud-tutorials')];
+          }
+          return undefined;
+        },
       },
     ],
     [
