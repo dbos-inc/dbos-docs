@@ -11,26 +11,27 @@ Add a few annotations to your application to **durably execute** it and make it 
 
 import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 } from "react-icons/tb";
 
-
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
 <section className="row list">
   <IndexCardLink
-    label="Deploy Your First App"
+    label="Run Your First Workflow"
     href="/quickstart#deploy-your-first-app-to-the-cloud"
-    description="Deploy an app to the cloud in minutes"
+    description="Install DBOS on your computer and run your first app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Start Developing Locally"
-    href="/quickstart#run-dbos-locally"
-    description="Set up DBOS for local development"
+    label="Learn DBOS Python"
+    href="/python/programming-guide"
+    description="Learn how to build incredibly reliable applications with DBOS"
     index="2️"
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Build Crashproof Apps"
-    href=""
-    description={<HtmlToReactNode htmlString={"<a class='logo-button' href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' width=35 title='Learn DBOS Python'/></a><a class='logo-button' href='/typescript/programming-guide'><img src='img/typescript-logo.svg' width=35 alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
+    label="Add DBOS To Your App"
+    href="/python/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
     index="3"
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -42,6 +43,40 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
 </section>
+</LargeTabItem>
+<LargeTabItem value="typescript" label="TypeScript">
+<section className="row list">
+  <IndexCardLink
+    label="Run Your First Workflow"
+    href="/quickstart#deploy-your-first-app-to-the-cloud"
+    description="Install DBOS on your computer and run your first app"
+    index="1"
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Learn DBOS TypeScript"
+    href="/typescript/programming-guide"
+    description="Learn how to build incredibly reliable applications with DBOS"
+    index="2️"
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Add DBOS To Your App"
+    href="/typescript/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
+    index="3"
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Explore Examples"
+    href="/examples"
+    description="See what you can build with DBOS"
+    index="4"
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+</section>
+</LargeTabItem>
+</LargeTabs>
 
 ### Example Applications
 import { MdOutlineShoppingCart } from "react-icons/md";
