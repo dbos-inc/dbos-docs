@@ -48,7 +48,7 @@ The results returned from step and transaction functions when the workflow origi
 
 ## Cloud Replay Debugging
 
-You can also replay debug DBOS applications deployed to [DBOS Cloud](../../cloud-tutorials/application-management.md).
+You can also replay debug DBOS applications deployed to DBOS Cloud.
 If your application is deployed to DBOS Cloud and you are logged into DBOS Cloud in the DBOS Debugger, you will see an additional 
 `☁️ Cloud Replay Debug` CodeLens attached to your DBOS workflow functions.
 

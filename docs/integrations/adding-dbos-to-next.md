@@ -10,7 +10,7 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 - Lightweight durable execution – DBOS [workflows](../typescript/tutorials/workflow-tutorial) run to completion exactly once.
 - Reliable background tasks - Use DBOS [queues](../typescript/tutorials/queue-tutorial.md) to run any task in the background and guarantee it eventually completes, no matter how long it takes.
 - Cron-style task scheduling – Automate recurring jobs with [cron-like scheduling](../typescript/tutorials/scheduled-workflows).
-- Built-in tracing and replay debugging – [Find workflows in the dashboard](../cloud-tutorials/monitoring-dashboard) and [re-run them locally](../typescript/tutorials/debugging.md).
+- Built-in tracing and replay debugging – [Find workflows in the dashboard](../production/dbos-cloud/monitoring-dashboard) and [re-run them locally](../typescript/tutorials/debugging.md).
 
 ## Architectural Overview
 Next.js is a framework that optimizes where and when [React](https://react.dev/) UI components render—whether on the client, server, or edge—while also handling routing, data fetching, and performance optimizations.  Part of this architecture involves the creation of minimized code bundles for handling requests.  These bundles can be loaded quickly in a “serverless” environment, leading to minimal request latency even when the server is “cold”.  This “serverless” style of deployment precludes any long-running jobs, background tasks that execute while no client requests are pending, or long-lived server objects such as WebSockets:
@@ -280,5 +280,3 @@ For Next.js server actions to work, it may be necessary to configure allowed ori
 - If your DBOS code is accessing the application database, check out the [transactions tutorial](../typescript/tutorials/transaction-tutorial) and consider database setup using [schema migration](../typescript/programming-guide#5-database-operations-and-transactions).
 - Review the [programming guide](../typescript/programming-guide) for information on job scheduling, queues, and other DBOS features.
 - Check out DBOS [programming examples](../examples)
-- Launch your Next.js app to [DBOS Cloud](../cloud-tutorials/application-management).
-

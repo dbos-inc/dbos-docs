@@ -143,7 +143,7 @@ main().catch(console.log);
 ### Queue Management
 
 Because DBOS manages queues in Postgres, you can view and manage queued functions from the command line.
-These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
+These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../production/dbos-cloud/cloud-cli.md).
 
 #### Listing Queued Functions
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 80
 title: Interactive Time Travel
 description: Learn how to run interactive time-travelled queries on your database
 ---
@@ -20,7 +20,7 @@ The extension can be installed from the link above or by searching the
 [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace)
 inside VS Code for "DBOS"
 
-![Installing the DBOS Time Travel Extension Screenshot](../assets/ttdbg-ext-install.png)
+![Installing the DBOS Time Travel Extension Screenshot](../../assets/ttdbg-ext-install.png)
 
 Once installed, the DBOS Time Travel Extension will automatically update as new releases are published to the VS Code Marketplace.
 
@@ -44,7 +44,7 @@ chmod +x debug-proxy
 </Tabs>
 
 :::info
-The DBOS time travel proxy securely connects to the [provenance database](../explanations/system-tables.md), an append-only replica of your application database maintained by DBOS Cloud.
+The DBOS time travel proxy securely connects to the [provenance database](../../explanations/system-tables.md), an append-only replica of your application database maintained by DBOS Cloud.
 It uses the historical information in this database to run time-travelled queries without modifying your application database.
 :::
 
@@ -58,7 +58,7 @@ psql -h localhost -p 2345 -U postgres
 ```
 
 By default, any queries you run will reflect the current state of your database.
-Let's assume you've deployed the ["Hello, Database" quickstart](../quickstart) application to DBOS Cloud.
+Let's assume you've deployed a simple application to DBOS Cloud.
 The application's `dbos_hello` table tracks how many times each person has been greeted.
 The following query tells you how many times Mike has been greeted:
 
@@ -118,7 +118,7 @@ Can be shortened to `DBOS WF`
 
 Sets the time travel debugger to the specific point in time when a specified workflow started. 
 Workflows are identified by their workflow UUID, which can be found in the
-[Monitoring Dashboard](../cloud-tutorials/monitoring-dashboard.md).
+[Monitoring Dashboard](./monitoring-dashboard.md).
 The workflow UUID must be enclosed in quotes when using this command.
 
 Examples:

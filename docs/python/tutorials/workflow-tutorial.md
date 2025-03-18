@@ -272,33 +272,34 @@ dbos workflow resume <workflow-id>
 
 ## Workflow Management
 
-Because DBOS stores the execution state of workflows in Postgres, you can view and manage your workflows from the command line.
-These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../cloud-tutorials/cloud-cli.md).
+You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
 
 #### Listing Workflows
 
-You can list your application's workflows with:
+Navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable list of its workflows:
+
+<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
+Alternatively, list them from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-queue-list)):
 
 ```shell
 dbos workflow list
 ```
 
-By default, this returns your ten most recently started workflows.
-You can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-queue-list).
-
 #### Cancelling Workflows
 
-You can cancel the execution of a workflow with:
+You can cancel the execution of a workflow from the web UI or with:
 
 ```shell
 dbos workflow cancel <workflow-id>
 ```
 
-Currently, this does not halt execution, but prevents the workflow from being automatically recovered.
+If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
+If the workflow is enqueued, cancelling removes it from the queue.
 
 #### Resuming Workflows
 
-You can resume a workflow from its last completed step with:
+You can resume a workflow from its last completed step from the web UI or with:
 
 ```shell
 dbos workflow resume <workflow-id>
@@ -309,7 +310,7 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 
 #### Restarting Workflows
 
-You can start a new execution of a workflow with:
+You can start a new execution of a workflow from the web UI or with:
 
 ```shell
 dbos workflow restart <workflow-id>

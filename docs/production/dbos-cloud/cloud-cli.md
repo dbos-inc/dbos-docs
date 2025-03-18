@@ -1,5 +1,5 @@
 ---
-sidebar_position: 30
+sidebar_position: 1000
 title: Cloud CLI Reference
 description: DBOS Cloud CLI reference
 pagination_next: null
@@ -23,7 +23,7 @@ It provides a URL to a secure login portal you can use to create an account from
 
 **Arguments:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
-- `-s, --secret [string]`: (Optional) An [organization secret](../cloud-tutorials/account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
+- `-s, --secret [string]`: (Optional) An [organization secret](./account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
 
 
 :::info
@@ -163,7 +163,7 @@ After restoration is complete, we recommend using [`change-database-instance`](#
 
 **Description:**
 This command links your own Postgres database instance to DBOS Cloud.
-Before running this command, please first follow our [tutorial](../cloud-tutorials/byod-management) to set up your Postgres database.
+Before running this command, please first follow our [tutorial](./byod-management) to set up your Postgres database.
 
 :::info
 This feature is currently only available to [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscribers.

@@ -47,8 +47,8 @@ This commands launches the user's default browser and navigates to the root URL 
 
 ### Launch Time Travel Debugging Proxy
 
-[Interactive time travel](../../../cloud-tutorials/interactive-timetravel.md) relies on Debug Proxy utility to project the state of the database as it existed when a selected workflow started.
-You can launch the Debug Proxy in order to use `psql` or other similar tools for running [interactive time-traveled queries](../../../cloud-tutorials/interactive-timetravel.md).
+[Interactive time travel](../../../production/dbos-cloud//interactive-timetravel.md) relies on Debug Proxy utility to project the state of the database as it existed when a selected workflow started.
+You can launch the Debug Proxy in order to use `psql` or other similar tools for running [interactive time-traveled queries](../../../production/dbos-cloud/interactive-timetravel.md).
 
 When the Debug Proxy is running, its output appears in a [VSCode terminal window](https://code.visualstudio.com/docs/terminal/basics).
 You cannot interact with the Debug Proxy via this window, but you can shut it down with Ctrl-C.
