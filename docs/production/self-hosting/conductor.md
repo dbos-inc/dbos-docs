@@ -4,7 +4,7 @@ title: DBOS Conductor
 ---
 
 The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
-Conductor is a managed service for operating DBOS applications.
+Conductor is a managed service that helps you operate DBOS applications.
 It provides:
 
 - [**Distributed workflow recovery**](./workflow-recovery.md): Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
