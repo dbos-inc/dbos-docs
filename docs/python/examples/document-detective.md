@@ -26,7 +26,7 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
-from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle, load_config
+from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
@@ -49,7 +49,7 @@ Next, let's initialize LlamaIndex to store and query the vector index we'll be c
 ```python
 def configure_index():
     Settings.chunk_size = 512
-    dbos_config = load_config()
+    dbos_config = DBOS.config
     db = dbos_config["database"]
     vector_store = PGVectorStore.from_params(
         database=db["app_db_name"],
