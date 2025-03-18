@@ -120,16 +120,13 @@ Next:
 
 #### 1. Initialize an Application
 Initalize a starter application and enter its directory.
-We recommend initializing `dbos-node-toolbox`, which contains example code for useful DBOS features.
-
-If you previously created a git repository from the cloud console, you can clone your repository and use it instead.
 </article>
 
 <article className="col col--6">
 
 ```shell
-npx @dbos-inc/create@latest --template dbos-node-toolbox
-cd dbos-node-toolbox
+npx @dbos-inc/create@latest --template dbos-node-starter
+cd dbos-node-starter
 ```
 
 </article>
@@ -139,33 +136,15 @@ cd dbos-node-toolbox
 <article className="col col--6">
 
 #### 2. Build Your Application
-DBOS TypeScript requires Node.js 20 or later.
+Install dependencies, then build your application.
 
 </article>
-
-<article className="col col--6">
-
-<details>
-<summary>Instructions to install Node.js</summary>
-
-<InstallNode />
-
-</details>
-</article>
-
-<article className="col col--6">
-
-Install dependencies, then create some database tables.
-DBOS will automatically guide you through connecting to your app to a Postgres database.
-
-</article>
-
 
 <article className="col col--6">
 
 ```shell
 npm install
-npx dbos migrate
+npm run build
 ```
 
 </article>
@@ -178,30 +157,38 @@ npx dbos migrate
 
 <article className="col col--6">
 Now, start your app!
+DBOS will automatically guide you through connecting to your app to a Postgres database.
 
 </article>
 
 <article className="col col--6">
 ```bash
-npm run dev
+npm run start
 ```
 </article>
 
 <article className="col col--6">
 To see that it's working, visit this URL in your browser: http://localhost:3000/
+
+This application lets you test DBOS's reliability for yourself.
+Launch a durable workflow and watch it execute its three steps.
+At any point, crash the application.
+Then, restart it with `npm run start` and watch it seamlessly recover from where it left off.
+
+
+Congratulations, you've run your first durable workflow with DBOS!
+Next:
+
+- Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build incredibly reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable in just a few lines of code.
 </article>
 
 <article className="col col--6">
 <BrowserWindow url="http://localhost:3000/">
-**Welcome to DBOS!**
+<img src={require('@site/static/img/quickstart/node-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 </BrowserWindow>
 </article>
 
-
-<article className="col col--6">
-Congratulations, you're running DBOS locally!
-To learn more about building DBOS apps, check out the [TypeScript programming guide](./typescript/programming-guide.md).
-</article>
 
 </section>
 
