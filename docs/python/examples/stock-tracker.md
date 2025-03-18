@@ -15,8 +15,6 @@ Let's start off by importing the necessary libraries and initializing the app.
 
 ```python
 import os
-import sys
-import signal
 import datetime
 import threading
 import yfinance as yf
@@ -112,19 +110,9 @@ def fetch_alerts():
 In our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python 
-def signal_handler(sig, frame):
-    DBOS.destroy()
-    sys.exit(0)
-
 if __name__ == "__main__":
     DBOS.launch()
-    signal.signal(signal.SIGINT, signal_handler)
-    try:
-        DBOS.launch()
-        while True:
-            threading.Event().wait(1)
-    finally:
-        DBOS.destroy()
+    threading.Event().wait()
 ```
 
 ## Visualizing with Streamlit
