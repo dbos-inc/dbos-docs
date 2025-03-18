@@ -9,14 +9,9 @@ This guide describes how to manage workflow recovery in a production environment
 
 ## Managing Recovery
 
-### Recovery With Conductor
-
-If your application is connected to [DBOS Conductor](./conductor.md), workflow recovery is automatic.
-When Conductor detects that an executor is unhealthy, it automatically signals another executor to recover its workflows.
-
 ### Recovery On A Single Server
 
-If hosting an application on a single server without Conductor, each time you restart your application's process, it recovers all workflows that were executing before the restart (all `PENDING` workflows).
+If hosting an application on a single server without Conductor, each time you restart your application's process, DBOS recovers all workflows that were executing before the restart (all `PENDING` workflows).
 
 ### Recovery in a Distributed Setting
 
@@ -25,6 +20,11 @@ You should assign each executor running a DBOS application an executor ID by set
 Each workflow is tagged with the ID of the executor that started it.
 When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
 You can also instruct your executor to recover workflows assigned to other executor IDs through the [workflow recovery endpoint of the admin API](./admin-api.md#workflow-recovery).
+
+### Recovery With Conductor
+
+If your application is connected to [DBOS Conductor](./conductor.md), workflow recovery is automatic.
+When Conductor detects that an executor is unhealthy, it automatically signals another executor to recover its workflows.
 
 ## Managing Application versions
 

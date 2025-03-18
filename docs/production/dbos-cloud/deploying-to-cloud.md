@@ -6,7 +6,7 @@ hide_table_of_contents: true
 import InstallNode from '/docs/partials/_install_node.mdx';
 
 
-Any application built with DBOS can be deployed for free to DBOS Cloud.
+Any application built with DBOS can be deployed to DBOS Cloud.
 DBOS Cloud is a serverless platform for durably executed applications.
 It provides:
 
