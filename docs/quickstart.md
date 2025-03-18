@@ -9,7 +9,7 @@ import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 
 # Get Started with DBOS
 
-DBOS is a library for building incredibly reliable programs.
+DBOS is a library for building reliable programs.
 This guide shows you how to install and run it on your computer.
 
 <LargeTabs groupId="language">

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-DBOS is a library for building incredibly reliable programs.
+DBOS is a library for building reliable programs.
 Add a few annotations to your application to **durably execute** it and make it **resilient to any failure**.
 
 ### Get Started
