@@ -36,7 +36,7 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, SetWorkflowID, load_config
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
@@ -49,14 +49,18 @@ from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "llamabot",
+    "database_url": os.environ.get("DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 ```
 
 Next, let's initialize LlamaIndex to use the app's Postgres database as its vector store.
 
 ```python
 set_global_handler("simple", logger=DBOS.logger)
-dbos_config = load_config()
+dbos_config = DBOS.config
 vector_store = PGVectorStore.from_params(
     database=dbos_config["database"]["app_db_name"],
     host=dbos_config["database"]["hostname"],

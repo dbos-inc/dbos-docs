@@ -17,17 +17,23 @@ In our main file (`earthquake_tracker/main.py`) let's start off with imports and
 
 
 ```python
+import sys
+import signal
 import threading
 from datetime import datetime, timedelta
 from typing import TypedDict
 
 import requests
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
-DBOS()
+config: DBOSConfig = {
+    "name": "earthquake-tracker",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 ```
 
 ## Retrieving Earthquake Data
@@ -119,9 +125,18 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
 Finally, in our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python
+def signal_handler(sig, frame):
+    DBOS.destroy()
+    sys.exit(0)
+
 if __name__ == "__main__":
-    DBOS.launch()
-    threading.Event().wait()
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        DBOS.launch()
+        while True:
+            threading.Event().wait(1)
+    finally:
+        DBOS.destroy()
 ```
 
 ## Visualizing the Data with Streamlit
@@ -267,6 +282,7 @@ Then start your app:
 
 ```shell
 pip install -r requirements.txt
+export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```

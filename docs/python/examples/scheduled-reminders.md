@@ -18,7 +18,7 @@ Let's start off with imports and initializing the DBOS and FastAPI apps.
 ```python
 import os
 
-from dbos import DBOS, SetWorkflowID
+from dbos import DBOS, DBOSConfig, SetWorkflowID
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
@@ -26,7 +26,11 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "scheduled-reminders",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(fastapi=app, config=config)
 ```
 
 ## Scheduling Emails
@@ -175,6 +179,8 @@ Then start your app:
 
 ```shell
 pip install -r requirements.txt
+export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
+dbos migrate
 dbos start
 ```
 

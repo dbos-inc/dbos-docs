@@ -15,14 +15,20 @@ Let's start off by importing the necessary libraries and initializing the app.
 
 ```python
 import os
+import sys
+import signal
 import datetime
 import threading
 import yfinance as yf
 from twilio.rest import Client
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import stock_prices, alerts
 
-DBOS()
+config: DBOSConfig = {
+    "name": "stock-prices",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 ```
 
 ## Stock Prices Watcher as an online cron job
@@ -106,9 +112,19 @@ def fetch_alerts():
 In our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python 
+def signal_handler(sig, frame):
+    DBOS.destroy()
+    sys.exit(0)
+
 if __name__ == "__main__":
     DBOS.launch()
-    threading.Event().wait()
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        DBOS.launch()
+        while True:
+            threading.Event().wait(1)
+    finally:
+        DBOS.destroy()
 ```
 
 ## Visualizing with Streamlit

@@ -46,11 +46,15 @@ Let's start off with imports and initializing DBOS.
 We'll also set up FastAPI to serve HTTP requests.
 
 ```python showLineNumbers
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "reliable-refunds-langchain",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(fastapi=app, config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -380,6 +384,7 @@ pip install -r requirements.txt
 Then start your app in the virtual environment:
 
 ```shell
+export DBOS_DATABASE_URL=postgresql://postgres:${PGPASSWORD}@localhost:5432
 dbos migrate
 dbos start
 ```
