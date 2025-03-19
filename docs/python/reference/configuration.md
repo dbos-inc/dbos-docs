@@ -25,8 +25,11 @@ class DBOSConfig(TypedDict):
     name: str
     database_url: Optional[str]
     sys_db_name: Optional[str]
+    app_db_pool_size: Optional[int]
+    sys_db_pool_size: Optional[int]
     log_level: Optional[str]
     otlp_traces_endpoints: Optional[List[str]]
+    run_admin_server: Optional[bool]
     admin_port: Optional[int]
 ```
 
