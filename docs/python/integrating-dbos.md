@@ -19,7 +19,7 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 
 ```shell
 pip install dbos
-dbos init --config
+dbos init my-app --config
 ```
 
 </article>
@@ -29,7 +29,7 @@ dbos init --config
 <section className="row list">
 <article className="col col--6">
 
-In your program's main function, import DBOS and add these two lines of code.
+In your program's main function, import DBOS and add these lines of code.
 These initialize DBOS when your program starts.
 
 </article>
@@ -37,9 +37,13 @@ These initialize DBOS when your program starts.
 <article className="col col--6">
 
 ```python
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 
-DBOS()
+config: DBOSConfig = {
+    "name": "my-app",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config)
 DBOS.launch()
 ```
 
@@ -52,10 +56,10 @@ DBOS.launch()
 
 Try starting your application.
 When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
-If your project is already using Postgres, add the connection information for your database to [`dbos-config.yaml`](./reference/configuration.md).
-Otherwise, DBOS will automatically guide you through launching a new database and connecting to it.
+If your project is already using Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
 
-After you've connected to Postgres, your app should run normally, but log `Initializing DBOS` and `DBOS launched` on startup.
+After you've connected to Postgres, your app should run normally, but log `Initializing DBOS` and `DBOS launched!` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
 </article>
