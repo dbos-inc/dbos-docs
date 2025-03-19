@@ -161,13 +161,18 @@ If you need to run many functions concurrently, use DBOS _queues_.
 To try them out, copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
+import os
 import time
 
-from dbos import DBOS, Queue
+from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 queue = Queue("example-queue")
 
@@ -192,7 +197,7 @@ When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronous
 `enqueue` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
 
-Start your app with `dbos start`.
+Start your app with `fastapi run main.py`.
 Then, visit this URL: http://localhost:8000.
 Wait five seconds and you should see an output like:
 
@@ -223,7 +228,7 @@ def dbos_step(n: int):
     print(f"Step {n} completed!")
 ```
 
-Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
 After about five seconds, you should see an output like:
 
 ```
@@ -236,7 +241,8 @@ Step 3 completed!
 Step 4 completed!
 ```
 
-Next, press CTRL+C stop your app. Then, run `dbos start` to restart it. Wait ten seconds and you should see an output like:
+Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it).
+Then, run `fastapi run main.py` to restart it. Wait ten seconds and you should see an output like:
 
 
 ```shell
