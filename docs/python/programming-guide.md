@@ -333,7 +333,7 @@ escaped_conn_string = re.sub(
 config.set_main_option("sqlalchemy.url", escaped_conn_string)
 ```
 
-This code imports your table schema into Alembic and tells it to load its database connection parameters from DBOS.
+This code imports your table schema into Alembic and tells it to load its database connection parameters from your DBOS configuration file.
 
 Next, generate your migration files:
 
@@ -341,18 +341,10 @@ Next, generate your migration files:
 alembic revision --autogenerate -m "example_table"
 ```
 
-Edit your `dbos-config.yaml` to add a migration command:
-
-```yaml
-database:
-  migrate:
-    - alembic upgrade head
-```
-
 Finally, run your migrations with:
 
 ```shell
-dbos migrate
+alembic upgrade head
 ```
 
 You should see output like:
@@ -368,13 +360,19 @@ You just created your new table in your Postgres database!
 Now, let's write a DBOS workflow that operates on that table. Copy the following code into `main.py`:
 
 ```python showLineNumbers title="main.py"
-from dbos import DBOS
+import os
+
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 @DBOS.transaction()
 def insert_row():
@@ -397,7 +395,7 @@ The database operations are done in DBOS _transactions_. These are special steps
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
 
 You should see an output like:
 
