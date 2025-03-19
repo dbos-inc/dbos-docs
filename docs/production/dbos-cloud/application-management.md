@@ -32,13 +32,13 @@ If your account is part of an [organization](./account-management.md#organizatio
 
 #### Applications Configuration
 You need to provide a valid `dbos-config.yaml` file when deploying an application to DBOS Cloud. The required fields are:
+- **name**: Your application name. This is the name with which your application is registered.
 - **language**: `node` or `python`
 - **runtimeConfig.start**: the command used to start your application. For example, `fastapi run`
 
 Note that some fields from dbos-config.yaml will be **ignored** during cloud deployments:
 - **database_url** and **database** connection-related fields. DBOS Cloud automatically applies the connection information of your cloud database server.
 - **runtimeConfig.admin_port**: DBOS Cloud communicates with Transact admin port on port 3001.
-- **name**: DBOS Cloud will use the name you registered your application with
 
 
 #### Dependency Management
