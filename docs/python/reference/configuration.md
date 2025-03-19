@@ -35,22 +35,14 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 The database_url field is used to declare a connection string pointing to your application database.
 DBOS currently only supports Postgres-compatible databases.
+The supported format is `postgres://[username]:[password]@[hostname]:[port]/[database name]`. The `sslmode=require`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
 See the [Postgres docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS) for connection strings examples.
-We support the `sslmode`, `sslrootcert` and `connect_timeout` parameter keywords.
-
-**Example**
-```yaml
-database_url: 'postgres://postgres:${PGPASSWORD}@localhost:5432/dbname?connect_timeout=10&sslmode=require&sslrootcert=ca.pem"
-```
 
 ::::info
 The role with which DBOS connects to Postgres must have [`CREATE`](https://www.postgresql.org/docs/current/ddl-priv.html#DDL-PRIV-CREATE) privileges on both the application database and system database if they already exist.
 If either does not exist, the Postgres role must have the [`CREATEDB`](https://www.postgresql.org/docs/current/sql-createdatabase.html) privilege to create them.
 ::::
 
-::::info
-In DBOS Cloud, `database_url` is ignored in favor of your application's database connection information.
-::::
 
 ---
 

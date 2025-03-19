@@ -39,7 +39,7 @@ class DBOSConfig(TypedDict):
 ```
 
 - `name`: Your application's name. This field is used by tools from the DBOS ecosystem, like the [DBOS debugger](../tutorials/debugging).
-- `database_url`: A connection string pointing to your application's database. See the [Postgres docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS) for examples. We support the `sslmode`, `sslrootcert` and `connect_timeout` parameter keywords. The default parameters are `postgres://postgres:${PGPASSWORD}@localhost:5432`.
+- `database_url`: A connection string pointing to your application's database. The supported format is `postgres://[username]:[password]@[hostname]:[port]/[database name]` The `sslmode=require`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
 - `sys_db_name`: An optional name for [DBOS' system database](../../explanations/system-tables). Defaults to your application database name + `_dbos_sys`.
 - `log_level`: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - `otlp_traces_endpoints`: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
