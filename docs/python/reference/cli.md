@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 title: DBOS CLI
 ---
 
@@ -7,7 +7,7 @@ title: DBOS CLI
 
 ### dbos start
 
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
 For example:
 
 ```yaml
@@ -20,7 +20,7 @@ DBOS Cloud executes this command to start your app.
 
 ### dbos migrate
 
-Run all database schema migration commands defined in [`dbos-config.yaml`](./configuration.md#database).
+Run all database schema migration commands defined in [`dbos-config.yaml`](./configuration.md#database-section).
 For example:
 
 ```yaml

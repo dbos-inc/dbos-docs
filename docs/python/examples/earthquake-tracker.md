@@ -22,12 +22,16 @@ from datetime import datetime, timedelta
 from typing import TypedDict
 
 import requests
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import earthquake_tracker
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
-DBOS()
+config: DBOSConfig = {
+    "name": "earthquake-tracker",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 ```
 
 ## Retrieving Earthquake Data

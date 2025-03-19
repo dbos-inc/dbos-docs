@@ -27,7 +27,7 @@ import time
 from collections import deque
 
 import psutil
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from langchain_core.messages import HumanMessage
@@ -41,7 +41,11 @@ from pydantic import BaseModel
 from .schema import chat_history
 
 app = FastAPI()
-dbos = DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "chatbot",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+dbos = DBOS(fastapi=app, config=config)
 ```
 
 ## Setting Up LangChain

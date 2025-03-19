@@ -19,10 +19,14 @@ import datetime
 import threading
 import yfinance as yf
 from twilio.rest import Client
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from schema import stock_prices, alerts
 
-DBOS()
+config: DBOSConfig = {
+    "name": "stock-prices",
+    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+}
+DBOS(config=config)
 ```
 
 ## Stock Prices Watcher as an online cron job

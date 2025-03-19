@@ -27,9 +27,19 @@ If your account is part of an [organization](./account-management.md#organizatio
 :::tip
 * Applications should serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for Express and Koa).
 * Multiple applications can connect to the same Postgres database server&mdash;they are deployed to isolated databases on that server.
-* You don't have to worry about setting database server connection parameters like `hostname` or `password` to deploy an application to the cloud&#8212;DBOS automatically applies the connection information of your cloud database server.
 * You cannot change the database of a deployed application. You must delete and re-deploy the application.
 :::
+
+#### Applications Configuration
+You need to provide a valid `dbos-config.yaml` file when deploying an application to DBOS Cloud. The required fields are:
+- **name**: Your application name. This is the name with which your application is registered.
+- **language**: `node` or `python`
+- **runtimeConfig.start**: the command used to start your application. For example, `fastapi run`
+
+Note that some fields from dbos-config.yaml will be **ignored** during cloud deployments:
+- **database_url** and **database** connection-related fields. DBOS Cloud automatically applies the connection information of your cloud database server.
+- **runtimeConfig.admin_port**: DBOS Cloud communicates with Transact admin port on port 3001.
+
 
 #### Dependency Management
 

@@ -21,9 +21,12 @@ from datetime import UTC, datetime, timedelta
 
 import requests
 import slack_sdk
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 
-DBOS()
+config: DBOSConfig = {
+    "name": "hackernews-alerts",
+}
+DBOS(config=config)
 ```
 
 ## Searching Hacker News

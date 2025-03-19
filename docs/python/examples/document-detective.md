@@ -26,7 +26,7 @@ from tempfile import TemporaryDirectory
 from typing import List
 
 import requests
-from dbos import DBOS, Queue, WorkflowHandle, load_config
+from dbos import DBOS, DBOSConfig, Queue, WorkflowHandle
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from llama_index.core import Settings, StorageContext, VectorStoreIndex
@@ -37,7 +37,11 @@ from pydantic import BaseModel, HttpUrl
 from .schema import chat_history
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "document-detective",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(fastapi=app, config=config)
 ```
 
 Next, let's initialize LlamaIndex to store and query the vector index we'll be constructing.
@@ -45,7 +49,7 @@ Next, let's initialize LlamaIndex to store and query the vector index we'll be c
 ```python
 def configure_index():
     Settings.chunk_size = 512
-    dbos_config = load_config()
+    dbos_config = DBOS.config
     db = dbos_config["database"]
     vector_store = PGVectorStore.from_params(
         database=db["app_db_name"],

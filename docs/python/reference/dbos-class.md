@@ -12,18 +12,19 @@ Decorators are documented [here](./decorators.md) and context methods and variab
 ```python
 DBOS(
     *,
+    config: Optional[DBOSConfig] = None,
     fastapi: Optional[FastAPI] = None,
     flask: Optional[Flask] = None,
-    config: Optional[ConfigFile] = None,
     conductor_key: Optional[str] = None,
 )
 ```
 
 **Parameters:**
+- `config`: Configuration parameters for DBOS. See the [configuration docs](./configuration.md).
 - `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
 - `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
-- `config`: A configuration object. By default, DBOS reads configuration from `dbos-config.yaml`, but if this object is passed its contents are used instead. We recommend using this for testing only.
 - `conductor_key`: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+
 
 ### launch
 
