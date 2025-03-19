@@ -276,7 +276,7 @@ The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, de
 The schedule in the example, `* * * * * *` means "run this workflow every second."
 Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
 
-Now, start your app with `dbos start`.
+Now, start your app with `fastapi run main.py`.
 The workflow should run every second, with output like:
 
 ```shell
