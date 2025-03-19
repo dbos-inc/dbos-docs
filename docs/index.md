@@ -16,7 +16,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 <section className="row list">
   <IndexCardLink
     label="Run Your First Durable App"
-    href="/quickstart#deploy-your-first-app-to-the-cloud"
+    href="/quickstart"
     description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -48,7 +48,7 @@ import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 
 <section className="row list">
   <IndexCardLink
     label="Run Your First Durable App"
-    href="/quickstart#deploy-your-first-app-to-the-cloud"
+    href="/quickstart"
     description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
