@@ -2,39 +2,25 @@
 sidebar_position: 20
 title: Add DBOS To Your App
 ---
-import InstallNode from '/docs/partials/_install_node.mdx';
 
 
 This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
 
-### Using DBOS Transact
-
-#### 1. Install DBOS
-<section className="row list">
-<article className="col col--6">
+### 1. Install DBOS
 `pip install` DBOS into your application, then create a DBOS configuration file.
-</article>
 
-<article className="col col--6">
 
 ```shell
 pip install dbos
 dbos init my-app --config
 ```
 
-</article>
-</section>
 
-#### 2. Add the DBOS Initializer
-<section className="row list">
-<article className="col col--6">
+### 2. Add the DBOS Initializer
 
-In your program's main function, import DBOS and add these lines of code.
-These initialize DBOS when your program starts.
+Add these lines of code to your program's main function.
+They initialize DBOS when your program starts.
 
-</article>
-
-<article className="col col--6">
 
 ```python
 from dbos import DBOS, DBOSConfig
@@ -47,12 +33,7 @@ DBOS(config=config)
 DBOS.launch()
 ```
 
-</article>
-</section>
-
-#### 3. Start Your Application
-<section className="row list">
-<article className="col col--6">
+### 3. Start Your Application
 
 Try starting your application.
 When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
@@ -62,18 +43,8 @@ Otherwise, DBOS will automatically guide you through launching a new Postgres da
 After you've connected to Postgres, your app should run normally, but log `Initializing DBOS` and `DBOS launched!` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
-</article>
 
-<article className="col col--6">
-
-</article>
-
-</section>
-
-
-#### 4. Start Building With DBOS
-<section className="row list">
-<article className="col col--6">
+### 4. Start Building With DBOS
 
 At this point, you can add any DBOS decorator or method to your application.
 For example, you can annotate one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and the functions it calls as [steps](./tutorials/step-tutorial.md).
@@ -84,9 +55,6 @@ It's totally okay for your application to have one DBOS workflow alongside thous
 
 To learn more about programming with DBOS, check out [the guide](./programming-guide.md).
 
-</article>
-
-<article className="col col--6">
 
 ```python
 @DBOS.step()
@@ -102,6 +70,3 @@ def workflow()
     step_one()
     step_two()
 ```
-</article>
-
-</section>
