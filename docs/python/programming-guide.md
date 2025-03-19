@@ -512,4 +512,4 @@ def dbos_workflow():
 ```
 </details>
 
-Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
+Next learn how to [add DBOS to your own application](./integrating-dbos.md) and check out the Python tutorials and [example apps](../examples/index.md).
