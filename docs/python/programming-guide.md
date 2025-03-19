@@ -38,7 +38,7 @@ cd dbos-starter
 Then, install DBOS and create a DBOS configuration file:
 ```shell
 pip install dbos
-dbos init --config
+dbos init dbos-starter --config
 ```
 
 ## 2. Workflows and Steps
@@ -47,9 +47,14 @@ Now, let's create the simplest interesting DBOS program.
 Create a `main.py` file and add this code to it:
 
 ```python showLineNumbers title="main.py"
-from dbos import DBOS
+import os
+from dbos import DBOS, DBOSConfig
 
-DBOS()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -76,11 +81,15 @@ The key benefit of DBOS is **durability**&mdash;it automatically saves the state
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
-Run this code with `python3 main.py` and it should print output like:
+Now, trying running this code with `python3 main.py`.
+When DBOS is launched, it attempts to connect to a Postgres database.
+If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
+
+Your program should print output like:
 
 ```shell
-13:47:09 [    INFO] (dbos:_dbos.py:272) Initializing DBOS
-13:47:09 [    INFO] (dbos:_dbos.py:401) DBOS launched
+15:41:06 [    INFO] (dbos:_dbos.py:534) DBOS launched!
 Step one completed!
 Step two completed!
 ```
@@ -89,11 +98,17 @@ To see durable execution in action, let's modify the app to serve a DBOS workflo
 Copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
+import os
+
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
-from dbos import DBOS
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 @DBOS.step()
 def step_one():
@@ -113,8 +128,7 @@ def dbos_workflow():
     step_two()
 ```
 
-Start your app with `dbos start`.
-This calls the start command defined in your `dbos-config.yaml`, which by default is `fastapi run main.py`.
+Start your app with `fastapi run main.py`.
 Then, visit this URL: http://localhost:8000.
 
 In your terminal, you should see an output like:
@@ -124,10 +138,9 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 Step one completed!
 Press Control + C to stop the app...
 Press Control + C to stop the app...
-Press Control + C to stop the app...
 ```
 
-Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
+Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it). Then, run `fastapi run main.py` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
