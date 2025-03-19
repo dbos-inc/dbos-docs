@@ -4,44 +4,79 @@ sidebar_position: 1
 
 # Welcome to DBOS!
 
-DBOS is a library for building incredibly reliable programs.
+DBOS is a library for building reliable programs.
 Add a few annotations to your application to **durably execute** it and make it **resilient to any failure**.
 
 ### Get Started
 
 import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 } from "react-icons/tb";
 
-
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
 <section className="row list">
   <IndexCardLink
-    label="Deploy Your First App"
-    href="/quickstart#deploy-your-first-app-to-the-cloud"
-    description="Deploy an app to the cloud in minutes"
+    label="Run Your First Durable App"
+    href="/quickstart"
+    description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Start Developing Locally"
-    href="/quickstart#run-dbos-locally"
-    description="Set up DBOS for local development"
+    label="Learn DBOS Python"
+    href="/python/programming-guide"
+    description="Learn how to build reliable applications with DBOS"
     index="2️"
     icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Build Crashproof Apps"
-    href=""
-    description={<HtmlToReactNode htmlString={"<a class='logo-button' href='/python/programming-guide'><img src='img/python-logo-only.svg' alt='python' width=35 title='Learn DBOS Python'/></a><a class='logo-button' href='/typescript/programming-guide'><img src='img/typescript-logo.svg' width=35 alt='typescript' title='Learn DBOS TypeScript'/></a>"} />}
+    label="Add DBOS To Your App"
+    href="/python/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
     index="3"
     icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Explore Examples"
-    href="/examples"
-    description="See what you can build with DBOS"
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
     index="4"
     icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
 </section>
+</LargeTabItem>
+<LargeTabItem value="typescript" label="TypeScript">
+<section className="row list">
+  <IndexCardLink
+    label="Run Your First Durable App"
+    href="/quickstart"
+    description="Install DBOS on your computer and run your first durable app"
+    index="1"
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Learn DBOS TypeScript"
+    href="/typescript/programming-guide"
+    description="Learn how to build reliable applications with DBOS"
+    index="2️"
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Add DBOS To Your App"
+    href="/typescript/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
+    index="3"
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
+    index="4"
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+</section>
+</LargeTabItem>
+</LargeTabs>
 
 ### Example Applications
 import { MdOutlineShoppingCart } from "react-icons/md";
@@ -90,9 +125,9 @@ import { PiQueueBold } from "react-icons/pi";
     icon={<BsDatabaseCheck color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
   <IndexCardLink
-    label="Fast, Efficient Serverless"
-    href="https://console.dbos.dev/launch"
-    description="Experience serverless hosting 25x faster than AWS Lambda, with no charge for idle CPU time"
+    label="Run Anywhere"
+    href="/production"
+    description="Run DBOS workflows in any environment, or serverlessly deploy them to DBOS Cloud"
     index="2"
     icon={<IoIosRocket color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
@@ -105,8 +140,8 @@ import { PiQueueBold } from "react-icons/pi";
   />
   <IndexCardLink
     label="Built-in Observability"
-    href="/python/tutorials/logging-and-tracing"
-    description="All your workflows automatically emit OpenTelemetry traces"
+    href="/production/self-hosting/workflow-management"
+    description="Interactively view, search, and manage your workflows from a graphical UI."
     index="4"
     icon={<SiOpentelemetry color="var(--ifm-color-primary-lightest)" size={30}/>}
   />
