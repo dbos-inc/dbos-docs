@@ -415,16 +415,20 @@ Here's what everything looks like put together:
 <summary>Putting it all together</summary>
 
 ```python showLineNumbers title="main.py"
+import os
 import time
 
-from dbos import DBOS, Queue
+from dbos import DBOS, Queue, DBOSConfig
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 ##################################
 #### Workflows and Steps
