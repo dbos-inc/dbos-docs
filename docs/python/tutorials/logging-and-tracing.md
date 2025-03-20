@@ -6,9 +6,6 @@ description: Overview of logging and tracing in DBOS
 
 ### Logging
 
-When using DBOS, we recommend you do all logging via Python's [built-in logger](https://docs.python.org/3/library/logging.html).
-This allows DBOS Cloud to collect and display your logs.
-
 For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
 For example:
 
@@ -16,12 +13,15 @@ For example:
 DBOS.logger.info("Welcome to DBOS!")
 ```
 
-You can configure the log level of this built-in logger in your [`dbos-config.yaml`](../reference/configuration.md) file
+You can configure the log level of this built-in logger through the [DBOS constructor](../reference/dbos-class.md#class-dbosdbos).
+This also configures the log leve of the DBOS library.
 
-```yaml
-telemetry:
-  logs:
-    logLevel: 'INFO'
+```python
+config: DBOSConfig = {
+  "name": "my-app"
+  "log_level": "INFO"
+}
+DBOS(config=config)
 ```
 
 ### Tracing 

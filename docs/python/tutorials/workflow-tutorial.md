@@ -65,11 +65,25 @@ def example_workflow(friend: str):
     return example_transaction(body)
 ```
 
-## Workflow IDs
+## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+
+You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
+This acts as an idempotency key: if a workflow is called multiple times with the same key, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
+
+with SetWorkflowID("very-unique-id"):
+    example_workflow()
+```
 
 ## Starting Workflows In The Background
 
