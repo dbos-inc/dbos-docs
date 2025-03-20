@@ -7,14 +7,13 @@ title: Add DBOS To Your App
 This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
-`pip install` DBOS into your application, then create a DBOS configuration file.
-
+`pip install` DBOS into your application.
+Then, create a DBOS configuration file (this file is optional but is used by tooling like the DBOS CLI and debugger).
 
 ```shell
 pip install dbos
 dbos init my-app --config
 ```
-
 
 ### 2. Add the DBOS Initializer
 
