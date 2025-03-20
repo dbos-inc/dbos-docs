@@ -44,7 +44,7 @@ DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you id
 
 Workflows are in most respects normal Python functions.
 They can have loops, branches, conditionals, and so on.
-However, workflow functions must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
 
