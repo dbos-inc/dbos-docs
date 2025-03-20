@@ -53,10 +53,11 @@ You can view all applications registered with Conductor on the DBOS Console:
 
 <img src={require('@site/static/img/conductor/list-apps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-On your application's page, you can see all executors (processes) running that application that are currently connected to Conductor:
+On your application's page, you can see all executors (processes) running that application that are currently connected to Conductor.
+Executors are identified by a unique ID that they generate and print on startup.
+When you restart an executor, it generates a new ID.
 
 <img src={require('@site/static/img/conductor/app-page.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 
 An application is available to Conductor if there is at least one process running that application currently connected to Conductor.
 Conductor has no access to your application's database or private data&mdash;it implements features like [workflow management](./workflow-management.md) by communicating with connected executors through a workflow-metadata-only protocol over websockets.
