@@ -22,7 +22,7 @@ DBOS provides reliability guarantees for programs that are [written as workflows
 @DBOS.workflow(config?: WorkflowConfig)
 ```
 
-When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../../tutorials/idempotency-tutorial.md).
+When called, `workflow` functions are wrapped such that they will be [run to completion exactly once](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 `@DBOS.workflow()` takes an optional [`WorkflowConfig`](#workflow-configuration) object.
 
@@ -192,7 +192,7 @@ const qhres = await qhandle.getResult();
 ```
 
 ##### Assigning workflow IDs
-Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../../tutorials/idempotency-tutorial.md) can be done with `DBOS.withNextWorkflowID`.
+Specifying a workflow ID is useful if the intent is to start a workflow exactly once for a given circumstance.  Assignment of [workflow IDs](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) can be done with `DBOS.withNextWorkflowID`.
 
 ```typescript
 DBOS.withNextWorkflowID<R>(wfid: string, callback: ()=>Promise<R>) : Promise<R>
@@ -464,7 +464,7 @@ interface GetWorkflowsInput {
 }
 ```
 
-`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
@@ -491,7 +491,7 @@ export interface GetWorkflowQueueInput {
 }
 ```
 
-`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
+`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
 ```typescript
 export interface GetWorkflowQueueOutput {
   workflows: {

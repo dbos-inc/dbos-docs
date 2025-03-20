@@ -33,7 +33,7 @@ The DBOS crontab format supports some common extensions, as seen in the followin
 - `10-19/2 * * January,Feb *`: At 10, 12, 14, 16, and 18 minutes into each hour of every day, only in the months of January and February
 
 ### How Scheduling Works
-Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.
+Under the hood, DBOS constructs an [idempotency key](./workflow-tutorial.md#workflow-ids-and-idempotency) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.
 
 Sometimes, you may require a scheduled workflow run **exactly once** per interval, even if the application was offline when it should have run.
 For example, if your workflow is supposed to run every Friday at 9 PM UTC, but your application is offline for maintenance one Friday, you may want the workflow to launch as soon as your application is restarted.

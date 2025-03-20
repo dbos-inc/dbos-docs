@@ -105,7 +105,7 @@ Whenever this endpoint receives a message, it starts a DBOS workflow to durably 
 
 We start the workflow in the background so we can quickly respond to Slack, avoiding a timeout.
 This is safe because DBOS durably executes workflows: once they're started, even asynchronously, they always run to completion.
-We use the message's unique event ID as an [idempotency key](../tutorials/idempotency-tutorial.md) to guarantee that no matter how many times Slack calls this endpoint, the message is processed exactly-once.
+We use the message's unique event ID as an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) to guarantee that no matter how many times Slack calls this endpoint, the message is processed exactly-once.
 
 ```python
 @slackapp.message()

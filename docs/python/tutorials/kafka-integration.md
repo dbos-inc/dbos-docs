@@ -46,7 +46,7 @@ def test_kafka_workflow(msg: KafkaMessage):
 
 ```
 
-Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
 This combination is guaranteed to be unique for each Kafka cluster.
 Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
 

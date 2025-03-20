@@ -171,7 +171,7 @@ const output = await handlerCtxt.invoke(Cls).fn(arg);
 
 You don't supply a context to the invoked function&#8212;the DBOS Transact runtime does this for you.
 You can optionally provide an idempotency key to the invoked function.
-For more information, see our [idempotency tutorial](../../../tutorials/idempotency-tutorial.md).
+For more information, see our [idempotency tutorial](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 #### `handlerCtxt.invokeWorkflow`
 
@@ -206,7 +206,7 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await handlerCtxt.startWorkflow(Cls).wf(arg);
 ```
 
-If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/idempotency-tutorial.md).
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 
@@ -262,7 +262,7 @@ export interface GetWorkflowsInput {
 }
 ```
 
-It returns as output an object containing a list of the [UUIDs](../../../tutorials/idempotency-tutorial.md) of all retrieved workflows, ordered by workflow creation time:
+It returns as output an object containing a list of the [UUIDs](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of all retrieved workflows, ordered by workflow creation time:
 
 ```typescript
 export interface GetWorkflowsOutput {
@@ -338,7 +338,7 @@ The syntax for starting workflow `wf` in class `Cls` with argument `arg` is:
 const workflowHandle = await ctxt.startWorkflow(Cls).wf(arg);
 ```
 
-If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/idempotency-tutorial.md).
+If the `workflowID` argument is provided, the workflow will [execute exactly once per the specified ID](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 If the `queue` argument is provided, the workflow may not start immediately.  Start of execution will be determined by the [queue](../workflow-queues.md#class-workflowqueue) and its contents.
 
@@ -743,7 +743,7 @@ workflow<T extends unknown[], R>(
 ```
 
 Invokes the provided `wf` workflow function, with inputs specified by `args`.  The `WorkflowParams` control how the workflow is started:
-* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/idempotency-tutorial.md), for OAOO.
+* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), for OAOO.
 * `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
 
 The return value of `workflow` is a [`WorkflowHandle`](../workflow-handles.md) for the running or queued workflow.
