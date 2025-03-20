@@ -67,7 +67,7 @@ interface HTTPRequest {
 readonly workflowUUID: string
 ```
 
-The current workflow's [identity UUID](../../../tutorials/workflow-tutorial#workflow-ids), a string uniquely identifying a workflow execution.
+The current workflow's [identity UUID](../../../tutorials/workflow-tutorial#workflow-ids-and-idempotency), a string uniquely identifying a workflow execution.
 In a transaction or step, this field is set to the identity UUID of the calling workflow.
 In a handler, this field is empty.
 
@@ -218,7 +218,7 @@ You don't supply a context to the newly started workflow&#8212;the DBOS Transact
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids-and-idempotency) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `handlerCtxt.send`
@@ -401,7 +401,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) _workflowID_.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids-and-idempotency) _workflowID_.
 `R` is the return type of the target workflow.
 
 #### `WorkflowContext.sleep`
@@ -789,7 +789,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids) `workflowID`.
+Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids-and-idempotency) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`

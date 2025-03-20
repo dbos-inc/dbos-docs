@@ -21,7 +21,7 @@ DBOS.send(
 
 Send a message to the workflow identified by `destination_id`.
 Messages can optionally be associated with a topic.
-The `send` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), [`send_async`](#send_async) should be used instead.
+The `send` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`send_async`](#send_async) should be used instead.
 
 **Parameters:**
 - `destination_id`: The workflow to which to send the message.
@@ -54,7 +54,7 @@ Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
-The `recv` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), [`recv_async`](#recv_async) should be used instead.
+The `recv` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`recv_async`](#recv_async) should be used instead.
 
 **Parameters:**
 - `topic`: A topic queue on which to wait.
@@ -86,7 +86,7 @@ DBOS.set_event(
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
 Can only be called from within a workflow.
-The `set_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), `set_event_async` should be used instead.
+The `set_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), `set_event_async` should be used instead.
 
 **Parameters:**
 - `key`: The key of the event.
@@ -115,7 +115,7 @@ DBOS.get_event(
 
 Retrieve the latest value of an event published by the workflow identified by `workflow_id` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning `None` if the wait times out.
-The `get_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), [`get_event_async`](#get_event_async) should be used instead.
+The `get_event` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`get_event_async`](#get_event_async) should be used instead.
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose events to retrieve.
@@ -148,7 +148,7 @@ DBOS.sleep(
 Sleep for the given number of seconds.
 May only be called from within a workflow.
 This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
-The `sleep` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-workflows), [`sleep_async`](#sleep_async) should be used instead.
+The `sleep` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`sleep_async`](#sleep_async) should be used instead.
 
 **Parameters:**
 - `seconds`: The number of seconds to sleep.
@@ -323,7 +323,7 @@ SetWorkflowID(
 )
 ```
 
-Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids)/[idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
+Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency)/[idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
 Should be used in a `with` statement.
 
 Example syntax:

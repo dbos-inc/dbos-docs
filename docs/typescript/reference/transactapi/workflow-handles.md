@@ -6,7 +6,7 @@ description: API reference for workflow handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
 A workflow handle is obtained when a workflow is started with [`DBOS.startWorkflow`](./dbos-class#starting-background-workflows).
-Additionally, a handle can be retrieved by calling [`DBOS.retrieveWorkflow`](./dbos-class#dbosretrieveworkflow) with the workflow's [unique ID](../../tutorials/workflow-tutorial#workflow-ids).
+Additionally, a handle can be retrieved by calling [`DBOS.retrieveWorkflow`](./dbos-class#dbosretrieveworkflow) with the workflow's [unique ID](../../tutorials/workflow-tutorial#workflow-ids-and-idempotency).
 
 ---
 
@@ -33,7 +33,7 @@ Waits for the workflow to complete then returns its output.
 
 #### `workflowID: string`
 
-Retrieves the workflow's [unique ID](../../tutorials/workflow-tutorial#workflow-ids).
+Retrieves the workflow's [unique ID](../../tutorials/workflow-tutorial#workflow-ids-and-idempotency).
 
 #### `getWorkflowInputs<T extends any []>(): Promise<T>`
 
