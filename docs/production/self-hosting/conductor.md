@@ -30,22 +30,22 @@ By default, API keys do not expire, though they may be revoked at any time from 
 
 Finally, supply that API key to your DBOS application to connect it to Conductor.
 This initiates a websocket connection with Conductor:
-<LargeTabs groupId="language" queryString="language">
-<LargeTabItem value="python" label="Python">
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
 
 ```python
 conductor_key=os.environ.get("DBOS_CONDUCTOR_KEY", None)
 DBOS(conductor_key=conductor_key)
 ```
-</LargeTabItem>
-<LargeTabItem value="typescript" label="TypeScript">
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
 
 ```javascript
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
 ```
-</LargeTabItem>
-</LargeTabs>
+</TabItem>
+</Tabs>
 
 ## Managing Conductor Applications
 
