@@ -70,7 +70,7 @@ Every time you execute a workflow, that execution is assigned a unique ID, by de
 You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-## Starting Workflows Asynchronously
+## Starting Workflows In The Background
 
 You can use [start_workflow](../reference/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
@@ -223,7 +223,7 @@ All messages are persisted to the database, so if `send` completes successfully,
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
 
-## Coroutine Workflows
+## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Asynchronous workflows provide the same [reliability guarantees](#reliability-guarantees) as synchronous workflow functions. 
