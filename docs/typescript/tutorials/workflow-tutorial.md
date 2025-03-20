@@ -9,17 +9,29 @@ Workflows are comprised of [steps](./step-tutorial.md), which are ordinary TypeS
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 Here's an example workflow from the [programming guide](../programming-guide.md).
-It signs an online guestbook then records the signature in the database.
-Using a workflow guarantees that every guestbook signature is recorded in the database, even if execution is interrupted.
+Interrupt the program as much as you want after it finishes `stepOne`&mdash;it will always recover and complete `stepTwo`.
 
 ```javascript
-class Guestbook {
+class Example {
+
+  @DBOS.step()
+  static async stepOne() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.step()
+  static async stepTwo() {
+    DBOS.logger.info("Step two completed!");
+  }
 
   @DBOS.workflow()
-  static async greetingEndpoint(name: string): Promise<string> {
-    await Guestbook.signGuestbook(name);
-    await Guestbook.insertGreeting(name);
-    return `Thank you for being awesome, ${name}!`;
+  static async exampleWorkflow() {
+    await Example.stepOne();
+    for (let i = 0; i < 5; i++) {
+      console.log("Press Control + C to stop the app...");
+      await DBOS.sleep(1000);
+    }
+    await Example.stepTwo();
   }
 }
 ```
