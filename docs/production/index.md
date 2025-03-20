@@ -10,7 +10,7 @@ Once you've made your application durable with DBOS, there are two ways to take 
 DBOS is a library.
 You can import it in existing applications and keep deploying them on your infrastructure using your existing build, test, and deploy tools.
 
-To simplify managing and recovering your durable workflows in production, we recommend connecting your application to DBOS Conductor.
+To simplify managing and recovering your durable workflows in production, we recommend connecting your production applications to DBOS Conductor.
 Conductor is a managed service that helps you operate DBOS applications.
 It provides:
 
