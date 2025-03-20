@@ -50,3 +50,6 @@ For example, let's configure this step to retry exceptions (such as if `example.
     return await fetch("https://example.com").then(r => r.text());
   }
 ```
+
+If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
+If that exception is not caught, the workflow [terminates](./workflow-tutorial.md#reliability-guarantees).
