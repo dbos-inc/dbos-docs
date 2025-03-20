@@ -8,17 +8,6 @@ Workflows provide **durable execution** so you can write programs that are **res
 Workflows are comprised of [steps](./step-tutorial.md), which are ordinary Python functions annotated with `@DBOS.step()`.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-Here's an example workflow that sends a confirmation email, sleeps for a while, then sends a reminder email.
-By using a workflow, we guarantee that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
-
-```python
-@DBOS.workflow()
-def reminder_workflow(email: str, time_to_sleep: int):
-    send_confirmation_email(email)
-    DBOS.sleep(time_to_sleep)
-    send_reminder_email(email)
-```
-
 Here are some example apps demonstrating what workflows can do:
 
 - [**Fault-Tolerant Checkout**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
