@@ -21,8 +21,9 @@ def reminder_workflow(email: str, time_to_sleep: int):
 
 Here are some example apps demonstrating what workflows can do:
 
-- [**Widget Store**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
+- [**Fault-Tolerant Checkout**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
 - [**Scheduled Reminders**](../examples/scheduled-reminders.md): Send a reminder email to yourself on any day in the future&mdash;even if it's months away.
+- [**Document Ingestion Pipeline**](../examples/document-detective.md): Use workflows and [queues](./queue-tutorial.md) to reliably process thousands of documents concurrently.
 
 
 ## Reliability Guarantees
