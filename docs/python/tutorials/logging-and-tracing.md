@@ -13,8 +13,8 @@ For example:
 DBOS.logger.info("Welcome to DBOS!")
 ```
 
-You can configure the log level of this built-in logger through the [DBOS constructor](../reference/dbos-class.md#class-dbosdbos).
-This also configures the log leve of the DBOS library.
+You can [configure](../reference/configuration.md) the log level of this built-in logger through the DBOS constructor.
+This also configures the log level of the DBOS library.
 
 ```python
 config: DBOSConfig = {
@@ -36,16 +36,18 @@ You can access your current span via [`DBOS.span`](../reference/contexts.md#span
 
 ### OpenTelemetry Export
 
-You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
-In DBOS Cloud, this is done automatically, and you can view your logs and traces in the [cloud console](https://console.dbos.dev/login-redirect).
+You can export DBOS traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
 
-Locally, you can configure exporters in your [`dbos-config.yaml`](../reference/configuration.md):
+You can [configure](../reference/configuration.md) exporters through the DBOS constructor.
+For example:
 
-```yaml
-telemetry:
-    OTLPExporter:
-        logsEndpoint: http://localhost:4318/v1/logs
-        tracesEndpoint: http://localhost:4318/v1/traces
+```python
+config: DBOSConfig = {
+  "name": "my-app"
+  "otlp_traces_endpoints": ["http://localhost:4318/v1/traces"]
+}
+DBOS(config=config)
 ```
+
 
 For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application.
