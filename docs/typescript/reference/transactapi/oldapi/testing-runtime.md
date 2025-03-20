@@ -6,14 +6,21 @@ description: API documentation for the DBOS testing runtime
 
 # DBOS Testing Runtime
 
+:::info
+TestingRuntime is obsolete.  See the [tutorial on testing DBOS applications](../../../tutorials/development/testing-tutorial.md).
+- Instead of creating a `TestingRuntime`, call [`DBOS.setConfig()` and `DBOS.launch()`](../dbos-class#launching-dbos).
+- Calls to `TestingRuntime` functions can usually be replaced with identical calls to [`DBOS`](../dbos-class) functions.
+- In most cases, application functions can be called directly.  Older app code can be invoked using [`DBOS.invoke`](../dbos-class#calling-workflow-functions) instead of via `TestingRuntime.invoke`.
+:::
+
 DBOS provides a testing runtime to facilitate writing unit tests for applications.
 Before running your tests, [create and configure the runtime](#create-testing-runtime).
 In your tests, use [the runtime's methods](#methods) to invoke your application's functions.
 After your tests finish, [destroy the runtime](#runtimedestroy) to release resources.
 
-::::tip
+:::tip
 When writing tests, you are responsible for setting up and cleaning up your database schema, for example through migrations.
-::::
+:::
 
 ---
 
