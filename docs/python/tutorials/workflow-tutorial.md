@@ -72,7 +72,8 @@ You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
-This acts as an idempotency key: if a workflow is called multiple times with the same key, it executes only once.
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same key, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
 For example:
 

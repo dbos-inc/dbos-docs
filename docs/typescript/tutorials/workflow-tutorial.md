@@ -84,11 +84,31 @@ class Example {
 }
 ```
 
-## Workflow IDs
+## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the `DBOS.workflowID` context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+
+You can set the workflow ID of a workflow with [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids).
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same key, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```javascript
+class Example {
+  @DBOS.workflow()
+  static async exampleWorkflow(var1: str, var2: str) {
+      return var1 + var2;
+  }
+}
+
+await DBOS.withNextWorkflowID("very-unique-id", async () => {
+  return await Example.exampleWorkflow("one", "two");
+});
+```
+
 
 ## Starting Workflows Asynchronously
 
