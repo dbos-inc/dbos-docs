@@ -35,6 +35,11 @@ These guarantees assume that the application and database may crash and go offli
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
 3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
+If an uncaught exception is thrown from a workflow, this is **terminal**&mdash;DBOS records the exception, sets the worklow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
+
 ## Determinism
 
 Workflows are in most respects normal Python functions.
