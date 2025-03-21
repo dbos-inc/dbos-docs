@@ -51,24 +51,15 @@ def test_example_workflow(reset_dbos):
 
 You may want to use a custom configuration of DBOS for testing.
 For example, you likely want to test your application using an isolated development database.
-To do this, save your custom configuration to a file (for example, `dbos-config.testing.yaml`), load it, and pass it to the DBOS object used by your tests:
+To do this, simply pass a [custom configuration](../reference/configuration.md) into the DBOS constructor.
 
 ```python
 def reset_dbos():
     DBOS.destroy()
-    config = load_config("dbos-config.testing.yaml")
-    DBOS(config=config)
-    DBOS.reset_system_database()
-    DBOS.launch()
-```
-
-Alternatively, you can load your default config then modify its values programatically:
-
-```python
-def reset_dbos():
-    DBOS.destroy()
-    config = load_config()
-    config["database"]["app_db_name"] = f"{config["database"]["app_db_name"]}_test"
+    config: DBOSConfig = {
+        "name": "my-app",
+        "database_url": os.environ.get("TESTING_DATABASE_URL"),
+    }
     DBOS(config=config)
     DBOS.reset_system_database()
     DBOS.launch()
