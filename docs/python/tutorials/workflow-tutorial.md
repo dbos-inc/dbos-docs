@@ -9,7 +9,7 @@ Workflows are comprised of [steps](./step-tutorial.md), which are ordinary Pytho
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 Here's an example workflow that sends a confirmation email, sleeps for a while, then sends a reminder email.
-By using a workflow, we guarantee that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
+Using a workflow guarantees that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
 
 ```python
 @DBOS.workflow()
@@ -21,8 +21,9 @@ def reminder_workflow(email: str, time_to_sleep: int):
 
 Here are some example apps demonstrating what workflows can do:
 
-- [**Widget Store**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
+- [**Fault-Tolerant Checkout**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
 - [**Scheduled Reminders**](../examples/scheduled-reminders.md): Send a reminder email to yourself on any day in the future&mdash;even if it's months away.
+- [**Document Ingestion Pipeline**](../examples/document-detective.md): Use workflows and [queues](./queue-tutorial.md) to reliably process thousands of documents concurrently.
 
 
 ## Reliability Guarantees
@@ -30,15 +31,20 @@ Here are some example apps demonstrating what workflows can do:
 Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
-1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from the last completed step.
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
 3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Determinism
 
 Workflows are in most respects normal Python functions.
 They can have loops, branches, conditionals, and so on.
-However, workflow functions must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
 
@@ -64,13 +70,28 @@ def example_workflow(friend: str):
     return example_transaction(body)
 ```
 
-## Workflow IDs
+## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-## Starting Workflows Asynchronously
+You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
+
+with SetWorkflowID("very-unique-id"):
+    example_workflow()
+```
+
+## Starting Workflows In The Background
 
 You can use [start_workflow](../reference/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
@@ -220,10 +241,10 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
-If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
 
-## Coroutine Workflows
+## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Asynchronous workflows provide the same [reliability guarantees](#reliability-guarantees) as synchronous workflow functions. 
@@ -259,16 +280,16 @@ Because DBOS recovers workflows by re-executing them using information saved in 
 To guard against this, DBOS _versions_ applications and their workflows.
 When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden by setting the `DBOS__APPVERSION` environment variable).
 All workflows are tagged with the application version on which they started.
+
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-
-On DBOS Cloud, when an application is redeployed, executors running old versions are retained until they have completed all workflows that started on those versions.
-When self-hosting, to safely recover workflows started on an older version of your code, you should start a process running that code version.
 You can also manually recover a workflow on your current version with:
 
 ```shell
 dbos workflow resume <workflow-id>
 ```
+
+For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
 
 ## Workflow Management
 
@@ -276,15 +297,17 @@ You can view and manage your workflow executions via a web UI ([self-hosted](../
 
 #### Listing Workflows
 
-Navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
-Alternatively, list them from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-queue-list)):
+You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-list)):
 
 ```shell
 dbos workflow list
 ```
+
+Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
+
+<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
+
 
 #### Cancelling Workflows
 

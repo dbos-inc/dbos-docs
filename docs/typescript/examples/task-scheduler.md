@@ -86,7 +86,7 @@ The DBOS Task Scheduler app is somewhat complex, showcasing many features.  For 
 ::::
 
 This app uses the following:
-- DBOS [Workflows](../tutorials/workflow-tutorial.md), [Transactions](../tutorials/transaction-tutorial.md), and [Steps](../tutorials/step-tutorial.md) – Complete actions [exactly once](../tutorials/idempotency-tutorial.md), record the results, and send notifications, without worrying about server disruptions
+- DBOS [Workflows](../tutorials/workflow-tutorial.md), [Transactions](../tutorials/transaction-tutorial.md), and [Steps](../tutorials/step-tutorial.md) – Complete actions [exactly once](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), record the results, and send notifications, without worrying about server disruptions
 - [Knex](https://knexjs.org/) – Type-safe database access and schema management
 - [DBOS Scheduled Workflows](../tutorials/scheduled-workflows.md) – Ensure tasks are run as scheduled
 - React, with [Material](https://mui.com) and [react-big-calendar](https://github.com/jquense/react-big-calendar) – Present a calendar of tasks and results

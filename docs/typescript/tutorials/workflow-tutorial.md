@@ -9,17 +9,29 @@ Workflows are comprised of [steps](./step-tutorial.md), which are ordinary TypeS
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 Here's an example workflow from the [programming guide](../programming-guide.md).
-It signs an online guestbook then records the signature in the database.
-Using a workflow guarantees that every guestbook signature is recorded in the database, even if execution is interrupted.
+Interrupt the program as much as you want after it finishes `stepOne`&mdash;it will always recover and complete `stepTwo`.
 
 ```javascript
-class Guestbook {
+class Example {
+
+  @DBOS.step()
+  static async stepOne() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.step()
+  static async stepTwo() {
+    DBOS.logger.info("Step two completed!");
+  }
 
   @DBOS.workflow()
-  static async greetingEndpoint(name: string): Promise<string> {
-    await Guestbook.signGuestbook(name);
-    await Guestbook.insertGreeting(name);
-    return `Thank you for being awesome, ${name}!`;
+  static async exampleWorkflow() {
+    await Example.stepOne();
+    for (let i = 0; i < 5; i++) {
+      console.log("Press Control + C to stop the app...");
+      await DBOS.sleep(1000);
+    }
+    await Example.stepTwo();
   }
 }
 ```
@@ -29,15 +41,20 @@ class Guestbook {
 Workflows provide the following reliability guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
-1.  Workflows always run to completion.  If a DBOS process crashes while executing a workflow and is restarted, it resumes the workflow from the last completed step.
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
 3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Determinism
 
 Workflows are in most respects normal TypeScript functions.
 They can have loops, branches, conditionals, and so on.
-However, workflow functions must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
 
@@ -72,11 +89,31 @@ class Example {
 }
 ```
 
-## Workflow IDs
+## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 You can access this ID through the `DBOS.workflowID` context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+
+You can set the workflow ID of a workflow with [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids).
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```javascript
+class Example {
+  @DBOS.workflow()
+  static async exampleWorkflow(var1: str, var2: str) {
+      return var1 + var2;
+  }
+}
+
+await DBOS.withNextWorkflowID("very-unique-id", async () => {
+  return await Example.exampleWorkflow("one", "two");
+});
+```
+
 
 ## Starting Workflows Asynchronously
 
@@ -221,7 +258,7 @@ static async paymentWebhook(): Promise<void> {
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
-If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](#reliability-guarantees).
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ## Workflow Versioning and Recovery
@@ -230,16 +267,16 @@ Because DBOS recovers workflows by re-executing them using information saved in 
 To guard against this, DBOS _versions_ applications and their workflows.
 When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden by setting the `DBOS__APPVERSION` environment variable).
 All workflows are tagged with the application version on which they started.
+
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-
-On DBOS Cloud, when an application is redeployed, executors running old versions are retained until they have completed all workflows that started on those versions.
-When self-hosting, to safely recover workflows started on an older version of your code, you should start a process running that code version.
 You can also manually recover a workflow on your current version with:
 
 ```shell
 npx dbos workflow resume <workflow-id>
 ```
+
+For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
 
 ## Workflow Management
 
@@ -247,15 +284,17 @@ You can view and manage your workflow executions via a web UI ([self-hosted](../
 
 #### Listing Workflows
 
-Navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable list of its workflows:
+You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-list)):
+
+```shell
+npx dbos workflow list
+```
+
+Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-Alternatively, list them from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list)):
 
-```shell
-dbos workflow list
-```
 
 #### Cancelling Workflows
 

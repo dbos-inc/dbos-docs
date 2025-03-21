@@ -20,4 +20,4 @@ To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/
 The specification for the DBOS variant can be found in the [decorator reference](../reference/decorators.md#scheduled).
 
 ### How Scheduling Works
-Under the hood, DBOS constructs an [idempotency key](./idempotency-tutorial) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.
+Under the hood, DBOS constructs an [idempotency key](./workflow-tutorial.md#workflow-ids-and-idempotency) for each workflow invocation.  The key is a concatenation of the function name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.

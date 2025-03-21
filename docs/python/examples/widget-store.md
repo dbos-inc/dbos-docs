@@ -98,7 +98,7 @@ This endpoint receives a request when a customer presses the "Buy Now" button.
 It starts the checkout workflow in the background, then waits for the workflow to generate and send it a unique payment ID.
 It then returns the payment ID so the browser can redirect the user to the payments page.
 
-The endpoint accepts an [idempotency key](../tutorials/idempotency-tutorial.md) so that even if the customer presses "buy now" multiple times, only one checkout workflow is started.
+The endpoint accepts an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) so that even if the customer presses "buy now" multiple times, only one checkout workflow is started.
 
 ```python
 @app.post("/checkout/{idempotency_key}")
