@@ -64,6 +64,7 @@ To load configuration from a different file, or to create a configuration in ano
 ```typescript
     const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'});
     DBOS.setConfig(cfg, rtCfg);
+    await DBOS.dropSystemDB(); // If you want a completely clean start
     await DBOS.launch();
 ```
 
