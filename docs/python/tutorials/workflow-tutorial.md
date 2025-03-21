@@ -241,7 +241,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
-If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](./workflow-tutorial#reliability-guarantees).
+If you're sending a message from a workflow, DBOS transactionally guarantees exactly-once delivery.
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
 
 ## Coroutine (Async) Workflows

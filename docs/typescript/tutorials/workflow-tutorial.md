@@ -258,7 +258,7 @@ static async paymentWebhook(): Promise<void> {
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
-If you're sending a message from a workflow, DBOS guarantees exactly-once delivery because [workflows are reliable](#reliability-guarantees).
+If you're sending a message from a workflow, DBOS transactionally guarantees exactly-once delivery.
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ## Workflow Versioning and Recovery
