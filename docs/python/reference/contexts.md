@@ -206,6 +206,29 @@ def example_workflow(var1: str, var2: str):
 handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
 ```
 
+### start_workflow_async
+
+```python
+DBOS.start_workflow_async(
+    func: Workflow[P, Coroutine[Any, Any, R]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
+```
+
+Start an asynchronous workflow in the background and return a [handle](./workflow_handles.md) to it.
+The `DBOS.start_workflow_async` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+**Example syntax:**
+
+```python
+@DBOS.workflow()
+async def example_workflow(var1: str, var2: str):
+    DBOS.logger.info("I am a workflow")
+
+# Start example_workflow in the background
+handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
+```
 
 ## Context Variables
 
