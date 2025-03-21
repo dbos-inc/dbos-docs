@@ -97,7 +97,7 @@ Workflow IDs are useful for communicating with workflows and developing interact
 
 You can set the workflow ID of a workflow with [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids).
 Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same key, it executes only once.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
 For example:
 
