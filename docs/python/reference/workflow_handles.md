@@ -18,7 +18,7 @@ If you know a workflow's identity, you can also retrieve its handle using `DBOS.
 handle.get_workflow_id() -> str
 ```
 
-Retrieve the identity of the workflow.
+Retrieve the ID of the workflow.
 
 #### get_result
 
