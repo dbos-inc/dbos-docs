@@ -47,7 +47,7 @@ Retrieve the [workflow's status](#workflowstatus), defined below.
 handle.get_workflow_id() -> str
 ```
 
-Retrieve the identity of the workflow. Behaves identically to the [WorkflowHandle](#workflowhandle) verison.
+Retrieve the ID of the workflow. Behaves identically to the [WorkflowHandle](#workflowhandle) version.
 
 #### get_result
 
