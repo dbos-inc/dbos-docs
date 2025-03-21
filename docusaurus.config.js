@@ -116,7 +116,7 @@ const config = {
           },
           {
             from: '/typescript/reference/testing-runtime',
-            to: '/typescript/reference/transactapi/oldapi/testing-runtime',
+            to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
             from: '/typescript/reference/workflow-handles',

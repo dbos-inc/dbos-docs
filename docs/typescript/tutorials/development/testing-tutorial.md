@@ -101,6 +101,8 @@ Snapshots:   0 total
 Time:        1.247 s, estimated 2 s
 ```
 
-### Further Reading
-
-You can find the source code for this tutorial in [operations.test.ts](https://github.com/dbos-inc/dbos-transact-ts/blob/main/packages/create/templates/hello-v2/src/operations.test.ts).
+# DBOS TestingRuntime
+In prior versions of the TypeScript SDK, a `TestingRuntime` was used to set up DBOS.  This is obsolete.
+- Instead of creating a `TestingRuntime`, just call [`DBOS.setConfig()` and `DBOS.launch()`](../dbos-class#launching-dbos) from your tests.
+- Calls to `TestingRuntime` functions can usually be replaced with identical calls to [`DBOS`](../dbos-class) functions.
+- In most cases, application functions can be called directly within the tests.  Older app code can be invoked using [`DBOS.invoke`](../dbos-class#calling-workflow-functions) instead of via `TestingRuntime.invoke`.
