@@ -103,6 +103,6 @@ Time:        1.247 s, estimated 2 s
 
 # DBOS TestingRuntime
 In prior versions of the TypeScript SDK, a `TestingRuntime` was used to set up DBOS.  This is obsolete.
-- Instead of creating a `TestingRuntime`, just call [`DBOS.setConfig()` and `DBOS.launch()`](../dbos-class#launching-dbos) from your tests.
-- Calls to `TestingRuntime` functions can usually be replaced with identical calls to [`DBOS`](../dbos-class) functions.
-- In most cases, application functions can be called directly within the tests.  Older app code can be invoked using [`DBOS.invoke`](../dbos-class#calling-workflow-functions) instead of via `TestingRuntime.invoke`.
+- Instead of creating a `TestingRuntime`, just call [`DBOS.setConfig()` and `DBOS.launch()`](../../reference/transactapi/dbos-class#launching-dbos) from your tests.
+- Calls to `TestingRuntime` functions can usually be replaced with identical calls to [`DBOS`](../../reference/transactapi/dbos-class) functions.
+- In most cases, application functions can be called directly within the tests.  Older app code can be invoked using [`DBOS.invoke`](../../reference/transactapi/dbos-class#calling-workflow-functions) instead of via `TestingRuntime.invoke`.
