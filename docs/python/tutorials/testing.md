@@ -102,9 +102,7 @@ def test_record_recent_earthquakes(dbos):
     with patch("earthquake_tracker.main.get_earthquake_data") as mock_get_data:
         mock_get_data.return_value = [earthquake]
         # Create a mock for record_earthquake_data
-        with patch(
-            "earthquake_tracker.main.record_earthquake_data"
-        ) as mock_record_data:
+        with patch("earthquake_tracker.main.record_earthquake_data") as mock_record_data:
             mock_record_data.return_value = True
 
             # Call the workflow
