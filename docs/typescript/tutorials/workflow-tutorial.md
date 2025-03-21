@@ -267,16 +267,16 @@ Because DBOS recovers workflows by re-executing them using information saved in 
 To guard against this, DBOS _versions_ applications and their workflows.
 When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden by setting the `DBOS__APPVERSION` environment variable).
 All workflows are tagged with the application version on which they started.
+
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-
-On DBOS Cloud, when an application is redeployed, executors running old versions are retained until they have completed all workflows that started on those versions.
-When self-hosting, to safely recover workflows started on an older version of your code, you should start a process running that code version.
 You can also manually recover a workflow on your current version with:
 
 ```shell
 npx dbos workflow resume <workflow-id>
 ```
+
+For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
 
 ## Workflow Management
 
