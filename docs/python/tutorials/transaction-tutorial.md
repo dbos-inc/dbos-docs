@@ -69,26 +69,7 @@ Decorating an `async def` function with `@DBOS.transaction` will raise an error 
 ## Schema Management
 
 We strongly recommend you manage your database schema using migrations.
-DBOS supports any Python database migration tool, but by default uses [Alembic](https://alembic.sqlalchemy.org/en/latest/).
-
-
-Migration commands are configured in your [`dbos-config.yaml`](../reference/configuration.md) file.
-At migration time, DBOS runs all migration commands.
-The default configuration, using Alembic, is:
-
-```yaml
-database:
-  ...
-  migrate:
-    - alembic upgrade head
-```
-
-
-To execute all migration commands, run:
-
-```shell
-dbos migrate
-```
+One popular database migration tool in Python is [Alembic](https://alembic.sqlalchemy.org/en/latest/).
 
 If you are using Alembic, you can generate a new migration with:
 

@@ -38,7 +38,7 @@ cd dbos-starter
 Then, install DBOS and create a DBOS configuration file:
 ```shell
 pip install dbos
-dbos init --config
+dbos init dbos-starter --config
 ```
 
 ## 2. Workflows and Steps
@@ -47,9 +47,14 @@ Now, let's create the simplest interesting DBOS program.
 Create a `main.py` file and add this code to it:
 
 ```python showLineNumbers title="main.py"
-from dbos import DBOS
+import os
+from dbos import DBOS, DBOSConfig
 
-DBOS()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -76,11 +81,15 @@ The key benefit of DBOS is **durability**&mdash;it automatically saves the state
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
-Run this code with `python3 main.py` and it should print output like:
+Now, trying running this code with `python3 main.py`.
+When DBOS is launched, it attempts to connect to a Postgres database.
+If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
+
+Your program should print output like:
 
 ```shell
-13:47:09 [    INFO] (dbos:_dbos.py:272) Initializing DBOS
-13:47:09 [    INFO] (dbos:_dbos.py:401) DBOS launched
+15:41:06 [    INFO] (dbos:_dbos.py:534) DBOS launched!
 Step one completed!
 Step two completed!
 ```
@@ -89,11 +98,17 @@ To see durable execution in action, let's modify the app to serve a DBOS workflo
 Copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
+import os
+
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
-from dbos import DBOS
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 @DBOS.step()
 def step_one():
@@ -113,8 +128,7 @@ def dbos_workflow():
     step_two()
 ```
 
-Start your app with `dbos start`.
-This calls the start command defined in your `dbos-config.yaml`, which by default is `fastapi run main.py`.
+Start your app with `fastapi run main.py`.
 Then, visit this URL: http://localhost:8000.
 
 In your terminal, you should see an output like:
@@ -124,10 +138,9 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 Step one completed!
 Press Control + C to stop the app...
 Press Control + C to stop the app...
-Press Control + C to stop the app...
 ```
 
-Now, press CTRL+C stop your app. Then, run `dbos start` to restart it. You should see an output like:
+Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it). Then, run `fastapi run main.py` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -148,13 +161,18 @@ If you need to run many functions concurrently, use DBOS _queues_.
 To try them out, copy this code into `main.py`:
 
 ```python showLineNumbers title="main.py"
+import os
 import time
 
-from dbos import DBOS, Queue
+from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 queue = Queue("example-queue")
 
@@ -179,7 +197,7 @@ When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronous
 `enqueue` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
 
-Start your app with `dbos start`.
+Start your app with `fastapi run main.py`.
 Then, visit this URL: http://localhost:8000.
 Wait five seconds and you should see an output like:
 
@@ -210,7 +228,7 @@ def dbos_step(n: int):
     print(f"Step {n} completed!")
 ```
 
-Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
 After about five seconds, you should see an output like:
 
 ```
@@ -223,7 +241,8 @@ Step 3 completed!
 Step 4 completed!
 ```
 
-Next, press CTRL+C stop your app. Then, run `dbos start` to restart it. Wait ten seconds and you should see an output like:
+Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it).
+Then, run `fastapi run main.py` to restart it. Wait ten seconds and you should see an output like:
 
 
 ```shell
@@ -257,7 +276,7 @@ The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, de
 The schedule in the example, `* * * * * *` means "run this workflow every second."
 Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
 
-Now, start your app with `dbos start`.
+Now, start your app with `fastapi run main.py`.
 The workflow should run every second, with output like:
 
 ```shell
@@ -314,7 +333,7 @@ escaped_conn_string = re.sub(
 config.set_main_option("sqlalchemy.url", escaped_conn_string)
 ```
 
-This code imports your table schema into Alembic and tells it to load its database connection parameters from DBOS.
+This code imports your table schema into Alembic and tells it to load its database connection parameters from your DBOS configuration file.
 
 Next, generate your migration files:
 
@@ -322,18 +341,10 @@ Next, generate your migration files:
 alembic revision --autogenerate -m "example_table"
 ```
 
-Edit your `dbos-config.yaml` to add a migration command:
-
-```yaml
-database:
-  migrate:
-    - alembic upgrade head
-```
-
 Finally, run your migrations with:
 
 ```shell
-dbos migrate
+alembic upgrade head
 ```
 
 You should see output like:
@@ -349,13 +360,19 @@ You just created your new table in your Postgres database!
 Now, let's write a DBOS workflow that operates on that table. Copy the following code into `main.py`:
 
 ```python showLineNumbers title="main.py"
-from dbos import DBOS
+import os
+
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 @DBOS.transaction()
 def insert_row():
@@ -378,7 +395,7 @@ The database operations are done in DBOS _transactions_. These are special steps
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-Now, start your app with `dbos start`, then visit this URL: http://localhost:8000.
+Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
 
 You should see an output like:
 
@@ -398,16 +415,20 @@ Here's what everything looks like put together:
 <summary>Putting it all together</summary>
 
 ```python showLineNumbers title="main.py"
+import os
 import time
 
-from dbos import DBOS, Queue
+from dbos import DBOS, Queue, DBOSConfig
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 
 from schema import example_table
 
 app = FastAPI()
-DBOS(fastapi=app)
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
 
 ##################################
 #### Workflows and Steps
@@ -491,4 +512,4 @@ def dbos_workflow():
 ```
 </details>
 
-Next, to learn how to build more complex applications, check out the Python tutorials and [example apps](../examples/index.md).
+Next learn how to [add DBOS to your own application](./integrating-dbos.md) and check out the Python tutorials and [example apps](../examples/index.md).

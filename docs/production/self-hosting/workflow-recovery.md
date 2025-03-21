@@ -26,6 +26,10 @@ You can also instruct your executor to recover workflows assigned to other execu
 If your application is connected to [DBOS Conductor](./conductor.md), workflow recovery is automatic.
 When Conductor detects that an executor is unhealthy, it automatically signals another executor to recover its workflows.
 
+When an executor disconnects from Conductor, its status is changed to `DISCONNECTED` while Conductor waits for it to reconnect.
+If it has not reconnected after a grace period, its status is changed to `DEAD` and Conductor signals another executor of a compatible application version to recover its workflows.
+After recovery is confirmed, the executor is deleted.
+
 ## Managing Application versions
 
 When self-hosting, it is important to be careful when upgrading your application's code.
