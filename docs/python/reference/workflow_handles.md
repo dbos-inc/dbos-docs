@@ -63,7 +63,7 @@ Asynchronously wait for the workflow to complete, then return its result. Simila
 handle.get_status() -> Coroutine[Any, Any, WorkflowStatus]
 ```
 
-asynchronously retrieves the [workflow's status](#workflowstatus), defined below.
+Asynchronously retrieves the [workflow's status](#workflowstatus), defined below.
 
 ## WorkflowStatus
 
