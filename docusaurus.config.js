@@ -51,10 +51,6 @@ const config = {
             to: '/python/tutorials/scheduled-workflows',
           },
           {
-            from: '/tutorials/idempotency-tutorial',
-            to: '/python/tutorials/idempotency-tutorial',
-          },
-          {
             from: '/tutorials/authentication-authorization',
             to: '/typescript/tutorials/authentication-authorization',
           },

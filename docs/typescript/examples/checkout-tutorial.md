@@ -56,7 +56,7 @@ The handler is implemented in this `webCheckout` function and served from HTTP P
 static async webCheckout(@ArgOptional key: string): Promise<string> {
 ```
 
-It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/idempotency-tutorial).
+It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 If a workflow is invoked many times with the same idempotency key (for example, because a customer pressed the buy button many times), it only executes once.
 
 ### Invoking the checkout workflow

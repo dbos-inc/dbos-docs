@@ -8,17 +8,19 @@ A workflow handle represents the state of a particular active or completed workf
 You obtain a workflow handle when using `DBOS.start_workflow` to start a workflow in the background.
 If you know a workflow's identity, you can also retrieve its handle using `DBOS.retrieve_workflow`.
 
-## Methods
+## WorkflowHandle
 
-### get_workflow_id
+### Methods
+
+#### get_workflow_id
 
 ```python
 handle.get_workflow_id() -> str
 ```
 
-Retrieve the identity of the workflow.
+Retrieve the ID of the workflow.
 
-### get_result
+#### get_result
 
 ```python
 handle.get_result() -> R
@@ -26,13 +28,44 @@ handle.get_result() -> R
 
 Wait for the workflow to complete, then return its result.
 
-### get_status
+#### get_status
 
 ```python
 handle.get_status() -> WorkflowStatus
 ```
 
-Retrieve the workflow's status. This is the following object:
+Retrieve the [workflow's status](#workflowstatus), defined below.
+
+
+## WorkflowHandleAsync
+
+### Methods
+
+#### get_workflow_id
+
+```python
+handle.get_workflow_id() -> str
+```
+
+Retrieve the ID of the workflow. Behaves identically to the [WorkflowHandle](#workflowhandle) version.
+
+#### get_result
+
+```python
+handle.get_result() -> Coroutine[Any, Any, R]
+```
+
+Asynchronously wait for the workflow to complete, then return its result. Similar to the [WorkflowHandle](#workflowhandle) version, except asynchronous.
+
+#### get_status
+
+```python
+handle.get_status() -> Coroutine[Any, Any, WorkflowStatus]
+```
+
+Asynchronously retrieves the [workflow's status](#workflowstatus), defined below.
+
+## WorkflowStatus
 
 ```python
 class WorkflowStatus:

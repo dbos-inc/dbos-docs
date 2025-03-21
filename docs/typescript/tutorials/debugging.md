@@ -25,7 +25,7 @@ labeled `🔁 Replay Debug` on every [workflow method](./workflow-tutorial.md) i
 
 ![Local Replay Debugging Code Lens](./assets/ttdbg-local-replay.png)
 
-If you click on the Replay Debug CodeLens, a list of recent [workflow IDs](./workflow-tutorial#workflow-ids) will be shown.
+If you click on the Replay Debug CodeLens, a list of recent [workflow IDs](./workflow-tutorial#workflow-ids-and-idempotency) will be shown.
 You can filter the list of workflow IDs by entering a value in the text box above the list.
 If the workflow you wish to debug does not appear in the list, select the pencil icon in the upper right hand corner of the picker window to manually enter a workflow ID. 
 

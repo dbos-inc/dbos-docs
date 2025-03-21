@@ -51,6 +51,6 @@ class ExampleClass()
 
         @classmethod
         @DBOS.workflow()
-        def classmethod_workflow(cls) -> int:
+        def classmethod_workflow(cls):
             return
 ```

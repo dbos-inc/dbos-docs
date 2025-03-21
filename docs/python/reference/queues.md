@@ -49,7 +49,7 @@ queue.enqueue(
 ) -> WorkflowHandle[R]
 ```
 
-Enqueue a function for processing and return a [handle](./workflow_handles.md) to it.
+Enqueue a function for processing and return a [handle](./workflow_handles.md#workflowhandle) to it.
 You can enqueue any DBOS-annotated function.
 The `enqueue` method durably enqueues your function; after it returns your function is guaranteed to eventually execute even if your app is interrupted.
 
@@ -74,4 +74,41 @@ def process_tasks(tasks):
   # Wait for each task to complete and retrieve its result.
   # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
+```
+
+### enqueue_async
+
+```python
+queue.enqueue_async(
+    func: Callable[P, Coroutine[Any, Any, R]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+asynchronously enqueues an async function for processing and returns an [async handle](./workflow_handles.md#workflowhandleasync) to it.
+You can enqueue any DBOS-annotated async function.
+The `enqueue_async` method durably enqueues your function; after it returns your function is guaranteed to eventually execute even if your app is interrupted.
+
+**Example syntax:**
+
+```python
+from dbos import DBOS, Queue
+
+queue = Queue("example_queue")
+
+@DBOS.step()
+async def process_task_async(task):
+  ...
+
+@DBOS.workflow()
+async def process_tasks(tasks):
+  task_handles = []
+  # Enqueue each task so all tasks are processed concurrently.
+  for task in tasks:
+    handle = await queue.enqueue_async(process_task_async, task)
+    task_handles.append(handle)
+  # Wait for each task to complete and retrieve its result.
+  # Return the results of all tasks.
+  return [await handle.get_result() for handle in task_handles]
 ```

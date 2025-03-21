@@ -65,7 +65,7 @@ The `workflow` method provided by `executor` accepts a `params` argument, of typ
 ### Running Event Processing Exactly Once
 DBOS Transact provides guarantees that workflows run exactly once.  For event receivers, this guarantee can be met by ensuring the following two properties are implemented:
 * "At least once" invocation: the event receiver must have a way to "backfill" any events that may have been missed for any reason, such as no VM executing the receiver code when the event arrived.  The DBOS functions must be called at least once.
-* "At most once" execution: the event receiver should specify the [workflow ID](../idempotency-tutorial.md) so that the DBOS Transact runtime can deduplicate function calls.
+* "At most once" execution: the event receiver should specify the [workflow ID](../workflow-tutorial.md#workflow-ids-and-idempotency) so that the DBOS Transact runtime can deduplicate function calls.
 
 Because the functions are invoked at least once and executed at most once, they are run to completion exactly once.
 
