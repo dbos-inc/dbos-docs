@@ -55,7 +55,7 @@ Retrieve the identity of the workflow. Behaves identically to the [WorkflowHandl
 handle.get_result() -> Coroutine[Any, Any, R]
 ```
 
-Asncronously wait for the workflow to complete, then return its result. Similar to the [WorkflowHandle](#workflowhandle) verison, except asynchronous.
+Asynchronously wait for the workflow to complete, then return its result. Similar to the [WorkflowHandle](#workflowhandle) version, except asynchronous.
 
 #### get_status
 
