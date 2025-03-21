@@ -54,7 +54,7 @@ DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you id
 
 Workflows are in most respects normal TypeScript functions.
 They can have loops, branches, conditionals, and so on.
-However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
 
@@ -258,7 +258,7 @@ static async paymentWebhook(): Promise<void> {
 #### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
-If you're sending a message from a workflow, DBOS transactionally guarantees exactly-once delivery.
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
 
 ## Workflow Versioning and Recovery
