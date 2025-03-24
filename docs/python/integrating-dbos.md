@@ -66,7 +66,7 @@ def step_two():
     ...
 
 @DBOS.workflow()
-def workflow()
+def workflow():
     step_one()
     step_two()
 ```
