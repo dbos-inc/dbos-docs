@@ -345,7 +345,7 @@ SetWorkflowID(
 )
 ```
 
-Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency)/[idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
+Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow to run.
 Should be used in a `with` statement.
 
 Example syntax:
