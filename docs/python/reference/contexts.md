@@ -1,7 +1,6 @@
 ---
 sidebar_position: 3
-title: Contexts
-description: API reference for DBOS context methods and variables
+title: DBOS Methods & Variables
 ---
 
 DBOS provides a number of useful context methods and variables.
