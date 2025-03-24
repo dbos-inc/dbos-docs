@@ -22,6 +22,7 @@ They initialize DBOS when your program starts.
 
 
 ```python
+import os
 from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
