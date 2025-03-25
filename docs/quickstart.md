@@ -75,7 +75,8 @@ dbos init --template dbos-app-starter
 
 <article className="col col--6">
 Now, start your app!
-DBOS will automatically guide you through connecting to your app to a Postgres database.
+DBOS will automatically help you launch and connect to a new Postgres database (using Docker if available, else DBOS Cloud).
+If you already use Postgres, you can instead set the `DBOS_DATABASE_URL` environment variable to a connection string to your database.
 </article>
 
 <article className="col col--6">
@@ -85,11 +86,11 @@ fastapi run app/main.py
 </article>
 
 <article className="col col--6">
-To see that it's working, visit this URL in your browser: http://localhost:8000/
+To see that your app is working, visit this URL in your browser: http://localhost:8000/
 
-This application lets you test the reliability of DBOS for yourself.
+This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
-At any point, crash the application.
+At any point, crash the app.
 Then, restart it with `fastapi run app/main.py` and watch it seamlessly recover from where it left off.
 
 
@@ -159,7 +160,7 @@ npm run build
 
 <article className="col col--6">
 Now, start your app!
-DBOS will automatically guide you through connecting to your app to a Postgres database.
+DBOS will automatically help you launch and connect to a new Postgres database (using Docker if available, else DBOS Cloud).
 
 </article>
 
@@ -170,11 +171,11 @@ npm run start
 </article>
 
 <article className="col col--6">
-To see that it's working, visit this URL in your browser: http://localhost:3000/
+To see that your app is working, visit this URL in your browser: http://localhost:3000/
 
-This application lets you test the reliability of DBOS for yourself.
+This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
-At any point, crash the application.
+At any point, crash the app.
 Then, restart it with `npm run start` and watch it seamlessly recover from where it left off.
 
 

@@ -22,6 +22,7 @@ They initialize DBOS when your program starts.
 
 
 ```python
+import os
 from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
@@ -36,7 +37,7 @@ DBOS.launch()
 
 Try starting your application.
 When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
-If your project is already using Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+If your project already uses Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
 Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
 
 After you've connected to Postgres, your app should run normally, but log `Initializing DBOS` and `DBOS launched!` on startup.
@@ -65,7 +66,7 @@ def step_two():
     ...
 
 @DBOS.workflow()
-def workflow()
+def workflow():
     step_one()
     step_two()
 ```

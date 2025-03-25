@@ -5,7 +5,7 @@ title: Deploying To Production
 
 Once you've made your application durable with DBOS, there are two ways to take it into production:
 
-## Self Hosting
+## Self-Hosting
 
 DBOS is a library.
 You can import it in existing applications and keep deploying them on your infrastructure using your existing build, test, and deploy tools.
