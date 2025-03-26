@@ -66,9 +66,9 @@ static async kafkaWorkflow(topic: string, partition: number, message: KafkaMessa
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
 ## KafkaJS Integration Reference
 
@@ -83,7 +83,7 @@ Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuratio
 
 `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)`
 
-Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+Runs a workflow or transaction exactly-once for each message received on the specified topic(s).
 Takes in a Kafka topic or list of Kafka topics (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
@@ -121,7 +121,7 @@ First, install the DBOS integration for [Confluent's JavaScript Client for Apach
 npm install @dbos-inc/dbos-confluent-kafka
 ```
 
-Then, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
+Then, define your workflow. It must take in the Kafka topic, partition, and message as inputs:
 
 ```javascript
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -170,9 +170,9 @@ static async kafkaWorkflow(topic: string, partition: number, message: Message) {
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
 ## Confluent Kafka Integration Reference
 
@@ -186,7 +186,8 @@ Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuratio
 ### @CKafkaConsume
 
 `@CKafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)`
-Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+
+Runs a workflow or transaction exactly-once for each message received on the specified topic(s).
 Takes in a Kafka topic or list of Kafka topics (required) and a consumer configuration.
 Requires class to be decorated with [`@CKafka`](#ckafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
