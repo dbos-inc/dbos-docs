@@ -22,7 +22,9 @@ It provides:
 ## Connecting To Conductor
 
 :::tip
-Conductor is not part of your application's critical processing path.  If the connection to Conductor is interrupted, your applications will continue operating normally, and recovery will automatically resume when connectivity is restored.
+Conductor is not part of your application's critical path.
+If your connection to Conductor is interrupted, your applications will continue operating normally.
+Recovery, observability, and workflow management will automatically resume once connectivity is restored.
 :::
 
 To connect your application to Conductor, first register your application on the [DBOS console](https://console.dbos.dev).

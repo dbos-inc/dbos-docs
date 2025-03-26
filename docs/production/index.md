@@ -18,7 +18,9 @@ It provides:
 - [**Workflow and queue observability**](./self-hosting/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
 - [**Workflow and queue management**](./self-hosting/workflow-management.md): From the Conductor dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
 
-Conductor is not part of your application's critical path, so it adds no significant runtime overhead.  If connectivity is lost, your applications continue running without disruption, and recovery, management, and observability resume automatically once connectivity is restored.
+Conductor is not part of your application's critical path, so it does not add runtime overhead.
+If your connection to Conductor is interrupted, your applications will continue operating normally.
+Recovery, observability, and workflow management will automatically resume once connectivity is restored.
 
 ## DBOS Cloud
 
