@@ -22,7 +22,9 @@ It provides:
 ## Connecting To Conductor
 
 :::tip
-Conductor runs totally out-of-band, so if your connection is interrupted your applications will continue operating normally.
+Conductor is not part of your application's critical path.
+If your connection to Conductor is interrupted, your applications will continue operating normally.
+Recovery, observability, and workflow management will automatically resume once connectivity is restored.
 :::
 
 To connect your application to Conductor, first register your application on the [DBOS console](https://console.dbos.dev).
@@ -66,6 +68,4 @@ When you restart an executor, it generates a new ID.
 
 <img src={require('@site/static/img/conductor/app-page.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-An application is available to Conductor if there is at least one process running that application currently connected to Conductor.
-Conductor has no access to your application's database or private data&mdash;it implements features like [workflow management](./workflow-management.md) by communicating with connected executors through a workflow-metadata-only protocol over websockets.
-Thus, those features can only be used while your application is available.
+Conductor uses a WebSocket-based protocol to exchange workflow metadata and commands with your application.  An application is shown as _available_ in Conductor when at least one of its processes is connected.  Conductor has no access to your application's database or other private data.  As a result, workflow-related features are only available while your application is connected to Conductor over this metadata-only connection.
