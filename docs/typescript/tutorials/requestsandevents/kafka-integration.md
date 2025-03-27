@@ -1,21 +1,22 @@
 ---
 sidebar_position: 30
 title: Integrating with Kafka
-description: Learn how to integrate DBOS and Kafka.
 ---
 
-In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
+# Integrating with Kafka
 
-As there is more than one Kafka client for the JavaScript ecosystem, DBOS supports pluggable libraries.
+In this guide, you'll learn how to use DBOS workflows to process Kafka messages exactly-once.
 
-# KafkaJS
-First, install the DBOS library for [KafkaJS](https://kafka.js.org/) in your application:
+DBOS supports two popular Kafka clients: KafkaJS and Confluent Kafka.
+
+## KafkaJS Integration Tutorial
+First, install the DBOS integration for [KafkaJS](https://kafka.js.org/) in your application:
 
 ```
 npm install @dbos-inc/dbos-kafkajs
 ```
 
-Then, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
+Then, define your workflow. It must take in the Kafka topic, partition, and message as inputs:
 
 ```javascript
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -65,19 +66,24 @@ static async kafkaWorkflow(topic: string, partition: number, message: KafkaMessa
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
-## KafkaJS Integration Decorators
+## KafkaJS Integration Reference
 
-### `@Kafka(kafkaConfig: KafkaConfig)` {#kafka}
+### @Kafka
+
+`@Kafka(kafkaConfig: KafkaConfig)`
 
 Class-level decorator defining a Kafka configuration to use in all class methods.
 Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration).
 
-### `@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)` {#kafka-consume}
-Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+### @KafkaConsume
+
+`@KafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)`
+
+Runs a workflow or transaction exactly-once for each message received on the specified topic(s).
 Takes in a Kafka topic or list of Kafka topics (required) and a [KafkaJS consumer configuration](https://kafka.js.org/docs/consuming#options) (optional).
 Requires class to be decorated with [`@Kafka`](#kafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
@@ -103,19 +109,19 @@ class KafkaExample{
 }
 ```
 
-#### Concurrency and Rate Limiting
+### Concurrency and Rate Limiting
 By default, `@KafkaConsume` workflows are started immediately upon receiving Kafka messages.  If `queueName` is provided to the `@KafkaConsume` decorator, then the workflows will be enqueued in a [workflow queue](../queue-tutorial.md) and subject to rate limits.
 
 
-# Confluent's JavaScript Client for Apache Kafka
+## Confluent Kafka Integration Tutorial
 
-First, install the DBOS library for [Confluent's JavaScript Client for Apache Kafka](https://github.com/confluentinc/confluent-kafka-javascript) in your application:
+First, install the DBOS integration for [Confluent's JavaScript Client for Apache Kafka](https://github.com/confluentinc/confluent-kafka-javascript) in your application:
 
 ```
 npm install @dbos-inc/dbos-confluent-kafka
 ```
 
-Then, define your transaction or workflow. It must take in the Kafka topic, partition, and message as inputs:
+Then, define your workflow. It must take in the Kafka topic, partition, and message as inputs:
 
 ```javascript
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -164,19 +170,24 @@ static async kafkaWorkflow(topic: string, partition: number, message: Message) {
 }
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
-## Confluent Kafka Integration Decorators
+## Confluent Kafka Integration Reference
 
-### `@CKafka(kafkaConfig: KafkaConfig)` {#ckafka}
+### @CKafka
+
+`@CKafka(kafkaConfig: KafkaConfig)`
 
 Class-level decorator defining a Kafka configuration to use in all class methods.
 Takes in a [KafkaJS configuration object](https://kafka.js.org/docs/configuration) or [rdkafka configuration object](https://github.com/confluentinc/librdkafka/blob/v2.6.1/CONFIGURATION.md).
 
-### `@CKafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)` {#ckafka-consume}
-Runs a transaction or workflow exactly-once for each message received on the specified topic(s).
+### @CKafkaConsume
+
+`@CKafkaConsume(topic: string | RegExp | Array<string | RegExp>, consumerConfig?: ConsumerConfig, queueName?: string)`
+
+Runs a workflow or transaction exactly-once for each message received on the specified topic(s).
 Takes in a Kafka topic or list of Kafka topics (required) and a consumer configuration.
 Requires class to be decorated with [`@CKafka`](#ckafka).
 The decorated method must take as input a Kafka topic, partition, and message as in the example below:
@@ -200,5 +211,5 @@ class CKafkaExample{
 }
 ```
 
-#### Concurrency and Rate Limiting
+### Concurrency and Rate Limiting
 By default, `@CKafkaConsume` workflows are started immediately upon receiving Kafka messages.  If `queueName` is provided to the `@CKafkaConsume` decorator, then the workflows will be enqueued in a [workflow queue](../queue-tutorial.md) and subject to rate limits.
