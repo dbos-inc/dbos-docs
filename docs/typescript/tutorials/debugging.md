@@ -38,7 +38,7 @@ From here, you can step through your DBOS workflow and inspect variables as you 
 :::info Note
 You can only step through workflow code when using the Replay Debugger.
 [Step](./step-tutorial.md) and [transaction](./transaction-tutorial.md) methods are skipped when Replay Debugging.
-The results returned from step and transaction methods when the workflow originally ran are retrieved and returned automatically without excecuting the function body.
+The results returned from step and transaction methods when the workflow originally ran are retrieved and returned automatically without executing the function body.
 :::
 
 ![TypeScript debugger at breakpoint](./assets/ttdb-debug-breakpoint.png)
@@ -56,6 +56,32 @@ The only difference is the database your application connects to.
 When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database connection information
 and passes it to the `dbos debug` command via environment variables, 
 overriding the database connection information in the `dbos-config.yaml` file.
+
+## Time Travel Debugging
+
+If your DBOS Cloud application was deployed with [time-travel enabled](../../production/dbos-cloud/cloud-cli.md#dbos-cloud-app-deploy), 
+you will also see a `⏳ Time-Travel Debug` CodeLens attached to your DBOS Workflow methods.
+
+![Time Travel Debugging Code Lens](./assets/ttdbg-time-travel.png)
+
+Unlike replay debugging, Time Travel debugging does not step over [transaction](./transaction-tutorial.md) methods. 
+
+## DBOS Console Integration
+
+When using the cloud replay or time travel debuggers, an additional button appears in the upper right corner of the pick list next to the pencil icon.
+This button launches your default browser and navigates to the [DBOS Cloud Workflow Manager page](../../production/dbos-cloud/workflow-management.md).
+
+![Workflow Picker with DBOS Console button](./assets/ttdbg-wfid-picker-with-console.png)
+
+In the DBOS Cloud Workflow Manager, a new control button appears that allows you to select the workflow that you wish to debug.
+Selecting the debug button in this view will navigate the user back to VS Code, where the debugger will launch the selected workflow.
+
+![DBOS Cloud Workflow Manager with Debug control](./assets/console-debug-picker.png)
+
+:::info Note
+For your safety, VS Code will ask for confirmation before navigating to the Workflow Manager page and when navigating back to VS Code.
+If desired, you can configure VS Code not to prompt on these navigation events in the future.
+:::
 
 ## Log Into to DBOS Cloud
 

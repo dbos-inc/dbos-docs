@@ -60,6 +60,24 @@ When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database
 and passes it to the `dbos debug` command via environment variables, 
 overriding the database connection information in the `dbos-config.yaml` file.
 
+## DBOS Console Integration
+
+When using the cloud replay debugger, an additional button appears in the upper right corner of the pick list next to the pencil icon.
+This button launches your default browser and navigates to the [DBOS Cloud Workflow Manager page](../../production/dbos-cloud/workflow-management.md).
+
+![Workflow Picker with DBOS Console button](../../typescript/tutorials/assets/ttdbg-wfid-picker-with-console.png)
+
+In the DBOS Cloud Workflow Manager, a new control button appears that allows you to select the workflow that you wish to debug.
+Selecting the debug button in this view will navigate the user back to VS Code, where the debugger will launch the selected workflow.
+
+![DBOS Cloud Workflow Manager with Debug control](../../typescript/tutorials/assets/console-debug-picker.png)
+
+:::info Note
+For your safety, VS Code will ask for confirmation before navigating to the Workflow Manager page and when navigating back to VS Code.
+If desired, you can configure VS Code not to prompt on these navigation events in the future.
+:::
+
+
 ## Log Into to DBOS Cloud
 
 To login to DBOS Cloud in the DBOS Debugger, navigate to the DBOS Cloud view and select the `Log Into DBOS Cloud` menu item.
