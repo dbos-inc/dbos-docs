@@ -85,7 +85,7 @@ await client.enqueue<Parameters<IndexDocument>>(
         queueName: 'indexingQueue',
         workflowID: documentWFID,
     }, 
-    "https://arxiv.org/pdf/1901.01973");
+    "https://arxiv.org/pdf/2208.13068");
 ```
 
 :::info Note 
