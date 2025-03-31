@@ -314,7 +314,7 @@ const logAllRequests = () => {
     const start = Date.now();
 
     // Log the request method and URL
-    DBOS.globalLogger?.info(`[Request] ${ctx.method} ${ctx.url}`);
+    DBOS.logger.info(`[Request] ${ctx.method} ${ctx.url}`);
 
     let ok = false;
     try {
@@ -325,11 +325,11 @@ const logAllRequests = () => {
       const ms = Date.now() - start;
       if (ok) {
         // Log the response status and time taken
-        DBOS.globalLogger?.info(`[Response] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+        DBOS.logger.info(`[Response] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
       }
       else {
         // Log error response
-        DBOS.globalLogger?.warn(`[Exception] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+        DBOS.logger.warn(`[Exception] ${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
       }
     }
   };

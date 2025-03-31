@@ -525,11 +525,10 @@ DBOS.runtimeConfig?: DBOSRuntimeConfig;
 Note that `DBOS.dbosConfig` and `DBOS.runtimeConfig` are not fully available util runtime initialization starts and the configuration files are loaded.
 
 ### Accessing Logging
-Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.  It is also possible to access the global logger via `DBOS.globalLogger`.
+Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.
 
 ```typescript
 DBOS.logger: DLogger
-DBOS.globalLogger?: DLogger;
 ```
 
 ### Accessing The Tracing Span
