@@ -104,11 +104,11 @@ const config = {
           },
           {
             from: '/typescript/reference/contexts',
-            to: '/typescript/reference/transactapi/oldapi/contexts',
+            to: '/typescript/reference/transactapi/oldapi/oldcontexts',
           },
           {
             from: '/typescript/reference/decorators',
-            to: '/typescript/reference/transactapi/oldapi/decorators',
+            to: '/typescript/reference/transactapi/oldapi/olddecorators',
           },
           {
             from: '/typescript/reference/testing-runtime',

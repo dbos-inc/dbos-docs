@@ -52,7 +52,7 @@ The primary purpose of the interface is to manage the event receiver lifecycle.
 * The `destroy` function should shut down the event receiver and stop any function dispatching.
 
 ### Dispatching Events
-The [`DBOSExecutorContext`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontext) interface provides the services event receivers need to invoke workflows, transactions, and other step functions.  During `initialize`, the event receiver is provided with an instance implementing `DBOSExecutorContext` as the `executor` parameter, and can store this reference in its `executor` field.
+The [`DBOSExecutorContext`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontext) interface provides the services event receivers need to invoke workflows, transactions, and other step functions.  During `initialize`, the event receiver is provided with an instance implementing `DBOSExecutorContext` as the `executor` parameter, and can store this reference in its `executor` field.
 
 The following functions on `executor` can then be used to invoke DBOS Transact functions:
 *[`workflow`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
@@ -110,7 +110,7 @@ function associateClassWithEventReceiver<CtorT>(rcvr: DBOSEventReceiver, ctor: C
 * `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
 * `ctor`: The constructor of the class that is being decorated
 
-The return value of `associateClassWithEventReceiver` is an object.  Any properties set on this object will be available to `rcvr` when it is initialized, from the `classConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextgetregistrationsfor).
+The return value of `associateClassWithEventReceiver` is an object.  Any properties set on this object will be available to `rcvr` when it is initialized, from the `classConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md.md#dbosexecutorcontextgetregistrationsfor).
 
 In the following example, a `@Kafka(config)` decorator is created for providing Kafka broker configuration information as class-level defaults:
 ```typescript
@@ -134,7 +134,7 @@ function associateMethodWithEventReceiver<This, Args extends unknown[], Return>(
 * `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
 * `target`, `propertyKey`, `inDescriptor`: The target and property key of the decorated method, and the method's property descriptor
 
-There are two return values from `associateMethodWithEventReceiver`.   `descriptor` is an updated property descriptor that the decorator should install in place of the previous property descriptor for the method.  `receiverInfo` is an object; any properties set on this object will be available to `rcvr` when it is initialized, from the `methodConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextgetregistrationsfor).
+There are two return values from `associateMethodWithEventReceiver`.   `descriptor` is an updated property descriptor that the decorator should install in place of the previous property descriptor for the method.  `receiverInfo` is an object; any properties set on this object will be available to `rcvr` when it is initialized, from the `methodConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md.md#dbosexecutorcontextgetregistrationsfor).
 
 In the following example, a `@KafkaConsume(topic, ...)` method decorator is defined, which associates a topic with a workflow method that will be invoked when Kafka messages are consumed:
 ```typescript
