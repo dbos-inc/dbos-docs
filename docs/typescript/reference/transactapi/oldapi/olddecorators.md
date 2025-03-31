@@ -55,7 +55,7 @@ static async processWorkflow(wfCtxt: WorkflowContext, value: string) {
 }
 ```
 
-The first argument to a workflow function must be a [`WorkflowContext`](contexts.md#workflowcontext).  This context can be used to invoke transactions and steps, send and receive messages, and get other contextual information such as the authenticated user.
+The first argument to a workflow function must be a [`WorkflowContext`](oldcontexts.md#workflowcontext).  This context can be used to invoke transactions and steps, send and receive messages, and get other contextual information such as the authenticated user.
 
 `@Workflow()` takes an optional `WorkflowConfig` object:
 
@@ -68,7 +68,7 @@ interface WorkflowConfig {
 #### `@Transaction`
 Registers a function as a [DBOS transaction](../../../tutorials/transaction-tutorial.md).
 
-The first argument of the decorated function must be a [`TransactionContext`](contexts.md#transactioncontextt), which provides access to the database transaction.
+The first argument of the decorated function must be a [`TransactionContext`](oldcontexts.md#transactioncontextt), which provides access to the database transaction.
 
 ```typescript
 @Transaction({readOnly: true})
@@ -102,7 +102,7 @@ If you mark a transaction function as `readOnly: true` but it contains database 
 #### `@StoredProcedure`
 Registers a function as a [DBOS stored procedure](../../../tutorials/stored-proc-tutorial.md).
 
-The first argument of the decorated function must be a [`StoredProcedureContext`](contexts#storedprocedurecontext), which provides access to the database.
+The first argument of the decorated function must be a [`StoredProcedureContext`](oldcontexts#storedprocedurecontext), which provides access to the database.
 
 ```typescript
 @StoredProcedure({readOnly: true})
@@ -148,7 +148,7 @@ static async doComms(commCtxt: StepContext) {
 }
 ```
 
-The first argument to a step function must be a [`StepContext`](contexts.md#stepcontext).
+The first argument to a step function must be a [`StepContext`](oldcontexts.md#stepcontext).
 
 `@Step()` takes an optional `StepConfig`, which allows a number of step properties to be specified:
 
@@ -182,7 +182,7 @@ static async hello(_ctx: HandlerContext) {
 
 The `@GetApi` decorator can be combined with [`@Transaction`](#transaction), [`@Workflow`](#workflow), or [`@Step`](#step) to serve those operations via HTTP.
 It can also be used by itself in a [DBOS handler function](../../../tutorials/requestsandevents/http-serving-tutorial.md#handlers).
-The first argument to a handler function must be a [`HandlerContext`](./contexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and steps.
+The first argument to a handler function must be a [`HandlerContext`](./oldcontexts.md#handlercontext), which contains more details about the incoming request and allows invoking workflows, transactions, and steps.
 
 Endpoint paths may have placeholders, which are parts of the URL mapped to function arguments.
 These are represented by a section of the path prefixed with a `:`.

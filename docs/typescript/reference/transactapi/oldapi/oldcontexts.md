@@ -19,13 +19,12 @@ Each DBOS function has a specific context:
 - Workflows use [`WorkflowContext`](#workflowcontext).
 - Transactions use [`TransactionContext<T>`](#transactioncontextt) with a specific database client type.
 - Steps use [`StepContext`](#stepcontext).
-- Middleware functions use [`MiddlewareContext`](#middlewarecontext).
 
 ---
 
 ## `DBOSContext`
 
-Many contexts inherit from `DBOSContext` and share its properties and methods.   (`InitContext` and `MiddlewareContext` are exceptions, as these are applied outside the context of DBOS functions.)
+Many contexts inherit from `DBOSContext` and share its properties and methods.
 
 ### Properties
 
@@ -527,7 +526,7 @@ readonly retriesAllowed: boolean;
 ```
 
 Whether the step is automatically retried on failure.
-Configurable through the [`@Step`](./decorators#step) decorator.
+Configurable through the [`@Step`](./olddecorators#step) decorator.
 
 #### `stepCtxt.maxAttempts`
 
@@ -536,7 +535,7 @@ readonly maxAttempts: number;
 ```
 
 Maximum number of retries for the step.
-Configurable through the [`@Step`](./decorators#step) decorator.
+Configurable through the [`@Step`](./olddecorators#step) decorator.
 
 ---
 
@@ -545,89 +544,6 @@ Configurable through the [`@Step`](./decorators#step) decorator.
 `CommunicatorContext` is a historical synonym for [`StepContext`](#stepcontext), as steps are frequently used to communicate with external systems.
 
 ---
-
-## `MiddlewareContext`
-
-`MiddlewareContext` is provided to functions that execute against a request before entry into handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
-
-#### Properties and Methods
-
-- [logger](#middlewarecontextlogger)
-- [span](#middlewarecontextspan)
-- [koaContext](#middlewarecontextkoacontext)
-- [name](#middlewarecontextname)
-- [requiredRole](#middlewarecontextrequiredrole)
-- [getConfig](#middlewarecontextgetconfig)
-- [query](#middlewarecontextquery)
-
-#### `MiddlewareContext.logger`
-
-```typescript
-readonly logger: DBOSLogger;
-```
-
-`logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
-
-#### `MiddlewareContext.span`
-```typescript
-readonly span: Span;
-```
-`span` is the tracing span in which the middleware is being executed.
-
-#### `MiddlewareContext.koaContext`
-
-```typescript
-readonly koaContext: Koa.Context;
-```
-
-`koaContext` is the Koa context, which contains the inbound HTTP request associated with the middleware invocation.
-
-#### `MiddlewareContext.name`
-
-```typescript
-readonly name: string;
-```
-
-`name` contains the name of the function (handler, transaction, workflow) to be invoked after successful middleware processing.
-
-#### `MiddlewareContext.requiredRole`
-
-```typescript
-readonly requiredRole: string[];
-```
-
-`requiredRole` contains the list of roles required for the invoked operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
-
-#### `MiddlewareContext.getConfig`
-
-```typescript
-getConfig<T>(key: string, deflt: T | undefined) : T | undefined
-```
-
-`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
-
-#### `MiddlewareContext.query`
-
-```typescript
-  query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
-```
-
-The `query` function provides read access to the database.
-To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.
-The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.
-The provided `dbClient` will be a `Knex` or TypeORM `EntityManager` or `PrismaClient` depending on the application's choice of SQL access library.
-This callback function may take arguments, and return a value.
-
-Example, for Knex:
-```typescript
-  const u = await ctx.query(
-    // The qry function that takes in a dbClient and a list of arguments (uname in this case)
-    (dbClient: Knex, uname: string) => {
-      return dbClient<UserTable>(userTableName).select("username").where({ username: uname })
-    },
-    userName // Input value for the uname argument
-  );
-```
 
 ## Information Available Outside Of Contexts
 

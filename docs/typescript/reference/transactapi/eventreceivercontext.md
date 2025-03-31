@@ -1,8 +1,49 @@
 ---
-sidebar_position: 40
+sidebar_position: 45
 title: Event Receivers
 description: API reference for custom event receivers and context.
 ---
+
+## Extensibility
+DBOS Transact allows libraries, such as those designed to receive external events, to initiate DBOS functions.
+
+### Decorators
+Such libraries may choose to implement method decorators.  If the method decorator is registering a function with DBOS Transact, it should call `DBOS.registerAndWrapContextFreeFunction` for functions that do not accept a context as the first parameter.
+
+```typescript
+DBOS.registerAndWrapContextFreeFunction<This, Args extends unknown[], Return>(
+    target: object,
+    propertyKey: string,
+    descriptor: TypedPropertyDescriptor<(this: This, ...args: Args) => Promise<Return>>,
+)
+```
+
+`DBOS.registerAndWrapContextFreeFunction` registers the function named `propertyKey` on the `target` class, creates a wrapper function, and updates the `descriptor` to use the wrapper function.
+
+### Calling DBOS Functions From Event Dispatchers
+DBOS functions that are decorated as `DBOS.workflow`, `DBOS.transaction`, or `DBOS.step`, can be run directly from event receiver dispatch loops.
+For more complex circumstances, such as invoking functions with a context argument, `DBOS.executor` provides access to the [`DBOSExecutorContext` interface](#dbosexecutorcontext).
+
+#### Setting Authenticated User And Roles
+When calling DBOS functions, it may be desired to set context variables, such as the authenticated user, and the current tracing span.  The following functions can be used for these purposes:
+```typescript
+// Set the authenticated user, and roles allowed by the authentication system for the scope of the callback() function
+DBOS.withAuthedContext<R>(authedUser: string, authedRoles: string[], callback: () => Promise<R>): Promise<R>
+
+// Set the tracing span for the scope of the callback() function
+DBOS.withTracedContext<R>(callerName: string, span: Span, request: HTTPRequest, callback: () => Promise<R>): Promise<R>
+
+// Set the caller name for the scope of the callback() function
+DBOS.withNamedContext<R>(callerName: string, callback: () => Promise<R>): Promise<R>
+```
+
+#### Example
+In the following example, the `TestSecurity.testWorkflow` function is executed for authenticated user "joe", with role "user". 
+````typescript
+  const hijoe = await DBOS.withAuthedContext('joe', ['user'], async() => {
+    return await TestSecurity.testWorkflow('joe');
+  });
+````
 
 ## `DBOSExecutorContext`
 The `DBOSExecutorContext` is used by event receivers to get their configuration information and invoke workflows, transactions, or communicators in response to received events.
@@ -41,7 +82,7 @@ readonly logger: Logger
 ```
 
 A reference to DBOS's global logger.  Event receivers may log information related to event dispatch to this logger.
-Please see our [logging tutorial](../../../tutorials/logging.md) for more information.
+Please see our [logging tutorial](../../tutorials/logging.md) for more information.
 
 #### `DBOSExecutorContext.tracer`
 
@@ -50,7 +91,7 @@ readonly tracer: Tracer;
 ```
 
 A reference to DBOS's tracer.  Event receivers may initiate or propagate tracing information via `tracer`.
-Please see our [logging tutorial](../../../tutorials/logging.md) for more information.
+Please see our [logging tutorial](../../tutorials/logging.md) for more information.
 
 
 #### `DBOSExecutorContext.getConfig`
@@ -84,10 +125,10 @@ workflow<T extends unknown[], R>(
 ```
 
 Invokes the provided `wf` workflow function, with inputs specified by `args`.  The `WorkflowParams` control how the workflow is started:
-* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), for OAOO.
-* `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](../workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
+* `WorkflowParams.workflowUUID`: Set the workflow [idempotency key](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency), for OAOO.
+* `WorkflowParams.queueName`: Indicate that the workflow is to be run in a [queue](./workflow-queues.md#class-workflowqueue), with the provided name.  The queue with the provided `queueName` must have been created and registered prior to executing `workflow`, as the queue provides necessary concurrency and rate-limiting information.
 
-The return value of `workflow` is a [`WorkflowHandle`](../workflow-handles.md) for the running or queued workflow.
+The return value of `workflow` is a [`WorkflowHandle`](./workflow-handles.md) for the running or queued workflow.
 
 #### `DBOSExecutorContext.transaction`
 ```typescript
@@ -115,14 +156,14 @@ send<T extends NonNullable<any>>(destinationID: string, message: T, topic?: stri
 Sends a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
 You can provide an optional idempotency key to guarantee only a single message is sent even if `send` is called more than once.
-For more information, see the [messages API tutorial](../../../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
+For more information, see the [messages API tutorial](../../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
 
 #### `DBOSExecutorContext.getEvent`
 ```typescript
 getEvent<T extends NonNullable<any>>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
-Retrieves an event published by `workflowID` for a given key using the [events API](../../../tutorials/workflow-tutorial.md#workflow-events).
+Retrieves an event published by `workflowID` for a given key using the [events API](../../tutorials/workflow-tutorial.md#workflow-events).
 Awaiting on the promise returned by `getEvent()` waits for the workflow to set the key, returning `null` if the wait times out.
 
 #### `DBOSExecutorContext.retrieveWorkflow`
@@ -130,7 +171,7 @@ Awaiting on the promise returned by `getEvent()` waits for the workflow to set t
 retrieveWorkflow<R>(workflowID: string): WorkflowHandle<R>
 ```
 
-Returns a [workflow handle](../workflow-handles.md) to the workflow with [identity](../../../tutorials/workflow-tutorial#workflow-ids-and-idempotency) `workflowID`.
+Returns a [workflow handle](./workflow-handles.md) to the workflow with [identity](../../tutorials/workflow-tutorial#workflow-ids-and-idempotency) `workflowID`.
 `R` is the return type of the target workflow.
 
 #### `DBOSExecutorContext.upsertEventDispatchState`

@@ -43,7 +43,7 @@ Note that applications deployed to DBOS Cloud do not use the connection paramete
 - **password**: Password with which to connect to the database server.  We recommend using an environment variable for this field, instead of plain text. Defaults to the `PGPASSWORD` environment variable.
 - **app_db_name**: Name of the application database. If not supplied, the application name (with dashes replaced with underscores for compatibility) is used instead.
 - **sys_db_name**: Name of the system database in which DBOS stores internal state. Defaults to `{app_db_name}_dbos_sys`.  For local deployment only, not used in DBOS Cloud.
-- **app_db_client**: Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is the one used in [`TransactionContext`](../reference/transactapi/oldapi/contexts#transactioncontextt).
+- **app_db_client**: Client to use for connecting to the application database. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  The client specified here is used to provide [`DBOS.sqlClient`](../reference/transactapi/dbos-class.md#accesing-sql-database-clients).
 - **ssl_ca**: If using SSL/TLS to securely connect to a database, path to an SSL root certificate file.  Equivalent to the [`sslrootcert`](https://www.postgresql.org/docs/current/libpq-ssl.html) connection parameter in `psql`.
 - **connectionTimeoutMillis**: Database connection timeout in milliseconds. Defaults to `3000`.
 - **local_suffix**: Whether to suffix `app_db_name` with '_local'. Set to true when doing local development using a DBOS Cloud database.
@@ -112,7 +112,7 @@ http:
 ### Application
 
 Applications can optionally use the application configuration to define custom properties as key-value pairs.
-These properties can be retrieved from any [context](./transactapi/oldapi/contexts) via the [`getConfig`](./transactapi/oldapi/contexts#ctxtgetconfig) method.
+These properties can be retrieved via the [`DBOS.getConfig`](./transactapi/dbos-class.md#dbosgetconfig) method.
 
 **Example**:
 ```yaml

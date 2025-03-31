@@ -133,10 +133,10 @@ Indicates where a function argument is to be sourced, when it could come from mo
 In the example below, `@ArgSource` is used to indicate that the `name` argument comes from the URL query string, rather than the posted message body.
 
 ```typescript
-@PostApi("/workflow")
-@Workflow()
-static async testWorkflow(wfCtxt: WorkflowContext, @ArgSource(ArgSources.QUERY) name: string) {
-  const res = await wfCtxt.invoke(TestEndpoints).testTranscation(name);
+@DBOS.postApi("/workflow")
+@DBOS.workflow()
+static async testWorkflow(@ArgSource(ArgSources.QUERY) name: string) {
+  const res = await TestEndpoints.testTranscation(name);
   return res;
 }
 ```

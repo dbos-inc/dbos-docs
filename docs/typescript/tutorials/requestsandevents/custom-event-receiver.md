@@ -47,7 +47,7 @@ export interface DBOSEventReceiver
 
 The primary purpose of the interface is to manage the event receiver lifecycle.
 * In `initialize`, the event receiver should connect to the event source (if necessary), and record any issues or debugging information to the `logger` of the provided `executor`.   The event receiver should save a reference to the `executor` for later use in starting functions.
-* The event receiver should also check its configuration using the [`getRegistrationsFor`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextgetregistrationsfor) method of `executor`, and use that information to start dispatching events from sources to functions
+* The event receiver should also check its configuration using the [`getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextgetregistrationsfor) method of `executor`, and use that information to start dispatching events from sources to functions
 * The `logRegisteredEndpoints` function should be provided to log all event endpoints and functions served by the receiver.  Logging to `executor.logger` ensures that the application developer and system operator have visibility into the association between event sources and invoked functions.
 * The `destroy` function should shut down the event receiver and stop any function dispatching.
 
@@ -55,9 +55,9 @@ The primary purpose of the interface is to manage the event receiver lifecycle.
 The [`DBOSExecutorContext`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontext) interface provides the services event receivers need to invoke workflows, transactions, and other step functions.  During `initialize`, the event receiver is provided with an instance implementing `DBOSExecutorContext` as the `executor` parameter, and can store this reference in its `executor` field.
 
 The following functions on `executor` can then be used to invoke DBOS Transact functions:
-*[`workflow`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
-*[`transaction`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../transaction-tutorial.md)
-*[`external`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../step-tutorial.md)
+*[`workflow`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
+*[`transaction`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../transaction-tutorial.md)
+*[`external`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../step-tutorial.md)
 
 #### Waiting vs. Queueing
 The `workflow` method provided by `executor` accepts a `params` argument, of type `WorkflowParams`.  `WorkflowParams.queueName`, if provided, is the name of a [workflow queue](../../reference/transactapi/workflow-queues.md) that will be used to rate-limit execution of the workflows in the specified queue.  Otherwise, the function will be started immediately and the event receiver should `await` the result.
@@ -84,7 +84,7 @@ In these examples, it is important to have some durable summary status indicatin
 * Kafka should keep per-topic offsets for each function, indicating a point in the message stream prior to which all messages are known to have been dispatched.
 * A database trigger should record a recent date or sequence number of records in the source table that are all known to be processed.
 
-The [`getEventDispatchState`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextgeteventdispatchstate) and [`upsertEventDispatchState`](../../reference/transactapi/oldapi/contexts.md#dbosexecutorcontextupserteventdispatchstate) methods provided by `executor` can be used to persist the event receiver state in the DBOS system database.
+The [`getEventDispatchState`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextgeteventdispatchstate) and [`upsertEventDispatchState`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextupserteventdispatchstate) methods provided by `executor` can be used to persist the event receiver state in the DBOS system database.
 
 At `initialize` time, the event receiver can then:
 1. Start listening for new source events
@@ -110,7 +110,7 @@ function associateClassWithEventReceiver<CtorT>(rcvr: DBOSEventReceiver, ctor: C
 * `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
 * `ctor`: The constructor of the class that is being decorated
 
-The return value of `associateClassWithEventReceiver` is an object.  Any properties set on this object will be available to `rcvr` when it is initialized, from the `classConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md.md#dbosexecutorcontextgetregistrationsfor).
+The return value of `associateClassWithEventReceiver` is an object.  Any properties set on this object will be available to `rcvr` when it is initialized, from the `classConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextgetregistrationsfor).
 
 In the following example, a `@Kafka(config)` decorator is created for providing Kafka broker configuration information as class-level defaults:
 ```typescript
@@ -134,7 +134,7 @@ function associateMethodWithEventReceiver<This, Args extends unknown[], Return>(
 * `rcvr`: An instance of a subclass of `DBOSEventReceiver` implementing event receiver functionality
 * `target`, `propertyKey`, `inDescriptor`: The target and property key of the decorated method, and the method's property descriptor
 
-There are two return values from `associateMethodWithEventReceiver`.   `descriptor` is an updated property descriptor that the decorator should install in place of the previous property descriptor for the method.  `receiverInfo` is an object; any properties set on this object will be available to `rcvr` when it is initialized, from the `methodConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md.md#dbosexecutorcontextgetregistrationsfor).
+There are two return values from `associateMethodWithEventReceiver`.   `descriptor` is an updated property descriptor that the decorator should install in place of the previous property descriptor for the method.  `receiverInfo` is an object; any properties set on this object will be available to `rcvr` when it is initialized, from the `methodConfig` fields returned by [`DBOSExecutorContext.getRegistrationsFor`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextgetregistrationsfor).
 
 In the following example, a `@KafkaConsume(topic, ...)` method decorator is defined, which associates a topic with a workflow method that will be invoked when Kafka messages are consumed:
 ```typescript

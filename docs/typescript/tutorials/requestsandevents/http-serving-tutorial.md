@@ -113,11 +113,11 @@ When sending an HTTP request with a JSON body, make sure you set the [`Content-T
 :::info
 No matter where arguments are parsed from, if arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
 
-You can specify that an argument is optional with the [`@ArgOptional`](../../reference/transactapi/oldapi/decorators#argoptional) parameter decorator.
+You can specify that an argument is optional with the [`@ArgOptional`](../../reference/transactapi/parameterdecorators.md#argoptional) parameter decorator.
 :::
 
 :::info
-You can use the [`@ArgSource()`](../../reference/transactapi/oldapi/decorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
+You can use the [`@ArgSource()`](../../reference/transactapi/parameterdecorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
 :::
 
 #### Raw Requests
@@ -156,7 +156,7 @@ However, DBOS makes no guarantees about handler execution: if a handler fails, i
 You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the [strong guarantees of transactions and workflows](../workflow-tutorial#reliability-guarantees).
 
 ### Body Parser
-By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../../reference/transactapi/oldapi/decorators#koabodyparser) decorator.
+By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../../reference/transactapi/decorators#koabodyparser) decorator.
 
 ### CORS
 
@@ -164,12 +164,12 @@ By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) t
 
 To customize CORS:
 * Use the HTTP configuration in [`dbos-config.yaml`](../../reference/configuration#http) for global settings.
-* Use the [`@KoaCors`](../../reference/transactapi/oldapi/decorators#koacors) class decorator for class-specific settings.
+* Use the [`@KoaCors`](../../reference/transactapi/decorators#koacors) class decorator for class-specific settings.
 
 ### Middleware
 
 DBOS supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
-Middlewares are configured at the class level through the [`@KoaMiddleware`](../../reference/transactapi/oldapi/decorators#koamiddleware) decorator.
+Middlewares are configured at the class level through the [`@KoaMiddleware`](../../reference/transactapi/decorators#koamiddleware) decorator.
 Here is an example of a simple middleware checking an HTTP header:
 ```javascript
 import { Middleware } from "koa";
@@ -189,7 +189,7 @@ class Hello {
 
 The `@KoaMiddleware` decorator above only places middleware on registered routes within the decorated class.  It is sometimes desired to add middleware to all routes globally, including on routes that are not registered at all.
 
-For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a [global middleware](../../reference/transactapi/oldapi/decorators.md#koaglobalmiddleware):
+For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a [global middleware](../../reference/transactapi/decorators.md#koaglobalmiddleware):
 
 ```typescript
 import logger from 'koa-logger';

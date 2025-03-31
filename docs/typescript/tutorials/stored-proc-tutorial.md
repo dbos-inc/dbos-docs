@@ -29,9 +29,9 @@ Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./orm
 
 ```javascript
 export class Greetings {
-  @StoredProcedure()
-  static async InsertGreeting(ctxt: StoredProcedureContext, friend: string, note: string) {
-    await ctxt.query('INSERT INTO greetings (name, note) VALUES ($1, $2)', [friend, note]);
+  @DBOS.storedProcedure()
+  static async InsertGreeting(friend: string, note: string) {
+    await DBOS.sqlClient.query('INSERT INTO greetings (name, note) VALUES ($1, $2)', [friend, note]);
   }
 }
 ```
