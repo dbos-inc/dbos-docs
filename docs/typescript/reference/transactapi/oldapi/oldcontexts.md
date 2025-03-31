@@ -547,23 +547,6 @@ Configurable through the [`@Step`](./olddecorators#step) decorator.
 
 ## Information Available Outside Of Contexts
 
-While most code is executed within one of the numerous DBOS contexts, there are a few exceptions, such as the HTTP server, its non-DBOS middleware, or background tasks.  For these cases, it is possible to access the `globalLogger` and `dbosConfig` from a global location:
-
-```typescript
-import { DBOS } from "@dbos-inc/dbos-sdk";
-
-function myFunc() {
-  DBOS.globalLogger?.info(`There is no context here, but I need to log something anyway!
-                    My config is '${dbosConfig?.application?.myvalue}'`);
-}
-```
-
-The definition of `DBOS` is:
-```typescript
-class DBOS {
-  static globalLogger?: GlobalLogger; // The global logger
-  static dbosConfig?: DBOSConfig; // The global DBOS configuration
-}
-```
-
-Note that `DBOS` is not fully available util runtime initialization starts.
+:::note
+This document describes a deprecated DBOS Transact v1 API, in which `DBOSContext` objects were passed around.  All information available from contexts is now also available directly from the [`DBOS` class](../dbos-class.md).
+:::

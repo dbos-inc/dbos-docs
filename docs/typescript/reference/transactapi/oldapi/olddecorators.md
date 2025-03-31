@@ -17,7 +17,6 @@ DBOS uses decorators at the class, function, or function parameter level.  (Type
 ### Class Decorators
 
 Class decorators are affixed to a class, just before the keyword `class`.  Such decorators will be applied to all functions in the class.
--   [`@Authentication`](#authentication)
 -   [`@DefaultRequiredRole`](#defaultrequiredrole)
 
 ### Function Decorators
