@@ -30,7 +30,7 @@ export class KafkaExample{
 }
 ```
 
-Then, annotate your method with a [`@KafkaConsume`](#kafka-consume) decorator specifying which topic to consume from.
+Then, annotate your method with a [`@KafkaConsume`](#kafkaconsume) decorator specifying which topic to consume from.
 Additionally, annotate your class with a [`@Kafka`](#kafka) decorator defining which brokers to connect to.
 DBOS invokes your method exactly-once for each message sent to the topic.
 
@@ -135,7 +135,7 @@ export class CKafkaExample{
 }
 ```
 
-Then, annotate your method with a [`@CKafkaConsume`](#ckafka-consume) decorator specifying which topic to consume from.
+Then, annotate your method with a [`@CKafkaConsume`](#ckafkaconsume) decorator specifying which topic to consume from.
 Additionally, annotate your class with a [`@CKafka`](#ckafka) decorator defining which brokers to connect to.
 DBOS invokes your method exactly-once for each message sent to the topic.
 
