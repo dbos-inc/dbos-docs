@@ -54,11 +54,11 @@ export abstract class ConfiguredInstance {
     this.name = name;
     // ... registration occurs ...
   }
-  abstract initialize(ctx: InitContext): Promise<void>;
+  initialize(): Promise<void> {} // override if desired
 }
 ```
 
-The `ConfiguredInstance` base class constructor registers the instance under the given `name`.   The `initialize` function will be called on each registered instance after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](./decorators.md#initcontext), which provides access to configuration and other information.
+The `ConfiguredInstance` base class constructor registers the instance under the given `name`.   The `initialize` function will be called on each registered instance after the DBOS runtime has started, but before workflow processing commences.
 
 Example:
 ```typescript
@@ -70,8 +70,8 @@ class MyClass extends ConfiguredInstance
     super(name);
   }
 
-  async initialize() {
-    // Do initialization work
+  override async initialize() {
+    // Do initialization work; `DBOS` is available
     return Promise.resolve();
   }
 
@@ -109,7 +109,7 @@ class Workflows extends ConfiguredInstance
   }
 
   // Initialize an instance, see "Instance Methods" below
-  async initialize() {
+  override async initialize() {
     return Promise.resolve();
   }
 }

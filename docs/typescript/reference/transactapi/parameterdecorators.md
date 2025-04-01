@@ -11,8 +11,36 @@ Parameter decorators are affixed to a function parameter, just before its name. 
 -   [`@SkipLogging`](#skiplogging)
 -   [`@LogMask`](#logmask)
 
+### Input Validation Decorators
+
+A combination of function and parameter decorators automatically provides rudimentary argument validation for DBOS handler functions.
+
+While the typescript compiler does some compile-time checks, it is possible (and likely) for programmers to pass user input directly through their code through the `any` type or a series of poorly-validated casts.  The DBOS function argument validation logic is able to check arguments exist and are of the right data types (or are close enough to be coerced through reasonable means).
+
+Note that this validation is basic, and is not a substitute for the kind of input validation that conforms to your business logic.  For example, a policy that user passwords should be 8 characters, and contain at least an uppercase, lowercase, and numeric character should be implemented in the web UI (for immediate feedback) and double-checked in your backend code (for security), whereas the DBOS decorators will simply ensure that a password string was provided prior to function entry.
+
+These decorators also serve a second purpose, which is to make the type information available to DBOS.  Uses of this include creating a per-function schema for tracing logs, or automatically producing a description of the function for integration purposes.
+
+In simple cases (such as `string` or `number` arguments), the programmer need not do any decorating to get the functionality.  However, where the data types have some options, such as maximum length, precision, etc., there are decorators to control the behavior.
+
+#### `@ArgRequired`
+Ensures that the decorated function argument has a suitable value.  This is generally a default behavior, but see [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
+```typescript
+@DBOS.getApi("/string")
+static async checkStringG(@ArgRequired v: string) {
+  ...
+}
+```
+
+#### `@DefaultArgRequired`
+Sets as the default policy that each argument of each registered function in the decorated class has a suitable value.  This is generally a default behavior, but see [`@ArgRequired`](#argrequired), [`@ArgOptional`](#argoptional) and [`@DefaultArgOptional`](#defaultargoptional).
+```typescript
+@DefaultArgRequired
+export class User {}
+```
+
 #### `@ArgOptional`
-Allows the argument to have an undefined value.  See also [`@DefaultArgOptional`](#defaultargoptional).
+Allows the argument to have an undefined value.  See also [`@DefaultArgRequired`](#defaultargrequired) and [`@DefaultArgOptional`](#defaultargoptional).
 
 :::info note
 TypeScript/JavaScript makes a distinction between `undefined` and `null`.  Databases and serializers often support only one way to represent an undefined/unknown value.  For this reason, DBOS converts all `null` values to `undefined` prior to entry to the user function.  (`undefined` was chosen over `null` because it is much easier to work with in TypeScript.)
@@ -26,7 +54,7 @@ static async checkStringG(@ArgOptional v?: string) {
 ```
 
 #### `@DefaultArgOptional`
-Sets as the default policy that each argument of each registered function in the decorated class may have undefined value.  See also [`@ArgOptional`](#argoptional).
+Sets as the default policy that each argument of each registered function in the decorated class may have undefined value.  See also [`@ArgRequired`](#argrequired), [`@ArgOptional`](#argoptional) and [`@DefaultArgRequired`](#defaultargrequired).
 ```typescript
 @DefaultArgOptional
 export class User {}
