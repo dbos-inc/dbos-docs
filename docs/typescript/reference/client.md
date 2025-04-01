@@ -4,7 +4,16 @@ title: DBOS Client
 description: DBOS Client reference
 ---
 
-The `DBOSClient` class allows external code to interact with a running DBOS application.
+`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+`DBOSClient` includes methods similar to [`DBOS`](../reference/transactapi/dbos-class.md)
+that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
+
+:::tip
+`DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
+Where DBOS applications use the [static `DBOS` class](../reference/transactapi/dbos-class.md),
+external applications use the [`DBOSClient` class](../reference/client.md) instead.
+:::
+
 
 ### class DBOSClient
 
@@ -30,13 +39,21 @@ class DBOSClient {
 
 #### `create`
 
-Asynchronously creates a `DBOSClient` instance. 
+You construct a `DBOSClient` with the static `create` function. 
 
-Takes a DBOS application `databaseUrl` string argument plus an optional system database name argument. 
+The `databaseUrl` parameter is a [standard PostgreSQL connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS)
+for the DBOS application database.
+DBOS Client also needs to connect to the [system database](../../explanations/system-tables.md) of your DBOS application.
+The system database is stored on the same database server as the application database and typically has the same name as your application database, but suffixed with `_dbos_sys`. 
+If you are using a non-standard system database name in your DBOS application, you must also provide the name to `DBOSClient.create`.
 
-:::info
-The create docs are incomplete pending new config docs from Max.
-:::
+Example: 
+
+```ts
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create("postgresql://postgres:password@localhost:5432/my_app_db");
+```
 
 #### `destroy`
 
