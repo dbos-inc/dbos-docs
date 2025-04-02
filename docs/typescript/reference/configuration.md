@@ -10,7 +10,7 @@ For example:
 
 ```javascript
 DBOS.setConfig({
-  name: 'dbos-knex',
+  name: 'my-app',
   databaseUrl: process.env.DBOS_DATABASE_URL,
 });
 await DBOS.launch();

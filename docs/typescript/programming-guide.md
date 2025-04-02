@@ -14,7 +14,6 @@ To get started, initialize a DBOS template and install dependencies:
 ```shell
 npx @dbos-inc/create@latest -t dbos-node-starter -n dbos-starter
 cd dbos-starter
-npm install
 ```
 
 ## 2. Workflows and Steps
@@ -45,6 +44,10 @@ export class Example {
 }
 
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  })
   await DBOS.launch();
   await Example.exampleWorkflow();
   await DBOS.shutdown();
@@ -55,23 +58,26 @@ main().catch(console.log)
 
 DBOS helps you write reliable TypeScript programs as **workflows** of **steps**.
 You create workflows and steps by adding special annotations (`@DBOS.workflow()` and `@DBOS.step()`) to your TypeScript functions.
-Workflows and steps must be static class methods.
 
 The key benefit of DBOS is **durability**&mdash;it automatically saves the state of your workflows and steps to a database.
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
-Now, build and run this code with:
+Now, trying building and running your program with:
 
 ```shell
 npm run build
 npm run start
 ```
 
-It should print output like:
+When DBOS is launched, it attempts to connect to a Postgres database.
+If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
+Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
+
+Your program should print output like:
 
 ```shell
-2025-02-03 22:36:40 [info]: Workflow executor initialized
+2025-02-03 22:36:40 [info]: DBOS launched!
 2025-02-03 22:36:40 [info]: DBOS Admin Server is running at http://localhost:3001
 2025-02-03 22:36:40 [info]: Step one completed!
 2025-02-03 22:36:40 [info]: Step two completed!
@@ -116,6 +122,10 @@ app.get("/", async (req, res) => {
 });
 
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  })
   await DBOS.launch({ expressApp: app });
   const PORT = 3000;
   app.listen(PORT, () => {
@@ -126,7 +136,13 @@ async function main() {
 main().catch(console.log);
 ```
 
-Start your app with `npm run dev`.
+Now, rebuild and restart your app with:
+
+```shell
+npm run build
+npm run start
+```
+
 Then, visit this URL: http://localhost:3000.
 
 In your terminal, you should see an output like:
