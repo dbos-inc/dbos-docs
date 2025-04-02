@@ -297,10 +297,10 @@ The workflow should run every second, with output like:
 ## 5. Database Operations and Transactions
 
 Often, applications need to manage database tables in Postgres.
-We'll show you how to do that from scratch using [Knex.js](./tutorials/orms/using-knex.md).
+We'll show you how to do that from scratch using [Knex.js](https://knexjs.org/).
 First, we'll define a schema migration to create a new table.
 Then, we'll operate on the table using a DBOS workflow.
-DBOS also supports other popular ORMs such as [Drizzle](./tutorials/orms/using-drizzle.md), [Prisma](./tutorials/orms/using-prisma.md), and [TypeORM](./tutorials/orms/using-typeorm.md).
+DBOS also supports other popular ORMs such as [Drizzle](https://orm.drizzle.team/), [Prisma](https://www.prisma.io/), and [TypeORM](https://typeorm.io/).
 
 First, create a file named `knexfile.js` and add the following code to it.
 This configures Knex and instructs it to read its database connection parameters from DBOS.

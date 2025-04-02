@@ -24,7 +24,7 @@ You'll notice it is similar to the [example transaction function](./transaction-
 
 :::warning
 Because stored procedures run inside the database, only raw database queries are supported. 
-Query builders like [Knex.js](https://knexjs.org/) and ORMs like [TypeORM](./orms/using-typeorm.md) and [Prisma](./orms/using-prisma.md) are not supported in stored procedure functions.
+Query builders like Knex.js and ORMs like TypeORM and Prisma are not supported in stored procedure functions.
 :::
 
 ```javascript

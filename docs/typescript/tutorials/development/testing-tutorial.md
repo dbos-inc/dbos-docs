@@ -83,7 +83,7 @@ To load configuration from a different file, or to create a configuration in ano
 #### Setting Up App Databases Prior To Launch
 You are responsible for setting and cleaning up database tables before and after tests.
 
-In our example, we run Knex migrations with `npx dbos migrate` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using [TypeORM](../orms/using-typeorm.md), the schema can be set up from within the test itself using `DBOS.createUserSchema`:
+In our example, we run Knex migrations with `npx dbos migrate` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using TypeORM, the schema can be set up from within the test itself using `DBOS.createUserSchema`:
 ```typescript
   beforeEach(async () => {
     await DBOS.launch();
