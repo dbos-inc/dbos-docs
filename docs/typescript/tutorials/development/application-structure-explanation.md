@@ -56,7 +56,7 @@ Other templates will be similar, but may have additional files under `src/`:
 In this structure, `src/operations.ts` is an _entrypoint_ file, where DBOS looks for event handlers, such as [scheduled workflows](../scheduled-workflows), [kafka consumers](../requestsandevents/kafka-integration), or, if you are using DBOS's built in Koa server, [request handlers](../requestsandevents/http-serving-tutorial).
 At startup, the DBOS runtime automatically loads all classes that are exported or (directly and indirectly) referenced from these files, registering their decorated functions and serving any endpoints.
 
-The entrypoints are listed in the [`runtimeConfig` section of `dbos-config.yaml`](../../reference/configuration#runtime):
+The entrypoints are listed in the [`runtimeConfig` section of `dbos-config.yaml`](../../reference/configuration#runtime-section):
 
 ```yaml
 runtimeConfig:

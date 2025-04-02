@@ -272,7 +272,7 @@ Within a transaction function, the following read-only property is available fro
 DBOS.sqlClient: UserDatabaseClient
 ```
 
-The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../configuration.md#database):
+The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../configuration.md):
 ```typescript
 DBOS.pgClient: PoolClient
 DBOS.prismaClient: PrismaClient
@@ -513,16 +513,8 @@ To obtain further information about a particular workflow, call [`retrieveWorkfl
 DBOS.getConfig<T>(key: string): T | undefined
 DBOS.getConfig<T>(key: string, defaultValue: T): T
 ```
-Retrieves an application property specified in the [application section of the configuration](../configuration.md#application).
+**Deprecated.**  Retrieves an application property specified in the application section of the configuration.
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
-
-The entire configuration may also be accessed:
-```typescript
-DBOS.dbosConfig?: DBOSConfig; // The 
-DBOS.runtimeConfig?: DBOSRuntimeConfig;
-```
-
-Note that `DBOS.dbosConfig` and `DBOS.runtimeConfig` are not fully available util runtime initialization starts and the configuration files are loaded.
 
 ### Accessing Logging
 Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.  It is also possible to access the global logger via `DBOS.globalLogger`.

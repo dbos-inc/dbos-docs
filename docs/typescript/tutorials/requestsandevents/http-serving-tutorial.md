@@ -163,7 +163,6 @@ By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) t
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is a security feature that controls access to resources from different domains. DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a permissive default configuration.
 
 To customize CORS:
-* Use the HTTP configuration in [`dbos-config.yaml`](../../reference/configuration#http) for global settings.
 * Use the [`@KoaCors`](../../reference/transactapi/oldapi/decorators#koacors) class decorator for class-specific settings.
 
 ### Middleware

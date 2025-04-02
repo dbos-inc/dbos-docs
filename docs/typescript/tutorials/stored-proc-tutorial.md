@@ -67,7 +67,7 @@ npx dbosc deploy
 For information about all of the compiler's command line options, please see the [DBOS Compiler reference page](../reference/tools/dbos-compiler.md)
 :::
 
-You can add `npx dbosc deploy` to your [database migration commands](../reference/configuration.md#database) to run it alongside other schema migrations.
+You can add `npx dbosc deploy` to your [database migration commands](../reference/configuration.md#database-section) to run it alongside other schema migrations.
 Deploying your app's stored procedures via Database Schema Management is required for DBOS Cloud deployment.
 
 ```yaml

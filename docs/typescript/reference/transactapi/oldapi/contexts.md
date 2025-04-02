@@ -125,7 +125,7 @@ getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-Retrieves an application property specified in the [application section of the configuration](../../configuration.md#application).
+Retrieves an application property specified in the application section of the configuration.
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 ---
