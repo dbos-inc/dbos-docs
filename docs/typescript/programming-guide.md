@@ -188,7 +188,7 @@ const queue = new WorkflowQueue("example_queue");
 export class Example {
 
   @DBOS.step()
-  static async task_step(n: number) {
+  static async taskStep(n: number) {
     await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
@@ -198,7 +198,7 @@ export class Example {
     DBOS.logger.info("Enqueueing tasks!")
     const handles = []
     for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Example, { queueName: queue.name }).task_step(i))
+      handles.push(await DBOS.startWorkflow(Example, { queueName: queue.name }).taskStep(i))
     }
     const results = []
     for (const h of handles) {
@@ -279,7 +279,6 @@ The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, de
 The schedule in the example, `* * * * * *` means "run this workflow every second."
 Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
 
-
 Now, rebuild and restart your app with:
 
 ```shell
@@ -353,27 +352,16 @@ exports.up = function(knex) {
   };
 ```
 
-Then, edit your `dbos-config.yaml` to add a migration command:
-
-```yaml
-database:
-  migrate:
-    - npx knex migrate:latest
-```
-
-Finally, run your new migration with:
+Now run your new migration:
 
 ```shell
-npx dbos migrate
+npx knex migrate:latest
 ```
 
 You should see output like:
 
 ```shell
-2025-02-03 23:30:52 [info]: Executing migration command: npx knex migrate:latest
 Batch 1 run: 1 migrations
-2025-02-03 23:30:53 [info]: Creating DBOS tables and system database.
-2025-02-03 23:30:53 [info]: Migration successful!
 ```
 
 You just created your new table in your Postgres database!
@@ -413,8 +401,12 @@ app.get("/", async (req, res) => {
 });
 
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  })
   await DBOS.launch({ expressApp: app });
-  const PORT = DBOS.runtimeConfig?.port || 3000;
+  const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
@@ -428,7 +420,14 @@ The database operations are done in DBOS _transactions_. These are a special kin
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.knexClient`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-Now, start your app with `npm run dev`, then visit this URL: http://localhost:3000.
+Now, rebuild and restart your app with:
+
+```shell
+npm run build
+npm run start
+```
+
+Then, visit this URL: http://localhost:3000.
 
 You should see an output like:
 
@@ -482,8 +481,8 @@ export class Toolbox {
   //// Queues
   //////////////////////////////////
 
-  @DBOS.workflow()
-  static async taskWorkflow(n: number) {
+  @DBOS.step()
+  static async taskStep(n: number) {
     await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
@@ -493,7 +492,7 @@ export class Toolbox {
     DBOS.logger.info("Enqueueing tasks!")
     const handles = []
     for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Toolbox, { queueName: queue.name }).taskWorkflow(i))
+      handles.push(await DBOS.startWorkflow(Toolbox, { queueName: queue.name }).taskStep(i))
     }
     const results = []
     for (const h of handles) {
@@ -559,8 +558,12 @@ app.get("/transaction", async (req, res) => {
 /////////////////////////////////////
 
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  })
   await DBOS.launch({ expressApp: app });
-  const PORT = DBOS.runtimeConfig?.port || 3000;
+  const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
