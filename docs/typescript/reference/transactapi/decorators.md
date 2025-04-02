@@ -58,49 +58,12 @@ This decorator is used to specify functions to be run at application instance in
 `@DBOSInitializer` is intended for uses such as validating configuration, establishing connections to external (non-database) services, and so on.
 It is not a good place for database schema migration, for that see our [migration commands](../tools/cli.md#npx-dbos-migrate).
 
-The argument to `@DBOSInitializer` should be of type [`InitContext`](#initcontext).
-
 ```typescript
   @DBOSInitializer()
-  static async init(ctx: InitContext) {
-     // Use functions and config from ctx, report anything interesting with ctx.log
+  static async init() {
+     // Use functions from `DBOS`, report anything interesting with `DBOS.logger`
   }
 ```
-
-### `InitContext`
-
-[Class initialization functions](#dbosinitializer) and instance `initialize()` methods are provided with an `InitContext`, which provides access to configuration information, database access, and a logging facility.
-
-#### Properties and Methods
-
-- [logger](#initcontextlogger)
-- [queryuserdb](#initcontextqueryuserdb)
-- [getconfig](#initcontextgetconfig)
-
-#### `InitContext.logger`
-
-```typescript
-readonly logger: Logger;
-```
-
-`logger` is available to record any interesting successes, failures, or diagnostic information that occur during initialization.
-
-#### `InitContext.queryUserDB`
-
-```typescript
-queryUserDB<R>(sql: string, ...params: unknown[]): Promise<R[]>;
-```
-
-Accesses the user database directly with SQL.  This approach is to be used with caution, as using a string to represent SQL is not fully database independent and careless formation of the string can lead to SQL injection vulnerabilities.
-
-#### `InitContext.getConfig`
-
-```typescript
-getConfig<T>(key: string, defaultValue?: T): T | undefined;
-```
- 
-`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
-
 
 ## HTTP Middleware Decorators
 
