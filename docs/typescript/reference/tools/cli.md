@@ -14,7 +14,7 @@ The DBOS Transact CLI helps you run applications locally.
 ### `npx dbos start`
 
 **Description:**
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](../configuration.md#runtime-section).
 For example:
 
 ```yaml
