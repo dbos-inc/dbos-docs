@@ -45,7 +45,7 @@ Defaults to:
 postgresql://postgres:dbos@localhost:5432/[application name]
 ```
 - **userDbclient**: If using DBOS transactions, the database client to use. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.
-- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
+- **sysDbName**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 - **userDbPoolSize**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
 - **sysDbPoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
