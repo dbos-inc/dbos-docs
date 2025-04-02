@@ -187,8 +187,8 @@ const queue = new WorkflowQueue("example_queue");
 
 export class Example {
 
-  @DBOS.workflow()
-  static async taskWorkflow(n: number) {
+  @DBOS.step()
+  static async task_step(n: number) {
     await DBOS.sleep(5000);
     DBOS.logger.info(`Task ${n} completed!`)
   }
@@ -198,7 +198,7 @@ export class Example {
     DBOS.logger.info("Enqueueing tasks!")
     const handles = []
     for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Example, { queueName: queue.name }).taskWorkflow(i))
+      handles.push(await DBOS.startWorkflow(Example, { queueName: queue.name }).task_step(i))
     }
     const results = []
     for (const h of handles) {
@@ -214,8 +214,12 @@ app.get("/", async (req, res) => {
 });
 
 async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  })
   await DBOS.launch({ expressApp: app });
-  const PORT = DBOS.runtimeConfig?.port || 3000;
+  const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });
@@ -228,7 +232,13 @@ When you enqueue a function with `DBOS.startWorkflow`, DBOS executes it _asynchr
 `DBOS.startWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.get_result()` to wait for each of their handles.
 
-Start your app with `npm run dev`.
+Now, rebuild and restart your app with:
+
+```shell
+npm run build
+npm run start
+```
+
 Then, visit this URL: http://localhost:3000.
 Wait five seconds and you should see an output like:
 
@@ -269,7 +279,14 @@ The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, de
 The schedule in the example, `* * * * * *` means "run this workflow every second."
 Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
 
-Now, start your app with `npm run dev`.
+
+Now, rebuild and restart your app with:
+
+```shell
+npm run build
+npm run start
+```
+
 The workflow should run every second, with output like:
 
 ```shell
