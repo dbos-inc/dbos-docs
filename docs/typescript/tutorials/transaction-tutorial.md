@@ -31,7 +31,7 @@ export class Greetings {
     await DBOS.knexClient('greetings').insert(gr);
   }
 
-  @DBOS.transaction({readOnly: true})
+  @DBOS.transaction()
   static async getGreetings(): Promise<GreetingRecord[]>  {
     return await DBOS.knexClient<GreetingRecord>('greetings').select('*');
   }
@@ -56,7 +56,7 @@ export class Greetings {
     await getClient().insert(GreetingRecord).values({name: name, note: note});
   }
 
-  @DBOS.transaction({ readOnly:true })
+  @DBOS.transaction()
   static async getGreetings(): Promise<{name: string | null, note: string | null}[]> {
     return getClient().select().from(GreetingRecord);
   }
@@ -92,7 +92,7 @@ export class Greetings {
     await getClient().save(greeting);
   }
 
-  @DBOS.transaction({ readOnly:true })
+  @DBOS.transaction()
   static async getGreetings(): Promise<GreetingRecord[]> {
     return await getClient().getRepository(GreetingRecord).find();
   }  
@@ -129,7 +129,7 @@ export class Greetings {
     });
   }
 
-  @DBOS.transaction({ readOnly:true })
+  @DBOS.transaction()
   static async getGreetings(): Promise<GreetingRecord[]> {
     return await getClient().greetingRecord.findMany();
   }
@@ -152,7 +152,7 @@ export class Greetings {
     await ctxt.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
   }
 
-  @DBOS.transaction({readOnly: true})
+  @DBOS.transaction()
   static async getGreetings(): Promise<GreetingRecord[]> {
     const result = await DBOS.knexClient.raw('SELECT name, note FROM greetings') as { rows: GreetingRecord[] };
     return result.rows;
@@ -169,11 +169,7 @@ As shown above, we suggest decorating read-only transactions with `@DBOS.transac
 
 ## Schema Management
 
-We strongly recommend you manage your database schema using migrations.
-
-Migration commands are configured in your [`dbos-config.yaml`](../reference/configuration.md) file.
-At migration time, DBOS runs all migration commands.
-Please see these guides for details on how to configure migrations with each supported ORM:
+See these guides for details on how to configure migrations with each supported ORM:
 
 - [Knex schema management guide.](./orms/using-knex.md#schema-management)
 - [Drizzle schema management guide.](./orms/using-drizzle.md#schema-management)
