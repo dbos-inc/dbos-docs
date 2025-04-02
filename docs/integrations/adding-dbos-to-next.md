@@ -49,6 +49,15 @@ import { DBOS } from '@dbos-inc/dbos-sdk'; // Import DBOS
 async function main() { // Adjust if your entrypoint is not named 'main'
   // ... Configure anything DBOS needs prior to launch ...
 
+  // Configure DBOS
+  // highlight-next-line
+  DBOS.setConfig({
+  // highlight-next-line
+    "name": "my-app",
+  // highlight-next-line
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  // highlight-next-line
+  })
   // Launch DBOS after initializing DBOS logic, and before starting 'next'
   // highlight-next-line
   await DBOS.launch();
@@ -75,6 +84,14 @@ const handle = app.getRequestHandler();
 
 async function main() {
   DBOS.logger.info('Launching...');
+  // highlight-next-line
+  DBOS.setConfig({
+  // highlight-next-line
+    "name": "my-app",
+  // highlight-next-line
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  // highlight-next-line
+  })
   // highlight-next-line
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');
@@ -145,9 +162,6 @@ The following shows very basic scripts for `package.json`:
 ```
 
 These scripts can be more sophisticated, allowing for database migrations and `nodemon`.  See the [demo apps](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript) for examples.
-
-### DBOS Configuration
-By default, `DBOS.launch()` will read [`dbos-config.yaml`](../typescript/reference/configuration) to get key information, such as database settings.  To configure DBOS programatically, see [`DBOS.setConfig`](../typescript/reference/transactapi/dbos-class#setting-the-application-configuration).
 
 ## Calling DBOS Code From Next.js
 The DBOS Transact library and your workflow functions are available in all server-side request handling, including page loads, server actions, and route handlers.
