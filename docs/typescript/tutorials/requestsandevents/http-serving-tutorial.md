@@ -110,16 +110,6 @@ Content-Type: application/json
 When sending an HTTP request with a JSON body, make sure you set the [`Content-Type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) header to `application/json`.
 :::
 
-:::info
-No matter where arguments are parsed from, if arguments are not supplied or are of the wrong type, the endpoint will throw an input validation error.
-
-You can specify that an argument is optional with the [`@ArgOptional`](../../reference/transactapi/parameterdecorators.md#argoptional) parameter decorator.
-:::
-
-:::info
-You can use the [`@ArgSource()`](../../reference/transactapi/parameterdecorators.md#argsource) parameter decorator to parse an argument from a non-default location (for example, from a query string in a `POST` handler).
-:::
-
 #### Raw Requests
 
 If you need finer-grained request parsing, any DBOS method invoked via HTTP request can access raw request information from [`DBOS.request`](../../reference/transactapi/dbos-class#accessing-http-context). This returns the following information:
