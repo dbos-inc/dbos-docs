@@ -48,8 +48,8 @@ postgresql://postgres:dbos@localhost:5432/[application name]
 - **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 - **userDbPoolSize**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
 - **sysDbPoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
-- **logLevel**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `info`.
-- **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
+- **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
+- **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
 
@@ -57,7 +57,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]
 ## DBOS Configuration File
 
 Many tools in the DBOS ecosystem are configured by a `dbos-config.yaml` file.
-Tools that use `dbos-config.yaml` include the [DBOS CLI](./cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
+Tools that use `dbos-config.yaml` include the [DBOS CLI](./tools/cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
 Additionally, the DBOS library will fall back to `dbos-config.yaml` if no configuration object is provided.
 
 Here is an example configuration file with default parameters:
@@ -81,7 +81,7 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name. Must match the name supplied to the DBOS constructor.
 - **language**: The application language. Must be set to `node` for TypeScript applications.
-- **database_url**: A connection string to a Postgres database. This connection string is used by tools such as the [DBOS CLI](./cli.md) and [DBOS debugger](../tutorials/debugging.md). It has the same format as (and should match) the connection string you pass to the DBOS constructor.
+- **database_url**: A connection string to a Postgres database. This connection string is used by tools such as the [DBOS CLI](./tools/cli.md) and [DBOS debugger](../tutorials/debugging.md). It has the same format as (and should match) the connection string you pass to the DBOS constructor.
 - **database**: The [database section](#database-section).
 - **runtimeConfig**: The [runtime section](#runtime-section).
 
@@ -96,12 +96,12 @@ Each `dbos-config.yaml` file has the following fields and sections:
 database:
   sys_db_name: 'my_dbos_system_db'
   migrate:
-    - alembic upgrade head
+    - npx knex migrate:latest
 ```
 
 #### Runtime Section
 
-- **start**: The command(s) with which to start your app. Called from [`npx dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
+- **start**: The command(s) with which to start your app. Called from [`npx dbos start`](./tools/cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
 - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 **Example**:
@@ -109,7 +109,7 @@ database:
 ```yaml
 runtimeConfig:
   start:
-    - "fastapi run"
+    - "node dist/main.js"
 ```
 
 ### Configuration Schema File

@@ -14,15 +14,16 @@ The DBOS Transact CLI helps you run applications locally.
 ### `npx dbos start`
 
 **Description:**
-This command launches the DBOS Transact runtime and HTTP server to serve an application.
-It registers all functions and serves all endpoints in classes and dependencies of the [declared entrypoint files](../configuration#runtime) (`dist/operations.js` by default).
-Parameters set from the command line take precedence over parameters set in the [configuration file](../configuration).
-You must compile your code (`npm run build`) before running this command.
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
+For example:
 
-**Arguments:**
-- `-p, --port <port-number>`: The port on which to serve your functions.
-- `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-d, --appDir <application-directory>`: The path to your application root directory.
+```yaml
+runtimeConfig:
+  start:
+    - "node dist/main.js"
+```
+
+DBOS Cloud executes this command to start your app.
 
 ---
 
