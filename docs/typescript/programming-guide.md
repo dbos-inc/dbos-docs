@@ -63,7 +63,7 @@ The key benefit of DBOS is **durability**&mdash;it automatically saves the state
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
-Now, trying building and running your program with:
+Now, build and run this code with:
 
 ```shell
 npm run build
