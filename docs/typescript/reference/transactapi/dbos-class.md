@@ -272,7 +272,7 @@ Within a transaction function, the following read-only property is available fro
 DBOS.sqlClient: UserDatabaseClient
 ```
 
-The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../configuration.md#database):
+The following aliases are also available, depending on the database driver or ORM [`app_db_client` that has been configured](../configuration.md):
 ```typescript
 DBOS.pgClient: PoolClient
 DBOS.prismaClient: PrismaClient
@@ -281,11 +281,7 @@ DBOS.typeORMClient: TypeORMEntityManager
 DBOS.drizzleClient: DrizzleClient
 ```
 
-For more details, see:
-* [Drizzle](../../tutorials/orms/using-drizzle.md)
-* [Knex](../../tutorials/orms/using-knex.md)
-* [Prisma](../../tutorials/orms/using-prisma.md)
-* [TypeORM](../../tutorials/orms/using-typeorm.md)
+For more details, see the [transaction tutorial](../../tutorials/transaction-tutorial.md).
 
 ### `@DBOS.step`
 `@DBOS.step` registers a function as a DBOS step.  Such functions are a key building block of DBOS's [reliable workflows](../../tutorials/workflow-tutorial.md).
@@ -513,16 +509,8 @@ To obtain further information about a particular workflow, call [`retrieveWorkfl
 DBOS.getConfig<T>(key: string): T | undefined
 DBOS.getConfig<T>(key: string, defaultValue: T): T
 ```
-Retrieves an application property specified in the [application section of the configuration](../configuration.md#application).
+**Deprecated.**  Retrieves an application property specified in the application section of the configuration.
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
-
-The entire configuration may also be accessed:
-```typescript
-DBOS.dbosConfig?: DBOSConfig; // The 
-DBOS.runtimeConfig?: DBOSRuntimeConfig;
-```
-
-Note that `DBOS.dbosConfig` and `DBOS.runtimeConfig` are not fully available util runtime initialization starts and the configuration files are loaded.
 
 ### Accessing Logging
 Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.  It is also possible to access the global logger via `DBOS.globalLogger`.
@@ -921,7 +909,7 @@ const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'}
 Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loaded and programmatic modifications or checks to be performed prior to calling `DBOS.setConfig`.
 
 ### Loading Classes
-Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that are actually loaded by the application.
+Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application entrypoints, files provided should be the `.js` files that are actually loaded by the application.
 
 ```typescript
 await DBOS.loadClasses(['dist/kafka_conumer.js','dist/background_jobs.js']);

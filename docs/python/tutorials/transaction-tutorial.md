@@ -4,8 +4,7 @@ title: Transactions
 description: Learn how to perform database operations
 ---
 
-We recommend performing database operations in _transactions_.
-These are a special type of [step](./step-tutorial.md) that are optimized for database accesses.
+Transactions are a special type of [step](./step-tutorial.md) that are optimized for database accesses.
 They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
 
 To make a Python function a transaction, annotate it with the [`@DBOS.transaction`](../reference/decorators.md#transaction) decorator.
