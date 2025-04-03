@@ -113,6 +113,7 @@ export const GreetingRecord = pgTable('greetings', {
 
 function getClient() { return DBOS.drizzleClient as NodePgDatabase; }
 
+@OrmEntities({GreetingRecord})
 export class Greetings {
 
   @DBOS.transaction()
@@ -126,6 +127,15 @@ export class Greetings {
   }
 }
 ```
+
+##### `@OrmEntities`
+Marks a class as using ORM entity classes.
+```typescript
+@OrmEntities({GreetingRecord})
+export class Greetings {/**/}
+```
+
+This code will ensure that drizzle is aware of the schema.
 
 </TabItem>
 <TabItem value="typeorm" label="TypeORM">
@@ -162,6 +172,15 @@ export class Greetings {
   }  
 }
 ```
+
+##### `@OrmEntities`
+Marks a class as using ORM entity classes.
+```typescript
+@OrmEntities([GreetingRecord])
+export class Greetings {/**/}
+```
+
+This code will ensure that the TypeORM entity manager and repository knows about the entities in the list.
 
 </TabItem>
 <TabItem value="prisma" label="Prisma">
