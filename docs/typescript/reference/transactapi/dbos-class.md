@@ -655,7 +655,7 @@ DBOS.koaContext: Koa.Context // Koa context, including response, any middleware 
 ```
 
 ### Middleware
-For details on middleware, argument processing, and data validation, see [HTTP Decorators](./decorators.md#http-middleware-decorators) or the [HTTP Handling Tutorial](../../tutorials/requestsandevents/http-serving-tutorial.md).
+For details on middleware, see [HTTP Decorators](../../tutorials/requestsandevents/http-serving-tutorial.md#middleware) in the [HTTP Handling Tutorial](../../tutorials/requestsandevents/http-serving-tutorial.md).
 
 ### HTTP Testing
 ```typescript

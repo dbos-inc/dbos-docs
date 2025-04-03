@@ -5,14 +5,14 @@ title: Authentication & Authorization
 
 This section covers declarative authentication and authorization in DBOS.
 
-DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](../reference/transactapi/decorators#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@DBOS.requiredRole`](../reference/transactapi/dbos-class.md#dbosrequiredrole) API.
+DBOS supports modular, built-in declarative security: you can use the [`@Authentication`](./requestsandevents/http-serving-tutorial#authentication) class decorator to make user identities available to DBOS contexts. Further, you can associate operations with a list of permitted roles using the [`@DBOS.requiredRole`](../reference/transactapi/dbos-class.md#dbosrequiredrole) API.
 
 :::info note
 You can fully implement authentication and authorization using custom [HTTP middleware](./requestsandevents/http-serving-tutorial#middleware) which will run before the request reaches the handler. This section describes mechanisms DBOS provides to make it easier.
 :::
 
 ## Authentication Middleware
-To instruct DBOS to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](../reference/transactapi/decorators#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
+To instruct DBOS to perform authentication for an HTTP endpoint, you can use the [`@Authentication`](./requestsandevents/http-serving-tutorial#authentication) class decorator to register HTTP middleware with your custom authentication logic (for example validating a [JSON Web Token](https://jwt.io/) and retrieving user credentials and permissions from the decoded token).
 The decorator should return a structure containing identity and claimed roles:
 
 ```javascript

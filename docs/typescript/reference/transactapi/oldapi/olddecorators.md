@@ -10,6 +10,53 @@ description: API reference for DBOS Transact v1.x decorators.
 This document describes a deprecated DBOS Transact v1 API, in which `DBOSContext` objects were passed around.  DBOS code should now be written using decorators and function calls from the [`DBOS` class](../dbos-class.md).
 :::
 
+## Background
+
+[Decorators](https://www.typescriptlang.org/docs/handbook/decorators.html) in TypeScript are a way to declaratively alter classes, functions, and parameters. Decorators precede the decorated class, function, or parameter, and begin with `@`:
+```typescript
+  @Decorated
+  class decorated {
+  ...
+  }
+```
+Decorators may or may not take arguments in parentheses `()`.  However, each specific decorator either requires or refuses parentheses. In the following, adding `()` after `@Required` will lead to an error, as will omitting `()` after `@LogMask`.
+```
+@Required @LogMask(LogMasks.HASH) password: string
+```
+
+While, in general, the order in which decorators are listed can affect the behavior, all decorators in the DBOS API are order-independent.  So this:
+```typescript
+  @DBOS.transaction()
+  @DBOS.postApi("/follow")
+  static async hello() {
+  ...
+  }
+```
+
+is the same as this:
+```typescript
+  @DBOS.postApi("/follow")
+  @DBOS.transaction()
+  static async hello() {
+  ...
+  }
+```
+
+### Enabling Decorators
+
+DBOS uses [TypeScript "Stage 2" decorators](https://www.typescriptlang.org/docs/handbook/decorators.html).
+If you initialize your project with [`npx -y @dbos-inc/create`](../../tools/cli.md#npx-dbos-inccreate), these are automatically enabled.
+Otherwise, you must enable them by supplying the following configuration to the TypeScript compiler (usually via the file `tsconfig.json`):
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+  }
+}
+```
+
 ## Decorator Locations
 
 DBOS uses decorators at the class, function, or function parameter level.  (TypeScript also supports decorators at the property or accessor level, but DBOS currently doesn't use them.)

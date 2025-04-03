@@ -146,20 +146,47 @@ However, DBOS makes no guarantees about handler execution: if a handler fails, i
 You should use handlers when you need to access HTTP requests or responses directly or when you are writing a lightweight task that does not need the [strong guarantees of transactions and workflows](../workflow-tutorial#reliability-guarantees).
 
 ### Body Parser
-By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the [`@KoaBodyParser`](../../reference/transactapi/decorators#koabodyparser) decorator.
+By default, DBOS uses [`@koa/bodyparser`](https://github.com/koajs/bodyparser) to support JSON in requests.  If this default behavior is not desired, you can configure a custom body parser with the `@KoaBodyParser` decorator.
+
+```typescript
+import { bodyParser } from "@koa/bodyparser";
+
+@KoaBodyParser(bodyParser({
+  extendTypes: {
+    json: ["application/json", "application/custom-content-type"],
+  },
+  encoding: "utf-8"
+}))
+class OperationEndpoints {
+}
+```
 
 ### CORS
 
 [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) is a security feature that controls access to resources from different domains. DBOS uses [`@koa/cors`](https://github.com/koajs/cors) with a permissive default configuration.
 
-To customize CORS:
-* Use the HTTP configuration in [`dbos-config.yaml`](../../reference/configuration#http) for global settings.
-* Use the [`@KoaCors`](../../reference/transactapi/decorators#koacors) class decorator for class-specific settings.
+If more complex logic is needed, or if the CORS configuration differs between operation classes, the `@KoaCors` class-level decorator can be used to specify the CORS middleware in full.
+
+```typescript
+import cors from "@koa/cors";
+
+@KoaCors(cors({
+  credentials: true,
+  origin:
+    (o: Context)=>{
+      const whitelist = ['https://us.com','https://partner.com'];
+      const origin = o.request.header.origin ?? '*';
+      return (whitelist.includes(origin) ? origin : '');
+    }
+}))
+class EndpointsWithSpecialCORS {
+}
+```
 
 ### Middleware
 
-DBOS supports running custom [Koa](https://koajs.com/) middleware for serving HTTP requests.
-Middlewares are configured at the class level through the [`@KoaMiddleware`](../../reference/transactapi/decorators#koamiddleware) decorator.
+DBOS supports running arbitrary [Koa](https://koajs.com/) middleware for serving HTTP requests.
+Middlewares are configured at the class level through the `@KoaMiddleware` decorator.
 Here is an example of a simple middleware checking an HTTP header:
 ```javascript
 import { Middleware } from "koa";
@@ -179,8 +206,7 @@ class Hello {
 
 The `@KoaMiddleware` decorator above only places middleware on registered routes within the decorated class.  It is sometimes desired to add middleware to all routes globally, including on routes that are not registered at all.
 
-For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a [global middleware](../../reference/transactapi/decorators.md#koaglobalmiddleware):
-
+For example, to install logging that would pick up on 404 errors or other bad requests during development, `koa-logger` could be installed as a global middleware
 ```typescript
 import logger from 'koa-logger';
 
@@ -223,6 +249,142 @@ const logAllRequests = () => {
 class OperationEndpoints{
   ...
 }
+```
+
+### `@Authentication`
+Configures the DBOS HTTP server to perform authentication. All functions in the decorated class will use the provided function to act as an authentication middleware.
+This middleware will make users' identity available to [DBOS functions](../../reference/transactapi/dbos-class#retrieving-the-authenticated-user-and-roles). Here is an example:
+
+```typescript
+async function exampleAuthMiddleware (ctx: MiddlewareContext) {
+  if (ctx.requiredRole.length > 0) {
+    const { userid } = ctx.koaContext.request.query;
+    const uid = userid?.toString();
+
+    if (!uid || uid.length === 0) {
+      const err = new DBOSNotAuthorizedError("Not logged in.", 401);
+      throw err;
+    }
+    else {
+      if (uid === 'bad_person') {
+        throw new DBOSNotAuthorizedError("Go away.", 401);
+      }
+      return {
+        authenticatedUser: uid,
+        authenticatedRoles: (uid === 'a_real_user' ? ['user'] : ['other'])
+      };
+    }
+  }
+}
+
+@Authentication(exampleAuthMiddleware)
+class OperationEndpoints {
+  @DBOS.getApi("/requireduser")
+  @DBOS.requiredRole(['user'])
+  static async checkAuth() {
+    return `Please say hello to ${DBOS.authenticatedUser}`;
+  }
+}
+```
+
+The interface for the authentication middleware is:
+```typescript
+/**
+ * Authentication middleware executing before requests reach functions.
+ * Can implement arbitrary authentication and authorization logic.
+ * Should throw an error or return an instance of `DBOSHttpAuthReturn`
+ */
+export type DBOSHttpAuthMiddleware = (ctx: MiddlewareContext) => Promise<DBOSHttpAuthReturn | void>;
+
+export interface DBOSHttpAuthReturn {
+  authenticatedUser: string;
+  authenticatedRoles: string[];
+}
+```
+
+The authentication function is provided with a ['MiddlewareContext'](#middlewarecontext), which allows access to the request, system configuration, logging, and database access services.
+
+### `MiddlewareContext`
+
+`MiddlewareContext` is provided to functions that execute against a request before entry into handler, transaction, and workflow functions.  These middleware functions are generally executed before, or in the process of, user authentication, request validation, etc.  The context is intended to provide read-only database access, logging services, and configuration information.
+
+#### Properties and Methods
+
+- [logger](#middlewarecontextlogger)
+- [span](#middlewarecontextspan)
+- [koaContext](#middlewarecontextkoacontext)
+- [name](#middlewarecontextname)
+- [requiredRole](#middlewarecontextrequiredrole)
+- [getConfig](#middlewarecontextgetconfig)
+- [query](#middlewarecontextquery)
+
+#### `MiddlewareContext.logger`
+
+```typescript
+readonly logger: DBOSLogger;
+```
+
+`logger` is available to record any interesting successes, failures, or diagnostic information that occur during middleware processing.
+
+#### `MiddlewareContext.span`
+```typescript
+readonly span: Span;
+```
+`span` is the tracing span in which the middleware is being executed.
+
+#### `MiddlewareContext.koaContext`
+
+```typescript
+readonly koaContext: Koa.Context;
+```
+
+`koaContext` is the Koa context, which contains the inbound HTTP request associated with the middleware invocation.
+
+#### `MiddlewareContext.name`
+
+```typescript
+readonly name: string;
+```
+
+`name` contains the name of the function (handler, transaction, workflow) to be invoked after successful middleware processing.
+
+#### `MiddlewareContext.requiredRole`
+
+```typescript
+readonly requiredRole: string[];
+```
+
+`requiredRole` contains the list of roles required for the invoked operation.  Access to the function will granted if the user has any role on the list.  If the list is empty, it means there are no authorization requirements and may indicate that authentication is not required.
+
+#### `MiddlewareContext.getConfig`
+
+```typescript
+getConfig<T>(key: string, deflt: T | undefined) : T | undefined
+```
+
+`getConfig` retrieves configuration information (from .yaml config file / environment).  If `key` is not present in the configuration, `defaultValue` is returned.
+
+#### `MiddlewareContext.query`
+
+```typescript
+  query<C extends UserDatabaseClient, R, T extends unknown[]>(qry: (dbclient: C, ...args: T) => Promise<R>, ...args: T): Promise<R>;
+```
+
+The `query` function provides read access to the database.
+To provide a scoped database connection and to ensure cleanup, the `query` API works via a callback function.
+The application is to pass in a `qry` function that will be executed in a context with access to the database client `dbclient`.
+The provided `dbClient` will be a `Knex` or TypeORM `EntityManager` or `PrismaClient` depending on the application's choice of SQL access library.
+This callback function may take arguments, and return a value.
+
+Example, for Knex:
+```typescript
+  const u = await ctx.query(
+    // The qry function that takes in a dbClient and a list of arguments (uname in this case)
+    (dbClient: Knex, uname: string) => {
+      return dbClient<UserTable>(userTableName).select("username").where({ username: uname })
+    },
+    userName // Input value for the uname argument
+  );
 ```
 
 ### Serving Static Content
