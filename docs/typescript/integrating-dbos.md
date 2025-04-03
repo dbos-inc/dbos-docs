@@ -41,7 +41,7 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 DBOS.setConfig({
   "name": "my-app",
   "databaseUrl": process.env.DBOS_DATABASE_URL
-})
+});
 await DBOS.launch();
 ```
 

@@ -47,7 +47,7 @@ async function main() {
   DBOS.setConfig({
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
-  })
+  });
   await DBOS.launch();
   await Example.exampleWorkflow();
   await DBOS.shutdown();
@@ -125,7 +125,7 @@ async function main() {
   DBOS.setConfig({
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
-  })
+  });
   await DBOS.launch({ expressApp: app });
   const PORT = 3000;
   app.listen(PORT, () => {
@@ -217,7 +217,7 @@ async function main() {
   DBOS.setConfig({
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
-  })
+  });
   await DBOS.launch({ expressApp: app });
   const PORT = 3000;
   app.listen(PORT, () => {
@@ -404,7 +404,7 @@ async function main() {
   DBOS.setConfig({
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
-  })
+  });
   await DBOS.launch({ expressApp: app });
   const PORT = 3000;
   app.listen(PORT, () => {
@@ -561,7 +561,7 @@ async function main() {
   DBOS.setConfig({
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
-  })
+  });
   await DBOS.launch({ expressApp: app });
   const PORT = 3000;
   app.listen(PORT, () => {

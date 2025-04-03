@@ -37,7 +37,7 @@ async function bootstrap() {
   // highlight-next-line
     "databaseUrl": process.env.DBOS_DATABASE_URL
   // highlight-next-line
-  })
+  });
   // highlight-next-line
   await DBOS.launch();
   await app.listen(process.env.PORT ?? 3000);

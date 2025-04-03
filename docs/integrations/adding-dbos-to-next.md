@@ -57,7 +57,7 @@ async function main() { // Adjust if your entrypoint is not named 'main'
   // highlight-next-line
     "databaseUrl": process.env.DBOS_DATABASE_URL
   // highlight-next-line
-  })
+  });
   // Launch DBOS after initializing DBOS logic, and before starting 'next'
   // highlight-next-line
   await DBOS.launch();
@@ -91,7 +91,7 @@ async function main() {
   // highlight-next-line
     "databaseUrl": process.env.DBOS_DATABASE_URL
   // highlight-next-line
-  })
+  });
   // highlight-next-line
   await DBOS.launch();
   DBOS.logger.info('  ...launched.');
