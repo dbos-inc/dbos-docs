@@ -909,7 +909,7 @@ const [cfg, rtCfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'}
 Use of `parseConfigFile` allows a file other than `dbos-config.yaml` to be loaded and programmatic modifications or checks to be performed prior to calling `DBOS.setConfig`.
 
 ### Loading Classes
-Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application [entrypoints](../../tutorials/development/application-structure-explanation), files provided should be the `.js` files that are actually loaded by the application.
+Before a DBOS app is launched, all classes with DBOS methods should be loaded, giving their decorators a chance to run and register the associated functions.  This is generally done automatically, but for advanced situations, it can be performed programatically with `DBOS.loadClasses`.  Note that, similar to those in the application entrypoints, files provided should be the `.js` files that are actually loaded by the application.
 
 ```typescript
 await DBOS.loadClasses(['dist/kafka_conumer.js','dist/background_jobs.js']);

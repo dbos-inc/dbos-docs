@@ -123,10 +123,6 @@ const config = {
             to: '/typescript/reference/transactapi/workflow-queues',
           },
           {
-            from: '/typescript/tutorials/application-structure-explanation',
-            to: '/typescript/tutorials/development/application-structure-explanation',
-          },
-          {
             from: '/typescript/tutorials/using-libraries',
             to: '/typescript/tutorials/development/using-libraries',
           },
