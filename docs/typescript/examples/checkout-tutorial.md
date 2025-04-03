@@ -330,7 +330,7 @@ Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repo
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/widget-store
+cd typescript/widget-store
 dbos-cloud app deploy
 ```
 
