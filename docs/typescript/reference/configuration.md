@@ -39,7 +39,7 @@ export interface DBOSConfig {
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
-The `sslmode=require`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
+The `sslmode=require`, `sslmode=verify-full`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
 Defaults to:
 ```
 postgresql://postgres:dbos@localhost:5432/[application name]
