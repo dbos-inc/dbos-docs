@@ -180,7 +180,7 @@ Marks a class as using ORM entity classes.
 export class Greetings {/**/}
 ```
 
-This code will ensure that the TypeORM entity manager and repository knows about the entities in the list.
+This code will ensure that the TypeORM entity manager and repository know about the entities in the list.
 
 </TabItem>
 <TabItem value="prisma" label="Prisma">
