@@ -47,7 +47,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]
 - **userDbclient**: If using DBOS transactions, the database client to use. Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.
 - **sysDbName**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 - **userDbPoolSize**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
-- **sysDbPoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **sysDbPoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 2.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
