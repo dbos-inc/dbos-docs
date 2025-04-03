@@ -125,6 +125,9 @@ Each of these functions performs a simple CRUD operation, like retrieving produc
 We apply the [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to each of them to give them access to a pre-configured database connection.
 We also add HTTP endpoints for some of them with Fastify.
 
+<details>
+<summary>Database Operations and HTTP Endpoints</summary>
+
 ```javascript
 export class ShopUtilities {
   @DBOS.transaction()
@@ -206,6 +209,8 @@ export class ShopUtilities {
   }
 }
 
+// Fastify HTTP endpoints
+
 fastify.get('/product', async () => {
   return await ShopUtilities.retrieveProduct();
 });
@@ -226,6 +231,7 @@ fastify.post('/restock', async () => {
 });
 
 ```
+</details>
 
 ## Finishing Up
 
@@ -312,7 +318,7 @@ main().catch(console.log);
 ```
 
 ## Try it Yourself!
-### Deploying to the Cloud
+### Deploying to DBOS Cloud
 
 To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
 

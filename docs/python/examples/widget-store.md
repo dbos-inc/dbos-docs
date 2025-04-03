@@ -254,7 +254,7 @@ def crash_application():
     os._exit(1)
 ```
 ## Try it Yourself!
-### Deploying to the Cloud
+### Deploying to DBOS Cloud
 
 To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
 
