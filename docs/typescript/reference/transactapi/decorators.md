@@ -53,18 +53,6 @@ Otherwise, you must enable them by supplying the following configuration to the 
 }
 ```
 
-## `@DBOSInitializer`
-This decorator is used to specify functions to be run at application instance initialization time.
-`@DBOSInitializer` is intended for uses such as validating configuration, establishing connections to external (non-database) services, and so on.
-It is not a good place for database schema migration, for that see our [migration commands](../tools/cli.md#npx-dbos-migrate).
-
-```typescript
-  @DBOSInitializer()
-  static async init() {
-     // Use functions from `DBOS`, report anything interesting with `DBOS.logger`
-  }
-```
-
 ## HTTP Middleware Decorators
 
 ### `@Authentication`
