@@ -102,7 +102,8 @@ database:
 #### Runtime Section
 
 - **start**: The command(s) with which to start your app. Called from [`npx dbos start`](./tools/cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
-- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
+- **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. This should only be used if you are using scheduled workflows, Kafka consumers, or DBOS HTTP decorators in files that are not referenced by your start command. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to [dist/operations.js].
+- **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 **Example**:
 
