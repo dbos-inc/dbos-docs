@@ -68,6 +68,31 @@ class Tasks {
 }
 ```
 
+### Enqueue with DBOSClient
+
+[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
+Among other things, this allows you to enqueue workflows from outside your DBOS application.
+
+Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+Example: 
+
+```ts
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create("postgresql://postgres:password@localhost:5432/my_app_db");
+
+type ProcessTask = typeof<Tasks.processTask>;
+await client.enqueue<Parameters<ProcessTask>>(
+    {
+        workflowName: 'processTask',
+        workflowClassName: 'Tasks',
+        queueName: 'example_queue',
+    }, 
+    task);
+```
+
+
 ### Reliability Guarantees
 
 Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
