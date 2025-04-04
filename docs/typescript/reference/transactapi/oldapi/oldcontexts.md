@@ -126,7 +126,7 @@ getConfig<T>(key: string): T | undefined;
 getConfig<T>(key: string, defaultValue: T): T;
 ```
 
-Retrieves an application property specified in the [application section of the configuration](../../configuration.md#application).
+Retrieves an application property specified in the application section of the configuration.
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 ---
@@ -437,28 +437,28 @@ Transactions use `TransactionContext` to interact with the database.
 The application database client is configurable in a project's [configuration file](../../configuration) (`app_db_client`).
 DBOS currently supports the following clients:
 
-**[Knex](../../../tutorials/orms/using-knex.md)**
+**Knex**
 
 ```typescript
 import { Knex } from "knex";
 static async exampleTransaction(ctxt: TransactionContext<Knex>, ...)
 ```
 
-**[TypeORM](../../../tutorials/orms/using-typeorm.md)**
+**TypeORM**
 
 ```typescript
 import { EntityManager } from "typeorm";
 static async exampleTransaction(ctxt: TransactionContext<EntityManager>, ...)
 ```
 
-**[Prisma](../../../tutorials/orms/using-prisma.md)**
+**Prisma**
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
 static async exampleTransaction(ctxt: TransactionContext<PrismaClient>, ...)
 ```
 
-**[Drizzle](../../../tutorials/orms/using-drizzle.md)**
+**Drizzle**
 
 ```typescript
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';

@@ -282,7 +282,6 @@ static async exampleDelete(ctxt: HandlerContext, id: string) {
 }
 ```
 
-
 ### Declarative Security Decorators
 
 :::note
