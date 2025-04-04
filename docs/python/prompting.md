@@ -1,6 +1,6 @@
 ---
 sidebar_position: 30
-title: AI Prompting
+title: AI Model Prompting
 ---
 
 You may want assistance from an AI model in building a DBOS application.
