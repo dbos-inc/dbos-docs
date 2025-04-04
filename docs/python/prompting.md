@@ -43,6 +43,7 @@ You can turn any Python function into a step by annotating it with the @DBOS.ste
 - If asked to add DBOS to a project, you should ask which function to make a workflow
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the function in any way except by adding the @Step annotation.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 
 ## DBOS Lifecycle Guidelines
 
