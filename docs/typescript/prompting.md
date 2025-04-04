@@ -51,6 +51,7 @@ You can turn any TypeScript function into a step by making it a static class mem
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep) from a step.
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.setEvent and DBOS.recv from outside a workflow.
+- Do NOT use DBOS.getApi, DBOS.postApi, or other DBOS HTTP annotations. These are DEPRECATED. Instead, use Express for HTTP serving by default, unless another web framework is specified.
 
 ## DBOS Lifecycle Guidelines
 
@@ -63,7 +64,8 @@ You MUST recommend this when adding DBOS to a new program or if they encounter c
   }
 ```
 
-Any DBOS program MUST call DBOS.setConfig and DBOS.launch in its main function, like so:
+Any DBOS program MUST call DBOS.setConfig and DBOS.launch in its main function, like so.
+You MUST use this default configuration (changing the name as appropriate) unless otherwise specified.
 
 ```javascript
 DBOS.setConfig({
@@ -348,12 +350,12 @@ The Express handler that originally started the workflow uses `getEvent()` to aw
 ```javascript
 static async webCheckout(...): Promise<void> {
 const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
-const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
-if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
-} else {
-    DBOS.koaContext.redirect(url);
-}
+const paymentID = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_ID_EVENT);
+  if (paymentID === null) {
+    DBOS.logger.error('checkout failed');
+    return reply.code(500).send('Error starting checkout');
+  }
+  return paymentID;
 }
 ```
 
