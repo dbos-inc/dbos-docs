@@ -649,4 +649,38 @@ You MUST use this beforeAll to reset DBOS between tests:
   });
 ```
 
+
+### Logging
+
+ALWAYS log errors like this:
+
+```typescript
+      DBOS.logger.error(`Error: ${(error as Error).message}`);
+```
+
+## Workflow Handle
+
+DBOS.startWorkflow and DBOS.retrieveWorkflow return a workflow handle.
+
+#### `getStatus(): Promise<WorkflowStatus>`
+
+Retrieves the status of a workflow with the following structure:
+
+```typescript
+export interface WorkflowStatus {
+  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, or CANCELLED.
+  readonly workflowName: string; // The name of the workflow function.
+}
+```
+
+#### `getResult(): Promise<R>`
+
+Waits for the workflow to complete then returns its output.
+
+#### `workflowID: string`
+
+Retrieves the workflow's unique ID.
+
+
+
 ````

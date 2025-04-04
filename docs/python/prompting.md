@@ -319,7 +319,7 @@ This is useful for sending notifications to an active workflow.
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
-Do NOT call this from a step.
+NEVER call this from a step.
 
 ```python
 DBOS.send(
@@ -585,12 +585,42 @@ def reset_dbos():
     DBOS.launch()
 ```
 
-### Logging
+## Workflow Handle
 
-ALWAYS log errors like this:
+DBOS.start_workflow, DBOS.retrieve_workflow, and enqueue return workflow handles.
 
-```typescript
-      DBOS.logger.error(`Error: ${(error as Error).message}`);
+#### get_workflow_id
+
+```python
+handle.get_workflow_id() -> str
 ```
+
+Retrieve the ID of the workflow.
+
+#### get_result
+
+```python
+handle.get_result() -> R
+```
+
+Wait for the workflow to complete, then return its result.
+
+#### get_status
+
+```python
+handle.get_status() -> WorkflowStatus
+```
+
+Retrieve the workflow status:
+
+```python
+class WorkflowStatus:
+    workflow_id: str # The workflow's ID
+    status: str # The workflow's current state. One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, or CANCELLED
+    name: str # The fully qualified name of the workflow function
+    class_name: Optional[str] # If the workflow function is a class method, the name of the class
+    config_name: Optional[str] # If the workflow function is a method of a configured class, the name of the class configuration
+```
+
 
 ````
