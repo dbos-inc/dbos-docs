@@ -8,10 +8,6 @@ description: API reference for DBOS
 
 The `DBOS` static utility class is the heart of the DBOS Transact programming API.  `DBOS` provides decorators to identify key application functions, and static access to context-dependent state.  `DBOS` has no instance members and is not to be instantiated.
 
-:::info
-Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./oldapi/oldcontexts.md) and used a separate set of [decorators](./oldapi/olddecorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
-:::
-
 ## Decorating Workflows, Transactions, and Steps
 DBOS provides reliability guarantees for programs that are [written as workflows comprised of steps, transactions, and child workflows](../../programming-guide.md).  The workflow, transaction, and step functions are marked with decorators.
 
@@ -310,28 +306,6 @@ Example:
 static async sendToServer(valueToSend: string) {
   ...
 }
-```
-
-## Accessing Application Functions Requiring Context Arguments
-Prior versions of the DBOS SDK were based on functions that took a [`context`](./oldapi/oldcontexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
-
-```typescript
-DBOS.invoke<T extends ConfiguredInstance>(targetInst: T): InvokeFuncsInst<T>;
-DBOS.invoke<T extends object>(targetClass: T): InvokeFuncs<T>
-```
-
-Example:
-```typescript
-class MyClass {
-  // Older dercorator, function takes `ctx` for SQL access
-  @Transaction()
-  static async transactionFunction(ctx: TransactionContext, arg: string) {
-    //...
-  }
-}
-
-// Call with `DBOS.invoke`
-const res = DBOS.invoke(MyClass).transactionFunction('arg');
 ```
 
 ## Durable Sleep

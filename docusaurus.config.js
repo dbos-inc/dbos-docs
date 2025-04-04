@@ -104,11 +104,11 @@ const config = {
           },
           {
             from: '/typescript/reference/contexts',
-            to: '/typescript/reference/transactapi/oldapi/oldcontexts',
+            to: '/typescript/reference/transactapi/dbos-class',
           },
           {
             from: '/typescript/reference/decorators',
-            to: '/typescript/reference/transactapi/oldapi/olddecorators',
+            to: '/typescript/reference/transactapi/dbos-class',
           },
           {
             from: '/typescript/reference/testing-runtime',
