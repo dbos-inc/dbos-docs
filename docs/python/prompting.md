@@ -3,7 +3,7 @@ sidebar_position: 30
 title: AI Prompting
 ---
 
-Often, you may want assistance from an AI model in building a DBOS application.
+You may want assistance from an AI model in building a DBOS application.
 To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
 
 ## How To Use
@@ -198,14 +198,15 @@ def run_every_minute(scheduled_time, actual_time):
 
 ## Workflow Documentation:
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+If an exception is thrown from a workflow, the workflow terminates**.
+DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
 You can access this ID through the `DBOS.workflow_id` context variable.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 You can set the workflow ID of a workflow with SetWorkflowID.
-Workflow IDs must be **globally unique** for your application.
+Workflow IDs must be globally unique for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
 For example:
@@ -249,7 +250,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### set_event
 
-Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
 
 ```python
 DBOS.set_event(
@@ -259,7 +260,7 @@ DBOS.set_event(
 ```
 #### get_event
 
-You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
+You can call `DBOS.get_event` to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
 
 ```python
