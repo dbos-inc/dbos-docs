@@ -54,6 +54,15 @@ You can turn any TypeScript function into a step by making it a static class mem
 
 ## DBOS Lifecycle Guidelines
 
+For a DBOS program to compile, you MUST enable TypeScript decorators in your tsconfig.json file.
+You MUST recommend this when adding DBOS to a new program or if they encounter compilation issues related to decorators.
+
+```json
+  "compilerOptions": {
+    "experimentalDecorators": true,
+  }
+```
+
 Any DBOS program MUST call DBOS.setConfig and DBOS.launch in its main function, like so:
 
 ```javascript
