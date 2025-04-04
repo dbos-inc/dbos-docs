@@ -46,6 +46,9 @@ You can turn any Python function into a step by annotating it with the @DBOS.ste
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
+- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.start_workflow, DBOS.sleep) from a step.
+- Do NOT start workflows from inside a step.
+- Do NOT call DBOS.set_event and DBOS.recv from outside a workflow.
 
 ## DBOS Lifecycle Guidelines
 
@@ -355,6 +358,18 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     # Send the payment status to the checkout workflow.
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
 ```
+
+### sleep
+
+```python
+DBOS.sleep(
+    seconds: float
+) -> None
+```
+
+Sleep for the given number of seconds.
+May only be called from within a workflow.
+This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
 
 ## Coroutine (Async) Workflows
 
