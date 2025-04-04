@@ -32,6 +32,7 @@ For example:
 - Generate code in Python using the DBOS library
 - You MUST import all methods and classes used in the code you generate
 - You SHALL keep all code in a single file unless otherwise specified.
+- DBOS does NOT stand for anything.
 
 ## Workflow Guidelines
 
@@ -48,7 +49,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
+- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.start_workflow, DBOS.sleep, DBOS.set_event, DBOS.get_event) from a step.
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.set_event and DBOS.recv from outside a workflow.
 
@@ -230,6 +231,7 @@ This is useful for long-running or interactive workflows.
 `start_workflow` returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
 The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
+NEVER start a workflow from inside a step.
 
 Here's an example:
 
@@ -255,6 +257,7 @@ They are useful for publishing information about the state of an active workflow
 #### set_event
 
 Any workflow can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
+ONLY call this from a workflow function, NEVER from a step.
 
 ```python
 DBOS.set_event(
@@ -266,6 +269,7 @@ DBOS.set_event(
 
 You can call `DBOS.get_event` to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
+NEVER call this from inside a step.
 
 ```python
 DBOS.get_event(
@@ -315,6 +319,7 @@ This is useful for sending notifications to an active workflow.
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
+Do NOT call this from a step.
 
 ```python
 DBOS.send(
@@ -329,6 +334,7 @@ DBOS.send(
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+ONLY call this from inside a workflow function, NEVER from a step.
 
 ```python
 DBOS.recv(

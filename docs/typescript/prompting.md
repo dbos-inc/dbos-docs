@@ -33,6 +33,7 @@ For example:
 - You MUST import all methods and classes used in the code you generate
 - You SHALL keep all code in a single file unless otherwise specified.
 - You MUST await all promises.
+- DBOS does NOT stand for anything.
 
 ## Workflow Guidelines
 
@@ -287,6 +288,7 @@ This is useful for long-running or interactive workflows.
 `startWorkflow` returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
 The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
+NEVER start a workflow from inside a step.
 
 Here's an example:
 
@@ -316,6 +318,7 @@ They are useful for publishing information about the state of an active workflow
 #### setEvent
 
 Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
+ONLY call this from a workflow function, NEVER from a step.
 
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
@@ -324,6 +327,7 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 
 You can call `DBOS.getEvent` to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
+NEVER call this from inside a step.
 
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -369,6 +373,7 @@ This is useful for sending notifications to an active workflow.
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
+NEVER call this from a step.
 
 ```typescript
 DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
@@ -379,6 +384,7 @@ DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+ONLY call this from inside a workflow function, NEVER from a step.
 
 ```typescript
 DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
