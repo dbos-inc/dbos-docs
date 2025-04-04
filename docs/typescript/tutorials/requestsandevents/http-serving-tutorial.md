@@ -181,6 +181,7 @@ import cors from "@koa/cors";
 }))
 class EndpointsWithSpecialCORS {
 }
+```
 
 ### Middleware
 
