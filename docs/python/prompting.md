@@ -198,7 +198,7 @@ def run_every_minute(scheduled_time, actual_time):
 
 ## Workflow Documentation:
 
-If an exception is thrown from a workflow, the workflow terminates**.
+If an exception is thrown from a workflow, the workflow terminates.
 DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
@@ -560,7 +560,7 @@ Additionally, all DBOS-decorated classes must be instantiated before `DBOS.launc
 
 Unless otherwise specified, recommend testing DBOS applications with pytest.
 
-**You must use this fixture to reset DBOS between tests**
+You MUST use this fixture to reset DBOS between tests:
 
 ```python
 @pytest.fixture()
