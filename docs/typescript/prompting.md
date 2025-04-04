@@ -41,6 +41,8 @@ Workflows are comprised of steps, which are ordinary TypeScript functions annota
 When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step. 
 You can turn any TypeScript function into a step by making it a static class member function and annotating it with the @DBOS.step decorator. The only requirement is that its inputs and outputs should be serializable.
 
+If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. 
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way except by adding the @Step annotation.
 - ALL decorated functions (workflows and steps) MUST be class member functions. You MUST make them static functions unless they use class intance variables, in which case you MUST use ConfiguredInstance.
@@ -48,9 +50,9 @@ You can turn any TypeScript function into a step by making it a static class mem
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use Promise.all() or anything similar to run multiple functions concurrently. You should instead use DBOS.startWorkflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep) from a step.
+- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
-- Do NOT call DBOS.setEvent and DBOS.recv from outside a workflow.
+- Do NOT call DBOS.setEvent and DBOS.recv from outside a workflow function.
 - Do NOT use DBOS.getApi, DBOS.postApi, or other DBOS HTTP annotations. These are DEPRECATED. Instead, use Express for HTTP serving by default, unless another web framework is specified.
 
 ## DBOS Lifecycle Guidelines

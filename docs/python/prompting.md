@@ -40,13 +40,15 @@ Workflows are comprised of steps, which are ordinary Python functions annotated 
 When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step. 
 You can turn any Python function into a step by annotating it with the @DBOS.step decorator. The only requirement is that its inputs and outputs should be serializable.
 
+If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. 
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way except by adding the @Step annotation.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.start_workflow, DBOS.sleep) from a step.
+- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.set_event and DBOS.recv from outside a workflow.
 
@@ -573,6 +575,14 @@ def reset_dbos():
     DBOS(config=config)
     DBOS.reset_system_database()
     DBOS.launch()
+```
+
+### Logging
+
+ALWAYS log errors like this:
+
+```typescript
+      DBOS.logger.error(`Error: ${(error as Error).message}`);
 ```
 
 ````
