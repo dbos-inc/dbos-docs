@@ -255,18 +255,16 @@ static async runEverySecond(scheduledTime: Date, startTime: Date) {
 
 ## Workflow Documentation:
 
-If an exception is thrown from a workflow, the workflow terminates.
+If an exception is thrown from a workflow, the workflow TERMINATES.
 DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
+
+## Workflow IDs
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
 You can access this ID through the `DBOS.workflowID` context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow with SetWorkflowID.
-Workflow IDs must be globally unique for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
+Set the workflow ID of a workflow with `DBOS.withNextWorkflowID`.
+If a workflow is called multiple times with the same ID, it executes ONLY ONCE.
 
 ```javascript
 class Example {
@@ -276,16 +274,18 @@ class Example {
   }
 }
 
-await DBOS.withNextWorkflowID("very-unique-id", async () => {
+const workflowID = "my-workflow-id"
+
+await DBOS.withNextWorkflowID(workflowID, async () => {
   return await Example.exampleWorkflow("one", "two");
 });
 ```
 
-You can use DBOS.start_workflow to start a workflow in the background without waiting for it to complete.
+You can use `DBOS.startWorkflow` to start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
 
-`start_workflow` returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+`startWorkflow` returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
+The `startWorkflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
 
 Here's an example:

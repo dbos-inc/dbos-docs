@@ -200,27 +200,29 @@ def run_every_minute(scheduled_time, actual_time):
 
 ## Workflow Documentation:
 
-If an exception is thrown from a workflow, the workflow terminates.
+If an exception is thrown from a workflow, the workflow TERMINATES.
 DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
+
+## Workflow IDs
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
 You can access this ID through the `DBOS.workflow_id` context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow with SetWorkflowID.
-Workflow IDs must be globally unique for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
+Set the workflow ID of a workflow with SetWorkflowID.
+If a workflow is called multiple times with the same ID, it executes ONLY ONCE.
 
 ```python
 @DBOS.workflow()
 def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
-with SetWorkflowID("very-unique-id"):
+workflow_id = "my-workflow-id"
+
+with SetWorkflowID(workflow_id):
     example_workflow()
 ```
+
+## Starting in the Background
 
 You can use DBOS.start_workflow to start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
