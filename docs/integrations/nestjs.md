@@ -55,7 +55,7 @@ Here is an example of a Nest.js service implementing a simple two-step workflow:
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 // highlight-next-line
-import { ConfiguredInstance, DBOS, InitContext } from '@dbos-inc/dbos-sdk';
+import { ConfiguredInstance, DBOS } from '@dbos-inc/dbos-sdk';
 
 @Injectable()
 // highlight-next-line
@@ -68,7 +68,7 @@ export class AppService extends ConfiguredInstance {
   }
 
   // Optionally perform some asynchronous setup work
-  async initialize(): Promise<void> {}
+  override async initialize(): Promise<void> {}
 
   // highlight-next-line
   @DBOS.workflow()

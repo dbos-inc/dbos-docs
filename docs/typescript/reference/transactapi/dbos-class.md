@@ -9,7 +9,7 @@ description: API reference for DBOS
 The `DBOS` static utility class is the heart of the DBOS Transact programming API.  `DBOS` provides decorators to identify key application functions, and static access to context-dependent state.  `DBOS` has no instance members and is not to be instantiated.
 
 :::info
-Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./oldapi/contexts.md) and used a separate set of [decorators](./oldapi/decorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
+Note that this is the second major version of the TypeScript API.  The first version of the API was based on passing [contexts](./oldapi/oldcontexts.md) and used a separate set of [decorators](./oldapi/olddecorators.md).  It is fine to use both approaches in the same DBOS application, however the `DBOS` class is simpler and is therefore recommended.
 :::
 
 ## Decorating Workflows, Transactions, and Steps
@@ -54,11 +54,11 @@ export abstract class ConfiguredInstance {
     this.name = name;
     // ... registration occurs ...
   }
-  abstract initialize(ctx: InitContext): Promise<void>;
+  initialize(): Promise<void> {} // override if desired
 }
 ```
 
-The `ConfiguredInstance` base class constructor registers the instance under the given `name`.   The `initialize` function will be called on each registered instance after the DBOS runtime has started, but before workflow processing commences.  The argument to `initialize` is an [`InitContext`](./oldapi/contexts.md#initcontext), which provides access to configuration and other information.
+The `ConfiguredInstance` base class constructor registers the instance under the given `name`.   The `initialize` function will be called on each registered instance after the DBOS runtime has started, but before workflow processing commences.
 
 Example:
 ```typescript
@@ -70,8 +70,8 @@ class MyClass extends ConfiguredInstance
     super(name);
   }
 
-  async initialize() {
-    // Do initialization work
+  override async initialize() {
+    // Do initialization work; `DBOS` is available
     return Promise.resolve();
   }
 
@@ -109,7 +109,7 @@ class Workflows extends ConfiguredInstance
   }
 
   // Initialize an instance, see "Instance Methods" below
-  async initialize() {
+  override async initialize() {
     return Promise.resolve();
   }
 }
@@ -313,7 +313,7 @@ static async sendToServer(valueToSend: string) {
 ```
 
 ## Accessing Application Functions Requiring Context Arguments
-Prior versions of the DBOS SDK were based on functions that took a [`context`](./oldapi/contexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
+Prior versions of the DBOS SDK were based on functions that took a [`context`](./oldapi/oldcontexts.md#dboscontext) as the first argument.  It is possible to call these old-style step and transaction functions from new workflows via the `DBOS.invoke` syntax:
 
 ```typescript
 DBOS.invoke<T extends ConfiguredInstance>(targetInst: T): InvokeFuncsInst<T>;
@@ -513,11 +513,10 @@ DBOS.getConfig<T>(key: string, defaultValue: T): T
 Optionally accepts a default value, returned when the key cannot be found in the configuration.
 
 ### Accessing Logging
-Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.  It is also possible to access the global logger via `DBOS.globalLogger`.
+Using `DBOS.logger` is the preferred logging method, as this will return a context-dependent logger if available, or the global logger otherwise.
 
 ```typescript
 DBOS.logger: DLogger
-DBOS.globalLogger?: DLogger;
 ```
 
 ### Accessing The Tracing Span
@@ -644,7 +643,7 @@ DBOS.koaContext: Koa.Context // Koa context, including response, any middleware 
 ```
 
 ### Middleware
-For details on middleware, argument processing, and data validation, see [HTTP Decorators](./oldapi/decorators.md#http-api-registration-decorators) or the [HTTP Handling Tutorial](../../tutorials/requestsandevents/http-serving-tutorial.md).
+For details on middleware, see [HTTP Decorators](../../tutorials/requestsandevents/http-serving-tutorial.md#middleware) in the [HTTP Handling Tutorial](../../tutorials/requestsandevents/http-serving-tutorial.md).
 
 ### HTTP Testing
 ```typescript

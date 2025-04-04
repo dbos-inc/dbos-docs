@@ -232,7 +232,7 @@ export class Greetings {
 
   @DBOS.transaction()
   static async insertGreeting(gr: GreetingRecord) {
-    await ctxt.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
+    await DBOS.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
   }
 
   @DBOS.transaction()
