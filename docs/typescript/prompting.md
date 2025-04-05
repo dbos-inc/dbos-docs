@@ -240,15 +240,17 @@ async function main() {
 main().catch(console.log);
 ```
 
-Example scheduled workflow:
+#### Scheduled Workflow
+
+You can schedule DBOS workflows to run exactly once per time interval. To do this, annotate the workflow with the @DBOS.scheduled decorator and specify the schedule in crontab syntax. For example:
 
 - A scheduled workflow MUST specify a crontab schedule.
-- It MUST take in two arguments, scheduled and actual time. Both are datetime.datetimes of when the workflow started.
+- It MUST take in two arguments, scheduled and actual time. Both are Date of when the workflow started.
 
 ```javascript
-@DBOS.scheduled({ crontab: "* * * * * *" })
+@DBOS.scheduled({ crontab: "* * * * *" })
 @DBOS.workflow()
-static async runEverySecond(scheduledTime: Date, startTime: Date) {
+static async runEveryMinute(scheduledTime: Date, startTime: Date) {
   DBOS.logger.info(`I am a scheduled workflow. It is currently ${scheduledTime}.`)
 }
 ```

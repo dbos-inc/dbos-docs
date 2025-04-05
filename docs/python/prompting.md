@@ -186,10 +186,9 @@ def dbos_workflow():
     print(f"Successfully completed {len(results)} steps")
 ```
 
-Example scheduled workflow:
+#### Scheduled Workflow
 
-- A scheduled workflow MUST specify a crontab schedule.
-- It MUST take in two arguments, scheduled and actual time. Both are datetime.datetimes of when the workflow started.
+You can schedule DBOS workflows to run exactly once per time interval. To do this, annotate the workflow with the @DBOS.scheduled decorator and specify the schedule in crontab syntax. For example:
 
 ```python
 @DBOS.scheduled("* * * * *")
@@ -197,6 +196,9 @@ Example scheduled workflow:
 def run_every_minute(scheduled_time, actual_time):
     print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
 ```
+
+- A scheduled workflow MUST specify a crontab schedule.
+- It MUST take in two arguments, scheduled and actual time. Both are datetime.datetimes of when the workflow started.
 
 
 ## Workflow Documentation:
