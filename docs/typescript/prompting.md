@@ -681,6 +681,129 @@ Waits for the workflow to complete then returns its output.
 
 Retrieves the workflow's unique ID.
 
+### Transactions
+
+Transactions are a special type of step that are optimized for database accesses.
+They execute as a single database transaction.
+
+ONLY use transactions if you are SPECIFICALLY requested to perform database operations, DO NOT USE THEM OTHERWISE.
+
+If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a transaction unless requested.
+
+To make a TypeScript function a transaction, annotate it with the DBOS.transaction decorator.
+Then, access the database with raw SQL or one of several supported ORMS, including Knex.js, Drizzle, TypeORM, and Prisma.
+
+IF AND ONLY IF you are using transactions, ALWAYS set the `userDbclient` field in your DBOS configuration to your ORM of choice. The options are knex, drizzle, typeorm, and prisma.
+
+For example, for knex:
+
+```javascript
+DBOS.setConfig({
+  name: 'my-app',
+  databaseUrl: process.env.DBOS_DATABASE_URL,
+  userDbclient: 'knex',
+});
+await DBOS.launch();
+```
+
+Here are some example transactions:
+
+#### Knex
+
+```javascript
+interface GreetingRecord {
+  name: string;
+  note: string;
+}
+
+export class Greetings {
+
+  @DBOS.transaction()
+  static async insertGreeting(gr: GreetingRecord) {
+    await DBOS.knexClient('greetings').insert(gr);
+  }
+
+  @DBOS.transaction()
+  static async getGreetings(): Promise<GreetingRecord[]>  {
+    return await DBOS.knexClient<GreetingRecord>('greetings').select('*');
+  }
+}
+```
+
+#### Drizzle
+
+```javascript
+export const GreetingRecord = pgTable('greetings', {
+  name: text('name'),
+  note: text('note'),
+});
+
+function getClient() { return DBOS.drizzleClient as NodePgDatabase; }
+
+@OrmEntities({GreetingRecord})
+export class Greetings {
+
+  @DBOS.transaction()
+  static async insertGreeting(name: string, note: string) {
+    await getClient().insert(GreetingRecord).values({name: name, note: note});
+  }
+
+  @DBOS.transaction()
+  static async getGreetings(): Promise<{name: string | null, note: string | null}[]> {
+    return getClient().select().from(GreetingRecord);
+  }
+}
+```
+
+With workflows and express:
+
+```javascript
+import { DBOS, } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+export const app = express();
+app.use(express.json());
+
+export class Toolbox {
+  @DBOS.transaction()
+  static async insertRow() {
+    await DBOS.knexClient.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  }
+
+  @DBOS.transaction({ readOnly: true })
+  static async countRows() {
+    const result = await DBOS.knexClient.raw('SELECT COUNT(*) as count FROM example_table');
+    const count = result.rows[0].count;
+    DBOS.logger.info(`Row count: ${count}`);
+  }
+
+  @DBOS.workflow()
+  static async transactionWorkflow() {
+    await Toolbox.insertRow()
+    await Toolbox.countRows()
+  }
+}
+
+app.get("/", async (req, res) => {
+  await Toolbox.transactionWorkflow();
+  res.send();
+});
+
+async function main() {
+  DBOS.setConfig({
+    "name": "dbos-starter",
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  });
+  await DBOS.launch({ expressApp: app });
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  });
+}
+
+main().catch(console.log);
+```
+
 
 
 ````

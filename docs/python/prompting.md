@@ -622,5 +622,95 @@ class WorkflowStatus:
     config_name: Optional[str] # If the workflow function is a method of a configured class, the name of the class configuration
 ```
 
+### Transactions
+
+Transactions are a special type of step that are optimized for database accesses.
+They execute as a single database transaction.
+
+ONLY use transactions if you are SPECIFICALLY requested to perform database operations, DO NOT USE THEM OTHERWISE.
+
+If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a transaction unless requested.
+
+To make a Python function a transaction, annotate it with the DBOS.transaction decorator.
+Then, access the database using the DBOS.sql_session client, which is a SQLAlchemy client DBOS automatically connects to your database.
+Here are some examples:
+
+
+#### SQLAlchemy
+
+```python
+greetings = Table(
+    "greetings", 
+    MetaData(), 
+    Column("name", String), 
+    Column("note", String)
+)
+
+@DBOS.transaction()
+def example_insert(name: str, note: str) -> None:
+    # Insert a new greeting into the database
+    DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
+
+@DBOS.transaction()
+def example_select(name: str) -> Optional[str]:
+    # Select the first greeting to a particular name
+    row = DBOS.sql_session.execute(
+        select(greetings.c.note).where(greetings.c.name == name)
+    ).first()
+    return row[0] if row else None
+```
+
+#### Raw SQL
+
+```python
+@DBOS.transaction()
+def example_insert(name: str, note: str) -> None:
+    # Insert a new greeting into the database
+    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
+    DBOS.sql_session.execute(sql, {"name": name, "note": note})
+
+
+@DBOS.transaction()
+def example_select(name: str) -> Optional[str]:
+    # Select the first greeting to a particular name
+    sql = text("SELECT note FROM greetings WHERE name = :name LIMIT 1")
+    row = DBOS.sql_session.execute(sql, {"name": name}).first()
+    return row[0] if row else None
+```
+
+#### With FastAPI
+
+```python
+import os
+
+from dbos import DBOS, DBOSConfig
+from fastapi import FastAPI
+
+from schema import example_table
+
+app = FastAPI()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+}
+DBOS(config=config, fastapi=app)
+
+@DBOS.transaction()
+def insert_row():
+        DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
+
+@DBOS.transaction()
+def count_rows():
+    count = DBOS.sql_session.execute(example_table.select()).rowcount
+    print(f"Row count: {count}")
+
+@app.get("/")
+@DBOS.workflow()
+def dbos_workflow():
+    insert_row()
+    count_rows()
+```
+
+NEVER async def a transaction.
 
 ````
