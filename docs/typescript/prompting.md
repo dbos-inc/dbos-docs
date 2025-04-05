@@ -688,6 +688,9 @@ They execute as a single database transaction.
 
 ONLY use transactions if you are SPECIFICALLY requested to perform database operations, DO NOT USE THEM OTHERWISE.
 
+ONLY use transactions with a Postgres database.
+To access any other database, ALWAYS use steps.
+
 If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a transaction unless requested.
 
 To make a TypeScript function a transaction, annotate it with the DBOS.transaction decorator.

@@ -631,6 +631,9 @@ ONLY use transactions if you are SPECIFICALLY requested to perform database oper
 
 If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a transaction unless requested.
 
+ONLY use transactions with a Postgres database.
+To access any other database, ALWAYS use steps.
+
 To make a Python function a transaction, annotate it with the DBOS.transaction decorator.
 Then, access the database using the DBOS.sql_session client, which is a SQLAlchemy client DBOS automatically connects to your database.
 Here are some examples:
