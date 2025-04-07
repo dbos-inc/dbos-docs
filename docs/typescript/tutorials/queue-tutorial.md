@@ -80,7 +80,7 @@ Example:
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create("postgresql://postgres:password@localhost:5432/my_app_db");
+const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
 
 type ProcessTask = typeof<Tasks.processTask>;
 await client.enqueue<Parameters<ProcessTask>>(
