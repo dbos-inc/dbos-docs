@@ -49,13 +49,13 @@ Every time you deploy an application to DBOS Cloud, it runs all migrations defin
 This is the same as running `dbos migrate` locally.
 
 Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
-To make this easier, you can load your cloud database connection information into your local `dbos-config.yaml` configuration file by running:
+To make this easier, you can retrieve your cloud database connection URL by running:
 
 ```shell
-dbos-cloud db connect <database-name>
+dbos-cloud db url <database-name>
 ```
 
-You can then locally run any migration command (for example, a down-migration command in your schema migration tool) and it will execute on your cloud database.
+You can then use it to run locally any migration command (for example, a down-migration command in your schema migration tool) and it will execute on your cloud database.
 
 :::warning
 While it is occasionally necessary, be careful when manually changing the schema on a production database.
