@@ -2,7 +2,6 @@
 sidebar_position: 2
 title: Decorators
 description: API reference for DBOS decorators.
-pagination_prev: null
 ---
 
 
