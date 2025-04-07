@@ -70,9 +70,9 @@ This metadata includes:
 **Example syntax:**
 
 ```python
-options = {
-    "queue_name": "process_task",
-    "workflow_name": "example_queue",
+options: EnqueueOptions = {
+  "queue_name": "process_task",
+  "workflow_name": "example_queue",
 }
 handle = client.enqueue(options, task)
 result = handle.get_result()
@@ -94,9 +94,9 @@ Similar to [enqueue](#enqueue), but enqueues asynchronously and returns a
 **Example syntax:**
 
 ```python
-options = {
-    "queue_name": "process_task",
-    "workflow_name": "example_queue",
+options: EnqueueOptions = {
+  "queue_name": "process_task",
+  "workflow_name": "example_queue",
 }
 handle = await client.enqueue_async(options, task)
 result = await handle.get_result()

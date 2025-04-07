@@ -55,6 +55,28 @@ def process_tasks(tasks):
   return [handle.get_result() for handle in task_handles]
 ```
 
+### Enqueue with DBOSClient
+
+[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
+Among other things, this allows you to enqueue workflows from outside your DBOS application.
+
+Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+Example: 
+
+```python
+from dbos import DBOSClient, EnqueueOptions
+
+client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
+
+options: EnqueueOptions = {
+  "queue_name": "process_task",
+  "workflow_name": "example_queue",
+}
+handle = client.enqueue(options, task)
+result = handle.get_result()
+```
+
 ### Reliability Guarantees
 
 Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
