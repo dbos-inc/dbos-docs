@@ -32,7 +32,7 @@ export enum AlertStatus {
 }
 ```
 
-In this app we use [Knex](../tutorials/orms/using-knex.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert_id and the alert table has a nullable employee_name. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
+In this app we use [Knex](../tutorials/transaction-tutorial.md) for schema management. Our two tables are quite simple. The employee table has a nullable alert_id and the alert table has a nullable employee_name. These are set when an employee is assigned to an alert. Our schema migration file looks like so:
 ```typescript
 exports.up = async function(knex) {
   await knex.schema.createTable('employee', table => {

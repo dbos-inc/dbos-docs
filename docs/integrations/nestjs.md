@@ -7,12 +7,10 @@ This guide shows you how to add the open source [DBOS Transact](https://github.c
 
 ## Installation and Requirements
 
-Install DBOS TypeScript with `npm install @dbos-inc/dbos-sdk` and add a `dbos-config.yaml` file to the root of your project:
-```yaml
-language: node
-telemetry:
-  logs:
-    logLevel: 'info'
+Install DBOS TypeScript with:
+
+```shell
+npm install @dbos-inc/dbos-sdk
 ```
 
 ## Bootstrapping DBOS
@@ -33,6 +31,14 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // highlight-next-line
+  DBOS.setConfig({
+  // highlight-next-line
+    "name": "my-app",
+  // highlight-next-line
+    "databaseUrl": process.env.DBOS_DATABASE_URL
+  // highlight-next-line
+  });
+  // highlight-next-line
   await DBOS.launch();
   await app.listen(process.env.PORT ?? 3000);
 }
@@ -49,7 +55,7 @@ Here is an example of a Nest.js service implementing a simple two-step workflow:
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 // highlight-next-line
-import { ConfiguredInstance, DBOS, InitContext } from '@dbos-inc/dbos-sdk';
+import { ConfiguredInstance, DBOS } from '@dbos-inc/dbos-sdk';
 
 @Injectable()
 // highlight-next-line
@@ -62,7 +68,7 @@ export class AppService extends ConfiguredInstance {
   }
 
   // Optionally perform some asynchronous setup work
-  async initialize(): Promise<void> {}
+  override async initialize(): Promise<void> {}
 
   // highlight-next-line
   @DBOS.workflow()
