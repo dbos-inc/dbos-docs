@@ -31,8 +31,7 @@ class DBOSClient {
     async enqueue<T extends (...args: any[]) => Promise<any>>(
         options: EnqueueOptions,
         ...args: Parameters<T>
-    ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>
-    enqueue<T extends unknown[]>(options: EnqueueOptions, ...args: T): Promise<void>;
+    ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
