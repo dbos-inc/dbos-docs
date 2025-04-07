@@ -5,13 +5,13 @@ description: DBOS Client reference
 ---
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
-`DBOSClient` includes methods similar to [`DBOS`](../reference/transactapi/dbos-class.md)
+`DBOSClient` includes methods similar to [`DBOS`](./transactapi/dbos-class.md)
 that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
 
 :::note 
 `DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
-Where DBOS applications use the [static `DBOS` class](../reference/transactapi/dbos-class.md),
-external applications use the [`DBOSClient` class](../reference/client.md) instead.
+Where DBOS applications use the [static `DBOS` class](./transactapi/dbos-class.md),
+external applications use the `DBOSClient` class instead.
 :::
 
 ### class DBOSClient
