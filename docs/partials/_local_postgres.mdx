@@ -2,25 +2,6 @@ import CodeBlock from '@theme/CodeBlock';
 
 <Tabs groupId="postgres-or-docker" className="small-tabs">
 
-<TabItem value="cloud" label="Use Cloud Postgres">
-
-You can connect your local application to a Postgres database hosted in DBOS Cloud.
-
-First, set a password for your DBOS Cloud database:
-
-```
-dbos-cloud db reset-password
-```
-
-Then connect your local app to your cloud database.
-When prompted, enter the password you just set.
-
-```
-dbos-cloud db local
-```
-
-</TabItem>
-
 <TabItem value="docker" label="Launch Postgres with Docker">
 <Tabs groupId="operating-systems" className="small-tabs">
   <TabItem value="mac" label="macOS">
@@ -36,7 +17,7 @@ ${props.cmd}`}
   </TabItem>
     <TabItem value="linux" label="Linux">
    Follow the [Docker Engine installation page](https://docs.docker.com/engine/install/) to install Docker on several popular Linux distributions.
-	    
+
    Then, run this script to launch Postgres in a Docker container:
    <CodeBlock
       language="bash">
