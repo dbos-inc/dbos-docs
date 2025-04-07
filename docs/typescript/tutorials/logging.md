@@ -5,31 +5,23 @@ title: Logging & Tracing
 
 ### Logging
 
-When building a DBOS app, we recommend using the built-in DBOS logger.
-This allows DBOS Cloud to collect and display your logs.
-You can access the logger through [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
+For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
+For example:
 
 ```javascript
 DBOS.logger.info("Welcome to DBOS!");
 ```
 
-The logger provides four logging levels: `info()`, `debug()`, `warn()` and `error()`.
-Each accepts and logs any output that can be serialized to JSON.
-`error()` additionally logs a stack trace.
+You can [configure](../reference/configuration.md) the log level of this built-in logger.
+This also configures the log level of the DBOS library:
 
-In your [`dbos-config.yaml`](../reference/configuration.md), you can configure the log level and whether to add metadata such as the workflow ID to logs:
-
-```yaml
-telemetry:
-  logs:
-    logLevel: 'info' # info (default) | debug | warn | error
-    addContextMetadata: 'true' # true (default) | false
-```
-
-You can also configure the logging level from the command line:
-
-```shell
-npx dbos start --loglevel debug
+```javascript
+DBOS.setConfig({
+  name: 'my-app',
+  databaseUrl: process.env.DBOS_DATABASE_URL,
+  logLevel: "info",
+});
+await DBOS.launch();
 ```
 
 ### Tracing
@@ -43,16 +35,18 @@ You can access your current span via [`DBOS.span`](../reference/transactapi/dbos
 
 ### OpenTelemetry Export
 
-You can export DBOS logs and traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
-In DBOS Cloud, this is done automatically, and you can view your logs and traces in the [cloud console](https://console.dbos.dev/login-redirect).
+You can export DBOS traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
 
-Locally, you can configure exporters in your [`dbos-config.yaml`](../reference/configuration.md):
+You can [configure](../reference/configuration.md) a custom export target.
+For example:
 
-```yaml
-telemetry:
-    OTLPExporter:
-        logsEndpoint: http://localhost:4318/v1/logs
-        tracesEndpoint: http://localhost:4318/v1/traces
+```javascript
+DBOS.setConfig({
+  name: 'my-app',
+  databaseUrl: process.env.DBOS_DATABASE_URL,
+  otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
+});
+await DBOS.launch();
 ```
 
-For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application.
+For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the of your local application.

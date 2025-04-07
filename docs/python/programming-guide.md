@@ -81,7 +81,7 @@ The key benefit of DBOS is **durability**&mdash;it automatically saves the state
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
-Now, trying running this code with `python3 main.py`.
+Now, run this code with `python3 main.py`.
 When DBOS is launched, it attempts to connect to a Postgres database.
 If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
 Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.

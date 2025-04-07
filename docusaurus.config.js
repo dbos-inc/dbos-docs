@@ -104,11 +104,11 @@ const config = {
           },
           {
             from: '/typescript/reference/contexts',
-            to: '/typescript/reference/transactapi/oldapi/contexts',
+            to: '/typescript/reference/transactapi/dbos-class',
           },
           {
             from: '/typescript/reference/decorators',
-            to: '/typescript/reference/transactapi/oldapi/decorators',
+            to: '/typescript/reference/transactapi/dbos-class',
           },
           {
             from: '/typescript/reference/testing-runtime',
@@ -121,10 +121,6 @@ const config = {
           {
             from: '/typescript/reference/workflow-queues',
             to: '/typescript/reference/transactapi/workflow-queues',
-          },
-          {
-            from: '/typescript/tutorials/application-structure-explanation',
-            to: '/typescript/tutorials/development/application-structure-explanation',
           },
           {
             from: '/typescript/tutorials/using-libraries',
@@ -145,22 +141,6 @@ const config = {
           {
             from: '/typescript/tutorials/http-serving-tutorial',
             to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/using-drizzle',
-            to: '/typescript/tutorials/orms/using-drizzle',
-          },
-          {
-            from: '/typescript/tutorials/using-knex',
-            to: '/typescript/tutorials/orms/using-knex',
-          },
-          {
-            from: '/typescript/tutorials/using-prisma',
-            to: '/typescript/tutorials/orms/using-prisma',
-          },
-          {
-            from: '/typescript/tutorials/using-typeorm',
-            to: '/typescript/tutorials/orms/using-typeorm',
           },
           {
             from: '/typescript/tutorials/workflow-communication-tutorial',

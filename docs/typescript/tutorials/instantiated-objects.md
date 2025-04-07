@@ -16,7 +16,7 @@ class MyClass extends ConfiguredInstance {
     this.cfg = cfg;
   }
 
-  async initialize(_ctx: InitContext) : Promise<void> {
+  override async initialize() : Promise<void> {
     // ... Validate this.cfg
   }
 
@@ -47,13 +47,13 @@ The reason for these requirements is to enable workflow recovery.  When you crea
 Configured class instances should be created and named when the application starts, before any workflows run.  This ensures that they will all be initialized before any processing begins.
 
 ### Writing New Configured Classes
-All configured classes must:
+All configured classes:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
-* Have an `initialize(ctx: InitContext)` that will be called after all objects have been created, but before request handling commences
+* May have an `initialize()` method that will be called after all objects have been created, but before request handling commences
 
 ### `initialize()` Method
-The `initialize(ctx: InitContext)` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  The `InitContext` argument provides configuration file, logging, and database access services, so any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
+The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/transactapi/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
 Event and handler registration decorators such as `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, and `@DBOS.putApi` cannot be applied to instance methods.

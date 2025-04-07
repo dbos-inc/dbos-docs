@@ -4,7 +4,7 @@ sidebar_position: 1
 title: Fault-Tolerant Checkout
 ---
 
-In this example, we use DBOS and FastAPI to deploy an online storefront that's resilient to any failure.
+In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
 
 You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).
 Try playing with it and pressing the crash button as often as you want.
@@ -254,7 +254,7 @@ def crash_application():
     os._exit(1)
 ```
 ## Try it Yourself!
-### Deploying to the Cloud
+### Deploying to DBOS Cloud
 
 To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
 

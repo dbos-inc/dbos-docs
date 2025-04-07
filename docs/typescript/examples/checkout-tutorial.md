@@ -1,299 +1,371 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 30
-title: Checkout Workflow
-description: Learn how to implement the checkout button for an online store with DBOS
+sidebar_position: 1
+title: Fault-Tolerant Checkout
 ---
 
-# Building a Reliable Checkout Workflow
+In this example, we use DBOS and Fastify to deploy an online storefront that's resilient to any failure.
 
-In this guide, we'll show you how to use DBOS to write a more complex program: the checkout workflow of an online store.
-When a customer orders an item, this workflow must reserve inventory for the order, redirect the customer to a third-party payment service, wait for the payment to process, then fulfill the order if payment succeeded.
-Because this workflow manages inventory and money, it should be **reliable**, meaning it should:
+You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).
+Try playing with it and pressing the crash button as often as you want.
+Within a few seconds, the app will recover and resume as if nothing happened.
 
-1. Never charge a customer without fulfilling an order.
-2. Never charge a customer twice for the same order.
-3. Reserve inventory for an order if and only if the order is fulfilled.
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
 
-Without DBOS, these properties are hard to guarantee.
-If the checkout service is interrupted after a customer pays, you have to recover the workflow from where it left off and fulfill their order.
-If a customer clicks the buy button twice, you have to make sure they aren't charged twice.
-If a payment doesn't go through, you have to return any reserved inventory.
-**As we'll show, DBOS makes this easy.**
+![Widget store UI](../../python/examples/assets/widget_store_ui.png)
 
-:::info what you will learn
-- How to develop reliable programs with workflows
-- How to write interactive workflows that await user input
-- How to use idempotency keys to call your workflows once and only once
-:::
-
-## Resources
-This guide comes a companion [repository](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/shop-guide) containing all its code.
-
-
-## Overview
-In this guide, we'll be implementing two functions: the checkout workflow and its request handler.
-These interact with an external payment service modelled on [Stripe](https://stripe.com).
-Here's a diagram of what the end-to-end checkout flow looks like:
-
-![](./assets/shop-guide-diagram.svg)
-
-When a customer sends a checkout request, it's intercepted by the handler, which starts a checkout workflow, which initiates a session in the payment service.
-After the session is initiated, the workflow notifies the handler, which responds to the customer with a link to submit payment.
-The workflow then waits for the payment service to notify it whether the customer has paid.
-Once the customer pays, the workflow fulfills the customer's order.
-
-## The Request Handler
-
-We'll start by building the checkout request handler, which initiates checkout in response to customer HTTP requests.
-
-### Registering the handler
-
-The handler is implemented in this `webCheckout` function and served from HTTP POST requests to the URL `<host>/checkout/:key?`.
-
-```javascript
-@DBOS.postApi('/checkout/:key?')
-static async webCheckout(@ArgOptional key: string): Promise<string> {
-```
-
-It accepts an optional parameter `key`, used to invoke the checkout workflow [idempotently](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
-If a workflow is invoked many times with the same idempotency key (for example, because a customer pressed the buy button many times), it only executes once.
-
-### Invoking the checkout workflow
-Upon receiving a request, the handler asynchronously invokes the checkout workflow using its idempotency key.
-It obtains a [workflow handle](../reference/transactapi/workflow-handles), used to interact with the workflow.
-
-```javascript
-// A workflow handle is immediately returned. The workflow continues in the background.
-const handle = const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();`
-```
-
-### Awaiting payment information
-After invoking the checkout workflow, the handler uses the DBOS [events API](../tutorials/workflow-tutorial.md#workflow-events) to await a notification from the checkout workflow that the payment session is ready.
-We will see in the next section how the checkout workflow notifies the handler.
-Upon receiving the payment session ID, it generates a link to submit payment and returns it to the customer.
-
-```javascript
-// Wait until the payment session is ready
-const session_id = await DBOS.getEvent<string>(handle.workflowID, session_topic);
-if (session_id === null) {
-  DBOS.logger.error("workflow failed");
-  return;
-}
-return generatePaymentUrls(handle.workflowID, session_id);
-```
-
-### Full handler code
-
-```javascript
-@DBOS.postApi('/checkout/:key?')
-static async webCheckout(@ArgOptional key: string): Promise<string> {
-  // A workflow handle is immediately returned. The workflow continues in the background.
-  const handle = await DBOS.startWorkflow(Shop, {workflowID: key}).checkoutWorkflow();
-  DBOS.logger.info(`Checkout workflow started with UUID: ${handle.workflowID}`);
-
-  // Wait until the payment session is ready
-  const session_id = await DBOS.getEvent<string>(handle.workflowID, session_topic);
-  if (session_id === null) {
-    DBOS.logger.error("workflow failed");
-    return "";
-  }
-
-  return generatePaymentUrls(handle.workflowID, session_id);
-}
-```
 
 ## The Checkout Workflow
 
-The checkout workflow reserves inventory for an order, attempts to process payment, and fufills the order if payment is successful.
-As we'll show, it's **reliable**: it always fulfills orders if payments succeed, never charges customers twice for the same order, and always returns reserved inventory on failure.
+First, let's write the checkout workflow.
+This workflow is triggered whenever a customer buys a widget.
+It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
+If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
 
-:::info
-Check out our [e-commerce demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce) for a more elaborate example.
-:::
-
-### Registering the workflow
-
-First, we declare the workflow using the `@DBOS.workflow` decorator:
-
-```javascript
-@DBOS.workflow()
-static async checkoutWorkflow(): Promise<void> {
-```
-
-### Reserving inventory
-Before purchasing an item, the checkout workflow reserves inventory for the order using the `reserveInventory` transaction.
-If this fails (likely because the item is out of stock), the workflow notifies its handler of the failure using the [events API](../tutorials/workflow-tutorial.md#workflow-events) and returns.
+DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
+You can try this yourself!
+On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
+Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
 
 ```javascript
-// Attempt to update the inventory. Signal the handler if it fails.
-try {
-  await ShopUtilities.reserveInventory();
-} catch (error) {
-  DBOS.logger.error("Failed to update inventory");
-  await DBOS.setEvent(session_topic, null);
-  return;
-}
-```
+export class Shop {
+  @DBOS.workflow()
+  static async paymentWorkflow(): Promise<void> {
+    // Attempt to reserve inventory, failing if no inventory remains
+    try {
+      await ShopUtilities.subtractInventory();
+    } catch (error) {
+      DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
+      await DBOS.setEvent(PAYMENT_ID_EVENT, null);
+      return;
+    }
 
-### Initiating a payment session
-Next, the workflow initiates a payment session using the `createPaymentSession` [step](../tutorials/step-tutorial).
-If this fails, it returns reserved items using the `undoReserveInventory` transaction, notifies its handler, and returns.
-```javascript
-// Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-const paymentSession = await ShopUtilities.createPaymentSession();
-if (!paymentSession.url) {
-  DBOS.logger.error("Failed to create payment session");
-  await ShopUtilities.undoReserveInventory();
-  await DBOS.setEvent(session_topic, null);
-  return;
-}
-```
+    // Create a new order
+    const orderID = await ShopUtilities.createOrder();
 
-### Notifying the handler
+    // Send a unique payment ID to the checkout endpoint so it can
+    // redirect the customer to the payments page
+    await DBOS.setEvent(PAYMENT_ID_EVENT, DBOS.workflowID);
+    const notification = await DBOS.recv<string>(PAYMENT_TOPIC, 120);
 
-After initiating a payment ession, the workflow notifies its handler that the payment session is ready.
-We use `DBOS.setEvent` to publish the payment session ID to the workflow's `session_topic`, on which the handler is awaiting a notification.
-```javascript
-// Notify the handler of the payment session ID.
-await DBOS.setEvent(session_topic, paymentSession.session_id);
-```
+    // If payment succeeded, mark the order as paid and start the order dispatch workflow.
+    // Otherwise, return reserved inventory and cancel the order.
+    if (notification && notification === 'paid') {
+      DBOS.logger.info(`Payment successful!`);
+      await ShopUtilities.markOrderPaid(orderID);
+      await DBOS.startWorkflow(ShopUtilities).dispatchOrder(orderID);
+    } else {
+      DBOS.logger.warn(`Payment failed...`);
+      await ShopUtilities.errorOrder(orderID);
+      await ShopUtilities.undoSubtractInventory();
+    }
 
-### Waiting for a payment
-After notifying its handler, the checkout workflow waits for the payment service to notify it whether the customer has paid.
-We await this notification using the `DBOS.recv` method from the DBOS [messages API](../tutorials/workflow-tutorial.md#workflow-messaging-and-notifications).
-When the customer pays, the payment service sends a callback HTTP request to a separate callback handler (omitted for brevity, source code in `src/utilities.ts`), which notifies the checkout workflow via [`DBOS.send`].
-
-```javascript
-// Await a notification from the payment service.
-const notification = await DBOS.recv<string>(payment_complete_topic);
-```
-
-### Handling payment outcomes
-After receiving a payment notification, the workflow fulfills the order if the payment succeeded and cancels the order and returns reserved inventory if the payment failed or timed out.
-In a real application, we may want to check with the payment provider in case of a timeout to verify the status of the payment.
-
-```javascript
-if (notification && notification === 'paid') {
-  // If the payment succeeds, fulfill the order (code omitted for brevity.)
-  DBOS.logger.info(`Checkout with UUID ${DBOS.workflowID} succeeded!`);
-} else {
-  // If the payment fails or times out, cancel the order and return inventory.
-  DBOS.logger.warn(`Checkout with UUID ${DBOS.workflowID} failed or timed out...`);
-  await ShopUtilities.undoReserveInventory();
-}
-```
-
-### Full workflow code
-```javascript
-@DBOS.workflow()
-static async checkoutWorkflow(): Promise<void> {
-  // Attempt to update the inventory. Signal the handler if it fails.
-  try {
-    await ShopUtilities.reserveInventory();
-  } catch (error) {
-    DBOS.logger.error("Failed to update inventory");
-    await DBOS.setEvent(session_topic, null);
-    return;
-  }
-
-  // Attempt to start a payment session. If it fails, restore inventory state and signal the handler.
-  const paymentSession = await ShopUtilities.createPaymentSession();
-  if (!paymentSession.url) {
-    DBOS.logger.error("Failed to create payment session");
-    await ShopUtilities.undoReserveInventory();
-    await DBOS.setEvent(session_topic, null);
-    return;
-  }
-
-  // Notify the handler of the payment session ID.
-  await DBOS.setEvent(session_topic, paymentSession.session_id);
-
-  // Await a notification from the payment service.
-  const notification = await DBOS.recv<string>(payment_complete_topic);
-
-  if (notification && notification === 'paid') {
-    // If the payment succeeds, fulfill the order (code omitted for brevity.)
-    DBOS.logger.info(`Checkout with UUID ${DBOS.workflowUUID} succeeded!`);
-  } else {
-    // If the payment fails or times out, cancel the order and return inventory.
-    DBOS.logger.warn(`Checkout with UUID ${DBOS.workflowUUID} failed or timed out...`);
-    await ShopUtilities.undoReserveInventory();
+    // Finally, send the order ID to the payment endpoint so it can redirect
+    // the customer to the order status page.
+    await DBOS.setEvent(ORDER_ID_EVENT, orderID);
   }
 }
 ```
 
-## Running it Yourself
+## The Checkout and Payment Endpoints
 
-Now, let's see this code in action!
-First, clone and enter the companion repository:
+Now, let's use Fastify to write the HTTP endpoint for checkout.
 
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps
-cd dbos-demo-apps/typescript/shop-guide
+This endpoint receives a request when a customer presses the "Buy Now" button.
+It starts the checkout workflow in the background, then waits for the workflow to generate and send it a unique payment ID.
+It then returns the payment ID so the browser can redirect the user to the payments page.
+
+The endpoint accepts an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) so that even if the customer presses "buy now" multiple times, only one checkout workflow is started.
+
+```javascript
+const fastify = Fastify({logger: true});
+
+fastify.post<{
+  Params: { key: string };
+}>('/checkout/:key', async (req, reply) => {
+  const key = req.params.key;
+  // Idempotently start the checkout workflow in the background.
+  const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
+  // Wait for the checkout workflow to send a payment ID, then return it.
+  const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
+  if (paymentID === null) {
+    DBOS.logger.error('checkout failed');
+    return reply.code(500).send('Error starting checkout');
+  }
+  return paymentID;
+});
+
 ```
 
-Then, start the payment service in the background.
-In one terminal, run:
-```shell
-./start_payment_service.sh
+Let's also write the HTTP endpoint for payments.
+It listens for any payment event generated by the user.
+It uses the payment ID to signal the checkout workflow whether the payment succeeded or failed.
+It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
+
+```javascript
+fastify.post<{
+  Params: { key: string; status: string };
+}>('/payment_webhook/:key/:status', async (req, reply) => {
+  const { key, status } = req.params;
+  // Send the payment status to the checkout workflow.
+  await DBOS.send(key, status, PAYMENT_TOPIC);
+  // Wait for the checkout workflow to send an order ID, then return it.
+  const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
+  if (orderID === null) {
+    DBOS.logger.error('retrieving order ID failed');
+    return reply.code(500).send('Error retrieving order ID');
+  }
+  return orderID;
+});
 ```
 
-Next, start the shop application.
-In another terminal, run:
+## Database Operations
+
+Next, let's write some database operations.
+Each of these functions performs a simple CRUD operation, like retrieving product information or updating inventory.
+We apply the [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to each of them to give them access to a pre-configured database connection.
+We also add HTTP endpoints for some of them with Fastify.
+
+<details>
+<summary>Database Operations and HTTP Endpoints</summary>
+
+```javascript
+export class ShopUtilities {
+  @DBOS.transaction()
+  static async subtractInventory(): Promise<void> {
+    const numAffected = await DBOS.knexClient<Product>('products')
+      .where('product_id', PRODUCT_ID)
+      .andWhere('inventory', '>=', 1)
+      .update({
+        inventory: DBOS.knexClient.raw('inventory - ?', 1),
+      });
+    if (numAffected <= 0) {
+      throw new Error('Insufficient Inventory');
+    }
+  }
+
+  @DBOS.transaction()
+  static async undoSubtractInventory(): Promise<void> {
+    await DBOS.knexClient<Product>('products')
+      .where({ product_id: PRODUCT_ID })
+      .update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
+  }
+
+  @DBOS.transaction()
+  static async setInventory(inventory: number): Promise<void> {
+    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+  }
+
+  @DBOS.transaction()
+  static async retrieveProduct(): Promise<Product> {
+    const item = await DBOS.knexClient<Product>('products').select('*').where({ product_id: PRODUCT_ID });
+    if (!item.length) {
+      throw new Error(`Product ${PRODUCT_ID} not found`);
+    }
+    return item[0];
+  }
+
+  @DBOS.transaction()
+  static async createOrder(): Promise<number> {
+    const orders = await DBOS.knexClient<Order>('orders')
+      .insert({
+        order_status: OrderStatus.PENDING,
+        product_id: PRODUCT_ID,
+        last_update_time: DBOS.knexClient.fn.now(),
+        progress_remaining: 10,
+      })
+      .returning('order_id');
+    const orderID = orders[0].order_id;
+    return orderID;
+  }
+
+  @DBOS.transaction()
+  static async markOrderPaid(order_id: number): Promise<void> {
+    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+      order_status: OrderStatus.PAID,
+      last_update_time: DBOS.knexClient.fn.now(),
+    });
+  }
+
+  @DBOS.transaction()
+  static async errorOrder(order_id: number): Promise<void> {
+    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+      order_status: OrderStatus.CANCELLED,
+      last_update_time: DBOS.knexClient.fn.now(),
+    });
+  }
+
+  @DBOS.transaction()
+  static async retrieveOrder(order_id: number): Promise<Order> {
+    const item = await DBOS.knexClient<Order>('orders').select('*').where({ order_id: order_id });
+    if (!item.length) {
+      throw new Error(`Order ${order_id} not found`);
+    }
+    return item[0];
+  }
+
+  @DBOS.transaction()
+  static async retrieveOrders() {
+    return DBOS.knexClient<Order>('orders').select('*');
+  }
+}
+
+// Fastify HTTP endpoints
+
+fastify.get('/product', async () => {
+  return await ShopUtilities.retrieveProduct();
+});
+
+fastify.get<{
+  Params: { order_id: string };
+}>('/order/:order_id', async (req) => {
+  const order_id = Number(req.params.order_id);
+  return await ShopUtilities.retrieveOrder(order_id);
+});
+
+fastify.get('/orders', async () => {
+  return await ShopUtilities.retrieveOrders();
+});
+
+fastify.post('/restock', async () => {
+  return await ShopUtilities.setInventory(12);
+});
+
+```
+</details>
+
+## Finishing Up
+
+A few more functions to go!
+
+First, let's write a workflow to dispatch orders that have been paid for.
+This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
+Every second, it updates the progress of a paid order, then dispatches the order if it is fully progressed.
+
+```javascript
+export class ShopUtilities {
+  @DBOS.workflow()
+  static async dispatchOrder(order_id: number) {
+    for (let i = 0; i < 10; i++) {
+      await DBOS.sleep(1000);
+      await ShopUtilities.update_order_progress(order_id);
+    }
+  }
+
+  @DBOS.transaction()
+  static async update_order_progress(order_id: number): Promise<void> {
+    const orders = await DBOS.knexClient<Order>('orders').where({
+      order_id: order_id,
+      order_status: OrderStatus.PAID,
+    });
+    if (!orders.length) {
+      throw new Error(`No PAID order with ID ${order_id} found`);
+    }
+
+    const order = orders[0];
+    if (order.progress_remaining > 1) {
+      await DBOS.knexClient<Order>('orders')
+        .where({ order_id: order_id })
+        .update({ progress_remaining: order.progress_remaining - 1 });
+    } else {
+      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
+        order_status: OrderStatus.DISPATCHED,
+        progress_remaining: 0,
+      });
+    }
+  }
+}
+```
+
+Let's also serve the app's frontend from an HTML file using Fastify.
+In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
+
+```javascript
+fastify.get('/', async (req, reply) => {
+  async function render(file: string, ctx?: object): Promise<string> {
+    const engine = new Liquid({
+      root: path.resolve(__dirname, '..', 'public'),
+    });
+    return (await engine.renderFile(file, ctx)) as string;
+  }
+  const html = await render('app.html', {});
+  return reply.type('text/html').send(html);
+});
+```
+
+Here is the crash endpoint. It crashes your app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
+
+```javascript
+fastify.post('/crash_application', () => {
+  process.exit(1);
+});
+```
+
+Finally, let's start DBOS and the Fastify server:
+
+```javascript
+async function main() {
+  const PORT = 3000;
+  DBOS.setConfig({
+    name: 'widget-store-node',
+    databaseUrl: process.env.DBOS_DATABASE_URL,
+  });
+  await DBOS.launch();
+  await fastify.listen({ port: PORT, host: "0.0.0.0" });
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+}
+
+main().catch(console.log);
+```
+
+## Try it Yourself!
+### Deploying to DBOS Cloud
+
+To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
+
 ```shell
-npm ci
+npm i -g @dbos-inc/dbos-cloud
+```
+
+Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
+
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd typescript/widget-store
+dbos-cloud app deploy
+```
+
+This command outputs a URL&mdash;visit it to see your app!
+You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
+
+### Running Locally
+
+First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd typescript/widget-store
+```
+
+Then install dependencies, build your app, and set up its database tables:
+
+```shell
+npm install
 npm run build
 npx dbos migrate
-npx dbos start
 ```
 
-The output should look like:
+Then, start it:
 
 ```shell
-[info]: Workflow executor initialized
-[info]: HTTP endpoints supported:
-[info]:     POST  :  /payment_webhook
-[info]:     POST  :  /checkout/:key?
-[info]: DBOS Server is running at http://localhost:8082
-[info]: DBOS Admin Server is running at http://localhost:8083
+npm run start
 ```
 
-In another terminal, let's send a request to initiate a checkout: 
-
-```
-curl -X POST http://localhost:8082/checkout
-```
-
-The response will include two `curl` commands, one for validating the payment and one for cancelling it.
+Alternatively, run it in dev mode using `nodemon`:
 
 ```shell
-Submit payment:
-curl -X POST http://localhost:8086/api/submit_payment -H "Content-type: application/json" -H "dbos-idmpotency-key: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
-Cancel payment:
-curl -X POST http://localhost:8086/api/cancel_payment -H "Content-type: application/json" -H "dbos-idempotency-key: f5103e9f-e78a-4aab-9801-edd45a933d6a" -d '{"session_id":"fd17b90a-1968-440c-adf7-052aaeaaf788"}'
+npm install
+npm run dev
 ```
 
-If you submit the payment, you should see this output:
-
-```shell
-[info]: Checkout with UUID <uuid> succeeded!
-```
-
-If you cancel the payment or do nothing, you should see this output:
-
-```
-[warn]: Checkout with UUID <uuid> failed or timed out...
-```
-
-## Using Idempotency Keys
-
-You can use idempotency keys to send a request idempotently, guaranteeing it only executes once, even if the request is sent multiple times.
-To see this in action, set the idempotency key when submitting a checkout request:
-
-```
-curl -X POST http://localhost:8082/checkout/abcde-12345
-```
-
-No matter how many times you submit this request, you always receive the same response and the checkout is only started once (notice that all printed messages share the same UUID).
-If you submit the payment for this checkout, you'll see it's only processed once.
+Visit [`http://localhost:3000`](http://localhost:3000) to see your app!

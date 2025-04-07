@@ -59,33 +59,29 @@ To make it easy to run your tests, create a `scripts` entry in `package.json`:
 
 ### Launching DBOS
 
-Before executing any test code that uses DBOS, DBOS should be launched.  This is often placed in `beforeAll` or `beforeEach`, rather than in each test function.
+Before executing any test code that uses DBOS, DBOS should be configured and launched.  This is often placed in `beforeAll` or `beforeEach`, rather than in each test function.
 ```typescript
   beforeAll(async () => {
+    DBOS.setConfig({
+      name: 'my-app',
+      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
+    });
     await DBOS.launch();
   });
 ```
 
 See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-dbos) for launch options.
 
-#### Configuring DBOS Prior To Launch
-
-By default, `DBOS.launch` loads the configuration from `dbos-config.yaml` in the package root and uses this information to set up the runtime.
-
-To load configuration from a different file, or to create a configuration in another way, call [`DBOS.setConfig`](../../reference/transactapi/dbos-class#setting-the-application-configuration) prior to launch:
-```typescript
-    const [cfg] = parseConfigFile({configfile: 'my-testing-dbos-config.yaml'});
-    DBOS.setConfig(cfg);
-    await DBOS.dropSystemDB(); // If you want a completely clean start
-    await DBOS.launch();
-```
-
 #### Setting Up App Databases Prior To Launch
 You are responsible for setting and cleaning up database tables before and after tests.
 
-In our example, we run Knex migrations with `npx dbos migrate` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using [TypeORM](../orms/using-typeorm.md), the schema can be set up from within the test itself using `DBOS.createUserSchema`:
+In our example, we run Knex migrations with `npx dbos migrate` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using TypeORM, the schema can be set up from within the test itself using `DBOS.createUserSchema`:
 ```typescript
   beforeEach(async () => {
+    DBOS.setConfig({
+      name: 'my-app',
+      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
+    });
     await DBOS.launch();
     await DBOS.dropUserSchema();
     await DBOS.createUserSchema();
@@ -96,7 +92,10 @@ In our example, we run Knex migrations with `npx dbos migrate` as part of our te
 If your tests reuse workflow IDs, it is necessary to clean out the DBOS system database to ensure a consistent starting point for testing.  Dropping the system database with `DBOS.dropSystemDB` must be done after DBOS is configured (so the database connection parameters are known), but prior to launch (so that the system database is not yet in use):
 
 ```typescript
-    DBOS.setConfig(cfg);
+    DBOS.setConfig({
+      name: 'my-app',
+      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
+    });
     await DBOS.dropSystemDB();
     await DBOS.launch();
 ```
@@ -131,6 +130,10 @@ import request from "supertest";
 Launch your app's HTTP server, or launch DBOS with your app server:
 ```typescript
   beforeAll(async () => {
+    DBOS.setConfig({
+      name: 'my-app',
+      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
+    });
     await DBOS.launch({ expressApp: app });
   });
 ```
@@ -199,8 +202,10 @@ import { MyWorkflow } from "../dbos/operations";
 
 describe("dbos functions", () => {
   beforeEach(async () => {
-    const [config] = parseConfigFile();
-    DBOS.setConfig(config); // Could configure in other ways, since this is a test
+    DBOS.setConfig({
+      name: 'my-app',
+      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
+    });
     await DBOS.launch();
   });
 
