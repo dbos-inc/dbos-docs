@@ -4,8 +4,6 @@ hide_table_of_contents: true
 ---
 
 import InstallNode from '/docs/partials/_install_node.mdx';
-import LocalPostgres from '/docs/partials/_local_postgres.mdx';
-import QuickstartDeploy from '/docs/partials/_quickstart_deploy.mdx';
 
 # Get Started with DBOS
 
