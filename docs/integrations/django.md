@@ -46,6 +46,7 @@ In your Django application `AppConfig`, start DBOS inside the `ready` method. Yo
 ```python
 from django.apps import AppConfig
 from dbos import DBOS
+import os
 
 class PollsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -54,6 +55,7 @@ class PollsConfig(AppConfig):
     def ready(self):
         dbos_config = {
             "name": name,
+            "database_url": os.environ.get("DBOS_DATABASE_URL"),
         }
         dbos = DBOS(config=dbos_config)
         dbos.launch()
