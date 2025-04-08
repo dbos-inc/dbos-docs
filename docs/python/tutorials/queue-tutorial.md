@@ -58,7 +58,7 @@ def process_tasks(tasks):
 ### Enqueue with DBOSClient
 
 [`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
-Among other things, this allows you to enqueue workflows from outside your DBOS application.
+Among other things, this allows you to enqueue workflows from outside your DBOS application by connecting to Postgres directly.
 
 Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
