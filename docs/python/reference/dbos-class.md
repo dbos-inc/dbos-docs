@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 title: DBOS Class
+pagination_prev: null
 ---
 
 The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.

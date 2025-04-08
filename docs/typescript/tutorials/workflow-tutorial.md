@@ -141,7 +141,8 @@ async function main() {
 }
 ```
 
-You can also use [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
+You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.md#dbosretrieveworkflow).
+This can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
 
 ## Workflow Events
 
@@ -159,6 +160,8 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 
 You can call [`DBOS.getEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+
+You can also call `getEvent` from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -210,6 +213,8 @@ This is useful for sending notifications to an active workflow.
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
+
+You can also call `send` from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
 ```typescript
 DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
