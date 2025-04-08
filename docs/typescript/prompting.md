@@ -325,7 +325,7 @@ ONLY call this from a workflow function, NEVER from a step.
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
-#### get_event
+#### getEvent
 
 You can call `DBOS.getEvent` to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
