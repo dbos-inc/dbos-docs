@@ -22,6 +22,7 @@ We'll also define a few constants for later.
 ```python
 import os
 
+import uvicorn
 from dbos import DBOS, SetWorkflowID, DBOSConfig
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
@@ -246,13 +247,22 @@ def frontend():
     return HTMLResponse(html)
 ```
 
-Finally, here is the crash endpoint. It crashes your app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
+Here is the crash endpoint. It crashes your app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
 
 ```python
 @app.post("/crash_application")
 def crash_application():
     os._exit(1)
 ```
+
+Finally, launch DBOS and the FastAPI server.
+
+```python
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
 ## Try it Yourself!
 ### Deploying to DBOS Cloud
 
