@@ -45,13 +45,6 @@ Run all migration commands specified in your [configuration file](../configurati
 
 ---
 
-### `npx dbos rollback`
-
-**Description:**
-Run all rollback commands specified in your [configuration file](../configuration) to roll back the last batch of schema migrations.
-
----
-
 ### `npx dbos configure`
 
 **Description:**

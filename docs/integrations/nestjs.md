@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Nest.js + DBOS
+title: Nest.js
 ---
 
 This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
