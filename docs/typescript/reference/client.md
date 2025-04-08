@@ -43,8 +43,9 @@ class DBOSClient {
 You construct a `DBOSClient` with the static `create` function. 
 
 The `databaseUrl` parameter is a [standard PostgreSQL connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS)
-for the DBOS application database.
-DBOS Client also needs to connect to the [system database](../../explanations/system-tables.md) of your DBOS application.
+for the DBOS application database. Please see [Configuring DBOS](configuration.md#configuring-dbos) for more info.
+
+DBOS Client needs to connect to the [system database](../../explanations/system-tables.md) of your DBOS application.
 The system database is stored on the same database server as the application database and typically has the same name as your application database, but suffixed with `_dbos_sys`. 
 If you are using a non-standard system database name in your DBOS application, you must also provide the name to `DBOSClient.create`.
 
@@ -53,7 +54,7 @@ Example:
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create("postgresql://postgres:password@localhost:5432/my_app_db");
+const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
 ```
 
 #### `destroy`
