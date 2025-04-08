@@ -5,7 +5,6 @@ hide_table_of_contents: true
 ---
 
 import InstallNode from '/docs/partials/_install_node.mdx';
-import LocalPostgres from '/docs/partials/_local_postgres.mdx';
 
 #  Use DBOS With Supabase
 
