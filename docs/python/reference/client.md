@@ -72,6 +72,10 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflo
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
 Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 
+:::warning
+At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
+:::
+
 **Example syntax:**
 
 ```python
