@@ -90,7 +90,7 @@ In addition to the `EnqueueOptions` described above, you must also provide the w
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
 
 Since DBOS Client works independently of your DBOS application code, `enqueue` accepts whatever arguments you provide it without verifying if they match the workflow's expected argument types.
-However, you can get a better developer experience by providing a function declaration type parameter to `enqueue`.
+However, you can get type safety by providing a function declaration type parameter to `enqueue`.
 This enables TypeScript to verify that the provided arguments match the provided declaration and to infer the returned `WorkflowHandle` result type.
 
 Untyped Example:
