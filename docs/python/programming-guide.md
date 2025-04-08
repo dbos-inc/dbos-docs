@@ -126,9 +126,13 @@ def dbos_workflow():
         print("Press Control + C to stop the app...")
         DBOS.sleep(1)
     step_two()
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-Start your app with `fastapi run main.py`.
+Start your app with `python3 main.py`.
 Then, visit this URL: http://localhost:8000.
 
 In your terminal, you should see an output like:
@@ -140,7 +144,7 @@ Press Control + C to stop the app...
 Press Control + C to stop the app...
 ```
 
-Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it). Then, run `fastapi run main.py` to restart it. You should see an output like:
+Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it). Then, run `python3 main.py` to restart it. You should see an output like:
 
 ```shell
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -191,13 +195,17 @@ def dbos_workflow():
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     print(f"Successfully completed {len(results)} steps")
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `enqueue` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
 
-Start your app with `fastapi run main.py`.
+Start your app with `python3 main.py`.
 Then, visit this URL: http://localhost:8000.
 Wait five seconds and you should see an output like:
 
@@ -228,7 +236,7 @@ def dbos_step(n: int):
     print(f"Step {n} completed!")
 ```
 
-Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
+Now, start your app with `python3 main.py`, then visit this URL: http://localhost:8000.
 After about five seconds, you should see an output like:
 
 ```
@@ -242,7 +250,7 @@ Step 4 completed!
 ```
 
 Now, press CTRL+C stop your app (press CTRL+C multiple times to force quit it).
-Then, run `fastapi run main.py` to restart it. Wait ten seconds and you should see an output like:
+Then, run `python3 main.py` to restart it. Wait ten seconds and you should see an output like:
 
 
 ```shell
@@ -276,7 +284,7 @@ The argument to the `DBOS.scheduled()` decorator is your workflow's schedule, de
 The schedule in the example, `* * * * * *` means "run this workflow every second."
 Learn more about scheduled workflows [here](./tutorials/scheduled-workflows.md).
 
-Now, start your app with `fastapi run main.py`.
+Now, start your app with `python3 main.py`.
 The workflow should run every second, with output like:
 
 ```shell
@@ -388,6 +396,10 @@ def count_rows():
 def dbos_workflow():
     insert_row()
     count_rows()
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 This workflow first inserts a new row into your table, then prints the total number of rows in into your table.
@@ -395,7 +407,7 @@ The database operations are done in DBOS _transactions_. These are special steps
 They execute as a single database transaction and give you access to a pre-configured database client (`DBOS.sql_session`).
 Learn more about transactions [here](./tutorials/transaction-tutorial.md).
 
-Now, start your app with `fastapi run main.py`, then visit this URL: http://localhost:8000.
+Now, start your app with `python3 main.py`, then visit this URL: http://localhost:8000.
 
 You should see an output like:
 
@@ -509,6 +521,11 @@ def count_rows():
 def dbos_workflow():
     insert_row()
     count_rows()
+
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 </details>
 
