@@ -45,7 +45,7 @@ export class Example {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-starter",
+    "name": "dbos-node-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch();
