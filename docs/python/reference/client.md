@@ -42,10 +42,9 @@ client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
 class EnqueueOptions(TypedDict):
     workflow_name: str
     queue_name: str
-    workflow_class_name: NotRequired[str]
-    app_version: NotRequired[str]
     workflow_id: NotRequired[str]
-    
+    app_version: NotRequired[str]
+
 client.enqueue(
     options: EnqueueOptions, 
     *args: Any, 
@@ -58,13 +57,20 @@ Returns a [WorkflowHandle](./workflow_handles.md#workflowhandle).
 
 When enqueuing a workflow from within a DBOS application, the workflow and queue metadata can be retrieved automatically.
 However, since `DBOSClient` runs outside the DBOS application, the metadata must be specified explicitly.
-This metadata includes:
+
+Required metadata includes:
 
 * `workflow_name`: The name of the workflow method being enqueued.
-* `workflow_class_name`: The name of the class the workflow method is a member of. For simple function workflows, this may be left unspecified.
 * `queue_name`: The name of the [Queue](./queues.md) to enqueue the workflow on.
-* `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued. Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
-* `workflow_id`: The unique ID for the enqueued workflow. If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+
+Additional but optional metadata includes:
+
+* `workflow_id`: The unique ID for the enqueued workflow. 
+If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). 
+Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* `app_version`: The version of your application that should process this workflow. 
+If left undefined, it will be updated to the current version when the workflow is first dequeued.
+Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 
 **Example syntax:**
 

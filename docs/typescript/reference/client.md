@@ -21,8 +21,8 @@ interface EnqueueOptions {
     workflowName: string;
     workflowClassName: string;
     queueName: string;
-    appVersion?: string;
     workflowID?: string;
+    appVersion?: string;
 }
 
 class DBOSClient {
@@ -71,7 +71,6 @@ asynchronously from an external application.
 When enqueuing a workflow from within a DBOS application, the workflow and queue metadata can be retrieved automatically.
 However, since `DBOSClient` runs outside the DBOS application, the metadata must be specified explicitly.
 
-
 Required metadata includes:
 
 * `workflowName`: The name of the workflow method being enqueued.
@@ -80,12 +79,12 @@ Required metadata includes:
 
 Additional but optional metadata includes:
 
-* `appVersion`: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued. 
-Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 * `workflowID`: The unique ID for the enqueued workflow. 
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* `appVersion`: The version of your application that should process this workflow. 
+If left undefined, it will be updated to the current version when the workflow is first dequeued. 
+Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
