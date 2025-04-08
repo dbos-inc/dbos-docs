@@ -100,6 +100,7 @@ Copy this code into `main.py`:
 ```python showLineNumbers title="main.py"
 import os
 
+import uvicorn
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
@@ -168,6 +169,7 @@ To try them out, copy this code into `main.py`:
 import os
 import time
 
+import uvicorn
 from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 
@@ -370,6 +372,7 @@ Now, let's write a DBOS workflow that operates on that table. Copy the following
 ```python showLineNumbers title="main.py"
 import os
 
+import uvicorn
 from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
@@ -430,6 +433,7 @@ Here's what everything looks like put together:
 import os
 import time
 
+import uvicorn
 from dbos import DBOS, Queue, DBOSConfig
 from fastapi import FastAPI
 

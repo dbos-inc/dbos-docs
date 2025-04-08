@@ -22,6 +22,7 @@ We'll also define a few constants for later.
 ```python
 import os
 
+import uvicorn
 from dbos import DBOS, SetWorkflowID, DBOSConfig
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
