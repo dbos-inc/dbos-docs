@@ -71,7 +71,7 @@ dbos-cloud app env list
 
 ## Deleting a Secret
 
-You can delete an environment variables with:
+You can delete an environment variable with:
 
 ```shell
 dbos-cloud app env delete -s <secret-name>
