@@ -300,7 +300,7 @@ For more information on managing workflow recovery when self-hosting production 
 
 ## Workflow Management
 
-You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
+You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)), [programmatically](../reference/contexts.md#workflow-management-methods), or via command line.
 
 #### Listing Workflows
 
@@ -313,7 +313,6 @@ dbos workflow list
 Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 
 
 #### Cancelling Workflows
