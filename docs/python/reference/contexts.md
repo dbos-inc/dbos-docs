@@ -248,13 +248,13 @@ def list_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve the [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
-- **start_time**: Retrieve workflows started after this timestamp (RFC 3339).
-- **end_time**: Retrieve workflows started before this timestamp (RFC 3339).
+- **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **app_version**: Retrieve workflows tagged with this application version.
 - **user**: Retrieve workflows run by this authenticated user.
@@ -277,13 +277,13 @@ def list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve the [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
 
 **Parameters:**
 - **queue_name**: Retrieve workflows running on this queue.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
-- **start_time**: Retrieve workflows enqueued after this timestamp (RFC 3339).
-- **end_time**: Retrieve workflows enqueued before this timestamp (RFC 3339).
+- **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
