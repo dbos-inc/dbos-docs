@@ -313,32 +313,20 @@ You can also view a searchable and expandable list of your application's workflo
 
 #### Cancelling Workflows
 
-You can cancel the execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow cancel <workflow-id>
-```
+You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancel_workflow`](../reference/contexts.md#cancel_workflow), or through the command line with [`dbos workflow cancel`](../reference/cli.md#dbos-workflow-cancel).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
 #### Resuming Workflows
 
-You can resume a workflow from its last completed step from the web UI or with:
-
-```shell
-dbos workflow resume <workflow-id>
-```
+You can resume a workflow from its last copmleted step from the web UI, programmatically via [`DBOS.resume_workflow`](../reference/contexts.md#resume_workflow), or through the command line with [`dbos workflow resume`](../reference/cli.md#dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 #### Restarting Workflows
 
-You can start a new execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow restart <workflow-id>
-```
+You can start a new execution of a workflow from the web UI, programmatically via [`DBOS.restart_workflow`](../reference/contexts.md#restart_workflow), or through the command line with [`dbos workflow restart`](../reference/cli.md#dbos-workflow-restart).
 
 The new workflow has the same inputs as the original, but a new workflow ID.
