@@ -231,47 +231,6 @@ handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, 
 
 ## Workflow Management Methods
 
-### Workflow Status
-
-Some workflow introspection and management methods return a `WorkflowStatus`.
-This object has the following definition:
-
-```python
-class WorkflowStatus:
-    # The workflow ID
-    workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
-    status: str
-    # The name of the workflow function
-    name: str
-    # The name of the workflow's class, if any
-    class_name: Optional[str]
-    # The name with which the workflow's class instance was configured, if any
-    config_name: Optional[str]
-    # The user who ran the workflow, if specified
-    authenticated_user: Optional[str]
-    # The role with which the workflow ran, if specified
-    assumed_role: Optional[str]
-    # All roles which the authenticated user could assume
-    authenticated_roles: Optional[list[str]]
-    # The deserialized workflow input object
-    input: Optional[WorkflowInputs]
-    # The workflow's output, if any
-    output: Optional[Any]
-    # The error the workflow threw, if any
-    error: Optional[Exception]
-    # Workflow start time, as a Unix epoch timestamp in ms
-    created_at: Optional[int]
-    # Last time the workflow status was updated, as a Unix epoch timestamp in ms
-    updated_at: Optional[int]
-    # If this workflow was enqueued, on which queue
-    queue_name: Optional[str]
-    # The executor to most recently executed this workflow
-    executor_id: Optional[str]
-    # The application version on which this workflow was started
-    app_version: Optional[str]
-```
-
 ### list_workflows
 ```python
 def list_workflows(
@@ -362,6 +321,47 @@ DBOS.restart_workflow(
 ```
 
 Start a new execution of a workflow with the same inputs as the original, but a new workflow ID.
+
+### Workflow Status
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```python
+class WorkflowStatus:
+    # The workflow ID
+    workflow_id: str
+    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+    status: str
+    # The name of the workflow function
+    name: str
+    # The name of the workflow's class, if any
+    class_name: Optional[str]
+    # The name with which the workflow's class instance was configured, if any
+    config_name: Optional[str]
+    # The user who ran the workflow, if specified
+    authenticated_user: Optional[str]
+    # The role with which the workflow ran, if specified
+    assumed_role: Optional[str]
+    # All roles which the authenticated user could assume
+    authenticated_roles: Optional[list[str]]
+    # The deserialized workflow input object
+    input: Optional[WorkflowInputs]
+    # The workflow's output, if any
+    output: Optional[Any]
+    # The error the workflow threw, if any
+    error: Optional[Exception]
+    # Workflow start time, as a Unix epoch timestamp in ms
+    created_at: Optional[int]
+    # Last time the workflow status was updated, as a Unix epoch timestamp in ms
+    updated_at: Optional[int]
+    # If this workflow was enqueued, on which queue
+    queue_name: Optional[str]
+    # The executor to most recently executed this workflow
+    executor_id: Optional[str]
+    # The application version on which this workflow was started
+    app_version: Optional[str]
+```
 
 ## Context Variables
 
