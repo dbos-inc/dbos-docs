@@ -321,7 +321,7 @@ def list_queued_workflows(
 Retrieve the [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
 
 **Parameters:**
-- **status**: Retrieve workflows running on this queue.
+- **queue_name**: Retrieve workflows running on this queue.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this timestamp (RFC 3339).
 - **end_time**: Retrieve workflows enqueued before this timestamp (RFC 3339).
