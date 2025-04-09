@@ -396,6 +396,33 @@ DBOS.workflow_id: str
 May only be accessed from within a workflow, step, or transaction.
 Return the identity of the current workflow.
 
+### step_id
+
+```python
+DBOS.step_id: int
+```
+
+Returns the unique ID of the current step within a workflow.
+
+### step_status
+
+```python
+DBOS.step_status: StepStatus
+```
+
+Return the status of the currently executing step.
+This object has the following properties:
+
+```python
+class StepStatus:
+    # The unique ID of this step in its workflow.
+    step_id: int
+    # For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+    current_attempt: Optional[int]
+    # For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
+    max_attempts: Optional[int]
+```
+
 ### span
 
 ```python
