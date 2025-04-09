@@ -229,6 +229,83 @@ async def example_workflow(var1: str, var2: str):
 handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
 ```
 
+## Workflow Management Methods
+
+### Workflow Status
+
+Many workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```python
+class WorkflowStatus:
+    # The workflow ID
+    workflow_id: str
+    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+    status: str
+    # The name of the workflow function
+    name: str
+    # The name of the workflow's class, if any
+    class_name: Optional[str]
+    # The name with which the workflow's class instance was configured, if any
+    config_name: Optional[str]
+    # The user who ran the workflow, if specified
+    authenticated_user: Optional[str]
+    # The role with which the workflow ran, if specified
+    assumed_role: Optional[str]
+    # All roles which the authenticated user could assume
+    authenticated_roles: Optional[list[str]]
+    # The deserialized workflow input object
+    input: Optional[WorkflowInputs]
+    # The workflow's output, if any
+    output: Optional[Any]
+    # The error the workflow threw, if any
+    error: Optional[Exception]
+    # Workflow start time, as a Unix epoch timestamp in ms
+    created_at: Optional[int]
+    # Last time the workflow status was updated, as a Unix epoch timestamp in ms
+    updated_at: Optional[int]
+    # If this workflow was enqueued, on which queue
+    queue_name: Optional[str]
+    # The executor to most recently executed this workflow
+    executor_id: Optional[str]
+    # The application version on which this workflow was started
+    app_version: Optional[str]
+```
+
+### list_workflows
+```python
+    def list_workflows(
+        *,
+        workflow_ids: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        name: Optional[str] = None,
+        app_version: Optional[str] = None,
+        user: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        sort_desc: bool = False,
+    ) -> List[WorkflowStatus]:
+```
+
+Retrieve all workflows matching specified criteria.
+
+**Parameters:**
+- **workflow_ids**: Retrieve workflows with these IDs.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **start_time**: Retrieve workflows started after this timestamp (RFC 3339).
+- **end_time**: Retrieve workflows started before this timestamp (RFC 3339).
+- **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **user**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+
+**Returns:**
+- List of [`WorkflowStatus`](#workflow-status) of all workflows matching the search criteria.
+
+
 ## Context Variables
 
 ### logger
@@ -270,25 +347,6 @@ DBOS.span: opentelemetry.trace.Span
 
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
-
-### request
-
-```python
-DBOS.request: Request
-```
-
-May only be accessed from within the handler of a FastAPI request, or in a function called from the handler.
-Retrieve request information parsed from FastAPI:
-```python
-headers: Headers # The request headers
-path_params: dict[str, Any] # The request's path parameters
-query_params QueryParams # The request's query parameters
-url: URL # The URL to which the request was sent
-base_url: URL # The base URL of the request
-client: Optional[Address] # Information about the client that sent the request
-cookies: dict[str, str] # The request's cookie parameters
-method: str # The HTTP method of the request
-```
 
 ### config
 
