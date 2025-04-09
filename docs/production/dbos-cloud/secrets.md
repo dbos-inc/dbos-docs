@@ -12,7 +12,7 @@ Redeploy your application for newly created or updated secrets to take effect.
 You can create or update a secret using the Cloud CLI:
 
 ```
-dbos-cloud app env create -s <name> -v <value>
+dbos-cloud app env create -s <secret-name> -v <secret-value>
 ```
 
 For example, to create a secret named `API_KEY` with value `abc123`, run:
@@ -64,6 +64,14 @@ dbos-cloud app env import -d .env
 ## Listing Secrets
 
 You can list the names of your application's secrets with:
+
+```shell
+dbos-cloud app env list
+```
+
+## Deleting a Secret
+
+You can delete an environment variables with:
 
 ```shell
 dbos-cloud app env delete -s <secret-name>
