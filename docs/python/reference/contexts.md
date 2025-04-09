@@ -233,7 +233,7 @@ handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, 
 
 ### Workflow Status
 
-Many workflow introspection and management methods return a `WorkflowStatus`.
+Some workflow introspection and management methods return a `WorkflowStatus`.
 This object has the following definition:
 
 ```python
@@ -274,22 +274,22 @@ class WorkflowStatus:
 
 ### list_workflows
 ```python
-    def list_workflows(
-        *,
-        workflow_ids: Optional[List[str]] = None,
-        status: Optional[str] = None,
-        start_time: Optional[str] = None,
-        end_time: Optional[str] = None,
-        name: Optional[str] = None,
-        app_version: Optional[str] = None,
-        user: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        sort_desc: bool = False,
-    ) -> List[WorkflowStatus]:
+def list_workflows(
+    *,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
 ```
 
-Retrieve all workflows matching specified criteria.
+Retrieve the [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
@@ -301,10 +301,67 @@ Retrieve all workflows matching specified criteria.
 - **user**: Retrieve workflows run by this authenticated user.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
 
-**Returns:**
-- List of [`WorkflowStatus`](#workflow-status) of all workflows matching the search criteria.
+### list_queued_workflows
+```python
+def list_queued_workflows(
+    *,
+    queue_name: Optional[str] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
 
+Retrieve the [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+
+**Parameters:**
+- **status**: Retrieve workflows running on this queue.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
+- **start_time**: Retrieve workflows enqueued after this timestamp (RFC 3339).
+- **end_time**: Retrieve workflows enqueued before this timestamp (RFC 3339).
+- **name**: Retrieve workflows with this fully-qualified name.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+
+### cancel_workflow
+
+```python
+DBOS.cancel_workflow(
+    workflow_id: str,
+) -> None
+```
+
+Cancel a workflow.
+This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### resume_workflow
+
+```python
+DBOS.resume_workflow(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Resume a workflow.
+This immediately starts it from its last completed step.
+You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### restart_workflow
+
+```python
+DBOS.restart_workflow(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Start a new execution of a workflow with the same inputs as the original, but a new workflow ID.
 
 ## Context Variables
 
