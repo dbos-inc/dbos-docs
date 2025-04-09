@@ -1,23 +1,21 @@
 ---
 sidebar_position: 100
-title: Environment Variables
+title: Secrets and Environment Variables
 ---
 
-You can configure environment variables for your application in DBOS Cloud.
-Environment variables are key-value pairs that are securely stored in DBOS Cloud and made available to your application as environment variables.
-We recommend using them to manage confidential information such as API keys.
-Redeploy your application for newly created or updated variables to take effect.
+We recommend using _secrets_ to securely manage your application's secrets and environment variables in DBOS Cloud.
+Secrets are key-value pairs that are securely stored in DBOS Cloud and made available to your application as environment variables.
+Redeploy your application for newly created or updated secrets to take effect.
 
+## Managing and Using Secrets
 
-## Managing and Using Environment Variables
-
-You can create or update an environment variable using the Cloud CLI:
+You can create or update a secret using the Cloud CLI:
 
 ```
 dbos-cloud app env create -s <name> -v <value>
 ```
 
-For example, to create an environment variable named `API_KEY` with value `abc123`, run:
+For example, to create a secret named `API_KEY` with value `abc123`, run:
 
 ```
 dbos-cloud app env create -s API_KEY -v abc123
@@ -42,13 +40,13 @@ const key = process.env.API_KEY; // Value is abc123
 </TabItem>
 </Tabs>
 
-Additionally, you can manage your application's environment variables from the secrets page of the [cloud console](https://console.dbos.dev).
+Additionally, you can manage your application's secrets from the secrets page of the [cloud console](https://console.dbos.dev).
 
 <img src={require('@site/static/img/secrets/secrets-page.png').default} alt="Secrets Page" width="1000" className="custom-img" />
 
-## Importing Environment Variables
+## Importing Secrets
 
-You can import the contents of a `.env` file as environment variables.
+You can import the contents of a `.env` file as secrets.
 Allowed syntax for the `.env` file is described [here](https://dotenvx.com/docs/env-file). Note that interpolation is supported but command substitution and encryption are currently not.
 Import a `.env` file with the following command:
 
@@ -63,17 +61,9 @@ For example:
 dbos-cloud app env import -d .env
 ```
 
-## Listing Environment Variables
+## Listing Secrets
 
-You can list the names of your application's environment variables with:
-
-```
-dbos-cloud app env list
-```
-
-## Deleting an Environment Variable
-
-You can delete an environment variables with:
+You can list the names of your application's secrets with:
 
 ```shell
 dbos-cloud app env delete -s <secret-name>
