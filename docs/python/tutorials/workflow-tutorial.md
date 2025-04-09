@@ -304,13 +304,9 @@ You can view and manage your workflow executions via a web UI ([self-hosted](../
 
 #### Listing Workflows
 
-You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-list)):
+You can list your application's workflows programmatically via [`DBOS.list_workflows`](../reference/contexts.md#workflow-management-methods) or from the command line with [`dbos workflow list`](../reference/cli.md#dbos-workflow-list).
 
-```shell
-dbos workflow list
-```
-
-Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
+You can also view a searchable and expandable list of your application's workflows from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
