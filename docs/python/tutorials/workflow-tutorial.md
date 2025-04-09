@@ -38,7 +38,7 @@ These guarantees assume that the application and database may crash and go offli
 If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
 This is because uncaught exceptions are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Determinism
 
