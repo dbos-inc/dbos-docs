@@ -3,13 +3,6 @@ sidebar_position: 10
 title: DBOS Conductor
 ---
 
-:::info
-
-Conductor is currently in developer preview.
-For access, please contact the team ([Discord](https://discord.gg/fMwQjeW5zg), [email](mailto:contact@dbos.dev)).
-
-:::
-
 The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
 Conductor is a managed service that helps you operate DBOS applications.
 It provides:
