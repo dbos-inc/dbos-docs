@@ -107,7 +107,7 @@ This command retrieves the status of a Postgres database instance
 This command resets your password for a Postgres database instance.
 
 **Arguments:**
-- `[database-instance-name]`: The name of the database instance to provision.
+- `[database-instance-name]`: The name of the database instance whose password to reset.
 - `-W, --password [string]`: Your new password for this database instance. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.
 
 ---
@@ -122,41 +122,16 @@ This command destroys a previously-provisioned Postgres database instance.
 
 ---
 
-### `dbos-cloud db local`
+### `dbos-cloud db url`
 
 **Description:**
-Configure `dbos-config.yaml` to use a DBOS Cloud Postgres server for local development.
-This command also sets the `local_suffix` field in `dbos-config.yaml`, so your application will suffix its application database name with `_local` while running locally.
-This isolates the database you use for local development from the database used by your app deployed to DBOS Cloud even though both use the same Postgres server.
-
+This command retrives your cloud database connection URL.
 
 **Arguments:**
 - `[database-instance-name]`: The name of the database instance to which to connect.
+- `-S, --show-password`: Whether to show your database password in the output.
 - `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
 
----
-
-### `dbos-cloud db connect`
-
-**Description:**
-This command loads your cloud database's connection parameters into your local `dbos-config.yaml`.
-
-**Arguments:**
-- `[database-instance-name]`: The name of the database instance to which to connect.
-- `-W, --password [string]`: Your password for this database instance. If not provided, will be prompted on the command line.
-
----
-
-### `dbos-cloud db restore`
-
-**Description:**
-This command performs [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to create a new database instance containing the state of your database instance at a previous point in time.
-After restoration is complete, we recommend using [`change-database-instance`](#dbos-cloud-app-change-database-instance) to redeploy your applications to the new database instance, then [destroying](#dbos-cloud-db-destroy) the original.
-
-**Arguments:**
-- `<database-instance-name>`: The name of the database instance to restore from.
-- `-t, --restore-time <string>`: The timestamp to restore from, in [RFC3339 format](https://datatracker.ietf.org/doc/html/rfc3339). Must be within the backup retention period of your database (24 hours for free-tier users).
-- `-n, --target-name <string>`: The name of the new database instance to create.
 ---
 
 ### `dbos-cloud db link`
@@ -312,12 +287,11 @@ It retrieves an application's logs.
 **Description:**
 This command must be run from an application root directory.
 It redeploys the application to a new database instance.
-It is meant to be used with [`database restore`](#dbos-cloud-db-restore) during disaster recovery to transfer the application to the restored database instance.
 
 **Arguments:**
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-d, --database <string>` The name of the new database instance for this application.
-- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. During restoration, we recommend deploying to the version active at the timestamp to which you recovered. You can list previous versions and their IDs and timestamps with the [versions command](#dbos-cloud-app-versions).
+- `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory.
 
 ---
 

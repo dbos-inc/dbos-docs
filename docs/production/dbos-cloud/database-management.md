@@ -65,42 +65,6 @@ While it is occasionally necessary, be careful when manually changing the schema
 Be careful making breaking schema changes such as deleting or renaming a column&#8212;they may break active workflows running on a previous application version.
 :::
 
-### Database Recovery
-
-:::info
-Database recovery is not available for [linked databases](./byod-management.md)
-:::
-
-DBOS Cloud can use [PostgreSQL point-in-time-recovery](https://www.postgresql.org/docs/current/continuous-archiving.html) to restore your database to a previous state, for example to recover from data corruption or loss.
-First, run the [`database restore`](./cloud-cli.md#dbos-cloud-db-restore) to create a new database instance containing the state of your database instance at a previous point in time:
-
-```shell
-dbos-cloud db restore <database-name> -t <timestamp> -n <new-db-instance-name>
-```
-
-The timestamp must be in [RFC3339](https://datatracker.ietf.org/doc/html/rfc3339) format and must be within the backup retention period of your database (24 hours for free-tier users).
-
-After the database is restored, you can redeploy your applications to it with [`app change-database-instance`](./cloud-cli.md#dbos-cloud-app-change-database-instance).
-For each application connected to the original database instance, run:
-
-```shell
-dbos-cloud app change-database-instance --database <new-db-instance-name>
-```
-
-If you wish to restore your application to a previous version (such as the version that was running at the recovery timestamp), you can do this with the `--previous-version` parameter:
-
-```shell
-dbos-cloud app change-database-instance --database <new-db-instance-name> --previous-version <version-id>
-```
-
-For more information on application version management, see [here](./application-management.md#managing-application-versions).
-
-Finally, destroy the original database instance:
-
-```shell
-dbos-cloud db destroy <original-database-instance-name>
-```
-
 ### Destroying Database Instances
 
 To destroy a database instance, run:

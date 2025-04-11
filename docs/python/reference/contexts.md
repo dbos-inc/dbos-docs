@@ -229,6 +229,140 @@ async def example_workflow(var1: str, var2: str):
 handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
 ```
 
+## Workflow Management Methods
+
+### list_workflows
+```python
+def list_workflows(
+    *,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+
+**Parameters:**
+- **workflow_ids**: Retrieve workflows with these IDs.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **user**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+
+### list_queued_workflows
+```python
+def list_queued_workflows(
+    *,
+    queue_name: Optional[str] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+
+**Parameters:**
+- **queue_name**: Retrieve workflows running on this queue.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
+- **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+
+### cancel_workflow
+
+```python
+DBOS.cancel_workflow(
+    workflow_id: str,
+) -> None
+```
+
+Cancel a workflow.
+This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### resume_workflow
+
+```python
+DBOS.resume_workflow(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Resume a workflow.
+This immediately starts it from its last completed step.
+You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### restart_workflow
+
+```python
+DBOS.restart_workflow(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Start a new execution of a workflow with the same inputs as the original, but a new workflow ID.
+
+### Workflow Status
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```python
+class WorkflowStatus:
+    # The workflow ID
+    workflow_id: str
+    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+    status: str
+    # The name of the workflow function
+    name: str
+    # The name of the workflow's class, if any
+    class_name: Optional[str]
+    # The name with which the workflow's class instance was configured, if any
+    config_name: Optional[str]
+    # The user who ran the workflow, if specified
+    authenticated_user: Optional[str]
+    # The role with which the workflow ran, if specified
+    assumed_role: Optional[str]
+    # All roles which the authenticated user could assume
+    authenticated_roles: Optional[list[str]]
+    # The deserialized workflow input object
+    input: Optional[WorkflowInputs]
+    # The workflow's output, if any
+    output: Optional[Any]
+    # The error the workflow threw, if any
+    error: Optional[Exception]
+    # Workflow start time, as a Unix epoch timestamp in ms
+    created_at: Optional[int]
+    # Last time the workflow status was updated, as a Unix epoch timestamp in ms
+    updated_at: Optional[int]
+    # If this workflow was enqueued, on which queue
+    queue_name: Optional[str]
+    # The executor to most recently executed this workflow
+    executor_id: Optional[str]
+    # The application version on which this workflow was started
+    app_version: Optional[str]
+```
+
 ## Context Variables
 
 ### logger
@@ -262,6 +396,33 @@ DBOS.workflow_id: str
 May only be accessed from within a workflow, step, or transaction.
 Return the identity of the current workflow.
 
+### step_id
+
+```python
+DBOS.step_id: int
+```
+
+Returns the unique ID of the current step within a workflow.
+
+### step_status
+
+```python
+DBOS.step_status: StepStatus
+```
+
+Return the status of the currently executing step.
+This object has the following properties:
+
+```python
+class StepStatus:
+    # The unique ID of this step in its workflow.
+    step_id: int
+    # For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+    current_attempt: Optional[int]
+    # For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
+    max_attempts: Optional[int]
+```
+
 ### span
 
 ```python
@@ -270,25 +431,6 @@ DBOS.span: opentelemetry.trace.Span
 
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
-
-### request
-
-```python
-DBOS.request: Request
-```
-
-May only be accessed from within the handler of a FastAPI request, or in a function called from the handler.
-Retrieve request information parsed from FastAPI:
-```python
-headers: Headers # The request headers
-path_params: dict[str, Any] # The request's path parameters
-query_params QueryParams # The request's query parameters
-url: URL # The URL to which the request was sent
-base_url: URL # The base URL of the request
-client: Optional[Address] # Information about the client that sent the request
-cookies: dict[str, str] # The request's cookie parameters
-method: str # The HTTP method of the request
-```
 
 ### config
 
