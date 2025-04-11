@@ -38,7 +38,7 @@ These guarantees assume that the application and database may crash and go offli
 If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
 This is because uncaught exceptions are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Determinism
 
@@ -297,53 +297,3 @@ dbos workflow resume <workflow-id>
 ```
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
-
-## Workflow Management
-
-You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
-
-#### Listing Workflows
-
-You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/cli.md#dbos-workflow-list)):
-
-```shell
-dbos workflow list
-```
-
-Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
-
-
-#### Cancelling Workflows
-
-You can cancel the execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow cancel <workflow-id>
-```
-
-If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
-
-#### Resuming Workflows
-
-You can resume a workflow from its last completed step from the web UI or with:
-
-```shell
-dbos workflow resume <workflow-id>
-```
-
-You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-#### Restarting Workflows
-
-You can start a new execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow restart <workflow-id>
-```
-
-The new workflow has the same inputs as the original, but a new workflow ID.
