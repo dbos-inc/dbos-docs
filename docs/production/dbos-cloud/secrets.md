@@ -5,19 +5,20 @@ title: Secrets and Environment Variables
 
 We recommend using _secrets_ to securely manage your application's secrets and environment variables in DBOS Cloud.
 Secrets are key-value pairs that are securely stored in DBOS Cloud and made available to your application as environment variables.
+Redeploy your application for newly created or updated secrets to take effect.
 
 ## Managing and Using Secrets
 
 You can create or update a secret using the Cloud CLI:
 
 ```
-dbos-cloud app secrets create -s <secret-name> -v <secret-value>
+dbos-cloud app env create -s <secret-name> -v <secret-value>
 ```
 
 For example, to create a secret named `API_KEY` with value `abc123`, run:
 
 ```
-dbos-cloud app secrets create -s API_KEY -v abc123
+dbos-cloud app env create -s API_KEY -v abc123
 ```
 
 When you next redeploy your application, its environment will be updated to contain the `API_KEY` environment variable with value `abc123`.
@@ -50,20 +51,29 @@ Allowed syntax for the `.env` file is described [here](https://dotenvx.com/docs/
 Import a `.env` file with the following command:
 
 ```shell
-dbos-cloud app secrets import -d <path-to-dotenv-file>
+dbos-cloud app env import -d <path-to-dotenv-file>
 ```
 
 For example:
 
 
 ```shell
-dbos-cloud app secrets import -d .env
+dbos-cloud app env import -d .env
 ```
 
 ## Listing Secrets
 
 You can list the names of your application's secrets with:
 
+```shell
+dbos-cloud app env list
 ```
-dbos-cloud app secrets list
+
+## Deleting a Secret
+
+You can delete an environment variable with:
+
+```shell
+dbos-cloud app env delete -s <secret-name>
 ```
+
