@@ -27,18 +27,24 @@ DBOS requires Python 3.9 or later.
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
+mkdir my-app
+cd my-app
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
+mkdir my-app
+cd my-app
 python3 -m venv .venv
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
+mkdir my-app
+cd my-app
 python3 -m venv .venv
 .venv\Scripts\activate.bat
 ```
@@ -72,9 +78,18 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
+DBOS needs a Postgres database to connect to. If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string. Otherwise, you can use the Docker script we provide to a small container like so:
+</article>
+
+<article className="col col--6">
+```bash
+export PGPASSWORD=dbos
+python3 start_postgres_docker.py
+```
+</article>
+
+<article className="col col--6">
 Now, start your app!
-DBOS will automatically help you launch and connect to a new Postgres database (using Docker if available, else DBOS Cloud).
-If you already use Postgres, you can instead set the `DBOS_DATABASE_URL` environment variable to a connection string to your database.
 </article>
 
 <article className="col col--6">
