@@ -6,7 +6,7 @@ title: Log and Traces Export
 This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. We use Datadog as an example. We connect by installing the otel-contrib package in the App VM at deployment time and configuring it with the Datadog API key to export data.
 
 :::info
-These steps require a [DBOS Pro or Enterprise]((https://www.dbos.dev/pricing)) subscription. 
+These steps require a [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscription.
 :::
 
 
