@@ -13,7 +13,7 @@ Where DBOS applications use the [`DBOS` methods](./contexts.md),
 external applications use `DBOSClient` instead.
 :::
 
-### class dbos.DBOSClient
+### Constructor
 
 ```python
 DBOSClient(
@@ -35,6 +35,8 @@ This DBOS client connects to the database specified in the `DBOS_DATABASE_URL` e
 ```python
 client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
 ```
+
+## Workflow Interaction Methods 
 
 ### enqueue
 
@@ -232,3 +234,151 @@ Similar to [`DBOS.get_event_async](contexts.md#get_event_async).
 
 **Returns:**
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
+
+## Workflow Management Methods
+
+### list_workflows
+
+```python
+client.list_workflows(
+    *,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+Similar to [`DBOS.list_workflows`](./contexts.md#list_workflows).
+
+**Parameters:**
+- **workflow_ids**: Retrieve workflows with these IDs.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **user**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+
+### list_workflows_async
+
+```python
+client.list_workflows_async(
+    *,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Asynchronous version of [`DBOSClient.list_workflows`](#list_workflows).
+
+### list_queued_workflows
+
+```python
+client.list_queued_workflows(
+    *,
+    queue_name: Optional[str] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
+
+**Parameters:**
+- **queue_name**: Retrieve workflows running on this queue.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
+- **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+
+### list_queued_workflows_async
+
+```python
+client.list_queued_workflows_async(
+    *,
+    queue_name: Optional[str] = None,
+    status: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workflows).
+
+### cancel_workflow
+
+```python
+client.cancel_workflow(
+    workflow_id: str,
+) -> None
+```
+
+Cancel a workflow.
+This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
+
+### cancel_workflow_async
+
+```python
+client.cancel_workflow_async(
+    workflow_id: str,
+) -> None
+```
+
+Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
+
+
+### resume_workflow
+
+```python
+client.resume_workflow(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Resume a workflow.
+This immediately starts it from its last completed step.
+You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
+
+### resume_workflow_async
+
+```python
+client.resume_workflow_async(
+    workflow_id: str,
+) -> WorkflowHandle[R]
+```
+
+Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
