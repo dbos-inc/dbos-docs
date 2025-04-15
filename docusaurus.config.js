@@ -323,13 +323,14 @@ const config = {
         },
       },
       prism: {
+        additionalLanguages: ['bash'],
         theme: {
           ...prismThemes.okaidia,
           styles: [
             ...prismThemes.okaidia.styles,
             {
               types: ['punctuation'],
-              languages: ['python'],
+              languages: ['python', 'bash'],
               style: {
                 color: 'rgb(199, 146, 234)', // Change this to your desired color
               },
