@@ -61,7 +61,7 @@ systemctl enable otelcol-contrib
 
 ## 2. Configure Your App to Run the Script on Deploy
 
-Add the build.sh script as a custom setup to your runtimeConfig in your dbos-config.yaml. See [Customizing MicroVM Setup](./application-management#customizing-microvm-setup) for more info.
+Add the build.sh script as a custom setup to your runtimeConfig in your `dbos-config.yaml`. See [Customizing MicroVM Setup](./application-management#customizing-microvm-setup) for more info.
 ```yaml
 runtimeConfig:
   setup:
