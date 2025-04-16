@@ -30,7 +30,7 @@ Then, enable TypeScript decorators in your `tsconfig.json` file:
 ```
 
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
 Otherwise, you can start Postgres in a Docker container with this command:
 
 ```shell
