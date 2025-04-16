@@ -17,7 +17,7 @@ This guide shows you how to install and run it on your computer.
 <article className="col col--6">
 
 #### 1. Create a Virtual Environment
-In a clean directory, create a Python virtual environment.
+Create and activate a Python virtual environment in a directory.
 DBOS requires Python 3.9 or later.
 
 </article>
@@ -27,25 +27,22 @@ DBOS requires Python 3.9 or later.
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.bat
 ```
 </TabItem>
