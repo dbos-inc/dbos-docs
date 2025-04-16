@@ -194,10 +194,15 @@ Classes with instance methods should extend from [`DBOSConfiguredInstance`](#dbo
 ### dbos_class
 
 ```python
-DBOS.dbos_class()
+DBOS.dbos_class(
+  class_name: Optional[str]
+)
 ```
 
 The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow, transaction, and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
+
+**Parameters**
+- `class_name` (Optional): A custom name to register the class with DBOS. By default, DBOS uses the class’s qualified name (`cls.__qualname__`) for identification. This can be overridden by providing a user-defined name, which may differ from the qualified name. All class names registered with DBOS must be globally unique.
 
 **Example:**
 ```python
