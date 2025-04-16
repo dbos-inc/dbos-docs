@@ -244,7 +244,7 @@ npm run start
 Then, visit this URL: http://localhost:3000.
 Wait five seconds and you should see an output like:
 
-```shell
+```
 🚀 Server is running on http://localhost:3000
 2025-02-03 22:58:12 [info]: Enqueueing tasks!
 2025-02-03 22:58:18 [info]: Task 0 completed!
@@ -290,7 +290,7 @@ npm run start
 
 The workflow should run every second, with output like:
 
-```shell
+```
 2025-02-03 23:10:58 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:10:58 GMT-0800 (Pacific Standard Time).
 2025-02-03 23:10:59 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:10:59 GMT-0800 (Pacific Standard Time).
 2025-02-03 23:11:00 [info]: I am a scheduled workflow. It is currently Mon Feb 03 2025 15:11:00 GMT-0800 (Pacific Standard Time).
@@ -304,31 +304,18 @@ First, we'll define a schema migration to create a new table.
 Then, we'll operate on the table using a DBOS workflow.
 DBOS also supports other popular ORMs such as [Drizzle](https://orm.drizzle.team/), [Prisma](https://www.prisma.io/), and [TypeORM](https://typeorm.io/).
 
-First, create a file named `knexfile.js` and add the following code to it.
-This configures Knex and instructs it to read its database connection parameters from DBOS.
+First, create a file named `knexfile.js` and add the following code to it:
 
 ```javascript showLineNumbers title="knexfile.js"
-const { parseConfigFile } = require('@dbos-inc/dbos-sdk');
-
-const [dbosConfig, ] = parseConfigFile();
-
 const config = {
   client: 'pg',
-  connection: {
-    host: dbosConfig.poolConfig.host,
-    port: dbosConfig.poolConfig.port,
-    user: dbosConfig.poolConfig.user,
-    password: dbosConfig.poolConfig.password,
-    database: dbosConfig.poolConfig.database,
-    ssl: dbosConfig.poolConfig.ssl,
-  },
+  connection: process.env.DBOS_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_node_starter',
   migrations: {
     directory: './migrations'
   }
 };
 
-module.exports = config;
-
+export default config;
 ```
 
 Next, let's create a schema migration that will create a table in your database.
@@ -433,7 +420,7 @@ Then, visit this URL: http://localhost:3000.
 
 You should see an output like:
 
-```shell
+```
 🚀 Server is running on http://localhost:3000
 2025-02-03 23:32:31 [info]: Row count: 1
 ```
