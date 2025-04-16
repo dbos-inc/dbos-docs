@@ -896,11 +896,6 @@ await DBOS.launch();
 
 This starts the DBOS app, or registers it to be started in conjunction with a provided HTTP server.  Launching will initialize all DBOS components, run any application initializers, start workflow recovery, start event processing, and start HTTP services (if so configured).
 
-`DBOS.launch()` connects your app to a Postgres database.
-It looks for database connection parameters in your [`dbos-config.yaml`](../configuration.md) and `.dbos/db_connection` files.
-If those parameters are set to default values and no database is found, it prompts you to launch a local Postgres database using Docker.
-If Docker is not found, it prompts you to connect to a database hosted on DBOS Cloud.
-
 ### Starting HTTP Handler Services
 If DBOS functions include [handler decorators](./dbos-class.md#http-handling) such as `@DBOS.getApi` and `@DBOS.postApi`, DBOS HTTP should be started to serve them.
 
