@@ -38,11 +38,6 @@ Should be called after all decorators run.
 **You should not call a DBOS function until after DBOS is launched.**
 If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
 
-`DBOS.launch()` connects your app to a Postgres database.
-It looks for database connection parameters in your [`dbos-config.yaml`](./configuration.md) and `.dbos/db_connection` files.
-If those parameters are set to default values and no database is found, it prompts you to launch a local Postgres database using Docker.
-If Docker is not found, it prompts you to connect to a database hosted on DBOS Cloud.
-
 **Example:**
 ```python
 from dbos import DBOS
@@ -108,33 +103,3 @@ Destroy the DBOS [system database](../../explanations/how-workflows-work.md), re
 Useful when testing a DBOS application to reset the internal state of DBOS between tests.
 For example, see its use in the [testing tutorial](../tutorials/testing.md).
 **This is a destructive operation and should only be used in a test environment.**
-
-## Configuration Management
-
-### load_config
-
-```python
-load_config(
-    config_file_path: str = "dbos-config.yaml",
-    use_db_wizard: bool = True
-) -> ConfigFile:
-```
-
-Load and parse a DBOS configuration file into a `ConfigFile` object.
-
-**Parameters:**
-- `config_file_path`: The path to the DBOS configuration file to parse.
-- `use_db_wizard`: If the configuration file specifies default database connection parameters and there is no Postgres database there, whether to prompt the user to connect to a different database.
-
-### get_dbos_database_url
-
-```python
-get_dbos_database_url(
-    config_file_path: str = "dbos-config.yaml"
-) -> str
-```
-
-Parse database connection information from a DBOS configuration file into a Postgres database connection string.
-
-**Parameters:**
-- `config_file_path`: The path to the DBOS configuration file to parse.

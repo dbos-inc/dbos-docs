@@ -33,7 +33,13 @@ After a bit of launch activity, you will be presented with:
 If you [started out in DBOS Cloud](#running-dbos-task-scheduler-in-dbos-cloud), you can download your code to your development environment.  Or, you can [clone the code from the git repository](https://github.com/dbos-inc/dbos-demo-apps) and change to the `typescript/nextjs-calendar` directory.
 
 ### Setting Up A Database
-DBOS requires a Postgres database.  If your local environment is set up with database connection settings, these will be used.  If not, the "database wizard" will help establish a connection.
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+
+```shell
+npx dbos postgres start
+```
 
 
 ### Running In Development
