@@ -18,7 +18,7 @@ Also check out the integration guides for popular TypeScript frameworks:
 `npm install` DBOS into your application. Note that DBOS requires Node.js 20 or later.
 
 ```shell
-npm install @dbos-inc/dbos-sdk
+npm install @dbos-inc/dbos-sdk@latest
 ```
 
 Then, enable TypeScript decorators in your `tsconfig.json` file:
@@ -27,6 +27,14 @@ Then, enable TypeScript decorators in your `tsconfig.json` file:
   "compilerOptions": {
     "experimentalDecorators": true,
   }
+```
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+
+```shell
+npx dbos postgres start
 ```
 
 
@@ -48,11 +56,7 @@ await DBOS.launch();
 #### 3. Start Your Application
 
 Try starting your application.
-When `DBOS.launch()` is called, it will attempt to connect to a Postgres database.
-If your project already uses Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
-Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
-
-After you've connected to Postgres, your app should run normally, but log `DBOS launched` on startup.
+If everything is set up correctly, your app should run normally, but log `DBOS launched!` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
 #### 4. Start Building With DBOS
