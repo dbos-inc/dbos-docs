@@ -331,20 +331,12 @@ This creates a `migrations/` directory in your application.
 Next, add the following code to `migrations/env.py` right before the `run_migrations_offline` function:
 
 ```python showLineNumbers title="migrations/env.py"
-from dbos import get_dbos_database_url
-import re
+import os
 from schema import metadata
 
 target_metadata = metadata
-
-# Programmatically set the sqlalchemy.url field from the DBOS config
-# Alembic requires the % in URL-escaped parameters be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
-)
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
+conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/dbos_starter")
+config.set_main_option("sqlalchemy.url", conn_string)
 ```
 
 This code imports your table schema into Alembic and tells it to load its database connection parameters from your DBOS configuration file.
