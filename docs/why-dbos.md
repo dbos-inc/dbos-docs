@@ -48,30 +48,6 @@ Thus, DBOS makes your application **resilient to any failure**.
 
 All you need to use DBOS is install the open-source DBOS Transact library ([Python](https://github.com/dbos-inc/dbos-transact-py), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts)).
 
-You can run these commands to quickly try out a DBOS demo yourself:
-
-
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
-
-```shell
-pip install dbos
-dbos init
-dbos start
-```
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
-
-```shell
-npx @dbos-inc/create -t dbos-node-starter
-cd dbos-node-starter
-npm run build
-npm run start
-```
-</TabItem>
-</Tabs>
-
-
 To add DBOS to your application, simply annotate _workflows_ and _steps_ in your program like this:
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
