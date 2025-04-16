@@ -12,8 +12,16 @@ This guide shows you how to use DBOS to build TypeScript apps that are **resilie
 To get started, initialize a DBOS template and install dependencies:
 
 ```shell
-npx @dbos-inc/create@latest -t dbos-node-starter -n dbos-starter
-cd dbos-starter
+npx @dbos-inc/create@latest -t dbos-node-starter
+cd dbos-node-starter
+```
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+
+```shell
+npx dbos postgres start
 ```
 
 ## 2. Workflows and Steps
@@ -69,18 +77,12 @@ Now, build and run this code with:
 npm run build
 npm run start
 ```
-
-When DBOS is launched, it attempts to connect to a Postgres database.
-If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
-Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
-
 Your program should print output like:
 
-```shell
-2025-02-03 22:36:40 [info]: DBOS launched!
-2025-02-03 22:36:40 [info]: DBOS Admin Server is running at http://localhost:3001
-2025-02-03 22:36:40 [info]: Step one completed!
-2025-02-03 22:36:40 [info]: Step two completed!
+```
+2025-04-16 17:05:01 [info]: DBOS launched!
+2025-04-16 17:05:01 [info]: Step one completed!
+2025-04-16 17:05:01 [info]: Step two completed!
 ```
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Express.js.
@@ -123,7 +125,7 @@ app.get("/", async (req, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-starter",
+    "name": "dbos-node-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch({ expressApp: app });
@@ -147,7 +149,7 @@ Then, visit this URL: http://localhost:3000.
 
 In your terminal, you should see an output like:
 
-```shell
+```
 🚀 Server is running on http://localhost:3000
 2025-02-03 22:42:54 [info]: Step one completed!
 Press Control + C to stop the app...
@@ -158,7 +160,7 @@ Press Control + C to stop the app...
 
 Now, press CTRL+C stop your app. Then, run `npm run start` to restart it. You should see an output like:
 
-```shell
+```
 🚀 Server is running on http://localhost:3000
 Press Control + C to stop the app...
 Press Control + C to stop the app...
@@ -215,7 +217,7 @@ app.get("/", async (req, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-starter",
+    "name": "dbos-node-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch({ expressApp: app });
@@ -402,7 +404,7 @@ app.get("/", async (req, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-starter",
+    "name": "dbos-node-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch({ expressApp: app });
@@ -559,7 +561,7 @@ app.get("/transaction", async (req, res) => {
 
 async function main() {
   DBOS.setConfig({
-    "name": "dbos-starter",
+    "name": "dbos-node-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
   await DBOS.launch({ expressApp: app });
