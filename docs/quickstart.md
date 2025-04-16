@@ -55,7 +55,7 @@ cd dbos-app-starter
 <article className="col col--6">
 
 #### 2. Install and Initialize DBOS
-Install DBOS with `pip install dbos`, then initialize `dbos-app-starter`, an example application built with DBOS and FastAPI.
+Install DBOS with `pip install dbos`, then initialize an example application.
 
 </article>
 
@@ -75,13 +75,14 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-DBOS needs a Postgres database to connect to. If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string. Otherwise, you can use the Docker script we provide to start it like so:
+DBOS needs a Postgres database to connect to.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres with Docker like so:
 </article>
 
 <article className="col col--6">
 ```bash
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
+dbos postgres start
 ```
 </article>
 
@@ -91,7 +92,7 @@ Now, start your app!
 
 <article className="col col--6">
 ```bash
-fastapi run app/main.py
+python3 app/main.py
 ```
 </article>
 
@@ -101,7 +102,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
-Then, restart it with `fastapi run app/main.py` and watch it seamlessly recover from where it left off.
+Then, restart it with `python3 app/main.py` and watch it seamlessly recover from where it left off.
 
 
 Congratulations, you've run your first durable workflow with DBOS!
