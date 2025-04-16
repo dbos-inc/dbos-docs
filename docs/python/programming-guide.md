@@ -35,10 +35,18 @@ cd dbos-starter
 </TabItem>
 </Tabs>
 
-Then, install DBOS and create a DBOS configuration file:
+Then, install DBOS:
+
 ```shell
 pip install dbos
-dbos init dbos-starter --config
+```
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+
+```shell
+dbos postgres start
 ```
 
 ## 2. Workflows and Steps
@@ -82,10 +90,6 @@ If your program crashes or is interrupted, DBOS uses this saved state to recover
 Thus, DBOS makes your application **resilient to any failure**.
 
 Now, run this code with `python3 main.py`.
-When DBOS is launched, it attempts to connect to a Postgres database.
-If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
-Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
-
 Your program should print output like:
 
 ```shell

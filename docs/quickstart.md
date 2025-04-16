@@ -75,7 +75,7 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-DBOS needs a Postgres database to connect to.
+DBOS requires a Postgres database.
 If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
 Otherwise, you can start Postgres in a Docker container with this command:
 </article>
@@ -170,7 +170,7 @@ npm run build
 <section className="row list">
 
 <article className="col col--6">
-DBOS needs a Postgres database to connect to.
+DBOS requires a Postgres database.
 If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
 Otherwise, you can start Postgres in a Docker container with this command:
 </article>
