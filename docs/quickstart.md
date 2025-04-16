@@ -17,7 +17,7 @@ This guide shows you how to install and run it on your computer.
 <article className="col col--6">
 
 #### 1. Create a Virtual Environment
-In a clean directory, create a Python virtual environment.
+Create and activate a Python virtual environment in a directory.
 DBOS requires Python 3.9 or later.
 
 </article>
@@ -27,25 +27,22 @@ DBOS requires Python 3.9 or later.
 <Tabs groupId="operating-systems" className="small-tabs">
 <TabItem value="maclinux" label="macOS or Linux">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 source .venv/bin/activate
 ```
 </TabItem>
 <TabItem value="win-ps" label="Windows (PowerShell)">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.ps1
 ```
 </TabItem>
 <TabItem value="win-cmd" label="Windows (cmd)">
 ```shell
-mkdir my-app
-cd my-app
-python3 -m venv .venv
+python3 -m venv dbos-app-starter/.venv
+cd dbos-app-starter
 .venv\Scripts\activate.bat
 ```
 </TabItem>
@@ -58,7 +55,7 @@ python3 -m venv .venv
 <article className="col col--6">
 
 #### 2. Install and Initialize DBOS
-Install DBOS with `pip install dbos`, then initialize `dbos-app-starter`, an example application built with DBOS and FastAPI.
+Install DBOS with `pip install dbos`, then initialize an example application.
 
 </article>
 
@@ -78,13 +75,14 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-DBOS needs a Postgres database to connect to. If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string. Otherwise, you can use the Docker script we provide to start it like so:
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
 </article>
 
 <article className="col col--6">
 ```bash
-export PGPASSWORD=dbos
-python3 start_postgres_docker.py
+dbos postgres start
 ```
 </article>
 
@@ -94,7 +92,7 @@ Now, start your app!
 
 <article className="col col--6">
 ```bash
-fastapi run app/main.py
+python3 app/main.py
 ```
 </article>
 
@@ -104,7 +102,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
-Then, restart it with `fastapi run app/main.py` and watch it seamlessly recover from where it left off.
+Then, restart it with `python3 app/main.py` and watch it seamlessly recover from where it left off.
 
 
 Congratulations, you've run your first durable workflow with DBOS!
@@ -172,8 +170,19 @@ npm run build
 <section className="row list">
 
 <article className="col col--6">
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+</article>
+
+<article className="col col--6">
+```bash
+npx dbos postgres start
+```
+</article>
+
+<article className="col col--6">
 Now, start your app!
-DBOS will automatically help you launch and connect to a new Postgres database (using Docker if available, else DBOS Cloud).
 
 </article>
 

@@ -35,10 +35,18 @@ cd dbos-starter
 </TabItem>
 </Tabs>
 
-Then, install DBOS and create a DBOS configuration file:
+Then, install DBOS:
+
 ```shell
 pip install dbos
-dbos init dbos-starter --config
+```
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+Otherwise, you can start Postgres in a Docker container with this command:
+
+```shell
+dbos postgres start
 ```
 
 ## 2. Workflows and Steps
@@ -82,10 +90,6 @@ If your program crashes or is interrupted, DBOS uses this saved state to recover
 Thus, DBOS makes your application **resilient to any failure**.
 
 Now, run this code with `python3 main.py`.
-When DBOS is launched, it attempts to connect to a Postgres database.
-If you already use Postgres, set the `DBOS_DATABASE_URL` environment variable to a connection string to your Postgres database.
-Otherwise, DBOS will automatically guide you through launching a new Postgres database (using Docker if available, else DBOS Cloud) and connecting to it.
-
 Your program should print output like:
 
 ```shell
@@ -327,20 +331,12 @@ This creates a `migrations/` directory in your application.
 Next, add the following code to `migrations/env.py` right before the `run_migrations_offline` function:
 
 ```python showLineNumbers title="migrations/env.py"
-from dbos import get_dbos_database_url
-import re
+import os
 from schema import metadata
 
 target_metadata = metadata
-
-# Programmatically set the sqlalchemy.url field from the DBOS config
-# Alembic requires the % in URL-escaped parameters be escaped to %%.
-escaped_conn_string = re.sub(
-    r"%(?=[0-9A-Fa-f]{2})",
-    "%%",
-    get_dbos_database_url(),
-)
-config.set_main_option("sqlalchemy.url", escaped_conn_string)
+conn_string = os.environ.get("DBOS_DATABASE_URL", "postgresql+psycopg://postgres:dbos@localhost:5432/dbos_starter")
+config.set_main_option("sqlalchemy.url", conn_string)
 ```
 
 This code imports your table schema into Alembic and tells it to load its database connection parameters from your DBOS configuration file.
