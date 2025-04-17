@@ -181,6 +181,17 @@ Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workfl
 **Returns:**
 - The [handle](./workflow_handles.md) of the workflow whose ID is `workflow_id`.
 
+### retrieve_workflow_async
+
+```python
+DBOS.retrieve_workflow(
+    workflow_id: str,
+    existing_workflow: bool = True,
+) -> WorkflowHandleAsync[R]
+```
+
+Coroutine version of [`DBOS.retrieve_workflow`](#retrieve_workflow), retrieving an async workflow handle.
+
 ### start_workflow
 
 ```python
