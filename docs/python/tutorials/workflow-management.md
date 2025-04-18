@@ -34,9 +34,3 @@ You can resume a workflow from its last copmleted step from the web UI, programm
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-## Restarting Workflows
-
-You can start a new execution of a workflow from the web UI, programmatically via [`DBOS.restart_workflow`](../reference/contexts.md#restart_workflow), or through the command line with [`dbos workflow restart`](../reference/cli.md#dbos-workflow-restart).
-
-The new workflow has the same inputs as the original, but a new workflow ID.
