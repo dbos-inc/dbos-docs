@@ -540,6 +540,32 @@ with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
+### SetWorkflowTimeout
+
+```python
+SetWorkflowTimeout(
+    workflow_timeout_sec: Optional[float]
+)
+```
+
+Set a timeout for all enclosed workflow invocations or enqueues.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+# The workflow will time out and be cancelled after 10 seconds
+with SetWorkflowTimeout(10):
+    example_workflow()
+```
+
 ### DBOSContextEnsure
 
 ```python
