@@ -118,6 +118,27 @@ You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_wo
 This can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieve_workflow`](../reference/client.md#retrieve_workflow).
 
 
+## Workflow Timeouts
+
+You can set a timeout for a workflow with [`SetWorkflowTimeout`](../reference/contexts.md#setworkflowtimeout).
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very large timeouts.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+# If the workflow does not complete within 10 seconds, it times out and is cancelled
+with SetWorkflowTimeout(10):
+    example_workflow()
+```
+
 ## Workflow Events
 
 Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
