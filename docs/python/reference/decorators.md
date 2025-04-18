@@ -13,7 +13,7 @@ In DBOS, you annotate functions with decorators to give them properties.
 
 ```python
 DBOS.workflow(
-  max_recovery_attempts: int = 50
+  max_recovery_attempts: Optional[int] = 50
 )
 ```
 
@@ -28,11 +28,10 @@ def greeting_workflow(name: str, note: str):
 ```
 
 **Parameters:**
-- `max_recovery_attempts`: The maximum number of times the workflow may be recovered.
-If the process executing a workflow terminates without the workflow completing (either by succeeding or by throwing an error), DBOS will automatically recover the workflow from its last completed step.
-For safety, DBOS only attempts to recover a workflow a set number of times.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+- `max_recovery_attempts`: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
 
 ### step
 
