@@ -139,3 +139,27 @@ def process_event(event: str):
 def event_endpoint(event: str):
     queue.enqueue(process_event, event)
  ```
+
+
+## Setting Timeouts
+
+You can set a timeout for an enqueued workflow with [`SetWorkflowTimeout`](../reference/contexts.md#setworkflowtimeout).
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very large timeouts.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+queue = Queue("example-queue")
+
+# If the workflow does not complete within 10 seconds after being dequeued, it times out and is cancelled
+with SetWorkflowTimeout(10):
+    queue.enqueue(example_workflow)
+```
