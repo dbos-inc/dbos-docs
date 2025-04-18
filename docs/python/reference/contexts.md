@@ -299,6 +299,30 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enque
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 
+### list_workflow_steps
+```python
+def list_workflow_steps(
+    workflow_id: str,
+) -> List[StepInfo]
+```
+
+Retrieve the steps of a workflow.
+This is a list of `StepInfo` objects, with the following structure:
+
+```python
+class StepInfo(TypedDict):
+    # The unique ID of the step in the workflow. One-indexed.
+    function_id: int
+    # The (fully qualified) name of the step
+    function_name: str
+    # The step's output, if any
+    output: Optional[Any]
+    # The error the step threw, if any
+    error: Optional[Exception]
+    # If the step starts or retrieves the result of a workflow, its ID
+    child_workflow_id: Optional[str]
+```
+
 ### cancel_workflow
 
 ```python
@@ -323,15 +347,18 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
-### restart_workflow
+### fork_workflow
 
 ```python
-DBOS.restart_workflow(
+DBOS.fork_workflow(
     workflow_id: str,
+    start_step: int,
 ) -> WorkflowHandle[R]
 ```
 
-Start a new execution of a workflow with the same inputs as the original, but a new workflow ID.
+Start a new execution of a workflow from a specific step.
+The input step ID must match the `function_id` of the step returned by `list_workflow_steps`.
+The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is &lt;= `start_step` will not be re-executed.
 
 ### Workflow Status
 

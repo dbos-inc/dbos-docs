@@ -336,6 +336,26 @@ client.list_queued_workflows_async(
 
 Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workflows).
 
+### list_workflow_steps
+
+```python
+client.list_workflow_steps(
+    workflow_id: str,
+) -> List[StepInfo]
+```
+
+Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
+
+### list_workflow_steps_async
+
+```python
+client.list_workflow_steps_async(
+    workflow_id: str,
+) -> List[StepInfo]
+```
+
+Asnychronous version of [`list_workflow_steps`](#list_workflow_steps).
+
 ### cancel_workflow
 
 ```python
@@ -382,3 +402,26 @@ client.resume_workflow_async(
 ```
 
 Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
+
+
+### fork_workflow
+
+```python
+client.fork_workflow(
+    workflow_id: str,
+    start_step: int,
+) -> WorkflowHandle[R]
+```
+
+Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
+
+### fork_workflow_async
+
+```python
+client.fork_workflow_async(
+    workflow_id: str,
+    start_step: int,
+) -> WorkflowHandleAsync[R]
+```
+
+Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
