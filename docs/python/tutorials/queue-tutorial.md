@@ -148,7 +148,7 @@ When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
 Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
-Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very large timeouts.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
 Example syntax:
 
