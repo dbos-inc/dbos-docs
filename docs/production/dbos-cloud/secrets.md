@@ -15,6 +15,10 @@ You can create or update a secret using the Cloud CLI:
 dbos-cloud app env create -s <secret-name> -v <secret-value>
 ```
 
+:::info
+A few secrets name are reserved and cannot be used. These are `DBOS_DATABASE_URL` and `DBOS_APP_HOSTNAME`.
+:::
+
 For example, to create a secret named `API_KEY` with value `abc123`, run:
 
 ```
