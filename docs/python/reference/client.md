@@ -255,8 +255,8 @@ client.list_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
-Similar to [`DBOS.list_workflows`](./contexts.md#list_workflows).
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all workflows matching specified criteria.
+Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
@@ -306,7 +306,7 @@ client.list_queued_workflows(
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **currently enqueued** workflows matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**
