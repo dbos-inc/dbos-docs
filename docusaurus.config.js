@@ -91,14 +91,6 @@ const config = {
             to: '/typescript/reference/tools/dbos-compiler',
           },
           {
-            from: '/typescript/reference/time-travel-debugger',
-            to: '/typescript/reference/tools/dbos-debugger',
-          },
-          {
-            from: '/typescript/reference/tools/time-travel-debugger',
-            to: '/typescript/reference/tools/dbos-debugger',
-          },
-          {
             from: '/typescript/reference/dbos-class',
             to: '/typescript/reference/transactapi/dbos-class',
           },
