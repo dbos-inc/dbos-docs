@@ -26,6 +26,7 @@ class DBOSConfig(TypedDict):
     sys_db_name: Optional[str]
     app_db_pool_size: Optional[int]
     sys_db_pool_size: Optional[int]
+    db_engine_kwargs: Optional[Dict[str, Any]]
     log_level: Optional[str]
     otlp_traces_endpoints: Optional[List[str]]
     run_admin_server: Optional[bool]
@@ -45,6 +46,16 @@ postgresql://postgres:dbos@localhost:5432/[application name]
 - **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 - **app_db_pool_size**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and system database engines. Defaults to:
+```python
+{
+  "pool_size": 20,
+  "max_overflow": 0,
+  "pool_timeout": 30,
+  "connect_args": {"connect_timeout": 10}
+}
+```
+If `app_db_pool_size` or `sys_db_pool_size` is explicitly set, it will override the `pool_size` value for the respective database.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
