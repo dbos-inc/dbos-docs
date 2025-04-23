@@ -104,7 +104,7 @@ For example:
 ```javascript
 class Example {
   @DBOS.workflow()
-  static async exampleWorkflow(var1: str, var2: str) {
+  static async exampleWorkflow(var1: string, var2: string) {
       return var1 + var2;
   }
 }
@@ -128,7 +128,7 @@ Here's an example:
 ```javascript
 class Example {
     @DBOS.workflow()
-    static async exampleWorkflow(var1: str, var2: str) {
+    static async exampleWorkflow(var1: string, var2: string) {
         return var1 + var2;
     }
 }
