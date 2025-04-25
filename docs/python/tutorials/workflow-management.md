@@ -30,7 +30,7 @@ If the workflow is enqueued, cancelling removes it from the queue.
 
 ## Resuming Workflows
 
-You can resume a workflow from its last copmleted step from the web UI, programmatically via [`DBOS.resume_workflow`](../reference/contexts.md#resume_workflow), or through the command line with [`dbos workflow resume`](../reference/cli.md#dbos-workflow-resume).
+You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resume_workflow`](../reference/contexts.md#resume_workflow), or through the command line with [`dbos workflow resume`](../reference/cli.md#dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
