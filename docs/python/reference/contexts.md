@@ -338,9 +338,7 @@ This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued
 
 ```python
 DBOS.resume_workflow(
-    workflow_id: str,
-    *,
-    application_version: Optional[str] = None,
+    workflow_id: str
 ) -> WorkflowHandle[R]
 ```
 
@@ -348,7 +346,6 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
-It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
 ### fork_workflow
 

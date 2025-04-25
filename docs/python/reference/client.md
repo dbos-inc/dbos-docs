@@ -383,9 +383,7 @@ Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
 
 ```python
 client.resume_workflow(
-    workflow_id: str,
-    *,
-    application_version: Optional[str] = None,
+    workflow_id: str
 ) -> WorkflowHandle[R]
 ```
 
