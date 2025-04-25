@@ -363,8 +363,9 @@ DBOS.fork_workflow(
 
 Start a new execution of a workflow from a specific step.
 The input step ID must match the `function_id` of the step returned by `list_workflow_steps`.
-The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is &lt;= `start_step` will not be re-executed.
-The forked workflow will have a new workflow ID, which can be set with `SetWorkflowID`.
+The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is less than `start_step` will not be re-executed.
+
+The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
 ### Workflow Status
