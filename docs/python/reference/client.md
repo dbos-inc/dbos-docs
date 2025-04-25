@@ -384,6 +384,8 @@ Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
 ```python
 client.resume_workflow(
     workflow_id: str,
+    *,
+    application_version: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -398,6 +400,8 @@ Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 ```python
 client.resume_workflow_async(
     workflow_id: str,
+    *,
+    application_version: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -410,6 +414,8 @@ Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
 client.fork_workflow(
     workflow_id: str,
     start_step: int,
+    *,
+    application_version: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -421,6 +427,8 @@ Similar to [`DBOS.fork_workflow`](./contexts.md#fork_workflow).
 client.fork_workflow_async(
     workflow_id: str,
     start_step: int,
+    *,
+    application_version: Optional[str] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
