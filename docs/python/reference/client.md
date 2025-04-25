@@ -398,8 +398,6 @@ Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 ```python
 client.resume_workflow_async(
     workflow_id: str,
-    *,
-    application_version: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
