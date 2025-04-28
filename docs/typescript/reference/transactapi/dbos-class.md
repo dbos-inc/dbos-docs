@@ -909,14 +909,3 @@ await DBOS.shutdown();
 ```
 
 This stops the DBOS app.  First, handling of new events and requests is disabled, and then the workflow executor and database connections are destroyed.
-
-### Recovering Workflows
-DBOS generally recovers workflows automatically.  However, this process can be initiated externally.
-
-```typescript
-DBOS.recoverPendingWorkflows(executorIDs: string[] = ["local"]): Promise<WorkflowHandle<unknown>[]>
-DBOS.executeWorkflowById(workflowId: string, startNewWorkflow: boolean = false): Promise<WorkflowHandle<unknown>>
-```
-
-* `DBOS.recoverPendingWorkflows`: Retrieves a list of workflows to recover, and starts them, returning their handles
-* `DBOS.executeWorkflowById`: Starts executing a workflow given its `workflowId`.  If `startNewWorkflow` is `true`, the workflow is cloned and assigned a new unique workflow ID.
