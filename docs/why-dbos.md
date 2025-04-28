@@ -11,11 +11,11 @@ Instead of managing your own workflow orchestrator or task queue system, you can
 
 To get started, follow the [quickstart](./quickstart.md) to install the open-source library and connect it to a Postgres database.
 Then, annotate workflows and steps in your program to make it durable!
-That's all you need to do&mdash;DBOS is entirely contained in the open-source library, there's no required infrastructure for you to configure or manage.
+That's all you need to do&mdash;DBOS is entirely contained in the open-source library, there's no additional infrastructure for you to configure or manage.
 
 ## When Should I Use DBOS?
 
-You should consider using DBOS if you're **concerned about how your application handles failures**.
+You should consider using DBOS if your application needs to **reliably handle failures**.
 For example, you might be building a payments service that must reliably process transactions even if servers crash mid-operation, or building a long-running data pipeline that needs to resume seamlessly from checkpoints rather than restarting entirely when interruptions occur.
 
 Handling failures is costly and complicated, requiring complex state management and recovery logic as well as heavyweight tools like external orchestration services.
@@ -72,7 +72,7 @@ You can add DBOS to your program by installing the open-source library, connecti
 By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
 [This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) makes the comparison in more detail.
 
-**When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or your stack already includes Postgres.
+**When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or you are using Postgres.
 
 **When to use Temporal:** You don't want to add Postgres to your stack, or you need a language DBOS doesn't support.
 
@@ -97,7 +97,7 @@ By contrast, Celery/BullMQ are Redis-backed and don't provide workflows, so they
 
 **When to use DBOS:** You need the reliability of enqueueing tasks from durable workflows.
 
-**When to use Celery/BullMQ**: You don't need durability, or you need very high throughput (>10K tasks/second).
+**When to use Celery/BullMQ**: You don't need durability, or you need very high throughput beyond what your Postgres server can support.
 
 
 ## Use Cases
