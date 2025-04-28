@@ -66,10 +66,10 @@ Thus, DBOS makes your application **resilient to any failure**.
 
 ### DBOS vs. Temporal
 
-Both DBOS and Temporal provide durable execution, but DBOS is implemented in a lightweight Postgres-backed library whereas Temporal, and architecturally similar systems such as Restate and Inngest, are implemented in an externally orchestrated server.
+Both DBOS and Temporal provide durable execution, but DBOS is implemented in a lightweight Postgres-backed library whereas Temporal is implemented in an externally orchestrated server.
 
 You can add DBOS to your program by installing the open-source library, connecting it to Postgres, and annotating workflows and steps.
-By contrast, to add Temporal to your program, you must rearchitect your program to move your durable workflows to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
+By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
 [This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) makes the comparison in more detail.
 
 **When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or your stack already includes Postgres.
