@@ -580,6 +580,43 @@ with SetWorkflowTimeout(10):
     example_workflow()
 ```
 
+### SetEnqueueOptions
+
+```python
+SetEnqueueOptions(
+    deduplication_id: Optional[str],
+    priority: Optional[int]
+)
+```
+
+Set enqueue options for all enclosed workflow enqueues.
+These options are **not propagated** to child workflows.
+
+**Parameters:**
+
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued to the specified queue. If a workflow with the same deduplication ID is already in an incomplete state (`PENDING` or `ENQUEUED`), subsequent workflow enqueue attempt on the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
+- `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Defaults to `0` (highest priority), meaning workflows without an assigned priority will be dequeued before others with explicitly assigned priorities.
+
+
+**Deduplication Example**
+
+```python
+with SetEnqueueOptions(deduplication_id="my_dedup_id"):
+    try:
+        handle = queue.enqueue(example_workflow, ...)
+    except DBOSQueueDeduplicatedError as e:
+        # Handle deduplicated error, maybe retry
+```
+
+**Priority Example**
+
+```python
+with SetEnqueueOptions(priority=10):
+    # All workflows are enqueued with priority set to 10
+    for task in tasks:
+        queue.enqueue(example_workflow, task)
+```
+
 ### DBOSContextEnsure
 
 ```python

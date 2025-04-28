@@ -163,3 +163,45 @@ queue = Queue("example-queue")
 with SetWorkflowTimeout(10):
     queue.enqueue(example_workflow)
 ```
+
+## Deduplication
+
+You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions).
+At any given time, at most one workflow with the same deduplication ID can be enqueued to the specified queue.
+If a workflow with the same deduplication ID is already in an incomplete state (`PENDING` or `ENQUEUED`), subsequent workflow enqueue attempt on the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+
+This is useful for long-running workflows that should only be triggered one at a time, such as critical updates that must not be duplicated if a workflow is already in progress.
+
+Example syntax:
+
+```python
+with SetEnqueueOptions(deduplication_id="my_dedup_id"):
+    try:
+        handle = queue.enqueue(example_workflow, ...)
+    except DBOSQueueDeduplicatedError as e:
+        # Handle deduplicated error, maybe retry
+```
+
+## Priority
+
+You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions).
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+
+:::tip
+Workflows without an assigned priority will be dequeued before others with explicitly assigned priorities.
+:::
+
+Example syntax:
+
+```python
+with SetEnqueueOptions(priority=10):
+    # All workflows are enqueued with priority set to 10
+    # They will be dequeued in FIFO order
+    for task in tasks:
+        queue.enqueue(task_workflow, task)
+
+with SetEnqueueOptions(priority=1):
+    queue.enqueue(first_workflow)
+
+# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
+```
