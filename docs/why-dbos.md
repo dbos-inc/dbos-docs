@@ -16,7 +16,7 @@ That's all you need to do&mdash;DBOS is entirely contained in the open-source li
 ## When Should I Use DBOS?
 
 You should consider using DBOS if your application needs to **reliably handle failures**.
-For example, you might be building a payments service that must reliably process transactions even if servers crash mid-operation, or building a long-running data pipeline that needs to resume seamlessly from checkpoints rather than restarting entirely when interruptions occur.
+For example, you might be building a payments service that must reliably process transactions even if servers crash mid-operation, or a long-running data pipeline that needs to resume seamlessly from checkpoints rather than restart from the beginning when interrupted.
 
 Handling failures is costly and complicated, requiring complex state management and recovery logic as well as heavyweight tools like external orchestration services.
 DBOS makes it simpler: annotate your code to checkpoint it in Postgres and automatically recover from any failure.
@@ -69,7 +69,7 @@ Thus, DBOS makes your application **resilient to any failure**.
 Both DBOS and Temporal provide durable execution, but DBOS is implemented in a lightweight Postgres-backed library whereas Temporal is implemented in an externally orchestrated server.
 
 You can add DBOS to your program by installing the open-source library, connecting it to Postgres, and annotating workflows and steps.
-By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
+By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows and steps (activities) to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
 [This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) makes the comparison in more detail.
 
 **When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or you are using Postgres.
@@ -89,9 +89,9 @@ DBOS is general-purpose, but is often used for data pipelines, allowing develope
 
 ### DBOS vs. Celery/BullMQ
 
-DBOS provides a similar queue abstraction to dedicating queueing systems like Celery or BullMQ: you can declare queues, submit tasks to them, and control their flow with concurrency limits, rate limits, timeouts, prioritization, etc.
+DBOS provides a similar queue abstraction to dedicated queueing systems like Celery or BullMQ: you can declare queues, submit tasks to them, and control their flow with concurrency limits, rate limits, timeouts, prioritization, etc.
 However, DBOS queues are **durable and Postgres-backed** and integrate with durable workflows.
-For example, in DBOS you can write a workflow that enqueues a thousand tasks and waits for their results.
+For example, in DBOS you can write a durable workflow that enqueues a thousand tasks and waits for their results.
 DBOS checkpoints the workflow and each of its tasks in Postgres, guaranteeing that even if failures or interruptions occur, the tasks will complete and the workflow will collect their results.
 By contrast, Celery/BullMQ are Redis-backed and don't provide workflows, so they provide fewer guarantees but better performance.
 
