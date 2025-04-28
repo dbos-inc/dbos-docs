@@ -74,7 +74,7 @@ By contrast, to add Temporal to your program, you must rearchitect your program 
 
 **When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or you are using Postgres.
 
-**When to use Temporal:** You don't want to add Postgres to your stack, or you need a language DBOS doesn't support.
+**When to use Temporal:** You don't want to add Postgres to your stack, or you need a language DBOS doesn't support yet.
 
 ### DBOS vs. Airflow
 
