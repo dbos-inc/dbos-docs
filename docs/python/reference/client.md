@@ -258,6 +258,7 @@ client.list_workflows(
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -266,6 +267,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
@@ -291,6 +293,7 @@ client.list_workflows_async(
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 

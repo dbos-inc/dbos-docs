@@ -256,6 +256,7 @@ def list_workflows(
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -263,6 +264,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
