@@ -326,6 +326,13 @@ These functions work in any context, and will use the system sleep if no workflo
 
 ## Interacting With Workflows
 
+### `DBOS.retrieveWorkflow`
+Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](./workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
+
+```typescript
+DBOS.retrieveWorkflow(workflowID: string)
+```
+
 ### Sending And Receiving Messages
 
 `DBOS.send` and `DBOS.recv` allows the sending of messages to a specific [workflow](../../tutorials/workflow-tutorial#workflow-ids-and-idempotency).  Workflows may wait for the message to be received before proceeding.
@@ -395,6 +402,7 @@ DBOS.getWorkflowStatus(workflowID: string): Promise<WorkflowStatus | null>
 The `WorkflowStatus` returned has the following field definition:
 ```typescript
 interface WorkflowStatus {
+  readonly workflowID: string; // The workflow's unique identifier
   readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, ENQUEUED, or CANCELLED.
   readonly workflowName: string; // The name of the workflow function.
   readonly workflowClassName: string; // The class name holding the workflow function.
@@ -403,22 +411,18 @@ interface WorkflowStatus {
   readonly authenticatedUser: string; // The user who ran the workflow. Empty string if not set.
   readonly assumedRole: string; // The role used to run this workflow.  Empty string if authorization is not required.
   readonly authenticatedRoles: string[]; // All roles the authenticated user has, if any.
+  readonly output?: unknown; // The final output returned by the workflow, if any
+  readonly error?: unknown; // The error thrown by the workflow, if any.
+  readonly input?: unknown[]; // The input to the workflow, if any.
   readonly request: HTTPRequest; // The parent request for this workflow, if any.
 }
 ```
 
-### `DBOS.retrieveWorkflow`
-Similar to [`DBOS.getWorkflowStatus`](#dbosgetworkflowstatus), `DBOS.retrieveWorkflow` retrieves a single workflow by its id, but returns a [`WorkflowHandle`](./workflow-handles.md).  This handle provides status, but also allows other workflow interactions.
+### `DBOS.listWorkflows`
+`DBOS.listWorkflows` allows querying workflow execution history.
 
 ```typescript
-DBOS.retrieveWorkflow(workflowID: string)
-```
-
-### `DBOS.getWorkflows`
-`DBOS.getWorkflows` allows querying workflow execution history.
-
-```typescript
-DBOS.getWorkflows(input: GetWorkflowsInput): Promise<GetWorkflowsOutput>
+DBOS.listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus>
 ```
 
 Its `GetWorkflowsInput` argument is an object describing which workflows to retrieve (by default, retrieve all workflows):
@@ -434,21 +438,13 @@ interface GetWorkflowsInput {
 }
 ```
 
-`getWorkflows` returns as output an object containing a list of the [Workflow IDs](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of all retrieved workflows, ordered by workflow creation time:
+`listWorkflows` returns as output an array of [WorkflowStatus objects](#dbosgetworkflowstatus) for matching workflows.
+
+### `DBOS.listQueuedWorkflows`
+`DBOS.listQueuedWorkflows` allows querying workflow execution history for a given [workflow queue](./workflow-queues.md).
 
 ```typescript
-export interface GetWorkflowsOutput {
-  workflowUUIDs: string[];
-}
-```
-
-To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
-
-### `DBOS.getWorkflowQueue`
-`DBOS.getWorkflowQueue` allows querying workflow execution history for a given [workflow queue](./workflow-queues.md).
-
-```typescript
-DBOS.getWorkflowQueue(input: GetWorkflowQueueInput): Promise<GetWorkflowQueueOutput>
+DBOS.listQueuedWorkflows(input: GetWorkflowQueueInput): Promise<WorkflowStatus>
 ```
 
 Its `GetWorkflowQueueInput` argument is an object describing which workflows to retrieve (by default, retrieve all workflows):
@@ -461,20 +457,63 @@ export interface GetWorkflowQueueInput {
 }
 ```
 
-`getWorkflowQueue` returns as output an object containing a list of the [Workflow IDs](../../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of all retrieved workflows, ordered by workflow creation time.  The returned array lists some other details about the workflows also:
-```typescript
-export interface GetWorkflowQueueOutput {
-  workflows: {
-    workflowID: string; // Workflow ID
-    queueName: string; // Workflow queue name
-    createdAt: number; // Time that queue entry was created
-    startedAt?: number; // Time that workflow was started, if started
-    completedAt?: number; // Time that workflow completed, if complete
-  }[];
-}
+`listQueuedWorkflows` returns a list of [WorkflowStatus objects](#dbosgetworkflowstatus) for all retrieved workflows.
+
+### `DBOS.listWorkflowSteps`
+
+`DBOS.listWorkflowSteps` returns a list of the steps executed by a given workflow. 
+If the workflow is not found, `listWorkflowSteps` returns undefined.
+
+```ts
+DBOS.listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>
 ```
 
-To obtain further information about a particular workflow, call [`retrieveWorkflow`](#dbosretrieveworkflow) on its ID to obtain a [handle](./workflow-handles.md).
+The `StepInfo` object provides details about every step executed by a workflow.
+
+```ts
+export interface StepInfo {
+  readonly functionID: number;
+  readonly name: string;
+  readonly output: unknown;
+  readonly error: Error | null;
+  readonly childWorkflowID: string | null;
+}
+```
+## Workflow Management
+
+### `DBOS.cancelWorkflow`
+
+Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
+
+```ts
+DBOS.cancelWorkflow(workflowID: string): Promise<void>;
+```
+
+### `DBOS.resumeWorkflow`
+
+Resumes a workflow that had stopped during execution (due to cancellation or error). 
+
+```ts
+DBOS.resumeWorkflow(workflowID: string): Promise<void>;
+```
+
+### `DBOS.forkWorkflow`
+
+Start a new execution of a workflow from a specific step. 
+The startStep must match the `functionID of the step returned by list_workflow_steps. 
+The specified startStep is the step from which the new workflow will start, so any steps whose ID is less than startStep will not be re-executed.
+
+The forked workflow will have a new workflow ID, which can be set via the `newWorkflowID` parameter or via [`withNextWorkflowID`](#assigning-workflow-ids). 
+It is also possible to specify the application version on which the forked workflow will run by setting applicationVersion.
+This is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+```ts
+DBOS.forkWorkflow<T>(
+    workflowID: string,
+    startStep: number,
+    options?: { newWorkflowID?: string; applicationVersion?: string },
+  ): Promise<WorkflowHandle<Awaited<T>>>;
+```
 
 ## Accessing Configuration, Logging, and Tracing Facilities
 
