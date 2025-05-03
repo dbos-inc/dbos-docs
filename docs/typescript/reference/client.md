@@ -28,13 +28,24 @@ interface EnqueueOptions {
 class DBOSClient {
     static create(databaseUrl: string, systemDatabase?: string): Promise<DBOSClient>;
     destroy(): Promise<void>;
+
     async enqueue<T extends (...args: any[]) => Promise<any>>(
         options: EnqueueOptions,
         ...args: Parameters<T>
     ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
-    retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
+    retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+
+    getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
+    listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
+    listQueuedWorkflows(input: GetQueuedWorkflowsInput): Promise<WorkflowStatus[]>;
+    listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
+
+    cancelWorkflow(workflowID: string): Promise<void>;
+    resumeWorkflow(workflowID: string): Promise<void>;
+    forkWorkflow(workflowID: string, startStep: number,
+        options?: { newWorkflowID?: string; applicationVersion?: string }): Promise<string>;
 }
 ```
 
@@ -60,6 +71,8 @@ const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
 #### `destroy`
 
 Asynchronously destroys a `DBOSClient` instance.
+
+### Workflow Interaction
 
 #### `enqueue`
 
@@ -140,6 +153,20 @@ You can copy or import the function type declaration from your application's
 [generated declaration file (aka.d.ts file)](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html).
 ::: 
 
+#### `send`
+
+Sends a message to a specified workflow. Identical to [`DBOS.send`](./transactapi/dbos-class#dbossend).
+
+:::warning
+Since DBOS Client is running outside of a DBOS application, 
+it is highly recommended that you use the `idempotencyKey` parameter in order to get exactly-once behavior.
+:::
+
+#### `getEvent`
+
+Retrieves an event published by workflowID for a given key using the [events API](../tutorials/workflow-tutorial#workflow-events).
+Identical to [DBOS.getEvent](./transactapi/dbos-class#dbosgetevent)
+
 #### `retrieveWorkflow`
 
 Retrieves a workflow by ID, similar to [`DBOS.retrieveWorkflow`](./transactapi/dbos-class#dbosretrieveworkflow).
@@ -156,16 +183,45 @@ const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
 ```
 
-#### `send`
+### Workflow Inspection
 
-Sends a message to a specified workflow. Identical to [`DBOS.send`](./transactapi/dbos-class#dbossend).
+#### `getWorkflow`
 
-:::warning
-Since DBOS Client is running outside of a DBOS application, 
-it is highly recommended that you use the `idempotencyKey` parameter in order to get exactly-once behavior.
-:::
+Retrieves the status of a single workflow, given its workflow ID. 
+If the specified workflow ID does not exist, getWorkflow returns undefined.
+Please see [`DBOS.getWorkflowStatus`](./transactapi/dbos-class.md#dbosgetworkflowstatus) for more for more information.
 
-#### `getEvent`
+#### `listWorkflows`
 
-Retrieves an event published by workflowID for a given key using the [events API](../tutorials/workflow-tutorial#workflow-events).
-Identical to [DBOS.getEvent](./transactapi/dbos-class#dbosgetevent)
+Retrieves information about workflow execution history. 
+Please see [`DBOS.listWorkflows`](./transactapi/dbos-class.md#dboslistworkflows) for more for more information.
+
+#### `listQueuedWorkflows`
+
+Retrieves information about workflow execution history for a given workflow queue. 
+Please see [`DBOS.listQueuedWorkflows`](./transactapi/dbos-class.md#dboslistqueuedworkflows) for more for more information.
+
+#### `listWorkflowSteps`
+
+Retrieves information about the steps executed in a specified workflow. 
+If the specified workflow is not found, `listWorkflowSteps` returns undefined
+Please see [`DBOS.listWorkflowSteps`](./transactapi/dbos-class.md#dboslistworkflowsteps) for more for more information.
+
+### Workflow Management
+
+#### `cancelWorkflow`
+
+Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
+Please see [`DBOS.cancelWorkflow`](./transactapi/dbos-class.md#dboscancelworkflow) for more for more information.
+
+#### `resumeWorkflow`
+
+Resumes a workflow that had stopped during execution (due to cancellation or error).
+Please see [`DBOS.resumeWorkflow`](./transactapi/dbos-class.md#dbosresumeworkflow) for more for more information.
+
+#### `forkWorkflow`
+
+Start a new execution of a workflow from a specific step. 
+Please see [`DBOS.forkWorkflow`](./transactapi/dbos-class.md#dbosforkworkflow) for more for more information.
+
+
