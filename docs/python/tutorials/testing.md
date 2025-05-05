@@ -12,7 +12,11 @@ Because DBOS workflows, steps, and transactions are ordinary Python functions, y
 ```python
 def reset_dbos():
     DBOS.destroy()
-    DBOS()
+    config: DBOSConfig = {
+        "name": "my-app",
+        "database_url": os.environ.get("TESTING_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.reset_system_database()
     DBOS.launch()
 ```
@@ -32,7 +36,11 @@ from dbos import DBOS
 @pytest.fixture()
 def reset_dbos():
     DBOS.destroy()
-    DBOS()
+    config: DBOSConfig = {
+        "name": "my-app",
+        "database_url": os.environ.get("TESTING_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.reset_system_database()
     DBOS.launch()
 ```
@@ -45,24 +53,6 @@ def test_example_workflow(reset_dbos):
     example_output = ...
     assert example_workflow(example_input) == example_output
 
-```
-
-### Custom Configuration
-
-You may want to use a custom configuration of DBOS for testing.
-For example, you likely want to test your application using an isolated development database.
-To do this, simply pass a [custom configuration](../reference/configuration.md) into the DBOS constructor.
-
-```python
-def reset_dbos():
-    DBOS.destroy()
-    config: DBOSConfig = {
-        "name": "my-app",
-        "database_url": os.environ.get("TESTING_DATABASE_URL"),
-    }
-    DBOS(config=config)
-    DBOS.reset_system_database()
-    DBOS.launch()
 ```
 
 ### Mocking
@@ -90,7 +80,7 @@ We can test the workflow in isolation by mocking its two steps:
 ```python
 from unittest.mock import patch
 
-def test_record_recent_earthquakes(dbos):
+def test_record_recent_earthquakes(reset_dbos):
     now = datetime.now()
     earthquake: EarthquakeData = {
         "id": "ci40171730",
