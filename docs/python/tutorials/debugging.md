@@ -16,7 +16,7 @@ If you don't already have VS Code installed, please see [their official document
 The DBOS Debugger can be installed from the [VS Code Marketplace website](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg)
 or or by searching the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace) inside VS Code for "DBOS".
 
-![Installing the DBOS Time Travel Extension Screenshot](../../assets/ttdbg-ext-install.png)
+![Installing the DBOS Debugger Extension Screenshot](../../assets/ttdbg-ext-install.png)
 
 Additionally, the official [VS Code Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) is needed to debug DBOS Python applications. 
 For more information about this extension, please see the [official VS Code documentation](https://code.visualstudio.com/docs/python/python-quick-start).
