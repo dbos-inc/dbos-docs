@@ -34,22 +34,22 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name.
-- **database_url**: A connection string to a Postgres database. DBOS will use the connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+- **database_url**: A connection string to a Postgres database. DBOS uses this connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+A valid connection string looks like:
 
-:::info
-SQLAlchemy requires passwords in connection strings to be escaped (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
-:::
-
-:::info
-DBOS Transact requires the [psycopg 3](https://www.psycopg.org/psycopg3/docs/) driver and will accordingly set the driver to `postgresql+psycopg` before creating an engine. If you use [alembic](https://alembic.sqlalchemy.org/en/latest/) to manage database migrations, you'll need to set the driver in your connection string.
-:::
-
-If none is provided, DBOS will use this default connection string:
-```shell
-postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_timeout=10
+```
+postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
 
-If `PGPASSWORD` is not exported, the default password will be `dbos`. The database name will be derived from your application's name.
+:::info
+SQLAlchemy requires passwords in connection strings to be escaped if they contain special characters (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
+:::
+
+If no connection string is provided, DBOS uses this default:
+
+```shell
+postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
+```
 
 - **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and [system database](../../explanations/system-tables) engines. Defaults to:
 ```python
@@ -57,15 +57,8 @@ If `PGPASSWORD` is not exported, the default password will be `dbos`. The databa
   "pool_size": 20,
   "max_overflow": 0,
   "pool_timeout": 30,
-  "connect_args": {"connect_timeout": 10}
 }
 ```
-
-:::info
-`connect_timout` set in `engine_kwargs` takes precedence over `connect_timeout` set in a connection string.
-:::
-
-DBOS maintains two SQLAlchemy engines: one for your application database and one for the DBOS [system database](../../explanations/system-tables). Both are configured with `engine_kwargs` and you can override the DBOS system database's engine's pool size with `sys_db_pool_size`.
 
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
