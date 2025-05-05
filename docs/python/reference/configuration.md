@@ -37,7 +37,7 @@ class DBOSConfig(TypedDict):
 - **database_url**: A connection string to a Postgres database. DBOS will use the connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
 
 :::info
-Passwords in connection strings should be escaped (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
+SQLAlchemy requires passwords in connection strings to be escaped (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
 :::
 
 :::info
