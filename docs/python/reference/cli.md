@@ -145,6 +145,9 @@ database:
 
 DBOS Cloud uses this command during application deployment to migrate your database schema.
 
+**Arguments:**
+* `-D, --db-url TEXT`: Your DBOS application database URL
+
 ### dbos init
 
 Initialize the local directory with a DBOS template application.
