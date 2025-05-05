@@ -27,7 +27,8 @@ If your account is part of an [organization](./account-management.md#organizatio
 :::tip
 * Applications should serve requests from port 8000 (Python&mdash;the default port for FastAPI and Gunicorn) or 3000 (TypeScript&mdash;the default port for Express and Koa).
 * Multiple applications can connect to the same Postgres database server&mdash;they are deployed to isolated databases on that server.
-* You cannot change the database of a deployed application. You must delete and re-deploy the application.
+* You cannot change the _logical_ database of a deployed application. You must delete and re-deploy the application.
+* But you can change the database _instance_ of a deployed application with `dbos-cloud app change-database-instance`.
 :::
 
 #### Applications Configuration
