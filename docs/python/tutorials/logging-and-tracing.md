@@ -33,6 +33,10 @@ For example, if a FastAPI HTTP endpoint calls a workflow that calls a transactio
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
 You can access your current span via [`DBOS.span`](../reference/contexts.md#span).
 
+### Logging
+
+The DBOS logger can be configured to export OTLP-formatted [logs](https://opentelemetry.io/docs/concepts/signals/logs/), which will include the current span's metadata for correlation with the traces.
+
 ### OpenTelemetry Export
 
 You can export DBOS traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
@@ -44,6 +48,7 @@ For example:
 config: DBOSConfig = {
   "name": "my-app"
   "otlp_traces_endpoints": ["http://localhost:4318/v1/traces"]
+  "otlp_logs_endpoints": ["http://localhost:4318/v1/traces"]
 }
 DBOS(config=config)
 ```

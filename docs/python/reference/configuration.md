@@ -24,28 +24,33 @@ class DBOSConfig(TypedDict):
     name: str
     database_url: Optional[str]
     sys_db_name: Optional[str]
-    app_db_pool_size: Optional[int]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
     log_level: Optional[str]
     otlp_traces_endpoints: Optional[List[str]]
-    run_admin_server: Optional[bool]
+    otlp_logs_endpoints: Optional[List[str]]
     admin_port: Optional[int]
+    run_admin_server: Optional[bool]
 ```
 
 - **name**: Your application's name.
-- **database_url**: A connection string to a Postgres database. The supported format is
+- **database_url**: A connection string to a Postgres database. DBOS will use the connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+
+:::info
+Passwords in connection strings should be escaped (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
+:::
+
+:::info
+DBOS Transact requires the [psycopg 3](https://www.psycopg.org/psycopg3/docs/) driver and will accordingly set the driver to `postgresql+psycopg` before creating an engine.
+:::
+
+I none is provided, DBOS will create a default connection string:
 ```
-postgresql://[username]:[password]@[hostname]:[port]/[database name]
+postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_timeout=10&sslmode=prefer
 ```
-The `sslmode=require`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
-Defaults to:
-```
-postgresql://postgres:dbos@localhost:5432/[application name]
-```
-- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
-- **app_db_pool_size**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
-- **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+
+If `PGPASSWORD` is not exported, the default password will be `dbos`. The database name will be derived from your application's name.
+
 - **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and system database engines. Defaults to:
 ```python
 {
@@ -55,9 +60,20 @@ postgresql://postgres:dbos@localhost:5432/[application name]
   "connect_args": {"connect_timeout": 10}
 }
 ```
-If `app_db_pool_size` or `sys_db_pool_size` is explicitly set, it will override the `pool_size` value for the respective database.
+
+:::info
+In SQLAlchemy, `connect_timout` set in `engine_kwargs` takes precedence over `connect_timeout` set in a connection string.
+
+If you set `connect_timeout` in your connection string but not in `engine_kwargs`, DBOS will set this `connect_timeout` for you in `engine_kwargs`.
+:::
+
+DBOS maintains two SQLAlchemy engines: one for your application database and one for the DBOS [system database](../../explanations/system-tables). both are configured with `engine_kwargs` and you can override the DBOS system database's engine's pool size with `sys_db_pool_size`.
+
+- **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
+- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
-- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 
@@ -91,7 +107,6 @@ Each `dbos-config.yaml` file has the following fields and sections:
 #### Database Section
 
 - **migrate**: A list of commands to run to apply your application's schema to the database. 
-- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 
 **Example**:
 
