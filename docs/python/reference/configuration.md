@@ -44,7 +44,7 @@ Passwords in connection strings should be escaped (e.g., with [urllib](https://d
 DBOS Transact requires the [psycopg 3](https://www.psycopg.org/psycopg3/docs/) driver and will accordingly set the driver to `postgresql+psycopg` before creating an engine. If you use [alembic](https://alembic.sqlalchemy.org/en/latest/) to manage database migrations, you'll need to set the driver in your connection string.
 :::
 
-I none is provided, DBOS will use this default connection string:
+If none is provided, DBOS will use this default connection string:
 ```
 postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_timeout=10&sslmode=prefer
 ```
