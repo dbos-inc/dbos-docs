@@ -23,6 +23,7 @@ config: DBOSConfig = {
 DBOS(config=config)
 ```
 
+
 ### Tracing 
 
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all workflows and their steps.
@@ -33,13 +34,10 @@ For example, if a FastAPI HTTP endpoint calls a workflow that calls a transactio
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
 You can access your current span via [`DBOS.span`](../reference/contexts.md#span).
 
-### Logging
-
-The DBOS logger can be configured to export OTLP-formatted [logs](https://opentelemetry.io/docs/concepts/signals/logs/), which will include the current span's metadata for correlation with the traces.
 
 ### OpenTelemetry Export
 
-You can export DBOS traces to any OpenTelemetry Protocol (OTLP)-compliant receiver.
+You can export DBOS traces and logs to any OpenTelemetry Protocol (OTLP)-compliant receiver.
 
 You can [configure](../reference/configuration.md) exporters through the DBOS constructor.
 For example:
