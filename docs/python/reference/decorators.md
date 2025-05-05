@@ -13,7 +13,7 @@ In DBOS, you annotate functions with decorators to give them properties.
 
 ```python
 DBOS.workflow(
-  max_recovery_attempts: Optional[int] = 50
+  max_recovery_attempts: Optional[int] = 100
 )
 ```
 
