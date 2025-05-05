@@ -289,7 +289,7 @@ The code looks like so:
 static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
   
   // Get the current time from a checkpointed step;
-  //   This ensures the same time is used for recovery or in the time-travel debugger
+  // This ensures the same time is used for recovery 
   let ctime = await DBOSDateTime.getCurrentTime();
 
   //Assign, extend time or simply return current assignment

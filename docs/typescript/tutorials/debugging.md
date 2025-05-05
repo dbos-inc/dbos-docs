@@ -16,7 +16,7 @@ If you don't already have VS Code installed, please see [their official document
 The DBOS Debugger can be installed from the [VS Code Marketplace website](https://marketplace.visualstudio.com/items?itemName=dbos-inc.dbos-ttdbg)
 or or by searching the [Extension Marketplace](https://code.visualstudio.com/docs/editor/extension-marketplace) inside VS Code for "DBOS".
 
-![Installing the DBOS Time Travel Extension Screenshot](../../assets/ttdbg-ext-install.png)
+![Installing the DBOS Debugger Extension Screenshot](../../assets/ttdbg-ext-install.png)
 
 ## Local Replay Debugging
 
@@ -57,18 +57,9 @@ When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database
 and passes it to the `dbos debug` command via environment variables, 
 overriding the database connection information in the `dbos-config.yaml` file.
 
-## Time Travel Debugging
-
-If your DBOS Cloud application was deployed with [time-travel enabled](../../production/dbos-cloud/cloud-cli.md#dbos-cloud-app-deploy), 
-you will also see a `⏳ Time-Travel Debug` CodeLens attached to your DBOS Workflow methods.
-
-![Time Travel Debugging Code Lens](./assets/ttdbg-time-travel.png)
-
-Unlike replay debugging, Time Travel debugging does not step over [transaction](./transaction-tutorial.md) methods. 
-
 ## DBOS Console Integration
 
-When using the cloud replay or time travel debuggers, an additional button appears in the upper right corner of the pick list next to the pencil icon.
+When using the cloud replay debugger, an additional button appears in the upper right corner of the pick list next to the pencil icon.
 This button launches your default browser and navigates to the [DBOS Cloud Workflow Manager page](../../production/dbos-cloud/workflow-management.md).
 
 ![Workflow Picker with DBOS Console button](./assets/ttdbg-wfid-picker-with-console.png)
