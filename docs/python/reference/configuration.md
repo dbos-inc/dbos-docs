@@ -45,8 +45,8 @@ DBOS Transact requires the [psycopg 3](https://www.psycopg.org/psycopg3/docs/) d
 :::
 
 If none is provided, DBOS will use this default connection string:
-```
-postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_timeout=10&sslmode=prefer
+```shell
+postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_timeout=10
 ```
 
 If `PGPASSWORD` is not exported, the default password will be `dbos`. The database name will be derived from your application's name.
@@ -62,9 +62,7 @@ If `PGPASSWORD` is not exported, the default password will be `dbos`. The databa
 ```
 
 :::info
-In SQLAlchemy, `connect_timout` set in `engine_kwargs` takes precedence over `connect_timeout` set in a connection string.
-
-If you set `connect_timeout` in your connection string but not in `engine_kwargs`, DBOS will set this `connect_timeout` for you in `engine_kwargs`.
+`connect_timout` set in `engine_kwargs` takes precedence over `connect_timeout` set in a connection string.
 :::
 
 DBOS maintains two SQLAlchemy engines: one for your application database and one for the DBOS [system database](../../explanations/system-tables). Both are configured with `engine_kwargs` and you can override the DBOS system database's engine's pool size with `sys_db_pool_size`.
