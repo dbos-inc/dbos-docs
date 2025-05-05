@@ -51,7 +51,7 @@ postgresql://postgres:${PGPASSWORD}@localhost:5432/application_name?connect_time
 
 If `PGPASSWORD` is not exported, the default password will be `dbos`. The database name will be derived from your application's name.
 
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and system database engines. Defaults to:
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and [system database](../../explanations/system-tables) engines. Defaults to:
 ```python
 {
   "pool_size": 20,
@@ -67,7 +67,7 @@ In SQLAlchemy, `connect_timout` set in `engine_kwargs` takes precedence over `co
 If you set `connect_timeout` in your connection string but not in `engine_kwargs`, DBOS will set this `connect_timeout` for you in `engine_kwargs`.
 :::
 
-DBOS maintains two SQLAlchemy engines: one for your application database and one for the DBOS [system database](../../explanations/system-tables). both are configured with `engine_kwargs` and you can override the DBOS system database's engine's pool size with `sys_db_pool_size`.
+DBOS maintains two SQLAlchemy engines: one for your application database and one for the DBOS [system database](../../explanations/system-tables). Both are configured with `engine_kwargs` and you can override the DBOS system database's engine's pool size with `sys_db_pool_size`.
 
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
