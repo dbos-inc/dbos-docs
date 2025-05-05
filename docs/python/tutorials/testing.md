@@ -22,7 +22,7 @@ def reset_dbos():
 ```
 
 First, destroy any existing DBOS instance.
-Then, create a new DBOS instance.
+Then, create and configure a new DBOS instance (you may want to use a different database for testing).
 Next, reset the internal state of DBOS in Postgres, cleaning up any state left over from previous tests.
 Finally, launch a new DBOS instance.
 
