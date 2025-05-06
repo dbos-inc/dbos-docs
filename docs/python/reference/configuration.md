@@ -24,40 +24,47 @@ class DBOSConfig(TypedDict):
     name: str
     database_url: Optional[str]
     sys_db_name: Optional[str]
-    app_db_pool_size: Optional[int]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
     log_level: Optional[str]
     otlp_traces_endpoints: Optional[List[str]]
-    run_admin_server: Optional[bool]
+    otlp_logs_endpoints: Optional[List[str]]
     admin_port: Optional[int]
+    run_admin_server: Optional[bool]
 ```
 
 - **name**: Your application's name.
-- **database_url**: A connection string to a Postgres database. The supported format is
+- **database_url**: A connection string to a Postgres database. DBOS uses this connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+A valid connection string looks like:
+
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
-The `sslmode=require`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
-Defaults to:
+
+:::info
+SQLAlchemy requires passwords in connection strings to be escaped if they contain special characters (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
+:::
+
+If no connection string is provided, DBOS uses this default:
+
+```shell
+postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
 ```
-postgresql://postgres:dbos@localhost:5432/[application name]
-```
-- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
-- **app_db_pool_size**: The size of the connection pool used by [transactions](../tutorials/transaction-tutorial.md) to connect to your application database. Defaults to 20.
-- **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and system database engines. Defaults to:
+
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and [system database](../../explanations/system-tables) engines. Defaults to:
 ```python
 {
   "pool_size": 20,
   "max_overflow": 0,
   "pool_timeout": 30,
-  "connect_args": {"connect_timeout": 10}
 }
 ```
-If `app_db_pool_size` or `sys_db_pool_size` is explicitly set, it will override the `pool_size` value for the respective database.
+
+- **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
+- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
-- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible receivers.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 
@@ -91,7 +98,6 @@ Each `dbos-config.yaml` file has the following fields and sections:
 #### Database Section
 
 - **migrate**: A list of commands to run to apply your application's schema to the database. 
-- **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 
 **Example**:
 

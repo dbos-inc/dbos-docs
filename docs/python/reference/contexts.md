@@ -481,14 +481,6 @@ DBOS.span: opentelemetry.trace.Span
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
 
-### config
-
-```python
-DBOS.config: ConfigFile
-```
-
-Return the current DBOS [configuration](./configuration.md), as a `ConfigFile`.
-
 ## Authentication
 
 ### authenticated_user
