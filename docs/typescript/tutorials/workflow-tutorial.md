@@ -275,11 +275,7 @@ All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You can also manually recover a workflow on your current version with:
-
-```shell
-npx dbos workflow resume <workflow-id>
-```
+You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](../reference/transactapi/dbos-class.md#dbosforkworkflow) to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
 
