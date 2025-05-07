@@ -25,15 +25,16 @@ Each row represents a different workflow execution.
 - `request`: The serialized HTTP Request that triggered this workflow, if any.
 - `output`: The serialized workflow output, if any.
 - `error`: The serialized error thrown by the workflow, if any.
-- `created_at`: The epoch timestamp of when this workflow started.
+- `created_at`: The epoch timestamp of when this workflow was created (enqueued or started).
 - `updated_at`: The latest epoch timestamp when this workflow status was updated.
 - `application_version`: The application version of this workflow code.
 - `class_name`: The class name of the workflow function.
 - `config_name`: The name of the configured instance of this workflow, if any.
 - `recovery_attempts`: The number of attempts (so far) to recovery this workflow.
 - `queue_name`: If this workflow is or was enqueued, the name of the queue.
-- `application_id`: (Internal use) The ID of the application that ran this workflow.
-- `executor_id`: (Internal use) The ID of the executor that ran this workflow.
+- `executor_id`: The ID of the executor that ran this workflow.
+- `workflow_timeout_ms`: The timeout of the workflow, if specified.
+- `workflow_deadline_epoch_ms`: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).
 
 ### dbos.workflow_inputs
 This table stores workflow input information.
@@ -79,7 +80,8 @@ Functions are removed from this table after completing execution, but remain in 
 - `created_at_epoch_ms`: The epoch timestamp when this function was enqueued.
 - `started_at_epoch_ms`: The epoch timestamp at which this function began execution.
 - `completed_at_epoch_ms`: The epoch timestamp at which this function completed execution.
-- `executor_id`: (Internal use) The ID of the executor that enqueued this function.
+- `deduplication_id`: The deduplication key for the enqueued function, if any.
+- `priority`: The priority of the enqueued function. Defaults to 0 if not specified. Lower priorities execute first.
 
 ### dbos.notifications
 This table stores workflow messages/notifications.
