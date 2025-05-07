@@ -59,13 +59,15 @@ Each row represents a different transaction function execution.
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
 Each row represents a different workflow step execution.
-Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded here as steps.
+Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded here as steps, as is enqueueing or starting a child workflow.
 
 **Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
 - `function_id`: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.
+- `function_name`: The name of the step.
 - `output`: The serialized transaction output, if any.
 - `error`: The serialized error thrown by the transaction, if any.
+- `child_workflow_id`: If the step starts a new child workflow, its ID.
 
 ### dbos.workflow_queue
 This table stores currently enqueued functions.
