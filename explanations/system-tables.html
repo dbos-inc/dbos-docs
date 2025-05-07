@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.4075af2b.css">
-<script src="/assets/js/runtime~main.ffbee73e.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.e42152e6.js" defer="defer"></script>
 <script src="/assets/js/main.4b0735f0.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -33,15 +33,16 @@ Each row represents a different workflow execution.</p>
 <li><code>request</code>: The serialized HTTP Request that triggered this workflow, if any.</li>
 <li><code>output</code>: The serialized workflow output, if any.</li>
 <li><code>error</code>: The serialized error thrown by the workflow, if any.</li>
-<li><code>created_at</code>: The epoch timestamp of when this workflow started.</li>
+<li><code>created_at</code>: The epoch timestamp of when this workflow was created (enqueued or started).</li>
 <li><code>updated_at</code>: The latest epoch timestamp when this workflow status was updated.</li>
 <li><code>application_version</code>: The application version of this workflow code.</li>
 <li><code>class_name</code>: The class name of the workflow function.</li>
 <li><code>config_name</code>: The name of the configured instance of this workflow, if any.</li>
 <li><code>recovery_attempts</code>: The number of attempts (so far) to recovery this workflow.</li>
 <li><code>queue_name</code>: If this workflow is or was enqueued, the name of the queue.</li>
-<li><code>application_id</code>: (Internal use) The ID of the application that ran this workflow.</li>
-<li><code>executor_id</code>: (Internal use) The ID of the executor that ran this workflow.</li>
+<li><code>executor_id</code>: The ID of the executor that ran this workflow.</li>
+<li><code>workflow_timeout_ms</code>: The timeout of the workflow, if specified.</li>
+<li><code>workflow_deadline_epoch_ms</code>: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosworkflow_inputs">dbos.workflow_inputs<a href="#dbosworkflow_inputs" class="hash-link" aria-label="Direct link to dbos.workflow_inputs" title="Direct link to dbos.workflow_inputs">​</a></h3>
 <p>This table stores workflow input information.
@@ -67,13 +68,15 @@ Each row represents a different transaction function execution.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosoperation_outputs">dbos.operation_outputs<a href="#dbosoperation_outputs" class="hash-link" aria-label="Direct link to dbos.operation_outputs" title="Direct link to dbos.operation_outputs">​</a></h3>
 <p>This table stores the outputs of workflow steps.
 Each row represents a different workflow step execution.
-Executions of DBOS methods like <code>DBOS.sleep</code> and <code>DBOS.send</code> are also recorded here as steps.</p>
+Executions of DBOS methods like <code>DBOS.sleep</code> and <code>DBOS.send</code> are also recorded here as steps, as is enqueueing or starting a child workflow.</p>
 <p><strong>Columns:</strong></p>
 <ul>
 <li><code>workflow_uuid</code>: The unique identifier of the workflow execution this function belongs to.</li>
 <li><code>function_id</code>: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.</li>
+<li><code>function_name</code>: The name of the step.</li>
 <li><code>output</code>: The serialized transaction output, if any.</li>
 <li><code>error</code>: The serialized error thrown by the transaction, if any.</li>
+<li><code>child_workflow_id</code>: If the step starts a new child workflow, its ID.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosworkflow_queue">dbos.workflow_queue<a href="#dbosworkflow_queue" class="hash-link" aria-label="Direct link to dbos.workflow_queue" title="Direct link to dbos.workflow_queue">​</a></h3>
 <p>This table stores currently enqueued functions.
@@ -85,7 +88,8 @@ Functions are removed from this table after completing execution, but remain in 
 <li><code>created_at_epoch_ms</code>: The epoch timestamp when this function was enqueued.</li>
 <li><code>started_at_epoch_ms</code>: The epoch timestamp at which this function began execution.</li>
 <li><code>completed_at_epoch_ms</code>: The epoch timestamp at which this function completed execution.</li>
-<li><code>executor_id</code>: (Internal use) The ID of the executor that enqueued this function.</li>
+<li><code>deduplication_id</code>: The deduplication key for the enqueued function, if any.</li>
+<li><code>priority</code>: The priority of the enqueued function. Defaults to 0 if not specified. Lower priorities execute first.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosnotifications">dbos.notifications<a href="#dbosnotifications" class="hash-link" aria-label="Direct link to dbos.notifications" title="Direct link to dbos.notifications">​</a></h3>
 <p>This table stores workflow messages/notifications.
