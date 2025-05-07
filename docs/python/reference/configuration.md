@@ -71,9 +71,8 @@ postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
 
 ## DBOS Configuration File
 
-Many tools in the DBOS ecosystem are configured by a `dbos-config.yaml` file.
-Tools that use `dbos-config.yaml` include the [DBOS CLI](./cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
-Additionally, the DBOS library will fall back to `dbos-config.yaml` if no `DBOSConfig` object is provided to the DBOS constructor.
+
+Some tools in the DBOS ecosystem, including [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md) and the [DBOS debugger](../tutorials/debugging.md), are configured by a `dbos-config.yaml` file.
 
 You can create a `dbos-config.yaml` with default parameters with:
 
