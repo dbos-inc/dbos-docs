@@ -57,8 +57,7 @@ If your application is deployed to DBOS Cloud and you are logged into DBOS Cloud
 Cloud replay debugging works the same as local replay debugging. 
 The only difference is the database your application connects to.
 When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database connection information
-and passes it to the `dbos debug` command via environment variables, 
-overriding the database connection information in the `dbos-config.yaml` file.
+and passes it to the `dbos debug` command via environment variables, overriding existing settings.
 
 ## DBOS Console Integration
 
