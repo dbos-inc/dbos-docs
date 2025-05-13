@@ -188,7 +188,7 @@ Update an application metadata in DBOS Cloud.
 
 **Arguments:**
 - `[application-name]`: The name of the application to update.
-- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription.
+- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription. Additional RAM is [billed](https://www.dbos.dev/dbos-pricing).
 - `--min-executors <number>`: The minimum number of microVMs to be allocated to this application. Acts as a floor for autoscaling. This feature requires a DBOS Pro subscrption.
 
 :::info
