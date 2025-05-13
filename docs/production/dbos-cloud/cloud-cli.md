@@ -176,6 +176,7 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 - `-d, --database <string>`: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--enable-timetravel`: Enable experimental time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
+- `--configFile`: DBOS config file path (default: `dbos-config.yaml`).
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the [versions command](#dbos-cloud-app-versions).
 
 ---
@@ -187,7 +188,8 @@ Update an application metadata in DBOS Cloud.
 
 **Arguments:**
 - `[application-name]`: The name of the application to update.
-- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription.
+- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription. Additional RAM is [billed](https://www.dbos.dev/dbos-pricing).
+- `--min-executors <number>`: The minimum number of microVMs to be allocated to this application. Acts as a floor for autoscaling. This feature requires a DBOS Pro subscrption.
 
 :::info
 This command does not trigger a redeployment of the application. To apply changes affecting the application's executors, you must redeploy the application with [`dbos-cloud app deploy`](#dbos-cloud-app-deploy).
