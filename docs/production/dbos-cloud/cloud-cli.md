@@ -306,7 +306,7 @@ You must redeploy your application for a change in its secrets to take effect.
 
 **Arguments:**
 - `[application-name]`: The name of the application for which to create or update secrets.
-- `-s, --secretname <string>` The name of the secret to create or update.
+- `-s, --name <string>` The name of the secret to create or update.
 - `-v, --value`: The value of the secret.
 
 ---
@@ -346,7 +346,7 @@ This action is irreversible
 
 **Arguments:**
 - `[application-name]`: The name of the application for which to list secrets.
-- `-s, --secretname <string>` The name of the secret to delete.
+- `-s, --name <string>` The name of the secret to delete.
 
 ---
 
