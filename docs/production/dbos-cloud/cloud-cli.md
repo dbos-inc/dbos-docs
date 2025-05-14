@@ -306,9 +306,10 @@ You must redeploy your application for a change in its secrets to take effect.
 
 **Arguments:**
 - `[application-name]`: The name of the application for which to create or update secrets.
-- `-s, --secretname <string>` The name of the secret to create or update.
+- `-s, --name <string>` The name of the secret to create or update.
 - `-v, --value`: The value of the secret.
 
+---
 
 ### `dbos-cloud app secrets import`
 
@@ -331,6 +332,21 @@ List all secrets associated with an application (only their names, not their val
 
 **Arguments:**
 - `[application-name]`: The name of the application for which to list secrets.
+
+---
+
+### `dbos-cloud app secrets delete`
+
+**Description:**
+Delete a secret associated with an application.
+
+:::warn
+This action is irreversible
+:::
+
+**Arguments:**
+- `[application-name]`: The name of the application for which to list secrets.
+- `-s, --name <string>` The name of the secret to delete.
 
 ---
 
