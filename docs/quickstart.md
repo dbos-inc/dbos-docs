@@ -110,6 +110,7 @@ Next:
 
 - Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./python/prompting.md).
 
 </article>
 
@@ -206,6 +207,7 @@ Next:
 
 - Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./typescript/prompting.md).
 </article>
 
 <article className="col col--6">
