@@ -77,5 +77,7 @@ CMD ["/bin/bash", "-c", ". .venv/bin/activate && dbos start"]
 
 ## Access the application
 
+Bring the containers up with `docker-compose up --build`.
+
 You can now head to `http://localhost:8000/` and start exploring the application.
 If you press "crash the application", docker will restart the container immediately and the workflow will resume durably.
