@@ -4,7 +4,7 @@ title: Docker
 ---
 
 
-# Setup a DBOS application with Docker
+# Deploying with Docker
 
 This guide shows you how to setup a starter DBOS application and its Postgres database using docker.
 
