@@ -6,14 +6,34 @@ title: Docker
 
 # Setup a DBOS application with Docker
 
-
 This guide shows you how to setup a starter DBOS application and its Postgres database using docker.
 
-We'll need two files:
+## Dockerfile
+
+First, we'll setup a Dockerfile to configure a Debian Python image.
+
+DBOS is just a library your program imports, so the only core requirement is to run `pip install dbos`.
+The container will initialize a DBOS starter template then start the application.
+
+```bash
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN python3 -m venv .venv && \
+    . .venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install dbos && \
+    dbos init --template dbos-app-starter
+
+EXPOSE 8000
+
+CMD ["/bin/bash", "-c", ". .venv/bin/activate && dbos start"]
+```
 
 ## Docker compose
 
-With Docker compose we'll start two containers, one for Postgres and one for a DBOS Python application.
+Next, we'll use Docker compose to start two containers: one for Postgres and one for Python.
 Note we set `restart` to `unless-stopped` so the container is restarted anytime the application exists.
 
 ```yaml
@@ -44,35 +64,6 @@ services:
 
 volumes:
   pgdata:
-```
-
-## Dockerfile
-
-Next, we'll setup a Dockerfile which:
-1. Installs a few dependencies
-2. Initialize the dbos-app-starter template
-3. Starts the application
-
-```bash
-FROM python:3.11-slim
-
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-RUN python3 -m venv .venv && \
-    . .venv/bin/activate && \
-    pip install --upgrade pip && \
-    pip install dbos && \
-    dbos init --template dbos-app-starter
-
-EXPOSE 8000
-
-CMD ["/bin/bash", "-c", ". .venv/bin/activate && dbos start"]
 ```
 
 ## Access the application
