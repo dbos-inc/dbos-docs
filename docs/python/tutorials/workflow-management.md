@@ -13,6 +13,15 @@ You can also view a searchable and expandable list of your application's workflo
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
+## Listing Workflow Steps
+
+You can list the steps of a workflow programmatically via [`DBOS.list_workflow_steps`](../reference/contexts.md#list_workflow_steps) or from the command line with [`dbos workflow steps`](../reference/cli.md#dbos-workflow-steps).
+
+You can also visualize the workflow execution graph (including the workflow, its steps, and its child workflows and their steps) from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
+For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
+
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
 ## Listing Enqueued Workflows
 
 You can list all **currently enqueued** workflows and steps of your application via [`DBOS.list_queued_workflows`](../reference/contexts.md#list_queued_workflows) or from the command line with [`dbos workflow queue list`](../reference/cli.md#dbos-workflow-queue-list).
@@ -34,3 +43,6 @@ You can resume a workflow from its last completed step from the web UI, programm
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+## Forking Workflows
+
