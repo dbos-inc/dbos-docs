@@ -1,6 +1,6 @@
 ---
 sidebar_position: 69
-title: Docker
+title: Deploying With Docker
 ---
 
 
@@ -13,7 +13,7 @@ This guide shows you how to setup a starter DBOS Python application and its Post
 First, we'll setup a Dockerfile to configure a Debian Python image.
 
 DBOS is just a library for your program to import, so the only core requirement is to run `pip install dbos`.
-The container will initialize a DBOS starter template then start the application.
+The container initializes a DBOS starter template then starts the application.
 
 ```bash
 FROM python:3.11-slim
@@ -33,8 +33,8 @@ CMD ["/bin/bash", "-c", ". .venv/bin/activate && dbos start"]
 
 ## Docker compose
 
-Next, we'll use Docker compose to start two containers: one for Postgres and one for Python.
-Note we set `restart` to `unless-stopped` so the container is restarted anytime the application exists.
+Next, we'll use Docker compose to start two containers: one for Postgres and one for the DBOS Python app.
+Note we set `restart` to `unless-stopped` so the container automatically restarts if the application crashes.
 
 ```yaml
 version: '3.9'
@@ -70,5 +70,5 @@ volumes:
 
 Bring the containers up with `docker-compose up --build`.
 
-You can now head to `http://localhost:8000/` and start exploring DBOS.
+You can now visit `http://localhost:8000/` to see the template application live.
 If you press "crash the application", Docker will restart the container immediately and the DBOS workflow will resume durably.
