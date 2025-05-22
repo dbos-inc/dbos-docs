@@ -186,6 +186,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 
 You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions) or [`DBOSClient`](../reference/client.md#enqueue).
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+If using priority, you must set `priority_enabled=True` on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -194,6 +195,8 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```python
+queue = Queue("priority_queue", priority_enabled=True)
+
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
     # They will be dequeued in FIFO order
