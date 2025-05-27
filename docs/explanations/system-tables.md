@@ -35,6 +35,9 @@ Each row represents a different workflow execution.
 - `executor_id`: The ID of the executor that ran this workflow.
 - `workflow_timeout_ms`: The timeout of the workflow, if specified.
 - `workflow_deadline_epoch_ms`: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).
+- `started_at_epoch_ms`: If this workflow was enqueued, the time at which it was dequeued and began excution.
+- `deduplication_id`: The deduplication key for this workflow, if any.
+- `priority`: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
 
 ### dbos.workflow_inputs
 This table stores workflow input information.
@@ -69,19 +72,6 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - `output`: The serialized transaction output, if any.
 - `error`: The serialized error thrown by the transaction, if any.
 - `child_workflow_id`: If the step starts a new child workflow, its ID.
-
-### dbos.workflow_queue
-This table stores currently enqueued functions.
-Functions are removed from this table after completing execution, but remain in the `dbos.workflow_status` table.
-
-**Columns:**
-- `workflow_uuid`: The workflow ID of this enqueued function.
-- `queue_name`: The name of the queue on which this function is enqueued.
-- `created_at_epoch_ms`: The epoch timestamp when this function was enqueued.
-- `started_at_epoch_ms`: The epoch timestamp at which this function began execution.
-- `completed_at_epoch_ms`: The epoch timestamp at which this function completed execution.
-- `deduplication_id`: The deduplication key for the enqueued function, if any.
-- `priority`: The priority of the enqueued function. Defaults to 0 if not specified. Lower priorities execute first.
 
 ### dbos.notifications
 This table stores workflow messages/notifications.
