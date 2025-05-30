@@ -340,7 +340,7 @@ List all secrets associated with an application (only their names, not their val
 **Description:**
 Delete a secret associated with an application.
 
-:::warn
+:::warning
 This action is irreversible
 :::
 
