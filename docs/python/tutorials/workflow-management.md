@@ -1,6 +1,6 @@
 ---
 sidebar_position: 5
-title: Workflow & Queue Management
+title: Workflow Management
 ---
 
 You can view and manage your durable workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)), programmatically, or via command line.
