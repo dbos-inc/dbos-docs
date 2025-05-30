@@ -170,7 +170,7 @@ You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
-This is useful for long-running workflows that should only be triggered one at a time, such as critical updates that must not be duplicated if a workflow is already in progress.
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
 Example syntax:
 
@@ -184,7 +184,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 
 ## Priority
 
-You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions) or [`DBOSClient`](../reference/client.md#enqueue).
+You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions) or with [`DBOSClient`](../reference/client.md#enqueue).
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 If using priority, you must set `priority_enabled=True` on your queue.
 
