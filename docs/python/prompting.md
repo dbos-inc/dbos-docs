@@ -546,6 +546,74 @@ def event_endpoint(event: str):
     queue.enqueue(process_event, event)
  ```
 
+ ## Setting Timeouts
+
+You can set a timeout for an enqueued workflow with SetWorkflowTimeout.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+queue = Queue("example-queue")
+
+# If the workflow does not complete within 10 seconds after being dequeued, it times out and is cancelled
+with SetWorkflowTimeout(10):
+    queue.enqueue(example_workflow)
+```
+
+## Deduplication
+
+You can set a deduplication ID for an enqueued workflow with SetEnqueueOptions`.
+At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+Example syntax:
+
+```python
+with SetEnqueueOptions(deduplication_id="my_dedup_id"):
+    try:
+        handle = queue.enqueue(example_workflow, ...)
+    except DBOSQueueDeduplicatedError as e:
+        # Handle deduplication error
+```
+
+## Priority
+
+You can set a priority for an enqueued workflow with `SetEnqueueOptions`.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+If using priority, you must set `priority_enabled=True` on your queue.
+
+:::tip
+Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+:::
+
+Example syntax:
+
+```python
+queue = Queue("priority_queue", priority_enabled=True)
+
+with SetEnqueueOptions(priority=10):
+    # All workflows are enqueued with priority set to 10
+    # They will be dequeued in FIFO order
+    for task in tasks:
+        queue.enqueue(task_workflow, task)
+
+with SetEnqueueOptions(priority=1):
+    queue.enqueue(first_workflow)
+
+# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
+```
+
 ## Python Classes
 
  You can add DBOS workflow and step decorators to your Python class instance methods.

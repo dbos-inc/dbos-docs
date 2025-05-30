@@ -29,6 +29,11 @@ Common nondeterministic operations include:
 - Generating a random number.
 - Getting the current time.
 
+You **cannot** call, start, or enqueue workflows from within steps.
+You also cannot call DBOS methods like `DBOS.send` or `DBOS.setEvent` from within steps.
+These operations should be performed from workflow functions.
+You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
