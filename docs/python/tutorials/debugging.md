@@ -28,6 +28,8 @@ labeled `🔁 Replay Debug` on every [workflow function](./workflow-tutorial.md)
 
 ![Local Replay Debugging Code Lens](./assets/ttdbg-local-replay.png)
 
+The debugger will pick the database connection information from the `dbos-config.yaml` file.
+
 If you click on the Replay Debug CodeLens, a list of recent [workflow IDs](./workflow-tutorial#workflow-ids-and-idempotency) will be shown.
 You can filter the list of workflow IDs by entering a value in the text box above the list.
 If the workflow you wish to debug does not appear in the list, select the pencil icon in the upper right hand corner of the picker window to manually enter a workflow ID. 
@@ -57,7 +59,7 @@ If your application is deployed to DBOS Cloud and you are logged into DBOS Cloud
 Cloud replay debugging works the same as local replay debugging. 
 The only difference is the database your application connects to.
 When cloud replay debugging, the DBOS Debugger retrieves the DBOS Cloud database connection information
-and passes it to the `dbos debug` command via environment variables, overriding existing settings.
+and passes it to the `dbos debug` command via environment variables, overriding the database connection information in the `dbos-config.yaml` file.
 
 ## DBOS Console Integration
 
