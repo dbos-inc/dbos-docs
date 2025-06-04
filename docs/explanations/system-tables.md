@@ -23,6 +23,7 @@ Each row represents a different workflow execution.
 - `assumed_role`: The role used to run this workflow.  Empty string if authorization is not required.
 - `authenticated_roles`: All roles the authenticated user has, if any.
 - `request`: The serialized HTTP Request that triggered this workflow, if any.
+- `inputs`: The serialized inputs of the workflow execution.
 - `output`: The serialized workflow output, if any.
 - `error`: The serialized error thrown by the workflow, if any.
 - `created_at`: The epoch timestamp of when this workflow was created (enqueued or started).
@@ -38,27 +39,6 @@ Each row represents a different workflow execution.
 - `started_at_epoch_ms`: If this workflow was enqueued, the time at which it was dequeued and began excution.
 - `deduplication_id`: The deduplication key for this workflow, if any.
 - `priority`: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
-
-### dbos.workflow_inputs
-This table stores workflow input information.
-Each row represents the input of a different workflow execution.
-
-**Columns:**
-- `workflow_uuid`: The unique identifier of the workflow execution.
-- `inputs`: The serialized inputs of the workflow execution.
-
-### dbos.transaction_outputs
-This table stores the outputs of transaction functions.
-Each row represents a different transaction function execution.
-
-**Columns:**
-- `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
-- `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.
-- `output`: The serialized transaction output, if any.
-- `error`: The serialized error thrown by the transaction, if any.
-- `txn_id`: The transaction ID of this function, if any. This is empty for read-only transactions.
-- `created_at`: The timestamp of when this function started.
-- `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -92,3 +72,16 @@ Each entry represents a different event.
 - `workflow_uuid`: The ID of the workflow that published this event.
 - `key`: The serialized key of the event.
 - `value`: The serialized value of the event.
+
+### dbos.transaction_outputs
+This table stores the outputs of transaction functions.
+Each row represents a different transaction function execution.
+
+**Columns:**
+- `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
+- `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.
+- `output`: The serialized transaction output, if any.
+- `error`: The serialized error thrown by the transaction, if any.
+- `txn_id`: The transaction ID of this function, if any. This is empty for read-only transactions.
+- `created_at`: The timestamp of when this function started.
+- `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
