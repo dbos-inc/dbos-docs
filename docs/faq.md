@@ -12,7 +12,7 @@ All system database tables are documented [here](./explanations/system-tables.md
 
 :::tip
 If you're using Supabase, the default application database name is `postgres`, so the default system database name is `postgres_dbos_sys`.
-You cannot connect to or view non-default Postgres databases from the Supabase web console, but you can still connect to and explore your system database using a client like [`psql`](https://www.postgresql.org/docs/current/app-psql.html) and [`DBeaver`](https://dbeaver.io/).
+You cannot connect to or view non-default databases from the Supabase web console, but you can still connect to and explore your system database using a client like [`psql`](https://www.postgresql.org/docs/current/app-psql.html) and [`DBeaver`](https://dbeaver.io/).
 :::
 
 ### Why is my queue stuck?
