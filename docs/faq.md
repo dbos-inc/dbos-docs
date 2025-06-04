@@ -40,3 +40,14 @@ A workflow function is deterministic if, when called multiple times with the sam
 If a workflow is non-deterministic, it may execute different steps during recovery than it did during its original execution.
 
 To make a workflow deterministic, make sure all non-deterministic operations (such as calling a third-party API, generating a random number, or getting the local time) are performed **in steps** instead of in the workflow function.
+
+### Can I call a workflow from a workflow?
+
+Yes, you can call (or start, or enqueue) a workflow from inside another workflow.
+That workflow becomes a **child** of its caller and is by default assigned a workflow ID derived from its parent's.
+If you view a workflow's call graph from the DBOS console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)), it will include the workflow's children.
+
+### Can I call a step from a step?
+
+Yes, you can call a step from another step.
+However, the called step becomes part of the calling step's execution rather than function as a separate step.
