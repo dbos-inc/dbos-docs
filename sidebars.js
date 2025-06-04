@@ -79,6 +79,11 @@ const sidebars = {
         }
       ],
     },
+    {
+      type: 'doc',
+      id: 'faq',
+      label: 'Troubleshooting & FAQ',
+    },
   ],
 
   examplesSidebar: [
