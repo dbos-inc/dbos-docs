@@ -31,3 +31,12 @@ See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/Java
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow or construct it globally and access it from the workflow or the appropriate steps.
+
+### I'm seeing an error that function X was recorded when Y was expected?
+
+This error arises when DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead.
+Typically, this occurs because the workflow function is not **deterministic**.
+A workflow function is deterministic if, when called multiple times with the same inputs, it invokes the same steps with the same inputs in the same order (given the same return values from those steps).
+If a workflow is non-deterministic, it may execute different steps during recovery than it did during its original execution.
+
+To make a workflow deterministic, make sure all non-deterministic operations (such as calling a third-party API, generating a random number, or getting the local time) are performed **in steps** instead of in the workflow function.
