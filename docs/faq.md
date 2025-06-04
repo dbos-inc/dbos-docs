@@ -51,7 +51,7 @@ If you view a workflow's call graph from the DBOS console ([self-hosted](./produ
 ### Can I call a step from a step?
 
 Yes, you can call a step from another step.
-However, the called step becomes part of the calling step's execution rather than function as a separate step.
+However, the called step becomes part of the calling step's execution rather than functioning as a separate step.
 
 ### Can I start or interact with DBOS workflows from a non-DBOS application?
 
