@@ -51,3 +51,7 @@ If you view a workflow's call graph from the DBOS console ([self-hosted](./produ
 
 Yes, you can call a step from another step.
 However, the called step becomes part of the calling step's execution rather than function as a separate step.
+
+### Can I start or interact with DBOS workflows from a non-DBOS application?
+
+Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
