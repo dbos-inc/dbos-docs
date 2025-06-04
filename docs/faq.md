@@ -8,6 +8,7 @@ DBOS checkpoints information about your workflows in an isolated _system databas
 By default, the name of your system database is your application database name suffixed with `_dbos_sys`.
 For example, if your application database is `dbos_app_starter`, your system database is `dbos_app_starter_dbos_sys`.
 You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
+Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
 All system database tables are documented [here](./explanations/system-tables.md).
 
 :::tip
@@ -17,7 +18,7 @@ You cannot connect to or view non-default databases from the Supabase web consol
 
 ### Why is my queue stuck?
 
-If a DBOS queue is stuck (newly submitted tasks are not being dequeued), it is likely that the number of tasks currently executing on the queue exceeds the queue's global concurrency limit.
+If a DBOS queue is stuck (newly submitted tasks are not being dequeued), it is likely that either the number of tasks currently executing on the queue exceeds the queue's global concurrency limit or the number of tasks executing on each of your processes exceeds the queue's worker concurrency limit.
 In that case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled.
 You can view all tasks executing on a queue from the queues tab of the DBOS Console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)).
 If you need to, you can cancel tasks to remove them from the queue.
