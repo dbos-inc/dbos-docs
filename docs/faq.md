@@ -21,3 +21,13 @@ If a DBOS queue is stuck (newly submitted tasks are not being dequeued), it is l
 In that case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled.
 You can view all tasks executing on a queue from the queues tab of the DBOS Console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)).
 If you need to, you can cancel tasks to remove them from the queue.
+
+### I'm seeing errors that objects cannot be deserialized?
+
+DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, be **serializable**.
+This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
+DBOS serializes objects to JSON in TypeScript and with pickle in Python.
+See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled)) for information on what objects can and cannot be serialized.
+
+If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
+Instead, either construct the object inside the workflow from parameters passed into the workflow or construct it globally and access it from the workflow or the appropriate steps.
