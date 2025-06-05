@@ -56,3 +56,17 @@ However, the called step becomes part of the calling step's execution rather tha
 ### Can I start, monitor, or cancel DBOS workflows from a non-DBOS application?
 
 Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
+
+### What happens if you start two workflows with the same workflow ID?
+
+In DBOS, workflow IDs are unique identifiers of workflow executions.
+If you start a workflow with the ID of a workflow that has already completed, it will return the result of the previous execution.
+If you start a workflow with the ID of a workflow that is currently executing, it will attempt to recover that workflow's execution, continuing execution from the last recorded checkpoint unless it detects a conflict with a concurrent execution of that workflow.
+
+### How can I reset all my DBOS state during development?
+
+You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/tools/cli.md#npx-dbos-reset)).
+
+### How can I cancel a large number of workflows in a batch?
+
+Write a script using the DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) to list all the workflows you need cancelled, then iteratively cancel them.
