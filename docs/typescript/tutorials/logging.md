@@ -49,4 +49,4 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the of your local application.
+For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application.
