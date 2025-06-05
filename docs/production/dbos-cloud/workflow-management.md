@@ -16,6 +16,20 @@ Click on a workflow to see details, including its input and output:
 
 <img src={require('@site/static/img/workflow-management/workflow-details.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
+Click "Show Workflow Steps" to view the workflow's execution graph (including the workflow, its steps, and its child workflows and their steps).
+For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
+
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
+## Viewing Queues
+
+Navigate to the queues tab of your application's page to see all **currently enqueued** workflows.
+This page only shows workflows that are currently executing on a queue (`PENDING` status) or are enqueued for execution (`ENQUEUED` status).
+By default, the oldest (first enqueued) workflows are shown first.
+You can click on workflows to expand them and see their steps, just as in the workflows page.
+
+<img src={require('@site/static/img/workflow-management/queue-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
 ## Workflow Management
 
 You can manage individual workflows directly from the DBOS console.
@@ -29,11 +43,15 @@ If the workflow is enqueued, cancelling removes it from the queue.
 
 #### Resuming Workflows
 
-You can resume any `ENQUEUED`, `CANCELLED`, or `RETRIES_EXCEEDED` workflow.
+You can resume any `ENQUEUED`, `CANCELLED` or `RETRIES_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 If the workflow is enqueued, this bypasses the queue to start it immediately.
 
-#### Restarting Workflows
+#### Forking Workflows
 
-You can restart any `SUCCESS` or `ERROR` workflow.
-Restarting a workflow restarts it from the beginning, creating a new workflow with the same inputs as the original.
+You can start a new execution of a workflow by **forking** it from a specific step.
+To do this, open the workflow steps view, select a particular step, and click "Fork".
+
+When you fork a workflow, DBOS generates a new workflow with a new workflow ID, copies to that workflow the original workflow's inputs and all its steps up to the selected step, then begins executing the new workflow from the selected step.
+
+Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
