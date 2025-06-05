@@ -60,7 +60,7 @@ Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/
 ### What happens if you start two workflows with the same workflow ID?
 
 In DBOS, workflow IDs are unique identifiers of workflow executions.
-If you enqueue a workflow with the ID of a workflow that already exists, it's a no=op and a handle to the existing workflow execution is returned.
+If you enqueue a workflow with the ID of a workflow that already exists, it's a no-op and a handle to the existing workflow execution is returned.
 If you start a workflow with the ID of a workflow that has already completed, it will return the result of the previous execution.
 If you start a workflow with the ID of a workflow that is currently executing, it will attempt to recover that workflow's execution, continuing execution from the last completed step.
 If another process is concurrently executing the same workflow, both processes may execute the step.
