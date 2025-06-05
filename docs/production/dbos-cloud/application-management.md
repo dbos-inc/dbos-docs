@@ -133,7 +133,7 @@ dbos-cloud app deploy --previous-version <version-id>
 
 ### Workflow Recovery
 
-When a microVM running in DBOS Cloud is killed (either due to a process crash or when scaling down), all of its workflows are automatically recovered to another microVM running the same application version. If no other microVM of that application version exists, DBOS Cloud launches a new one and instructs it to recover the workflows.
+When a microVM running in DBOS Cloud dies (either due to a process crash or when scaling down), all of its workflows are automatically recovered to another microVM running the same application version. If no other microVM of that application version exists, DBOS Cloud launches a new one and instructs it to recover the workflows.
 
 When you deploy a new version of your application, DBOS Cloud routes all requests and scheduled workflows to microVMs of the new application version.
 Then, DBOS Cloud attempts to decommission microVMs running the previous application version.
