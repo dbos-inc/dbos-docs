@@ -1,6 +1,26 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 import {themes as prismThemes} from 'prism-react-renderer';
+import path from 'path';
+import fse from 'fs-extra';
+import fs from 'fs';
+
+function CopyMarkdownPlugin(context, options) {
+  return {
+    name: 'copy-markdown-plugin',
+    async postBuild({ outDir }) {
+      const docsSrc = path.join(__dirname, 'docs');
+      const docsDest = outDir; // Strip the /docs part
+
+      // Recursively copy .md files from /docs to /build/docs
+      fse.copySync(docsSrc, docsDest, {
+        filter: (src) => src.endsWith('.md') || fs.lstatSync(src).isDirectory(),
+      });
+
+      console.log('Markdown files copied to build output.');
+    },
+  };
+}
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -33,6 +53,7 @@ const config = {
   },
 
   plugins: [
+    CopyMarkdownPlugin,
     'docusaurus-plugin-matomo',
     [
       '@docusaurus/plugin-client-redirects',
