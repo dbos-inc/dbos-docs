@@ -155,7 +155,7 @@ Scripts such as `build`, `dev`, and `start` may require modification to work wit
 The following shows very basic scripts for `package.json`:
 ```json
   "scripts": {
-    "dev": "npx dbos migrate && node dist/src/server.js",
+    "dev": "npx knex migrate:latest && node dist/src/server.js",
     "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
   },

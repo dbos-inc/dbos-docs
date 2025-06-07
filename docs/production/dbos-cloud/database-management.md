@@ -46,7 +46,6 @@ dbos-cloud db status <database-instance-name>
 ### Database Schema Management
 
 Every time you deploy an application to DBOS Cloud, it runs all migrations defined in your `dbos-config.yaml`.
-This is the same as running `dbos migrate` locally.
 
 Sometimes, it may be necessary to manually perform schema changes on a cloud database, for example to recover from a schema migration failure.
 To make this easier, you can retrieve your cloud database connection URL by running:

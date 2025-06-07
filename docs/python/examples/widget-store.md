@@ -303,7 +303,7 @@ Then start your app:
 
 ```shell
 pip install -r requirements.txt
-dbos migrate
+alembic upgrade head
 dbos start
 ```
 

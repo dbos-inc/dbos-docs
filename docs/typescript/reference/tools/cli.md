@@ -38,13 +38,6 @@ This command initializes a new DBOS application from a template into a target di
 
 ---
 
-### `npx dbos migrate`
-
-**Description:**
-Run all migration commands specified in your [configuration file](../configuration) to apply your application's schema to the database.
-
----
-
 ### `npx dbos configure`
 
 **Description:**

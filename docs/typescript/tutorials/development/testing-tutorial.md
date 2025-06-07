@@ -53,7 +53,7 @@ describe('operations-test', () => {
 To make it easy to run your tests, create a `scripts` entry in `package.json`:
 ```json
   "scripts": {
-    "test": "npx dbos migrate && jest"
+    "test": "npx knex migrate:latest && jest"
   }
 ```
 
@@ -75,7 +75,7 @@ See [`DBOS.launch`](../../reference/transactapi/dbos-class.md#launching-dbos) fo
 #### Setting Up App Databases Prior To Launch
 You are responsible for setting and cleaning up database tables before and after tests.
 
-In our example, we run Knex migrations with `npx dbos migrate` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using TypeORM, the schema can be set up from within the test itself using `DBOS.createUserSchema`:
+In our example, we run Knex migrations with `npx knex migrate:latest` as part of our testing script in `package.json`, but this could have been done within the test instead.  For example, if you are using TypeORM, the schema can be set up from within the test itself using `DBOS.createUserSchema`:
 ```typescript
   beforeEach(async () => {
     DBOS.setConfig({

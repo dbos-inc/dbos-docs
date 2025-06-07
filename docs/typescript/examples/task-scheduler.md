@@ -58,7 +58,7 @@ Instead of `npm run dev` it is also possible to run the following sequence of co
 ```
 npm install
 npm run build
-npx dbos migrate
+npx knex migrate:latest
 npm run start
 ```
 
@@ -200,12 +200,6 @@ exports.up = function(knex) {
 };
 ```
 
-These migrations will be run by `npx dbos migrate`, because Knex migrations are indicated in `dbos-config.yaml`:
-
-```yaml
-  migrate:
-    - npx knex migrate:latest
-```
 
 ### Sending Email with Amazon SES
 
@@ -471,10 +465,10 @@ As is customary, `package.json` contains a list of the project's dependencies, f
 `package.json` also includes the following scripts that are worth mentioning:
 ```json
   "scripts": {
-    "dev": "npx dbos migrate && nodemon",
+    "dev": "npx knex migrate:latest && nodemon",
     "build": "tsc && next build",
     "start": "NODE_ENV=production node dist/src/server.js",
-    "test": "npx dbos migrate && jest --detectOpenHandles",
+    "test": "npx knex migrate:latest && jest --detectOpenHandles",
     "lint": "next lint --fix"
   },
 ```

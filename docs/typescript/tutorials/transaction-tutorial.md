@@ -286,7 +286,7 @@ Then, build it, run schema migrations, and start the app:
 
 ```bash
 npm run build
-npx dbos migrate
+npx knex migrate:latest
 npx dbos start
 ```
 
