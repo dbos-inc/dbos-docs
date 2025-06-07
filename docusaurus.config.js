@@ -22,6 +22,48 @@ function CopyMarkdownPlugin(context, options) {
   };
 }
 
+async function pluginLlmsTxt(context) {
+  return {
+    name: "llms-txt-plugin",
+
+    postBuild: async ({ routes, outDir }) => {
+      // we need to dig down several layers:
+      // find PluginRouteConfig marked by plugin.name === "docusaurus-plugin-content-docs"
+      const docsPluginRouteConfig = routes.filter(
+        (route) => route.plugin.name === "docusaurus-plugin-content-docs"
+      )[0];
+
+      // docsPluginRouteConfig has a routes property has a record with the path "/" that contains all docs routes.
+      const allDocsRouteConfig = docsPluginRouteConfig.routes?.filter(
+        (route) => route.path === '/'
+      )[0];
+
+      // A little type checking first
+      if (!allDocsRouteConfig?.props?.version) {
+        return;
+      }
+
+      // this route config has a `props` property that contains the current documentation.
+      const currentVersionDocsRoutes = (
+        allDocsRouteConfig.props.version
+      ).docs;
+
+      const dbosDocBase = "https://docs.dbos.dev";
+      // for every single docs route we now parse a path (which is the key) and a title
+      const docsRecords = Object.entries(currentVersionDocsRoutes).map(([path, record]) => {
+        return `- [${record.title}](${dbosDocBase}/${path}.md): ${record.description}`;
+      });
+
+      // Build up llms.txt file
+      const llmsTxt = `# DBOS Documentation\n\n## Docs\n\n${docsRecords.join("\n")}`;
+
+      // Write llms.txt file
+      const llmsTxtPath = path.join(outDir, "llms.txt");
+      await fs.promises.writeFile(llmsTxtPath, llmsTxt);
+    },
+  };
+}
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'DBOS Docs',
@@ -54,6 +96,7 @@ const config = {
 
   plugins: [
     CopyMarkdownPlugin,
+    pluginLlmsTxt,
     'docusaurus-plugin-matomo',
     [
       '@docusaurus/plugin-client-redirects',
