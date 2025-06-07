@@ -131,7 +131,16 @@ You can redeploy a previous version of your application by passing `--previous-v
 dbos-cloud app deploy --previous-version <version-id>
 ```
 
-This will fail if the previous and current versions use different database schemas.
+### Workflow Recovery
+
+When a microVM running in DBOS Cloud dies (either due to a process crash or when scaling down), all of its workflows are automatically recovered to another microVM running the same application version. If no other microVM of that application version exists, DBOS Cloud launches a new one and instructs it to recover the workflows.
+
+When you deploy a new version of your application, DBOS Cloud routes all requests and scheduled workflows to microVMs of the new application version.
+Then, DBOS Cloud attempts to decommission microVMs running the previous application version.
+If there are still `PENDING` or `ENQUEUED` workflows of that code version, DBOS Cloud leaves some number of microVMs alive to process those workflows until all are complete.
+
+Periodically, DBOS Cloud checks if there are any `PENDING` or `ENQUEUED` workflows not assigned to any microVM.
+If any are found, DBOS Cloud recovers them to a microVM of the appropriate application version (starting one if necessary).
 
 ### Updating Applications
 
