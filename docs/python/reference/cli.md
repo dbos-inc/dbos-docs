@@ -132,22 +132,6 @@ runtimeConfig:
 
 DBOS Cloud executes this command to start your app.
 
-### dbos migrate
-
-Run all database schema migration commands defined in [`dbos-config.yaml`](./configuration.md#database-section).
-For example:
-
-```yaml
-database:
-  migrate:
-    - alembic upgrade head
-```
-
-DBOS Cloud uses this command during application deployment to migrate your database schema.
-
-**Arguments:**
-* `-D, --db-url TEXT`: Your DBOS application database URL
-
 ### dbos init
 
 Initialize the local directory with a DBOS template application.
