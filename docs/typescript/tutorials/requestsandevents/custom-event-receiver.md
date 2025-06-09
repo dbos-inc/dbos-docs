@@ -55,9 +55,9 @@ The primary purpose of the interface is to manage the event receiver lifecycle.
 The [`DBOSExecutorContext`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontext) interface provides the services event receivers need to invoke workflows, transactions, and other step functions.  During `initialize`, the event receiver is provided with an instance implementing `DBOSExecutorContext` as the `executor` parameter, and can store this reference in its `executor` field.
 
 The following functions on `executor` can then be used to invoke DBOS Transact functions:
-*[`workflow`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
-*[`transaction`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../transaction-tutorial.md)
-*[`external`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../step-tutorial.md)
+* [`workflow`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextworkflow): Invoke, start, or enqueue a DBOS [workflow](../workflow-tutorial.md)
+* [`transaction`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontexttransaction): Invoke a DBOS [transaction](../transaction-tutorial.md)
+* [`external`](../../reference/transactapi/eventreceivercontext.md#dbosexecutorcontextexternal): Invoke a DBOS [step](../step-tutorial.md)
 
 #### Waiting vs. Queueing
 The `workflow` method provided by `executor` accepts a `params` argument, of type `WorkflowParams`.  `WorkflowParams.queueName`, if provided, is the name of a [workflow queue](../../reference/transactapi/workflow-queues.md) that will be used to rate-limit execution of the workflows in the specified queue.  Otherwise, the function will be started immediately and the event receiver should `await` the result.
