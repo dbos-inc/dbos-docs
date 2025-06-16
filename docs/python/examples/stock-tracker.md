@@ -7,7 +7,7 @@ title: Stock Tracker
 In this example, we use DBOS to build and deploy an app that tracks stock prices and sends SMS alerts when the price of a stock crosses a certain threshold.
 We don't want to miss a good opportunity to trade, so it's important this app is punctual and reliable!
 
-You can see the application live [here](https://max-stock-prices.cloud.dbos.dev/). All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/stock-prices).
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/stock-prices).
 
 ## Import and Initialize the App
 
