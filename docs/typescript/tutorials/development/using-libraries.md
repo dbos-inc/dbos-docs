@@ -18,14 +18,8 @@ Second, import the key classes from the library for use in your source files:
 import { DBOS_SES } from "@dbos-inc/dbos-email-ses";
 ```
 
-### Calling Simple Functions
-Libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` are comprised of functions that can be invoked from their classes.  Such functions may be called directly:
-```typescript
-BcryptStep.bcryptHash('myString');
-```
-
 ### Working With Instantiated Objects
-While libraries such as `@dbos-inc/dbos-bcrypt` or `@dbos-inc/dbos-datetime` have simple functions that can be called directly from their classes, more complex DBOS libraries use ["instantiated objects"](../instantiated-objects) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
+Some DBOS libraries use ["instantiated objects"](../instantiated-objects) so that they can be used in multiple scenarios within the same application.  To create and configure an instance:
 
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
