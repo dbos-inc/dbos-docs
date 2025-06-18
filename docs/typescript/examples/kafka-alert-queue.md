@@ -275,7 +275,7 @@ static async checkForExpiredAssignment(employee_name: string, currentDate: Date)
 ## 6. The Workflow to Assign and Release
 
 We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time.  It does the following:
-1. use [DBOSDateTime](../reference/libraries.md) to durably retrieve the workflow start time
+1. use `DBOS.now` to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [DBOS.setEvent](../tutorials/workflow-tutorial.md#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to release this assignment when time is up.
@@ -287,10 +287,10 @@ The code looks like so:
 //in operations.ts/AlertCenter
 @DBOS.workflow()
 static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolean | undefined) {
-  
+
   // Get the current time from a checkpointed step;
   // This ensures the same time is used for recovery 
-  let ctime = await DBOSDateTime.getCurrentTime();
+  let ctime = await DBOS.now();
 
   //Assign, extend time or simply return current assignment
   const userRec = await RespondUtilities.getUserAssignment(name, ctime, more_time);
@@ -309,9 +309,8 @@ static async userAssignmentWorkflow(name: string, @ArgOptional more_time: boolea
     while (expirationMS > ctime) {
       DBOS.logger.debug(`Sleeping ${expirationMS-ctime}`);
       await DBOS.sleepms(expirationMS - ctime);
-      const curDate = await DBOSDateTime.getCurrentDate();
-      ctime = curDate.getTime();
-      const nextTime = await RespondUtilities.checkForExpiredAssignment(name, curDate);
+      ctime = DBOS.now();
+      const nextTime = await RespondUtilities.checkForExpiredAssignment(name, ctime);
 
       if (!nextTime) {
         //The time on this assignment expired, and we can stop monitoring it

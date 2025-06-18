@@ -23,19 +23,12 @@ Some DBOS libraries use ["instantiated objects"](../instantiated-objects) so tha
 
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { DBOS_SES } from "@dbos-inc/dbos-email-ses";
+import { DBOS_S3 } from "@dbos-inc/component-aws-s3";
 
-const sesMailer = new DBOS_SES('marketing', {awscfgname: 'marketing_email_aws_config'});
+const photoBucket = new DBOS_S3('marketing', ...);
 ```
 
 Methods can then be called on the object instance:
 ```typescript
-sesMailer.sendEmail(
-{
-   to: [DBOS.getConfig('marketing_mailing_list_address', 'dbos@nowhere.dev')],
-   from: DBOS.getConfig('marketing_from_address', 'info@dbos.dev'),
-   subject: 'New SES Library Version Released',
-   bodyText: 'Check mailbox to see if this library is able to send mail about itself.',
-   // ...
-},
+photoBucket.writeFileViaURL(...),
 ```
