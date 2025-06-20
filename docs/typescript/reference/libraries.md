@@ -37,5 +37,5 @@ DBOS provides steps for working with S3, and transactional workflows for keeping
 
 ## Simple Queue Service (SQS)
 
-DBOS provides steps for sending messages via Amazon SQS, and an event receiver for executing workflow functions in response to received SQS messages.  For details of the functionality, see the documentation accompanying the [@dbos-inc/dbos-sqs](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/dbos-sqs) package.
+DBOS provides an event receiver for executing workflow functions in response to received SQS messages.  For details of the functionality, see the documentation accompanying the [@dbos-inc/sqs-receive](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/sqs-receive) package.
 

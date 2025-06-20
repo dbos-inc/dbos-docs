@@ -200,7 +200,6 @@ exports.up = function(knex) {
 };
 ```
 
-
 ### Sending Email with Amazon SES
 
 The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](../reference/libraries#simple-email-service-ses) package.
