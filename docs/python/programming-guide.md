@@ -161,7 +161,7 @@ Press Control + C to stop the app...
 Step two completed!
 ```
 
-You can see how DBOS **recovers your workflow from the last completed step**, executing step 1 without re-executing step 2.
+You can see how DBOS **recovers your workflow from the last completed step**, executing step two without re-executing step one.
 Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
 
 ## 3. Queues and Parallelism
