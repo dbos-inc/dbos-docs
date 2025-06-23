@@ -178,6 +178,43 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 ## Workflow Management Methods
 
+### DBOS.listWorkflows
+
+```typescript
+DBOS.listWorkflows(
+  input: GetWorkflowsInput
+): Promise<WorkflowStatus[]>
+```
+
+```typescript
+export interface GetWorkflowsInput {
+  workflowIDs?: string[];
+  workflowName?: string;
+  status?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'RETRIES_EXCEEDED' | 'CANCELLED' | 'ENQUEUED';
+  startTime?: string;
+  endTime?: string;
+  applicationVersion?: string;
+  authenticatedUser?: string;
+  limit?: number;
+  offset?: number;
+  sortDesc?: boolean;
+}
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+
+**Parameters:**
+- **workflowIDs**: Retrieve workflows with these IDs.
+- **workflowName**: Retrieve workflows whose IDs start with the specified string.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **applicationVersion**: Retrieve workflows tagged with this application version.
+- **authenticatedUser**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
