@@ -1,7 +1,6 @@
 ---
-sidebar_position: 25
+sidebar_position: 60
 title: DBOS Client
-description: DBOS Client reference
 ---
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.

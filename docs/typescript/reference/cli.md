@@ -1,8 +1,6 @@
 ---
-sidebar_position: 10
-title: DBOS Transact CLI
-description: DBOS Transact CLI reference
-pagination_prev: null
+sidebar_position: 100
+title: DBOS CLI
 ---
 
 The DBOS Transact CLI helps you run applications locally.
