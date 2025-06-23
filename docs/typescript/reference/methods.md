@@ -3,9 +3,6 @@ sidebar_position: 30
 title: DBOS Methods & Variables
 ---
 
-DBOS provides a number of useful context methods and variables.
-All are accessed through the syntax `DBOS.<method>`.
-
 ## DBOS Methods
 
 ### DBOS.send
@@ -130,5 +127,37 @@ export interface WorkflowStatus {
 ```
 
 ## DBOS Variables
+
+## Workflow Handles
+
+A workflow handle represents the state of a particular active or completed workflow execution.
+You obtain a workflow handle when using `DBOS.startWorkflow` to start a workflow in the background.
+If you know a workflow's identity, you can also retrieve its handle using `DBOS.retrieveWorkflow`.
+
+Workflow handles have the following methods:
+
+### handle.workflowID
+
+```typescript
+handle.workflowID(): string;
+```
+
+Retrieve the ID of the workflow.
+
+### handle.getResult
+
+```typescript
+handle.getResult(): Promise<R>;
+```
+
+Wait for the workflow to complete, then return its result.
+
+### handle.getStatus
+
+```typescript
+handle.getStatus(): Promise<WorkflowStatus>;
+```
+
+Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow.
 
 ## Context Management
