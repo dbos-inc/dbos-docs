@@ -187,10 +187,10 @@ DBOS.listWorkflows(
 ```
 
 ```typescript
-export interface GetWorkflowsInput {
+interface GetWorkflowsInput {
   workflowIDs?: string[];
   workflowName?: string;
-  status?: 'PENDING' | 'SUCCESS' | 'ERROR' | 'RETRIES_EXCEEDED' | 'CANCELLED' | 'ENQUEUED';
+  status?: string;
   startTime?: string;
   endTime?: string;
   applicationVersion?: string;
@@ -205,12 +205,45 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflowIDs**: Retrieve workflows with these IDs.
-- **workflowName**: Retrieve workflows whose IDs start with the specified string.
+- **workflowName**: Retrieve workflows with this name.
 - **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
 - **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **applicationVersion**: Retrieve workflows tagged with this application version.
 - **authenticatedUser**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+
+### DBOS.listQueuedWorkflows
+
+```typescript
+DBOS.listQueuedWorkflows(
+  input: GetQueuedWorkflowsInput
+): Promise<WorkflowStatus[]>
+```
+
+```typescript
+interface GetQueuedWorkflowsInput {
+  workflowName?: string;
+  status?: string;
+  queueName?: number;
+  startTime?: string;
+  endTime?: string;
+  limit?: number;
+  offset?: number;
+  sortDesc?: boolean;
+}
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+
+**Parameters:**
+- **workflowName**: Retrieve workflows with this name.
+- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **queueName**: Retrieve workflows running on this queue.
+- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
