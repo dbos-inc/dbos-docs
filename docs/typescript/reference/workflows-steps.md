@@ -3,8 +3,6 @@ sidebar_position: 20
 title: Workflows & Steps
 ---
 
-This reference documented how to construct DBOS workflows and steps.
-
 ## Workflows
 
 ### DBOS.workflow
@@ -91,6 +89,7 @@ DBOS.step(
 
 ```typescript
 export interface StepConfig {
+  name?: name;
   retriesAllowed?: boolean;
   intervalSeconds?: number;
   maxAttempts?: number;
@@ -123,6 +122,7 @@ export class Example {
 ```
 
 **Parameters:**
+- **name**: A name to give the step. If not provided, use the function name.
 - **retriesAllowed**: Whether to retry the step if it throws an exception.
 - **intervalSeconds**: How long to wait before the initial retry.
 - **maxAttempts**: How many times to retry a step that is throwing exceptions.
@@ -162,4 +162,39 @@ async function exampleWorkflow() {
 
 **Parameters:**
 - **func**: The function to be wrapped in a step.
+- **config**: The step config, documented above.
+
+### DBOS.runStep
+
+```typescript
+runStep<Return>(
+    func: () => Promise<Return>, 
+    config: StepConfig = {},
+): Promise<Return> {
+```
+
+Run a function as a step in a workflow.
+Can only be called from a durable workflow.
+Returns the output of the step.
+
+**Example:**
+
+```typescript
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
+}
+
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+
+// Use DBOS.runStep to run any function as a step
+async function exampleWorkflow() {
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
+}
+```
+
+**Parameters:**
+- **func**: The function to run as a step.
 - **config**: The step config, documented above.
