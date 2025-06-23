@@ -248,6 +248,76 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enque
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
 
+### DBOS.listWorkflowSteps
+```typescript
+DBOS.listWorkflowSteps(
+  workflowID: string)
+: Promise<StepInfo[]>
+```
+
+Retrieve the steps of a workflow.
+This is a list of `StepInfo` objects, with the following structure:
+
+```typescript
+interface StepInfo {
+  // The unique ID of the step in the workflow. Zero-indexed.
+  readonly functionID: number;
+  // The name of the step
+  readonly name: string;
+  // The step's output, if any
+  readonly output: unknown;
+  // The error the step threw, if any
+  readonly error: Error | null;
+  // If the step starts or retrieves the result of a workflow, its ID
+  readonly childWorkflowID: string | null;
+}
+```
+
+### DBOS.cancelWorkflow
+
+```typescript
+cancelWorkflow(
+  workflowID: string
+): Promise<void>
+```
+
+Cancel a workflow.
+This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### DBOS.resumeWorkflow
+
+```typescript
+DBOS.resumeWorkflow<T>(
+  workflowID: string
+): Promise<WorkflowHandle<Awaited<T>>> 
+```
+
+Resume a workflow.
+This immediately starts it from its last completed step.
+You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### DBOS.forkWorkflow
+
+```typescript
+static async forkWorkflow<T>(
+  workflowID: string,
+  startStep: number,
+  options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number },
+): Promise<WorkflowHandle<Awaited<T>>>
+```
+
+Start a new execution of a workflow from a specific step.
+The input step ID (`startStep`) must match the `functionID` of the step returned by `listWorkflowSteps`.
+The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to fork.
+- **startStep**: The ID of the step from which to start the forked workflow. Must match the `functionID` of the step in the original workflow execution.
+- **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
+- **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
+- **timeoutMS**: A timeout for the forked workflow in milliseconds.
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
