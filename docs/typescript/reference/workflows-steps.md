@@ -1,6 +1,6 @@
 ---
 sidebar_position: 20
-title: Workflows & Steps
+title: DBOS Workflows & Steps
 ---
 
 ## Workflows
