@@ -3,6 +3,8 @@ sidebar_position: 20
 title: Workflows & Steps
 ---
 
+This reference documented how to construct DBOS workflows and steps.
+
 ## Workflows
 
 ### DBOS.workflow
@@ -73,3 +75,6 @@ await exampleWorkflow();
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
+- **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
+- **className**: ???
+- **config**: Configuration for the workflow, documented above.
