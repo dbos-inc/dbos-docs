@@ -143,52 +143,12 @@ const config = {
             to: '/typescript/examples/checkout-tutorial',
           },
           {
-            from: '/typescript/reference/communicatorlib',
-            to: '/typescript/reference/libraries',
-          },
-          {
-            from: '/typescript/reference/cli',
-            to: '/typescript/reference/tools/cli',
-          },
-          {
-            from: '/typescript/reference/dbos-compiler',
-            to: '/typescript/reference/tools/dbos-compiler',
-          },
-          {
-            from: '/typescript/reference/dbos-class',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/contexts',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/decorators',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/testing-runtime',
-            to: '/typescript/tutorials/development/testing-tutorial',
-          },
-          {
-            from: '/typescript/reference/workflow-handles',
-            to: '/typescript/reference/transactapi/workflow-handles',
-          },
-          {
-            from: '/typescript/reference/workflow-queues',
-            to: '/typescript/reference/transactapi/workflow-queues',
-          },
-          {
             from: '/typescript/tutorials/using-libraries',
             to: '/typescript/tutorials/development/using-libraries',
           },
           {
             from: '/typescript/reference/static-analysis',
             to: '/typescript/tutorials/development/static-analysis',
-          },
-          {
-            from: '/typescript/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/development/testing-tutorial',
           },
           {
             from: '/typescript/tutorials/configured-instances',
