@@ -113,7 +113,7 @@ export class Example {
     DBOS.logger.info("Step two completed!");
   }
 
-  // Steps can be called from workflows
+  // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
     await Toolbox.stepOne();
@@ -127,3 +127,39 @@ export class Example {
 - **intervalSeconds**: How long to wait before the initial retry.
 - **maxAttempts**: How many times to retry a step that is throwing exceptions.
 - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+
+### DBOS.registerStep
+
+```typescript
+  static registerStep<This, Args extends unknown[], Return>(
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config: StepConfig = {},
+  ): (this: This, ...args: Args) => Promise<Return>
+```
+
+Wrap a function in a step to safely call it from a durable workflow.
+Returns the wrapped function.
+
+**Example:**
+
+```typescript
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
+}
+const regStepOne = DBOS.registerStep(stepOne);
+
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+const regStepTwo = DBOS.registerStep(stepTwo);
+
+// Call steps from workflows
+async function exampleWorkflow() {
+  await regStepOne();
+  await regStepTwo();
+}
+```
+
+**Parameters:**
+- **func**: The function to be wrapped in a step.
+- **config**: The step config, documented above.
