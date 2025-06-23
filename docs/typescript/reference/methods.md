@@ -87,6 +87,48 @@ If the event does not yet exist, wait for it to be published, returning `null` i
 
 ## Workflow Management Methods
 
+### Workflow Status
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```typescript
+export interface WorkflowStatus {
+  // The workflow ID
+  readonly workflowID: string;
+  // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+  readonly status: string;
+  // The name of the workflow function.
+  readonly workflowName: string;
+  // The name of the workflow's class, if any
+  readonly workflowClassName: string; // The class name holding the workflow function.
+  // The name with which the workflow's class instance was configured, if any.
+  readonly workflowConfigName?: string;
+  // If the workflow was enqueued, the name of the queue.
+  readonly queueName?: string;
+  // The workflow's output, if any.
+  readonly output?: unknown;
+  // The error thrown by the workflow, if any.
+  readonly error?: unknown;
+  // The deserialized workflow inputs.
+  readonly input?: unknown[];
+  // The ID of the executor (process) that most recently executed this workflow.
+  readonly executorId?: string;
+  // The application version on which this workflow started.
+  readonly applicationVersion?: string;
+  // The number of times this workflow has been started.
+  readonly recoveryAttempts?: number;
+  // Workflow start time, as a UNIX epoch timestamp in milliseconds
+  readonly createdAt: number;
+  // Last time the workflow status was updated, as a UNIX epoch timestamp in milliseconds. For a completed workflow, this is the workflow completion timestamp.
+  readonly updatedAt?: number;
+  // The timeout specified for this workflow, if any. Timeouts are start-to-close.
+  readonly timeoutMS?: number | null;
+  // The deadline at which this workflow times out, if any. Not set until the workflow begins execution.
+  readonly deadlineEpochMS?: number;
+}
+```
+
 ## DBOS Variables
 
 ## Context Management
