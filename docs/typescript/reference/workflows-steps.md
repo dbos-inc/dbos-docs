@@ -78,3 +78,52 @@ await exampleWorkflow();
 - **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
 - **className**: ???
 - **config**: Configuration for the workflow, documented above.
+
+## Steps
+
+### DBOS.step
+
+```typescript
+DBOS.step(
+    config: StepConfig = {}
+)
+```
+
+```typescript
+export interface StepConfig {
+  retriesAllowed?: boolean;
+  intervalSeconds?: number;
+  maxAttempts?: number;
+  backoffRate?: number;
+}
+```
+
+A decorator that marks a function as a step in a durable workflow.
+
+**Example:**
+```typescript
+export class Example {
+  @DBOS.step()
+  static async stepOne() {
+    DBOS.logger.info("Step one completed!");
+  }
+
+  @DBOS.step()
+  static async stepTwo() {
+    DBOS.logger.info("Step two completed!");
+  }
+
+  // Steps can be called from workflows
+  @DBOS.workflow()
+  static async exampleWorkflow() {
+    await Toolbox.stepOne();
+    await Toolbox.stepTwo();
+  }
+}
+```
+
+**Parameters:**
+- **retriesAllowed**: Whether to retry the step if it throws an exception.
+- **intervalSeconds**: How long to wait before the initial retry.
+- **maxAttempts**: How many times to retry a step that is throwing exceptions.
+- **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
