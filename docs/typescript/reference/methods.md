@@ -148,11 +148,22 @@ async function example(input: number) {
 const exampleWorkflow = DBOS.registerWorkflow(example, "exampleWorkflow");
 
 const input = 10;
-const handle = DBOS.startWorkflow(exampleWorkflow)(input);
+const handle = await DBOS.startWorkflow(exampleWorkflow)(input);
 ```
 
 To start a workflow created by decorating a class method:
 
+```typescript
+export class Example {
+  @DBOS.workflow()
+  static async exampleWorkflow(input: number) {
+    // Call steps
+  }
+}
+
+const input = 10;
+const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
+```
 
 **Parameters:**
 
