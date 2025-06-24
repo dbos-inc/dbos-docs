@@ -12,7 +12,7 @@ The DBOS Transact CLI helps you run applications locally.
 ### `npx dbos start`
 
 **Description:**
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](../configuration.md#runtime-section).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
 For example:
 
 ```yaml
@@ -40,7 +40,7 @@ This command initializes a new DBOS application from a template into a target di
 
 **Description:**
 This command configures which database server your application connects to.
-It applies changes to your [configuration file](../configuration).
+It applies changes to your [configuration file](./configuration).
 If parameters are not specified, it prompts for them.
 
 **Arguments:**
@@ -52,7 +52,7 @@ If parameters are not specified, it prompts for them.
 
 ### `npx dbos reset`
 
-Reset your DBOS [system database](../../../explanations/system-tables.md), deleting metadata about past workflows and steps.
+Reset your DBOS [system database](../../explanations//system-tables.md), deleting metadata about past workflows and steps.
 No application data is affected by this.
 
 **Arguments:**
@@ -96,7 +96,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects.md), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
@@ -122,7 +122,7 @@ A JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume
@@ -183,7 +183,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `status`: The status of the workflow
 - `workflowName`: The name of the workflow function
 - `workflowClassName`: The name of the class in which the workflow function is implemented
-- `workflowConfigName`: If the workflow is in a [configured class](../../tutorials/instantiated-objects), the name of the configuration
+- `workflowConfigName`: If the workflow is in a [configured class](../tutorials/instantiated-objects), the name of the configuration
 - `authenticatedUser`: The user who ran the workflow, if specified
 - `assumedRole`: The role with which the workflow ran, if specified
 - `authenticatedRoles`: All roles which the authenticated user could assume

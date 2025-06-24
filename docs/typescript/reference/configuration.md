@@ -57,7 +57,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]
 ## DBOS Configuration File
 
 Many tools in the DBOS ecosystem are configured by a `dbos-config.yaml` file.
-Tools that use `dbos-config.yaml` include the [DBOS CLI](./tools/cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
+Tools that use `dbos-config.yaml` include the [DBOS CLI](./cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
 Additionally, the DBOS library will fall back to `dbos-config.yaml` if no configuration object is provided.
 
 Here is an example configuration file with default parameters:
@@ -81,7 +81,7 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name. Must match the name supplied to the DBOS constructor.
 - **language**: The application language. Must be set to `node` for TypeScript applications.
-- **database_url**: A connection string to a Postgres database. This connection string is used by tools such as the [DBOS CLI](./tools/cli.md) and [DBOS debugger](../tutorials/debugging.md). It has the same format as (and should match) the connection string you pass to the DBOS constructor.
+- **database_url**: A connection string to a Postgres database. This connection string is used by tools such as the [DBOS CLI](./cli.md) and [DBOS debugger](../tutorials/debugging.md). It has the same format as (and should match) the connection string you pass to the DBOS constructor.
 - **database**: The [database section](#database-section).
 - **runtimeConfig**: The [runtime section](#runtime-section).
 
@@ -101,7 +101,7 @@ database:
 
 #### Runtime Section
 
-- **start**: The command(s) with which to start your app. Called from [`npx dbos start`](./tools/cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
+- **start**: The command(s) with which to start your app. Called from [`npx dbos start`](./cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
 - **entrypoints** (optional): The compiled JavaScript files where DBOS looks for your application's code. This should only be used if you are using scheduled workflows, Kafka consumers, or DBOS HTTP decorators in files that are not referenced by your start command. At startup, the DBOS runtime automatically loads all classes exported from these files, serving their endpoints and registering their decorated functions. Defaults to [dist/operations.js].
 - **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 

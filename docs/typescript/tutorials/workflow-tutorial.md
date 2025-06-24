@@ -67,7 +67,7 @@ These guarantees assume that the application and database may crash and go offli
 If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
 This is because uncaught exceptions are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Determinism
 
@@ -110,10 +110,10 @@ class Example {
 
 ## Starting Workflows Asynchronously
 
-You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to durably start a workflow in the background without waiting for it to complete.
+You can use [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow) to durably start a workflow in the background without waiting for it to complete.
 This is useful for long-running or interactive workflows.
 
-`DBOS.startWorkflow` returns a [workflow handle](../reference/transactapi/workflow-handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+`DBOS.startWorkflow` returns a [workflow handle](../reference/methods.md#workflow-handles), from which you can access information about the workflow or wait for it to complete and retrieve its result.
 When you `await DBOS.startWorkflow`, the method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if your app is interrupted.
 
 Here's an example:

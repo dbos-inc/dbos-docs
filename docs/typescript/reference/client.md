@@ -4,12 +4,12 @@ title: DBOS Client
 ---
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
-`DBOSClient` includes methods similar to [`DBOS`](./transactapi/dbos-class.md)
+`DBOSClient` includes methods similar to `DBOS`.
 that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
 
 :::note 
 `DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
-Where DBOS applications use the [static `DBOS` class](./transactapi/dbos-class.md),
+Where DBOS applications use the static `DBOS` class,
 external applications use the `DBOSClient` class instead.
 :::
 
@@ -75,8 +75,7 @@ Asynchronously destroys a `DBOSClient` instance.
 
 #### `enqueue`
 
-Enqueues a workflow, similar to [passing a queue name to `startWorkflow`](./transactapi/dbos-class.md#starting-background-workflows)
-or using [`DBOS.withWorkflowQueue`](./transactapi/dbos-class.md#using-workflow-queues). 
+Enqueues a workflow, similar to passing a queue name to `DBOS.startWorkflow`.
 Like `startWorkflow`, the `enqueue` method returns a `WorkflowHandle` that you can use to retrieve the workflow results 
 asynchronously from an external application.
 
@@ -87,7 +86,7 @@ Required metadata includes:
 
 * `workflowName`: The name of the workflow method being enqueued.
 * `workflowClassName`: The name of the class the workflow method is a member of.
-* `queueName`: The name of the [WorkflowQueue](./transactapi/workflow-queues#class-workflowqueue) to enqueue the workflow on.
+* `queueName`: The name of the queue to enqueue the workflow on.
 
 Additional but optional metadata includes:
 
@@ -154,7 +153,7 @@ You can copy or import the function type declaration from your application's
 
 #### `send`
 
-Sends a message to a specified workflow. Identical to [`DBOS.send`](./transactapi/dbos-class#dbossend).
+Sends a message to a specified workflow. Identical to [`DBOS.send`](./methods.md#dbossend).
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -164,12 +163,12 @@ it is highly recommended that you use the `idempotencyKey` parameter in order to
 #### `getEvent`
 
 Retrieves an event published by workflowID for a given key using the [events API](../tutorials/workflow-tutorial#workflow-events).
-Identical to [DBOS.getEvent](./transactapi/dbos-class#dbosgetevent)
+Identical to [DBOS.getEvent](./methods.md#dbosgetevent)
 
 #### `retrieveWorkflow`
 
-Retrieves a workflow by ID, similar to [`DBOS.retrieveWorkflow`](./transactapi/dbos-class#dbosretrieveworkflow).
-Returns a [WorkflowHandle](./transactapi/workflow-handles) that can be used to retrieve information about the workflow, 
+Retrieves a workflow by ID, similar to [`DBOS.retrieveWorkflow`](./methods.md#dbosretrieveworkflow).
+Returns a [WorkflowHandle](./methods.md#workflow-handles) that can be used to retrieve information about the workflow, 
 including its current state and its eventual result.
 
 Similar to enqueue, `retrieveWorkflow` can be made type safe by use of a class declaration
@@ -188,39 +187,39 @@ const pageCount = await handle.getResult();
 
 Retrieves the status of a single workflow, given its workflow ID. 
 If the specified workflow ID does not exist, getWorkflow returns undefined.
-Please see [`DBOS.getWorkflowStatus`](./transactapi/dbos-class.md#dbosgetworkflowstatus) for more for more information.
+Please see [`DBOS.getWorkflowStatus`](./methods.md#handlegetstatus) for more for more information.
 
 #### `listWorkflows`
 
 Retrieves information about workflow execution history. 
-Please see [`DBOS.listWorkflows`](./transactapi/dbos-class.md#dboslistworkflows) for more for more information.
+Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more for more information.
 
 #### `listQueuedWorkflows`
 
 Retrieves information about workflow execution history for a given workflow queue. 
-Please see [`DBOS.listQueuedWorkflows`](./transactapi/dbos-class.md#dboslistqueuedworkflows) for more for more information.
+Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more for more information.
 
 #### `listWorkflowSteps`
 
 Retrieves information about the steps executed in a specified workflow. 
 If the specified workflow is not found, `listWorkflowSteps` returns undefined
-Please see [`DBOS.listWorkflowSteps`](./transactapi/dbos-class.md#dboslistworkflowsteps) for more for more information.
+Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for more for more information.
 
 ### Workflow Management
 
 #### `cancelWorkflow`
 
 Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
-Please see [`DBOS.cancelWorkflow`](./transactapi/dbos-class.md#dboscancelworkflow) for more for more information.
+Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for more information.
 
 #### `resumeWorkflow`
 
 Resumes a workflow that had stopped during execution (due to cancellation or error).
-Please see [`DBOS.resumeWorkflow`](./transactapi/dbos-class.md#dbosresumeworkflow) for more for more information.
+Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for more information.
 
 #### `forkWorkflow`
 
 Start a new execution of a workflow from a specific step. 
-Please see [`DBOS.forkWorkflow`](./transactapi/dbos-class.md#dbosforkworkflow) for more for more information.
+Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
 
 

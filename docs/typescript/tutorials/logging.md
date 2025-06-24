@@ -5,7 +5,7 @@ title: Logging & Tracing
 
 ### Logging
 
-For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging) that you can **optionally** use.
+For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/methods.md#dboslogger) that you can **optionally** use.
 For example:
 
 ```javascript
@@ -31,7 +31,7 @@ DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces 
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if an HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
-You can access your current span via [`DBOS.span`](../reference/transactapi/dbos-class#accessing-the-tracing-span).
+You can access your current span via [`DBOS.span`](../reference/methods.md#dbosspan).
 
 ### OpenTelemetry Export
 

@@ -66,7 +66,7 @@ env:
 ```
 This passes the value of `KAFKA_BROKER` to the app when running locally and also to DBOS Cloud when deploying the app.
 
-Following the [Kafka Integration](../tutorials/requestsandevents/kafka-integration.md) guide, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
+Using the Kafka integration, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
 ```typescript
 //The Kafka topic and broker configuration
 const respondTopic = 'alert-responder-topic';
@@ -275,7 +275,7 @@ static async checkForExpiredAssignment(employee_name: string, currentDate: Date)
 ## 6. The Workflow to Assign and Release
 
 We now compose a workflow that leverages `getUserAssignment` and `checkForExpiredAssignment` to reliably assign alerts and then release them when they expire. This workflow takes the name of the employee and, optionally, whether this is a request for more time.  It does the following:
-1. use [DBOSDateTime](../reference/libraries.md) to durably retrieve the workflow start time
+1. use DBOSDateTime to durably retrieve the workflow start time
 2. call `getUserAssignment` to retrieve the assignment status for the employee (creating a new assignment if appropriate)
 3. use [DBOS.setEvent](../tutorials/workflow-tutorial.md#setevent) to return the assignment status to the caller
 4. if this is a new assignment, go into a loop that performs durable sleep and calls `checkForExpiredAssignment` to release this assignment when time is up.
