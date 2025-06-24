@@ -43,15 +43,15 @@ If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it
 ### DBOS.registerWorkflow
 
 ```typescript
-  static registerWorkflow<This, Args extends unknown[], Return>(
-    func: (this: This, ...args: Args) => Promise<Return>,
-    name: string,
-    options: {
-      classOrInst?: object;
-      className?: string;
-      config?: WorkflowConfig;
-    } = {},
-  ): (this: This, ...args: Args) => Promise<Return> 
+DBOS.registerWorkflow<This, Args extends unknown[], Return>(
+  func: (this: This, ...args: Args) => Promise<Return>,
+  name: string,
+  options: {
+    classOrInst?: object;
+    className?: string;
+    config?: WorkflowConfig;
+  } = {},
+): (this: This, ...args: Args) => Promise<Return> 
 ```
 
 Wrap a function in a DBOS workflow.
@@ -76,6 +76,59 @@ await exampleWorkflow();
 - **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
 - **className**: ???
 - **config**: Configuration for the workflow, documented above.
+
+### DBOS.scheduled
+
+```typescript
+DBOS.scheduled(
+  schedulerConfig: SchedulerConfig
+);
+```
+
+```typescript
+class SchedulerConfig {
+  crontab: string;
+  mode?: SchedulerMode = SchedulerMode.ExactlyOncePerIntervalWhenActive;
+  queueName?: string;
+}
+```
+
+A decorator directing DBOS to run a workflow on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
+
+The annotated function must take in two parameters: The time that the run was scheduled (as a `Date`) and the time that the run was actually started (also a `Date`).
+For example:
+
+```typescript
+import { DBOS } from '@dbos-inc/dbos-sdk';
+
+class ScheduledExample{
+  @DBOS.workflow()
+  @DBOS.scheduled({crontab: '*/30 * * * * *'})
+  static async scheduledFunc(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+  }
+}
+```
+
+**Parameters:**
+- **crontab**: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+The DBOS variant contains 5 or 6 items, separated by spaces:
+
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
+- **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
+- **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
+
 
 ## Steps
 
@@ -131,10 +184,10 @@ export class Example {
 ### DBOS.registerStep
 
 ```typescript
-  static registerStep<This, Args extends unknown[], Return>(
-    func: (this: This, ...args: Args) => Promise<Return>,
-    config: StepConfig = {},
-  ): (this: This, ...args: Args) => Promise<Return>
+DBOS.registerStep<This, Args extends unknown[], Return>(
+  func: (this: This, ...args: Args) => Promise<Return>,
+  config: StepConfig = {},
+): (this: This, ...args: Args) => Promise<Return>
 ```
 
 Wrap a function in a step to safely call it from a durable workflow.
@@ -167,7 +220,7 @@ async function exampleWorkflow() {
 ### DBOS.runStep
 
 ```typescript
-runStep<Return>(
+DBOS.runStep<Return>(
     func: () => Promise<Return>, 
     config: StepConfig = {},
 ): Promise<Return> {
