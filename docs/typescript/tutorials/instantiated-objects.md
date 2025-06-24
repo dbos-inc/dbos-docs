@@ -1,5 +1,5 @@
 ---
-sidebar_position: 85
+sidebar_position: 80
 title: Using Typescript Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---

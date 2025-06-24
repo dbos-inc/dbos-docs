@@ -1,5 +1,5 @@
 ---
-sidebar_position: 48
+sidebar_position: 60
 title: Scheduled Workflows
 ---
 
