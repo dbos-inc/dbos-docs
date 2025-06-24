@@ -87,7 +87,24 @@ const dataSource = new KnexDataSource('knex-ds', config);
 ### dataSource.client
 
 Use this inside a transaction to access the datasource's transactional client.
-See the examples below for syntax.
+
+<Tabs groupId="database-clients">
+<TabItem value="knex" label="Knex">
+
+```typescript
+client: Knex.Transaction
+```
+
+</TabItem>
+<TabItem value="drizzle" label="Drizzle">
+
+
+</TabItem>
+<TabItem value="typeorm" label="TypeORM">
+
+</TabItem>
+</Tabs>
+
 
 ### dataSource.Transaction
 
