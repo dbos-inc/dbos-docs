@@ -5,7 +5,7 @@ title: Logging & Tracing
 
 ### Logging
 
-For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
+For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging) that you can **optionally** use.
 For example:
 
 ```javascript
