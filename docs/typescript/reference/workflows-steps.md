@@ -144,7 +144,7 @@ DBOS.step(
 ```
 
 ```typescript
-export interface StepConfig {
+interface StepConfig {
   name?: name;
   retriesAllowed?: boolean;
   intervalSeconds?: number;
@@ -228,7 +228,7 @@ const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 DBOS.runStep<Return>(
     func: () => Promise<Return>, 
     config: StepConfig = {},
-): Promise<Return> {
+): Promise<Return>
 ```
 
 Run a function as a step in a workflow.
