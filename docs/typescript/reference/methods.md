@@ -448,5 +448,3 @@ handle.getStatus(): Promise<WorkflowStatus>;
 ```
 
 Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow.
-
-## Context Management
