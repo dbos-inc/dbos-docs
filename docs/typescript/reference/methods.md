@@ -362,6 +362,61 @@ export interface WorkflowStatus {
 
 ## DBOS Variables
 
+### DBOS.logger
+
+```typescript
+DBOS.logger: Logger;
+```
+
+Retrieve the DBOS logger.
+This is a pre-configured Winston logger provided as a convenience.
+You do not need to use it if you have your own logger.
+
+### DBOS.workflowID
+
+```typescript
+DBOS.workflowID: string | undefined;
+```
+
+Return the ID of the current workflow, if in a workflow.
+
+### DBOS.stepID
+
+```typescript
+DBOS.stepID: string | undefined;
+```
+
+Return the unique ID of the current step within a workflow.
+
+### DBOS.stepStatus
+
+```typescript
+DBOS.stepStatus: StepStatus | undefined;
+```
+
+Return the status of the currently executing step.
+This object has the following properties:
+
+```typescript
+interface StepStatus {
+  // The unique ID of this step in its workflow.
+  stepID: number;
+  // For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+  currentAttempt?: number;
+  // For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
+  maxAttempts?: number;
+}
+```
+
+### DBOS.span
+
+```typescript
+DBOS.span: Span | undefined
+```
+
+Retrieve the OpenTelemetry span associated with the current workflow.
+You can use this to set custom attributes in your span.
+
 ## Workflow Handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
