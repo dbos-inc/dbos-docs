@@ -157,6 +157,62 @@ async function main() {
 }
 ```
 
+### Deduplication
+
+You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
+At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const dedup: string = ...
+  try {
+    const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {deduplicationID: dedup}})(task);
+  } catch (e) {
+    // Handle DBOSQueueDuplicatedError
+  }
+}
+```
+
+### Priority
+
+You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+If using priority, you must set `usePriority: true` on your queue.
+
+:::tip
+Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+:::
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue", {usePriority: true});
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const priority: number = ...
+  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
+}
+```
+
 ### In-Order Processing
 
 You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
