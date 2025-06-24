@@ -36,7 +36,8 @@ await Example.exampleWorkflow();
 ```
 
 **Parameters:**
-- **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
+- **config**:
+  - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
 
@@ -73,9 +74,10 @@ await workflow();
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
-- **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
-- **className**: ???
-- **config**: Configuration for the workflow, documented above.
+- **options**:
+  - **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
+  - **className**: ???
+  - **config**: Configuration for the workflow, documented above.
 
 ### DBOS.scheduled
 
@@ -112,7 +114,8 @@ class ScheduledExample{
 ```
 
 **Parameters:**
-- **crontab**: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
+- **schedulerConfig**:
+  - **crontab**: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
 The DBOS variant contains 5 or 6 items, separated by spaces:
 
 ```
@@ -126,8 +129,8 @@ The DBOS variant contains 5 or 6 items, separated by spaces:
  │ │ │ │ │ │
  * * * * * *
 ```
-- **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
-- **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
+  - **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
+  - **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
 
 
 ## Steps
@@ -175,11 +178,12 @@ export class Example {
 ```
 
 **Parameters:**
-- **name**: A name to give the step. If not provided, use the function name.
-- **retriesAllowed**: Whether to retry the step if it throws an exception.
-- **intervalSeconds**: How long to wait before the initial retry.
-- **maxAttempts**: How many times to retry a step that is throwing exceptions.
-- **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+- **config**:
+  - **name**: A name to give the step. If not provided, use the function name.
+  - **retriesAllowed**: Whether to retry the step if it throws an exception.
+  - **intervalSeconds**: How long to wait before the initial retry.
+  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
 ### DBOS.registerStep
 
