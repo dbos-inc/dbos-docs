@@ -9,6 +9,9 @@ They execute as a single [database transaction](https://en.wikipedia.org/wiki/Da
 
 Transactions can be performed using _datasources_, which are special database clients that wrap operations in DBOS transactions.
 Datasources are available for most popular TypeScript database clients.
+Each datasource provides the same interface as its underlying client.
+For example, a Knex datasource provides a Knex client and a Drizzle datasource a Drizzle client.
+Therefore, you don't have to change your database operations to run a function as a DBOS transaction&mdash;just use the datasource client.
 
 ## Installing Data Sources
 
