@@ -63,7 +63,38 @@ Through arguments to `DBOS.startWorkflow`, you can optionally provide a custom p
 
 The `DBOS.startWorkflow` method durably enqueues your function; after it returns, your function is guaranteed to eventually execute even if your app is interrupted.
 
-**Example syntax:**
+**Example syntax using registered workflows:**
+
+```typescript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function queueFunction(tasks) {
+  const handles = []
+  
+  // Enqueue each task so all tasks are processed concurrently.
+  for (const task of tasks) {
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(task))
+  }
+
+  // Wait for each task to complete and retrieve its result.
+  // Return the results of all tasks.
+  const results = []
+  for (const h of handles) {
+    results.push(await h.getResult())
+  }
+  return results
+}
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
+```
+
+**Example syntax using decorated workflows:**
 
 ```javascript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
@@ -95,3 +126,4 @@ class Tasks {
   }
 }
 ```
+
