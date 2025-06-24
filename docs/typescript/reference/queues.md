@@ -58,7 +58,7 @@ const queue = new WorkflowQueue(
 ### Enqueueing Workflows
 
 Workflows are enqueued by providing a `queueName` argument to [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow).
-This enqueues a function for processing and returns a [handle](./workflow-handles.md) to it.
+This enqueues a function for processing and returns a [handle](./methods.md#workflow-handles) to it.
 Through arguments to `DBOS.startWorkflow`, you can optionally provide a custom priority or deduplication ID to an enqueued workflow.
 
 The `DBOS.startWorkflow` method durably enqueues your function; after it returns, your function is guaranteed to eventually execute even if your app is interrupted.
