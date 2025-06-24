@@ -115,14 +115,6 @@ const config = {
             to: '/python/tutorials/scheduled-workflows',
           },
           {
-            from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/authentication-authorization',
-          },
-          {
-            from: '/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/development/testing-tutorial',
-          },
-          {
             from: '/tutorials/workflow-tutorial',
             to: '/typescript/tutorials/workflow-tutorial',
           },
@@ -137,38 +129,6 @@ const config = {
           {
             from: '/python/reference/task_queues',
             to: '/python/reference/queues',
-          },
-          {
-            from: '/typescript/tutorials/checkout-tutorial',
-            to: '/typescript/examples/checkout-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/using-libraries',
-            to: '/typescript/tutorials/development/using-libraries',
-          },
-          {
-            from: '/typescript/reference/static-analysis',
-            to: '/typescript/tutorials/development/static-analysis',
-          },
-          {
-            from: '/typescript/tutorials/configured-instances',
-            to: '/typescript/tutorials/instantiated-objects',
-          },
-          {
-            from: '/typescript/tutorials/http-serving-tutorial',
-            to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/workflow-communication-tutorial',
-            to: '/typescript/tutorials/workflow-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/custom-event-receiver',
-            to: '/typescript/tutorials/requestsandevents/custom-event-receiver',
-          },
-          {
-            from: '/typescript/tutorials/kafka-integration',
-            to: '/typescript/tutorials/requestsandevents/kafka-integration',
           },
           {
             from: '/python/examples/reliable-ai-agent',

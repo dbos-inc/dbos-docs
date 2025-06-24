@@ -50,10 +50,6 @@ Configured class instances should be created and named when the application star
 All configured classes:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
-* May have an `initialize()` method that will be called after all objects have been created, but before request handling commences
-
-### `initialize()` Method
-The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/transactapi/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-Event and handler registration decorators such as `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, and `@DBOS.putApi` cannot be applied to instance methods.
+Event and handler registration decorators such as `@DBOS.scheduled` cannot be applied to instance methods.

@@ -108,32 +108,6 @@ class Example {
 }
 ```
 
-## Workflow IDs and Idempotency
-
-Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the `DBOS.workflowID` context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
-
-You can set the workflow ID of a workflow with [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids).
-Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
-
-```javascript
-class Example {
-  @DBOS.workflow()
-  static async exampleWorkflow(var1: string, var2: string) {
-      return var1 + var2;
-  }
-}
-
-await DBOS.withNextWorkflowID("very-unique-id", async () => {
-  return await Example.exampleWorkflow("one", "two");
-});
-```
-
-
 ## Starting Workflows Asynchronously
 
 You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to durably start a workflow in the background without waiting for it to complete.
@@ -160,8 +134,37 @@ async function main() {
 }
 ```
 
-You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.md#dbosretrieveworkflow).
+You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/methods.md#dbosretrieveworkflow).
 This can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
+
+
+## Workflow IDs and Idempotency
+
+Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this ID through the `DBOS.workflowID` context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+
+You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow()`.
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        // ...
+    }
+}
+
+async function main() {
+    const myID: string = ...
+    const handle = await DBOS.startWorkflow(Example, {workflowID: myID}).exampleWorkflow("one", "two");
+    const result = await handle.getResult();
+}
+```
+
 
 ## Setting Timeouts
 
@@ -194,14 +197,14 @@ They are useful for publishing information about the state of an active workflow
 
 #### setEvent
 
-Any workflow can call [`DBOS.setEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
 
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 #### getEvent
 
-You can call [`DBOS.getEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to retrieve the value published by a particular workflow ID for a particular key.
+You can call [`DBOS.getEvent`](../reference/methods.md#dbosgetevent) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 You can also call `getEvent` from outside of your DBOS application with [DBOS Client](../reference/client.md).
@@ -305,7 +308,7 @@ static async paymentWebhook(): Promise<void> {
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
+If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
 
 ## Workflow Versioning and Recovery
 
@@ -316,6 +319,6 @@ All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](../reference/transactapi/dbos-class.md#dbosforkworkflow) to restart a workflow from a specific step on a specific code version.
+You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](./workflow-management.md#forking-workflows) to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
