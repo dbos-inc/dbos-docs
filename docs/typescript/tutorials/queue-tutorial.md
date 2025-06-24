@@ -16,7 +16,7 @@ const queue = new WorkflowQueue("example_queue");
 ```
 
 You can then enqueue any workflow by passing the queue as an argument to `DBOS.startWorkflow`.
-Enqueuing a function submits it for execution and returns a [handle](../reference/transactapi/workflow-handles.md) to it.
+Enqueuing a function submits it for execution and returns a [handle](../reference/methods.md#workflow-handles) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```javascript
