@@ -163,6 +163,30 @@ async function main() {
 You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.md#dbosretrieveworkflow).
 This can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
 
+## Setting Timeouts
+
+You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```javascript
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const timeout = ... // Timeout in milliseconds
+  const handle = await DBOS.startWorkflow(taskWorkflow, {timeoutMS: timeout})(task);
+}
+```
+
 ## Workflow Events
 
 Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
@@ -207,7 +231,6 @@ The checkout workflow emits the payments URL using `setEvent()`:
 The HTTP handler that originally started the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
 
 ```javascript
-  @DBOS.postApi('/api/checkout_session')
   static async webCheckout(...): Promise<void> {
     const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
     const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
@@ -272,7 +295,6 @@ static async checkoutWorkflow(...): Promise<void> {
 A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```javascript
-@DBOS.postApi('/payment_webhook')
 static async paymentWebhook(): Promise<void> {
   const notificationMessage = ... // Parse the notification.
   const workflowID = ... // Retrieve the workflow ID from notification metadata.

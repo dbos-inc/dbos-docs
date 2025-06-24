@@ -40,32 +40,32 @@ async function main() {
 Here's an example of a workflow using a queue to process tasks in parallel:
 
 ```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
 const queue = new WorkflowQueue("example_queue");
 
-class Tasks {
-  @DBOS.workflow()
-  static async processTask(task) {
+async function taskFunction(task) {
     // ...
-  }
-
-  @DBOS.workflow()
-  static async processTasks(tasks) {
-    const handles = []
-
-    // Enqueue each task so all tasks are processed concurrently.
-    for (const task of tasks) {
-      handles.push(await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task));
-    }
-
-    // Wait for each task to complete and retrieve its result.
-    // Return the results of all tasks.
-    const results = [];
-    for (const h of handles) {
-      results.push(await h.getResult());
-    }
-    return results;
-  }
 }
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function queueFunction(tasks) {
+  const handles = []
+  
+  // Enqueue each task so all tasks are processed concurrently.
+  for (const task of tasks) {
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(task))
+  }
+
+  // Wait for each task to complete and retrieve its result.
+  // Return the results of all tasks.
+  const results = []
+  for (const h of handles) {
+    results.push(await h.getResult())
+  }
+  return results
+}
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
 ```
 
 ### Enqueue with DBOSClient
@@ -131,6 +131,32 @@ const queue = new WorkflowQueue("example_queue", { rateLimit: { limitPerPeriod: 
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
 
+### Setting Timeouts
+
+You can set a timeout for an enqueued workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const timeout = ... // Timeout in milliseconds
+  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+}
+```
+
 ### In-Order Processing
 
 You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
@@ -164,40 +190,3 @@ async function main() {
 
 main().catch(console.log);
 ```
-
-### Queue Management
-
-Because DBOS manages queues in Postgres, you can view and manage queued functions from the command line.
-These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../production/dbos-cloud/cloud-cli.md).
-
-#### Listing Queued Functions
-
-You can list all currently enqueued functions with:
-
-```shell
-npx dbos workflow list
-```
-
-By default, this lists all currently enqueued functions, including queued functions that are currently executing, but not completed functions
-You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list).
-
-#### Removing Queued Functions
-
-You can remove a function from a queue with:
-
-```shell
-npx dbos workflow cancel <workflow-id>
-```
-
-This removes the function from its queue and transitions it to a `CANCELLED` state, so it will not run unless manually resumed.
-
-#### Resuming Workflows
-
-You can start execution of an enqueued function with:
-
-```shell
-npx dbos workflow resume <workflow-id>
-```
-
-This starts execution immediately, bypassing the queue and transitioning the function to a `PENDING` state.
-It also removes the function from its queue.
