@@ -177,31 +177,28 @@ app.use(express.json());
 
 const queue = new WorkflowQueue("example_queue");
 
-export class Example {
-
-  @DBOS.step()
-  static async taskStep(n: number) {
-    await DBOS.sleep(5000);
-    DBOS.logger.info(`Task ${n} completed!`)
-  }
-
-  @DBOS.workflow()
-  static async queueWorkflow() {
-    DBOS.logger.info("Enqueueing tasks!")
-    const handles = []
-    for (let i = 0; i < 10; i++) {
-      handles.push(await DBOS.startWorkflow(Example, { queueName: queue.name }).taskStep(i))
-    }
-    const results = []
-    for (const h of handles) {
-      results.push(await h.getResult())
-    }
-    DBOS.logger.info(`Successfully completed ${results.length} tasks`)
-  }
+async function taskFunction(n: number) {
+  await DBOS.sleep(5000);
+  DBOS.logger.info(`Task ${n} completed!`)
 }
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskFunction");
+
+async function queueFunction() {
+  DBOS.logger.info("Enqueueing tasks!")
+  const handles = []
+  for (let i = 0; i < 10; i++) {
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i))
+  }
+  const results = []
+  for (const h of handles) {
+    results.push(await h.getResult())
+  }
+  DBOS.logger.info(`Successfully completed ${results.length} tasks`)
+}
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
 
 app.get("/", async (req, res) => {
-  await Example.queueWorkflow();
+  await queueWorkflow();
   res.send();
 });
 
