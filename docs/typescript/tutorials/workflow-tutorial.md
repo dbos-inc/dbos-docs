@@ -5,15 +5,35 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which are ordinary TypeScript functions annotated with `@DBOS.step()`.
+Workflows are comprised of [steps](./step-tutorial.md), which can be constructed from ordinary TypeScript functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-Here's an example workflow from the [programming guide](../programming-guide.md).
-Interrupt the program as much as you want after it finishes `stepOne`&mdash;it will always recover and complete `stepTwo`.
+To write a workflow, register a TypeScript function with `DBOS.registerWorkflow`.
+The function's inputs and outputs must be serializable to JSON.
+For example:
 
-```javascript
-class Example {
+```typescript
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
+}
 
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+
+async function workflowFunction() {
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
+}
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+
+await workflow();
+```
+
+Alternatively, you can register workflows and steps with decorators:
+
+```typescript
+export class Example {
   @DBOS.step()
   static async stepOne() {
     DBOS.logger.info("Step one completed!");
@@ -24,16 +44,15 @@ class Example {
     DBOS.logger.info("Step two completed!");
   }
 
+  // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Example.stepOne();
-    for (let i = 0; i < 5; i++) {
-      console.log("Press Control + C to stop the app...");
-      await DBOS.sleep(1000);
-    }
-    await Example.stepTwo();
+    await Toolbox.stepOne();
+    await Toolbox.stepTwo();
   }
 }
+
+await Example.exampleWorkflow();
 ```
 
 ## Reliability Guarantees
@@ -278,53 +297,3 @@ This prevents unsafe recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](../reference/transactapi/dbos-class.md#dbosforkworkflow) to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
-
-## Workflow Management
-
-You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
-
-#### Listing Workflows
-
-You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-list)):
-
-```shell
-npx dbos workflow list
-```
-
-Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
-
-
-#### Cancelling Workflows
-
-You can cancel the execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow cancel <workflow-id>
-```
-
-If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
-
-#### Resuming Workflows
-
-You can resume a workflow from its last completed step from the web UI or with:
-
-```shell
-dbos workflow resume <workflow-id>
-```
-
-You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-#### Restarting Workflows
-
-You can start a new execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow restart <workflow-id>
-```
-
-The new workflow has the same inputs as the original, but a new workflow ID.
