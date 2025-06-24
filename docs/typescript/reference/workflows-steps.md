@@ -60,14 +60,14 @@ Returns the wrapped function.
 **Example:**
 
 ```typescript
-async function example() {
+async function workflowFunction() {
   await stepOne();
   await stepTwo();
 }
 
-const exampleWorkflow = DBOS.registerWorkflow(example, "exampleWorkflow")
-// The wrapped workflow function can be called normally
-await exampleWorkflow();
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+// The registered workflow can be called normally
+await workflow();
 ```
 
 **Parameters:**
@@ -196,21 +196,22 @@ Returns the wrapped function.
 **Example:**
 
 ```typescript
-async function stepOne() {
+async function stepOneFunction() {
   DBOS.logger.info("Step one completed!");
 }
-const regStepOne = DBOS.registerStep(stepOne);
+const stepOne = DBOS.registerStep(stepOneFunction);
 
-async function stepTwo() {
+async function stepTwoFunction() {
   DBOS.logger.info("Step two completed!");
 }
-const regStepTwo = DBOS.registerStep(stepTwo);
+const stepTwo = DBOS.registerStep(stepTwoFunction);
 
 // Call steps from workflows
-async function exampleWorkflow() {
-  await regStepOne();
-  await regStepTwo();
+async function workflowFunction() {
+  await stepOne();
+  await stepTwo();
 }
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 ```
 
 **Parameters:**
