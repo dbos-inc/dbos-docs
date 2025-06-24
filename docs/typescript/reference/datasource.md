@@ -36,14 +36,6 @@ npm i @dbos-inc/typeorm-datasource
 
 
 </TabItem>
-<TabItem value="prisma" label="Prisma">
-
-```shell
-npm i @dbos-inc/prisma-datasource
-```
-
-
-</TabItem>
 </Tabs>
 
 ## Constructing Datasources
