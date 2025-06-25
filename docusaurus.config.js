@@ -115,14 +115,6 @@ const config = {
             to: '/python/tutorials/scheduled-workflows',
           },
           {
-            from: '/tutorials/authentication-authorization',
-            to: '/typescript/tutorials/authentication-authorization',
-          },
-          {
-            from: '/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/development/testing-tutorial',
-          },
-          {
             from: '/tutorials/workflow-tutorial',
             to: '/typescript/tutorials/workflow-tutorial',
           },
@@ -137,78 +129,6 @@ const config = {
           {
             from: '/python/reference/task_queues',
             to: '/python/reference/queues',
-          },
-          {
-            from: '/typescript/tutorials/checkout-tutorial',
-            to: '/typescript/examples/checkout-tutorial',
-          },
-          {
-            from: '/typescript/reference/communicatorlib',
-            to: '/typescript/reference/libraries',
-          },
-          {
-            from: '/typescript/reference/cli',
-            to: '/typescript/reference/tools/cli',
-          },
-          {
-            from: '/typescript/reference/dbos-compiler',
-            to: '/typescript/reference/tools/dbos-compiler',
-          },
-          {
-            from: '/typescript/reference/dbos-class',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/contexts',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/decorators',
-            to: '/typescript/reference/transactapi/dbos-class',
-          },
-          {
-            from: '/typescript/reference/testing-runtime',
-            to: '/typescript/tutorials/development/testing-tutorial',
-          },
-          {
-            from: '/typescript/reference/workflow-handles',
-            to: '/typescript/reference/transactapi/workflow-handles',
-          },
-          {
-            from: '/typescript/reference/workflow-queues',
-            to: '/typescript/reference/transactapi/workflow-queues',
-          },
-          {
-            from: '/typescript/tutorials/using-libraries',
-            to: '/typescript/tutorials/development/using-libraries',
-          },
-          {
-            from: '/typescript/reference/static-analysis',
-            to: '/typescript/tutorials/development/static-analysis',
-          },
-          {
-            from: '/typescript/tutorials/testing-tutorial',
-            to: '/typescript/tutorials/development/testing-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/configured-instances',
-            to: '/typescript/tutorials/instantiated-objects',
-          },
-          {
-            from: '/typescript/tutorials/http-serving-tutorial',
-            to: '/typescript/tutorials/requestsandevents/http-serving-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/workflow-communication-tutorial',
-            to: '/typescript/tutorials/workflow-tutorial',
-          },
-          {
-            from: '/typescript/tutorials/custom-event-receiver',
-            to: '/typescript/tutorials/requestsandevents/custom-event-receiver',
-          },
-          {
-            from: '/typescript/tutorials/kafka-integration',
-            to: '/typescript/tutorials/requestsandevents/kafka-integration',
           },
           {
             from: '/python/examples/reliable-ai-agent',

@@ -99,7 +99,7 @@ Useful for testing.
 DBOS.reset_system_database()
 ```
 
-Destroy the DBOS [system database](../../explanations/how-workflows-work.md), resetting DBOS's internal state in Postgres.
+Destroy the DBOS [system database](../../explanations/system-tables.md), resetting DBOS's internal state in Postgres.
 Useful when testing a DBOS application to reset the internal state of DBOS between tests.
 For example, see its use in the [testing tutorial](../tutorials/testing.md).
 **This is a destructive operation and should only be used in a test environment.**

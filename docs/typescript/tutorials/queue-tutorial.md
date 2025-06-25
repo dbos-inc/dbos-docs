@@ -16,7 +16,7 @@ const queue = new WorkflowQueue("example_queue");
 ```
 
 You can then enqueue any workflow by passing the queue as an argument to `DBOS.startWorkflow`.
-Enqueuing a function submits it for execution and returns a [handle](../reference/transactapi/workflow-handles.md) to it.
+Enqueuing a function submits it for execution and returns a [handle](../reference/methods.md#workflow-handles) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```javascript
@@ -40,32 +40,32 @@ async function main() {
 Here's an example of a workflow using a queue to process tasks in parallel:
 
 ```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
 const queue = new WorkflowQueue("example_queue");
 
-class Tasks {
-  @DBOS.workflow()
-  static async processTask(task) {
+async function taskFunction(task) {
     // ...
-  }
-
-  @DBOS.workflow()
-  static async processTasks(tasks) {
-    const handles = []
-
-    // Enqueue each task so all tasks are processed concurrently.
-    for (const task of tasks) {
-      handles.push(await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task));
-    }
-
-    // Wait for each task to complete and retrieve its result.
-    // Return the results of all tasks.
-    const results = [];
-    for (const h of handles) {
-      results.push(await h.getResult());
-    }
-    return results;
-  }
 }
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function queueFunction(tasks) {
+  const handles = []
+  
+  // Enqueue each task so all tasks are processed concurrently.
+  for (const task of tasks) {
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(task))
+  }
+
+  // Wait for each task to complete and retrieve its result.
+  // Return the results of all tasks.
+  const results = []
+  for (const h of handles) {
+    results.push(await h.getResult())
+  }
+  return results
+}
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
 ```
 
 ### Enqueue with DBOSClient
@@ -131,6 +131,88 @@ const queue = new WorkflowQueue("example_queue", { rateLimit: { limitPerPeriod: 
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
 
+### Setting Timeouts
+
+You can set a timeout for an enqueued workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const timeout = ... // Timeout in milliseconds
+  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+}
+```
+
+### Deduplication
+
+You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
+At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const dedup: string = ...
+  try {
+    const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {deduplicationID: dedup}})(task);
+  } catch (e) {
+    // Handle DBOSQueueDuplicatedError
+  }
+}
+```
+
+### Priority
+
+You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+If using priority, you must set `usePriority: true` on your queue.
+
+:::tip
+Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+:::
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue", {usePriority: true});
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+
+async function main() {
+  const task = ...
+  const priority: number = ...
+  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
+}
+```
+
 ### In-Order Processing
 
 You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
@@ -164,40 +246,3 @@ async function main() {
 
 main().catch(console.log);
 ```
-
-### Queue Management
-
-Because DBOS manages queues in Postgres, you can view and manage queued functions from the command line.
-These commands are also available for applications deployed to DBOS Cloud using the [cloud CLI](../../production/dbos-cloud/cloud-cli.md).
-
-#### Listing Queued Functions
-
-You can list all currently enqueued functions with:
-
-```shell
-npx dbos workflow list
-```
-
-By default, this lists all currently enqueued functions, including queued functions that are currently executing, but not completed functions
-You can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-queue-list).
-
-#### Removing Queued Functions
-
-You can remove a function from a queue with:
-
-```shell
-npx dbos workflow cancel <workflow-id>
-```
-
-This removes the function from its queue and transitions it to a `CANCELLED` state, so it will not run unless manually resumed.
-
-#### Resuming Workflows
-
-You can start execution of an enqueued function with:
-
-```shell
-npx dbos workflow resume <workflow-id>
-```
-
-This starts execution immediately, bypassing the queue and transitioning the function to a `PENDING` state.
-It also removes the function from its queue.

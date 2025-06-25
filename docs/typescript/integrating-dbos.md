@@ -7,7 +7,6 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 
 :::info
 Also check out the integration guides for popular TypeScript frameworks:
-- [Next.js + DBOS](../integrations/adding-dbos-to-next.md)
 - [Nest.js + DBOS](../integrations/nestjs.md)
 :::
 
@@ -21,7 +20,7 @@ Also check out the integration guides for popular TypeScript frameworks:
 npm install @dbos-inc/dbos-sdk@latest
 ```
 
-Then, enable TypeScript decorators in your `tsconfig.json` file:
+**Optionally**, if you want to use TypeScript decorators, enable them in your `tsconfig.json` file:
 
 ```json title="tsconfig.json"
   "compilerOptions": {
@@ -61,27 +60,29 @@ Congratulations!  You've integrated DBOS into your application.
 
 #### 4. Start Building With DBOS
 
-At this point, you can add any DBOS decorator or method to your application.
-For example, you can annotate one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and the functions it calls as [steps](./tutorials/step-tutorial.md).
+At this point, you can add any DBOS method to your application.
+For example, you can register one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and call other functions as [steps](./tutorials/step-tutorial.md).
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```typescript
-export class Example {
-
-  @DBOS.step()
-  static async myStep(n) {
-    DBOS.logger.info(`Step ${n} completed!`);
-  }
-
-  @DBOS.workflow()
-  static async exampleWorkflow() {
-    await Example.myStep(1);
-    await Example.myStep(2);
-  }
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
 }
+
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+
+async function workflowFunction() {
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
+}
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+
+await workflow();
 ```
 
-To ensure that DBOS registers all decorated functions, **declare all DBOS-decorated functions before running `await DBOS.launch()`.**
+**You must register all workflows before calling `DBOS.launch()`**
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.

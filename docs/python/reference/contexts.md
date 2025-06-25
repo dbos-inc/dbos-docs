@@ -380,7 +380,7 @@ class WorkflowStatus:
     status: str
     # The name of the workflow function
     name: str
-    # The number of times the workflow was scheduled to run
+    # The number of times this workflow has been started
     recovery_attempts: int
     # The name of the workflow's class, if any
     class_name: Optional[str]
@@ -404,12 +404,10 @@ class WorkflowStatus:
     updated_at: Optional[int]
     # If this workflow was enqueued, on which queue
     queue_name: Optional[str]
-    # The executor to most recently executed this workflow (DBOS__VMID if set else "local")
+    # The ID of the executor (process) that most recently executed this workflow
     executor_id: Optional[str]
     # The application version on which this workflow was started
     app_version: Optional[str]
-    # The ID of the application (DBOS__APPID if set)
-    app_id: Optional[str]
 ```
 
 ## Context Variables
