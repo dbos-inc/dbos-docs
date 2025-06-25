@@ -29,6 +29,7 @@ class DBOSConfig(TypedDict):
     log_level: Optional[str]
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
+    otlp_attributes: Optional[dict[str, str]]
     admin_port: Optional[int]
     run_admin_server: Optional[bool]
 ```
@@ -64,6 +65,7 @@ postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
 - **sys_db_name**: Name for the [system database](../../explanations/system-tables) in which DBOS stores internal state. Defaults to `{database name}_dbos_sys`.
 - **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
+- **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.

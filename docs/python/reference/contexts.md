@@ -247,7 +247,7 @@ handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, 
 def list_workflows(
     *,
     workflow_ids: Optional[List[str]] = None,
-    status: Optional[str] = None,
+    status: Optional[str | list[str]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
@@ -265,7 +265,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
 - **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
@@ -280,7 +280,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 def list_queued_workflows(
     *,
     queue_name: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[str | list[str]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
@@ -294,7 +294,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enque
 
 **Parameters:**
 - **queue_name**: Retrieve workflows running on this queue.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED` or `PENDING`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.

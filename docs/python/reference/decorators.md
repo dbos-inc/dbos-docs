@@ -13,6 +13,8 @@ In DBOS, you annotate functions with decorators to give them properties.
 
 ```python
 DBOS.workflow(
+  *,
+  name: Optional[str] = None,
   max_recovery_attempts: Optional[int] = 100
 )
 ```
@@ -28,6 +30,7 @@ def greeting_workflow(name: str, note: str):
 ```
 
 **Parameters:**
+- `name`: A name for this workflow. If not provided, the function's fully qualified name is used.
 - `max_recovery_attempts`: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
@@ -37,6 +40,8 @@ If this behavior is not desired, it may be disabled by setting `max_recovery_att
 
 ```python
 DBOS.step(
+    *,
+    name: Optional[str] = None,
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
@@ -44,12 +49,9 @@ DBOS.step(
 )
 ```
 
-Mark a function as a step in a workflow.
-This has two benefits:
-
-1. It lets workflows know this function performs a complex operation or interacts with an external service, so the workflow can guarantee those operations or interactions happen exactly-once.
-
-2. DBOS provides configurable automatic retries with exponential backoff for steps to more easily handle transient errors.
+Annotate a function as a step in a workflow.
+Workflows automatically checkpoint the outcomes of their steps.
+If a workflow is interrupted, it recovers from the last completed step.
 
 **Example:**
 ```python
@@ -59,6 +61,7 @@ def example_step():
 ```
 
 **Parameters:**
+- `name`: A name for this step. If not provided, the function's fully qualified name is used.
 - `retries_allowed`: Whether to retry the step if it throws an exception.
 - `interval_seconds`: How long to wait before the initial retry.
 - `max_attempts`: How many times to retry a step that is throwing exceptions.
@@ -70,6 +73,8 @@ def example_step():
 ```python
 DBOS.transaction(
     isolation_level: str = "SERIALIZABLE"
+    *,
+    name: Optional[str] = None,
 )
 ```
 
@@ -88,6 +93,7 @@ def example_insert(name: str, note: str) -> None:
 
 **Parameters:**
 - `isolation_level`: The isolation level with which to run the transaction. Must be one of `SERIALIZABLE`, `REPEATABLE READ`, or `READ COMMITTED`. Defaults to `SERIALIZABLE`.
+- `name`: A name for this transaction. If not provided, the function's fully qualified name is used.
 
 ### scheduled
 
