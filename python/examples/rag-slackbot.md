@@ -36,38 +36,50 @@ import os
 import uuid
 from typing import Any, Dict, Optional
 
-from dbos import DBOS, DBOSConfig, SetWorkflowID
+import uvicorn
+from dbos import DBOS, DBOSConfig, Queue, SetWorkflowID
 from fastapi import Body, FastAPI
 from fastapi import Request as FastAPIRequest
 from llama_index.core import StorageContext, VectorStoreIndex, set_global_handler
 from llama_index.core.postprocessor import FixedRecencyPostprocessor
 from llama_index.core.prompts import PromptTemplate
-from llama_index.core.schema import NodeRelationship, RelatedNodeInfo, TextNode
+from llama_index.core.schema import TextNode
+from llama_index.llms.openai import OpenAI
 from llama_index.vector_stores.postgres import PGVectorStore
 from slack_bolt import App, BoltRequest
 from slack_bolt.adapter.starlette.handler import to_bolt_request
 from slack_sdk.web import SlackResponse
+from sqlalchemy import make_url
 
 app = FastAPI()
+db_url = os.environ.get("DBOS_DATABASE_URL", "")
 config: DBOSConfig = {
     "name": "llamabot",
-    "database_url": os.environ.get("DATABASE_URL"),
+    "database_url": db_url,
 }
 DBOS(fastapi=app, config=config)
+```
+
+Then, we'll define a queue to limit processing incoming messages to 10 per minute.
+This is to prevent the bot from being overwhelmed by a large number of messages.
+We also set the concurrency to 1 to ensure that messages are responded in the order they are received.
+
+```python
+work_queue = Queue("llamabot_queue", limiter={"limit": 300, "period": 60}, concurrency=1)
 ```
 
 Next, let's initialize LlamaIndex to use the app's Postgres database as its vector store.
 
 ```python
 set_global_handler("simple", logger=DBOS.logger)
-dbos_config = DBOS.config
+db_url_config = make_url(db_url)
 vector_store = PGVectorStore.from_params(
-    database=dbos_config["database"]["app_db_name"],
-    host=dbos_config["database"]["hostname"],
-    password=dbos_config["database"]["password"],
-    port=dbos_config["database"]["port"],
-    user=dbos_config["database"]["username"],
-    perform_setup=False,  # Set up during migration step
+    database=db_url_config.database,
+    host=db_url_config.host,
+    password=db_url_config.password,
+    port=str(db_url_config.port),
+    user=db_url_config.username,
+    perform_setup=False,  # Already setup through schema migration
 )
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 index = VectorStoreIndex([], storage_context=storage_context)
@@ -117,7 +129,7 @@ def handle_message(request: BoltRequest) -> None:
         # Start the event processing workflow in the background then respond to Slack.
         # We can't wait for the workflow to finish because Slack expects the
         # endpoint to reply within 3 seconds.
-        DBOS.start_workflow(message_workflow, request.body["event"])
+        work_queue.enqueue(message_workflow, request.body["event"])
 ```
 
 ## Processing Messages
@@ -204,8 +216,8 @@ def get_slack_replies(channel: str, thread_ts: str) -> SlackResponse:
 # Get a Slack user's username from their user id
 @DBOS.step()
 def get_user_name(user_id: str) -> str:
-    user_info = slackapp.client.users_info(user=user_id)
-    user_name: str = user_info["user"]["name"]
+    user_info = slackapp.client.users_info(user=user_id).get("user", {})
+    user_name: str = user_info["name"]
     return user_name
 ```
 
@@ -222,8 +234,9 @@ def answer_question(
     who_is_asking = get_user_name(message["user"])
     replies_stanza = ""
     if replies is not None:
+        replies_messages = replies.get("messages", [])
         replies_stanza = "In addition to the context above, the question you're about to answer has been discussed in the following chain of replies:\n"
-        for reply in replies["messages"]:
+        for reply in replies_messages:
             replies_stanza += get_user_name(reply["user"]) + ": " + reply["text"] + "\n"
     template = (
         "Your context is a series of chat messages. Each one is tagged with 'who:' \n"
@@ -266,6 +279,14 @@ def insert_node(text: str, user_name: str, formatted_time: str) -> None:
         metadata={"who": user_name, "when": formatted_time},  # type: ignore
     )
     index.insert_nodes([node])
+```
+
+Finally, launch this app
+
+```python
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 ## Try it Yourself!
