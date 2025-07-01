@@ -5,37 +5,39 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which are ordinary Python functions annotated with `@DBOS.step()`.
-If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
 
-Here's an example workflow that sends a confirmation email, sleeps for a while, then sends a reminder email.
-Using a workflow guarantees that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
+You can make a function by annotating it with `@DBOS.workflow()`.
+Workflows call [steps](./step-tutorial.md), which are Python functions annotated with `@DBOS.step()`.
+If a workflow fails for any reason (e.g. a process crash or restart), DBOS automatically recovers it and resumes its execution from the last completed step.
+
+Here's an example of a workflow:
 
 ```python
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
+
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
+
 @DBOS.workflow()
-def reminder_workflow(email: str, time_to_sleep: int):
-    send_confirmation_email(email)
-    DBOS.sleep(time_to_sleep)
-    send_reminder_email(email)
+def workflow():
+    step_one()
+    step_two()
 ```
 
-Here are some example apps demonstrating what workflows can do:
+## Workflow Guarantees
 
-- [**Fault-Tolerant Checkout**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
-- [**Scheduled Reminders**](../examples/scheduled-reminders.md): Send a reminder email to yourself on any day in the future&mdash;even if it's months away.
-- [**Document Ingestion Pipeline**](../examples/document-detective.md): Use workflows and [queues](./queue-tutorial.md) to reliably process thousands of documents concurrently.
-
-
-## Reliability Guarantees
-
-Workflows provide the following reliability guarantees.
+Workflows provide the following guarantees.
 These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
 
 1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
 3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
 This is because uncaught exceptions are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
 DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
