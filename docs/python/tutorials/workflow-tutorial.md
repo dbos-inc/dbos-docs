@@ -126,6 +126,22 @@ with SetWorkflowTimeout(10):
     example_workflow()
 ```
 
+## Durable Sleep
+
+You can use [`DBOS.sleep()`](../reference/contexts.md#sleep) to put your workflow to sleep for any period of time.
+This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
+
+Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
+For example:
+
+```python
+@DBOS.workflow()
+def schedule_task(time_to_sleep, task):
+  # Durably sleep for some time before running the task
+  DBOS.sleep(time_to_sleep)
+  run_task(task)
+```
+
 ## Workflow Events
 
 Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
