@@ -7,9 +7,9 @@ toc_max_heading_level: 3
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
 Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
 
-You can make a function by annotating it with `@DBOS.workflow()`.
-Workflows call [steps](./step-tutorial.md), which are Python functions annotated with `@DBOS.step()`.
-If a workflow fails for any reason (e.g. a process crash or restart), DBOS automatically recovers it and resumes its execution from the last completed step.
+You can make a function a workflow by annotating it with [`@DBOS.workflow()`](../reference/decorators.md#workflow).
+Workflows call [steps](./step-tutorial.md), which are Python functions annotated with [`@DBOS.step()`](../reference/decorators.md#step).
+If a workflow is interrupted for any reason, DBOS automatically recovers its execution from the last completed step.
 
 Here's an example of a workflow:
 
@@ -27,6 +27,31 @@ def workflow():
     step_one()
     step_two()
 ```
+
+## Starting Workflows In The Background
+
+One common use-case for workflows is building reliable background tasks that keep running even when the program is interrupted, restarted, or crashes.
+You can use [`DBOS.start_workflow`](../reference/contexts.md#start_workflow) to start a workflow in the background.
+If you start a workflow this way, it returns a [workflow handle](../reference/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+
+Here's an example:
+
+```python
+@DBOS.workflow()
+def background_task(input):
+    # ...
+    return output
+
+# Start the background task
+handle: WorkflowHandle = DBOS.start_workflow(background_task, input)
+# Wait for the background task to complete and retrieve its result.
+output = handle.get_result()
+```
+
+After starting a workflow in the background, you can use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieve_workflow`](../reference/client.md#retrieve_workflow).
+
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
 ## Workflow Guarantees
 
@@ -92,32 +117,6 @@ def example_workflow():
 with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
-
-## Starting Workflows In The Background
-
-You can use [start_workflow](../reference/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
-This is useful for long-running or interactive workflows.
-
-`start_workflow` returns a [workflow handle](../reference/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
-
-
-Here's an example:
-
-```python
-@DBOS.workflow()
-def example_workflow(var1: str, var2: str):
-    DBOS.sleep(10) # Sleep for 10 seconds
-    return var1 + var2
-
-# Start example_workflow in the background
-handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
-# Wait for the workflow to complete and retrieve its result.
-result = handle.get_result()
-```
-
-You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its ID.
-This can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieve_workflow`](../reference/client.md#retrieve_workflow).
 
 
 ## Workflow Timeouts
