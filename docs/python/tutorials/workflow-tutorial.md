@@ -53,19 +53,26 @@ You can also retrieve a workflow's handle from outside of your DBOS application 
 
 If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
-## Workflow Guarantees
+## Workflow IDs and Idempotency
 
-Workflows provide the following guarantees.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
-2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
 
-If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
-This is because uncaught exceptions are assumed to be nonrecoverable.
-If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
+```python
+@DBOS.workflow()
+def example_workflow():
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
+
+with SetWorkflowID("very-unique-id"):
+    example_workflow()
+```
 
 ## Determinism
 
@@ -95,27 +102,6 @@ def example_step():
 def example_workflow(friend: str):
     body = example_step()
     return example_transaction(body)
-```
-
-## Workflow IDs and Idempotency
-
-Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
-
-You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
-Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
-
-```python
-@DBOS.workflow()
-def example_workflow():
-    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
-
-with SetWorkflowID("very-unique-id"):
-    example_workflow()
 ```
 
 
@@ -275,7 +261,6 @@ If you're sending a message from normal Python code, you can use [`SetWorkflowID
 ## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
-Asynchronous workflows provide the same [reliability guarantees](#reliability-guarantees) as synchronous workflow functions. 
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
 You should start coroutine workflows in the background using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
@@ -302,6 +287,20 @@ async def example_workflow(friend: str):
     result = await asyncio.to_thread(example_transaction, body)
     return result
 ```
+
+## Workflow Guarantees
+
+Workflows provide the following guarantees.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Workflow Versioning and Recovery
 
