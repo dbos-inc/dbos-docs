@@ -7,7 +7,6 @@
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
-- [Next.js](https://docs.dbos.dev/integrations/adding-dbos-to-next.md): This guide shows you how to add the open source DBOS Transact library to your existing Next.js application to durably execute it and make it resilient to any failure.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add the open source DBOS Transact library to your existing Django application to durably execute it and make it resilient to any failure.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
@@ -29,7 +28,6 @@
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/self-hosting/hosting-with-kubernetes.md): This guide shows you how to setup a DBOS Python application and its Postgres database using Kubernetes.
 - [Workflow Management](https://docs.dbos.dev/production/self-hosting/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
 - [Workflow Recovery](https://docs.dbos.dev/production/self-hosting/workflow-recovery.md): When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
-- [LLM-Powered Chatbot](https://docs.dbos.dev/python/examples/chatbot.md): In this example, you'll learn how to build an interactive LLM-powered chatbot with DBOS and LangChain and serverlessly deploy it to DBOS Cloud.
 - [Cloud Cron Quickstart](https://docs.dbos.dev/python/examples/cron-starter.md): Let's say you want to run some code on a schedule.  For example, you want to:
 - [Reliable Customer Service Agent](https://docs.dbos.dev/python/examples/customer-service.md): In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and LangGraph and serverlessly deploy it to DBOS Cloud. This example demonstrates how DBOS makes it easy to connect your AI agent to your existing production systems, especially when integrating human decision-making into automated processes.
 - [Document Ingestion Pipeline](https://docs.dbos.dev/python/examples/document-detective.md): In this example, we'll use DBOS to build a reliable and scalable data processing pipeline.
@@ -55,7 +53,7 @@
 - [Debugging](https://docs.dbos.dev/python/tutorials/debugging.md): Learn how to debug your DBOS Python workflows.
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): Logging
-- [Queues & Parallelism](https://docs.dbos.dev/python/tutorials/queue-tutorial.md): Queues allow you to run functions with managed concurrency.
+- [Queues & Concurrency](https://docs.dbos.dev/python/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduled Workflows](https://docs.dbos.dev/python/tutorials/scheduled-workflows.md): Learn how to run DBOS workflows on a schedule.
 - [Steps](https://docs.dbos.dev/python/tutorials/step-tutorial.md): When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step.
 - [Testing Your App](https://docs.dbos.dev/python/tutorials/testing.md): Testing DBOS Functions
