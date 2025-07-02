@@ -11,8 +11,8 @@ Also check out the integration guides for popular TypeScript frameworks:
 :::
 
 :::warning
-DBOS currently is not compatible with projects that use JavaScript or TypeScript bundlers.
-Support will be added in an upcoming release.
+The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers.
+Additional support for bundling will be added in an upcoming release.
 :::
 
 ### Using DBOS Transact
