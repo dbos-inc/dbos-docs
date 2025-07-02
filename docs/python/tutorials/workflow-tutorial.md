@@ -5,40 +5,74 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which are ordinary Python functions annotated with `@DBOS.step()`.
-If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
 
-Here's an example workflow that sends a confirmation email, sleeps for a while, then sends a reminder email.
-Using a workflow guarantees that even if the sleep duration is weeks or months, even if your program crashes or restarts many times, the reminder email is always sent on schedule (and the confirmation email is never re-sent).
+You can make a function a workflow by annotating it with [`@DBOS.workflow()`](../reference/decorators.md#workflow).
+Workflows call [steps](./step-tutorial.md), which are Python functions annotated with [`@DBOS.step()`](../reference/decorators.md#step).
+If a workflow is interrupted for any reason, DBOS automatically recovers its execution from the last completed step.
+
+Here's an example of a workflow:
+
+```python
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
+
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
+
+@DBOS.workflow()
+def workflow():
+    step_one()
+    step_two()
+```
+
+## Starting Workflows In The Background
+
+One common use-case for workflows is building reliable background tasks that keep running even when the program is interrupted, restarted, or crashes.
+You can use [`DBOS.start_workflow`](../reference/contexts.md#start_workflow) to start a workflow in the background.
+If you start a workflow this way, it returns a [workflow handle](../reference/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+
+Here's an example:
 
 ```python
 @DBOS.workflow()
-def reminder_workflow(email: str, time_to_sleep: int):
-    send_confirmation_email(email)
-    DBOS.sleep(time_to_sleep)
-    send_reminder_email(email)
+def background_task(input):
+    # ...
+    return output
+
+# Start the background task
+handle: WorkflowHandle = DBOS.start_workflow(background_task, input)
+# Wait for the background task to complete and retrieve its result.
+output = handle.get_result()
 ```
 
-Here are some example apps demonstrating what workflows can do:
+After starting a workflow in the background, you can use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieve_workflow`](../reference/client.md#retrieve_workflow).
 
-- [**Fault-Tolerant Checkout**](../examples/widget-store.md): No matter how many times you crash this online storefront, it always correctly processes your orders.
-- [**Scheduled Reminders**](../examples/scheduled-reminders.md): Send a reminder email to yourself on any day in the future&mdash;even if it's months away.
-- [**Document Ingestion Pipeline**](../examples/document-detective.md): Use workflows and [queues](./queue-tutorial.md) to reliably process thousands of documents concurrently.
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
+## Workflow IDs and Idempotency
 
-## Reliability Guarantees
+Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-Workflows provide the following reliability guarantees.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
 
-1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
-2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+```python
+@DBOS.workflow()
+def example_workflow():
+    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
-This is because uncaught exceptions are assumed to be nonrecoverable.
-If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
+with SetWorkflowID("very-unique-id"):
+    example_workflow()
+```
 
 ## Determinism
 
@@ -70,53 +104,6 @@ def example_workflow(friend: str):
     return example_transaction(body)
 ```
 
-## Workflow IDs and Idempotency
-
-Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the [`DBOS.workflow_id`](../reference/contexts.md#workflow_id) context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
-
-You can set the workflow ID of a workflow with [`SetWorkflowID`](../reference/contexts.md#setworkflowid).
-Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
-
-```python
-@DBOS.workflow()
-def example_workflow():
-    DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
-
-with SetWorkflowID("very-unique-id"):
-    example_workflow()
-```
-
-## Starting Workflows In The Background
-
-You can use [start_workflow](../reference/contexts.md#start_workflow) to start a workflow in the background without waiting for it to complete.
-This is useful for long-running or interactive workflows.
-
-`start_workflow` returns a [workflow handle](../reference/workflow_handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
-
-
-Here's an example:
-
-```python
-@DBOS.workflow()
-def example_workflow(var1: str, var2: str):
-    DBOS.sleep(10) # Sleep for 10 seconds
-    return var1 + var2
-
-# Start example_workflow in the background
-handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
-# Wait for the workflow to complete and retrieve its result.
-result = handle.get_result()
-```
-
-You can also use [`DBOS.retrieve_workflow`](../reference/contexts.md#retrieve_workflow) to retrieve a workflow's handle from its ID.
-This can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieve_workflow`](../reference/client.md#retrieve_workflow).
-
 
 ## Workflow Timeouts
 
@@ -137,6 +124,22 @@ def example_workflow():
 # If the workflow does not complete within 10 seconds, it times out and is cancelled
 with SetWorkflowTimeout(10):
     example_workflow()
+```
+
+## Durable Sleep
+
+You can use [`DBOS.sleep()`](../reference/contexts.md#sleep) to put your workflow to sleep for any period of time.
+This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
+
+Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
+For example:
+
+```python
+@DBOS.workflow()
+def schedule_task(time_to_sleep, task):
+  # Durably sleep for some time before running the task
+  DBOS.sleep(time_to_sleep)
+  run_task(task)
 ```
 
 ## Workflow Events
@@ -274,7 +277,6 @@ If you're sending a message from normal Python code, you can use [`SetWorkflowID
 ## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
-Asynchronous workflows provide the same [reliability guarantees](#reliability-guarantees) as synchronous workflow functions. 
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
 You should start coroutine workflows in the background using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
@@ -301,6 +303,20 @@ async def example_workflow(friend: str):
     result = await asyncio.to_thread(example_transaction, body)
     return result
 ```
+
+## Workflow Guarantees
+
+Workflows provide the following guarantees.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Workflow Versioning and Recovery
 

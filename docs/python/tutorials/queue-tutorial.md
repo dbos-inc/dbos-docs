@@ -1,11 +1,11 @@
 ---
 sidebar_position: 4
-title: Queues & Parallelism
+title: Queues & Concurrency
 toc_max_heading_level: 3
 ---
 
-Queues allow you to run functions with managed concurrency.
-They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+You can use queues to run many workflows at once with managed concurrency.
+Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, specify its name:
 
@@ -15,14 +15,14 @@ from dbos import Queue
 queue = Queue("example_queue")
 ```
 
-You can then enqueue any DBOS workflow, step, or transaction.
+You can then enqueue any DBOS workflow or step.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflow_handles.md) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```python
 queue = Queue("example_queue")
 
-@DBOS.step()
+@DBOS.workflow()
 def process_task(task):
   ...
 
@@ -39,7 +39,7 @@ from dbos import DBOS, Queue
 
 queue = Queue("example_queue")
 
-@DBOS.step()
+@DBOS.workflow()
 def process_task(task):
   ...
 
@@ -54,38 +54,6 @@ def process_tasks(tasks):
   # Return the results of all tasks.
   return [handle.get_result() for handle in task_handles]
 ```
-
-### Enqueue with DBOSClient
-
-[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
-Among other things, this allows you to enqueue workflows from outside your DBOS application by connecting to Postgres directly.
-
-Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
-
-Example: 
-
-```python
-from dbos import DBOSClient, EnqueueOptions
-
-client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
-
-options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
-}
-handle = client.enqueue(options, task)
-result = handle.get_result()
-```
-
-### Reliability Guarantees
-
-Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
-
-1.  Enqueued functions always run to completion.  If a DBOS process crashes and is restarted at any point after a function is enqueued, it resumes the enqueued function from the last completed step.
-2.  Enqueued [steps](./step-tutorial.md) (or steps called from enqueued workflows) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  Enqueued [transactions](./transaction-tutorial.md) (or transactions called from enqueued workflows) commit _exactly once_.
-
 
 ### Managing Concurrency
 
@@ -207,4 +175,25 @@ with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
 
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
+```
+
+## Enqueueing with DBOS Client
+
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting to Postgres directly.
+
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+Example: 
+
+```python
+from dbos import DBOSClient, EnqueueOptions
+
+client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
+
+options: EnqueueOptions = {
+  "queue_name": "process_task",
+  "workflow_name": "example_queue",
+}
+handle = client.enqueue(options, task)
+result = handle.get_result()
 ```

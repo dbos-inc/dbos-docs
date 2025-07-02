@@ -8,10 +8,6 @@ description: Learn how to combine DBOS + Next.js with this cloud scheduling tool
 # DBOS Task Scheduler
 DBOS Task Scheduler is a full-stack app built with [Next.js](https://nextjs.org/) and [DBOS](https://dbos.dev).  It serves as both a demo for learning DBOS concepts and a template for building your own DBOS-powered Next.js applications.
 
-:::tip
-For general information about integrating DBOS with Next.js, see the ["Adding DBOS to Next.js Apps"](../../integrations/adding-dbos-to-next.md) guide.
-:::
-
 ![Screen shot of DBOS Task Scheduler](./assets/dbos-task-scheduler-main.png)
 
 If you like the idea of a cloud-based task scheduler with a calendar UI, you can easily [customize it with your own tasks](#task-code) and deploy it to [DBOS Cloud](https://www.dbos.dev/dbos-cloud) for free.
@@ -326,7 +322,7 @@ While WebSockets can be used to deliver notifications from DBOS to the client, a
 ```
 
 ### Next.js Custom Server
-While many Next.js applications are "serverless", several of the features in DBOS Task Scheduler require a ["custom server"](../../integrations/adding-dbos-to-next#adding-serverts-to-a-project).  This file, located in `src/server.ts`, handles the following:
+While many Next.js applications are "serverless", several of the features in DBOS Task Scheduler require a "custom server".  This file, located in `src/server.ts`, handles the following:
 - Sets up all DBOS application code so that it is all available before serving requests.
 - Launches DBOS, which starts any necessary workflow recovery.
 - Creates an HTTP server with the WebSockets extension.
@@ -454,7 +450,7 @@ As part of server setup, before server listening is started, add WebSockets func
 ```
 
 #### The Importance of `globalThis`
-Next.js creates multiple "bundles" that contain minimized code for handling each request type.  These bundles have their own copies of what would otherwise be "global" variables.  If you intend to share data across bundles and with the DBOS logic in `server.ts`, you should use [`globalThis`](../../integrations/adding-dbos-to-next#using-globalthis) or a similar construct.
+Next.js creates multiple "bundles" that contain minimized code for handling each request type.  These bundles have their own copies of what would otherwise be "global" variables.  If you intend to share data across bundles and with the DBOS logic in `server.ts`, you should use `globalThis` or a similar construct.
 
 ## Configuration Files
 DBOS Task Scheduler relies on a significant number of configuration files.  While an exhaustive treatment is not possible, the following sections describe some of more important bits.
@@ -498,10 +494,10 @@ This script checks the code for common errors, using [`eslint`](https://eslint.o
 This file contains the `eslint` configuration.  This is based on the "next/core-web-vitals" and "next/typescript" settings, with an additional override to ignore unused variables, as long as the names are prefixed with `_`.
 
 ### `tsconfig.json`
-For DBOS code and `server.ts` to compile properly, some `tsconfig.json` settings are required.  This project was set up according to ["Compilation Settings For DBOS Code"](../../integrations/adding-dbos-to-next#compilation-settings-for-dbos-code).
+For DBOS code and `server.ts` to compile properly, some `tsconfig.json` settings are required.  This project was set up according to "Compilation Settings For DBOS Code".
 
 ### `next.config.ts`
-It is [important keep the DBOS library, and any workflow functions or other code used by DBOS, external to Next.js bundles](../../integrations/adding-dbos-to-next#preventing-bundling).  This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
+It is important keep the DBOS library, and any workflow functions or other code used by DBOS, external to Next.js bundles.  This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
 ```typescript
   webpack: (config, { isServer, dev: _dev }) => {
     if (isServer) {

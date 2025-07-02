@@ -82,13 +82,6 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="LLM-Powered Chatbot"
-    href="python/examples/chatbot"
-    description="Build a chatbot with DBOS and LangChain, then serverlessly deploy it to DBOS Cloud 50x cheaper than on AWS."
-    icon={<IoIosChatboxes color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
     label="Earthquake Tracker"
     href="python/examples/earthquake-tracker"
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
