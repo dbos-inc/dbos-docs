@@ -7,8 +7,12 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 
 :::info
 Also check out the integration guides for popular TypeScript frameworks:
-- [Next.js + DBOS](../integrations/adding-dbos-to-next.md)
 - [Nest.js + DBOS](../integrations/nestjs.md)
+:::
+
+:::warning
+DBOS currently is not compatible with projects that use JavaScript or TypeScript bundlers.
+Support will be added in an upcoming release.
 :::
 
 ### Using DBOS Transact
