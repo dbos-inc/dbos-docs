@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 7
-title: Autonomous Research Agent
+sidebar_position: 10
+title: Hacker News Research Agent
 ---
 
 In this example, we use DBOS to build an autonomous research agent that searches Hacker News for information on any topic.
@@ -443,12 +443,3 @@ python -m hacker_news_agent "kubernetes scaling"
 ```
 
 The agent will autonomously research your topic, make decisions about what to investigate next, and produce a comprehensive research report with insights from the Hacker News community.
-
-### What Makes This Agent Reliable?
-
-1. **Durable Execution**: Every step is wrapped with `@DBOS.step()`, making the entire research process fault-tolerant.
-2. **Autonomous Decision-Making**: The agent evaluates its own progress and decides when to continue or conclude research.
-3. **Adaptive Queries**: When searches yield no results, the agent generates alternative approaches.
-4. **Comprehensive Synthesis**: All findings are combined into a coherent, detailed report with specific insights.
-
-The agent demonstrates how DBOS enables building sophisticated AI workflows that can recover from any failure while maintaining state and progress.
