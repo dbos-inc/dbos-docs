@@ -128,9 +128,8 @@ def email_endpoint(request):
 <article className="col col--4">
 
 Schedule functions to run at specific times.
-Host them serverlessly on DBOS Cloud.
 
-[Get started ↗️](./python/examples/cron-starter.md)
+[Get started ↗️](./python/tutorials/scheduled-workflows.md)
 
 </article>
 <article className="col col--8">

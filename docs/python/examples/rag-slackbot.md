@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 6
+sidebar_position: 70
 title: AI-Powered Slackbot
 ---
 
