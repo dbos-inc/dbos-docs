@@ -203,23 +203,22 @@ def process_kafka_alerts(msg):
 <section className="row list">
 <article className="col col--4">
 
-Enhance your AI agents with reliable asynchronous tasks and human in the loop.
+Use durable workflows to build reliable, fault-tolerant AI agents.
 Integrate with popular frameworks like LangChain and LlamaIndex.
 
-[See an example ↗️](./python/examples/customer-service.md)
+[See an example ↗️](./python/examples/hacker-news-agent.md)
 
 </article>
 <article className="col col--8">
 
 ```python
 @DBOS.workflow()
-def agentic_refund(purchase):
-    email_human_for_approval(purchase)
-    status = DBOS.recv(timeout_seconds=APPROVAL_TIMEOUT)
-    if status == "approve":
-        approve_refund(purchase)
-    else:
-        reject_refund(purchase)
+def agentic_research_workflow(topic: str):
+    ...
+
+@DBOS.step()
+def generate_followup_queries(topic, current_findings):
+    ...
 ```
 
 </article>
