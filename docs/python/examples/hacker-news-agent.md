@@ -121,7 +121,7 @@ def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
                 story_comments = get_comments_step(story_id, max_comments=10)
                 comments.extend(story_comments)
 
-    # Step 3: Evaluates gathered data and returns findings
+    # Step 3: Evaluate gathered data and return findings
     evaluation = evaluate_results_step(topic, query, stories, comments)
 
     return {
