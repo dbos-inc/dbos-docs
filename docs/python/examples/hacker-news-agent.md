@@ -106,7 +106,7 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
 
 ## Research Query Workflow
 
-Each iteration of the main research workflow is implemented as a child workflow that searches Hacker News for information about a query, then evaluates and returns its findings.
+Each iteration of the main research workflow calls a child workflow that searches Hacker News for information about a query, then evaluates and returns its findings.
 
 ```python
 @DBOS.workflow()
@@ -198,7 +198,6 @@ def evaluate_results_step(
         )
 
     comments_text = ""
-    interesting_comments = []
 
     if comments:
         for i, comment in enumerate(comments[:20]):  # Limit to top 20 comments
@@ -215,10 +214,6 @@ def evaluate_results_step(
                 comments_text += f"Comment {i+1}:\n"
                 comments_text += f"  Author: {author}\n"
                 comments_text += f"  Text: {excerpt}\n\n"
-
-                interesting_comments.append(
-                    {"author": author, "text": excerpt, "full_text": comment_text}
-                )
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
@@ -240,15 +235,8 @@ def evaluate_results_step(
     - Specific use cases, implementation details, or real-world examples
     
     Return JSON with:
-    - "detailed_insights": Array of specific, technical insights with context
-    - "technical_findings": Array of concrete technical details or metrics
-    - "tools_mentioned": Array of specific tools/libraries/frameworks discussed
-    - "interesting_quotes": Array of notable quotes or opinions from comments
-    - "use_cases": Array of specific use cases or applications mentioned
-    - "performance_data": Array of any performance metrics or benchmarks
+    - "insights": Array of specific, technical insights with context
     - "relevance_score": Number 1-10
-    - "unanswered_questions": Array of questions needing more research
-    - "follow_up_suggestions": Array of specific research directions
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
     """
@@ -264,35 +252,18 @@ def evaluate_results_step(
     response = call_llm(messages, max_tokens=2000)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         evaluation = json.loads(cleaned_response)
-        # Add metadata and story references
         evaluation["query"] = query
-        evaluation["stories_count"] = len(stories)
-        evaluation["comments_count"] = len(comments) if comments else 0
         evaluation["top_stories"] = top_stories
-        evaluation["interesting_comments"] = interesting_comments
         return evaluation
     except json.JSONDecodeError:
         return {
             "insights": [f"Found {len(stories)} stories about {topic}"],
             "relevance_score": 7,
-            "unanswered_questions": [],
-            "follow_up_suggestions": [],
             "summary": f"Basic search results for {query}",
             "key_points": [],
             "query": query,
-            "stories_count": len(stories),
-            "comments_count": len(comments) if comments else 0,
         }
 ```
 
@@ -359,16 +330,7 @@ def generate_follow_ups_step(
     response = call_llm(messages)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         queries = json.loads(cleaned_response)
         return queries if isinstance(queries, list) else []
     except json.JSONDecodeError:
@@ -431,7 +393,6 @@ def should_continue_step(
     Return JSON with:
     - "should_continue": boolean
     - "reason": string explaining the decision
-    - "confidence": number 1-10 in the decision
     """
 
     messages = [
@@ -442,26 +403,16 @@ def should_continue_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages)
+    response = call_llm(messages)
 
     try:
-        # Clean the response
-        cleaned_response = response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        cleaned_response = cleaned_response.strip()
-
+        cleaned_response = clean_json_response(response)
         decision = json.loads(cleaned_response)
         return decision
     except json.JSONDecodeError:
         return {
             "should_continue": current_iteration < max_iterations and avg_relevance < 8,
             "reason": "Default decision based on iteration count and relevance",
-            "confidence": 5,
         }
 ```
 
@@ -519,7 +470,7 @@ def synthesize_findings_step(
         findings_text += f"Query: {finding.get('query', 'Unknown')}\n"
         findings_text += f"Summary: {finding.get('summary', 'No summary')}\n"
         findings_text += f"Key Points: {finding.get('key_points', [])}\n"
-        findings_text += f"Insights: {finding.get('insights', 'No insights')}\n"
+        findings_text += f"Insights: {finding.get('insights', [])}\n"
 
         # Extract story links and details for reference
         if finding.get("top_stories"):
@@ -628,23 +579,12 @@ def synthesize_findings_step(
     response = call_llm(messages, max_tokens=3000)
 
     try:
-        cleaned_response = _clean_json_response(response)
+        cleaned_response = clean_json_response(response)
         result = json.loads(cleaned_response)
         return result
     except json.JSONDecodeError as e:
-        # Agent resilience: Create fallback synthesis if LLM output can't be parsed
-        basic_insights = []
-        for finding in all_findings:
-            insights = finding.get("insights", [])
-            if insights:
-                basic_insights.extend(insights[:2])
-
-        basic_report = f"Research on {topic} revealed {len(all_findings)} key areas of investigation with varying levels of activity and discussion."
-        if basic_insights:
-            basic_report += f" Key insights include: {'; '.join(basic_insights[:3])}."
-
         return {
-            "report": basic_report,
+            "report": "JSON parsing error, report could not be generated.",
             "error": f"JSON parsing failed, created basic synthesis. Error: {str(e)}",
         }
 ```
