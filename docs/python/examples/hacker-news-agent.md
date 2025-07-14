@@ -186,7 +186,8 @@ def evaluate_results_step(
     stories_text = ""
     top_stories = []
 
-    for i, story in enumerate(stories[:10]):  # Limit to top 10 stories
+    # Evaluate only the top 10 most relevant (per HN search) stories
+    for i, story in enumerate(stories[:10]):
         title = story.get("title", "No title")
         url = story.get("url", "No URL")
         hn_url = f"https://news.ycombinator.com/item?id={story.get('objectID', '')}"
@@ -278,7 +279,7 @@ def evaluate_results_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages, max_tokens=2000)
+    response = call_llm(messages, max_tokens=2000)
 
     try:
         # Clean the response
@@ -373,7 +374,7 @@ def generate_follow_ups_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages)
+    response = call_llm(messages)
 
     try:
         # Clean the response
@@ -484,38 +485,45 @@ def should_continue_step(
 
 </details>
 
-## LLM Integration and API Steps
+## Search API Steps
 
-The agent relies on these key step functions to make LLM calls (via the OpenAI API, using `gpt-4o-mini` by default) and to search Hacker News.
+After deciding what terms to search for, the agent calls these steps to retrieve stories and comments from Hacker News.
 
 <details>
-<summary><strong>LLM Integration Step</strong></summary>
+<summary><strong>Hacker News API Steps</strong></summary>
 
 ```python
 @DBOS.step()
-def llm_call_step(
-    messages: List[Dict[str, str]],
-    model: str = DEFAULT_MODEL,
-    temperature: float = DEFAULT_TEMPERATURE,
-    max_tokens: int = DEFAULT_MAX_TOKENS,
-) -> str:
-    """Core LLM API call wrapped as a durable DBOS step.
+def search_hackernews_step(query: str, max_results: int = 20) -> List[Dict[str, Any]]:
+    """Search Hacker News stories using Algolia API."""
+    params = {"query": query, "hitsPerPage": max_results, "tags": "story"}
 
-    The @DBOS.step() decorator makes this function durable - if it fails,
-    DBOS will automatically retry it. This is essential for building reliable
-    agents that can recover from transient failures.
-    """
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        raise Exception(f"LLM API call failed: {str(e)}")
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get("https://hn.algolia.com/api/v1/search", params=params)
+        response.raise_for_status()
+        return response.json()["hits"]
 
+@DBOS.step()
+def get_comments_step(story_id: str, max_comments: int = 50) -> List[Dict[str, Any]]:
+    """Get comments for a specific Hacker News story."""
+    params = {"tags": f"comment,story_{story_id}", "hitsPerPage": max_comments}
+
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get("https://hn.algolia.com/api/v1/search", params=params)
+        response.raise_for_status()
+        return response.json()["hits"]
+```
+
+</details>
+
+## Synthesize Findings Step
+
+Finally, after concluding its research, the agentic workflow calls this step to synthesize its findings into a report.
+
+<details>
+<summary><strong>Synthesize Findings Step</strong></summary>
+
+```python
 @DBOS.step()
 def synthesize_findings_step(
     topic: str, all_findings: List[Dict[str, Any]]
@@ -635,7 +643,7 @@ def synthesize_findings_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = llm_call_step(messages, max_tokens=3000)
+    response = call_llm(messages, max_tokens=3000)
 
     try:
         cleaned_response = _clean_json_response(response)
@@ -661,32 +669,6 @@ def synthesize_findings_step(
 
 </details>
 
-<details>
-<summary><strong>Hacker News API Steps</strong></summary>
-
-```python
-@DBOS.step()
-def search_hackernews_step(query: str, max_results: int = 20) -> List[Dict[str, Any]]:
-    """Search Hacker News stories using Algolia API."""
-    params = {"query": query, "hitsPerPage": max_results, "tags": "story"}
-
-    with httpx.Client(timeout=30.0) as client:
-        response = client.get("https://hn.algolia.com/api/v1/search", params=params)
-        response.raise_for_status()
-        return response.json()["hits"]
-
-@DBOS.step()
-def get_comments_step(story_id: str, max_comments: int = 50) -> List[Dict[str, Any]]:
-    """Get comments for a specific Hacker News story."""
-    params = {"tags": f"comment,story_{story_id}", "hitsPerPage": max_comments}
-
-    with httpx.Client(timeout=30.0) as client:
-        response = client.get("https://hn.algolia.com/api/v1/search", params=params)
-        response.raise_for_status()
-        return response.json()["hits"]
-```
-
-</details>
 
 ## Try it Yourself!
 
