@@ -48,37 +48,30 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
 
         # Handle cases where no results are found
         stories_found = iteration_result["stories_found"]
-
         if stories_found == 0:
+
             # Generate alternative queries when hitting dead ends
-            alternative_queries = generate_follow_ups_step(
+            alternative_query = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-
-            if alternative_queries:
-                current_query = alternative_queries[0]
+            if alternative_query:
+                current_query = alternative_query
                 continue
 
         # Evaluate whether to continue research
-        decision = should_continue_step(
+        should_continue = should_continue_step(
             topic, all_findings, current_iteration, max_iterations
         )
-
-        if not decision.get("should_continue", False):
+        if not should_continue:
             break
 
         # Generate next research question based on findings
         if current_iteration < max_iterations:
-            console.print("[dim]💭 Agent generating next research question...[/dim]")
-            follow_up_queries = generate_follow_ups_step(
+            follow_up_query = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-
-            if follow_up_queries:
-                current_query = follow_up_queries[0]
-                console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
-            else:
-                break
+            if follow_up_query:
+                current_query = follow_up_query
 
     # Final step: Synthesize all findings into comprehensive report
     final_report = synthesize_findings_step(topic, all_findings)
@@ -276,7 +269,7 @@ def evaluate_results_step(
 @DBOS.step()
 def generate_follow_ups_step(
     topic: str, current_findings: List[Dict[str, Any]], iteration: int
-) -> List[str]:
+) -> Optional[str]:
     """Agent generates follow-up research queries based on current findings."""
 
     findings_summary = ""
@@ -332,9 +325,9 @@ def generate_follow_ups_step(
     try:
         cleaned_response = clean_json_response(response)
         queries = json.loads(cleaned_response)
-        return queries if isinstance(queries, list) else []
+        return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
     except json.JSONDecodeError:
-        return []
+        return None
 ```
 
 </details>
@@ -349,7 +342,7 @@ def should_continue_step(
     all_findings: List[Dict[str, Any]],
     current_iteration: int,
     max_iterations: int,
-) -> Dict[str, Any]:
+) -> bool:
     """Agent decides whether to continue research or conclude."""
 
     if current_iteration >= max_iterations:
@@ -392,7 +385,6 @@ def should_continue_step(
     
     Return JSON with:
     - "should_continue": boolean
-    - "reason": string explaining the decision
     """
 
     messages = [
@@ -408,12 +400,9 @@ def should_continue_step(
     try:
         cleaned_response = clean_json_response(response)
         decision = json.loads(cleaned_response)
-        return decision
+        return decision.get("should_continue", True)
     except json.JSONDecodeError:
-        return {
-            "should_continue": current_iteration < max_iterations and avg_relevance < 8,
-            "reason": "Default decision based on iteration count and relevance",
-        }
+        return True
 ```
 
 </details>
