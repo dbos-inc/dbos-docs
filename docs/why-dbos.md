@@ -213,12 +213,19 @@ Integrate with popular frameworks like LangChain and LlamaIndex.
 
 ```python
 @DBOS.workflow()
-def agentic_research_workflow(topic: str):
-    ...
+def agentic_research_workflow(topic, max_iterations):
+  research_results = []
+  for i in range(max_iterations):
+    research_result = research_query(topic)
+    research_results.append(research_result)
+    if not should_continue(research_results):
+      break
+    topic = generate_next_topic(topic, research_results)
+  return synthesize_research_report(research_results)
 
 @DBOS.step()
-def generate_followup_queries(topic, current_findings):
-    ...
+def research_query(topic):
+  ...
 ```
 
 </article>
