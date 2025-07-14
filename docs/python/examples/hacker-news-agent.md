@@ -693,12 +693,11 @@ git clone https://github.com/dbos-inc/dbos-docs.git
 cd dbos-docs/hacker-news-agent
 ```
 
-Then create a virtual environment and install dependencies:
+Then use [uv](https://docs.astral.sh/uv/guides/install-python/) to install dependencies and activate your virtual environment:
 
 ```shell
-python3 -m venv .venv
+uv sync
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 Start PostgreSQL (required for DBOS):
