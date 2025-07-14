@@ -10,6 +10,10 @@ This example demonstrates how to build **reliable, durable AI agents** with DBOS
 The agent starts with a research topic, autonomously searches for related information, makes decisions about when to continue research, and synthesizes findings into a comprehensive report.
 Because the agent is implemented as a DBOS durable workflow, it can automatically recover from any failure and continue research from where it left off, ensuring no work is lost.
 
+This example also demonstrates how easy it is to add DBOS to an existing agentic application.
+Adding DBOS to this agent to make it reliable and observable required changing **&lt;20 lines of code**.
+All you have to do is annotate workflows and steps.
+
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hacker-news-agent).
 
 ## Main Research Workflow
