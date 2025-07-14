@@ -15,52 +15,42 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ## Main Research Workflow
 
 The core of the agent is the main research workflow.
-It starts with a topic and autonomously explores related topics until it has enough information, then synthesizes a final report.
+It starts with a topic and autonomously explores related queries until it has enough information, then synthesizes a final report.
 
 ```python
 @DBOS.workflow()
-def agentic_research_workflow(
-    topic: str, max_iterations: Optional[int] = None
-) -> Dict[str, Any]:
+def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]:
     """Main agentic workflow that autonomously researches a topic.
 
     This demonstrates a complete agentic workflow using DBOS.
     The agent starts with a research topic then:
     1. Searches Hacker News for information on that topic.
-    2. Iteratively searches related topics, collecting information.
+    2. Iteratively searches related queries, collecting information.
     3. Makes decisions about when to continue
     4. Synthesizes findings into a final report.
 
     The entire process is durable and can recover from any failure.
     """
 
-    console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
-
-    # Initialize agent state
-    if max_iterations is None:
-        max_iterations = 8
-
     all_findings = []
     research_history = []
     current_iteration = 0
     current_query = topic
 
-    # Main agentic research loop - each iteration is a child workflow
+    # Main agentic research loop
     while current_iteration < max_iterations:
         current_iteration += 1
-    
-        # Execute each research iteration as a child workflow
-        iteration_result = research_iteration_workflow(
-            topic, current_query, current_iteration
-        )
+
+        # Research the next query in a child workflow
+        iteration_result = research_query(topic, current_query, current_iteration)
         research_history.append(iteration_result)
         all_findings.append(iteration_result["evaluation"])
 
-        # Agent adaptation: Handle cases where no results are found
+        # Handle cases where no results are found
         stories_found = iteration_result["stories_found"]
 
         if stories_found == 0:
-            # Agent generates alternative queries when hitting dead ends
+            # Generate alternative queries when hitting dead ends
             alternative_queries = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
@@ -69,7 +59,7 @@ def agentic_research_workflow(
                 current_query = alternative_queries[0]
                 continue
 
-        # Agent decision-making: Evaluate whether to continue research
+        # Evaluate whether to continue research
         decision = should_continue_step(
             topic, all_findings, current_iteration, max_iterations
         )
@@ -77,18 +67,20 @@ def agentic_research_workflow(
         if not decision.get("should_continue", False):
             break
 
-        # Agent planning: Generate next research question based on findings
+        # Generate next research question based on findings
         if current_iteration < max_iterations:
+            console.print("[dim]💭 Agent generating next research question...[/dim]")
             follow_up_queries = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
 
             if follow_up_queries:
                 current_query = follow_up_queries[0]
+                console.print(f"[dim]➡️  Next research focus: '{current_query}'[/dim]")
             else:
                 break
 
-    # Final step: Agent synthesizes all findings into comprehensive report
+    # Final step: Synthesize all findings into comprehensive report
     final_report = synthesize_findings_step(topic, all_findings)
 
     # Return complete research results
@@ -112,22 +104,14 @@ def agentic_research_workflow(
     }
 ```
 
-## Research Iteration Workflow
+## Research Query Workflow
 
-Each iteration of the main research workflow is implemented as a child workflow that searches Hacker News for information about a topic, then evaluates and returns its findings.
+Each iteration of the main research workflow is implemented as a child workflow that searches Hacker News for information about a query, then evaluates and returns its findings.
 
 ```python
 @DBOS.workflow()
-def research_iteration_workflow(
-    topic: str, query: str, iteration: int
-) -> Dict[str, Any]:
-    """Execute each research iteration as a durable workflow.
-
-    This workflow demonstrates how to combine multiple DBOS steps
-    into a cohesive research process. If any step fails, DBOS will
-    automatically retry from the failed step.
-    """
-
+def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
+    """Research a query selected by the main agentic workflow."""
 
     # Step 1: Search Hacker News for stories about the topic
     stories = search_hackernews_step(query, max_results=30)
@@ -135,18 +119,16 @@ def research_iteration_workflow(
     # Step 2: Gather comments from all stories found
     comments = []
     if stories:
-
         for i, story in enumerate(stories):
             story_id = story.get("objectID")
             title = story.get("title", "Unknown")[:50]
             num_comments = story.get("num_comments", 0)
 
             if story_id and num_comments > 0:
-                # Each comment fetch is a durable step
                 story_comments = get_comments_step(story_id, max_comments=10)
                 comments.extend(story_comments)
 
-    # Step 3: Agent evaluates gathered data and returns its findings
+    # Step 3: Evaluates gathered data and returns findings
     evaluation = evaluate_results_step(topic, query, stories, comments)
 
     return {
