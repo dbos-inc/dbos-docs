@@ -17,7 +17,7 @@ Each row represents a different workflow execution.
 
 **Columns:**
 - `workflow_uuid`: The unique identifier of the workflow execution.
-- `status`: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, or `CANCELLED`.
+- `status`: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, or `CANCELLED`.
 - `name`: The name (in Python, fully qualified name) of the workflow function.
 - `authenticated_user`: The user who ran the workflow. Empty string if not set.
 - `assumed_role`: The role used to run this workflow.  Empty string if authorization is not required.

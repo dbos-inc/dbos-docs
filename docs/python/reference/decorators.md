@@ -31,9 +31,10 @@ def greeting_workflow(name: str, note: str):
 
 **Parameters:**
 - `name`: A name for this workflow. If not provided, the function's fully qualified name is used.
-- `max_recovery_attempts`: The maximum number of times the workflow may be attempted.
+- `max_recovery_attempts`: The maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+A workflow in this state may be [resumed](../tutorials/workflow-management.md#resuming-workflows), which will resume execution and reset the count of execution attempts.
 If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
 
 ### step

@@ -670,7 +670,7 @@ Retrieves the status of a workflow with the following structure:
 
 ```typescript
 export interface WorkflowStatus {
-  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, or CANCELLED.
+  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, or CANCELLED.
   readonly workflowName: string; // The name of the workflow function.
 }
 ```
