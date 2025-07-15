@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 2
+sidebar_position: 20
 title: Document Ingestion Pipeline
 ---
 

@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 1
+sidebar_position: 30
 title: Fault-Tolerant Checkout
 ---
 
