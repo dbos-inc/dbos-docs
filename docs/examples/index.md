@@ -19,10 +19,10 @@ import { VscGraphLine } from "react-icons/vsc";
 
   <section className="row list">
   <CardLink
-    label="Fault-Tolerant Checkout"
-    href="python/examples/widget-store"
-    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+    label="Hacker News Research Agent"
+    href="python/examples/hacker-news-agent"
+    description="Use DBOS to build an AI deep research agent searching Hacker News."
+    icon={<FaHackerNews color="white" size={50} />}
     language="python"
   />
   <CardLink
@@ -33,18 +33,11 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="Reliable Customer Service Agent"
-    href="python/examples/customer-service"
-    description="Use DBOS and LangGraph to build a reliable AI-powered customer service agent."
-    icon={<RiCustomerService2Line color="white" size={50}/>}
+    label="Fault-Tolerant Checkout"
+    href="python/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
     language="python"
-  />
-  <CardLink
-    label="DBOS Task Scheduler"
-    href="typescript/examples/task-scheduler"
-    description="Use DBOS + Next.js to reliably schedule tasks in the cloud."
-    icon={<RiCalendarScheduleLine color="white" size={50}/>}
-    language="typescript"
   />
   <CardLink
     label="Stock Tracker"
@@ -54,11 +47,11 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="Kafka Alert Queue"
-    href="typescript/examples/kafka-alert-queue"
-    description="Use DBOS and Kafka to create an alerts management application that handles each alert exactly once."
-    icon={<SiApachekafka color="white" size={50}/>}
-    language="typescript"
+    label="Reliable Customer Service Agent"
+    href="python/examples/customer-service"
+    description="Use DBOS and LangGraph to build a reliable AI-powered customer service agent."
+    icon={<RiCustomerService2Line color="white" size={50}/>}
+    language="python"
   />
   <CardLink
     label="Scheduled Reminders"
@@ -68,11 +61,11 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="Hacker News Bot"
-    href="python/examples/hacker-news-bot"
-    description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
-    icon={<FaHackerNews color="white" size={50} />}
-    language="python"
+    label="Kafka Alert Queue"
+    href="typescript/examples/kafka-alert-queue"
+    description="Use DBOS and Kafka to create an alerts management application that handles each alert exactly once."
+    icon={<SiApachekafka color="white" size={50}/>}
+    language="typescript"
   />
   <CardLink
     label="AI-Powered Slackbot"
@@ -89,17 +82,17 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="Cloud Cron Quickstart"
-    href="python/examples/cron-starter"
-    description="Use DBOS to write a cron job in just six lines of code and host it in the cloud with a single command."
-    icon={<TbClock2 color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
     label="Fault-Tolerant Checkout"
     href="typescript/examples/checkout-tutorial"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
     language="typescript"
+  />
+  <CardLink
+    label="Hacker News Bot"
+    href="python/examples/hacker-news-bot"
+    description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
+    icon={<FaHackerNews color="white" size={50} />}
+    language="python"
   />
   </section>

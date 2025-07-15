@@ -128,9 +128,8 @@ def email_endpoint(request):
 <article className="col col--4">
 
 Schedule functions to run at specific times.
-Host them serverlessly on DBOS Cloud.
 
-[Get started ↗️](./python/examples/cron-starter.md)
+[Get started ↗️](./python/tutorials/scheduled-workflows.md)
 
 </article>
 <article className="col col--8">
@@ -204,23 +203,29 @@ def process_kafka_alerts(msg):
 <section className="row list">
 <article className="col col--4">
 
-Enhance your AI agents with reliable asynchronous tasks and human in the loop.
+Use durable workflows to build reliable, fault-tolerant AI agents.
 Integrate with popular frameworks like LangChain and LlamaIndex.
 
-[See an example ↗️](./python/examples/customer-service.md)
+[See an example ↗️](./python/examples/hacker-news-agent.md)
 
 </article>
 <article className="col col--8">
 
 ```python
 @DBOS.workflow()
-def agentic_refund(purchase):
-    email_human_for_approval(purchase)
-    status = DBOS.recv(timeout_seconds=APPROVAL_TIMEOUT)
-    if status == "approve":
-        approve_refund(purchase)
-    else:
-        reject_refund(purchase)
+def agentic_research_workflow(topic, max_iterations):
+  research_results = []
+  for i in range(max_iterations):
+    research_result = research_query(topic)
+    research_results.append(research_result)
+    if not should_continue(research_results):
+      break
+    topic = generate_next_topic(topic, research_results)
+  return synthesize_research_report(research_results)
+
+@DBOS.step()
+def research_query(topic):
+  ...
 ```
 
 </article>
