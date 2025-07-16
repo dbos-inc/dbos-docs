@@ -54,7 +54,7 @@ This workflow is triggered whenever a customer buys a widget and handles the com
 5. Handles failures gracefully by releasing reserved inventory and canceling orders when necessary
 
 DBOS **durably executes** this workflow.
-It checkpoints each step in the database so that if the app fails or is interrupted at any point, it will automatically recover from the last completed step.
+It checkpoints each step in the database so that if the app fails or is interrupted during checkout, it will automatically recover from the last completed step.
 This means that customers never lose their order progress, no matter what breaks.
 
 You can try this yourself!
