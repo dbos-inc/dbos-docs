@@ -16,8 +16,8 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ## Import and Initialize the App
 
-Let's start off with imports and initializing the DBOS and FastAPI apps.
-We'll also define a few constants for later.
+Let's begin with imports and initializing DBOS and FastAPI.
+We'll also define some constants.
 
 ```python
 import os
