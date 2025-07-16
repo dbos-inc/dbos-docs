@@ -42,14 +42,21 @@ PAYMENT_ID = "payment_id"
 ORDER_ID = "order_id"
 ```
 
-## The Checkout Workflow
+## Building the Checkout Workflow
 
-Next, let's write the checkout workflow.
-This workflow is triggered whenever a customer buys a widget.
-It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
-If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
+The heart of this application is the checkout workflow, which orchestrates the entire purchase process.
+This workflow is triggered whenever a customer buys a widget and handles the complete order lifecycle:
 
-DBOS **durably executes** this workflow, checkpointing each step in the database so that if the app ever fails or is interrupted, it automatically recovers from the last completed step.
+1. Creates a new order in the system
+2. Reserves inventory to ensure the item is available
+3. Processes payment 
+4. Marks the order as paid and initiates fulfillment
+5. Handles failures gracefully by releasing reserved inventory and canceling orders when necessary
+
+DBOS **durably executes** this workflow.
+It checkpoints each step in the database so that if the app fails or is interrupted at any point, it will automatically recover from the last completed step.
+This means that customers never lose their order progress, no matter what breaks.
+
 You can try this yourself!
 On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
@@ -93,9 +100,9 @@ def checkout_workflow():
 
 ## The Checkout and Payment Endpoints
 
-Now, let's use FastAPI to write the HTTP endpoint for checkout.
+Now let's implement the HTTP endpoints that handle customer interactions with the checkout system.
 
-This endpoint receives a request when a customer presses the "Buy Now" button.
+The checkout endpoint is triggered when a customer clicks the "Buy Now" button.
 It starts the checkout workflow in the background, then waits for the workflow to generate and send it a unique payment ID.
 It then returns the payment ID so the browser can redirect the user to the payments page.
 
@@ -114,7 +121,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
     return Response(payment_id)
 ```
 
-Let's also write the HTTP endpoint for payments.
+The payment endpoint handles the communication between the payment system and the checkout workflow.
 It uses the payment ID to signal the checkout workflow whether the payment succeeded or failed.
 It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
 
