@@ -49,7 +49,7 @@ This workflow is triggered whenever a customer buys a widget.
 It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
 If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
 
-DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
+DBOS **durably executes** this workflow, checkpointing each step in the database so that if the app ever fails or is interrupted, it automatically recovers from the last completed step.
 You can try this yourself!
 On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
@@ -264,26 +264,6 @@ if __name__ == "__main__":
 ```
 
 ## Try it Yourself!
-### Deploying to DBOS Cloud
-
-To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/widget-store
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
 
 First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
@@ -292,19 +272,30 @@ git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/widget-store
 ```
 
-Then create a virtual environment:
+Then create a virtual environment and install DBOS:
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
+pip install dbos
+```
+
+Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
+
+```shell
+dbos postgres start
+```
+
+Create database tables:
+
+```shell
+dbos migrate
 ```
 
 Then start your app:
 
 ```shell
-pip install -r requirements.txt
-alembic upgrade head
-dbos start
+python3 -m widget_store.main
 ```
 
 Visit [http://localhost:8000](http://localhost:8000) to see your app! 
