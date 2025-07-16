@@ -132,10 +132,12 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 ## Database Operations
 
-Next, let's write some database operations.
-Each of these functions performs a simple CRUD operation, like retrieving product information or updating inventory.
-We apply the [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to each of them to give them access to a pre-configured database connection.
-We also make some of these functions HTTP endpoints with FastAPI so the frontend can access them, for example to display order status.
+Now, let's implement the checkout workflow's steps.
+Each step performs a database operation, like updating inventory or order status.
+Because these steps access the database, they are implemented as [transactions](../tutorials/transaction-tutorial.md).
+
+<details>
+<summary><strong>Database Operations</strong></summary>
 
 ```python
 @DBOS.transaction()
@@ -200,17 +202,7 @@ def get_orders():
 @DBOS.transaction()
 def restock():
     DBOS.sql_session.execute(products.update().values(inventory=100))
-```
 
-## Finishing Up
-
-A few more functions to go!
-
-First, let's write a workflow to dispatch orders that have been paid for.
-This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
-Every second, it updates the progress of a paid order, then dispatches the order if it is fully progressed.
-
-```python
 @DBOS.workflow()
 def dispatch_order_workflow(order_id):
     for _ in range(10):
@@ -235,9 +227,12 @@ def update_order_progress(order_id):
             .values(order_status=OrderStatus.DISPATCHED.value)
         )
 ```
+</details>
 
-Let's also serve the app's frontend from an HTML file using FastAPI.
-In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
+## Launching and Serving the App
+
+Let's add the final touches to the app.
+This FastAPI endpoint serves its frontend:
 
 ```python
 @app.get("/")
@@ -247,7 +242,7 @@ def frontend():
     return HTMLResponse(html)
 ```
 
-Here is the crash endpoint. It crashes your app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
+This FastAPI endpoint crashes the app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
 
 ```python
 @app.post("/crash_application")
@@ -262,6 +257,7 @@ if __name__ == "__main__":
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
+
 
 ## Try it Yourself!
 
