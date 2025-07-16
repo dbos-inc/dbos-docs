@@ -220,11 +220,11 @@ interface WorkflowConfig {
 ```
 
 **Parameters:**
-- `max_recovery_attempts`: The maximum number of times the workflow may be recovered.
-If the process executing a workflow terminates without the workflow completing (either by succeeding or by throwing an error), DBOS will automatically recover the workflow from its last completed step.
-For safety, DBOS only attempts to recover a workflow a set number of times.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+- `max_recovery_attempts`: The maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+A workflow in this state may be [resumed](../../tutorials/workflow-tutorial.md#resuming-workflows), which will resume execution and reset the count of execution attempts.
+If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
 
 ### `@DBOS.transaction`
 `@DBOS.transaction` registers a function as a DBOS transaction.  Such functions will be provided with database access via a [SQL client](#accesing-sql-database-clients).
@@ -403,7 +403,7 @@ The `WorkflowStatus` returned has the following field definition:
 ```typescript
 interface WorkflowStatus {
   readonly workflowID: string; // The workflow's unique identifier
-  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, RETRIES_EXCEEDED, ENQUEUED, or CANCELLED.
+  readonly status: string; // The status of the workflow.  One of PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED.
   readonly workflowName: string; // The name of the workflow function.
   readonly workflowClassName: string; // The class name holding the workflow function.
   readonly workflowConfigName: string; // The name of the configuration, if the class needs configuration
@@ -432,7 +432,7 @@ interface GetWorkflowsInput {
   authenticatedUser?: string; // The user who ran the workflow.
   startTime?: string; // Timestamp in RFC 3339 format
   endTime?: string; // Timestamp in RFC 3339 format
-  status?: "PENDING" | "SUCCESS" | "ERROR" | "RETRIES_EXCEEDED" | "CANCELLED" ; // The status of the workflow.
+  status?: "PENDING" | "SUCCESS" | "ERROR" | "MAX_RECOVERY_ATTEMPTS_EXCEEDED" | "CANCELLED" ; // The status of the workflow.
   applicationVersion?: string; // The application version that ran this workflow.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
 }
