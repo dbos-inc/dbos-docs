@@ -199,7 +199,7 @@ exports.up = function(knex) {
 
 ### Sending Email with Amazon SES
 
-The optional sending of task results emails is done using Amazon SES, and the [@dbos-inc/dbos-email-ses](../reference/libraries#simple-email-service-ses) package.
+The optional sending of task results emails is done using Amazon SES, and the `@dbos-inc/dbos-email-ses` package.
 
 All that is necessary, as shown in `src/dbos/operations.ts`, is to configure the email instance (using environment variables):
 ```typescript
@@ -286,7 +286,7 @@ Note that while this successfully registers the `/api/boredactivity` endpoint, i
 ### DBOS Routes
 DBOS provides a much simpler way to register API endpoints.
 
-By simply decorating a method with [`@DBOS.getAPI`](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial), the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
+By simply decorating a method with `@DBOS.getAPI`, the API will be available, with built-in type checking, and available for OpenAPI support.  The following registers the API at `/dbos/boredapi/activity`:
 
 ```typescript
   @DBOS.getApi('/dbos/boredapi/activity')
@@ -393,7 +393,7 @@ if (require.main === module) {
 ```
 
 #### Setting up DBOS Routes (optional)
-If you expect to use [DBOS HTTP Decorators](../tutorials/requestsandevents/http-serving-tutorial.md), add a provision for these to your server configuration when you create it.  In this example, we hand any request with a URL under `/dbos` to DBOS, but you can implement your own logic:
+If you expect to use DBOS HTTP Decorators, add a provision for these to your server configuration when you create it.  In this example, we hand any request with a URL under `/dbos` to DBOS, but you can implement your own logic:
 
 ```typescript
   // Create HTTP server
@@ -494,10 +494,11 @@ This script checks the code for common errors, using [`eslint`](https://eslint.o
 This file contains the `eslint` configuration.  This is based on the "next/core-web-vitals" and "next/typescript" settings, with an additional override to ignore unused variables, as long as the names are prefixed with `_`.
 
 ### `tsconfig.json`
-For DBOS code and `server.ts` to compile properly, some `tsconfig.json` settings are required.  This project was set up according to "Compilation Settings For DBOS Code".
+For DBOS code and `server.ts` to compile properly, some `tsconfig.json` settings are required.
 
 ### `next.config.ts`
-It is important keep the DBOS library, and any workflow functions or other code used by DBOS, external to Next.js bundles.  This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
+It is important keep the DBOS library, and any workflow functions or other code used by DBOS, external to Next.js bundles.
+This prevents incomplete, duplicate, and incorrect registration of functions.  For this project, we import all DBOS logic with the prefix `@dbos/`, and ask the bundler to treat such files as external:
 ```typescript
   webpack: (config, { isServer, dev: _dev }) => {
     if (isServer) {
