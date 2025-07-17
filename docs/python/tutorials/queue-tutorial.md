@@ -57,20 +57,31 @@ def process_tasks(tasks):
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
-Global concurrency limits are applied across all DBOS processes using this queue.
-Per process concurrency limits are applied to each DBOS process using this queue.
-If no limit is provided, any number of functions may run concurrently.
-For example, this queue has a maximum global concurrency of 10 and a per process maximum concurrency of 5, so at most 10 functions submitted to it may run at once, up to 5 per process:
+You can specify the _worker concurrency_ of a queue, the maximum number of functions that may run concurrently on a single process.
+If no limit is provided, any number of functions may run concurrently on each process.
+For example, this queue has a worker concurrency of 5, so at most 5 functions submitted to it may run concurrently on each process:
 
 ```python
 from dbos import Queue
 
-queue = Queue("example_queue", concurrency=10, worker_concurrency=5)
+queue = Queue("example_queue", worker_concurrency=5)
 ```
 
-You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
-The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the process.
+You can also specify a global concurrency limit for a queue.
+This limits the maximum number of functions from the queue that may run concurrently across all DBOS processes.
+For example, this queue has a maximum global concurrency of 10:
+
+:::warning
+For most use-cases, a worker concurrency limit is more useful than a global concurrency limit.
+
+Take care when specifying a global concurrency limit as any `PENDING` workflow on the queue, even a `PENDING` workflow from a previous application version, counts towards the limit.
+:::
+
+```python
+from dbos import Queue
+
+queue = Queue("example_queue", concurrency=10)
+```
 
 ### Rate Limiting
 
