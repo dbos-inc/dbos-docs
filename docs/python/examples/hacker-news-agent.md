@@ -615,7 +615,7 @@ uv sync
 source .venv/bin/activate
 ```
 
-Start PostgreSQL (required for DBOS):
+Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
 
 ```shell
 dbos postgres start
