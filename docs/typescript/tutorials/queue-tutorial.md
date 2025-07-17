@@ -104,20 +104,35 @@ These guarantees assume that the application and database may crash and go offli
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
-Global concurrency limits are applied across all DBOS processes using this queue.
-Per process concurrency limits are applied to each DBOS process using this queue.
-If no limit is provided, any number of functions may run concurrently.
-For example, this queue has a maximum global concurrency of 10 and a per process maximum concurrency of 5, so at most 10 functions submitted to it may run at once, up to 5 per process:
+You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
+This helps prevent resource exhaustion when workflows consume significant memory or processing power.
+
+#### Worker Concurrency
+
+Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
+This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
+For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const queue = new WorkflowQueue("example_queue", { workerConcurrency: 5 });
+```
+
+#### Global Concurrency
+
+Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
+For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
+
+:::warning
+Worker concurrency limits are recommended for most use cases.
+Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions
+:::
 
 ```javascript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
-const queue = new WorkflowQueue("example_queue", { concurrency: 10, workerConcurrency: 5 });
+const queue = new WorkflowQueue("example_queue", { concurrency: 10 });
 ```
-
-You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
-The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the process.
 
 ### Rate Limiting
 
