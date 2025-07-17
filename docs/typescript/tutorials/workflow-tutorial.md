@@ -55,6 +55,35 @@ export class Example {
 await Example.exampleWorkflow();
 ```
 
+## Starting Workflows In The Background
+
+One common use-case for workflows is building reliable background tasks that keep running even when your program is interrupted, restarted, or crashes.
+You can use [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow) to start a workflow in the background.
+If you start a workflow this way, it returns a [workflow handle](../reference/methods.md#workflow-handles), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+
+Here's an example:
+
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        return var1 + var2;
+    }
+}
+
+async function main() {
+    // Start exampleWorkflow in the background
+    const handle = await DBOS.startWorkflow(Example).exampleWorkflow("one", "two");
+    // Wait for the workflow to complete and return its results
+    const result = await handle.getResult();
+}
+```
+
+After starting a workflow in the background, you can use [`DBOS.retrieve_workflow`](../reference/methods.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
+
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
+
 ## Reliability Guarantees
 
 Workflows provide the following reliability guarantees.
@@ -107,36 +136,6 @@ class Example {
     }
 }
 ```
-
-## Starting Workflows Asynchronously
-
-You can use [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow) to durably start a workflow in the background without waiting for it to complete.
-This is useful for long-running or interactive workflows.
-
-`DBOS.startWorkflow` returns a [workflow handle](../reference/methods.md#workflow-handles), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-When you `await DBOS.startWorkflow`, the method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if your app is interrupted.
-
-Here's an example:
-
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow(var1: string, var2: string) {
-        return var1 + var2;
-    }
-}
-
-async function main() {
-    // Start exampleWorkflow in the background
-    const handle = await DBOS.startWorkflow(Example).exampleWorkflow("one", "two");
-    // Wait for the workflow to complete and return its results
-    const result = await handle.getResult();
-}
-```
-
-You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/methods.md#dbosretrieveworkflow).
-This can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
-
 
 ## Workflow IDs and Idempotency
 
