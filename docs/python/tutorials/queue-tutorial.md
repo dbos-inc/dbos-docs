@@ -57,8 +57,8 @@ def process_tasks(tasks):
 
 ### Managing Concurrency
 
-You can specify the _worker concurrency_ of a queue, the maximum number of functions that may run concurrently on a single process.
-If no limit is provided, any number of functions may run concurrently on each process.
+You can specify the _worker concurrency_ of a queue, the maximum number of workflows from that queue that may run concurrently on a single process.
+This is useful for workflows that consume significant resources (for example, a significant amount of memory) to avoid exhausting the resources of any process.
 For example, this queue has a worker concurrency of 5, so at most 5 functions submitted to it may run concurrently on each process:
 
 ```python
