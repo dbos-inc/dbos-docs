@@ -57,9 +57,14 @@ def process_tasks(tasks):
 
 ### Managing Concurrency
 
-You can specify the _worker concurrency_ of a queue, the maximum number of workflows from that queue that may run concurrently on a single process.
-This is useful for workflows that consume significant resources (for example, a significant amount of memory) to avoid exhausting the resources of any process.
-For example, this queue has a worker concurrency of 5, so at most 5 functions submitted to it may run concurrently on each process:
+You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
+This helps prevent resource exhaustion when workflows consume significant memory or processing power.
+
+#### Worker Concurrency
+
+Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single process.
+This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
+For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```python
 from dbos import Queue
@@ -67,14 +72,15 @@ from dbos import Queue
 queue = Queue("example_queue", worker_concurrency=5)
 ```
 
-You can also specify a global concurrency limit for a queue.
-This limits the maximum number of functions from the queue that may run concurrently across all DBOS processes.
-For example, this queue has a maximum global concurrency of 10:
+#### Global Concurrency
+
+
+Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
+For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
 
 :::warning
-For most use-cases, a worker concurrency limit is more useful than a global concurrency limit.
-
-Take care when specifying a global concurrency limit as any `PENDING` workflow on the queue, even a `PENDING` workflow from a previous application version, counts towards the limit.
+Worker concurrency limits are recommended for most use cases.
+Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions
 :::
 
 ```python
@@ -82,6 +88,9 @@ from dbos import Queue
 
 queue = Queue("example_queue", concurrency=10)
 ```
+
+
+
 
 ### Rate Limiting
 
