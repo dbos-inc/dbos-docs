@@ -10,6 +10,8 @@ Add a few annotations to your application to **durably execute** it and make it 
 ### Get Started
 
 import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbHexagonNumber4 } from "react-icons/tb";
+import { FaHackerNews } from "react-icons/fa6";
+
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
@@ -85,25 +87,22 @@ import { VscGraphLine } from "react-icons/vsc";
 
 <section className="row list">
   <NarrowCardLink
-    label="Fault-Tolerant Checkout"
-    href="python/examples/widget-store"
-    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
-    index="1"
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+    label="Hacker News Research Agent"
+    href="python/examples/hacker-news-agent"
+    description="Use DBOS to build an AI deep research agent searching Hacker News."
+    icon={<FaHackerNews color="white" size={50} />}
   />
   <NarrowCardLink
     label="Document Pipeline"
     href="python/examples/document-detective"
-    description="Use DBOS to build a reliable and scalable document ingestion pipeline for a RAG-based chat agent."
-    index="2"
+    description="Use DBOS to build a reliable and scalable document ingestion pipeline for a chat agent."
     icon={<PiFileMagnifyingGlassBold  color="white" size={50}/>}
   />
   <NarrowCardLink
-    label="Stock Tracker"
-    href="python/examples/stock-tracker"
-    description="Use DBOS to track stock prices and receive alerts when they cross a certain threshold."
-    index="3"
-    icon={<VscGraphLine color="white" size={50}/>}
+    label="Fault-Tolerant Checkout"
+    href="python/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
 </section>
 

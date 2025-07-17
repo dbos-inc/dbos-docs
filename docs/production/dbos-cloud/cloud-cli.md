@@ -421,7 +421,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-U, --user <string>`                 Retrieve workflows run by this user
 - `-s, --start-time <string>`           Retrieve workflows starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
+- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
 - `-v, --application-version <string>`  Retrieve workflows with this application version
 - `-n, --name <string>`        Retrieve functions with this name
 
@@ -437,7 +437,7 @@ Lists all currently enqueued functions in JSON format ordered by recency (most r
 - `-n, --name <string>`        Retrieve functions with this name
 - `-s, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `RETRIES_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
+- `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
 - `-l, --limit <number>`       Limit the results returned
 - `-o, --offset <number>`      Skip functions from the results returned (for pagination)
 - `-q, --queue <string>`       Retrieve functions run on this queue

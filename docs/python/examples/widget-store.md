@@ -1,6 +1,6 @@
 ---
 displayed_sidebar: examplesSidebar
-sidebar_position: 1
+sidebar_position: 30
 title: Fault-Tolerant Checkout
 ---
 
@@ -16,8 +16,8 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ## Import and Initialize the App
 
-Let's start off with imports and initializing the DBOS and FastAPI apps.
-We'll also define a few constants for later.
+Let's begin with imports and initializing DBOS and FastAPI.
+We'll also define some constants.
 
 ```python
 import os
@@ -42,14 +42,21 @@ PAYMENT_ID = "payment_id"
 ORDER_ID = "order_id"
 ```
 
-## The Checkout Workflow
+## Building the Checkout Workflow
 
-Next, let's write the checkout workflow.
-This workflow is triggered whenever a customer buys a widget.
-It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
-If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
+The heart of this application is the checkout workflow, which orchestrates the entire purchase process.
+This workflow is triggered whenever a customer buys a widget and handles the complete order lifecycle:
 
-DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
+1. Creates a new order in the system
+2. Reserves inventory to ensure the item is available
+3. Processes payment 
+4. Marks the order as paid and initiates fulfillment
+5. Handles failures gracefully by releasing reserved inventory and canceling orders when necessary
+
+DBOS **durably executes** this workflow.
+It checkpoints each step in the database so that if the app fails or is interrupted during checkout, it will automatically recover from the last completed step.
+This means that customers never lose their order progress, no matter what breaks.
+
 You can try this yourself!
 On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
@@ -93,9 +100,9 @@ def checkout_workflow():
 
 ## The Checkout and Payment Endpoints
 
-Now, let's use FastAPI to write the HTTP endpoint for checkout.
+Now let's implement the HTTP endpoints that handle customer interactions with the checkout system.
 
-This endpoint receives a request when a customer presses the "Buy Now" button.
+The checkout endpoint is triggered when a customer clicks the "Buy Now" button.
 It starts the checkout workflow in the background, then waits for the workflow to generate and send it a unique payment ID.
 It then returns the payment ID so the browser can redirect the user to the payments page.
 
@@ -114,7 +121,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
     return Response(payment_id)
 ```
 
-Let's also write the HTTP endpoint for payments.
+The payment endpoint handles the communication between the payment system and the checkout workflow.
 It uses the payment ID to signal the checkout workflow whether the payment succeeded or failed.
 It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
 
@@ -132,10 +139,12 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 ## Database Operations
 
-Next, let's write some database operations.
-Each of these functions performs a simple CRUD operation, like retrieving product information or updating inventory.
-We apply the [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to each of them to give them access to a pre-configured database connection.
-We also make some of these functions HTTP endpoints with FastAPI so the frontend can access them, for example to display order status.
+Now, let's implement the checkout workflow's steps.
+Each step performs a database operation, like updating inventory or order status.
+Because these steps access the database, they are implemented as [transactions](../tutorials/transaction-tutorial.md).
+
+<details>
+<summary><strong>Database Operations</strong></summary>
 
 ```python
 @DBOS.transaction()
@@ -200,17 +209,7 @@ def get_orders():
 @DBOS.transaction()
 def restock():
     DBOS.sql_session.execute(products.update().values(inventory=100))
-```
 
-## Finishing Up
-
-A few more functions to go!
-
-First, let's write a workflow to dispatch orders that have been paid for.
-This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
-Every second, it updates the progress of a paid order, then dispatches the order if it is fully progressed.
-
-```python
 @DBOS.workflow()
 def dispatch_order_workflow(order_id):
     for _ in range(10):
@@ -235,9 +234,12 @@ def update_order_progress(order_id):
             .values(order_status=OrderStatus.DISPATCHED.value)
         )
 ```
+</details>
 
-Let's also serve the app's frontend from an HTML file using FastAPI.
-In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
+## Launching and Serving the App
+
+Let's add the final touches to the app.
+This FastAPI endpoint serves its frontend:
 
 ```python
 @app.get("/")
@@ -247,7 +249,7 @@ def frontend():
     return HTMLResponse(html)
 ```
 
-Here is the crash endpoint. It crashes your app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
+This FastAPI endpoint crashes the app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
 
 ```python
 @app.post("/crash_application")
@@ -263,27 +265,8 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
+
 ## Try it Yourself!
-### Deploying to DBOS Cloud
-
-To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/widget-store
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
 
 First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
@@ -292,19 +275,30 @@ git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/widget-store
 ```
 
-Then create a virtual environment:
+Then create a virtual environment and install DBOS:
 
 ```shell
 python3 -m venv .venv
 source .venv/bin/activate
+pip install dbos
+```
+
+Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
+
+```shell
+dbos postgres start
+```
+
+Create database tables:
+
+```shell
+dbos migrate
 ```
 
 Then start your app:
 
 ```shell
-pip install -r requirements.txt
-alembic upgrade head
-dbos start
+python3 -m widget_store.main
 ```
 
 Visit [http://localhost:8000](http://localhost:8000) to see your app! 

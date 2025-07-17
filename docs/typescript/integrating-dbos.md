@@ -10,6 +10,11 @@ Also check out the integration guides for popular TypeScript frameworks:
 - [Nest.js + DBOS](../integrations/nestjs.md)
 :::
 
+:::warning
+The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers.
+Additional support for bundling will be added in an upcoming release.
+:::
+
 ### Using DBOS Transact
 
 #### 1. Install DBOS
