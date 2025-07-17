@@ -84,19 +84,34 @@ You can also retrieve a workflow's handle from outside of your DBOS application 
 
 If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
-## Reliability Guarantees
+## Workflow IDs and Idempotency
 
-Workflows provide the following reliability guarantees.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this ID through the `DBOS.workflowID` context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
-2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow()`.
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
-This is because uncaught exceptions are assumed to be nonrecoverable.
-If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        // ...
+    }
+}
+
+async function main() {
+    const myID: string = ...
+    const handle = await DBOS.startWorkflow(Example, {workflowID: myID}).exampleWorkflow("one", "two");
+    const result = await handle.getResult();
+}
+```
+
+
 
 ## Determinism
 
@@ -137,35 +152,8 @@ class Example {
 }
 ```
 
-## Workflow IDs and Idempotency
 
-Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the `DBOS.workflowID` context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
-
-You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow()`.
-Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
-For example:
-
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow(var1: string, var2: string) {
-        // ...
-    }
-}
-
-async function main() {
-    const myID: string = ...
-    const handle = await DBOS.startWorkflow(Example, {workflowID: myID}).exampleWorkflow("one", "two");
-    const result = await handle.getResult();
-}
-```
-
-
-## Setting Timeouts
+## Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
 When the timeout expires, the workflow **and all its children** are cancelled.
@@ -308,6 +296,20 @@ static async paymentWebhook(): Promise<void> {
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
+
+## Workflow Guarantees
+
+Workflows provide the following reliability guarantees.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Workflow Versioning and Recovery
 
