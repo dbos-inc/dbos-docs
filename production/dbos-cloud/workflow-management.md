@@ -43,7 +43,7 @@ If the workflow is enqueued, cancelling removes it from the queue.
 
 #### Resuming Workflows
 
-You can resume any `ENQUEUED`, `CANCELLED` or `RETRIES_EXCEEDED` workflow.
+You can resume any `ENQUEUED`, `CANCELLED` or `MAX_RECOVERY_ATTEMPTS_EXCEEDED` workflow.
 Resuming a workflow resumes its execution from its last completed step.
 If the workflow is enqueued, this bypasses the queue to start it immediately.
 
