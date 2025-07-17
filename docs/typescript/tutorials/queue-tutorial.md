@@ -1,6 +1,6 @@
 ---
 sidebar_position: 45
-title: Queues & Parallelism
+title: Queues & Concurrency
 toc_max_heading_level: 3
 ---
 
@@ -68,39 +68,6 @@ async function queueFunction(tasks) {
 const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
 ```
 
-### Enqueue with DBOSClient
-
-[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
-Among other things, this allows you to enqueue workflows from outside your DBOS application.
-
-Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
-
-Example: 
-
-```ts
-import { DBOSClient } from "@dbos-inc/dbos-sdk";
-
-const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
-
-type ProcessTask = typeof Tasks.processTask;
-await client.enqueue<ProcessTask>(
-    {
-        workflowName: 'processTask',
-        workflowClassName: 'Tasks',
-        queueName: 'example_queue',
-    }, 
-    task);
-```
-
-
-### Reliability Guarantees
-
-Because queues use DBOS [workflows](./workflow-tutorial.md), they provide the following reliability guarantees for enqueued functions.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
-
-1.  Enqueued functions always run to completion.  If a DBOS process crashes and is restarted at any point after a function is enqueued, it resumes the enqueued function from the last completed step.
-2.  [Steps](./step-tutorial.md) called from enqueued workflows are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) called from enqueued workflows commit _exactly once_.
 
 ### Managing Concurrency
 
@@ -260,4 +227,28 @@ async function main() {
 }
 
 main().catch(console.log);
+```
+
+### Enqueue with DBOSClient
+
+[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
+Among other things, this allows you to enqueue workflows from outside your DBOS application.
+
+Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+Example: 
+
+```ts
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
+
+type ProcessTask = typeof Tasks.processTask;
+await client.enqueue<ProcessTask>(
+    {
+        workflowName: 'processTask',
+        workflowClassName: 'Tasks',
+        queueName: 'example_queue',
+    }, 
+    task);
 ```
