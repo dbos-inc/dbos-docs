@@ -4,8 +4,8 @@ title: Queues & Concurrency
 toc_max_heading_level: 3
 ---
 
-Queues allow you to run functions with managed concurrency.
-They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+You can use queues to run many workflows at once with managed concurrency.
+Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, specify its name:
 
