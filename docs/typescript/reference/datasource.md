@@ -1,7 +1,6 @@
 ---
-sidebar_position: 30
+sidebar_position: 45
 title: Transactions & Datasources
-description: Learn how to perform database operations
 ---
 
 Transactions are a special type of step that are optimized for database accesses.
@@ -9,9 +8,6 @@ They execute as a single [database transaction](https://en.wikipedia.org/wiki/Da
 
 Transactions can be performed using _datasources_, which are special database clients that wrap operations in DBOS transactions.
 Datasources are available for most popular TypeScript database clients.
-Each datasource provides the same interface as its underlying client.
-For example, a Knex datasource provides a Knex client and a Drizzle datasource a Drizzle client.
-Therefore, you don't have to change your database operations to run a function as a DBOS transaction&mdash;just use the datasource client.
 
 ## Installing Data Sources
 
@@ -42,19 +38,32 @@ npm i @dbos-inc/typeorm-datasource
 </TabItem>
 </Tabs>
 
-## Using Datasources
+## Constructing Datasources
 
-Before using a datasource, you must configure and construct it:
+A datasource class must be configured and constructed before use.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
 
+
+```typescript
+class KnexDataSource {
+  constructor(name: string, config: Knex.Config)  
+}
+```
+
+**Example:**
 
 ```typescript
 const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('knex-ds', config);
 ```
 
+**Parameters:**
+
+- **name**: A unique name for the datasource.
+- **config**: A Knex configuration for the datasource. Passed directly into the Knex pool object.
+
 </TabItem>
 <TabItem value="drizzle" label="Drizzle">
 
@@ -65,28 +74,17 @@ const dataSource = new KnexDataSource('knex-ds', config);
 </TabItem>
 </Tabs>
 
+## Datasource Transactions
 
-You can run a function as a transaction using `dataSource.runTransaction`.
-The transaction should use `dataSource.client` as a client to access the database. For example:
+### dataSource.client
+
+Use this inside a transaction to access the datasource's transactional client.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
 
 ```typescript
-async function insertRow() {
-  await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
-}
-
-async function countRows() {
-  const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
-  const count = result.rows[0].count;
-}
-
-async function workflowFunction() {
-  await dataSource.runTransaction(() => insertRow(), "insertRow")
-  await dataSource.runTransaction(() => countRows(), "countRows")
-}
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+client: Knex.Transaction
 ```
 
 </TabItem>
@@ -99,10 +97,85 @@ const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 </TabItem>
 </Tabs>
 
-Alternatively, functions can be registered as transactions with `dataSource.registerTransaction`:
+
+### dataSource.Transaction
+
+```typescript
+dataSource.transaction(
+    config?: TransactionConfig
+)
+```
+
+A decorator that marks a function as a transactional step in a durable workflow.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
+
+```typescript
+interface TransactionConfig {
+  isolationLevel?: Knex.IsolationLevels;
+  readOnly?: boolean;
+}
+```
+
+**Parameters:**
+- **config**:
+  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read committed`, `repeatable read`, or `serializable`. Default is `serializable`.
+  - **readOnly**: Whether this transaction only performs reads. Optimizes checkpointing if so.
+
+**Example:**
+
+```typescript
+@dataSource.transaction()
+  static async insertRow() {
+  await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+}
+
+@dataSource.transaction()
+static async countRows() {
+  const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
+  const count = result.rows[0].count;
+}
+
+@DBOS.workflow()
+static async transactionWorkflow() {
+  await Toolbox.insertRow()
+  await Toolbox.countRows()
+}
+```
+
+</TabItem>
+<TabItem value="drizzle" label="Drizzle">
+
+
+</TabItem>
+<TabItem value="typeorm" label="TypeORM">
+
+</TabItem>
+</Tabs>
+
+### dataSource.registerTransaction
+
+```typescript
+registerTransaction<This, Args extends unknown[], Return>(
+  func: (this: This, ...args: Args) => Promise<Return>,
+  config?: TransactionConfig,
+  name?: string,
+): (this: This, ...args: Args) => Promise<Return>
+```
+
+Wrap a function in a tranasction.
+Returns the wrapped function.
+
+**Parameters:**
+- **func**: The function to be wrapped in a transaction.
+- **config**: The transaction config, documented above.
+- **name**: A name to give the transaction. If not given, use the function name.
+
+<Tabs groupId="database-clients">
+<TabItem value="knex" label="Knex">
+
+**Example:**
 
 ```typescript
 async function insertRowFunction() {
@@ -133,29 +206,45 @@ const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 </TabItem>
 </Tabs>
 
-Or functions can be decorated with `@dataSource.transaction()`:
+### dataSource.runTransaction
+
+```typescript
+runTransaction<T>(
+  func: () => Promise<T>,
+  funcName: string, 
+  config?: TransactionConfig
+)
+```
+
+Run a function as a transaction.
+Can only be called from a durable workflow.
+Returns the output of the transaction.
+
+**Parameters:**
+- **func**: The function to run as a transaction.
+- **funcName**: A name to give the transaction.
+- **config**: The transaction config, documented above.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
 
+**Example:**
 
 ```typescript
-@dataSource.transaction()
-  static async insertRow() {
+async function insertRow() {
   await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
 }
 
-@dataSource.transaction()
-static async countRows() {
+async function countRows() {
   const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
   const count = result.rows[0].count;
 }
 
-@DBOS.workflow()
-static async transactionWorkflow() {
-  await Toolbox.insertRow()
-  await Toolbox.countRows()
+async function workflowFunction() {
+  await dataSource.runTransaction(() => insertRow(), "insertRow")
+  await dataSource.runTransaction(() => countRows(), "countRows")
 }
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 ```
 
 </TabItem>

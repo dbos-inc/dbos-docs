@@ -105,7 +105,7 @@ DBOS.setConfig({
   "otlpTracesEndpoints": [ "http://0.0.0.0:4318/v1/traces" ],
   "otlpLogsEndpoints": [  "http://0.0.0.0:4318/v1/logs" ]
 });
-await DBOS.launch({ expressApp: app });
+await DBOS.launch();
 ```
 </TabItem>
 </Tabs>

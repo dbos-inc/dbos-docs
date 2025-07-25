@@ -1,11 +1,11 @@
 ---
-sidebar_position: 85
+sidebar_position: 80
 title: Using Typescript Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-You can add DBOS workflow, step, and transaction decorators to your TypeScript class instance methods.
-To add DBOS decorators to your instance methods, their class must inherit from `ConfiguredInstance`, which will take an instance name and register the instance.
+With the exception of workflows, there is no special treatment for TypeScript instance methods.
+To add DBOS decorators to your instance workflow methods, their class must inherit from `ConfiguredInstance`, which will take an instance name and register the instance.
 
 For example:
 ```typescript
@@ -17,17 +17,7 @@ class MyClass extends ConfiguredInstance {
   }
 
   override async initialize() : Promise<void> {
-    // ... Validate this.cfg
-  }
-
-  @DBOS.transaction()
-  async testTransaction() {
-    // ... Operations that use this.cfg
-  }
-
-  @DBOS.step()
-  async testStep() {
-    // ... Operations that use this.cfg
+    // ... Validate this.cfg; will be called at DBOS.launch()
   }
 
   @DBOS.workflow()
@@ -50,10 +40,6 @@ Configured class instances should be created and named when the application star
 All configured classes:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
-* May have an `initialize()` method that will be called after all objects have been created, but before request handling commences
-
-### `initialize()` Method
-The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/transactapi/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-Event and handler registration decorators such as `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, and `@DBOS.putApi` cannot be applied to instance methods.
+Event and handler registration decorators such as `@DBOS.scheduled` cannot be applied to instance methods.
