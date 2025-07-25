@@ -40,7 +40,7 @@ Launch DBOS, initializing database connections and starting queues and scheduled
 Should be called after all workflows and steps are registered.
 **You should not call a DBOS function until after DBOS is launched.**
 
-For example, here is one way to launch DBOS in an app built with Express.js:
+For example, here is one way to launch DBOS in an app:
 
 ```typescript
 async function main() {
@@ -51,8 +51,8 @@ async function main() {
   });
   // Launch DBOS
   await DBOS.launch();
-  // Start an Express.js server
-  const PORT = 3000;
+  // Start an app server
+  const PORT = 3000; // Must be 3000 in DBOS Cloud, can use environment variable locally
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
   });

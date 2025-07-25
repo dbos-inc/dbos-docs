@@ -220,9 +220,9 @@ app.get("/events/:event", async (req, res) => {
   await res.send("Workflow Started!");
 });
 
-// Launch DBOS and start the Express.js server
+// Launch DBOS and start the server
 async function main() {
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   app.listen(3000, () => {});
 }
 

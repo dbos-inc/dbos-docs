@@ -88,7 +88,7 @@ async function main() {
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
@@ -176,7 +176,7 @@ async function main() {
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
@@ -230,7 +230,7 @@ async function main() {
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
@@ -583,7 +583,7 @@ app.get("/events/:event", async (req, res) => {
 
 // Launch DBOS and start the Express.js server
 async function main() {
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   app.listen(3000, () => {});
 }
 
@@ -798,7 +798,7 @@ async function main() {
     "name": "dbos-starter",
     "databaseUrl": process.env.DBOS_DATABASE_URL
   });
-  await DBOS.launch({ expressApp: app });
+  await DBOS.launch();
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
