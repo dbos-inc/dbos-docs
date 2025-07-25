@@ -752,9 +752,9 @@ npx agent "artificial intelligence"
 Or try other topics:
 
 ```shell
-npx agent "rust programming"
-npx agent "database performance"
-npx agent "kubernetes scaling"
+npx agent "rust"
+npx agent "postgres"
+npx agent "kubernetes"
 ```
 
 The agent will autonomously research your topic, make decisions about what to investigate next, and produce a research report with insights from Hacker News.
