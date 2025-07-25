@@ -7,7 +7,8 @@ description: Learn how to communicate with external APIs and services
 When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
-You can use `DBOS.runStep` to call **any** TypeScript function as a step as long as its outputs are serializable to JSON.
+You can use `DBOS.runStep` to call a function as a step.  For a function to be used as a step, it should have a return value that can be serialized as JSON, and should not have non-durable side effects.
+
 Here's a simple example:
 
 ```javascript
