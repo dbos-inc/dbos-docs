@@ -49,7 +49,7 @@
 - [Queues](https://docs.dbos.dev/python/reference/queues.md): Queues allow you to ensure that functions will be run, without starting them immediately.
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS
-- [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS workflow, step, and transaction decorators to your Python class instance methods.
+- [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS decorators to your Python class instance methods.
 - [Debugging](https://docs.dbos.dev/python/tutorials/debugging.md): Learn how to debug your DBOS Python workflows.
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): Logging
