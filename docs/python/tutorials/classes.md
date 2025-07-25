@@ -3,8 +3,8 @@ sidebar_position: 15
 title: Working With Python Classes
 ---
 
-You can add DBOS workflow, step, and transaction decorators to your Python class instance methods.
-To add DBOS decorators to your methods, their class must inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
+You can add DBOS decorators to your Python class instance methods.
+You can add step decorators to any class methods, but to add a workflow decorator to a class method, its class must inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
 For example:
 
 ```python
@@ -26,19 +26,19 @@ example_fetcher = URLFetcher("https://example.com")
 print(example_fetcher.fetch_workflow())
 ```
 
-When you create a new instance of a DBOS-decorated class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
+When you create a new instance of a DBOS class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
 This `config_name` should be a unique identifier of the instance.
 Additionally, all DBOS-decorated classes must be instantiated before `DBOS.launch()` is called.
 
 The reason for these requirements is to enable workflow recovery.
-When you create a new instance of a DBOS-decorated class, DBOS stores it in a global registry indexed by `config_name`.
+When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `config_name`.
 When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
-If `config_name` is not supplied, or if DBOS-decorated classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
+If `config_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
 
 ### Static Methods and Class Methods
 
-You can add DBOS workflow, step, and transaction decorators to static methods and class methods of any class, even if it does not inherit from `DBOSConfiguredInstance`, because such methods do not access class instance variables.
-You must still decorate the class with `@DBOS.dbos_class()`.
+You can add DBOS decorators to static methods and class methods of any class, even if it does not inherit from `DBOSConfiguredInstance`, because such methods do not access class instance variables.
+If the class contains a DBOS workflow, it must be decorated with `@DBOS.dbos_class()`.
 For example:
 
 ```python
