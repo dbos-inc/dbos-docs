@@ -74,14 +74,3 @@ DBOS.shutdown(
 Shut down DBOS, terminating all active workflows and closing database disconnections.
 After this completes, DBOS can be re-configured and re-launched.
 Useful for testing.
-
-### DBOS.dropSystemDB
-
-```typescript
-DBOS.dropSystemDB(
-): Promise<void>
-```
-
-Destroy the DBOS [system database](../../explanations/system-tables.md), resetting DBOS's internal state in Postgres.
-Useful when testing a DBOS application to reset the internal state of DBOS between tests.
-**This is a destructive operation and should only be used in a test environment.**

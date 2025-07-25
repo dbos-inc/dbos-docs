@@ -646,7 +646,6 @@ You MUST use this beforeAll to reset DBOS between tests:
       name: 'my-app',
       databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
     });
-    await DBOS.dropSystemDB();
     await DBOS.launch();
   });
 ```
