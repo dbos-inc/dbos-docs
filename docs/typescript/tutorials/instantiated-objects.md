@@ -4,8 +4,8 @@ title: Using Typescript Objects
 description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-You can add DBOS workflow, step, and transaction decorators to your TypeScript class instance methods.
-To add DBOS decorators to your instance methods, their class must inherit from `ConfiguredInstance`, which will take an instance name and register the instance.
+With the exception of workflows, there is no special treatment for TypeScript instance methods.
+To add DBOS decorators to your instance workflow methods, their class must inherit from `ConfiguredInstance`, which will take an instance name and register the instance.
 
 For example:
 ```typescript
@@ -17,17 +17,7 @@ class MyClass extends ConfiguredInstance {
   }
 
   override async initialize() : Promise<void> {
-    // ... Validate this.cfg
-  }
-
-  @DBOS.transaction()
-  async testTransaction() {
-    // ... Operations that use this.cfg
-  }
-
-  @DBOS.step()
-  async testStep() {
-    // ... Operations that use this.cfg
+    // ... Validate this.cfg; will be called at DBOS.launch()
   }
 
   @DBOS.workflow()
