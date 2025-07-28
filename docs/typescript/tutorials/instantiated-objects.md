@@ -8,7 +8,6 @@ Any class instance method can be freely used as a step using the [`DBOS.step`](.
 To use a class instance method as a workflow, you must use the [`DBOS.workflow`](../reference/workflows-steps.md#dbosworkflow) decorator and the class must inherit from `ConfiguredInstance`.
 For example:
 
-For example:
 ```typescript
 class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
