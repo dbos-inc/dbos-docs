@@ -25,7 +25,7 @@ async function workflowFunction() {
   await DBOS.runStep(() => stepOne(), {name: "stepOne"});
   await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction)
 
 await workflow();
 ```
@@ -168,7 +168,7 @@ Example syntax:
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction);
 
 async function main() {
   const task = ...
