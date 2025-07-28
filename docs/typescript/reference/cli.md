@@ -59,7 +59,6 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
 - `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, or `CANCELLED`)
 - `-v, --application-version <string>`  Retrieve workflows with this application version
-- `--request`                           Retrieve workflow request information
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
@@ -75,7 +74,6 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
-- `request`: If the workflow was invoked via HTTP and this field was specified, the serialized request object
 
 ### `npx dbos workflow get`
 
@@ -99,7 +97,6 @@ A JSON whose fields are:
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
-- `request`: If the workflow was invoked via HTTP and this field was specified, the serialized request object
 
 ### `npx dbos workflow steps`
 
@@ -155,7 +152,6 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `input`: The input arguments to the workflow, in array format
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
-- `request`: If the workflow was invoked via HTTP and this field was specified, the serialized request object
 
 ### `npx dbos reset`
 
