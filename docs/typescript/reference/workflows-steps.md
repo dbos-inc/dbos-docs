@@ -258,7 +258,7 @@ async function exampleWorkflow() {
 - **config**: The step config, documented above.
 
 
-## Configured Instances
+## Instance Method Workflows
 
 ```typescript
 abstract class ConfiguredInstance {
@@ -266,8 +266,7 @@ abstract class ConfiguredInstance {
 }
 ```
 
-You can register or decorate class instance methods as DBOS workflows or steps.
-To do this, their class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
+You can register or decorate class instance methods.  However, if a class has any workflow methods, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
 
 When you create a new instance of the class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
 This `name` should be unique among instances of the same class.
@@ -280,11 +279,6 @@ class MyClass extends ConfiguredInstance {
   constructor(name: string, config: MyConfig) {
     super(name);
     this.cfg = cfg;
-  }
-
-  @DBOS.step()
-  async testStep() {
-    // ... Operations that use this.cfg
   }
 
   @DBOS.workflow()

@@ -46,7 +46,8 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way except by adding the @Step annotation.
-- ALL decorated functions (workflows and steps) MUST be class member functions. You MUST make them static functions unless they use class intance variables, in which case you MUST use ConfiguredInstance.
+- ALL decorated functions (workflows and steps) MUST be class member functions. You MUST make them static functions unless they use class intance variables.  If any instance method is a workflow, the class MUST extend ConfiguredInstance.
+- When calling static functions, you MUST NOT use "this"; instead use the class name explicitly.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use Promise.all() or anything similar to run multiple functions concurrently. You should instead use DBOS.startWorkflow and DBOS queues.
