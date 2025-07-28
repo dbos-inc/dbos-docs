@@ -11,6 +11,7 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();
 ```
@@ -21,16 +22,11 @@ All fields except `name` are optional.
 ```javascript
 export interface DBOSConfig {
   name?: string;
-  readonly databaseUrl?: string;
-
-  readonly userDatabaseClient?: UserDatabaseName; // Deprecated
-  readonly userDatabasePoolSize?: number; // Deprecated
 
   readonly systemDatabaseUrl?: string;
   readonly systemDatabasePoolSize?: number;
 
   readonly logLevel?: string;
-  readonly addContextMetadata?: boolean;
   readonly otlpLogsEndpoints?: string[];
   readonly otlpTracesEndpoints?: string[];
 
@@ -40,21 +36,18 @@ export interface DBOSConfig {
 ```
 
 - **name**: Your application's name.
-- **databaseUrl**: A connection string to a Postgres database that can be used to bootstrap the system.  If not present, the environment varialbe `DBOS_DATABASE_URL` is used.  This is also the application database for deprecated `@DBOS.transaction` transactions.  The supported format is:
+- **systemDatabaseUrl**: A connection string to a Postgres database in which [DBOS can store internal state](../../explanations/system-tables.md). The supported format is:
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
-The `sslmode=require`, `sslmode=verify-full`, `sslrootcert` and `connect_timeout` parameter keywords are also supported.
-Defaults to:
+
+The default is:
+
 ```
-postgresql://postgres:dbos@localhost:5432/[application name]
+postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
-- **userDatabaseClient**: If using deprecated `@DBOS.transaction`, the database client to use.  Must be one of `knex`, `drizzle`, `typeorm`, or `prisma`.  Defaults to `knex`.  This mechanism is deprecated in favor of data sources.
-- **userDatabasePoolSize**: The size of the connection pool used by `@DBOS.transaction` to connect to your application database. Defaults to 20.
-- **systemDatabaseUrl**: URL for the [system database](../../explanations/system-tables) in which DBOS stores internal state.  Defaults to database `{database name}_dbos_sys` within the same Postgres instance as `databaseUrl`.
 - **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 2.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
-- **addContextMetadata**: Configure the [DBOS logger](../tutorials/logging.md) entry details.  If true, data from the context will be included in log entries.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
@@ -72,6 +65,7 @@ Here is an example configuration file with default parameters:
 ```shell
 name: my-app
 language: node
+system_database_url: $DBOS_SYSTEM_DATABASE_URL
 runtimeConfig:
   start:
     - node dist/main.js
@@ -87,18 +81,20 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name.  Must match the name supplied to `DBOS.setConfig()`.
 - **language**: The application language.  Must be set to `node` for TypeScript applications.
-- **database**: The [database section](#database-section).
+- **system_database_url**: Full URL for the [system database](../../explanations/system-tables) in which DBOS stores internal state.  The default is:
+
+```
+postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
+```
 
 #### Database Section
 
-- **migrate**: A list of commands to run to apply your application's schema to the database, particularly in DBOS Cloud.
-- **system_database_url**: Full URL for the [system database](../../explanations/system-tables) in which DBOS stores internal state.  Defaults to `{database url}_dbos_sys`.
+- **migrate**: A list of commands to run to apply your application's schema to the database. 
 
 **Example**:
 
 ```yaml
 database:
-  system_database_url: 'postgresql://dbos:dbos@localhost:5432/my_dbos_system_db'
   migrate:
     - npx knex migrate:latest
 ```
