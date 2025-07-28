@@ -45,14 +45,17 @@ If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it
 
 ```typescript
 DBOS.registerWorkflow<This, Args extends unknown[], Return>(
-  func: (this: This, ...args: Args) => Promise<Return>,
-  name: string,
-  options: {
-    classOrInst?: object;
-    className?: string;
-    config?: WorkflowConfig;
-  } = {},
-): (this: This, ...args: Args) => Promise<Return> 
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config?: FunctionName & WorkflowConfig,
+  ): (this: This, ...args: Args) => Promise<Return> => Promise<Return> 
+```
+
+```typescript
+interface FunctionName {
+  name?: string;
+  className?: string;
+  ctorOrProto?: object;
+}
 ```
 
 Wrap a function in a DBOS workflow.
@@ -61,12 +64,12 @@ Returns the wrapped function.
 **Example:**
 
 ```typescript
-async function workflowFunction() {
+async function exampleWorkflowFunction() {
   await stepOne();
   await stepTwo();
 }
 
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(exampleWorkflowFunction, {"name": "exampleWorkflow"})
 // The registered workflow can be called normally
 await workflow();
 ```
@@ -74,10 +77,13 @@ await workflow();
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
-- **options**:
-  - **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
-  - **className**: ???
-  - **config**: Configuration for the workflow, documented above.
+- **config**:
+  - **name**: If the function is a class instance method, the instance. If it is a static class method, the class.
+  - **className**: Class name; if not provided, the class constructor or prototype's `name` will be used, or blank otherwise.
+  - **ctorOrProto**: For member functions, class constructor (for `static` methods) or prototype (for instance methods). This will be used to get the class name if `className` is not provided.
+  - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
 
 ### DBOS.scheduled
 
@@ -132,6 +138,27 @@ The DBOS variant contains 5 or 6 items, separated by spaces:
   - **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
   - **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
 
+### DBOS.registerScheduled
+
+```typescript
+registerScheduled<This, Return>(
+    func: (this: This, ...args: ScheduledArgs) => Promise<Return>,
+    config: SchedulerConfig,
+)
+```
+
+Register a workflow to run on a schedule.
+The semantics are the same as for the [`DBOS.scheduled`](#dbosscheduled) decorator.
+For example:
+
+```typescript
+async function scheduledFunc(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+}
+
+const regScheduledFunc = DBOS.registerWorkflow(scheduledFunc);
+DBOS.registerScheduled(regScheduledFunc, {crontab: '*/30 * * * * *'});
+```
 
 ## Steps
 
@@ -189,8 +216,8 @@ export class Example {
 
 ```typescript
 DBOS.registerStep<This, Args extends unknown[], Return>(
-  func: (this: This, ...args: Args) => Promise<Return>,
-  config: StepConfig = {},
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config: StepConfig & FunctionName = {},
 ): (this: This, ...args: Args) => Promise<Return>
 ```
 
@@ -203,31 +230,31 @@ Returns the wrapped function.
 async function stepOneFunction() {
   DBOS.logger.info("Step one completed!");
 }
-const stepOne = DBOS.registerStep(stepOneFunction);
+const stepOne = DBOS.registerStep(stepOneFunction, {"name": "stepOne"});
 
 async function stepTwoFunction() {
   DBOS.logger.info("Step two completed!");
 }
-const stepTwo = DBOS.registerStep(stepTwoFunction);
+const stepTwo = DBOS.registerStep(stepTwoFunction, {"name": "stepTwo"});
 
 // Call steps from workflows
 async function workflowFunction() {
   await stepOne();
   await stepTwo();
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkflow"})
 ```
 
 **Parameters:**
 - **func**: The function to be wrapped in a step.
-- **config**: The step config, documented above.
+- **config**: The step and registration config, documented above.
 
 ### DBOS.runStep
 
 ```typescript
-DBOS.runStep<Return>(
-    func: () => Promise<Return>, 
-    config: StepConfig = {},
+runStep<Return>(
+  func: () => Promise<Return>,
+  config: StepConfig & { name?: string } = {}
 ): Promise<Return>
 ```
 
