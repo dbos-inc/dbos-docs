@@ -47,7 +47,7 @@ const queue = new WorkflowQueue("example_queue");
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function queueFunction(tasks) {
   const handles = []
@@ -65,7 +65,7 @@ async function queueFunction(tasks) {
   }
   return results
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
 ```
 
 
@@ -130,7 +130,7 @@ const queue = new WorkflowQueue("example_queue");
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
   const task = ...
@@ -155,7 +155,7 @@ const queue = new WorkflowQueue("example_queue");
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
   const task = ...
@@ -186,7 +186,7 @@ const queue = new WorkflowQueue("example_queue", {usePriority: true});
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
   const task = ...

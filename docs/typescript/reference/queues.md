@@ -73,7 +73,7 @@ const queue = new WorkflowQueue("example_queue");
 async function taskFunction(task) {
     // ...
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskWorkflow");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function queueFunction(tasks) {
   const handles = []
@@ -91,7 +91,7 @@ async function queueFunction(tasks) {
   }
   return results
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
+const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "taskWorkflow"})
 ```
 
 **Example syntax using decorated workflows:**
