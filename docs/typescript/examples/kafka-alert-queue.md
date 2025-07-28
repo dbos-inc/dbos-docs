@@ -58,14 +58,6 @@ exports.down = async function(knex) {
 
 ## 2. Receiving Kafka Messages
 
-We create a `env` line in dbos-config.yaml for the KAFKA_BROKER environment variable:
-```yaml
-#...
-env:
-  KAFKA_BROKER: ${KAFKA_BROKER}
-```
-This passes the value of `KAFKA_BROKER` to the app when running locally and also to DBOS Cloud when deploying the app.
-
 Using the Kafka integration, we create a configuration to handle Kafka messages in our `operations.ts` file like so:
 ```typescript
 //The Kafka topic and broker configuration
@@ -399,10 +391,16 @@ while [ 1 ] ; do npx dbos start; done
 
 ## 10. Running with a Kafka Broker in the Cloud
 
-If you have an existing Kafka broker you'd like to use, pass the URL and port to the app via the environment variable KAFKA_BROKER like so:
+Kafka is configured using environment variables such as `KAFKA_BROKER`.
+
+For local operation, set these in the environment directly:
 ```bash
 export KAFKA_BROKER="broker1.example.com:9092"
-#...
+```
+
+To set these in DBOS Cloud, use [secrets](../../production/dbos-cloud/secrets.md) before application deployment.
+```bash
+dbos-cloud app secrets import --dotenv <.env file with KAFKA_BROKER etc.>
 dbos-cloud app deploy
 ```
-This way, the `dbos-cloud app deploy` command passes the value of `KAFKA_BROKER` to the deployed cloud app.
+This way, `KAFKA_BROKER` is available in the deployed cloud app.
