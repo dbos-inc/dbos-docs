@@ -6,8 +6,8 @@ description: DBOS system tables reference
 
 ## System Tables
 DBOS Transact records application execution history in several system tables.
-Most of these tables are in the system database, whose name is your application name suffixed with `_dbos_sys`.
-For example, if your application is named `dbos_app_starter`, your system database is named `dbos_app_starter_dbos_sys`.
+Most of these tables are in the system database, whose name by default is your application name suffixed with `_dbos_sys`.
+For example, if your application is named `dbos_app_starter`, your system database is by default named `dbos_app_starter_dbos_sys`.
 One exception is the `dbos.transaction_outputs` table which is stored in your application database.
 
 ### dbos.workflow_status
