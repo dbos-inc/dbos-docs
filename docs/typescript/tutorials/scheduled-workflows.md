@@ -4,7 +4,18 @@ title: Scheduled Workflows
 ---
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run exactly once per time interval.
-To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
+To do this, use the the [`DBOS.registerScheduled`](../reference/workflows-steps.md#dbosregisterscheduled) method or the [`DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
+
+```typescript
+async function scheduledFunction(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+}
+
+const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
+DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
+```
+
+Or using decorators:
 
 ```typescript
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -12,7 +23,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 class ScheduledExample{
   @DBOS.workflow()
   @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledFunc(schedTime: Date, startTime: Date) {
+  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
   }
 }

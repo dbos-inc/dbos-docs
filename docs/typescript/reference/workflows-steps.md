@@ -109,7 +109,7 @@ import { DBOS } from '@dbos-inc/dbos-sdk';
 class ScheduledExample{
   @DBOS.workflow()
   @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledFunc(schedTime: Date, startTime: Date) {
+  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
   }
 }
@@ -148,12 +148,12 @@ The semantics are the same as for the [`DBOS.scheduled`](#dbosscheduled) decorat
 For example:
 
 ```typescript
-async function scheduledFunc(schedTime: Date, startTime: Date) {
+async function scheduledFunction(schedTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
 }
 
-const regScheduledFunc = DBOS.registerWorkflow(scheduledFunc);
-DBOS.registerScheduled(regScheduledFunc, {crontab: '*/30 * * * * *'});
+const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
+DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
 ```
 
 ## Steps
