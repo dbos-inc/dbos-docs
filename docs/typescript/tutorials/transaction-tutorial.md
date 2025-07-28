@@ -4,7 +4,7 @@ title: Transactions & Datasources
 description: Learn how to perform database operations
 ---
 
-DBOS Transactions are a special kind of step intendef for database access.  They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
+DBOS Transactions are a special kind of step intended for database access.  They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
 
 You can perform transactions using datasources, which wrap database clients with DBOS-aware transaction logic.  Datasources are available for popular TypeScript libraries and expose the same interface as the underlying client. For example, the Knex datasource provides a `Knex.Transaction` client, and the Drizzle datasource provides a Drizzle `Transaction<>` client. This means you can use your existing database statements&mdash;just use the transaction provided within the datasource.
 
