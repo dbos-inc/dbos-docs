@@ -18,8 +18,6 @@ DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
 Or using decorators:
 
 ```typescript
-import { DBOS } from '@dbos-inc/dbos-sdk';
-
 class ScheduledExample{
   @DBOS.workflow()
   @DBOS.scheduled({crontab: '*/30 * * * * *'})
