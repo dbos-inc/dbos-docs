@@ -45,14 +45,15 @@ If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it
 
 ```typescript
 DBOS.registerWorkflow<This, Args extends unknown[], Return>(
-  func: (this: This, ...args: Args) => Promise<Return>,
-  name: string,
-  options: {
-    classOrInst?: object;
-    className?: string;
-    config?: WorkflowConfig;
-  } = {},
-): (this: This, ...args: Args) => Promise<Return> 
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config?: FunctionName & WorkflowConfig,
+  ): (this: This, ...args: Args) => Promise<Return> => Promise<Return> 
+```
+
+```typescript
+interface FunctionName {
+  name?: string;
+}
 ```
 
 Wrap a function in a DBOS workflow.
@@ -61,12 +62,12 @@ Returns the wrapped function.
 **Example:**
 
 ```typescript
-async function workflowFunction() {
+async function exampleWorkflowFunction() {
   await stepOne();
   await stepTwo();
 }
 
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(exampleWorkflowFunction, {"name": "exampleWorkflow"})
 // The registered workflow can be called normally
 await workflow();
 ```
@@ -74,10 +75,11 @@ await workflow();
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
-- **options**:
-  - **classOrInst**: If the function is a class instance method, the instance. If it is a static class method, the class.
-  - **className**: ???
-  - **config**: Configuration for the workflow, documented above.
+- **config**:
+  - **name**: The name with which to register the workflow. Defaults to the function name.
+  - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
+If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
 
 ### DBOS.scheduled
 
@@ -132,6 +134,27 @@ The DBOS variant contains 5 or 6 items, separated by spaces:
   - **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
   - **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
 
+### DBOS.registerScheduled
+
+```typescript
+registerScheduled<This, Return>(
+    func: (this: This, ...args: ScheduledArgs) => Promise<Return>,
+    config: SchedulerConfig,
+)
+```
+
+Register a workflow to run on a schedule.
+The semantics are the same as for the [`DBOS.scheduled`](#dbosscheduled) decorator.
+For example:
+
+```typescript
+async function scheduledFunc(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+}
+
+const regScheduledFunc = DBOS.registerWorkflow(scheduledFunc);
+DBOS.registerScheduled(regScheduledFunc, {crontab: '*/30 * * * * *'});
+```
 
 ## Steps
 
@@ -145,7 +168,6 @@ DBOS.step(
 
 ```typescript
 interface StepConfig {
-  name?: name;
   retriesAllowed?: boolean;
   intervalSeconds?: number;
   maxAttempts?: number;
@@ -179,7 +201,6 @@ export class Example {
 
 **Parameters:**
 - **config**:
-  - **name**: A name to give the step. If not provided, use the function name.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
@@ -189,8 +210,8 @@ export class Example {
 
 ```typescript
 DBOS.registerStep<This, Args extends unknown[], Return>(
-  func: (this: This, ...args: Args) => Promise<Return>,
-  config: StepConfig = {},
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config: StepConfig & FunctionName = {},
 ): (this: This, ...args: Args) => Promise<Return>
 ```
 
@@ -203,31 +224,36 @@ Returns the wrapped function.
 async function stepOneFunction() {
   DBOS.logger.info("Step one completed!");
 }
-const stepOne = DBOS.registerStep(stepOneFunction);
+const stepOne = DBOS.registerStep(stepOneFunction, {"name": "stepOne"});
 
 async function stepTwoFunction() {
   DBOS.logger.info("Step two completed!");
 }
-const stepTwo = DBOS.registerStep(stepTwoFunction);
+const stepTwo = DBOS.registerStep(stepTwoFunction, {"name": "stepTwo"});
 
 // Call steps from workflows
 async function workflowFunction() {
   await stepOne();
   await stepTwo();
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkflow"})
 ```
 
 **Parameters:**
 - **func**: The function to be wrapped in a step.
-- **config**: The step config, documented above.
+- **config**:
+  - **name**: A name to give the step. If not provided, use the function name.
+  - **retriesAllowed**: Whether to retry the step if it throws an exception.
+  - **intervalSeconds**: How long to wait before the initial retry.
+  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
 ### DBOS.runStep
 
 ```typescript
-DBOS.runStep<Return>(
-    func: () => Promise<Return>, 
-    config: StepConfig = {},
+runStep<Return>(
+  func: () => Promise<Return>,
+  config: StepConfig & { name?: string } = {}
 ): Promise<Return>
 ```
 
@@ -255,7 +281,12 @@ async function exampleWorkflow() {
 
 **Parameters:**
 - **func**: The function to run as a step.
-- **config**: The step config, documented above.
+- **config**:
+  - **name**: A name to give the step.
+  - **retriesAllowed**: Whether to retry the step if it throws an exception.
+  - **intervalSeconds**: How long to wait before the initial retry.
+  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
 
 ## Instance Method Workflows

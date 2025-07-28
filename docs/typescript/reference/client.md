@@ -22,6 +22,9 @@ interface EnqueueOptions {
     queueName: string;
     workflowID?: string;
     appVersion?: string;
+    workflowTimeoutMS?: number;
+    deduplicationID?: string;
+    priority?: number;
 }
 
 class DBOSClient {
