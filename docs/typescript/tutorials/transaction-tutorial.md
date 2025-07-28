@@ -4,7 +4,7 @@ title: Transactions & Datasources
 description: Learn how to perform database operations
 ---
 
-Transactions are a special kind of step intendef for database access. They execute as a single  [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
+DBOS Transactions are a special kind of step intendef for database access.  They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
 
 You can perform transactions using datasources, which wrap database clients with DBOS-aware transaction logic.  Datasources are available for popular TypeScript libraries and expose the same interface as the underlying client. For example, the Knex datasource provides a `Knex.Transaction` client, and the Drizzle datasource provides a Drizzle `Transaction<>` client. This means you can use your existing database statements&mdash;just use the transaction provided within the datasource.
 
@@ -292,4 +292,21 @@ Such methods will be run inside datasource transactions when called.
 Generally, connections to application databases should be made in a manner that is typical for the underlying client library.  However, for an application to work in DBOS Cloud, the `DBOS_DATABASE_URL` environment variable should be consulted.  If `DBOS_DATABASE_URL` is set, then this connection string should be used to access the cloud-provided database instance.
 
 ## Schema Setup
-Likewise, application developers may take complete control of the database schema setup process.  This may or may not be done using the same client library used for access from within DBOS.  However, if you are using DBOS Cloud, [migrations](../reference/configuration.md#database-section) should be specified in `dbos-config.yaml` so that database setup will occur when your application is deployed.
+Likewise, application developers may take complete control of the database schema setup process outside of DBOS.  This may or may not be done using the same client library used for access from within DBOS.  However, if you are using DBOS Cloud, [migrations](../reference/configuration.md#database-section) should be specified in `dbos-config.yaml` so that database setup will occur when your application is deployed.
+
+Note that all of the packages above require that the following schema and table be installed in the application database.  DBOS uses this table to ensure that transactions are executed exactly once.
+
+```sql
+CREATE SCHEMA IF NOT EXISTS dbos;
+
+CREATE TABLE IF NOT EXISTS dbos.transaction_completion (
+    workflow_id TEXT NOT NULL,
+    function_num INT NOT NULL,
+    output TEXT,
+    error TEXT,
+    created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM now())*1000)::bigint,
+    PRIMARY KEY (workflow_id, function_num)
+);
+```
+
+This table can be included in your migrations, or added manually.
