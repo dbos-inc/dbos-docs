@@ -163,10 +163,13 @@ For example, this is useful if you only want to have one workflow active at a ti
 Example syntax:
 
 ```python
+from dbos import DBOS, Queue, SetEnqueueOptions
+from dbos import error as dboserror
+
 with SetEnqueueOptions(deduplication_id="my_dedup_id"):
     try:
         handle = queue.enqueue(example_workflow, ...)
-    except DBOSQueueDeduplicatedError as e:
+    except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
 ```
 
