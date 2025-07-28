@@ -28,11 +28,11 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create(databaseUrl: string, systemDatabase?: string): Promise<DBOSClient>;
+    static create({systemDatabaseUrl}: {systemDatabaseUrl?: string}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
-    async enqueue<T extends (...args: any[]) => Promise<any>>(
-        options: EnqueueOptions,
+    enqueue<T extends (...args: any[]) => Promise<any>>(
+        options: ClientEnqueueOptions,
         ...args: Parameters<T>
     ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
@@ -53,21 +53,16 @@ class DBOSClient {
 
 #### `create`
 
-You construct a `DBOSClient` with the static `create` function. 
+You construct a `DBOSClient` with the static `create` function.
 
-The `databaseUrl` parameter is a [standard PostgreSQL connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS)
-for the DBOS application database. Please see [Configuring DBOS](configuration.md#configuring-dbos) for more info.
-
-DBOS Client needs to connect to the [system database](../../explanations/system-tables.md) of your DBOS application.
-The system database is stored on the same database server as the application database and typically has the same name as your application database, but suffixed with `_dbos_sys`. 
-If you are using a non-standard system database name in your DBOS application, you must also provide the name to `DBOSClient.create`.
+The `systemDatabaseUrl` parameter is a connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
 
 Example: 
 
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create(process.env.DBOS_DATABASE_URL);
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
 ```
 
 #### `destroy`
@@ -87,18 +82,22 @@ However, since `DBOSClient` runs outside the DBOS application, the metadata must
 
 Required metadata includes:
 
-* `workflowName`: The name of the workflow method being enqueued.
-* `workflowClassName`: The name of the class the workflow method is a member of.
-* `queueName`: The name of the queue to enqueue the workflow on.
+* **workflowName**: The name of the workflow method being enqueued.
+* **queueName**: The name of the queue to enqueue the workflow on.
 
 Additional but optional metadata includes:
 
-* `workflowID`: The unique ID for the enqueued workflow. 
+* **workflowClassName**: The name of the class the workflow method is a member of, if any.
+***`workflowID**: The unique ID for the enqueued workflow. 
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
-* `appVersion`: The version of your application that should process this workflow. 
+* **appVersion**: The version of your application that should process this workflow. 
 If left undefined, it will be updated to the current version when the workflow is first dequeued. 
 Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
+* **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
+* **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+* **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.

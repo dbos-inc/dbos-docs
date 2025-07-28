@@ -40,16 +40,16 @@ async function stepTwo() {
   DBOS.logger.info("Step two completed!");
 }
 
-async function exampleFunction() {
+async function exampleWorkflowFunction() {
   await DBOS.runStep(() => stepOne());
   await DBOS.runStep(() => stepTwo());
 }
-const exampleWorkflow = DBOS.registerWorkflow(exampleFunction, "workflow");
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
   await exampleWorkflow();
@@ -98,7 +98,7 @@ async function stepTwo() {
   DBOS.logger.info("Step two completed!");
 }
 
-async function exampleFunction() {
+async function exampleWorkflowFunction() {
   await DBOS.runStep(() => stepOne());
   for (let i = 0; i < 5; i++) {
     console.log("Press Control + C to stop the app...");
@@ -106,7 +106,7 @@ async function exampleFunction() {
   }
   await DBOS.runStep(() => stepTwo());
 }
-const exampleWorkflow = DBOS.registerWorkflow(exampleFunction, "workflow");
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 
 app.get("/", async (req, res) => {
   await exampleWorkflow();
@@ -116,7 +116,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
   const PORT = 3000;
@@ -128,9 +128,10 @@ async function main() {
 main().catch(console.log);
 ```
 
-Now, rebuild and restart your app with:
+Now, install Express.js, then rebuild and restart your app with:
 
 ```shell
+npm install express
 npm run build
 npm run start
 ```
@@ -181,7 +182,7 @@ async function taskFunction(n: number) {
   await DBOS.sleep(5000);
   DBOS.logger.info(`Task ${n} completed!`)
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskFunction");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction);
 
 async function queueFunction() {
   DBOS.logger.info("Enqueueing tasks!")
@@ -195,7 +196,7 @@ async function queueFunction() {
   }
   DBOS.logger.info(`Successfully completed ${results.length} tasks`)
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
+const queueWorkflow = DBOS.registerWorkflow(queueFunction)
 
 app.get("/", async (req, res) => {
   await queueWorkflow();
@@ -205,7 +206,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
   const PORT = 3000;

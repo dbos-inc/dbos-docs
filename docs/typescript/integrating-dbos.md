@@ -34,7 +34,7 @@ npm install @dbos-inc/dbos-sdk@latest
 ```
 
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
 Otherwise, you can start Postgres in a Docker container with this command:
 
 ```shell
@@ -44,20 +44,19 @@ npx dbos postgres start
 
 #### 2. Launch DBOS in Your App
 
-In your app's main entrypoint, add a call to `DBOS.launch()`.  This initializes DBOS when your app starts.
+In your app's main entrypoint, add code to configure and launch DBOS:
 
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
 DBOS.setConfig({
-  "name": "my-app", // If not set, will be taken from package.json
-  // Other options
+  "name": "my-app",
+  "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
-
 await DBOS.launch();
 ```
 
-`launch` should be called after the app is created, but before it begins processing requests.  Prior to launch, [`setConfig`](./reference/dbos-class.md#dbossetconfig) can optionally be used to provide configuration information for the system database location.
+Both `DBOS.setConfig` and `DBOS.launch` should be called after your app is created, but before it begins processing requests.
 
 #### 3. Start Your Application
 
@@ -72,17 +71,8 @@ For example, you can register one of your functions as a [workflow](./tutorials/
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```typescript
-class DBOSSteps
-{
-  @DBOS.step()
-  static async stepOne() {
-    DBOS.logger.info("Step one completed!");
-  }
-
-  @DBOS.workflow()
-  static async staticWorkflow() {
-    DBOSSteps.stepOne();
-  }
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
 }
 
 async function stepTwo() {
@@ -90,14 +80,12 @@ async function stepTwo() {
 }
 
 async function workflowFunction() {
-  await DBOSSteps.stepOne();
-  await DBOS.runStep(stepTwo, {name: "stepTwo"});
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
 }
-
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction)
 
 await workflow();
-await DBOSSteps.staticWorkflow();
 ```
 
 **You must register all workflows before calling `DBOS.launch()`**

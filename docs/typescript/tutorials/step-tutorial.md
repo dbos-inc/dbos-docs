@@ -4,7 +4,7 @@ title: Steps
 description: Learn how to communicate with external APIs and services
 ---
 
-When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
+When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can use `DBOS.runStep` to call a function as a step.  For a function to be used as a step, it should have a return value that can be serialized as JSON, and should not have non-durable side effects.
@@ -19,7 +19,7 @@ async function generateRandomNumber() {
 async function workflowFunction() {
   const randomNumber = await DBOS.runStep(() => generateRandomNumber(), {name: "generateRandomNumber"});
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction)
 ```
 
 Alternatively, you can register a function as a step using `DBOS.registerStep`:
@@ -33,7 +33,7 @@ const randomStep = DBOS.registerStep(generateRandomNumber);
 async function workflowFunction() {
   const randomNumber = await randomStep();
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction)
 ```
 
 Or use the `@DBOS.step()` decorator:
