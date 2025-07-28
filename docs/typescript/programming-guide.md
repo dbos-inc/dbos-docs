@@ -182,7 +182,7 @@ async function taskFunction(n: number) {
   await DBOS.sleep(5000);
   DBOS.logger.info(`Task ${n} completed!`)
 }
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, "taskFunction");
+const taskWorkflow = DBOS.registerWorkflow(taskFunction);
 
 async function queueFunction() {
   DBOS.logger.info("Enqueueing tasks!")
@@ -196,7 +196,7 @@ async function queueFunction() {
   }
   DBOS.logger.info(`Successfully completed ${results.length} tasks`)
 }
-const queueWorkflow = DBOS.registerWorkflow(queueFunction, "queueWorkflow")
+const queueWorkflow = DBOS.registerWorkflow(queueFunction)
 
 app.get("/", async (req, res) => {
   await queueWorkflow();
@@ -206,7 +206,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
   const PORT = 3000;
