@@ -1,0 +1,17 @@
+Unable to find image 'otel/opentelemetry-collector-contrib:0.128.0' locally
+0.128.0: Pulling from otel/opentelemetry-collector-contrib
+8178144b4b27: Pulling fs layer
+74e80a468d3f: Pulling fs layer
+1bd192b60ba6: Pulling fs layer
+8178144b4b27: Verifying Checksum
+8178144b4b27: Download complete
+8178144b4b27: Pull complete
+1bd192b60ba6: Verifying Checksum
+1bd192b60ba6: Download complete
+74e80a468d3f: Verifying Checksum
+74e80a468d3f: Download complete
+74e80a468d3f: Pull complete
+1bd192b60ba6: Pull complete
+Digest: sha256:1ab0baba0ee3695d823c46653d8a6e8894896e668ce8bd7ebe002e948d827bc7
+Status: Downloaded newer image for otel/opentelemetry-collector-contrib:0.128.0
+docker: Error response from daemon: driver failed programming external connectivity on endpoint zealous_darwin (39552b323ebc4b3c2c21e859a060f1762e7a87f1234ff2721decc9b9c6a56521): listen tcp4 127.0.0.1:55679: bind: address already in use.

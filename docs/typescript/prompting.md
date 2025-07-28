@@ -39,7 +39,7 @@ For example:
 
 Workflows provide durable execution so you can write programs that are resilient to any failure.
 Workflows are comprised of steps, which are ordinary TypeScript functions annotated with @DBOS.step().
-When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step. 
+When using DBOS workflows, you should register or annotate any function that performs complex operations or accesses external APIs or services as a step. 
 You can turn any TypeScript function into a step by making it a static class member function and annotating it with the @DBOS.step decorator. The only requirement is that its inputs and outputs should be serializable.
 
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
