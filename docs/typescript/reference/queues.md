@@ -26,14 +26,13 @@ interface QueueRateLimit {
   limitPerPeriod: number;
   periodSec: number;
 }
-
 ```
 
 **Parameters:**
 - **name**: The name of the queue.  Must be unique among all queues in the application.
+- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `concurrency`.
 - **concurrency**: The maximum number of workflows from this queue that may run concurrently. Defaults to no limit.
 This concurrency limit is global across all DBOS processes using this queue.
-- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `concurrency`.
 - **rateLimit**: A limit on the maximum number of functions which may be started in a given period.
   - **rateLimit.limitPerPeriod**: The number of workflows that may be started within the specified time period.
   - **rateLimit.periodSec**: The time period across which `limitPerPeriod` applies.
@@ -41,13 +40,12 @@ This concurrency limit is global across all DBOS processes using this queue.
 
 **Example syntax:**
 
-This queue may run no more than 10 functions concurrently and may not start more than 50 functions per 30 seconds:
+This queue may run no more than 5 functions per process and may not start more than 50 functions per 30 seconds:
 
 ```typescript
 const queue = new WorkflowQueue(
     "example_queue",
     {
-        concurrency: 10,
         workerConcurrency: 5,
         rateLimit: { limitPerPeriod: 50, periodSec: 30 }
     },
@@ -63,7 +61,7 @@ Through arguments to `DBOS.startWorkflow`, you can optionally provide a custom p
 
 The `DBOS.startWorkflow` method durably enqueues your function; after it returns, your function is guaranteed to eventually execute even if your app is interrupted.
 
-**Example syntax using registered workflows:**
+**Example syntax:**
 
 ```typescript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";

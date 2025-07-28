@@ -65,7 +65,7 @@ Here is an example configuration file with default parameters:
 ```shell
 name: my-app
 language: node
-system_database_url: $DBOS_SYSTEM_DATABASE_URL
+system_database_url: ${DBOS_SYSTEM_DATABASE_URL}
 runtimeConfig:
   start:
     - node dist/main.js

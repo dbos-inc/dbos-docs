@@ -145,7 +145,7 @@ To start a workflow created by registering a function:
 async function example(input: number) {
     // Call steps
 }
-const exampleWorkflow = DBOS.registerWorkflow(example, "exampleWorkflow");
+const exampleWorkflow = DBOS.registerWorkflow(example);
 
 const input = 10;
 const handle = await DBOS.startWorkflow(exampleWorkflow)(input);
