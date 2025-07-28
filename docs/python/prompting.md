@@ -15,9 +15,9 @@ This adds the prompt to your AI model's context, giving it up-to-date instructio
 If you are using an AI-powered IDE, you can add this prompt to your project's context.
 For example:
 
+- Claude Code: Add the prompt, or a link to it, to your CLAUDE.md file.
 - Cursor: Add the prompt to [your project rules](https://docs.cursor.com/context/rules-for-ai).
 - Zed: Copy the prompt to a file in your project, then use the [`/file`](https://zed.dev/docs/assistant/commands?highlight=%2Ffile#file) command to add the file to your context.
-- Windsurf: Copy the prompt to a file in your project, then use [`@-Mention`](https://docs.windsurf.com/chat/overview) to add the file to your context.
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
 ## Prompt
