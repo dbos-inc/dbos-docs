@@ -111,8 +111,6 @@ async function main() {
 }
 ```
 
-
-
 ## Determinism
 
 Workflows are in most respects normal TypeScript functions.

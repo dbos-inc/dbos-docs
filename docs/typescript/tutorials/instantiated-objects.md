@@ -4,7 +4,7 @@ title: Using Typescript Objects
 ---
 
 You can use class instance methods as workflows and steps.
-Any class instance method can be freely used as a step using the [`DBOS.step`](../reference/workflows-steps.md#dbosstep) decorator or the [`DBOS.runStep`](../reference/workflows-steps.md#dbosrunstep); there are no special requirements.
+Any class instance method can be freely used as a step using the [`DBOS.step`](../reference/workflows-steps.md#dbosstep) decorator or [`DBOS.runStep`](../reference/workflows-steps.md#dbosrunstep); there are no special requirements.
 To use a class instance method as a workflow, you must use the [`DBOS.workflow`](../reference/workflows-steps.md#dbosworkflow) decorator and the class must inherit from `ConfiguredInstance`.
 For example:
 
