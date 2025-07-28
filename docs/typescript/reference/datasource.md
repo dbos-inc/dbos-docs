@@ -76,49 +76,46 @@ While datasource transactions are generally run inside workflows, this is not st
 
 ### dataSource.runTransaction()
 
+`runTransaction` allows code to be run "in line" within a datasource transaction, without pulling the code out into a separate named function.
+
 ```typescript
 runTransaction<T>(
   func: () => Promise<T>,
-  funcName: string, 
-  config?: TransactionConfig
+  config?: TransactionConfig & {name?: string}
 )
 ```
 
-Run a function as a transaction.
-Can only be called from a durable workflow.
-Returns the output of the transaction.
-
 **Parameters:**
 - **func**: The function to run as a transaction.
-- **funcName**: A name to give the transaction.
-- **config**: The transaction config, documented above.
+- **config**: The transaction config, described below.
 
-**Example:**
+**Knex Example:**
 
 ```typescript
-async function insertRow() {
-  await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
-}
-
-async function countRows() {
-  const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
-  const count = result.rows[0].count;
-}
-
 async function workflowFunction() {
-  await dataSource.runTransaction(() => insertRow(), "insertRow")
-  await dataSource.runTransaction(() => countRows(), "countRows")
+  await dataSource.runTransaction(async () => {
+    await dataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  }, {name: "insertRow"});
+
+  return await dataSource.runTransaction(async () => {
+      const result = await dataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
+      const count = result.rows[0].count;
+      return count;
+    },
+    {name: "countRows", readOnly: true}
+  );
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction, "workflow");
 ```
 
 ### dataSource.registerTransaction()
 
+A transaction function may be registered, returning a wrapper function that remembers the associated datasource and transaction configuration.  The returned function takes the same argument as the provided function, making it transparent to the caller.
+
 ```typescript
 registerTransaction<This, Args extends unknown[], Return>(
   func: (this: This, ...args: Args) => Promise<Return>,
-  config?: TransactionConfig,
-  name?: string,
+  config?: TransactionConfig & {name?: string},
 ): (this: This, ...args: Args) => Promise<Return>
 ```
 
@@ -127,19 +124,18 @@ Returns the wrapped function.
 
 **Parameters:**
 - **func**: The function to be wrapped in a transaction.
-- **config**: The transaction config, documented above.
-- **name**: A name to give the transaction. If not given, use the function name.
+- **config**: The transaction config, documented below.  The exact configuration type may vary depending on the datasource.
 
-**Example:**
+**Knex Example:**
 
 ```typescript
 async function insertRowFunction() {
-  await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  await dataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
 }
 const insertRowTransaction = dataSource.registerTransaction(insertRowFunction);
 
 async function countRowsFunction() {
-  const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
+  const result = await dataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
   const count = result.rows[0].count;
 }
 const countRowsTransaction = dataSource.registerTransaction(countRowsFunction);
@@ -153,14 +149,16 @@ const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
 
 ### dataSource.transaction() Decorators
 
+Decorators can be used on class methods to mark them as transactional steps within a workflow.
+
+Each datasource provides a `transaction` decorator that accepts a `TransactionConfig` appropriate to the datasource.
 ```typescript
 dataSource.transaction(
     config?: TransactionConfig
 )
 ```
 
-A decorator that marks a function as a transactional step in a durable workflow.
-
+For example, the Knex `TransactionConfig` is:
 ```typescript
 interface TransactionConfig {
   isolationLevel?: Knex.IsolationLevels;
@@ -178,12 +176,12 @@ interface TransactionConfig {
 ```typescript
 @dataSource.transaction()
   static async insertRow() {
-  await KnexDataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
+  await dataSource.client.raw('INSERT INTO example_table (name) VALUES (?)', ['dbos']);
 }
 
 @dataSource.transaction()
 static async countRows() {
-  const result = await KnexDataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
+  const result = await dataSource.client.raw('SELECT COUNT(*) as count FROM example_table');
   const count = result.rows[0].count;
 }
 
@@ -194,7 +192,12 @@ static async transactionWorkflow() {
 }
 ```
 
-## Transaction configuration
+## Transaction Configuration
+Transaction configuration varies depending on the underlying datasource package in use.  Generally, fields similar to the following are supported:
+- `name`: Provides a name for the function, which will be recorded in the DBOS step record.  If not specified, the `name` will be taken from the transactions `function` object.
+- `isolationLevel?: 'read uncommitted' | 'read committed' | 'repeatable read' | 'serializable'`: Allows the transaction isolation level to be set.
+- `accessMode?: 'read only' | 'read write'` or `readOnly?: boolean`: Allows a read-only transaction to be requested.  Read-only transactions involve no writes to the underlying application database, but the result will be stored in the DBOS system database to allow for correct workflow behavior.
+
 
 ## Standard API for data sources
 
