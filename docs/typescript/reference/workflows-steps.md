@@ -53,8 +53,6 @@ DBOS.registerWorkflow<This, Args extends unknown[], Return>(
 ```typescript
 interface FunctionName {
   name?: string;
-  className?: string;
-  ctorOrProto?: object;
 }
 ```
 
@@ -78,9 +76,7 @@ await workflow();
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
 - **config**:
-  - **name**: If the function is a class instance method, the instance. If it is a static class method, the class.
-  - **className**: Class name; if not provided, the class constructor or prototype's `name` will be used, or blank otherwise.
-  - **ctorOrProto**: For member functions, class constructor (for `static` methods) or prototype (for instance methods). This will be used to get the class name if `className` is not provided.
+  - **name**: The name with which to register the workflow. Defaults to the function name.
   - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
@@ -172,7 +168,6 @@ DBOS.step(
 
 ```typescript
 interface StepConfig {
-  name?: name;
   retriesAllowed?: boolean;
   intervalSeconds?: number;
   maxAttempts?: number;
@@ -206,7 +201,6 @@ export class Example {
 
 **Parameters:**
 - **config**:
-  - **name**: A name to give the step. If not provided, use the function name.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
@@ -247,7 +241,12 @@ const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkfl
 
 **Parameters:**
 - **func**: The function to be wrapped in a step.
-- **config**: The step and registration config, documented above.
+- **config**:
+  - **name**: A name to give the step. If not provided, use the function name.
+  - **retriesAllowed**: Whether to retry the step if it throws an exception.
+  - **intervalSeconds**: How long to wait before the initial retry.
+  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
 ### DBOS.runStep
 
@@ -282,7 +281,12 @@ async function exampleWorkflow() {
 
 **Parameters:**
 - **func**: The function to run as a step.
-- **config**: The step config, documented above.
+- **config**:
+  - **name**: A name to give the step.
+  - **retriesAllowed**: Whether to retry the step if it throws an exception.
+  - **intervalSeconds**: How long to wait before the initial retry.
+  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
 
 ## Instance Method Workflows
