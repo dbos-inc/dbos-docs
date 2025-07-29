@@ -7,6 +7,63 @@ With the release of DBOS Transact TypeScript version 3 (aka DBOS TS v3), some AP
 Additionally, there are APIs that have been deprecated in v3 that will be removed in a future version of DBOS TS. 
 This document explains how to update your existing DBOS TS app to recommended v3 APIs.
 
+## Clean Up `dbos-config.yaml`
+`dbos-config.yaml` is not required and no longer supports the `application:`, `env:`, and some other sections.  Application configuration should use other approaches, such as direct use of environment variables that are set using tools such as `dotenv` or DBOS Cloud [secrets](../production/dbos-cloud/secrets.md).
+
+`dbos-config.yaml`, if in use, should only be used to provide the information needed by DBOS Cloud, the debugger, and other tools that start your app.  If `dbos-config.yaml` is not used, be sure to set important configuration information in a call to [`DBOS.setConfig`](./reference/dbos-class.md#dbossetconfig), prior to [`DBOS.launch`](./reference/dbos-class.md#dboslaunch).
+
+### Use Start Commands And `DBOS.launch`
+Previous versions of DBOS TS offered a "runtime", which loaded specified code files and then started a runtime for you.  This "entrypoints"-based runtime configuration is no longer available.  If your `dbos-config.yaml` does not have a `start:` or currently uses `entrypoints:` or `port:`, it should be changed to use `start:`.
+
+For example:
+```yaml
+runtimeConfig:
+  port: 8086
+```
+
+Would become:
+```yaml
+runtimeConfig:
+  start:
+    - "node dist/main.js"
+```
+
+It may be necessary to create a suitable main file containing setup and a call to `DBOS.launch`:
+```typescript
+// Note that port is no longer set in the runtime,
+//   and should come from the environment and default to 3000
+const PORT = parseInt(process.env.NODE_PORT ?? '3000');
+
+async function main() {
+  DBOS.setConfig({
+    "name": "alert-center", // Note app name is set
+  });
+
+  await DBOS.launch();
+  DBOS.logRegisteredEndpoints();
+
+  const app = new Koa();
+  const appRouter = new Router();
+  dkoa.registerWithApp(app, appRouter);
+
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
+
+main().then(()=>{}).catch(console.error);
+```
+
+Similarly, within unit tests the `TestingRuntime` approach is no longer available, and a combination of `DBOS.setConfig` and `DBOS.launch` should be used instead.
+
+For additional information, see:
+- [Configuration](./reference/configuration.md)
+- Configuring for [DBOS Cloud](../production/dbos-cloud/deploying-to-cloud.md)
+
+For examples that use `start` commands, see:
+- [Template Apps](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/create/templates)
+- [Demo Apps](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript)
+
 ## Update Context-based Methods
 
 In DBOS TS v1, DBOS application methods had an explicit context parameter.
