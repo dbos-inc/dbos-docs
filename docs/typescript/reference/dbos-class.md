@@ -74,3 +74,11 @@ DBOS.shutdown(
 Shut down DBOS, terminating all active workflows and closing database disconnections.
 After this completes, DBOS can be re-configured and re-launched.
 Useful for testing.
+
+### DBOS.logRegisteredEndpoints
+
+```typescript
+DBOS.logRegisteredEndpoints(): void
+```
+
+Logs all DBOS functions that are bound to endpoints, including scheduled workflows, kafka consumers, and any other library event receivers.  This can be a useful diagnostic to call at DBOS launch.

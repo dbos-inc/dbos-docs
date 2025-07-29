@@ -159,6 +159,22 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
 
+### DBOS.now
+
+```typescript
+DBOS.now(): Promise<number>
+```
+
+Returns the current time, in the manner of `Date.now()`, checkpointed as a step.
+
+### DBOS.randomUUID
+
+```typescript
+DBOS.randomUUID(): Promise<string>
+```
+
+Returns a random UUID, in the manner of `node:crypto`, checkpointed as a step.
+
 ### DBOS.retrieveWorkflow
 
 ```typescript
@@ -376,6 +392,12 @@ DBOS.workflowID: string | undefined;
 
 Return the ID of the current workflow, if in a workflow.
 
+### DBOS.isInStep()
+```typescript
+DBOS.isInStep(): boolean;
+```
+Returns true if called from within a step.
+
 ### DBOS.stepID
 
 ```typescript
@@ -403,6 +425,13 @@ interface StepStatus {
   maxAttempts?: number;
 }
 ```
+
+### DBOS.isInTransaction()
+```typescript
+DBOS.isInTransaction(): boolean;
+```
+Returns true if called from within a datasource transaction.
+
 
 ### DBOS.span
 
