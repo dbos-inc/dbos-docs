@@ -26,7 +26,7 @@ npx dbos postgres start
 
 ## 2. Workflows and Steps
 
-DBOS helps you add reliability to TypeScript programs.  The key feature of DBOS is **workflow functions** comprised of **steps**&mdash;DBOS automatically provides durability by saving the state of your workflows and steps to its system database.  If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.  Thus, DBOS makes your application **resilient to any failure**, such as a hardware fault or server crash.
+DBOS helps you add reliability to TypeScript programs.  The key feature of DBOS is **workflow functions** comprised of **steps**&mdash;DBOS automatically provides durability by saving the state of your workflows and steps to its system database.  If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.  Thus, DBOS makes your application **resilient to any failure**.
 
 Let's create a simple DBOS program that runs a workflow of two steps.  Replace all the code in `src/main.ts` with the following:
 

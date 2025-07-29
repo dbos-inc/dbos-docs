@@ -6,7 +6,7 @@ pagination_prev: null
 
 The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
 Here, we document its lifecycle.
-Other methods and variables are documented here.
+Other methods and variables are documented [here](./methods.md).
 
 ### DBOS.setConfig
 
@@ -51,11 +51,6 @@ async function main() {
   });
   // Launch DBOS
   await DBOS.launch();
-  // Start an app server
-  const PORT = 3000; // Must be 3000 in DBOS Cloud, can use environment variable locally
-  app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  });
 }
 
 main().catch(console.log);

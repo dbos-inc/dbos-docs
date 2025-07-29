@@ -15,7 +15,7 @@ You can also view a searchable and expandable list of your application's workflo
 
 ## Listing Workflow Steps
 
-You can list the steps of a workflow programmatically via [`DBOS.listWorkflowSteps`](../reference/methods.md#dboslistworkflowsteps).
+You can list the steps of a workflow programmatically via [`DBOS.listWorkflowSteps`](../reference/methods.md#dboslistworkflowsteps) or from the command line with [`npx dbos workflow steps`](../reference/cli.md#npx-dbos-workflow-steps).
 
 You can also visualize a workflow's execution graph (including the workflow, its steps, and its child workflows and their steps) from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
 For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:

@@ -13,13 +13,15 @@ Different JavaScript libraries have different mechanisms for starting transactio
 - Correct runtime behavior across all supported environments
 
 ## Setting Up Data Sources
-In general, each data source is implemented in a separate package.  This package, along with its underlying database libraries, should be installed before use.
--[@dbos-inc/drizzle-datasource](https://www.npmjs.com/package/@dbos-inc/drizzle-datasource): [drizzle](https://orm.drizzle.team/)
--[@dbos-inc/knex-datasource](https://www.npmjs.com/package/@dbos-inc/knex-datasource): [Knex.js](https://knexjs.org/)
--[@dbos-inc/nodepg-datasource](https://www.npmjs.com/package/@dbos-inc/nodepg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
--[@dbos-inc/postgres-datasource](https://www.npmjs.com/package/@dbos-inc/postgres-datasource): [Postgres.js](https://github.com/porsager/postgres)
--[@dbos-inc/prisma-datasource](https://www.npmjs.com/package/@dbos-inc/prisma-datasource): [Prisma](https://www.prisma.io/)
--[@dbos-inc/typeorm-datasource](https://www.npmjs.com/package/@dbos-inc/typeorm-datasource): [TypeORM](https://typeorm.io/)
+Each data source is implemented in a separate package.
+This package, along with its underlying database libraries, should be installed before use.
+
+- [@dbos-inc/drizzle-datasource](https://www.npmjs.com/package/@dbos-inc/drizzle-datasource): [drizzle](https://orm.drizzle.team/)
+- [@dbos-inc/knex-datasource](https://www.npmjs.com/package/@dbos-inc/knex-datasource): [Knex.js](https://knexjs.org/)
+- [@dbos-inc/nodepg-datasource](https://www.npmjs.com/package/@dbos-inc/nodepg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
+- [@dbos-inc/postgres-datasource](https://www.npmjs.com/package/@dbos-inc/postgres-datasource): [Postgres.js](https://github.com/porsager/postgres)
+- [@dbos-inc/prisma-datasource](https://www.npmjs.com/package/@dbos-inc/prisma-datasource): [Prisma](https://www.prisma.io/)
+- [@dbos-inc/typeorm-datasource](https://www.npmjs.com/package/@dbos-inc/typeorm-datasource): [TypeORM](https://typeorm.io/)
 
 ### Instantiating Datasources
 In general, datasources should be configured and constructed during program load, noting that they will not open any database connections until later in the initialization process.  This allows the datasource objects to be used to register transaction functions.
@@ -42,27 +44,24 @@ Note that each datasource is given a `name` upon construction.  These names are 
 
 To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment varialbe should be checked within configuration to connect to the primary application database.
 
-### Schema Migration
-
-Schema setup is outside of the scope of DBOS.  You may use the same library to manage your schema, or a different one.  DBOS Cloud does offer a [configuration option to run your schema migration commands](../../production/dbos-cloud/database-management.md#database-schema-management).
-
-To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment varialbe should be used within migrations to connect to the primary application database.
-
 ### Installing the DBOS Schema
 
-DBOS datasources generally require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run once.  This table can be added manually, via a schema migration in your favorite tool, by your DBA, etc.
+DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
 
-```sql
-CREATE SCHEMA IF NOT EXISTS dbos;
+This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
 
-CREATE TABLE IF NOT EXISTS dbos.transaction_completion (
-    workflow_id TEXT NOT NULL,
-    function_num INT NOT NULL,
-    output TEXT,
-    error TEXT,
-    created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM now())*1000)::bigint,
-    PRIMARY KEY (workflow_id, function_num)
-);
+```ts
+const {
+  KnexDataSource
+} = require('@dbos-inc/knex-datasource');
+
+exports.up = async function(knex) {
+  await KnexDataSource.initializeDBOSSchema(knex);
+};
+
+exports.down = async function(knex) {
+  await KnexDataSource.uninitializeDBOSSchema(knex);
+};
 ```
 
 ## Running Transactions
@@ -197,12 +196,3 @@ Transaction configuration varies depending on the underlying datasource package 
 - `name`: Provides a name for the function, which will be recorded in the DBOS step record.  If not specified, the `name` will be taken from the transactions `function` object.
 - `isolationLevel?: 'read uncommitted' | 'read committed' | 'repeatable read' | 'serializable'`: Allows the transaction isolation level to be set.
 - `accessMode?: 'read only' | 'read write'` or `readOnly?: boolean`: Allows a read-only transaction to be requested.  Read-only transactions involve no writes to the underlying application database, but the result will be stored in the DBOS system database to allow for correct workflow behavior.
-
-
-## Standard API for data sources
-
-## Creating New Datasource Packages
-
-Additional datasources can be implemented by following the [interface](https://github.com/dbos-inc/dbos-transact-ts/blob/main/src/datasource.ts) and using the [existing packages](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages) as examples.
-
-Please reach out to DBOS on GitHub or Discord if you have questions or suggestions.
