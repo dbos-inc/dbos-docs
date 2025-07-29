@@ -323,8 +323,8 @@ Finally, let's start DBOS and the Fastify server:
 async function main() {
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
-    name: 'widget-store-node',
-    databaseUrl: process.env.DBOS_DATABASE_URL,
+    "name": 'widget-store-node',
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   DBOS.logRegisteredEndpoints();
   await DBOS.launch();
@@ -351,7 +351,8 @@ npm install
 npm run build
 ```
 
-Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
+Then, start Postgres in a local Docker container.
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` (for application data) and `DBOS_SYSTEM_DATABASE_URL` (for DBOS system data) environment variables to your database connection string.
 
 ```shell
 npx dbos postgres start

@@ -721,7 +721,7 @@ npm install
 npm run build
 ```
 
-Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
+Start Postgres (if you already use Postgres, instead set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your database connection string):
 
 ```bash
 npx dbos postgres start
