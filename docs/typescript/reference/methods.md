@@ -5,6 +5,68 @@ title: DBOS Methods & Variables
 
 ## DBOS Methods
 
+### DBOS.startWorkflow
+
+```typescript
+static startWorkflow<Args extends unknown[], Return>(
+  target: (...args: Args) => Promise<Return>,
+  params?: StartWorkflowParams,
+): (...args: Args) => Promise<WorkflowHandle<Return>>;
+```
+
+```typescript
+interface StartWorkflowParams {
+  workflowID?: string;
+  queueName?: string;
+  timeoutMS?: number | null;
+  enqueueOptions?: EnqueueOptions;
+}
+
+export interface EnqueueOptions {
+  deduplicationID?: string;
+  priority?: number;
+}
+```
+
+Start a workflow in the background and return a [handle](#workflow-handles) to it.
+Optionally enqueue it on a DBOS queue.
+The `DBOS.startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+**Example syntax:**
+
+```typescript
+async function example(input: number) {
+    // Call steps
+}
+const exampleWorkflow = DBOS.registerWorkflow(example);
+
+const input = 10;
+const handle = await DBOS.startWorkflow(exampleWorkflow)(input);
+```
+
+Or if using decorators: 
+
+```typescript
+export class Example {
+  @DBOS.workflow()
+  static async exampleWorkflow(input: number) {
+    // Call steps
+  }
+}
+
+const input = 10;
+const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
+```
+
+**Parameters:**
+
+- **target**: The workflow to start.
+- **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
+- **queueName**: The name of the queue on which to enqueue this workflow, if any.
+- **timeoutMS**: The timeout of this workflow in milliseconds.
+- **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+- **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
 ### DBOS.send
 
 ```typescript
@@ -109,72 +171,6 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 
 **Parameters**:
 - **workflowID**: The ID of the workflow whose handle to retrieve.
-
-### DBOS.startWorkflow
-
-```typescript
-static startWorkflow<Args extends unknown[], Return>(
-  target: (...args: Args) => Promise<Return>,
-  params?: StartWorkflowParams,
-): (...args: Args) => Promise<WorkflowHandle<Return>>;
-```
-
-```typescript
-interface StartWorkflowParams {
-  workflowID?: string;
-  queueName?: string;
-  timeoutMS?: number | null;
-  enqueueOptions?: EnqueueOptions;
-}
-
-export interface EnqueueOptions {
-  deduplicationID?: string;
-  priority?: number;
-}
-```
-
-Start a workflow in the background and return a [handle](#workflow-handles) to it.
-Optionally enqueue it on a DBOS queue.
-The `DBOS.startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
-
-**Example syntax:**
-
-To start a workflow created by registering a function:
-
-```typescript
-async function example(input: number) {
-    // Call steps
-}
-const exampleWorkflow = DBOS.registerWorkflow(example);
-
-const input = 10;
-const handle = await DBOS.startWorkflow(exampleWorkflow)(input);
-```
-
-To start a workflow created by decorating a class method:
-
-```typescript
-export class Example {
-  @DBOS.workflow()
-  static async exampleWorkflow(input: number) {
-    // Call steps
-  }
-}
-
-const input = 10;
-const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
-```
-
-**Parameters:**
-
-- **target**: The workflow to start.
-- **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
-- **queueName**: The name of the queue on which to enqueue this workflow, if any.
-- **timeoutMS**: The timeout of this workflow in milliseconds.
-- **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
-- **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-
-
 
 ## Workflow Management Methods
 
