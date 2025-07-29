@@ -48,7 +48,7 @@ Here are some of the more common v1 decorators that have been removed and their 
 | `@Worfklow`  | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) |
 | `@Step`      | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep), [`DBOS.runStep`](./reference/workflows-steps.md#dbosrunstep) |
 | `@Communicator`  | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) |
-| `@Transaction`     | `@DBOS.transaction` | [Data Sources](#data-sources) (see section below) |
+| `@Transaction`     | `@DBOS.transaction` | [Data Sources](#datasources) (see section below) |
 | `@GetApi` | `@DBOS.getApi` | [`koa-serve` external package ](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/koa-serve#serve-dbos-functions-over-http-with-koa) (see HTTP section below) |
 | `@PostApi` | `@DBOS.postApi` | [`koa-serve` external package ](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/koa-serve#serve-dbos-functions-over-http-with-koa) (see HTTP section below) |
 
@@ -82,9 +82,9 @@ Here are some of the common v1 context methods and properties that have been rem
 | `WorkflowContext.getEvent` / `HandlerContext.getEvent` | [`DBOS.getEvent`](./reference/methods#dbosgetevent) |
 | `WorkflowContext.setEvent` | [`DBOS.setEvent`](./reference/methods#dbossetevent) |
 | `WorkflowContext.sleepms` | [`DBOS.sleep`](./reference/methods#dbossleep) |
-| `TransactionContext.client` | `DBOS.sqlClient` (Deprecated. see [Data Sources](#data-sources) section below) |
+| `TransactionContext.client` | `DBOS.sqlClient` (Deprecated. see [Data Sources](#datasources) section below) |
 
-## Data Sources
+## Datasources
 
 DBOS TS v1 and v2 provide built-in support for a single Postgres database for application data, and offer a choice of one of 5 built-in access libraries.  This database can be used as the application sees fit.  For example, the Widget Store demo app stores both products and orders in this application database, and accesses it with Knex.
 DBOS transactions, decorated with `@Transaction` (v1) or `@DBOS.transaction` (v2), are steps that update the application database and durably record execution history.
@@ -95,6 +95,24 @@ First, while the core DBOS package only supports a single application database, 
 
 Second, since they are external to core DBOS library, datasources can support additional database drivers, query builders, and object-relational mappers without a release of the main library.  The core DBOS package only supports five different clients: [node-postgres](https://node-postgres.com/), [Knex.js](https://knexjs.org/),
 [Drizzle](https://orm.drizzle.team/), [Prisma](https://www.prisma.io/) and [TypeORM](https://typeorm.io/), and adding support for some other package like [Postgres.js](https://github.com/porsager/postgres) was not feasible.  However, adding an [external Postgres.js datasource](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/postgres-datasource) was straightforward, and since it's an external package, it could even be implemented by an independent person or organization without involvement from DBOS, Inc.
+
+Upgrading to datasources is generally as simple as configuring and constructing a datasource object, and then switching the `@DBOS.transaction` decorators to use that object instead, and using the `.client` property of the datasource object instead of `DBOS.sqlClient` et al.
+
+For example:
+```typescript
+  @DBOS.transaction()
+  static async cleanAlerts() {
+    await DBOS.knexClient<AlertEmployee>('alert_employee').where({alert_status: AlertStatus.RESOLVED}).delete();
+  }
+```
+
+Becomes:
+```typescript
+  @knexds.transaction()
+  static async cleanAlerts() {
+    await knexds.client<AlertEmployee>('alert_employee').where({alert_status: AlertStatus.RESOLVED}).delete();
+  }
+```
 
 For more information on datasources, please see the [tutorial](./tutorials/transaction-tutorial.md) and 
 [reference documentation](./reference/datasource.md).
