@@ -1,6 +1,6 @@
 ---
-sidebar_position: 25
-title: Upgrade Guide
+sidebar_position: 200
+title: TSv3 Upgrade Guide
 ---
 
 With the release of DBOS Transact TypeScript version 3 (aka DBOS TS v3), some APIs that were marked as deprecated in v2 have been removed.
@@ -8,7 +8,7 @@ Additionally, there are APIs that have been deprecated in v3 that will be remove
 This document explains how to update your existing DBOS TS app to recommended v3 APIs.
 
 ## Clean Up `dbos-config.yaml`
-`dbos-config.yaml` is not required and no longer supports the `application:`, `env:`, and some other sections.  Application configuration should use other approaches, such as direct use of environment variables that are set using tools such as `dotenv` or DBOS Cloud [secrets](../production/dbos-cloud/secrets.md).
+`dbos-config.yaml` is no longer required and no longer supports the `application:`, `env:`, and some other sections.  Application configuration should use other approaches, such as direct use of environment variables that are set using tools such as `dotenv` or DBOS Cloud [secrets](../production/dbos-cloud/secrets.md).
 
 `dbos-config.yaml`, if in use, should only be used to provide the information needed by DBOS Cloud, the debugger, and other tools that start your app.  If `dbos-config.yaml` is not used, be sure to set important configuration information in a call to [`DBOS.setConfig`](./reference/dbos-class.md#dbossetconfig), prior to [`DBOS.launch`](./reference/dbos-class.md#dboslaunch).
 
@@ -36,7 +36,7 @@ const PORT = parseInt(process.env.NODE_PORT ?? '3000');
 
 async function main() {
   DBOS.setConfig({
-    "name": "alert-center", // Note app name is set
+    "name": "alert-center", // Setting app name is required
   });
 
   await DBOS.launch();
@@ -102,7 +102,7 @@ Here are some of the more common v1 decorators that have been removed and their 
 
 | v1 Decorator (Removed) | v2 Decorator (Supported) | v3 (Recommended) |
 |------------------------|--------------------------|------------------|
-| `@Worfklow`  | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) |
+| `@Workflow`  | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) | [`@DBOS.workflow`](./reference/workflows-steps.md#dbosworkflow) |
 | `@Step`      | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep), [`DBOS.runStep`](./reference/workflows-steps.md#dbosrunstep) |
 | `@Communicator`  | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) | [`@DBOS.step`](./reference/workflows-steps.md#dbosstep) |
 | `@Transaction`     | `@DBOS.transaction` | [Data Sources](#datasources) (see section below) |
@@ -143,7 +143,7 @@ Here are some of the common v1 context methods and properties that have been rem
 
 ## Datasources
 
-DBOS TS v1 and v2 provide built-in support for a single Postgres database for application data, and offer a choice of one of 5 built-in access libraries.  This database can be used as the application sees fit.  For example, the Widget Store demo app stores both products and orders in this application database, and accesses it with Knex.
+DBOS TS v1 and v2 provide built-in support for a single Postgres database for application data, and offer a choice of built-in access libraries.  This database can be used as the application sees fit.  For example, the [Fault-tolerant Checkout example application](./examples/checkout-tutorial.md) stores both products and orders in this application database, and accesses it with Knex.
 DBOS transactions, decorated with `@Transaction` (v1) or `@DBOS.transaction` (v2), are steps that update the application database and durably record execution history.
 
 While DBOS TS v3 continues to support a single v2-style application database, it introduces support [Datasource](./tutorials/transaction-tutorial.md) extension packages.  Datasources have two primary benefits over the built-in app database support.
