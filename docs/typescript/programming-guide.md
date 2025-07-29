@@ -26,8 +26,9 @@ npx dbos postgres start
 
 ## 2. Workflows and Steps
 
-Now, let's create the simplest interesting DBOS program.
-Add this code to `src/main.ts`:
+DBOS helps you add reliability to TypeScript programs.  The key feature of DBOS is **workflow functions** comprised of **steps**&mdash;DBOS automatically provides durability by saving the state of your workflows and steps to its system database.  If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.  Thus, DBOS makes your application **resilient to any failure**, such as a hardware fault or server crash.
+
+Let's create a simple DBOS program that runs a workflow of two steps.  Replace all the code in `src/main.ts` with the following:
 
 ```javascript showLineNumbers title="src/main.ts"
 import { DBOS } from "@dbos-inc/dbos-sdk";
@@ -41,8 +42,8 @@ async function stepTwo() {
 }
 
 async function exampleFunction() {
-  await DBOS.runStep(() => stepOne());
-  await DBOS.runStep(() => stepTwo());
+  await DBOS.runStep(stepOne);
+  await DBOS.runStep(stepTwo);
 }
 const exampleWorkflow = DBOS.registerWorkflow(exampleFunction);
 
@@ -59,13 +60,6 @@ async function main() {
 main().catch(console.log);
 ```
 
-DBOS helps you write reliable TypeScript programs as **workflows** of **steps**.
-You create workflows and steps by adding special annotations (`@DBOS.workflow()` and `@DBOS.step()`) to your TypeScript functions.
-
-The key benefit of DBOS is **durability**&mdash;it automatically saves the state of your workflows and steps to a database.
-If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
-Thus, DBOS makes your application **resilient to any failure**.
-
 Now, build and run this code with:
 
 ```shell
@@ -81,7 +75,7 @@ Your program should print output like:
 ```
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Express.js.
-Copy this code into `src/main.ts`:
+Replace the contents of `src/main.ts` with:
 
 ```javascript showLineNumbers title="src/main.ts"
 import { DBOS } from "@dbos-inc/dbos-sdk";
