@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which can be constructed from ordinary TypeScript functions.
+Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary TypeScript (or JavaScript) functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, register a TypeScript function with `DBOS.registerWorkflow`.
@@ -79,8 +79,8 @@ async function main() {
 }
 ```
 
-After starting a workflow in the background, you can use [`DBOS.retrieve_workflow`](../reference/methods.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
-You can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
+After starting a workflow in the background, you can use [`DBOS.retrieveWorkflow`](../reference/methods.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieveWorkflow`](../reference/client.md#retrieveworkflow).
 
 If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
@@ -132,8 +132,22 @@ class Example {
 }
 ```
 
-Do this instead:
+Instead, do this:
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        // Don't make an HTTP request in a workflow function
+        const body = await DBOS.runStep(
+          async ()=>{return await fetch("https://example.com").then(r => r.text())},
+          {name: "fetchBody"}
+        );
+        await Example.exampleTransaction(body);
+    }
+}
+```
 
+Or this:
 ```javascript
 class Example {
     @DBOS.step()
@@ -149,7 +163,6 @@ class Example {
     }
 }
 ```
-
 
 ## Workflow Timeouts
 
