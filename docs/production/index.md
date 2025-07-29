@@ -24,7 +24,7 @@ Recovery, observability, and workflow management will automatically resume once 
 
 ## DBOS Cloud
 
-Any application built with DBOS can be deployed to DBOS Cloud.
+Applications built with DBOS can be deployed to DBOS Cloud.
 DBOS Cloud is a serverless platform for durably executed applications.
 It provides:
 

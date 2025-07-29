@@ -1,11 +1,11 @@
 ---
-sidebar_position: 50
+sidebar_position: 70
 title: Logging & Tracing
 ---
 
 ### Logging
 
-For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/transactapi/dbos-class#accessing-logging).
+For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/methods.md#dboslogger) that you can **optionally** use.
 For example:
 
 ```javascript
@@ -18,7 +18,6 @@ This also configures the log level of the DBOS library:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
   logLevel: "info",
 });
 await DBOS.launch();
@@ -31,7 +30,7 @@ DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces 
 DBOS constructs hierarchical [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for workflows and each of their steps.
 For example, if an HTTP endpoint calls a workflow that calls a transaction, DBOS constructs a trace encompassing the entire request, with spans for the HTTP endpoint, the workflow, and the transaction.
 The transaction span is a child of the workflow span, which is a child of the HTTP endpoint span.
-You can access your current span via [`DBOS.span`](../reference/transactapi/dbos-class#accessing-the-tracing-span).
+You can access your current span via [`DBOS.span`](../reference/methods.md#dbosspan).
 
 ### OpenTelemetry Export
 
@@ -43,7 +42,6 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
   otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
 });
 await DBOS.launch();

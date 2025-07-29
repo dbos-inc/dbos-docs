@@ -1,18 +1,27 @@
 ---
-sidebar_position: 48
+sidebar_position: 60
 title: Scheduled Workflows
 ---
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run exactly once per time interval.
-To do this, annotate the workflow with the [`@DBOS.scheduled`](../reference/transactapi/dbos-class#scheduled-workflows) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
+To do this, use the the [`DBOS.registerScheduled`](../reference/workflows-steps.md#dbosregisterscheduled) method or the [`DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator and specify the schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.  For example:
 
 ```typescript
-import { DBOS } from '@dbos-inc/dbos-sdk';
+async function scheduledFunction(schedTime: Date, startTime: Date) {
+    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
+}
 
+const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
+DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
+```
+
+Or using decorators:
+
+```typescript
 class ScheduledExample{
   @DBOS.workflow()
   @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledFunc(schedTime: Date, startTime: Date) {
+  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
     DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
   }
 }
@@ -21,7 +30,6 @@ class ScheduledExample{
 Scheduled workflows must take in exactly two arguments: the time that the run was scheduled (as a `Date`) and the time the run was actually started (as a `Date`).
 
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-The specification for the DBOS variant can be found in the [DBOS API reference](../reference/transactapi/dbos-class#crontab-specification).
 
 The DBOS crontab format supports some common extensions, as seen in the following examples:
 - `* * * * *`: Every minute of every day

@@ -68,7 +68,7 @@ The first process to complete the step will checkpoint its outcome and continue 
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/tools/cli.md#npx-dbos-reset)).
+You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset)).
 
 ### How can I cancel a large number of workflows in a batch?
 

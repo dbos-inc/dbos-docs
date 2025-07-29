@@ -46,7 +46,7 @@ bootstrap();
 ```
 
 ## Register Services With DBOS
-To integrate a Nest.js service with DBOS, your service class must extend the DBOS [ConfiguredInstance](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class#decorating-instance-methods) class. By extending `ConfiguredInstance`, you add your class instance methods to DBOS Transact's internal registry. During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registry enables DBOS to recover workflows using the right class instance.
+To integrate a Nest.js service with DBOS workflows, your service class [must extend the DBOS `ConfiguredInstance` class](../typescript/tutorials/instantiated-objects.md). By extending `ConfiguredInstance`, you add your instance workflow methods to DBOS Transact's internal registry.  During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registry enables DBOS to recover workflows using the right class instance.
 
 Here is an example of a Nest.js service implementing a simple two-step workflow:
 

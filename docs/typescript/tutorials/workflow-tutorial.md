@@ -5,15 +5,35 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which are ordinary TypeScript functions annotated with `@DBOS.step()`.
+Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary TypeScript (or JavaScript) functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-Here's an example workflow from the [programming guide](../programming-guide.md).
-Interrupt the program as much as you want after it finishes `stepOne`&mdash;it will always recover and complete `stepTwo`.
+To write a workflow, register a TypeScript function with `DBOS.registerWorkflow`.
+The function's inputs and outputs must be serializable to JSON.
+For example:
 
-```javascript
-class Example {
+```typescript
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
+}
 
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+
+async function workflowFunction() {
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
+}
+const workflow = DBOS.registerWorkflow(workflowFunction)
+
+await workflow();
+```
+
+Alternatively, you can register workflows and steps with decorators:
+
+```typescript
+export class Example {
   @DBOS.step()
   static async stepOne() {
     DBOS.logger.info("Step one completed!");
@@ -24,31 +44,72 @@ class Example {
     DBOS.logger.info("Step two completed!");
   }
 
+  // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Example.stepOne();
-    for (let i = 0; i < 5; i++) {
-      console.log("Press Control + C to stop the app...");
-      await DBOS.sleep(1000);
-    }
-    await Example.stepTwo();
+    await Toolbox.stepOne();
+    await Toolbox.stepTwo();
   }
+}
+
+await Example.exampleWorkflow();
+```
+
+## Starting Workflows In The Background
+
+One common use-case for workflows is building reliable background tasks that keep running even when your program is interrupted, restarted, or crashes.
+You can use [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow) to start a workflow in the background.
+If you start a workflow this way, it returns a [workflow handle](../reference/methods.md#workflow-handles), from which you can access information about the workflow or wait for it to complete and retrieve its result.
+
+Here's an example:
+
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        return var1 + var2;
+    }
+}
+
+async function main() {
+    // Start exampleWorkflow in the background
+    const handle = await DBOS.startWorkflow(Example).exampleWorkflow("one", "two");
+    // Wait for the workflow to complete and return its results
+    const result = await handle.getResult();
 }
 ```
 
-## Reliability Guarantees
+After starting a workflow in the background, you can use [`DBOS.retrieveWorkflow`](../reference/methods.md#dbosretrieveworkflow) to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieveWorkflow`](../reference/client.md#retrieveworkflow).
 
-Workflows provide the following reliability guarantees.
-These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
 
-1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
-2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+## Workflow IDs and Idempotency
 
-If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
-This is because uncaught exceptions are assumed to be nonrecoverable.
-If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
-DBOS provides [tooling](./workflow-tutorial.md#listing-workflows) to help you identify failed workflows and examine the specific uncaught exceptions.
+Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+You can access this ID through the `DBOS.workflowID` context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+
+You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow()`.
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
+
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        // ...
+    }
+}
+
+async function main() {
+    const myID: string = ...
+    const handle = await DBOS.startWorkflow(Example, {workflowID: myID}).exampleWorkflow("one", "two");
+    const result = await handle.getResult();
+}
+```
 
 ## Determinism
 
@@ -71,8 +132,22 @@ class Example {
 }
 ```
 
-Do this instead:
+Instead, do this:
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        // Don't make an HTTP request in a workflow function
+        const body = await DBOS.runStep(
+          async ()=>{return await fetch("https://example.com").then(r => r.text())},
+          {name: "fetchBody"}
+        );
+        await Example.exampleTransaction(body);
+    }
+}
+```
 
+Or this:
 ```javascript
 class Example {
     @DBOS.step()
@@ -89,60 +164,45 @@ class Example {
 }
 ```
 
-## Workflow IDs and Idempotency
+## Workflow Timeouts
 
-Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the `DBOS.workflowID` context variable.
-Workflow IDs are useful for communicating with workflows and developing interactive workflows.
+You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
-You can set the workflow ID of a workflow with [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids).
-Workflow IDs must be **globally unique** for your application.
-An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
-This is useful if your operations have side effects like making a payment or sending an email.
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```javascript
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction);
+
+async function main() {
+  const task = ...
+  const timeout = ... // Timeout in milliseconds
+  const handle = await DBOS.startWorkflow(taskWorkflow, {timeoutMS: timeout})(task);
+}
+```
+
+## Durable Sleep
+
+You can use [`DBOS.sleep()`](../reference/methods.md#dbossleep) to put your workflow to sleep for any period of time.
+This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
+
+Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
 For example:
 
 ```javascript
-class Example {
-  @DBOS.workflow()
-  static async exampleWorkflow(var1: string, var2: string) {
-      return var1 + var2;
-  }
-}
-
-await DBOS.withNextWorkflowID("very-unique-id", async () => {
-  return await Example.exampleWorkflow("one", "two");
-});
-```
-
-
-## Starting Workflows Asynchronously
-
-You can use [`DBOS.startWorkflow`](../reference/transactapi/dbos-class.md#starting-background-workflows) to durably start a workflow in the background without waiting for it to complete.
-This is useful for long-running or interactive workflows.
-
-`DBOS.startWorkflow` returns a [workflow handle](../reference/transactapi/workflow-handles.md), from which you can access information about the workflow or wait for it to complete and retrieve its result.
-When you `await DBOS.startWorkflow`, the method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if your app is interrupted.
-
-Here's an example:
-
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow(var1: string, var2: string) {
-        return var1 + var2;
-    }
-}
-
-async function main() {
-    // Start exampleWorkflow in the background
-    const handle = await DBOS.startWorkflow(Example).exampleWorkflow("one", "two");
-    // Wait for the workflow to complete and return its results
-    const result = await handle.getResult();
+@DBOS.workflow()
+static async exampleWorkflow(timeToSleep, task) {
+    await DBOS.sleep(timeToSleep);
+    await runTask(task);
 }
 ```
-
-You can retrieve a workflow's handle from its ID with [`DBOS.retrieve_workflow`](../reference/transactapi/dbos-class.md#dbosretrieveworkflow).
-This can also retrieve a workflow's handle from outside of your DBOS application with ['DBOSClient.retrieve_workflow`](../reference/client.md#retrieveworkflow).
 
 ## Workflow Events
 
@@ -151,14 +211,14 @@ They are useful for publishing information about the state of an active workflow
 
 #### setEvent
 
-Any workflow can call [`DBOS.setEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
 
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 #### getEvent
 
-You can call [`DBOS.getEvent`](../reference/transactapi/dbos-class.md#setting-and-getting-events) to retrieve the value published by a particular workflow ID for a particular key.
+You can call [`DBOS.getEvent`](../reference/methods.md#dbosgetevent) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 You can also call `getEvent` from outside of your DBOS application with [DBOS Client](../reference/client.md).
@@ -188,7 +248,6 @@ The checkout workflow emits the payments URL using `setEvent()`:
 The HTTP handler that originally started the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
 
 ```javascript
-  @DBOS.postApi('/api/checkout_session')
   static async webCheckout(...): Promise<void> {
     const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
     const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
@@ -253,7 +312,6 @@ static async checkoutWorkflow(...): Promise<void> {
 A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```javascript
-@DBOS.postApi('/payment_webhook')
 static async paymentWebhook(): Promise<void> {
   const notificationMessage = ... // Parse the notification.
   const workflowID = ... // Retrieve the workflow ID from notification metadata.
@@ -264,7 +322,21 @@ static async paymentWebhook(): Promise<void> {
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` or use [`DBOS.withNextWorkflowID`](../reference/transactapi/dbos-class.md#assigning-workflow-ids) to guarantee exactly-once delivery.
+If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
+
+## Workflow Guarantees
+
+Workflows provide the following reliability guarantees.
+These guarantees assume that the application and database may crash and go offline at any point in time, but are always restarted and return online.
+
+1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
+2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+
+If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
+This is because uncaught exceptions are assumed to be nonrecoverable.
+If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
+DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
 
 ## Workflow Versioning and Recovery
 
@@ -275,56 +347,6 @@ All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](../reference/transactapi/dbos-class.md#dbosforkworkflow) to restart a workflow from a specific step on a specific code version.
+You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](./workflow-management.md#forking-workflows) to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
-
-## Workflow Management
-
-You can view and manage your workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or via command line.
-
-#### Listing Workflows
-
-You can list your application's workflows from the command line (you can parameterize this command for advanced search, see full documentation [here](../reference/tools/cli.md#npx-dbos-workflow-list)):
-
-```shell
-npx dbos workflow list
-```
-
-Alternatively, navigate to the workflows tab of your application's page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) to see a searchable and expandable list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
-
-
-#### Cancelling Workflows
-
-You can cancel the execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow cancel <workflow-id>
-```
-
-If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
-If the workflow is enqueued, cancelling removes it from the queue.
-
-#### Resuming Workflows
-
-You can resume a workflow from its last completed step from the web UI or with:
-
-```shell
-dbos workflow resume <workflow-id>
-```
-
-You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-
-#### Restarting Workflows
-
-You can start a new execution of a workflow from the web UI or with:
-
-```shell
-dbos workflow restart <workflow-id>
-```
-
-The new workflow has the same inputs as the original, but a new workflow ID.

@@ -11,8 +11,7 @@ Also check out the integration guides for popular TypeScript frameworks:
 :::
 
 :::warning
-The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers.
-Additional support for bundling will be added in an upcoming release.
+Due to its internal workflow registry, The DBOS library and DBOS workflows cannot be bundled with JavaScript or TypeScript bundlers (Webpack, Vite, Rollup, esbuild, Parcel, etc.) and must be treated as an external library by these tools.
 :::
 
 ### Using DBOS Transact
@@ -25,7 +24,7 @@ Additional support for bundling will be added in an upcoming release.
 npm install @dbos-inc/dbos-sdk@latest
 ```
 
-Then, enable TypeScript decorators in your `tsconfig.json` file:
+**Optionally**, if you want to use TypeScript decorators, enable them in your `tsconfig.json` file:
 
 ```json title="tsconfig.json"
   "compilerOptions": {
@@ -34,7 +33,7 @@ Then, enable TypeScript decorators in your `tsconfig.json` file:
 ```
 
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
 Otherwise, you can start Postgres in a Docker container with this command:
 
 ```shell
@@ -42,20 +41,21 @@ npx dbos postgres start
 ```
 
 
-#### 2. Initialize DBOS in Your App
+#### 2. Launch DBOS in Your App
 
-In your app's main entrypoint, add the following code.
-This initializes DBOS when your app starts.
+In your app's main entrypoint, add code to configure and launch DBOS:
 
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
 DBOS.setConfig({
   "name": "my-app",
-  "databaseUrl": process.env.DBOS_DATABASE_URL
+  "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();
 ```
+
+Both `DBOS.setConfig` and `DBOS.launch` should be called after your app is created, but before it begins processing requests.
 
 #### 3. Start Your Application
 
@@ -65,27 +65,30 @@ Congratulations!  You've integrated DBOS into your application.
 
 #### 4. Start Building With DBOS
 
-At this point, you can add any DBOS decorator or method to your application.
-For example, you can annotate one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and the functions it calls as [steps](./tutorials/step-tutorial.md).
+At this point, you can apply DBOS durability to your functions.
+For example, you can register one of your functions as a [workflow](./tutorials/workflow-tutorial.md) and call other functions as [steps](./tutorials/step-tutorial.md).
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```typescript
-export class Example {
-
-  @DBOS.step()
-  static async myStep(n) {
-    DBOS.logger.info(`Step ${n} completed!`);
-  }
-
-  @DBOS.workflow()
-  static async exampleWorkflow() {
-    await Example.myStep(1);
-    await Example.myStep(2);
-  }
+async function stepOne() {
+  DBOS.logger.info("Step one completed!");
 }
+
+async function stepTwo() {
+  DBOS.logger.info("Step two completed!");
+}
+
+async function workflowFunction() {
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
+}
+const workflow = DBOS.registerWorkflow(workflowFunction)
+
+await workflow();
 ```
 
-To ensure that DBOS registers all decorated functions, **declare all DBOS-decorated functions before running `await DBOS.launch()`.**
+**You must register all workflows before calling `DBOS.launch()`**
+As workflow recovery will commence after `DBOS.launch()`, it is essential that all workflows, queues, and other resources be registered before this point.
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.

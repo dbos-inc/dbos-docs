@@ -1,293 +1,309 @@
 ---
 sidebar_position: 30
-title: Transactions
+title: Transactions & Datasources
 description: Learn how to perform database operations
 ---
 
-Transactions are a special type of [step](./step-tutorial.md) that are optimized for database accesses.
-They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
+DBOS Transactions are a special kind of step intended for database access.  They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
 
-To make a TypeScript function a transaction, annotate it with the [`DBOS.transaction`](../reference/transactapi/dbos-class.md#dbostransaction) decorator.
-Then, access the database using raw SQL or one of several supported ORMs, including [Knex.js](https://knexjs.org/), [Drizzle](https://orm.drizzle.team/), [TypeORM](https://typeorm.io/), and [Prisma](https://www.prisma.io/).
+You can perform transactions using datasources, which wrap database clients with DBOS-aware transaction logic.  Datasources are available for popular TypeScript libraries and expose the same interface as the underlying client. For example, the Knex datasource provides a `Knex.Transaction` client, and the Drizzle datasource provides a Drizzle `Transaction<>` client. This means you can use your existing database statements&mdash;just use the transaction provided within the datasource.
 
-Configure which ORM to use with the `userDbclient` field in your [DBOS configuration](../reference/configuration.md):
+## Installing Data Sources
+
+Each datasource is implemented in its own package, which must be installed before use.
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
 
-```javascript
-DBOS.setConfig({
-  name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
-  userDbclient: 'knex',
-});
-await DBOS.launch();
+```shell
+npm i @dbos-inc/knex-datasource
 ```
 
 </TabItem>
 <TabItem value="drizzle" label="Drizzle">
 
-```javascript
-DBOS.setConfig({
-  name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
-  userDbclient: 'drizzle',
-});
-await DBOS.launch();
+```shell
+npm i @dbos-inc/drizzle-datasource
 ```
 
 </TabItem>
 <TabItem value="typeorm" label="TypeORM">
 
-```javascript
-DBOS.setConfig({
-  name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
-  userDbclient: 'typeorm',
-});
-await DBOS.launch();
+```shell
+npm i @dbos-inc/typeorm-datasource
 ```
 
 
 </TabItem>
 <TabItem value="prisma" label="Prisma">
 
-```javascript
-DBOS.setConfig({
-  name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
-  userDbclient: 'prisma',
-});
-await DBOS.launch();
+```shell
+npm i @dbos-inc/prisma-datasource
 ```
 
 
 </TabItem>
-<TabItem value="raw" label="Raw SQL w/ Knex">
+<TabItem value="node-postgres" label="node-postgres">
 
-```javascript
-DBOS.setConfig({
-  name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
-  userDbclient: 'knex',
-});
-await DBOS.launch();
+```shell
+npm i @dbos-inc/nodepg-datasource
+```
+
+
+</TabItem>
+<TabItem value="pg" label="Postgres.js">
+
+```shell
+npm i @dbos-inc/postgres-datasource
+```
+
+
+</TabItem>
+</Tabs>
+
+## Using Datasources
+
+Before using a datasource, you must configure and construct it:
+
+<Tabs groupId="database-clients">
+<TabItem value="knex" label="Knex">
+
+
+```typescript
+const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
+const dataSource = new KnexDataSource('app-db', config);
+```
+
+</TabItem>
+<TabItem value="drizzle" label="Drizzle">
+
+```typescript
+export const config = { connectionString: process.env.DBOS_DATABASE_URL };
+const dataSource = new DrizzleDataSource<NodePgDatabase>('app-db', config);
+```
+
+</TabItem>
+<TabItem value="typeorm" label="TypeORM">
+
+```typescript
+const config = { connectionString: process.env.DBOS_DATABASE_URL };
+const dataSource = new TypeOrmDataSource('app-db', config, [/*entities*/]);
+```
+
+</TabItem>
+<TabItem value="prisma" label="Prisma">
+
+```typescript
+process.env['DATABASE_URL'] = process.env['DBOS_DATABASE_URL'];
+const prismaClient = new PrismaClient();
+const dataSource = new PrismaDataSource<PrismaClient>('app-db', prismaClient);
+```
+
+</TabItem>
+<TabItem value="node-postgres" label="node-postgres">
+
+```typescript
+const dataSource = new NodePostgresDataSource('app-db', {connectionString: process.env.DBOS_DATABASE_URL});
+```
+
+</TabItem>
+<TabItem value="pg" label="Postgres.js">
+
+```typescript
+const dataSource = new PostgresDataSource('app-db', {connection: {url: process.env.DBOS_DATABASE_URL}});
 ```
 
 </TabItem>
 </Tabs>
 
-Here are some example transactions:
+Note that the names `dataSource` and `app-db` are used throughout this page, but were chosen arbitrarily.  It is possible to use several datasource instances, with different names.
+
+You can run a function as a transaction using `dataSource.runTransaction`.  The transaction function should use `dataSource.client` as a client to access the database.  (Note that while some data source classes expose a static `client` property, the data source object instance should be used to get the `client` as the instance asserts that its client is actually available.)
+
+Examples:
 
 <Tabs groupId="database-clients">
 <TabItem value="knex" label="Knex">
 
-```javascript
-interface GreetingRecord {
-  name: string;
-  note: string;
+```typescript
+async function insertFunction(user: string) {
+  const rows = await dataSource
+    .client<greetings>('greetings')
+    .insert({ name: user, greet_count: 1 })
+    .onConflict('name')
+    .merge({ greet_count: dataSource.client.raw('greetings.greet_count + 1') })
+    .returning('greet_count');
+  const row = rows.length > 0 ? rows[0] : undefined;
+
+  return { user, greet_count: row?.greet_count, now: Date.now() };
 }
 
-export class Greetings {
-
-  @DBOS.transaction()
-  static async insertGreeting(gr: GreetingRecord) {
-    await DBOS.knexClient('greetings').insert(gr);
-  }
-
-  @DBOS.transaction()
-  static async getGreetings(): Promise<GreetingRecord[]>  {
-    return await DBOS.knexClient<GreetingRecord>('greetings').select('*');
-  }
-}
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
 </TabItem>
 <TabItem value="drizzle" label="Drizzle">
 
-```javascript
-export const GreetingRecord = pgTable('greetings', {
-  name: text('name'),
-  note: text('note'),
-});
-
-function getClient() { return DBOS.drizzleClient as NodePgDatabase; }
-
-@OrmEntities({GreetingRecord})
-export class Greetings {
-
-  @DBOS.transaction()
-  static async insertGreeting(name: string, note: string) {
-    await getClient().insert(GreetingRecord).values({name: name, note: note});
-  }
-
-  @DBOS.transaction()
-  static async getGreetings(): Promise<{name: string | null, note: string | null}[]> {
-    return getClient().select().from(GreetingRecord);
-  }
-}
-```
-
-##### `@OrmEntities`
-Marks a class as using ORM entity classes.
 ```typescript
-@OrmEntities({GreetingRecord})
-export class Greetings {/**/}
-```
-
-This code will ensure that drizzle is aware of the schema.
-
-</TabItem>
-<TabItem value="typeorm" label="TypeORM">
-
-```javascript
-@Entity('greetings') //set the name of the table to 'greetings'
-export class GreetingRecord {
-    @PrimaryGeneratedColumn() //note: TypeORM requires at least one primary key
-    id!: number;
-
-    @Column()
-    name!: string;
-
-    @Column()
-    note!: string;
-}
-
-function getClient() {return DBOS.typeORMClient as EntityManager;}
-
-@OrmEntities([GreetingRecord])
-export class Greetings {
-
-  @DBOS.transaction()
-  static async insertGreeting(name: string, note: string) {
-    const greeting = new GreetingRecord();
-    greeting.name = name;
-    greeting.note = note;
-    await getClient().save(greeting);
-  }
-
-  @DBOS.transaction()
-  static async getGreetings(): Promise<GreetingRecord[]> {
-    return await getClient().getRepository(GreetingRecord).find();
-  }  
-}
-```
-
-##### `@OrmEntities`
-Marks a class as using ORM entity classes.
-```typescript
-@OrmEntities([GreetingRecord])
-export class Greetings {/**/}
-```
-
-This code will ensure that the TypeORM entity manager and repository know about the entities in the list.
-
-</TabItem>
-<TabItem value="prisma" label="Prisma">
-
-```javascript
-//Model specified in prisma/schema.prisma:
-//
-//model GreetingRecord {
-//  @@map("greetings") 
-//  greeting_id Int @id @default(autoincrement()) //Note: Prisma requires at least one primary key
-//  name String
-//  note String
-//}
-
-// Use the generated Prisma client and GreetingRecord class
-import { PrismaClient, GreetingRecord } from "@prisma/client";
-
-function getClient() {return DBOS.prismaClient as PrismaClient;}
-
-export class Greetings {
-
-  @DBOS.transaction()
-  static async insertGreeting(name: string, note: string) {
-    await getClient().greetingRecord.create({
-      data: {
-        name: name,
-        note: note
+async function insertFunction(user: string) {
+  const result = await dataSource.client
+    .insert(greetingsTable)
+    .values({ name: user, greet_count: 1 })
+    .onConflictDoUpdate({
+      target: greetingsTable.name,
+      set: {
+        greet_count: sql`${greetingsTable.greet_count} + 1`,
       },
-    });
-  }
+    })
+    .returning({ greet_count: greetingsTable.greet_count });
 
-  @DBOS.transaction()
-  static async getGreetings(): Promise<GreetingRecord[]> {
-    return await getClient().greetingRecord.findMany();
-  }
-}
-```
-
-</TabItem>
-<TabItem value="raw" label="Raw SQL w/ Knex">
-
-```javascript
-interface GreetingRecord {
-  name: string;
-  note: string;
+  const row = result.length > 0 ? result[0] : undefined;
+  return { user, greet_count: row?.greet_count, now: Date.now() };
 }
 
-export class Greetings {
-
-  @DBOS.transaction()
-  static async insertGreeting(gr: GreetingRecord) {
-    await DBOS.knexClient.raw('INSERT INTO greetings (name, note) VALUES (?, ?)', [gr.name, gr.note]);
-  }
-
-  @DBOS.transaction()
-  static async getGreetings(): Promise<GreetingRecord[]> {
-    const result = await DBOS.knexClient.raw('SELECT name, note FROM greetings') as { rows: GreetingRecord[] };
-    return result.rows;
-  }
-}
-```
-
-</TabItem>
-</Tabs>
-
-## Templates
-
-You can initialize a template app for each ORM with the following command:
-
-<Tabs groupId="database-clients">
-<TabItem value="knex" label="Knex">
-
-```bash
-npx -y @dbos-inc/create@latest -t dbos-knex -n <app-name>
-```
-
-</TabItem>
-<TabItem value="drizzle" label="Drizzle">
-
-```bash
-npx -y @dbos-inc/create@latest -t dbos-drizzle -n <app-name>
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
 </TabItem>
 <TabItem value="typeorm" label="TypeORM">
 
-```bash
-npx -y @dbos-inc/create@latest -t dbos-typeorm -n <app-name>
-```
+```typescript
+async function insertFunction(user: string) {
+  type Result = Array<{ greet_count: number }>;
+  const rows = await TypeOrmDataSource.entityManager.sql<Result>`
+     INSERT INTO greetings(name, greet_count) VALUES(${user}, 1)
+     ON CONFLICT(name) DO UPDATE SET greet_count = greetings.greet_count + 1
+     RETURNING greet_count`;
 
+  const row = rows.length > 0 ? rows[0] : undefined;
+  return { user, greet_count: row?.greet_count, now: Date.now() };
+}
+
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
+```
 
 </TabItem>
 <TabItem value="prisma" label="Prisma">
 
-```bash
-npx -y @dbos-inc/create@latest -t dbos-prisma -n <app-name>
+```typescript
+async function insertFunction(user: string) {
+  const existing = await dataSource.client.dbosHello.findUnique({
+    where: { name: user },
+    select: { greet_count: true },
+  });
+
+  let greet_count: number;
+
+  if (!existing) {
+    const created = await dataSource.client.dbosHello.create({
+      data: { name: user, greet_count: 1 },
+      select: { greet_count: true },
+    });
+    greet_count = created.greet_count;
+  } else {
+    const updated = await dataSource.client.dbosHello.update({
+      where: { name: user },
+      data: { greet_count: { increment: 1 } },
+      select: { greet_count: true },
+    });
+    greet_count = updated.greet_count;
+  }
+
+  return {
+    user,
+    greet_count,
+    now: Date.now(),
+  };
+}
+
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
+```
+
+</TabItem>
+<TabItem value="node-postgres" label="node-postgres">
+
+```typescript
+async function insertFunction(user: string) {
+  const { rows } = await dataSource.client.query<Pick<greetings, 'greet_count'>>(
+    `INSERT INTO greetings(name, greet_count) 
+     VALUES($1, 1) 
+     ON CONFLICT(name)
+     DO UPDATE SET greet_count = greetings.greet_count + 1
+     RETURNING greet_count`,
+    [user],
+  );
+  const row = rows.length > 0 ? rows[0] : undefined;
+  return { user, greet_count: row?.greet_count, now: Date.now() };
+}
+
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
+```
+
+</TabItem>
+<TabItem value="pg" label="Postgres.js">
+
+```typescript
+async function insertFunction(user: string) {
+  const rows = await dataSource.client<Pick<greetings, 'greet_count'>[]>`
+    INSERT INTO greetings(name, greet_count) 
+    VALUES(${user}, 1) 
+    ON CONFLICT(name)
+    DO UPDATE SET greet_count = greetings.greet_count + 1
+    RETURNING greet_count`;
+  const row = rows.length > 0 ? rows[0] : undefined;
+  return { user, greet_count: row?.greet_count, now: Date.now() };
+}
+
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
 </TabItem>
 </Tabs>
 
-Then, build it, run schema migrations, and start the app:
+## Registering Functions
 
-```bash
-npm run build
-npx knex migrate:latest
-npx dbos start
+Alternatively, functions can be registered as transactions with `dataSource.registerTransaction`:
+
+```typescript
+const insertRowTransaction = dataSource.registerTransaction(insertFunction, {/*Transaction options go here*/});
 ```
 
-Visit http://localhost:3000/greeting/dbos to see your app!
+The function wrapper returned from `dataSource.registerTransaction` has the same signature as the input function, and will automatically start a transaction with any name and transaction options provided.
+
+## Using Decorators
+
+Class member functions can be decorated with `@dataSource.transaction()`:
+
+```typescript
+@dataSource.transaction(/*Transaction options go here*/)
+static async insertRow() {
+  await dataSource.client. // Use library-specific client calls
+}
+
+@DBOS.workflow()
+static async transactionWorkflow() {
+  await Toolbox.insertRow()
+}
+```
+
+Such methods will be run inside datasource transactions when called.
+
+### Installing the DBOS Schema
+
+DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
+
+This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
+
+```ts
+const {
+  KnexDataSource
+} = require('@dbos-inc/knex-datasource');
+
+exports.up = async function(knex) {
+  await KnexDataSource.initializeDBOSSchema(knex);
+};
+
+exports.down = async function(knex) {
+  await KnexDataSource.uninitializeDBOSSchema(knex);
+};
+```
