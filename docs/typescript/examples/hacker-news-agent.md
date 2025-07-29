@@ -489,68 +489,52 @@ After deciding what terms to search for, the agent calls these steps to retrieve
 <summary><strong>Hacker News API Steps</strong></summary>
 
 ```typescript
-export async function searchHackerNews(
+export const searchHackerNews = async (
   query: string,
-  maxResults: number = 20,
-): Promise<HackerNewsStory[]> {
-  const params = new URLSearchParams({
-    query,
-    hitsPerPage: maxResults.toString(),
-    tags: "story",
-  });
-
+  maxResults = 20,
+): Promise<HackerNewsStory[]> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const response = await fetch(
+      `${HN_SEARCH_URL}?${new URLSearchParams({
+        query,
+        hitsPerPage: maxResults.toString(),
+        tags: "story",
+      })}`,
+      { signal: AbortSignal.timeout(30000) },
+    );
 
-    const response = await fetch(`${HN_SEARCH_URL}?${params}`, {
-      signal: controller.signal,
-    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: any = await response.json();
-    return data.hits || [];
+    const data = (await response.json()) as { hits: HackerNewsStory[] };
+    return data.hits ?? [];
   } catch (error) {
     console.error("Error searching Hacker News:", error);
     return [];
   }
-}
+};
 
-export async function getComments(
+export const getComments = async (
   storyId: string,
-  maxComments: number = 50,
-): Promise<HackerNewsComment[]> {
-  const params = new URLSearchParams({
-    tags: `comment,story_${storyId}`,
-    hitsPerPage: maxComments.toString(),
-  });
-
+  maxComments = 50,
+): Promise<HackerNewsComment[]> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const response = await fetch(
+      `${HN_SEARCH_URL}?${new URLSearchParams({
+        tags: `comment,story_${storyId}`,
+        hitsPerPage: maxComments.toString(),
+      })}`,
+      { signal: AbortSignal.timeout(30000) },
+    );
 
-    const response = await fetch(`${HN_SEARCH_URL}?${params}`, {
-      signal: controller.signal,
-    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: any = await response.json();
-    return data.hits || [];
+    const data = (await response.json()) as { hits: HackerNewsComment[] };
+    return data.hits ?? [];
   } catch (error) {
     console.error("Error getting comments:", error);
     return [];
   }
-}
+};
 ```
 
 </details>
