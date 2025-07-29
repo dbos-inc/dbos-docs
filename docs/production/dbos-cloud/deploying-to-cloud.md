@@ -187,11 +187,11 @@ You may connect an application database to your application through DBOS Cloud.
 If you do, connection information is provided via the `DBOS_DATABASE_URL` environment variable.
 For your application to work correctly in DBOS Cloud, it should use the `DBOS_DATABASE_URL` for its application database connection string.
 
-DBOS Cloud will also run migrations to set up your application's database schema. This is done by providing migration commands in your `dbos-config.yaml` file.
+You may optionally direct DBOS Cloud to run migrations to set up your application's database schema by specifying migration commands in your `dbos-config.yaml` file:
 
 ```yaml
 migrate:
   - npx knex migrate:latest
 ```
 
-Your migrations should connect to the application database using the `DBOS_DATABASE_URL` environment variable (if it is set) to work with DBOS Cloud.
+DBOS Cloud will provide a database URL to your migrations through the `DBOS_DATABASE_URL` environment variable.
