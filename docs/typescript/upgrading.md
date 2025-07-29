@@ -1,6 +1,6 @@
 ---
 sidebar_position: 200
-title: TSv3 Upgrade Guide
+title: Upgrading to TSv3
 ---
 
 With the release of DBOS Transact TypeScript version 3 (aka DBOS TS v3), some APIs that were marked as deprecated in v2 have been removed.
