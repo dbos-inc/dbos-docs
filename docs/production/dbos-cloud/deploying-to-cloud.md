@@ -181,7 +181,6 @@ You should not attempt to override or modify this URL.
 
 You may connect an application database to your application through DBOS Cloud.
 If you do, connection information is provided via the `DBOS_DATABASE_URL` environment variable.
-For your application to work correctly in DBOS Cloud, it should use the `DBOS_DATABASE_URL` for its application database connection string.
 
 You may optionally direct DBOS Cloud to run migrations to set up your application's database schema by specifying migration commands in your `dbos-config.yaml` file:
 
