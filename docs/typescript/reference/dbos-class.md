@@ -47,7 +47,7 @@ async function main() {
   // Configure DBOS
   DBOS.setConfig({
     "name": "dbos-node-toolbox",
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   // Launch DBOS
   await DBOS.launch();

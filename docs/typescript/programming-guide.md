@@ -17,7 +17,7 @@ cd dbos-node-starter
 ```
 
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
 Otherwise, you can start Postgres in a Docker container with this command:
 
 ```shell
