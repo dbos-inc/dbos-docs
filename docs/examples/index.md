@@ -82,13 +82,6 @@ import { VscGraphLine } from "react-icons/vsc";
     language="python"
   />
   <CardLink
-    label="Fault-Tolerant Checkout"
-    href="typescript/examples/checkout-tutorial"
-    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language="typescript"
-  />
-  <CardLink
     label="Hacker News Bot"
     href="python/examples/hacker-news-bot"
     description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
