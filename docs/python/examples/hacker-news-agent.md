@@ -4,6 +4,10 @@ sidebar_position: 10
 title: Hacker News Research Agent
 ---
 
+:::info
+This example is also available in [TypeScript](../../typescript/examples/hacker-news-agent).
+:::
+
 In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
 
 This example demonstrates how to build **reliable, durable AI agents** with DBOS.

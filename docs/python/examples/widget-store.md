@@ -4,6 +4,10 @@ sidebar_position: 30
 title: Fault-Tolerant Checkout
 ---
 
+:::info
+This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial).
+:::
+
 In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
 
 You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).

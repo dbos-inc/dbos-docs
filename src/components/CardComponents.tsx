@@ -48,18 +48,21 @@ function CardLayout({
   href: string;
   icon: ReactNode;
   title: string;
-  language: string;
+  language: string | string[];
   description: string;
 }): JSX.Element {
-  let languageIcon = '';
-  switch (language) {
-    case 'python':
-      languageIcon = 'img/python-logo-only.svg';
-      break;
-    case 'typescript':
-      languageIcon = 'img/typescript-logo.svg';
-      break;
-  }
+  const languages = Array.isArray(language) ? language : [language];
+  const languageIcons = languages.map(lang => {
+    switch (lang) {
+      case 'python':
+        return 'img/python-logo-only.svg';
+      case 'typescript':
+        return 'img/typescript-logo.svg';
+      default:
+        return '';
+    }
+  }).filter(icon => icon !== '');
+
   return (
     <CardContainer href={href}>
       {icon && <div className={styles.cardIcon}>{icon}</div>}
@@ -68,7 +71,16 @@ function CardLayout({
         className={clsx(styles.cardTitle)}
         title={title}>
         {title}
-        {languageIcon && <img src={languageIcon} className={styles.cardLogo}/>}
+        {languageIcons.length === 1 && (
+          <img src={languageIcons[0]} className={styles.cardLogo}/>
+        )}
+        {languageIcons.length > 1 && (
+          <div className={styles.cardLogos}>
+            {languageIcons.map((iconSrc, index) => (
+              <img key={index} src={iconSrc}/>
+            ))}
+          </div>
+        )}
       </Heading>
       {description && (
         <p
@@ -82,7 +94,7 @@ function CardLayout({
   );
 }
 
-export function CardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string}): JSX.Element {
+export function CardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string | string[]}): JSX.Element {
   return (
     <article key={Number(index)} className="col col--6 margin-bottom--lg">
       <CardLayout
@@ -221,7 +233,7 @@ export function HtmlToReactNode({ htmlString }) {
   return <span dangerouslySetInnerHTML={{ __html: htmlString }} />;
 }
 
-export function NarrowCardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string}): JSX.Element {
+export function NarrowCardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string | string[]}): JSX.Element {
   return (
     <article key={Number(index)} className="col col--4 margin-bottom--lg">
       <CardLayout
