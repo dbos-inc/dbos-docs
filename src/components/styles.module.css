@@ -47,6 +47,18 @@
   float: right;
 }
 
+.cardLogos {
+  display: flex;
+  gap: 0.5rem;
+  float: right;
+  align-items: center;
+}
+
+.cardLogos img {
+  height: 1.5rem;
+  padding-bottom: 0;
+}
+
 .cardDescription {
   font-size: 0.9rem;
   padding-left: 1.2rem;
