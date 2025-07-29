@@ -172,7 +172,7 @@ npm run build
 
 <article className="col col--6">
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string.
 Otherwise, you can start Postgres in a Docker container with this command:
 </article>
 
