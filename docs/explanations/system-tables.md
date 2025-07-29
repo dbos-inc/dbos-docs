@@ -5,10 +5,9 @@ description: DBOS system tables reference
 ---
 
 ## System Tables
-DBOS Transact records application execution history in several system tables.
-Most of these tables are in the system database, whose name by default is your application name suffixed with `_dbos_sys`.
+DBOS records application execution history in several system tables.
+These tables are located in your system database, whose name by default is your application name suffixed with `_dbos_sys`.
 For example, if your application is named `dbos_app_starter`, your system database is by default named `dbos_app_starter_dbos_sys`.
-One exception is the `dbos.transaction_outputs` table which is stored in your application database.
 
 ### dbos.workflow_status
 
@@ -49,8 +48,8 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
 - `function_id`: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.
 - `function_name`: The name of the step.
-- `output`: The serialized transaction output, if any.
-- `error`: The serialized error thrown by the transaction, if any.
+- `output`: The serialized step output, if any.
+- `error`: The serialized error thrown by the step, if any.
 - `child_workflow_id`: If the step starts a new child workflow, its ID.
 
 ### dbos.notifications
@@ -72,16 +71,3 @@ Each entry represents a different event.
 - `workflow_uuid`: The ID of the workflow that published this event.
 - `key`: The serialized key of the event.
 - `value`: The serialized value of the event.
-
-### dbos.transaction_outputs
-This table stores the outputs of transaction functions.
-Each row represents a different transaction function execution.
-
-**Columns:**
-- `workflow_uuid`: The unique identifier of the workflow execution this function belongs to.
-- `function_id`: The monotonically increasing ID of the function (starts from 0) within the workflow, based on the start order.
-- `output`: The serialized transaction output, if any.
-- `error`: The serialized error thrown by the transaction, if any.
-- `txn_id`: The transaction ID of this function, if any. This is empty for read-only transactions.
-- `created_at`: The timestamp of when this function started.
-- `txn_snapshot`: The [Postgres snapshot](https://www.postgresql.org/docs/current/functions-info.html#FUNCTIONS-INFO-SNAPSHOT) of this transaction.
