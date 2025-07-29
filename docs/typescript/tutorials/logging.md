@@ -18,7 +18,6 @@ This also configures the log level of the DBOS library:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
   logLevel: "info",
 });
 await DBOS.launch();
@@ -43,7 +42,6 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
-  databaseUrl: process.env.DBOS_DATABASE_URL,
   otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
 });
 await DBOS.launch();
