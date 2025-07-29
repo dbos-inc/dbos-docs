@@ -258,3 +258,59 @@ const hashFunc = DBOS.registerStep((txt: string, saltRounds: number = 10) => bcr
 `bcrypt.compare` is deterministic, so it can be called directly in a workflow or step function 
 without needing to wrap it with `DBOS.runStep` or `DBOS.registerStep` .
 :::
+
+## Other Packages
+For DBOS v3, several other external packages were completely rewritten, generally simplifying their configuration and improving ease of use.  The general guidance for upgrading to v3 is:
+- Configure and create objects using the underlying library (KafkaJS, AWS SQS, AWS SES, etc.)
+- For sending requests (Kafka messages, SQS requests, S3 commands, emails, etc.) use [`runStep`](./reference/workflows-steps.md#dbosrunstep) or register a step wrapper.
+- For running DBOS workflows in response to inbound events or messages, use the new v3 package.
+
+| v1/v2 Package (Discontinued) | v3 (Recommended) |
+|------------------------------|------------------|
+| [`@dbos-inc/dbos-kafkjs`](https://www.npmjs.com/package/@dbos-inc/dbos-kafkajs) | [`@dbos-inc/kafkajs-receive`](https://www.npmjs.com/package/@dbos-inc/kafkajs-receive) |
+| [`@dbos-inc/dbos-confluent-kafka`](https://www.npmjs.com/package/@dbos-inc/dbos-confluent-kafka) | [`@dbos-inc/confluent-kafka-receive`](https://www.npmjs.com/package/@dbos-inc/confluent-kafka-receive) |
+| [`@dbos-inc/dbos-sqs`](https://www.npmjs.com/package/@dbos-inc/dbos-sqs) | [`@dbos-inc/sqs-receive`](https://www.npmjs.com/package/@dbos-inc/sqs-receive) |
+| [`@dbos-inc/component-aws-s3`](https://www.npmjs.com/package/@dbos-inc/component-aws-s3) | [`@dbos-inc/aws-s3-workflows`](https://www.npmjs.com/package/@dbos-inc/aws-s3-workflows) |
+| [`@dbos-inc/dbos-email-ses`](https://www.npmjs.com/package/@dbos-inc/dbos-email-ses) | unnecessary |
+
+The documentation for these packages currently resides in their package README files.
+
+### Kafka Consumer Packages
+The packages for working with Kafka were replaced with simpler ones.  While the previous packages provided step wrappers for Kafka producers, you should now just produce messages in your own steps.
+
+DBOS does provide two packages for connecting workflows to Kafka consumers:
+- [`@dbos-inc/kafkajs-receive`](https://www.npmjs.com/package/@dbos-inc/kafkajs-receive)
+- [`@dbos-inc/confluent-kafka-receive`](https://www.npmjs.com/package/@dbos-inc/confluent-kafka-receive)
+
+Except for the underlying Kafka client library, these packages are similar, and use a `consume` decorator to connect `DBOS.workflow` methods to message topics:
+```typescript
+  @DBOS.workflow()
+  @kafkaReceiver.consumer(respondTopic)
+  static async inboundAlertWorkflow(_topic: string, _partition: number, message: KafkaMessage) { ... }
+```
+
+For a detailed example of using DBOS and Kafka together to publish and consume messages, see [Kafka Alert Queue](./examples/kafka-alert-queue.md).
+
+### AWS SQS Receiver Package
+Similar to the Kafka package changes, the SQS package was changed to include only a message receiver.  This is simpler to work with, as it allows much more flexibility in configuration of the SQS client.  After a client is constructed, SQS message receivers can be added to workflows using decorators:
+
+```typescript
+// Create a receiver (can configure now, or later...)
+const sqsReceiver = new SQSReceiver();
+
+// Optionally, configure the receiver at the class level
+@sqsReceiver.configure({client: .../*SQS client or function to retrieve client goes here*/})
+class SQSEventProcessor {
+  @sqsReceiver.messageConsumer({ queueUrl: process.env['SQS_QUEUE_URL'] })
+  @DBOS.workflow()
+  static async recvMessage(msg: Message) {
+    // Workflow code goes here...
+  }
+}
+```
+
+### AWS S3 Workflow Package
+The package for working with AWS S3 was replaced with a much simpler one.  While the previous package attempted to configure and instantiate the S3 client and provided step wrappers for some S3 commands, the new package only provides the workflows for keeping the contents of an S3 bucket in sync with a list kept in a database table.  This allows much more flexibility in configuring S3, while demonstrating how DBOS workflows can be used to synchronize multiple external systems.
+
+### AWS SES (Simple Email Service)
+With the simplified v3 [step](./reference/workflows-steps.md#dbosrunstep) syntax and requirements, it was no longer deemed helpful to provide a step library for interacting with AWS SES.  Configuring SES and sending mail is much more flexible when done directly with the library, as demonstrated in the [example code](./examples/task-scheduler.md#sending-email-with-amazon-ses).
