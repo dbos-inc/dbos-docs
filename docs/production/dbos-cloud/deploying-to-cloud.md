@@ -177,10 +177,6 @@ DBOS Cloud automatically constructs a system database for your application.
 You can access it at `DBOS_SYSTEM_DATABASE_URL`.
 You should not attempt to override or modify this URL.
 
-#### Self-Managed Application Databases
-
-DBOS Cloud does not treat these specially; it is up to the application to know the connection information and set up the schema. 
-
 #### Cloud-Provided Application Databases
 
 You may connect an application database to your application through DBOS Cloud.
