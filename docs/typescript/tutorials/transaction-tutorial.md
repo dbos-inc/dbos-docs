@@ -288,25 +288,22 @@ static async transactionWorkflow() {
 
 Such methods will be run inside datasource transactions when called.
 
-## Connecting To Databases
-Generally, connections to application databases should be made in a manner that is typical for the underlying client library.  However, for an application to work in DBOS Cloud, the `DBOS_DATABASE_URL` environment variable should be consulted.  If `DBOS_DATABASE_URL` is set, then this connection string should be used to access the cloud-provided database instance.
+### Installing the DBOS Schema
 
-## Schema Setup
-Likewise, application developers may take complete control of the database schema setup process outside of DBOS.  This may or may not be done using the same client library used for access from within DBOS.  However, if you are using DBOS Cloud, [migrations](../reference/configuration.md#database-section) should be specified in `dbos-config.yaml` so that database setup will occur when your application is deployed.
+DBOS datasources require an additional `transaction_completion` table within the `dbos` schema.  This table is used for recordkeeping, ensuring that each transaction is run exactly once.
 
-Note that all of the packages above require that the following schema and table be installed in the application database.  DBOS uses this table to ensure that transactions are executed exactly once.
+This table can be installed by running the `initializeDBOSSchema` method of your datasource. You may do this as part of database schema migrations or at app startup. For example, here is a Knex migration file that installs the DBOS schema in Knex:
 
-```sql
-CREATE SCHEMA IF NOT EXISTS dbos;
+```ts
+const {
+  KnexDataSource
+} = require('@dbos-inc/knex-datasource');
 
-CREATE TABLE IF NOT EXISTS dbos.transaction_completion (
-    workflow_id TEXT NOT NULL,
-    function_num INT NOT NULL,
-    output TEXT,
-    error TEXT,
-    created_at BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM now())*1000)::bigint,
-    PRIMARY KEY (workflow_id, function_num)
-);
+exports.up = async function(knex) {
+  await KnexDataSource.initializeDBOSSchema(knex);
+};
+
+exports.down = async function(knex) {
+  await KnexDataSource.uninitializeDBOSSchema(knex);
+};
 ```
-
-This table can be included in your migrations, or added manually.
