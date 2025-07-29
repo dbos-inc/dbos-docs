@@ -65,7 +65,7 @@ Capabilities that were originally accessed via the context parameter are now acc
 For example, where in v1 methods like `setEvent` and `recv` were accessed via the explicit context parameter,
 now they are static methods on the `DBOS` class. 
 See [WorkflowEvents](./tutorials/workflow-tutorial.md#workflow-events) 
-and [Workflow Messaging](./tutorials/workflow-tutorial.md@workflow-messaging-and-notifications) for more information.
+and [Workflow Messaging](./tutorials/workflow-tutorial.md#workflow-messaging-and-notifications) for more information.
 
 In DBOS TS v2, the explicit context parameter types and the decorators associated with DBOS application methods that 
 used them were marked as deprecated. In DBOS TS v3, those types and decorators have been removed.
