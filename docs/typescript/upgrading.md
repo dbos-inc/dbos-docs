@@ -3,7 +3,7 @@ sidebar_position: 200
 title: Upgrading to TSv3
 ---
 
-With the release of DBOS Transact TypeScript version 3 (aka DBOS TS v3), some APIs that were marked as deprecated in v2 have been removed.
+With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.
 Additionally, there are APIs that have been deprecated in v3 that will be removed in a future version of DBOS TS. 
 This document explains how to update your existing DBOS TS app to recommended v3 APIs.
 
