@@ -23,7 +23,7 @@ import { VscGraphLine } from "react-icons/vsc";
     href="python/examples/hacker-news-agent"
     description="Use DBOS to build an AI deep research agent searching Hacker News."
     icon={<FaHackerNews color="white" size={50} />}
-    language="python"
+    language={["python", "typescript"]}
   />
   <CardLink
     label="Document Ingestion Pipeline"
@@ -37,7 +37,7 @@ import { VscGraphLine } from "react-icons/vsc";
     href="python/examples/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language="python"
+    language={["python", "typescript"]}
   />
   <CardLink
     label="Stock Tracker"
@@ -80,13 +80,6 @@ import { VscGraphLine } from "react-icons/vsc";
     description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
     icon={<IoEarth color="white" size={50}/>}
     language="python"
-  />
-  <CardLink
-    label="Fault-Tolerant Checkout"
-    href="typescript/examples/checkout-tutorial"
-    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language="typescript"
   />
   <CardLink
     label="Hacker News Bot"

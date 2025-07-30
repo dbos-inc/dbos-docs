@@ -4,6 +4,10 @@ sidebar_position: 10
 title: Hacker News Research Agent
 ---
 
+:::info
+This example is also available in [TypeScript](../../typescript/examples/hacker-news-agent).
+:::
+
 In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
 
 This example demonstrates how to build **reliable, durable AI agents** with DBOS.
@@ -604,8 +608,8 @@ export OPENAI_API_KEY=<your_openai_key>
 First, clone this repository:
 
 ```shell
-git clone https://github.com/dbos-inc/dbos-docs.git
-cd dbos-docs/hacker-news-agent
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd python/hacker-news-agent
 ```
 
 Then use [uv](https://docs.astral.sh/uv/guides/install-python/) to install dependencies and activate your virtual environment:
@@ -630,12 +634,12 @@ python -m hacker_news_agent "artificial intelligence"
 Or try other topics:
 
 ```shell
-python -m hacker_news_agent "rust programming"
-python -m hacker_news_agent "database performance"
-python -m hacker_news_agent "kubernetes scaling"
+python -m hacker_news_agent "rust"
+python -m hacker_news_agent "postgres"
+python -m hacker_news_agent "kubernetes"
 ```
 
-The agent will autonomously research your topic, make decisions about what to investigate next, and produce a comprehensive research report with insights from the Hacker News community.
+The agent will autonomously research your topic, make decisions about what to investigate next, and produce a research report with insights from Hacker News.
 
 If the agent fails at any point during its research, you can restart it using its workflow ID to recover it from where it left off:
 

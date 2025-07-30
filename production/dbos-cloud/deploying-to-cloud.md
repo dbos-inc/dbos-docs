@@ -155,3 +155,38 @@ dbos-cloud app deploy
 
 </LargeTabItem>
 </LargeTabs>
+
+## DBOS Cloud How-Tos
+
+### HTTP Serving & Port Numbers
+
+DBOS Cloud provides your application with an HTTPS URL and routes traffic to it.
+It expects applications to listen for HTTP requests on port 3000 (TypeScript) or port 8000 (Python).
+
+### Environment Management
+
+We recommend you configure your application with environment variables.
+You can use [DBOS Cloud secrets](./secrets.md) to pass environment variables to your cloud application.
+You can even [import secrets](./secrets.md#importing-secrets) into DBOS Cloud from a `.env` file.
+
+### Database Setup
+
+#### System Database
+
+DBOS Cloud automatically constructs a system database for your application.
+You can access it at `DBOS_SYSTEM_DATABASE_URL`.
+You should not attempt to override or modify this URL.
+
+#### Cloud-Provided Application Databases
+
+You may connect an application database to your application through DBOS Cloud.
+If you do, connection information is provided via the `DBOS_DATABASE_URL` environment variable.
+
+You may optionally direct DBOS Cloud to run migrations to set up your application's database schema by specifying migration commands in your `dbos-config.yaml` file:
+
+```yaml
+migrate:
+  - npx knex migrate:latest
+```
+
+DBOS Cloud will provide a database URL to your migrations through the `DBOS_DATABASE_URL` environment variable.

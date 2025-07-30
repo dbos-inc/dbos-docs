@@ -4,6 +4,10 @@ sidebar_position: 1
 title: Fault-Tolerant Checkout
 ---
 
+:::info
+This example is also available in [Python](../../python/examples/widget-store).
+:::
+
 In this example, we use DBOS and Fastify to deploy an online storefront that's resilient to any failure.
 
 You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).
@@ -15,25 +19,32 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ![Widget store UI](../../python/examples/assets/widget_store_ui.png)
 
 
-## The Checkout Workflow
+## Building the Checkout Workflow
 
-First, let's write the checkout workflow.
-This workflow is triggered whenever a customer buys a widget.
-It creates a new order, then reserves inventory, then processes payment, then marks the order as paid and dispatches the order for fulfillment.
-If any step fails, it backs out, returning reserved inventory and marking the order as cancelled.
+The heart of this application is the checkout workflow, which orchestrates the entire purchase process.
+This workflow is triggered whenever a customer buys a widget and handles the complete order lifecycle:
 
-DBOS _durably executes_ this workflow: each of its steps executes exactly-once and if it's ever interrupted, it automatically resumes from where it left off.
+1. Creates a new order in the system
+2. Reserves inventory to ensure the item is available
+3. Processes payment 
+4. Marks the order as paid and initiates fulfillment
+5. Handles failures gracefully by releasing reserved inventory and canceling orders when necessary
+
+DBOS **durably executes** this workflow.
+It checkpoints each step in the database so that if the app fails or is interrupted during checkout, it will automatically recover from the last completed step.
+This means that customers never lose their order progress, no matter what breaks.
+
 You can try this yourself!
 On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
 
+
 ```javascript
-export class Shop {
-  @DBOS.workflow()
-  static async paymentWorkflow(): Promise<void> {
+const checkoutWorkflow = DBOS.registerWorkflow(
+  async () => {
     // Attempt to reserve inventory, failing if no inventory remains
     try {
-      await ShopUtilities.subtractInventory();
+      await subtractInventory();
     } catch (error) {
       DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
       await DBOS.setEvent(PAYMENT_ID_EVENT, null);
@@ -41,7 +52,7 @@ export class Shop {
     }
 
     // Create a new order
-    const orderID = await ShopUtilities.createOrder();
+    const orderID = await createOrder();
 
     // Send a unique payment ID to the checkout endpoint so it can
     // redirect the customer to the payments page
@@ -52,26 +63,27 @@ export class Shop {
     // Otherwise, return reserved inventory and cancel the order.
     if (notification && notification === 'paid') {
       DBOS.logger.info(`Payment successful!`);
-      await ShopUtilities.markOrderPaid(orderID);
-      await DBOS.startWorkflow(ShopUtilities).dispatchOrder(orderID);
+      await markOrderPaid(orderID);
+      await DBOS.startWorkflow(dispatchOrder)(orderID);
     } else {
       DBOS.logger.warn(`Payment failed...`);
-      await ShopUtilities.errorOrder(orderID);
-      await ShopUtilities.undoSubtractInventory();
+      await errorOrder(orderID);
+      await undoSubtractInventory();
     }
 
     // Finally, send the order ID to the payment endpoint so it can redirect
     // the customer to the order status page.
     await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-  }
-}
+  },
+  { name: 'checkoutWorkflow' },
+);
 ```
 
 ## The Checkout and Payment Endpoints
 
-Now, let's use Fastify to write the HTTP endpoint for checkout.
+Now let's implement the HTTP endpoints that handle customer interactions with the checkout system.
 
-This endpoint receives a request when a customer presses the "Buy Now" button.
+The checkout endpoint is triggered when a customer clicks the "Buy Now" button.
 It starts the checkout workflow in the background, then waits for the workflow to generate and send it a unique payment ID.
 It then returns the payment ID so the browser can redirect the user to the payments page.
 
@@ -85,7 +97,7 @@ fastify.post<{
 }>('/checkout/:key', async (req, reply) => {
   const key = req.params.key;
   // Idempotently start the checkout workflow in the background.
-  const handle = await DBOS.startWorkflow(Shop, { workflowID: key }).paymentWorkflow();
+  const handle = await DBOS.startWorkflow(checkoutWorkflow, { workflowID: key })();
   // Wait for the checkout workflow to send a payment ID, then return it.
   const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
   if (paymentID === null) {
@@ -94,11 +106,9 @@ fastify.post<{
   }
   return paymentID;
 });
-
 ```
 
-Let's also write the HTTP endpoint for payments.
-It listens for any payment event generated by the user.
+The payment endpoint handles the communication between the payment system and the checkout workflow.
 It uses the payment ID to signal the checkout workflow whether the payment succeeded or failed.
 It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
 
@@ -121,164 +131,174 @@ fastify.post<{
 
 ## Database Operations
 
-Next, let's write some database operations.
-Each of these functions performs a simple CRUD operation, like retrieving product information or updating inventory.
-We apply the [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to each of them to give them access to a pre-configured database connection.
-We also add HTTP endpoints for some of them with Fastify.
+Now, let's implement the checkout workflow's steps.
+Each step performs a database operation, like updating inventory or order status.
+Because these steps access the database, they are implemented using [datasource transactions](../tutorials/transaction-tutorial.md).
 
 <details>
-<summary>Database Operations and HTTP Endpoints</summary>
+<summary><strong>Database Operations</strong></summary>
 
 ```javascript
-export class ShopUtilities {
-  @DBOS.transaction()
-  static async subtractInventory(): Promise<void> {
-    const numAffected = await DBOS.knexClient<Product>('products')
-      .where('product_id', PRODUCT_ID)
-      .andWhere('inventory', '>=', 1)
-      .update({
-        inventory: DBOS.knexClient.raw('inventory - ?', 1),
-      });
-    if (numAffected <= 0) {
-      throw new Error('Insufficient Inventory');
-    }
-  }
 
-  @DBOS.transaction()
-  static async undoSubtractInventory(): Promise<void> {
-    await DBOS.knexClient<Product>('products')
-      .where({ product_id: PRODUCT_ID })
-      .update({ inventory: DBOS.knexClient.raw('inventory + ?', 1) });
-  }
+export const knexds = new KnexDataSource('app-db', config);
 
-  @DBOS.transaction()
-  static async setInventory(inventory: number): Promise<void> {
-    await DBOS.knexClient<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
-  }
-
-  @DBOS.transaction()
-  static async retrieveProduct(): Promise<Product> {
-    const item = await DBOS.knexClient<Product>('products').select('*').where({ product_id: PRODUCT_ID });
-    if (!item.length) {
-      throw new Error(`Product ${PRODUCT_ID} not found`);
-    }
-    return item[0];
-  }
-
-  @DBOS.transaction()
-  static async createOrder(): Promise<number> {
-    const orders = await DBOS.knexClient<Order>('orders')
-      .insert({
-        order_status: OrderStatus.PENDING,
-        product_id: PRODUCT_ID,
-        last_update_time: DBOS.knexClient.fn.now(),
-        progress_remaining: 10,
-      })
-      .returning('order_id');
-    const orderID = orders[0].order_id;
-    return orderID;
-  }
-
-  @DBOS.transaction()
-  static async markOrderPaid(order_id: number): Promise<void> {
-    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
-      order_status: OrderStatus.PAID,
-      last_update_time: DBOS.knexClient.fn.now(),
-    });
-  }
-
-  @DBOS.transaction()
-  static async errorOrder(order_id: number): Promise<void> {
-    await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
-      order_status: OrderStatus.CANCELLED,
-      last_update_time: DBOS.knexClient.fn.now(),
-    });
-  }
-
-  @DBOS.transaction()
-  static async retrieveOrder(order_id: number): Promise<Order> {
-    const item = await DBOS.knexClient<Order>('orders').select('*').where({ order_id: order_id });
-    if (!item.length) {
-      throw new Error(`Order ${order_id} not found`);
-    }
-    return item[0];
-  }
-
-  @DBOS.transaction()
-  static async retrieveOrders() {
-    return DBOS.knexClient<Order>('orders').select('*');
-  }
+export async function subtractInventory(): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      const numAffected = await KnexDataSource.client<Product>('products')
+        .where('product_id', PRODUCT_ID)
+        .andWhere('inventory', '>=', 1)
+        .update({
+          inventory: KnexDataSource.client.raw('inventory - ?', 1),
+        });
+      if (numAffected <= 0) {
+        throw new Error('Insufficient Inventory');
+      }
+    },
+    { name: 'subtractInventory' },
+  );
 }
 
-// Fastify HTTP endpoints
+export async function undoSubtractInventory(): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      await KnexDataSource.client<Product>('products')
+        .where({ product_id: PRODUCT_ID })
+        .update({ inventory: KnexDataSource.client.raw('inventory + ?', 1) });
+    },
+    { name: 'undoSubtractInventory' },
+  );
+}
 
-fastify.get('/product', async () => {
-  return await ShopUtilities.retrieveProduct();
-});
+export async function setInventory(inventory: number): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      await KnexDataSource.client<Product>('products').where({ product_id: PRODUCT_ID }).update({ inventory });
+    },
+    { name: 'setInventory' },
+  );
+}
 
-fastify.get<{
-  Params: { order_id: string };
-}>('/order/:order_id', async (req) => {
-  const order_id = Number(req.params.order_id);
-  return await ShopUtilities.retrieveOrder(order_id);
-});
+export async function retrieveProduct(): Promise<Product> {
+  return knexds.runTransaction(
+    async () => {
+      const item = await KnexDataSource.client<Product>('products').select('*').where({ product_id: PRODUCT_ID });
+      if (!item.length) {
+        throw new Error(`Product ${PRODUCT_ID} not found`);
+      }
+      return item[0];
+    },
+    { name: 'retrieveProduct' },
+  );
+}
 
-fastify.get('/orders', async () => {
-  return await ShopUtilities.retrieveOrders();
-});
+export async function createOrder(): Promise<number> {
+  return knexds.runTransaction(
+    async () => {
+      const orders = await KnexDataSource.client<Order>('orders')
+        .insert({
+          order_status: OrderStatus.PENDING,
+          product_id: PRODUCT_ID,
+          last_update_time: KnexDataSource.client.fn.now(),
+          progress_remaining: 10,
+        })
+        .returning('order_id');
+      const orderID = orders[0].order_id;
+      return orderID;
+    },
+    { name: 'createOrder' },
+  );
+}
 
-fastify.post('/restock', async () => {
-  return await ShopUtilities.setInventory(12);
-});
+export async function markOrderPaid(order_id: number): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+        order_status: OrderStatus.PAID,
+        last_update_time: KnexDataSource.client.fn.now(),
+      });
+    },
+    { name: 'markOrderPaid' },
+  );
+}
 
+export async function errorOrder(order_id: number): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+        order_status: OrderStatus.CANCELLED,
+        last_update_time: KnexDataSource.client.fn.now(),
+      });
+    },
+    { name: 'errorOrder' },
+  );
+}
+
+export async function retrieveOrder(order_id: number): Promise<Order> {
+  return knexds.runTransaction(
+    async () => {
+      const item = await KnexDataSource.client<Order>('orders').select('*').where({ order_id: order_id });
+      if (!item.length) {
+        throw new Error(`Order ${order_id} not found`);
+      }
+      return item[0];
+    },
+    { name: 'retrieveOrder' },
+  );
+}
+
+export async function retrieveOrders() {
+  return knexds.runTransaction(
+    async () => {
+      return KnexDataSource.client<Order>('orders').select('*');
+    },
+    { name: 'retrieveOrders' },
+  );
+}
+
+export const dispatchOrder = DBOS.registerWorkflow(
+  async (order_id: number) => {
+    for (let i = 0; i < 10; i++) {
+      await DBOS.sleep(1000);
+      await updateOrderProgress(order_id);
+    }
+  },
+  { name: 'dispatchOrder' },
+);
+
+export async function updateOrderProgress(order_id: number): Promise<void> {
+  return knexds.runTransaction(
+    async () => {
+      const orders = await KnexDataSource.client<Order>('orders').where({
+        order_id: order_id,
+        order_status: OrderStatus.PAID,
+      });
+      if (!orders.length) {
+        throw new Error(`No PAID order with ID ${order_id} found`);
+      }
+
+      const order = orders[0];
+      if (order.progress_remaining > 1) {
+        await KnexDataSource.client<Order>('orders')
+          .where({ order_id: order_id })
+          .update({ progress_remaining: order.progress_remaining - 1 });
+      } else {
+        await KnexDataSource.client<Order>('orders').where({ order_id: order_id }).update({
+          order_status: OrderStatus.DISPATCHED,
+          progress_remaining: 0,
+        });
+      }
+    },
+    { name: 'updateOrderProgress' },
+  );
+}
 ```
 </details>
 
 ## Finishing Up
 
-A few more functions to go!
-
-First, let's write a workflow to dispatch orders that have been paid for.
-This function is responsible for the "progress bar" you see for paid orders on the [live demo page](https://demo-widget-store.cloud.dbos.dev/).
-Every second, it updates the progress of a paid order, then dispatches the order if it is fully progressed.
-
-```javascript
-export class ShopUtilities {
-  @DBOS.workflow()
-  static async dispatchOrder(order_id: number) {
-    for (let i = 0; i < 10; i++) {
-      await DBOS.sleep(1000);
-      await ShopUtilities.update_order_progress(order_id);
-    }
-  }
-
-  @DBOS.transaction()
-  static async update_order_progress(order_id: number): Promise<void> {
-    const orders = await DBOS.knexClient<Order>('orders').where({
-      order_id: order_id,
-      order_status: OrderStatus.PAID,
-    });
-    if (!orders.length) {
-      throw new Error(`No PAID order with ID ${order_id} found`);
-    }
-
-    const order = orders[0];
-    if (order.progress_remaining > 1) {
-      await DBOS.knexClient<Order>('orders')
-        .where({ order_id: order_id })
-        .update({ progress_remaining: order.progress_remaining - 1 });
-    } else {
-      await DBOS.knexClient<Order>('orders').where({ order_id: order_id }).update({
-        order_status: OrderStatus.DISPATCHED,
-        progress_remaining: 0,
-      });
-    }
-  }
-}
-```
-
-Let's also serve the app's frontend from an HTML file using Fastify.
-In production, we recommend using DBOS primarily for the backend, with your frontend deployed elsewhere.
+Let's add the final touches to the app.
+This Fastify endpoint serves its frontend:
 
 ```javascript
 fastify.get('/', async (req, reply) => {
@@ -305,13 +325,14 @@ Finally, let's start DBOS and the Fastify server:
 
 ```javascript
 async function main() {
-  const PORT = 3000;
+  const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
-    name: 'widget-store-node',
-    databaseUrl: process.env.DBOS_DATABASE_URL,
+    "name": 'widget-store-node',
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
+  DBOS.logRegisteredEndpoints();
   await DBOS.launch();
-  await fastify.listen({ port: PORT, host: "0.0.0.0" });
+  await fastify.listen({ port: PORT, host: '0.0.0.0' });
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
 
@@ -319,26 +340,6 @@ main().catch(console.log);
 ```
 
 ## Try it Yourself!
-### Deploying to DBOS Cloud
-
-To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd typescript/widget-store
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your app!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
 
 First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
@@ -347,25 +348,30 @@ git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd typescript/widget-store
 ```
 
-Then install dependencies, build your app, and set up its database tables:
+Then install dependencies and build the application:
 
 ```shell
 npm install
 npm run build
-npx knex migrate:latest
 ```
 
-Then, start it:
+Then, start Postgres in a local Docker container.
+If you already use Postgres, you can set the `DBOS_DATABASE_URL` (for application data) and `DBOS_SYSTEM_DATABASE_URL` (for DBOS system data) environment variables to your database connection string.
+
+```shell
+npx dbos postgres start
+```
+
+Create database tables:
+
+```shell
+npm run db:setup
+```
+
+Then start your app:
 
 ```shell
 npm run start
 ```
 
-Alternatively, run it in dev mode using `nodemon`:
-
-```shell
-npm install
-npm run dev
-```
-
-Visit [`http://localhost:3000`](http://localhost:3000) to see your app!
+Visit [http://localhost:3000](http://localhost:3000) to see your app! 

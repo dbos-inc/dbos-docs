@@ -1,13 +1,13 @@
 ---
-sidebar_position: 85
+sidebar_position: 80
 title: Using Typescript Objects
-description: Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
 ---
 
-You can add DBOS workflow, step, and transaction decorators to your TypeScript class instance methods.
-To add DBOS decorators to your instance methods, their class must inherit from `ConfiguredInstance`, which will take an instance name and register the instance.
-
+You can use class instance methods as workflows and steps.
+Any class instance method can be freely used as a step using the [`DBOS.step`](../reference/workflows-steps.md#dbosstep) decorator or [`DBOS.runStep`](../reference/workflows-steps.md#dbosrunstep); there are no special requirements.
+To use a class instance method as a workflow, you must use the [`DBOS.workflow`](../reference/workflows-steps.md#dbosworkflow) decorator and the class must inherit from `ConfiguredInstance`.
 For example:
+
 ```typescript
 class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
@@ -17,17 +17,7 @@ class MyClass extends ConfiguredInstance {
   }
 
   override async initialize() : Promise<void> {
-    // ... Validate this.cfg
-  }
-
-  @DBOS.transaction()
-  async testTransaction() {
-    // ... Operations that use this.cfg
-  }
-
-  @DBOS.step()
-  async testStep() {
-    // ... Operations that use this.cfg
+    // ... Validate this.cfg; will be called at DBOS.launch()
   }
 
   @DBOS.workflow()
@@ -39,7 +29,9 @@ class MyClass extends ConfiguredInstance {
 const myClassInstance = new MyClass('instanceA');
 ```
 
-When you create a new instance of a DBOS-decorated class, the constructor for the base `ConfiguredInstance` must be called with a `name`. This `name` should be unique among instances of the same class.   Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.launch() is called.
+When you create a new instance of such a class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
+This `name` must be unique among instances of the same class.
+Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.launch() is called.
 
 The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 
@@ -53,7 +45,7 @@ All configured classes:
 * May have an `initialize()` method that will be called after all objects have been created, but before request handling commences
 
 ### `initialize()` Method
-The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/transactapi/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
+The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-Event and handler registration decorators such as `@DBOS.scheduled`, `@KafkaConsume`, `@DBOS.getApi`, and `@DBOS.putApi` cannot be applied to instance methods.
+Event registration decorators such as `@DBOS.scheduled` cannot be applied to instance methods.

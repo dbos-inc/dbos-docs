@@ -33,12 +33,12 @@
 - [Reliable Customer Service Agent](https://docs.dbos.dev/python/examples/customer-service.md): In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and LangGraph and serverlessly deploy it to DBOS Cloud. This example demonstrates how DBOS makes it easy to connect your AI agent to your existing production systems, especially when integrating human decision-making into automated processes.
 - [Document Ingestion Pipeline](https://docs.dbos.dev/python/examples/document-detective.md): In this example, we'll use DBOS to build a reliable and scalable data processing pipeline.
 - [Earthquake Tracker](https://docs.dbos.dev/python/examples/earthquake-tracker.md): In this example, we use DBOS to build and deploy a real-time earthquake dashboard.
-- [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
+- [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): This example is also available in TypeScript.
 - [Hacker News Slackbot](https://docs.dbos.dev/python/examples/hacker-news-bot.md): In this example, we use DBOS to build and deploy a scheduled job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
 - [AI-Powered Slackbot](https://docs.dbos.dev/python/examples/rag-slackbot.md): In this example, we use DBOS and LlamaIndex to build and deploy a Slackbot that uses retrieval-augmented generation (RAG) to answer questions about previous Slack conversations.
 - [Scheduled Reminders](https://docs.dbos.dev/python/examples/scheduled-reminders.md): In this example, we use DBOS to build and deploy an app that schedules reminder emails for any day in the future.
 - [Stock Tracker](https://docs.dbos.dev/python/examples/stock-tracker.md): In this example, we use DBOS to build and deploy an app that tracks stock prices and sends SMS alerts when the price of a stock crosses a certain threshold.
-- [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
+- [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript.
 - [Add DBOS To Your App](https://docs.dbos.dev/python/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Python](https://docs.dbos.dev/python/programming-guide.md): This guide shows you how to use DBOS to build Python apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/python/prompting.md): You may want assistance from an AI model in building a DBOS application.
@@ -63,35 +63,29 @@
 - [Workflow Management](https://docs.dbos.dev/python/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Get Started with DBOS](https://docs.dbos.dev/quickstart.md): DBOS is a library for building reliable programs.
-- [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): In this example, we use DBOS and Fastify to deploy an online storefront that's resilient to any failure.
+- [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): This example is also available in Python.
+- [Hacker News Research Agent](https://docs.dbos.dev/typescript/examples/hacker-news-agent.md): This example is also available in Python.
 - [Kafka Alert Queue](https://docs.dbos.dev/typescript/examples/kafka-alert-queue.md): In this example, we use DBOS to build an app that consumes Alert notifications as Kafka messages. Every Kafka message is handled exactly once, even if the app is stopped and restarted at any point.  All source code is available on GitHub.
 - [DBOS Task Scheduler](https://docs.dbos.dev/typescript/examples/task-scheduler.md): Learn how to combine DBOS + Next.js with this cloud scheduling tool
 - [Add DBOS To Your App](https://docs.dbos.dev/typescript/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS TypeScript](https://docs.dbos.dev/typescript/programming-guide.md): This guide shows you how to use DBOS to build TypeScript apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/typescript/prompting.md): You may want assistance from an AI model in building a DBOS application.
-- [DBOS Client](https://docs.dbos.dev/typescript/reference/client.md): DBOS Client reference
+- [DBOS CLI](https://docs.dbos.dev/typescript/reference/cli.md): The DBOS Transact CLI helps you run applications locally.
+- [DBOS Client](https://docs.dbos.dev/typescript/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
 - [Configuration](https://docs.dbos.dev/typescript/reference/configuration.md): Configuring DBOS
-- [Package Library](https://docs.dbos.dev/typescript/reference/libraries.md): API reference for library of DBOS Optional Packages
-- [DBOS Transact CLI](https://docs.dbos.dev/typescript/reference/tools/cli.md): DBOS Transact CLI reference
-- [DBOS Compiler](https://docs.dbos.dev/typescript/reference/tools/dbos-compiler.md): DBOS Compiler reference
-- [DBOS Class](https://docs.dbos.dev/typescript/reference/transactapi/dbos-class.md): API reference for DBOS
-- [Event Receivers](https://docs.dbos.dev/typescript/reference/transactapi/eventreceivercontext.md): API reference for custom event receivers and context.
-- [Workflow Handles](https://docs.dbos.dev/typescript/reference/transactapi/workflow-handles.md): API reference for workflow handles
-- [Workflow Queues](https://docs.dbos.dev/typescript/reference/transactapi/workflow-queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
-- [Authentication & Authorization](https://docs.dbos.dev/typescript/tutorials/authentication-authorization.md): This section covers declarative authentication and authorization in DBOS.
+- [Transactions & Datasources](https://docs.dbos.dev/typescript/reference/datasource.md): Introduction To Transactions And Datasources
+- [DBOS Lifecycle](https://docs.dbos.dev/typescript/reference/dbos-class.md): The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
+- [DBOS Methods & Variables](https://docs.dbos.dev/typescript/reference/methods.md): DBOS Methods
+- [Queues](https://docs.dbos.dev/typescript/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
+- [Workflows & Steps](https://docs.dbos.dev/typescript/reference/workflows-steps.md): Workflows
 - [Debugging](https://docs.dbos.dev/typescript/tutorials/debugging.md): Learn how to debug your DBOS TypeScript workflows.
-- [Static Analysis](https://docs.dbos.dev/typescript/tutorials/development/static-analysis.md): API, tool, and rule documentation for DBOS static code analysis
-- [Testing](https://docs.dbos.dev/typescript/tutorials/development/testing-tutorial.md): Learn how to use DBOS in popular unit testing frameworks.
-- [Using Libraries](https://docs.dbos.dev/typescript/tutorials/development/using-libraries.md): Learn how to use DBOS library functions
-- [Using Typescript Objects](https://docs.dbos.dev/typescript/tutorials/instantiated-objects.md): Learn how to make workflows, transactions, and steps reusable and configurable by instantiating objects
+- [Using Typescript Objects](https://docs.dbos.dev/typescript/tutorials/instantiated-objects.md): You can use class instance methods as workflows and steps.
 - [Logging & Tracing](https://docs.dbos.dev/typescript/tutorials/logging.md): Logging
-- [Queues & Parallelism](https://docs.dbos.dev/typescript/tutorials/queue-tutorial.md): Queues allow you to run functions with managed concurrency.
-- [Creating Custom Event Receivers](https://docs.dbos.dev/typescript/tutorials/requestsandevents/custom-event-receiver.md): Learn how to start DBOS workflows and other functions in response to external events and data sources
-- [HTTP Serving](https://docs.dbos.dev/typescript/tutorials/requestsandevents/http-serving-tutorial.md): Learn how to serve HTTP requests
-- [Integrating with Kafka](https://docs.dbos.dev/typescript/tutorials/requestsandevents/kafka-integration.md): In this guide, you'll learn how to use DBOS workflows to process Kafka messages exactly-once.
+- [Queues & Concurrency](https://docs.dbos.dev/typescript/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduled Workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows.md): You can schedule DBOS workflows to run exactly once per time interval.
 - [Steps](https://docs.dbos.dev/typescript/tutorials/step-tutorial.md): Learn how to communicate with external APIs and services
-- [Stored Procedures](https://docs.dbos.dev/typescript/tutorials/stored-proc-tutorial.md): Learn how to improve database interaction performance with Stored Procedures
-- [Transactions](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations
+- [Transactions & Datasources](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations
+- [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
+- [Upgrading to TSv3](https://docs.dbos.dev/typescript/upgrading.md): With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.
 - [Why DBOS?](https://docs.dbos.dev/why-dbos.md): What is DBOS?
