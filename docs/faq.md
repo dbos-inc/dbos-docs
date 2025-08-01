@@ -79,5 +79,5 @@ Write a script using the DBOS Client ([Python docs](./python/reference/client.md
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the `dbos migrate` command ([Python](./python/reference/cli.md#dbos-migrate)) can be run with a privileged user to create all DBOS database tables.
+In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
 Then, a DBOS application can run without privilege (requiring only access to the application and system databases).

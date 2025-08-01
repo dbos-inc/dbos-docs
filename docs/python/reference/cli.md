@@ -130,7 +130,7 @@ Then, a DBOS application can run without privilege (requiring only access to the
 **Arguments:**
 
 - `-D, --db-url`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/transaction-tutorial.md) run. If you are not using DBOS transactions, set this to the same connection string as your system database.
-- `-s, --sys-db-url`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state.
+- `-s, --sys-db-url`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
 
 ### dbos start
 
