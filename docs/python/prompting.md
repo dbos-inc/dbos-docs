@@ -192,6 +192,10 @@ def dbos_workflow():
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     print(f"Successfully completed {len(results)} steps")
+
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 #### Scheduled Workflow
@@ -616,8 +620,8 @@ with SetEnqueueOptions(priority=1):
 
 ## Python Classes
 
- You can add DBOS workflow and step decorators to your Python class instance methods.
-To add DBOS decorators to your methods, their class MUST inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
+You can add DBOS decorators to your Python class instance methods.
+You can add step decorators to any class methods, but to add a workflow decorator to a class method, its class must inherit from `DBOSConfiguredInstance` and must be decorated with `@DBOS.dbos_class`.
 For example:
 
 ```python
@@ -639,9 +643,14 @@ example_fetcher = URLFetcher("https://example.com")
 print(example_fetcher.fetch_workflow())
 ```
 
-When you create a new instance of a DBOS-decorated class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
+When you create a new instance of a DBOS class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
 This `config_name` should be a unique identifier of the instance.
 Additionally, all DBOS-decorated classes must be instantiated before `DBOS.launch()` is called.
+
+The reason for these requirements is to enable workflow recovery.
+When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `config_name`.
+When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
+If `config_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
 
 
 ### Testing DBOS Functions
@@ -689,16 +698,246 @@ Wait for the workflow to complete, then return its result.
 handle.get_status() -> WorkflowStatus
 ```
 
-Retrieve the workflow status:
+## Workflow Management Methods
+
+### list_workflows
+```python
+def list_workflows(
+    *,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[str | list[str]] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    user: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria.
+
+**Parameters:**
+- **workflow_ids**: Retrieve workflows with these IDs.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **user**: Retrieve workflows run by this authenticated user.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+
+### list_queued_workflows
+```python
+def list_queued_workflows(
+    *,
+    queue_name: Optional[str] = None,
+    status: Optional[str | list[str]] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    name: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    sort_desc: bool = False,
+) -> List[WorkflowStatus]:
+```
+
+Retrieve a list of `WorkflowStatus` of all **currently enqueued** workflows matching specified criteria.
+
+**Parameters:**
+- **queue_name**: Retrieve workflows running on this queue.
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
+- **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
+- **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **name**: Retrieve workflows with this fully-qualified name.
+- **limit**: Retrieve up to this many workflows.
+- **offset**: Skip this many workflows from the results returned (for pagination).
+
+### list_workflow_steps
+```python
+def list_workflow_steps(
+    workflow_id: str,
+) -> List[StepInfo]
+```
+
+Retrieve the steps of a workflow.
+This is a list of `StepInfo` objects, with the following structure:
+
+```python
+class StepInfo(TypedDict):
+    # The unique ID of the step in the workflow. One-indexed.
+    function_id: int
+    # The (fully qualified) name of the step
+    function_name: str
+    # The step's output, if any
+    output: Optional[Any]
+    # The error the step threw, if any
+    error: Optional[Exception]
+    # If the step starts or retrieves the result of a workflow, its ID
+    child_workflow_id: Optional[str]
+```
+
+### cancel_workflow
+
+```python
+DBOS.cancel_workflow(
+    workflow_id: str,
+) -> None
+```
+
+Cancel a workflow.
+This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### resume_workflow
+
+```python
+DBOS.resume_workflow(
+    workflow_id: str
+) -> WorkflowHandle[R]
+```
+
+Resume a workflow.
+This immediately starts it from its last completed step.
+You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
+You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### fork_workflow
+
+```python
+DBOS.fork_workflow(
+    workflow_id: str,
+    start_step: int,
+    *,
+    application_version: Optional[str] = None,
+) -> WorkflowHandle[R]
+```
+
+Start a new execution of a workflow from a specific step.
+The input step ID must match the `function_id` of the step returned by `list_workflow_steps`.
+The specified `start_step` is the step from which the new workflow will start, so any steps whose ID is less than `start_step` will not be re-executed.
+
+The forked workflow will have a new workflow ID, which can be set with `SetWorkflowID`.
+It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+### Workflow Status
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
 
 ```python
 class WorkflowStatus:
-    workflow_id: str # The workflow's ID
-    status: str # The workflow's current state. One of PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, or CANCELLED
-    name: str # The fully qualified name of the workflow function
-    class_name: Optional[str] # If the workflow function is a class method, the name of the class
-    config_name: Optional[str] # If the workflow function is a method of a configured class, the name of the class configuration
+    # The workflow ID
+    workflow_id: str
+    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    status: str
+    # The name of the workflow function
+    name: str
+    # The number of times this workflow has been started
+    recovery_attempts: int
+    # The name of the workflow's class, if any
+    class_name: Optional[str]
+    # The name with which the workflow's class instance was configured, if any
+    config_name: Optional[str]
+    # The user who ran the workflow, if specified
+    authenticated_user: Optional[str]
+    # The role with which the workflow ran, if specified
+    assumed_role: Optional[str]
+    # All roles which the authenticated user could assume
+    authenticated_roles: Optional[list[str]]
+    # The deserialized workflow input object
+    input: Optional[WorkflowInputs]
+    # The workflow's output, if any
+    output: Optional[Any]
+    # The error the workflow threw, if any
+    error: Optional[Exception]
+    # Workflow start time, as a Unix epoch timestamp in ms
+    created_at: Optional[int]
+    # Last time the workflow status was updated, as a Unix epoch timestamp in ms
+    updated_at: Optional[int]
+    # If this workflow was enqueued, on which queue
+    queue_name: Optional[str]
+    # The ID of the executor (process) that most recently executed this workflow
+    executor_id: Optional[str]
+    # The application version on which this workflow was started
+    app_version: Optional[str]
 ```
+
+Retrieve the workflow status:
+
+### Configuring DBOS
+
+To configure DBOS, pass a `DBOSConfig` object to its constructor.
+For example:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-example",
+    "database_url": os.environ["DBOS_DATABASE_URL"],
+}
+DBOS(config=config)
+```
+
+The `DBOSConfig` object has the following fields.
+All fields except `name` are optional.
+
+```python
+class DBOSConfig(TypedDict):
+    name: str
+    database_url: Optional[str]
+    system_database_url: Optional[str]
+    sys_db_pool_size: Optional[int]
+    db_engine_kwargs: Optional[Dict[str, Any]]
+    log_level: Optional[str]
+    otlp_traces_endpoints: Optional[List[str]]
+    otlp_logs_endpoints: Optional[List[str]]
+    otlp_attributes: Optional[dict[str, str]]
+    admin_port: Optional[int]
+    run_admin_server: Optional[bool]
+    application_version: Optional[str]
+```
+
+- **name**: Your application's name.
+- **database_url**: A connection string to a Postgres database. DBOS uses this connection string, unmodified, to create a SQLAlchemy engine.
+A valid connection string looks like:
+
+```
+postgresql://[username]:[password]@[hostname]:[port]/[database name]
+```
+
+:::info
+SQLAlchemy requires passwords in connection strings to be escaped if they contain special characters (e.g., with urllib).
+:::
+
+If no connection string is provided, DBOS uses this default:
+
+```shell
+postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
+```
+
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s `create_engine()`, applied to both the application and system database engines. Defaults to:
+```python
+{
+  "pool_size": 20,
+  "max_overflow": 0,
+  "pool_timeout": 30,
+}
+```
+- **system_database_url**: A connection string to a Postgres database, used to create the system database in which DBOS stores internal state. If not supplied, system database is created using `database_url` suffixing the database name with `_dbos_sys`
+- **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
+- **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
+- **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
+- **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
+- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
+- **admin_port**: The port on which the admin server runs. Defaults to 3001.
+- **application_version**: The code version for this application and its workflows. Workflow versioning is documented here.
+
 
 ### Transactions
 
@@ -757,39 +996,6 @@ def example_select(name: str) -> Optional[str]:
     sql = text("SELECT note FROM greetings WHERE name = :name LIMIT 1")
     row = DBOS.sql_session.execute(sql, {"name": name}).first()
     return row[0] if row else None
-```
-
-#### With FastAPI
-
-```python
-import os
-
-from dbos import DBOS, DBOSConfig
-from fastapi import FastAPI
-
-from schema import example_table
-
-app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
-}
-DBOS(config=config, fastapi=app)
-
-@DBOS.transaction()
-def insert_row():
-        DBOS.sql_session.execute(example_table.insert().values(name="dbos"))
-
-@DBOS.transaction()
-def count_rows():
-    count = DBOS.sql_session.execute(example_table.select()).rowcount
-    print(f"Row count: {count}")
-
-@app.get("/")
-@DBOS.workflow()
-def dbos_workflow():
-    insert_row()
-    count_rows()
 ```
 
 NEVER async def a transaction.

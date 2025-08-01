@@ -64,28 +64,3 @@ At this time, DBOS does not support coroutine transactions.
 Decorating an `async def` function with `@DBOS.transaction` will raise an error at runtime.
 
 :::
-
-## Schema Management
-
-We strongly recommend you manage your database schema using migrations.
-One popular database migration tool in Python is [Alembic](https://alembic.sqlalchemy.org/en/latest/).
-
-If you are using Alembic, you can generate a new migration with:
-
-```shell
-alembic revision -m <migration-name>
-```
-
-This creates a new migration file in whose `upgrade` and `downgrade` functions you can implement your migration.
-For example:
-
-```python
-def upgrade() -> None:
-    op.execute(sa.text("CREATE TABLE greetings (name TEXT, note TEXT)"))
-
-
-def downgrade() -> None:
-    op.execute(sa.text("DROP TABLE greetings"))
-```
-
-You can also generate new migrations directly from your SQLAlchemy schema files using [Alembic autogeneration](https://alembic.sqlalchemy.org/en/latest/autogenerate.html).
