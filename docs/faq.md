@@ -73,3 +73,11 @@ You can reset your DBOS system database and all internal DBOS state with the `db
 ### How can I cancel a large number of workflows in a batch?
 
 Write a script using the DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) to list all the workflows you need cancelled, then iteratively cancel them.
+
+### Why do I get insufficient privilege errors when starting DBOS?
+
+DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, the `dbos migrate` command ([Python](./python/reference/cli.md#dbos-migrate)) can be run with a privileged user to create all DBOS database tables.
+Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
