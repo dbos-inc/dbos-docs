@@ -105,7 +105,6 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 ```yaml
 database:
-  sys_db_name: 'my_dbos_system_db'
   migrate:
     - alembic upgrade head
 ```
