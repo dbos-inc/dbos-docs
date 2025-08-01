@@ -119,6 +119,19 @@ A JSON-formatted list of [workflow statuses](./contexts#workflow-status).
 
 ## Application Management Commands
 
+### dbos migrate
+
+Create the DBOS system database and internal tables.
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, this command can be run with a privileged user to create all DBOS database tables.
+Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
+
+**Arguments:**
+
+- `-D, --db-url`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/transaction-tutorial.md) run. If you are not using DBOS transactions, set this to the same connection string as your system database.
+- `-s, --sys-db-url`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state.
+
 ### dbos start
 
 Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
@@ -157,3 +170,4 @@ Execute a DBOS application in debug mode to replay a specified workflow.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to debug.
+
