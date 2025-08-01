@@ -93,21 +93,8 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name. Must match the name supplied to the DBOS constructor.
 - **language**: The application language. Must be set to `python` for Python applications.
-- **database_url**: A connection string to a Postgres database. This connection string is used only by the [DBOS debugger](../tutorials/debugging.md). It has the same format as the connection string you pass to the DBOS constructor.
-- **database**: The [database section](#database-section).
+- **database_url**: A connection string to a Postgres database. This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md). It has the same format as the connection string you pass to the DBOS constructor.
 - **runtimeConfig**: The [runtime section](#runtime-section).
-
-#### Database Section
-
-- **migrate**: A list of commands to run to apply your application's schema to the database. 
-
-**Example**:
-
-```yaml
-database:
-  migrate:
-    - alembic upgrade head
-```
 
 #### Runtime Section
 
