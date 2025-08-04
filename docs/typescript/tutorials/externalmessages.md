@@ -223,9 +223,16 @@ await DBOS.runStep(async () => {
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
 
+DBOS receivers consume kafka messages from topics and initiate workflows.  The topics may be specified as a string, regular expression, or an array of strings and regular expressions.
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
+```
 
+Options for the decorator and `registerConsumer` are the same:
+ - `queueName`: If specified, workflows for processing messages will be enqueued
+ - `config`: Configuration, as specified by the underlying kafka library
+
+```typescript
 registerConsumer<This, Return>(
   func: (this: This, ...args: KafkaArgs) => Promise<Return>,
   topics: ConsumerTopics,
@@ -248,6 +255,16 @@ consumer(
 </TabItem>
 
 <TabItem value="confluentkafka" label="Confluent Kafka">
+
+DBOS receivers consume kafka messages from topics and initiate workflows.  The topics may be specified as a string, regular expression, or an array of strings and regular expressions.
+```typescript
+export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
+```
+
+Options for the decorator and `registerConsumer` are the same:
+ - `queueName`: If specified, workflows for processing messages will be enqueued
+ - `config`: Configuration, as specified by the underlying kafka library
+
 
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
@@ -274,6 +291,14 @@ consumer(
 </TabItem>
 
 <TabItem value="sqs" label="SQS">
+
+SQS message receipt can be configured at the receiver, class, or method level, with method-level configuration items overriding the class- or receiver-level defaults.
+
+Configuration items are:
+ - `client`: Fully configured SQS client, or a function to retrieve it
+ - `workflowQueueName`: If specified, workflows for processing messages will be enqueued
+ - `queueUrl`: SQS Queue URL (or part) for receiving messages
+ - `getWorkflowKey`: Optional function to calculate a [workflow key](./workflow-tutorial.md#workflow-ids-and-idempotency) from a message; if not specified the [message ID](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-message-identifiers.html) will be used
 
 ```typescript
 interface SQSConfig {
