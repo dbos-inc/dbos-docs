@@ -3,7 +3,7 @@ sidebar_position: 65
 title: Messages (Kafka, SQS)
 ---
 
-In this guide, you'll learn how to use DBOS workflows to process [Kafka](https://kafka.apache.org/) or [Simple Queue Service (SQS)](https://aws.amazon.com/sqs/) messages with exactly-once semantics.
+In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) or [Simple Queue Service (SQS)](https://aws.amazon.com/sqs/) messages with exactly-once semantics.
 
 ## Installation
 
@@ -35,7 +35,7 @@ npm i @dbos-inc/sqs-receive
 
 ## Creating a Receiver
 
-The DBOS event receiver classes wrap the underlying library receivers and provide the associations to workflows.  First, create a DBOS event receiver instance, which is connected to the underlying library object or configuration:
+The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which is requires an underlying library object or configuration:
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
@@ -69,7 +69,7 @@ import { SQSClient } from '@aws-sdk/client-sqs';
 import { SQSReceiver } from '@dbos-inc/sqs-receive';
 
 function createSQS() {
-  return new SQSClient({ /*...*/  });
+  return new SQSClient({ /*configuration per SQS library...*/  });
 }
 
 const sqsReceiver = new SQSReceiver({
@@ -147,11 +147,11 @@ DBOS event receivers use a [workflow id](./workflow-tutorial.md#workflow-ids-and
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
-The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is started.
+The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is executed per message.
 </TabItem>
 
 <TabItem value="confluentkafka" label="Confluent Kafka">
-The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is started.
+The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is executed per message.
 </TabItem>
 
 <TabItem value="sqs" label="SQS">
@@ -160,7 +160,7 @@ AWS SQS messages have unique IDs assigned, which are used by default to create w
 </Tabs>
 
 ## Rate-Limiting Message Processing
-By default, event receivers start new workflows immediately upon message receipt.  If message processing should be rate-limited, DBOS [queues](./queue-tutorial.md) should be used.  Generally, the `queueName` parameter can be provided to select a queue; see [configuration](#configuration-reference) for details.
+By default, event receivers start new workflows immediately upon message receipt.  If message processing should be rate-limited, DBOS [queues](./queue-tutorial.md) can be used.  Generally, the queue name is provided as a parameter; see [configuration](#configuration-reference) for details.
 
 ## Sending Messages
 
@@ -223,7 +223,7 @@ await DBOS.runStep(async () => {
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
 
-DBOS receivers consume kafka messages from topics and initiate workflows.  The topics may be specified as a string, regular expression, or an array of strings and regular expressions.
+DBOS receivers consume kafka messages from topics and initiate workflows.  The topic(s) may be specified as a string, regular expression, or an array of strings and regular expressions.
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
 ```
@@ -256,7 +256,7 @@ consumer(
 
 <TabItem value="confluentkafka" label="Confluent Kafka">
 
-DBOS receivers consume kafka messages from topics and initiate workflows.  The topics may be specified as a string, regular expression, or an array of strings and regular expressions.
+DBOS receivers consume kafka messages from topics and initiate workflows.  The topic(s) may be specified as a string, regular expression, or an array of strings and regular expressions.
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
 ```
@@ -295,10 +295,10 @@ consumer(
 SQS message receipt can be configured at the receiver, class, or method level, with method-level configuration items overriding the class- or receiver-level defaults.
 
 Configuration items are:
- - `client`: Fully configured SQS client, or a function to retrieve it
- - `workflowQueueName`: If specified, workflows for processing messages will be enqueued
+ - `client`: Fully configured SQS client, or a function to get it
+ - `workflowQueueName`: If specified, workflows for processing messages will be enqueued to the named queue
  - `queueUrl`: SQS Queue URL (or part) for receiving messages
- - `getWorkflowKey`: Optional function to calculate a [workflow key](./workflow-tutorial.md#workflow-ids-and-idempotency) from a message; if not specified the [message ID](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-message-identifiers.html) will be used
+ - `getWorkflowKey`: Optional function to calculate a [workflow key](./workflow-tutorial.md#workflow-ids-and-idempotency) from a message; if not specified, the [message ID](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-message-identifiers.html) will be used
 
 ```typescript
 interface SQSConfig {
