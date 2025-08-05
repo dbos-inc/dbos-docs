@@ -241,6 +241,60 @@ Similar to [`DBOS.get_event_async](contexts.md#get_event_async).
 **Returns:**
 - The value of the event published by `workflow_id` with name `key`, or `None` if the wait times out.
 
+### read_stream
+
+```python
+client.read_stream(
+    workflow_id: str,
+    key: str
+) -> Generator[Any, Any, None]
+```
+
+Read values from a stream as a generator.
+This function reads values from a stream identified by the workflow_id and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+Similar to [`DBOS.read_stream`](contexts.md#read_stream).
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+
+**Yields:**
+- Each value in the stream until the stream is closed
+
+**Example syntax:**
+```python
+for value in client.read_stream(workflow_id, "results"):
+    print(f"Received: {value}")
+```
+
+### read_stream_async
+
+```python
+client.read_stream_async(
+    workflow_id: str,
+    key: str
+) -> AsyncGenerator[Any, None]
+```
+
+Read values from a stream as an async generator.
+This function reads values from a stream identified by the workflow_id and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+Similar to [`DBOS.read_stream_async`](contexts.md#read_stream_async).
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+
+**Yields:**
+- Each value in the stream until the stream is closed
+
+**Example syntax:**
+```python
+async for value in client.read_stream_async(workflow_id, "results"):
+    print(f"Received: {value}")
+```
+
 ## Workflow Management Methods
 
 ### list_workflows
