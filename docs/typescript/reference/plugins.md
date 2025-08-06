@@ -21,7 +21,7 @@ The principle behind DBOS datasources is that DBOS and the datasource work toget
 1. App code calls a transaction function (which does not have to be registered in advance).  Generally, this call is made to the datasource instance, as it provides full type checking for the transaction configuration.
 2. DBOS runs its step wrapper first, consulting the system database, and skipping the step if it has already run.
 3. If the step should be run, DBOS calls the datasource to start a transaction.
-4. The datasource starts a transaction and calls the app's function, making the transactional datasource client available to that function via context.
+4. The datasource starts a transaction and calls the transaction function, making the transactional datasource client available to that function via context.
 5. Upon completion of the function, the datasource generally writes its own completion checkpoint before ending the transaction.  Including this checkpoint in the transaction ensures exactly-once processing of the transaction.
 6. Control returns to the DBOS step wrapper, which writes the step result to its system database and emits tracing information.
 7. The transaction's result is returned to the caller.
