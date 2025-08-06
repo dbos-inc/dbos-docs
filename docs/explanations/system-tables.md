@@ -71,3 +71,13 @@ Each entry represents a different event.
 - `workflow_uuid`: The ID of the workflow that published this event.
 - `key`: The serialized key of the event.
 - `value`: The serialized value of the event.
+
+### dbos.streams
+This table stores workflow streams.
+Each entry represents a different message in a stream.
+
+**Columns:**
+- `workflow_uuid`: The ID of the workflow that wrote this stream message.
+- `key`: The serialized key of the stream.
+- `value`: The serialized value of the message.
+- `offset`: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
