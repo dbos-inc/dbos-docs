@@ -353,14 +353,13 @@ Readers will see all values written to the stream from all tries of the step in 
 **Example syntax:**
 
 ```typescript
-class Example {
-  @DBOS.workflow()
-  static async producerWorkflow() {
-    await DBOS.writeStream("example_key", { step: 1, data: "value1" });
-    await DBOS.writeStream("example_key", { step: 2, data: "value2" });
-    await DBOS.closeStream("example_key"); // Signal completion
-  }
+async function producerWorkflowFunction() {
+  await DBOS.writeStream("example_key", { step: 1, data: "value1" });
+  await DBOS.writeStream("example_key", { step: 2, data: "value2" });
+  await DBOS.closeStream("example_key"); // Signal completion
 }
+
+const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 ```
 
 #### Reading from Streams
