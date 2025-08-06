@@ -10,20 +10,20 @@ Unless you intend to extend the DBOS Transact library, you can ignore this topic
 :::
 
 DBOS Transact for TypeScript currently provides two explicit extension mechanisms:
-* [Datasources](#datasources) integrate database clients, ORMs, or other resouces with the DBOS lifecycle and transaction functions.
-* [External Event Receivers](#event-receivers) integrate event receivers (pollers, inbound sockets, timers, etc.) with the DBOS lifecycle, and initate workflow functions upon receiving events.
+* [Datasources](#datasources) integrate database clients, ORMs, or other resources with the DBOS lifecycle and transaction functions.
+* [External Event Receivers](#event-receivers) integrate event receivers (pollers, inbound sockets, timers, etc.) with the DBOS lifecycle, and initiate workflow functions upon receiving events.
 
 ## Datasources
 
 ### Method Of Operation
 
 The principle behind DBOS datasources is that DBOS and the datasource work together to execute functions in a checkpointed, transactional context.
-1. App code calls a transaction function (which may or may not be registered in advance).  This call is made to the datasource instance, as it provides full type checking for the transaction configuration.
+1. App code calls a transaction function (which does not have to be registered in advance).  This call is made to the datasource instance, as it provides full type checking for the transaction configuration.
 2. DBOS runs its step wrapper first, consulting the system database, and skipping the step if it has already run.
 3. If the step should be run, DBOS calls the datasource to start a transaction.
-4. The datasource starts a transaction and calls the app's function, making the transactional datasource client available to that function via context.
+4. The datasource starts a transaction and calls the transaction function, making the transactional datasource client available to that function via context.
 5. Upon completion of the function, the datasource writes its own completion checkpoint before ending the transaction.  Including this checkpoint in the transaction ensures exactly-once processing of the transaction.
-6. Control returns to the DBOS step wrapper, which writes the step result to its system database and emits tracing information.
+6. Control returns to the DBOS step wrapper, which writes the step result to the system database and emits tracing information.
 7. The transaction's result is returned to the caller.
 
 To guarantee exactly-once execution, datasources must maintain a completion checkpoint table in the same database used by the transaction function.  This check may be implemented optimistically (by rolling back the transaction upon a checkpoint write conflict in step 5 above) or pessimistically (by querying the checkpoint table before calling the transaction function in step 4 above).
@@ -127,7 +127,7 @@ The following `DBOS.` static methods are used to collect registration informatio
 ```
 
 The parameters to these functions are:
- - `external`: A key that identifies the event reciever; this can be its constructor, an instance, or a name string.
+ - `external`: A key that identifies the event receiver; this can be its constructor, an instance, or a name string.
  - `cls`: For `associateClassWithInfo`, the constructor of the class receiving the registration
  - `func`: For `associateFunctionWithInfo` and `associateParamWithInfo`, the function receiving the registration information
  - `target`: For `associateFunctionWithInfo` and `associateParamWithInfo`, this is the name to assign to the function (if it does not already have one).  For `associateParamWithInfo`, `target` also specifies `param`, which is the parameter name or index number
