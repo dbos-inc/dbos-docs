@@ -18,7 +18,7 @@ DBOS Transact for TypeScript currently provides two explicit extension mechanism
 ### Method Of Operation
 
 The principle behind DBOS datasources is that DBOS and the datasource work together to execut functions in a checkpointed, transactional context.
-1. App code calls a transaction function (which may or may not be registered in advance).  Generally, this call is made to the datasource instance, as it provides full type checking for the transaction configuration.
+1. App code calls a transaction function (which does not have to be registered in advance).  Generally, this call is made to the datasource instance, as it provides full type checking for the transaction configuration.
 2. DBOS runs its step wrapper first, consulting the system database, and skipping the step if it has already run.
 3. If the step should be run, DBOS calls the datasource to start a transaction.
 4. The datasource starts a transaction and calls the app's function, making the transactional datasource client available to that function via context.
