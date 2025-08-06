@@ -17,14 +17,16 @@ DBOS Transact for TypeScript currently provides two explicit extension mechanism
 
 ### Method Of Operation
 
-The principle behind DBOS datasources is that DBOS and the datasource work together to execut functions in a checkpointed, transactional context.
-1. App code calls a transaction function (which may or may not be registered in advance).  Generally, this call is made to the datasource instance, as it provides full type checking for the transaction configuration.
+The principle behind DBOS datasources is that DBOS and the datasource work together to execute functions in a checkpointed, transactional context.
+1. App code calls a transaction function (which may or may not be registered in advance).  This call is made to the datasource instance, as it provides full type checking for the transaction configuration.
 2. DBOS runs its step wrapper first, consulting the system database, and skipping the step if it has already run.
 3. If the step should be run, DBOS calls the datasource to start a transaction.
 4. The datasource starts a transaction and calls the app's function, making the transactional datasource client available to that function via context.
-5. Upon completion of the function, the datasource generally writes its own completion checkpoint before ending the transaction.  Including this checkpoint in the transaction ensures exactly-once processing of the transaction.
+5. Upon completion of the function, the datasource writes its own completion checkpoint before ending the transaction.  Including this checkpoint in the transaction ensures exactly-once processing of the transaction.
 6. Control returns to the DBOS step wrapper, which writes the step result to its system database and emits tracing information.
 7. The transaction's result is returned to the caller.
+
+To guarantee exactly-once execution, datasources must maintain a completion checkpoint table in the same database used by the transaction function.  This check may be implemented optimistically (by rolling back the transaction upon a checkpoint write conflict in step 5 above) or pessimistically (by querying the checkpoint table before calling the transaction function in step 4 above).
 
 ### Datasource Interfaces
 
@@ -38,13 +40,13 @@ Datasource integration is based on 3 key interfaces:
 `DBOSDataSource` is the API for datasources to present to the application developer.  It provides a consistent, type-safe way to register and call transaction functions.
 `DBOSDataSource` is templatized on its `Config` type, which describes datasource-specific configuration for a transaction function.  `Config` typically covers transaction isolation, read-write/read-only, and the transaction's name.
 
- - `runTransaction` should run its callback, generally with the `runTransaction` function [below](#dbos-incdbos-sdkdatasource)
- - `registerTransaction` should register the provided function and return an invocation wrapper, generally via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
- - `transaction` should be a decorator that registers its target method and installs it, generally via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
+ - `runTransaction` should run its callback, via the `runTransaction` function [below](#dbos-incdbos-sdkdatasource)
+ - `registerTransaction` should register the provided function and return an invocation wrapper via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
+ - `transaction` should be a decorator that registers its target method and installs it via `registerTransaction` [below](#dbos-incdbos-sdkdatasource)
 
 In addition to implementing the `DBOSDataSource` interface, datasource classes should also provide:
  - A way to access the transactional client.  The preferred method is with an instance `get` method: `get client(): <client type>;`.
- - A function to install any necessary transaction tracking tables, particularly as a helper for use within the test environment.
+ - A function to install any necessary transaction checkpoint tables, particularly as a helper for use within the test environment.
 
 #### `DataSourceTransactionHandler`
 
@@ -56,12 +58,12 @@ A `DataSourceTransactionHandler` must be provided at datasource registration, an
 #### `@dbos-inc/dbos-sdk/datasource`
 The primary purpose of this submodule export is to provide the functions datasources need for registration and transaction invocation.
  - `registerDataSource`: Called by a datasource constructor to self-register the datasource with DBOS.
- - `registerTransaction`: Called by a datasource to create the transaction wrapper for a transaction function.  The returned function should be called in lieu of the original.  This is generally used within the datasource's `registerTransaction` method.
- - `runTransaction`: Called by a datasource to run code within a transaction, generally within the implementation of its `runTransaction` method.
+ - `registerTransaction`: Called by a datasource to create the transaction wrapper for a transaction function.  The returned function should be called in lieu of the original.  This is used within the datasource's `registerTransaction` method.
+ - `runTransaction`: Called by a datasource implementation of `runTransaction` to run code within a transaction step wrapper.
 
 This export also includes some utilities for datasource implementations based on Postgres:
  - `PGIsolationLevel` and `PGTransactionConfig`: These types should be used to represent transaction isolation settings in Postgres-based datasources.
- - `createTransactionCompletionSchemaPG` and `createTransactionCompletionTablePG`: These strings contain the SQL statements used to create the transaction completion checkpoint table and its schema.
+ - `createTransactionCompletionSchemaPG` and `createTransactionCompletionTablePG`: These strings contain the SQL statements used to create the transaction checkpoint table and its schema.
  - `getPGErrorCode`: Gets the Postgres code, if any, from an `Error`
  - `isPGRetriableTransactionError`: Transactions that throw errors are retried by datasources under some circumstances.  This function establishes whether a transaction is eligible to be retried based on the thrown error.
  - `isPGKeyConflictError`: Indicates if the error is a key conflict.  Such errors, if thrown from the transaction checkpoint insert, indicate that the transaction may already be complete.
