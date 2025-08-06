@@ -11,7 +11,7 @@ Unless you intend to extend the DBOS Transact library, you can ignore this topic
 
 DBOS Transact for TypeScript currently provides two explicit extension mechanisms:
 * [Datasources](#datasources) integrate database clients, ORMs, or other resources with the DBOS lifecycle and transaction functions.
-* [External Event Receivers](#event-receivers) integrate event receivers (pollers, inbound sockets, timers, etc.) with the DBOS lifecycle, and initate workflow functions upon receiving events.
+* [External Event Receivers](#event-receivers) integrate event receivers (pollers, inbound sockets, timers, etc.) with the DBOS lifecycle, and initiate workflow functions upon receiving events.
 
 ## Datasources
 
