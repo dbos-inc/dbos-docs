@@ -42,8 +42,8 @@ async function stepTwo() {
 }
 
 async function exampleFunction() {
-  await DBOS.runStep(stepOne);
-  await DBOS.runStep(stepTwo);
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
 }
 const exampleWorkflow = DBOS.registerWorkflow(exampleFunction);
 
@@ -93,12 +93,12 @@ async function stepTwo() {
 }
 
 async function exampleFunction() {
-  await DBOS.runStep(() => stepOne());
+  await DBOS.runStep(() => stepOne(), {name: "stepOne"});
   for (let i = 0; i < 5; i++) {
     console.log("Press Control + C to stop the app...");
     await DBOS.sleep(1000);
   }
-  await DBOS.runStep(() => stepTwo());
+  await DBOS.runStep(() => stepTwo(), {name: "stepTwo"});
 }
 const exampleWorkflow = DBOS.registerWorkflow(exampleFunction);
 
