@@ -324,6 +324,62 @@ All messages are persisted to the database, so if `send` completes successfully,
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
 
+## Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
+
+#### Writing to Streams
+
+You can write values to a stream from a workflow or its steps using [`DBOS.writeStream`](../reference/methods.md#dboswritestream).
+A workflow may have any number of streams, each identified by a unique key.
+
+```typescript
+DBOS.writeStream<T>(key: string, value: T): Promise<void>
+```
+
+When you are done writing to a stream, you should close it with [`DBOS.closeStream`](../reference/methods.md#dbosclosestream).
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```typescript
+DBOS.closeStream(key: string): Promise<void>
+```
+
+DBOS streams are immutable and append-only.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+Readers will see all values written to the stream from all tries of the step in the order in which they were written.
+
+**Example syntax:**
+
+```typescript
+class Example {
+  @DBOS.workflow()
+  static async producerWorkflow() {
+    await DBOS.writeStream("example_key", { step: 1, data: "value1" });
+    await DBOS.writeStream("example_key", { step: 2, data: "value2" });
+    await DBOS.closeStream("example_key"); // Signal completion
+  }
+}
+```
+
+#### Reading from Streams
+
+You can read values from a stream from anywhere using [`DBOS.readStream`](../reference/methods.md#dbosreadstream).
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
+
+```typescript
+DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+```
+
+**Example syntax:**
+
+```typescript
+for await (const value of DBOS.readStream(workflowID, "example_key")) {
+  console.log(`Received: ${JSON.stringify(value)}`);
+}
+```
+
 ## Workflow Guarantees
 
 Workflows provide the following reliability guarantees.

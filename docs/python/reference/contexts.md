@@ -276,7 +276,8 @@ DBOS.close_stream(
 ) -> None
 ```
 
-Close a stream.
+Close a stream identified by a key..
+After this is called, no more values can be written to the stream.
 Can only be called from within a workflow.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
 
@@ -314,6 +315,13 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Yields:**
 - Each value in the stream until the stream is closed
 
+**Example syntax:**
+
+```python
+for value in DBOS.read_stream(workflow_id, example_key):
+    print(f"Received: {value}")
+```
+
 ### read_stream_async
 
 ```python
@@ -331,6 +339,13 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+
+**Example syntax:**
+
+```python
+async for value in DBOS.read_stream_async(workflow_id, example_key):
+    print(f"Received: {value}")
+```
 
 **Yields:**
 - Each value in the stream until the stream is closed

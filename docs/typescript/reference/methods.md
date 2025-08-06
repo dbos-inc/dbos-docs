@@ -175,6 +175,66 @@ DBOS.randomUUID(): Promise<string>
 
 Returns a random UUID, in the manner of `node:crypto`, checkpointed as a step.
 
+### DBOS.writeStream
+
+```typescript
+DBOS.writeStream<T>(
+  key: string, 
+  value: T
+): Promise<void>
+```
+
+Write a value to a stream.
+A workflow may have any number of streams, each identified by a unique key.
+Can only be called from within a workflow or step.
+
+**Parameters:**
+- **key**: The stream key/name within the workflow.
+- **value**: A serializable value to write to the stream.
+
+### DBOS.closeStream
+
+```typescript
+DBOS.closeStream(
+  key: string
+): Promise<void>
+```
+
+Close a stream identified by a key..
+After this is called, no more values can be written to the stream.
+Can only be called from within a workflow.
+
+**Parameters:**
+- **key**: The stream key/name within the workflow.
+
+### DBOS.readStream
+
+```typescript
+DBOS.readStream<T>(
+  workflowID: string, 
+  key: string
+): AsyncGenerator<T, void, unknown>
+```
+
+Read values from a stream as an async generator.
+This function reads values from a stream identified by the workflowID and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+
+**Parameters:**
+- **workflowID**: The workflow instance ID that owns the stream.
+- **key**: The stream key/name within the workflow.
+
+**Returns:**
+- An async generator that yields each value in the stream until the stream is closed.
+
+**Example syntax:**
+
+```typescript
+for await (const value of DBOS.readStream(workflowID, "example_key")) {
+  console.log(`Received: ${JSON.stringify(value)}`);
+}
+```
+
 ### DBOS.retrieveWorkflow
 
 ```typescript
