@@ -125,7 +125,7 @@ The following `DBOS.` static methods are used to collect registration informatio
 ```
 
 The parameters to these functions are:
- - `external`: A key that identifies the event reciever; this can be its constructor, an instance, or a name string.
+ - `external`: A key that identifies the event receiver; this can be its constructor, an instance, or a name string.
  - `cls`: For `associateClassWithInfo`, the constructor of the class receiving the registration
  - `func`: For `associateFunctionWithInfo` and `associateParamWithInfo`, the function receiving the registration information
  - `target`: For `associateFunctionWithInfo` and `associateParamWithInfo`, this is the name to assign to the function (if it does not already have one).  For `associateParamWithInfo`, `target` also specifies `param`, which is the parameter name or index number
