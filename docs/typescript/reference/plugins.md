@@ -170,5 +170,66 @@ In response to events, receivers should take one of the following approaches to 
  - For synchronous calls, event receivers should call the `invoke` method of `methodReg`.  `invoke` ensures that any DBOS wrappers are executed in addition to the function's code.
  - For starting workflows, event receivers should call `DBOS.startWorkflow` with `methodReg.registeredFunction` as the workflow.  The workflow ID, queue, and other parameters may be specified to `startWorkflow`.
 
+### Keeping State In The System Database
+An event receiver may keep state in the system database.  This state may be helpful for backfilling events that came in while the event receiver was not running.  This state uses a key/value store design, where the event receiver may use [`DBOS.upsertEventDispatchState`](#dbosupserteventdispatchstate) to insert/update the value associated with a key, and [`getEventDispatchState`](#dbosgeteventdispatchstate) to retrieve the value associated with a key.  This implementation also supports an update time or update sequence; updates made with lower sequence numbers or times are discared if the existing entry is marked with a later sequence / time.
+
+Stored state follows the `DBOSExternalState` interface:
+```typescript
+export interface DBOSExternalState {
+  /** Name of event receiver service */
+  service: string;
+  /** Fully qualified function name for which state is kept */
+  workflowFnName: string;
+  /** subkey within the service+workflowFnName */
+  key: string;
+  /** Value kept for the service+workflowFnName+key combination */
+  value?: string;
+  /** Updated time (used to version the value) */
+  updateTime?: number;
+  /** Updated sequence number (used to version the value) */
+  updateSeq?: bigint;
+}
+```
+
+The key consists of:
+* `service`: `service` should be unique to the event receiver keeping state, to separate from other table users
+* `workflowFnName`: `workflowFnName` workflow function name should be the fully qualified / unique function name dispatched, to keep state separate by event function
+* `key`: The `key` field allows multiple records per service / workflow function
+
+The value stored for each `service`/`workflowFnName`/`key` combination includes:
+* `value`: `value` is a string value.  JSON can be used to encode more complex values.
+* `updateTime`: The time `value` was set.  Upserts of records with an earlier `updateTime` will have no effect on the stored state.
+* `updateSeq`: An integer number indicating when the value was set.  Upserts of records with a smaller `updateSeq` will have no effect on the stored state.
+
+#### `DBOS.upsertEventDispatchState`
+```typescript
+upsertEventDispatchState(state: DBOSExternalState): Promise<DBOSExternalState>;
+```
+`upsertEventDispatchState` inserts a value associated with a key.  If a value is already associated with the specified key, the stored value will be updated, unless `updateTime` or `updateSeq` is provided and is less that what is already stored in the system database.
+
+The function return value indicates the contents of the system database for the specified key.  This is useful to detect if a more recent record is already stored in the database.
+
+#### `DBOS.getEventDispatchState`
+```typescript
+getEventDispatchState(service: string, workflowFnName: string, key: string)
+  : Promise<DBOSExternalState | undefined>;
+```
+
+Retrieve the value set for an event receiver's key, as stored by [`upsertEventDispatchState`](#dbosupserteventdispatchstate) above.  If no value has been associated with the combination of `service`/`workflowFnName`/`key` above, then `undefined` is returned.
+
+### Setting Authenticated User And Roles
+When dispatching events and requests, it is possible to set the authenticated user and roles using `DBOS.withAuthedContext`.  This function sets the context for the duration of its `callback`:
+```typescript
+// Set the authenticated user, and roles allowed by the authentication system for the scope of the callback() function
+DBOS.withAuthedContext<R>(authedUser: string, authedRoles: string[], callback: () => Promise<R>): Promise<R>
+```
+
+In the following example, the `Secured.workflow` function is executed for authenticated user "joe", with role "user". 
+````typescript
+  const hijoe = await DBOS.withAuthedContext('joe', ['user'], async() => {
+    return await Secured.workflow('args go here');
+  });
+````
+
 ### Event Receiver Examples
 The best examples are found in the DBOS [github repository](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages).  Event receiver names end with `-receive` or `-serve`, such as [`kafkajs-receive`](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/kafkajs-receive) and [`koa-serve`](https://github.com/dbos-inc/dbos-transact-ts/tree/main/packages/koa-serve)
