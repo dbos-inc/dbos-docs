@@ -1,6 +1,6 @@
 ---
 sidebar_position: 65
-title: Messages (Kafka, SQS)
+title: Kafka & SQS Integration
 ---
 
 In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) or [Simple Queue Service (SQS)](https://aws.amazon.com/sqs/) messages with exactly-once semantics.
