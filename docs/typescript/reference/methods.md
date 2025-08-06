@@ -200,7 +200,7 @@ DBOS.closeStream(
 ): Promise<void>
 ```
 
-Close a stream identified by a key..
+Close a stream identified by a key.
 After this is called, no more values can be written to the stream.
 Can only be called from within a workflow.
 

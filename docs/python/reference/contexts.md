@@ -276,7 +276,7 @@ DBOS.close_stream(
 ) -> None
 ```
 
-Close a stream identified by a key..
+Close a stream identified by a key.
 After this is called, no more values can be written to the stream.
 Can only be called from within a workflow.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
