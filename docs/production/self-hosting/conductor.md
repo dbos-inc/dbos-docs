@@ -84,8 +84,8 @@ DBOS(config=config, conductor_key=conductor_key)
 
 ```javascript
 DBOS.setConfig({
-"name": process.env.DBOS_APPLICATION_NAME,
-"systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+    "name": process.env.DBOS_APPLICATION_NAME,
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
