@@ -62,3 +62,34 @@ When you restart an executor, it generates a new ID.
 <img src={require('@site/static/img/conductor/app-page.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
 Conductor uses a WebSocket-based protocol to exchange workflow metadata and commands with your application.  An application is shown as _available_ in Conductor when at least one of its processes is connected.  Conductor has no access to your application's database or other private data.  As a result, workflow-related features are only available while your application is connected to Conductor over this metadata-only connection.
+
+:::tip
+For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
+For example, you should have separate dev, staging, and prod Conductor apps.
+To facilitate this, pass in your application name as an environment variable, for example:
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "database_url": os.environ.get("DBOS_APPLICATION_NAME"),
+}
+conductor_key=os.environ.get("DBOS_CONDUCTOR_KEY", None)
+DBOS(config=config, conductor_key=conductor_key)
+```
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```javascript
+DBOS.setConfig({
+    "name": "dbos-node-starter",
+    "systemDatabaseUrl": process.env.DBOS_APPLICATION_NAME,
+});
+const conductorKey = process.env.DBOS_CONDUCTOR_KEY
+await DBOS.launch({conductorKey})
+```
+</TabItem>
+</Tabs>
+:::
