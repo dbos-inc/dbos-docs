@@ -73,8 +73,8 @@ To facilitate this, pass in your application name as an environment variable, fo
 
 ```python
 config: DBOSConfig = {
-    "name": "dbos-starter",
-    "database_url": os.environ.get("DBOS_APPLICATION_NAME"),
+    "name": os.environ.get("DBOS_APPLICATION_NAME"),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 conductor_key=os.environ.get("DBOS_CONDUCTOR_KEY", None)
 DBOS(config=config, conductor_key=conductor_key)
@@ -84,8 +84,8 @@ DBOS(config=config, conductor_key=conductor_key)
 
 ```javascript
 DBOS.setConfig({
-    "name": "dbos-node-starter",
-    "systemDatabaseUrl": process.env.DBOS_APPLICATION_NAME,
+"name": process.env.DBOS_APPLICATION_NAME,
+"systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
