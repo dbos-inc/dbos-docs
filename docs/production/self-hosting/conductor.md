@@ -65,7 +65,7 @@ Conductor uses a WebSocket-based protocol to exchange workflow metadata and comm
 
 :::tip
 For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
-For example, you should have separate dev, staging, and prod Conductor apps.
+For example, you may want to have separate dev, staging, and prod Conductor apps.
 To facilitate this, pass in your application name as an environment variable, for example:
 
 <Tabs groupId="language" queryString="language">
