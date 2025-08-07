@@ -126,7 +126,7 @@ By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, this command can be run with a privileged user to create all DBOS database tables.
 
-After creating the DBOS database tables with this command, a DBOS application can run without privilege, requiring only access to the DBOS schema in the application and system databases.
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
 Use the `-r` flag to grant a role access to that schema.
 
 **Arguments:**
