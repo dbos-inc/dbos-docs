@@ -8,6 +8,54 @@ All are accessed through the syntax `DBOS.<method>` and can only be used once a 
 
 ## Context Methods
 
+### start_workflow
+
+```python
+DBOS.start_workflow(
+    func: Workflow[P, R],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Start a workflow in the background and return a [handle](./workflow_handles.md) to it.
+The `DBOS.start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+**Example syntax:**
+
+```python
+@DBOS.workflow()
+def example_workflow(var1: str, var2: str):
+    DBOS.logger.info("I am a workflow")
+
+# Start example_workflow in the background
+handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
+```
+
+### start_workflow_async
+
+```python
+DBOS.start_workflow_async(
+    func: Workflow[P, Coroutine[Any, Any, R]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
+```
+
+Start an asynchronous workflow in the background and return a [handle](./workflow_handles.md) to it.
+The `DBOS.start_workflow_async` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+**Example syntax:**
+
+```python
+@DBOS.workflow()
+async def example_workflow(var1: str, var2: str):
+    DBOS.logger.info("I am a workflow")
+
+# Start example_workflow in the background
+handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
+```
+
 ### send
 
 ```python
@@ -192,53 +240,115 @@ DBOS.retrieve_workflow(
 
 Coroutine version of [`DBOS.retrieve_workflow`](#retrieve_workflow), retrieving an async workflow handle.
 
-### start_workflow
+### write_stream
 
 ```python
-DBOS.start_workflow(
-    func: Workflow[P, R],
-    *args: P.args,
-    **kwargs: P.kwargs,
-) -> WorkflowHandle[R]
+DBOS.write_stream(
+    key: str,
+    value: Any
+) -> None
 ```
 
-Start a workflow in the background and return a [handle](./workflow_handles.md) to it.
-The `DBOS.start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+Write a value to a stream.
+Can only be called from within a workflow or its steps.
+The `write_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`write_stream_async`](#write_stream_async) should be used instead.
+
+**Parameters:**
+- `key`: The stream key / name within the workflow
+- `value`: A serializable value to write to the stream
+
+### write_stream_async
+
+```python
+DBOS.write_stream_async(
+    key: str,
+    value: Any
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`write_stream`](#write_stream)
+
+### close_stream
+
+```python
+DBOS.close_stream(
+    key: str
+) -> None
+```
+
+Close a stream identified by a key.
+After this is called, no more values can be written to the stream.
+Can only be called from within a workflow.
+The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
+
+**Parameters:**
+- `key`: The stream key / name within the workflow
+
+### close_stream_async
+
+```python
+DBOS.close_stream_async(
+    key: str
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`close_stream`](#close_stream)
+
+### read_stream
+
+```python
+DBOS.read_stream(
+    workflow_id: str,
+    key: str
+) -> Generator[Any, Any, None]
+```
+
+Read values from a stream as a generator.
+
+This function reads values from a stream identified by the workflow_id and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+
+**Yields:**
+- Each value in the stream until the stream is closed
 
 **Example syntax:**
 
 ```python
-@DBOS.workflow()
-def example_workflow(var1: str, var2: str):
-    DBOS.logger.info("I am a workflow")
-
-# Start example_workflow in the background
-handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
+for value in DBOS.read_stream(workflow_id, example_key):
+    print(f"Received: {value}")
 ```
 
-### start_workflow_async
+### read_stream_async
 
 ```python
-DBOS.start_workflow_async(
-    func: Workflow[P, Coroutine[Any, Any, R]],
-    *args: P.args,
-    **kwargs: P.kwargs,
-) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
+DBOS.read_stream_async(
+    workflow_id: str,
+    key: str
+) -> AsyncGenerator[Any, None]
 ```
 
-Start an asynchronous workflow in the background and return a [handle](./workflow_handles.md) to it.
-The `DBOS.start_workflow_async` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+Read values from a stream as an async generator.
+
+This function reads values from a stream identified by the workflow_id and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
 
 **Example syntax:**
 
 ```python
-@DBOS.workflow()
-async def example_workflow(var1: str, var2: str):
-    DBOS.logger.info("I am a workflow")
-
-# Start example_workflow in the background
-handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
+async for value in DBOS.read_stream_async(workflow_id, example_key):
+    print(f"Received: {value}")
 ```
+
+**Yields:**
+- Each value in the stream until the stream is closed
 
 ## Workflow Management Methods
 
