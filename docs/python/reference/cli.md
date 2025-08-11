@@ -125,12 +125,15 @@ Create the DBOS system database and internal tables.
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, this command can be run with a privileged user to create all DBOS database tables.
-Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
+
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the `-r` flag to grant a role access to that schema.
 
 **Arguments:**
 
 - `-D, --db-url`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/transaction-tutorial.md) run. If you are not using DBOS transactions, set this to the same connection string as your system database.
 - `-s, --sys-db-url`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
+- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your application and system databases.
 
 ### dbos start
 

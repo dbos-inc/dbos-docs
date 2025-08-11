@@ -274,6 +274,66 @@ All messages are persisted to the database, so if `send` completes successfully,
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once execution.
 
+## Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
+
+#### Writing to Streams
+
+You can write values to a stream from a workflow or its steps using [`DBOS.write_stream`](../reference/contexts.md#write_stream).
+A workflow may have any number of streams, each identified by a unique key.
+
+```python
+DBOS.write_stream(
+    key: str, 
+    value: Any
+) -> None:
+```
+
+When you are done writing to a stream, you should close it with [`DBOS.close_stream`](../reference/contexts.md#close_stream).
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```python
+DBOS.close_stream(
+    key: str
+) -> None
+```
+
+DBOS streams are immutable and append-only:.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+Readers will see all values written to the stream from all tries of the step in the order in which they were written.
+
+**Example syntax:**
+
+```python
+@DBOS.workflow()
+def producer_workflow():
+    DBOS.write_stream(example_key, {"step": 1, "data": "value1"})
+    DBOS.write_stream(example_key, {"step": 2, "data": "value2"})
+    DBOS.close_stream(example_key)  # Signal completion
+```
+
+#### Reading from Streams
+
+You can read values from a stream from anywhere using [`DBOS.read_stream`](../reference/contexts.md#read_stream).
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
+
+```python
+DBOS.read_stream(
+    workflow_id: str,
+    key: str
+) -> Generator[Any, Any, None]
+```
+
+**Example syntax:**
+
+```python
+for value in DBOS.read_stream(workflow_id, example_key):
+    print(f"Received: {value}")
+```
+
 ## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
