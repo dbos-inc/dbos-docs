@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.b8436145.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b6d79c1c.js" defer="defer"></script>
 <script src="/assets/js/main.d1843b1f.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -121,12 +121,14 @@ A JSON-formatted list of <a href="/python/reference/contexts#workflow-status">wo
 <p>Create the DBOS system database and internal tables.
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, this command can be run with a privileged user to create all DBOS database tables.
-Then, a DBOS application can run without privilege (requiring only access to the application and system databases).</p>
+In that case, this command can be run with a privileged user to create all DBOS database tables.</p>
+<p>After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the <code>-r</code> flag to grant a role access to that schema.</p>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li><code>-D, --db-url</code>: A connection string for your DBOS application database, in which DBOS <a href="/python/tutorials/transaction-tutorial">transactions</a> run. If you are not using DBOS transactions, set this to the same connection string as your system database.</li>
 <li><code>-s, --sys-db-url</code>: A connection string for your DBOS <a href="/explanations/system-tables">system database</a>, in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.</li>
+<li><code>-r, --app-role</code>: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your application and system databases.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbos-start">dbos start<a href="#dbos-start" class="hash-link" aria-label="Direct link to dbos start" title="Direct link to dbos start">​</a></h3>
 <p>Start your DBOS application by executing the <code>start</code> command defined in <a href="/python/reference/configuration#runtime-section"><code>dbos-config.yaml</code></a>.

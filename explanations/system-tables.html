@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.b8436145.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b6d79c1c.js" defer="defer"></script>
 <script src="/assets/js/main.d1843b1f.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -28,29 +28,29 @@ For example, if your application is named <code>dbos_app_starter</code>, your sy
 Each row represents a different workflow execution.</p>
 <p><strong>Columns:</strong></p>
 <ul>
-<li><code>workflow_uuid</code>: The unique identifier of the workflow execution.</li>
-<li><code>status</code>: The status of the workflow execution. One of <code>PENDING</code>, <code>SUCCESS</code>, <code>ERROR</code>, <code>MAX_RECOVERY_ATTEMPTS_EXCEEDED</code>, or <code>CANCELLED</code>.</li>
-<li><code>name</code>: The name (in Python, fully qualified name) of the workflow function.</li>
-<li><code>authenticated_user</code>: The user who ran the workflow. Empty string if not set.</li>
-<li><code>assumed_role</code>: The role used to run this workflow.  Empty string if authorization is not required.</li>
-<li><code>authenticated_roles</code>: All roles the authenticated user has, if any.</li>
-<li><code>request</code>: The serialized HTTP Request that triggered this workflow, if any.</li>
-<li><code>inputs</code>: The serialized inputs of the workflow execution.</li>
-<li><code>output</code>: The serialized workflow output, if any.</li>
-<li><code>error</code>: The serialized error thrown by the workflow, if any.</li>
-<li><code>created_at</code>: The epoch timestamp of when this workflow was created (enqueued or started).</li>
-<li><code>updated_at</code>: The latest epoch timestamp when this workflow status was updated.</li>
-<li><code>application_version</code>: The application version of this workflow code.</li>
-<li><code>class_name</code>: The class name of the workflow function.</li>
-<li><code>config_name</code>: The name of the configured instance of this workflow, if any.</li>
-<li><code>recovery_attempts</code>: The number of attempts (so far) to recovery this workflow.</li>
-<li><code>queue_name</code>: If this workflow is or was enqueued, the name of the queue.</li>
-<li><code>executor_id</code>: The ID of the executor that ran this workflow.</li>
-<li><code>workflow_timeout_ms</code>: The timeout of the workflow, if specified.</li>
-<li><code>workflow_deadline_epoch_ms</code>: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).</li>
-<li><code>started_at_epoch_ms</code>: If this workflow was enqueued, the time at which it was dequeued and began excution.</li>
-<li><code>deduplication_id</code>: The deduplication key for this workflow, if any.</li>
-<li><code>priority</code>: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.</li>
+<li><strong>workflow_uuid</strong>: The unique identifier of the workflow execution.</li>
+<li><strong>status</strong>: The status of the workflow execution. One of <code>PENDING</code>, <code>SUCCESS</code>, <code>ERROR</code>, <code>MAX_RECOVERY_ATTEMPTS_EXCEEDED</code>, or <code>CANCELLED</code>.</li>
+<li><strong>name</strong>: The name (in Python, fully qualified name) of the workflow function.</li>
+<li><strong>authenticated_user</strong>: The user who ran the workflow. Empty string if not set.</li>
+<li><strong>assumed_role</strong>: The role used to run this workflow.  Empty string if authorization is not required.</li>
+<li><strong>authenticated_roles</strong>: All roles the authenticated user has, if any.</li>
+<li><strong>request</strong>: The serialized HTTP Request that triggered this workflow, if any.</li>
+<li><strong>inputs</strong>: The serialized inputs of the workflow execution.</li>
+<li><strong>output</strong>: The serialized workflow output, if any.</li>
+<li><strong>error</strong>: The serialized error thrown by the workflow, if any.</li>
+<li><strong>created_at</strong>: The epoch timestamp of when this workflow was created (enqueued or started).</li>
+<li><strong>updated_at</strong>: The latest epoch timestamp when this workflow status was updated.</li>
+<li><strong>application_version</strong>: The application version of this workflow code.</li>
+<li><strong>class_name</strong>: The class name of the workflow function.</li>
+<li><strong>config_name</strong>: The name of the configured instance of this workflow, if any.</li>
+<li><strong>recovery_attempts</strong>: The number of attempts (so far) to recovery this workflow.</li>
+<li><strong>queue_name</strong>: If this workflow is or was enqueued, the name of the queue.</li>
+<li><strong>executor_id</strong>: The ID of the executor that ran this workflow.</li>
+<li><strong>workflow_timeout_ms</strong>: The timeout of the workflow, if specified.</li>
+<li><strong>workflow_deadline_epoch_ms</strong>: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).</li>
+<li><strong>started_at_epoch_ms</strong>: If this workflow was enqueued, the time at which it was dequeued and began excution.</li>
+<li><strong>deduplication_id</strong>: The deduplication key for this workflow, if any.</li>
+<li><strong>priority</strong>: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosoperation_outputs">dbos.operation_outputs<a href="#dbosoperation_outputs" class="hash-link" aria-label="Direct link to dbos.operation_outputs" title="Direct link to dbos.operation_outputs">​</a></h3>
 <p>This table stores the outputs of workflow steps.
@@ -58,32 +58,42 @@ Each row represents a different workflow step execution.
 Executions of DBOS methods like <code>DBOS.sleep</code> and <code>DBOS.send</code> are also recorded here as steps, as is enqueueing or starting a child workflow.</p>
 <p><strong>Columns:</strong></p>
 <ul>
-<li><code>workflow_uuid</code>: The unique identifier of the workflow execution this function belongs to.</li>
-<li><code>function_id</code>: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.</li>
-<li><code>function_name</code>: The name of the step.</li>
-<li><code>output</code>: The serialized step output, if any.</li>
-<li><code>error</code>: The serialized error thrown by the step, if any.</li>
-<li><code>child_workflow_id</code>: If the step starts a new child workflow, its ID.</li>
+<li><strong>workflow_uuid</strong>: The unique identifier of the workflow execution this function belongs to.</li>
+<li><strong>function_id</strong>: The monotonically increasing ID of the step (starts from 0) within the workflow, based on the order in which steps execute.</li>
+<li><strong>function_name</strong>: The name of the step.</li>
+<li><strong>output</strong>: The serialized step output, if any.</li>
+<li><strong>error</strong>: The serialized error thrown by the step, if any.</li>
+<li><strong>child_workflow_id</strong>: If the step starts a new child workflow, its ID.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosnotifications">dbos.notifications<a href="#dbosnotifications" class="hash-link" aria-label="Direct link to dbos.notifications" title="Direct link to dbos.notifications">​</a></h3>
 <p>This table stores workflow messages/notifications.
 Each entry represents a different message.</p>
 <p><strong>Columns:</strong></p>
 <ul>
-<li><code>destination_uuid</code>: The ID of the workflow to which the message is sent.</li>
-<li><code>topic</code>: The topic to which the message is sent.</li>
-<li><code>message</code>: The serialized contents of the message.</li>
-<li><code>created_at_epoch_ms</code>: The epoch timestamp when this message was created.</li>
-<li><code>message_uuid</code>: The unique ID of the message.</li>
+<li><strong>destination_uuid</strong>: The ID of the workflow to which the message is sent.</li>
+<li><strong>topic</strong>: The topic to which the message is sent.</li>
+<li><strong>message</strong>: The serialized contents of the message.</li>
+<li><strong>created_at_epoch_ms</strong>: The epoch timestamp when this message was created.</li>
+<li><strong>message_uuid</strong>: The unique ID of the message.</li>
 </ul>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosworkflow_events">dbos.workflow_events<a href="#dbosworkflow_events" class="hash-link" aria-label="Direct link to dbos.workflow_events" title="Direct link to dbos.workflow_events">​</a></h3>
 <p>This table stores workflow events.
 Each entry represents a different event.</p>
 <p><strong>Columns:</strong></p>
 <ul>
-<li><code>workflow_uuid</code>: The ID of the workflow that published this event.</li>
-<li><code>key</code>: The serialized key of the event.</li>
-<li><code>value</code>: The serialized value of the event.</li>
-</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/explanations/how-workflows-work"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">How Workflows Work</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/faq"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Troubleshooting &amp; FAQ</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#system-tables" class="table-of-contents__link toc-highlight">System Tables</a><ul><li><a href="#dbosworkflow_status" class="table-of-contents__link toc-highlight">dbos.workflow_status</a></li><li><a href="#dbosoperation_outputs" class="table-of-contents__link toc-highlight">dbos.operation_outputs</a></li><li><a href="#dbosnotifications" class="table-of-contents__link toc-highlight">dbos.notifications</a></li><li><a href="#dbosworkflow_events" class="table-of-contents__link toc-highlight">dbos.workflow_events</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Follow Us</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://www.linkedin.com/company/dbos-inc/" target="_blank" rel="noopener noreferrer" class="footer__link-item">LinkedIn<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://bsky.app/profile/dbos.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Bluesky<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://x.com/DBOS_Inc" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter/X<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Learn More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://www.dbos.dev/blog" target="_blank" rel="noopener noreferrer" class="footer__link-item">Blog<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://www.dbos.dev/about" target="_blank" rel="noopener noreferrer" class="footer__link-item">About<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Questions or Comments?</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://discord.gg/fMwQjeW5zg" target="_blank" rel="noopener noreferrer" class="footer__link-item">Chat with us on Discord<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="mailto:contact@dbos.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Write to us at contact@dbos.dev<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="margin-bottom--sm"><a href="https://dbos.dev" rel="noopener noreferrer" class="footerLogoLink_BH7S"><img src="/img/dbos-logo.png" alt="DBOS Logo" class="footer__logo themedComponent_mlkZ themedComponent--light_NVdE" width="100"><img src="/img/dbos-logo-dark.png" alt="DBOS Logo" class="footer__logo themedComponent_mlkZ themedComponent--dark_xIcU" width="100"></a></div><div class="footer__copyright">Copyright © 2025 DBOS, Inc. | <a href="https://www.dbos.dev/privacy" target="_blank">Privacy Policy</a></div></div></div></footer></div>
+<li><strong>workflow_uuid</strong>: The ID of the workflow that published this event.</li>
+<li><strong>key</strong>: The serialized key of the event.</li>
+<li><strong>value</strong>: The serialized value of the event.</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="dbosstreams">dbos.streams<a href="#dbosstreams" class="hash-link" aria-label="Direct link to dbos.streams" title="Direct link to dbos.streams">​</a></h3>
+<p>This table stores workflow streams.
+Each entry represents a different message in a stream.</p>
+<p><strong>Columns:</strong></p>
+<ul>
+<li><strong>workflow_uuid</strong>: The ID of the workflow that wrote this stream message.</li>
+<li><strong>key</strong>: The serialized key of the stream.</li>
+<li><strong>value</strong>: The serialized value of the message.</li>
+<li><strong>offset</strong>: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).</li>
+</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/explanations/how-workflows-work"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">How Workflows Work</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/faq"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Troubleshooting &amp; FAQ</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#system-tables" class="table-of-contents__link toc-highlight">System Tables</a><ul><li><a href="#dbosworkflow_status" class="table-of-contents__link toc-highlight">dbos.workflow_status</a></li><li><a href="#dbosoperation_outputs" class="table-of-contents__link toc-highlight">dbos.operation_outputs</a></li><li><a href="#dbosnotifications" class="table-of-contents__link toc-highlight">dbos.notifications</a></li><li><a href="#dbosworkflow_events" class="table-of-contents__link toc-highlight">dbos.workflow_events</a></li><li><a href="#dbosstreams" class="table-of-contents__link toc-highlight">dbos.streams</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Follow Us</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://www.linkedin.com/company/dbos-inc/" target="_blank" rel="noopener noreferrer" class="footer__link-item">LinkedIn<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://bsky.app/profile/dbos.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Bluesky<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://x.com/DBOS_Inc" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter/X<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Learn More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://www.dbos.dev/blog" target="_blank" rel="noopener noreferrer" class="footer__link-item">Blog<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="https://www.dbos.dev/about" target="_blank" rel="noopener noreferrer" class="footer__link-item">About<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Questions or Comments?</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://discord.gg/fMwQjeW5zg" target="_blank" rel="noopener noreferrer" class="footer__link-item">Chat with us on Discord<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li><li class="footer__item"><a href="mailto:contact@dbos.dev" target="_blank" rel="noopener noreferrer" class="footer__link-item">Write to us at contact@dbos.dev<svg width="13.5" height="13.5" aria-hidden="true" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="margin-bottom--sm"><a href="https://dbos.dev" rel="noopener noreferrer" class="footerLogoLink_BH7S"><img src="/img/dbos-logo.png" alt="DBOS Logo" class="footer__logo themedComponent_mlkZ themedComponent--light_NVdE" width="100"><img src="/img/dbos-logo-dark.png" alt="DBOS Logo" class="footer__logo themedComponent_mlkZ themedComponent--dark_xIcU" width="100"></a></div><div class="footer__copyright">Copyright © 2025 DBOS, Inc. | <a href="https://www.dbos.dev/privacy" target="_blank">Privacy Policy</a></div></div></div></footer></div>
 </body>
 </html>

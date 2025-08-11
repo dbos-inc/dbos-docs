@@ -38,6 +38,7 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+    readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -181,6 +182,32 @@ Example:
 ```ts
 const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
+```
+
+#### `readStream`
+
+```typescript
+readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+```
+
+Read values from a stream as an async generator from outside the DBOS application.
+This function reads values from a stream identified by the workflowID and key,
+yielding each value in order until the stream is closed or the workflow terminates.
+Similar to [`DBOS.readStream`](./methods.md#dbosreadstream).
+
+**Parameters:**
+- **workflowID**: The workflow instance ID that owns the stream.
+- **key**: The stream key/name within the workflow.
+
+**Returns:**
+- An async generator that yields each value in the stream until the stream is closed.
+
+**Example:**
+
+```ts
+for await (const value of client.readStream(workflowID, "example_key")) {
+  console.log(`Received: ${JSON.stringify(value)}`);
+}
 ```
 
 ### Workflow Inspection
