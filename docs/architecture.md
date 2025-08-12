@@ -83,12 +83,27 @@ All workflows are tagged with the application version on which they started.
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
 To safely recover workflows started on an older version of your code, you should start a process running that code version.
-Alternatively, you can use the [_workflow fork_](./production/self-hosting/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
+Alternatively, you can use the [workflow fork](./production/self-hosting/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
 For more information, see the [workflow recovery documentation](./production/self-hosting/workflow-recovery.md).
+
+## Durable Queues
+
+One powerful feature of DBOS is that you can **enqueue** workflows for later execution.
+You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
+
+When you enqueue a workflow, it may be executed on any of your application's servers.
+All DBOS applications periodically poll their queues to find and execute new work.
+This is in contrast to other workflow and queue services that have separate "worker servers" that can execute queued tasks&mdash;in DBOS, all of your application servers act as queue workers.
+
+To help you operate at scale, DBOS queues provide **flow control**.
+You can customize the rate and concurrency at which workflows are dequeued and executed.
+For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows of that queue may execute concurrently on that server.
+For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md)).
 
 ## Operating DBOS in Production with Conductor
 
-DBOS Conductor is an optional management service that helps you operate DBOS applications in production.
+The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
+DBOS Conductor is an optional management service that helps you operate DBOS applications.
 It provides:
 
 - [**Distributed workflow recovery**](./production/self-hosting//workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
