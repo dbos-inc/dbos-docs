@@ -75,6 +75,19 @@ Each application has its own isolated system database on the same physical Postg
 
 <img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
 
+## Application and Workflow Versions
+
+Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
+To guard against this, DBOS _versions_ applications and their workflows.
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through configuration).
+All workflows are tagged with the application version on which they started.
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents unsafe recovery of workflows that depend on different code.
+To safely recover workflows started on an older version of your code, you should start a process running that code version.
+Alternatively, you can use the [_workflow fork_](./production/self-hosting/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
+For more information, see the [workflow recovery documentation](./production/self-hosting/workflow-recovery.md).
+
 ## Operating DBOS in Production with Conductor
 
 DBOS Conductor is an optional management service that helps you operate DBOS applications in production.
