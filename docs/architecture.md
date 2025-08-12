@@ -1,8 +1,9 @@
 ---
 hide_table_of_contents: false
-hide_title: false
 title: DBOS Architecture
 ---
+
+## DBOS Architecture
 
 DBOS provides a lightweight library for durable workflows built on top of Postgres.
 Architecturally, an application built with DBOS looks like this:
@@ -18,8 +19,8 @@ If your program fails, crashes, or is interrupted, DBOS uses those checkpoints t
 
 ## Comparison to External Workflow Orchestrators
 
-The DBOS architecture is radically simpler than he architecture of other workflow systems such as Temporal, Airflow or AWS Step Functions.
-These systems implement workflows via **external orchestration**.
+DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
+All these systems implement workflows via **external orchestration**.
 At a high-level, their architectures look like this:
 
 <img src={require('@site/static/img/architecture/external-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
@@ -34,9 +35,7 @@ While DBOS can be installed into an existing application as a library, adding an
 First, you must move all workflow and step code from application servers to workers.
 You must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
 Then, you must build infrastructure to operate and scale the worker servers.
-Finally, you must operate the orchestration server itself and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
-
-<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+Finally, you must operate the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
 ## How Workflow Recovery Works
 
@@ -62,3 +61,26 @@ For DBOS to be able to safely recover a workflow, it must satisfy two requiremen
 2. Steps should be **idempotent**, meaning it should be safe to retry them multiple times.
 If a workflow fails while executing a step, it will retry the step during recovery.
 However, once a step completes and is checkpointed, it is never re-executed.
+
+## Operating DBOS in Production with Conductor
+
+DBOS Conductor is an optional management service that helps you operate DBOS applications in production.
+It provides:
+
+- [**Distributed workflow recovery**](./production/self-hosting//workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
+- [**Workflow and queue observability**](./production/self-hosting/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
+- [**Workflow and queue management**](./production/self-hosting/workflow-management.md): From the Conductor dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+
+Architecturally, Conductor looks like this:
+
+<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+
+Each of your application servers opens a secure websocket connection to Conductor.
+All of Conductor's features are powered by these websocket connections.
+When you open a Conductor dashboard in your browser, your request is sent over websocket to one of your application servers, which serves the request (for example, retrieving a list of recent workflows) and sends the result back through the websocket.
+If one of your application servers fails, Conductor detects the failure through the closed websocket connection and, after a grace period, directs another server to recover its workflows.
+This architecture has two useful implications:
+
+1. Conductor is **secure** and **privacy-preserving**. It does not have access to your database, nor does it need direct access to your application servers. Instead, your servers open outbound websocket connections to it and communicate exclusively through its websocket protocol.
+2. Conductor is **out-of-band**. Conductor is **only** used for observability and recovery and is never in the critical path of workflow execution (unlike the external orchestrators of other workflow systems).
+If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
