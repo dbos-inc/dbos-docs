@@ -62,6 +62,19 @@ For DBOS to be able to safely recover a workflow, it must satisfy two requiremen
 If a workflow fails while executing a step, it will retry the step during recovery.
 However, once a step completes and is checkpointed, it is never re-executed.
 
+## Applications and Databases
+
+Each DBOS application server connects to a Postgres database, called the system database.
+This database stores durably stores workflow and step checkpoints, and queue and message state.
+Its schema and tables are documented [here](./explanations/system-tables.md).
+A single Postgres server can host multiple system databases for multiple DBOS applications.
+However, separate applications (meaning separate code bases) should not share a system database.
+
+For example, in this diagram we deploy two DBOS applications, each with three servers.
+Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to that system database.
+
+<img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
+
 ## Operating DBOS in Production with Conductor
 
 DBOS Conductor is an optional management service that helps you operate DBOS applications in production.
