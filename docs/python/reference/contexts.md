@@ -42,8 +42,9 @@ DBOS.start_workflow_async(
 ) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
 ```
 
-Start an asynchronous workflow in the background and return a [handle](./workflow_handles.md) to it.
+Start an asynchronous workflow and return a [handle](./workflow_handles.md) to it.
 The `DBOS.start_workflow_async` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+The workflow started with `DBOS.start_workflow_async` runs in the same event loop as its caller.
 
 **Example syntax:**
 
@@ -52,7 +53,7 @@ The `DBOS.start_workflow_async` method resolves after the handle is durably crea
 async def example_workflow(var1: str, var2: str):
     DBOS.logger.info("I am a workflow")
 
-# Start example_workflow in the background
+# Start example_workflow
 handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
 ```
 
