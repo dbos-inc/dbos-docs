@@ -91,6 +91,7 @@ queue.enqueue_async(
 Asynchronously enqueue an async function for processing and return an [async handle](./workflow_handles.md#workflowhandleasync) to it.
 You can enqueue any DBOS-annotated async function.
 The `enqueue_async` method durably enqueues your function; after it returns your function is guaranteed to eventually execute even if your app is interrupted.
+The enqueued function is launched into a different event loop as its caller.
 
 **Example syntax:**
 
