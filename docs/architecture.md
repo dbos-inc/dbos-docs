@@ -93,7 +93,9 @@ You can enqueue a workflow from within a DBOS app directly or from anywhere usin
 
 When you enqueue a workflow, it may be executed on any of your application's servers.
 All DBOS applications periodically poll their queues to find and execute new work.
-This is in contrast to other workflow and queue services that have separate "worker servers" that can execute queued tasks&mdash;in DBOS, all of your application servers act as queue workers.
+This is in contrast to other workflow and queue services that have separate "worker servers" that can execute queued tasks&mdash;in DBOS, all of your application servers act as queue workers, as in this diagram:
+
+<img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
