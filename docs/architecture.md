@@ -15,7 +15,7 @@ Then, you annotate workflows and steps in your application code.
 The DBOS library **checkpoints** those workflows and steps in Postgres.
 If your program fails, crashes, or is interrupted, DBOS uses those checkpoints to automatically recover your workflows from the last completed step.
 
-<img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ## Comparison to External Workflow Orchestrators
 
@@ -23,19 +23,17 @@ DBOS architecture is radically simpler than other workflow systems such as Tempo
 All these systems implement workflows via **external orchestration**.
 At a high-level, their architectures look like this:
 
-<img src={require('@site/static/img/architecture/external-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/external-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 
 Externally orchestrated systems are made up of an orchestrator and a bunch of workers. The orchestrator runs workflow code, dispatching steps to workers through queues.
-Workers execute steps, then return their output to the orchestrator.
-The orchestrator persists that output to a data store, then dispatches the next step.
-Typically, the orchestrator and workers run on separate servers and communicate via message-passing.
+Workers execute steps, then return their output to the orchestrator, which persists that output to a data store then dispatches the next step.
 Application code can't call workflows directly, but instead sends requests to the orchestrator server to start workflows and fetch their results.
 
 While DBOS can be installed into an existing application as a library, adding an external orchestrator to an application requires substantially rearchitecting it.
 First, you must move all workflow and step code from application servers to workers.
-You must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
-Then, you must build infrastructure to operate and scale the worker servers.
-Finally, you must operate the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
+Then, you must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
+Next, you must build infrastructure to operate and scale the worker servers.
+Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
 ## How Workflow Recovery Works
 
@@ -45,7 +43,7 @@ Here's how that works:
 
 1. First, DBOS must detect that workflow execution has failed.
 For a single-node application, this is easy: on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
-In a distributed setting, detecting failed workflow execution can be done automatically through tools like [DBOS Conductor](./production/self-hosting/conductor.md) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
+In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#operating-dbos-in-production-with-conductor) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
 
 2. Next, DBOS restarts the interrupted workflow from the beginning by calling it with its checkpointed inputs.
 As the workflow re-executes, it checks before executing each step if that step's output is checkpointed in Postgres.
@@ -99,7 +97,7 @@ It provides:
 
 Architecturally, Conductor looks like this:
 
-<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 Each of your application servers opens a secure websocket connection to Conductor.
 All of Conductor's features are powered by these websocket connections.
