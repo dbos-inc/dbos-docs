@@ -35,9 +35,22 @@ Then, you must also rewrite all interaction between your application and its wor
 Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
+## Applications and Databases
+
+Each DBOS application server connects to a Postgres database, called the system database.
+This database stores durably stores workflow and step checkpoints, and queue and message state.
+Its schema and tables are documented [here](./explanations/system-tables.md).
+A single Postgres server can host multiple system databases for multiple DBOS applications.
+However, separate applications (meaning separate code bases) should not share a system database.
+
+For example, in this diagram we deploy two DBOS applications, each with three servers.
+Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to that system database.
+
+<img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
+
 ## How Workflow Recovery Works
 
-To recover workflows from failures, DBOS checkpoints in Postgres the input of each workflow and the output of each step.
+To recover workflows from failures, DBOS checkpoints in its system database the input of each workflow and the output of each step.
 When a program executing a workflow fails, crashes, or is interrupted, DBOS uses those checkpoints to recover the workflow from its last completed step.
 Here's how that works:
 
@@ -59,19 +72,6 @@ For DBOS to be able to safely recover a workflow, it must satisfy two requiremen
 2. Steps should be **idempotent**, meaning it should be safe to retry them multiple times.
 If a workflow fails while executing a step, it will retry the step during recovery.
 However, once a step completes and is checkpointed, it is never re-executed.
-
-## Applications and Databases
-
-Each DBOS application server connects to a Postgres database, called the system database.
-This database stores durably stores workflow and step checkpoints, and queue and message state.
-Its schema and tables are documented [here](./explanations/system-tables.md).
-A single Postgres server can host multiple system databases for multiple DBOS applications.
-However, separate applications (meaning separate code bases) should not share a system database.
-
-For example, in this diagram we deploy two DBOS applications, each with three servers.
-Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to that system database.
-
-<img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
 
 ## Application and Workflow Versions
 
