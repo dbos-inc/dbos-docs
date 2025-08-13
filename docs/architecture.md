@@ -38,7 +38,7 @@ Finally, you must operate and scale the orchestration server and its underlying 
 ## Applications and Databases
 
 Each DBOS application server connects to a Postgres database, called the system database.
-This database stores durably stores workflow and step checkpoints, and queue and message state.
+This database durably stores workflow and step checkpoints, and queue and message state.
 Its schema and tables are documented [here](./explanations/system-tables.md).
 One physical Postgres server can host multiple logical system databases for several DBOS applications.
 However, separate applications (meaning separate code bases) should not share a system database.
