@@ -3,8 +3,6 @@ hide_table_of_contents: false
 title: DBOS Architecture
 ---
 
-## DBOS Architecture
-
 DBOS provides a lightweight library for durable workflows built on top of Postgres.
 Architecturally, an application built with DBOS looks like this:
 
@@ -96,7 +94,7 @@ All DBOS applications periodically poll their queues to find and execute new wor
 This is in contrast to other queue services that have separate "worker servers" that can execute queued tasks.
 In DBOS, all of your application servers act as queue workers, as in this diagram:
 
-<img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
