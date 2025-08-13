@@ -104,7 +104,7 @@ For more information on queues, see the docs ([Python](./python/tutorials/queue-
 ## Self-Hosting DBOS with Conductor
 
 The simplest way to operate DBOS durable workflows in production is to connect your application to Conductor.
-Conductor is an optional management service that helps you operate DBOS applications.
+Conductor is an optional management service that helps you self-host DBOS applications.
 It provides:
 
 - [**Distributed workflow recovery**](./production/self-hosting//workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
