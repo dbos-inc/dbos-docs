@@ -75,7 +75,7 @@ However, once a step completes and is checkpointed, it is never re-executed.
 
 ## Application and Workflow Versions
 
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
+A workflow recovery attempt can happen some time after the first execution attempt. If the code has changed in the meantime, safe recovery may no longer be possible.
 To guard against this, DBOS _versions_ applications and their workflows.
 When DBOS is launched, it computes an application version from a hash of the source code of your workflows. You can override the version through configuration.
 All workflows are tagged with the application version on which they started.
