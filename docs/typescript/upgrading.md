@@ -171,6 +171,8 @@ Becomes:
   }
 ```
 
+Datasources also require [installation of a transaction checkpoint table](./tutorials/transaction-tutorial.md#installing-the-dbos-schema).
+
 For more information on datasources, please see the [tutorial](./tutorials/transaction-tutorial.md) and 
 [reference documentation](./reference/datasource.md).
 
