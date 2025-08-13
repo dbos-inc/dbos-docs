@@ -129,7 +129,7 @@ For more information on Conductor, see [its docs](./production/self-hosting/cond
 
 ## DBOS Cloud
 
-You can also deploy DBOS applications built to DBOS Cloud.
+You can deploy DBOS applications to DBOS Cloud.
 DBOS Cloud is a serverless platform for durably executed applications.
 It provides:
 
