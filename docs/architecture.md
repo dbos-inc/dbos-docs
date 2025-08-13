@@ -40,11 +40,11 @@ Finally, you must operate and scale the orchestration server and its underlying 
 Each DBOS application server connects to a Postgres database, called the system database.
 This database durably stores workflow and step checkpoints, and queue and message state.
 Its schema and tables are documented [here](./explanations/system-tables.md).
-One physical Postgres server can host multiple logical system databases for several DBOS applications.
-However, separate applications (meaning separate code bases) should not share a system database.
+One physical Postgres server can host multiple system databases for several DBOS applications.
+Separate DBOS applications (meaning separate code bases) should not share a system database.
 
 For example, in this diagram we deploy two DBOS applications, each with three servers.
-Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to that system database.
+Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to its system database.
 
 <img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
 
@@ -55,7 +55,7 @@ When a program executing a workflow fails, crashes, or is interrupted, DBOS uses
 Here's how that works:
 
 1. First, DBOS must detect that workflow execution has failed.
-For a single-node application, this is easy: on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
+For a single-node application, on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
 In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#operating-dbos-in-production-with-conductor) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
 
 2. Next, DBOS restarts the interrupted workflow from the beginning by calling it with its checkpointed inputs.
@@ -63,19 +63,19 @@ As the workflow re-executes, it checks before executing each step if that step's
 If there is a checkpoint, the step returns the checkpointed output instead of executing.
 
 3. Eventually, the recovered workflow reaches a step whose output is **not** checkpointed in Postgres.
-It then executes that step normally and proceeds from there, thus **resuming from the last completed step.**
+The recovered workflow executes that step normally and proceeds from there, thus **resuming from the last completed step.**
 
 For DBOS to be able to safely recover a workflow, your code must satisfy two requirements:
 
-1. The workflow function must be **deterministic**: if executed multiple times, with the same function arguments and step return values, the workflow should invoke the same steps with the same inputs in the same order. If you need to perform any non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you should do it in a step instead of directly in the workflow function.
+1. The workflow function must be **deterministic**: if executed multiple times, with the same arguments and step return values, the workflow should invoke the same steps with the same inputs in the same order. If you need to perform any non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you should do it in a step instead of directly in the workflow function.
 
 2. Steps should be **idempotent**, meaning it should be safe to retry them multiple times.
-If a workflow fails while executing a step, it will retry the step during recovery.
+If a workflow fails while executing a step, it retries the step during recovery.
 However, once a step completes and is checkpointed, it is never re-executed.
 
 ## Application and Workflow Versions
 
-A workflow recovery attempt can happen some time after the first execution attempt. If the code has changed in the meantime, safe recovery may no longer be possible.
+If code changes between when a workflow starts and when it its recovered, safe recovery may not be possible.
 To guard against this, DBOS _versions_ applications and their workflows.
 When DBOS is launched, it computes an application version from a hash of the source code of your workflows. You can override the version through configuration.
 All workflows are tagged with the application version on which they started.
@@ -88,24 +88,25 @@ For more information, see the [workflow recovery documentation](./production/sel
 
 ## Durable Queues
 
-One powerful feature of DBOS is that you can **enqueue** workflows for later execution and control how many may run simultaneously.
+One powerful feature of DBOS is that you can **enqueue** workflows for later execution with managed concurrency.
 You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
 
 When you enqueue a workflow, it may be executed on any of your application's servers.
 All DBOS applications periodically poll their queues to find and execute new work.
-This is in contrast to other queue services that have separate "worker servers" that can execute queued tasks. In DBOS, all of your application servers act as queue workers, as in this diagram:
+This is in contrast to other queue services that have separate "worker servers" that can execute queued tasks.
+In DBOS, all of your application servers act as queue workers, as in this diagram:
 
 <img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
-For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows of that queue may execute concurrently on that server.
+For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md)).
 
 ## Operating DBOS in Production with Conductor
 
-The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
-Conductor is an optional management service that helps you operate applications.
+The simplest way to operate DBOS durable workflows in production is to connect your application to Conductor.
+Conductor is an optional management service that helps you operate DBOS applications.
 It provides:
 
 - [**Distributed workflow recovery**](./production/self-hosting//workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
@@ -126,6 +127,17 @@ This architecture has two useful implications:
 2. Conductor is **out-of-band**. Conductor is **only** used for observability and recovery and is never in the critical path of workflow execution (unlike the external orchestrators of other workflow systems).
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
+For more information on Conductor, see [its docs](./production/self-hosting/conductor.md).
+
 ## DBOS Cloud
 
-Alternatively, you can deploy your application to the fully-managed DBOS Cloud service. The Cloud offers many of the above Conductor benefits as well as automated virtual machine management, including application versioning and auto-scaling. See [**Deploying to DBOS Cloud**](./production/dbos-cloud/deploying-to-cloud.md) to learn more.
+You can also deploy DBOS applications built to DBOS Cloud.
+DBOS Cloud is a serverless platform for durably executed applications.
+It provides:
+
+- [**Application hosting and autoscaling**](./production/dbos-cloud/application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
+- [**Managed workflow recovery**](./production/dbos-cloud/application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
+- [**Workflow and queue observability**](./production//dbos-cloud/workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
+- [**Workflow and queue management**](./production/dbos-cloud/workflow-management.md): From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+
+See [**Deploying to DBOS Cloud**](./production/dbos-cloud/deploying-to-cloud.md) to learn more.
