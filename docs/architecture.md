@@ -54,7 +54,7 @@ Here's how that works:
 
 1. First, DBOS must detect that workflow execution has failed.
 For a single-node application, on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
-In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#operating-dbos-in-production-with-conductor) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
+In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#dbos-cloud) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
 
 2. Next, DBOS restarts the interrupted workflow from the beginning by calling it with its checkpointed inputs.
 As the workflow re-executes, it checks before executing each step if that step's output is checkpointed in Postgres.
@@ -101,7 +101,7 @@ You can customize the rate and concurrency at which workflows are dequeued and e
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md)).
 
-## Operating DBOS in Production with Conductor
+## Self-Hosting DBOS with Conductor
 
 The simplest way to operate DBOS durable workflows in production is to connect your application to Conductor.
 Conductor is an optional management service that helps you operate DBOS applications.
