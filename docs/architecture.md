@@ -88,7 +88,7 @@ For more information, see the [workflow recovery documentation](./production/sel
 
 ## Durable Queues
 
-One powerful feature of DBOS is that you can **enqueue** workflows for later execution.
+One powerful feature of DBOS is that you can **enqueue** workflows for later execution and control how many may run simultaneously.
 You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
 
 When you enqueue a workflow, it may be executed on any of your application's servers.
