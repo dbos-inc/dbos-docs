@@ -67,7 +67,7 @@ It then executes that step normally and proceeds from there, thus **resuming fro
 
 For DBOS to be able to safely recover a workflow, your code must satisfy two requirements:
 
-1. The workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order. If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you should do it in a step instead of directly in the workflow function.
+1. The workflow function must be **deterministic**: if executed multiple times, with the same function arguments and step return values, the workflow should invoke the same steps with the same inputs in the same order. If you need to perform any non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you should do it in a step instead of directly in the workflow function.
 
 2. Steps should be **idempotent**, meaning it should be safe to retry them multiple times.
 If a workflow fails while executing a step, it will retry the step during recovery.
