@@ -65,7 +65,7 @@ If there is a checkpoint, the step returns the checkpointed output instead of ex
 3. Eventually, the recovered workflow reaches a step whose output is **not** checkpointed in Postgres.
 It then executes that step normally and proceeds from there, thus **resuming from the last completed step.**
 
-For DBOS to be able to safely recover a workflow, it must satisfy two requirements:
+For DBOS to be able to safely recover a workflow, your code must satisfy two requirements:
 
 1. The workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order. If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you should do it in a step instead of directly in the workflow function.
 
