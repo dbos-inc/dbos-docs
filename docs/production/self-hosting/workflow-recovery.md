@@ -33,7 +33,7 @@ After recovery is confirmed, the executor is deleted.
 ## Managing Application versions
 
 When self-hosting, it is important to be careful when upgrading your application's code.
-When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through the `DBOS__APPVERSION` environment variable).
+When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through configuration).
 Each workflow is tagged with the version of the application that started it.
 To prevent code compatibility issues, DBOS does not attempt to recover workflows tagged with a different application version.
 

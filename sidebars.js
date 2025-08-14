@@ -30,6 +30,11 @@ const sidebars = {
       label: 'Why DBOS?',
     },
     {
+      type: 'doc',
+      id: 'architecture',
+      label: 'DBOS Architecture',
+    },
+    {
       type: 'category',
       label: 'Develop with Python',
       items: [
