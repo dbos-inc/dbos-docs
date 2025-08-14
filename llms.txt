@@ -2,8 +2,8 @@
 
 ## Docs
 
+- [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
-- [How Workflows Work](https://docs.dbos.dev/explanations/how-workflows-work.md): Learn how DBOS workflows work
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
@@ -76,6 +76,7 @@
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/reference/datasource.md): Introduction To Transactions And Datasources
 - [DBOS Lifecycle](https://docs.dbos.dev/typescript/reference/dbos-class.md): The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
 - [DBOS Methods & Variables](https://docs.dbos.dev/typescript/reference/methods.md): DBOS Methods
+- [DBOS Plugin Architecture](https://docs.dbos.dev/typescript/reference/plugins.md): Unless you intend to extend the DBOS Transact library, you can ignore this topic.
 - [Queues](https://docs.dbos.dev/typescript/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/typescript/reference/workflows-steps.md): Workflows
 - [Debugging](https://docs.dbos.dev/typescript/tutorials/debugging.md): Learn how to debug your DBOS TypeScript workflows.

@@ -86,22 +86,28 @@ For example, **don't do this**:
 
 ```python
 @DBOS.workflow()
-def example_workflow(friend: str):
-    body = requests.get("https://example.com").text
-    return example_transaction(body)
+def example_workflow():
+    choice = random.randint(0, 1)
+    if choice == 0:
+        step_one()
+    else:
+        step_two()
 ```
 
 Do this instead:
 
 ```python
 @DBOS.step()
-def example_step():
-    return requests.get("https://example.com").text
+def generate_choice():
+    return random.randint(0, 1)
 
 @DBOS.workflow()
 def example_workflow(friend: str):
-    body = example_step()
-    return example_transaction(body)
+    choice = generate_choice()
+    if choice == 0:
+        step_one()
+    else:
+        step_two()
 ```
 
 
