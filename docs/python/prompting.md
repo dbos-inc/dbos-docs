@@ -92,6 +92,27 @@ if __name__ == "__main__":
     threading.Event().wait()
 ```
 
+Or if using asyncio:
+
+```python
+import asyncio
+from dbos import DBOS, DBOSConfig
+
+config: DBOSConfig = {
+    "name": "dbos-app"
+}
+DBOS(config=config)
+
+
+async def main():
+    DBOS.launch()
+    await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+
 ## Workflow and Steps Examples
 
 Simple example:
