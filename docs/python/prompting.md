@@ -92,7 +92,7 @@ if __name__ == "__main__":
     threading.Event().wait()
 ```
 
-Or if async:
+Or if using asyncio:
 
 ```python
 import asyncio
