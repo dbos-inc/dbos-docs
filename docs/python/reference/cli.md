@@ -66,20 +66,6 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 - `<workflow-id>`: The ID of the workflow to resume.
 - `-D, --db-url TEXT`: Your DBOS application database URL
 
-:::info
-Resuming a workflow on a new version of your application will flag the workflow with the new version.
-:::
-
-### dbos workflow restart
-
-**Description:**
-Start a new execution of a workflow with the same inputs.
-This new workflow has a new workflow ID and is tagged with the current application version.
-
-**Arguments:**
-- `<workflow-id>`: The ID of the workflow to restart.
-- `-D, --db-url TEXT`: Your DBOS application database URL
-
 **Output:**
 A JSON-formatted [workflow status](./contexts#workflow-status).
 
@@ -87,7 +73,7 @@ A JSON-formatted [workflow status](./contexts#workflow-status).
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID and is tagged with the current application version.
+This new workflow has a new workflow ID.
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**
