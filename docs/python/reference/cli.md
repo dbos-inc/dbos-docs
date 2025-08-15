@@ -73,7 +73,7 @@ A JSON-formatted [workflow status](./contexts#workflow-status).
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID.
+This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#fork_workflow)).
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**
