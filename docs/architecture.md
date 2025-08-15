@@ -8,10 +8,13 @@ Architecturally, an application built with DBOS looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-You can integrate DBOS into your existing application running on your existing servers and infrastructure in just three steps.
-First, install the DBOS library into your application.
-Second, connect to any Postgres database.
-Third, annotate workflows and steps directly in your application code.
+You can integrate DBOS into your existing application running on your existing servers and infrastructure in just three steps:
+
+1. Install the DBOS library into your application.
+2. Connect to any Postgres database.
+3. Annotate workflows and steps directly in your application code.
+
+For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md)).
 
 Once integrated, DBOS automatically checkpoints every workflow and step execution in your application to Postgres.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
@@ -53,19 +56,22 @@ All servers within an application connect to the application's system database, 
 
 ## How Workflow Recovery Works
 
-To recover workflows from failures, DBOS checkpoints in its system database the input of each workflow and the output of each step.
-When a program executing a workflow fails, crashes, or is interrupted, DBOS uses those checkpoints to recover the workflow from its last completed step.
-Here's how that works:
+DBOS achieves fault tolerance by checkpointing workflows and steps.
+Every workflow input and step output is durably stored in the system database.
+When execution fails, whether from crashes, network issues, or server restarts, DBOS leverages these checkpoints to recover workflows from their last completed step.
 
-1. First, DBOS must detect that workflow execution has failed.
-For a single-node application, on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
-In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#host-applications-on-dbos-cloud) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
+Workflow recovery occurs in three steps:
 
-2. Next, DBOS restarts the interrupted workflow from the beginning by calling it with its checkpointed inputs.
-As the workflow re-executes, it checks before executing each step if that step's output is checkpointed in Postgres.
+1. First, DBOS detects interrupted workflows.
+In single-node deployments, this happens automatically at startup when DBOS scans for incomplete (PENDING) workflows.
+Distributed environments require additional coordination, either through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#host-applications-on-dbos-cloud), or through manual intervention using the admin API (detailed [here](./production/self-hosting/workflow-recovery.md)).
+
+2. Next, DBOS restarts the interrupted workflow by calling it with its checkpointed inputs.
+As the workflow re-executes, it checks before each step if that step's output is checkpointed in Postgres.
 If there is a checkpoint, the step returns the checkpointed output instead of executing.
 
-3. Eventually, the recovered workflow reaches a step whose output is **not** checkpointed in Postgres.
+3. Eventually, the recovered workflow reaches a step with **no checkpoint**.
+This marks the point where the original execution failed.
 The recovered workflow executes that step normally and proceeds from there, thus **resuming from the last completed step.**
 
 For DBOS to be able to safely recover a workflow, your code must satisfy two requirements:
