@@ -78,6 +78,8 @@ Forking from step N copies the results of all previous steps to the new workflow
 
 **Arguments:**
 * `<workflow-id>`: The ID of the workflow to restart.
+* `-f, --forked-workflow-id`: Custom ID for the forked workflow
+* `-v, --application-version`: Custom application version for the forked workflow
 * `-s, --step INTEGER`: Restart from this step [default: 1]
 * `-D, --db-url TEXT`: Your DBOS application database URL
 
