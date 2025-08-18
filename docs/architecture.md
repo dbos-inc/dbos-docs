@@ -46,7 +46,7 @@ By contrast, external orchestration systems also **orchestrate** the execution o
 
 ## Applications and Databases
 
-DBOS applications connect to a dedicated Postgres database called the system database.
+Each DBOS application server connects to a Postgres database, called the system database.
 This database serves as the persistence layer for all workflow checkpoints, step outputs, and queue state.
 The complete schema and table structure are documented [here](./explanations/system-tables.md).
 
