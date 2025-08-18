@@ -42,7 +42,7 @@ Finally, you must operate and scale the orchestration server and its underlying 
 DBOS is simpler because it runs entirely **in-process**, taking responsibility only for checkpointing and recovering your workflows.
 Your workflows and steps remain normal functions within your application that you can keep using the same way you always have.
 DBOS simply instruments them to checkpoint their state and recover them from failure.
-By contrast, external orchestration systems also **orchestrate** workflow execution, managing where (on what workesr) workflows and steps run.
+By contrast, external orchestration systems also **orchestrate** the execution of workflows themselves, deciding where (and on which workers) each workflow or step runs. That extra layer of orchestration adds complexity.
 
 ## Applications and Databases
 
