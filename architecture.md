@@ -8,22 +8,29 @@ Architecturally, an application built with DBOS looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-You install the DBOS library into your existing application running on your existing servers and infrastructure and connect it to a Postgres database.
-Then, you annotate workflows and steps in your application code.
-The DBOS library **checkpoints** those workflows and steps in Postgres.
-If your program fails, crashes, or is interrupted, DBOS uses those checkpoints to automatically recover your workflows from the last completed step.
+You can integrate DBOS into your existing application running on your existing servers and infrastructure in just three steps:
+
+1. Install the DBOS library into your application.
+2. Connect to any Postgres database.
+3. Annotate workflows and steps directly in your application code.
+
+For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md)).
+
+Once integrated, DBOS automatically checkpoints every workflow and step execution in your application to Postgres.
+When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
+For more detail on how workflow recovery works, see [this section below](#how-workflow-recovery-works).
 
 <img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ## Comparison to External Workflow Orchestrators
 
-DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
+The DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
 All these systems implement workflows via **external orchestration**.
 At a high-level, their architectures look like this:
 
 <img src={require('@site/static/img/architecture/external-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 
-Externally orchestrated systems are made up of an orchestrator and a bunch of workers. The orchestrator runs workflow code, dispatching steps to workers through queues.
+Externally orchestrated systems are made up of an orchestrator and a set of workers. The orchestrator runs workflow code, dispatching steps to workers through queues.
 Workers execute steps, then return their output to the orchestrator, which persists that output to a data store then dispatches the next step.
 Application code can't call workflows directly, but instead sends requests to the orchestrator server to start workflows and fetch their results.
 
@@ -33,34 +40,42 @@ Then, you must also rewrite all interaction between your application and its wor
 Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
+DBOS is simpler because it runs entirely **in-process** as a library, so your workflows and steps remain normal functions within your application that you can call from other application code.
+DBOS simply instruments them to checkpoint their state and recover them from failure.
+
 ## Applications and Databases
 
 Each DBOS application server connects to a Postgres database, called the system database.
-This database durably stores workflow and step checkpoints, and queue and message state.
-Its schema and tables are documented [here](./explanations/system-tables.md).
-One physical Postgres server can host multiple system databases for several DBOS applications.
-Separate DBOS applications (meaning separate code bases) should not share a system database.
+This database serves as the persistence layer for all workflow checkpoints, step outputs, and queue state.
+The complete schema and table structure are documented [here](./explanations/system-tables.md).
 
-For example, in this diagram we deploy two DBOS applications, each with three servers.
-Each application has its own isolated system database on the same physical Postgres server, and all of the application's servers connect to its system database.
+A single Postgres server can host multiple system databases, with each database serving a separate DBOS application.
+However, each application must maintain its own isolated system database: you should not share a system database between separate applications (separate code bases).
+
+For example, in this diagram we deploy two DBOS applications, each running three application servers.
+While both applications share the same physical Postgres server, each maintains its own system database.
+All servers within an application connect to the application's system database, ensuring consistent state across the distributed deployment.
 
 <img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
 
 ## How Workflow Recovery Works
 
-To recover workflows from failures, DBOS checkpoints in its system database the input of each workflow and the output of each step.
-When a program executing a workflow fails, crashes, or is interrupted, DBOS uses those checkpoints to recover the workflow from its last completed step.
-Here's how that works:
+DBOS achieves fault tolerance by checkpointing workflows and steps.
+Every workflow input and step output is durably stored in the system database.
+When workflow execution fails, whether from crashes, network issues, or server restarts, DBOS leverages these checkpoints to recover workflows from their last completed step.
 
-1. First, DBOS must detect that workflow execution has failed.
-For a single-node application, on startup, DBOS looks up and attempts to recover all incomplete (`PENDING`) workflows.
-In a distributed setting, detecting failed workflow execution can be done automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#host-applications-on-dbos-cloud) or manually using the admin API (more documentation [here](./production/self-hosting/workflow-recovery.md)).
+Workflow recovery occurs in three steps:
 
-2. Next, DBOS restarts the interrupted workflow from the beginning by calling it with its checkpointed inputs.
-As the workflow re-executes, it checks before executing each step if that step's output is checkpointed in Postgres.
+1. First, DBOS detects interrupted workflows.
+In single-node deployments, this happens automatically at startup when DBOS scans for incomplete (PENDING) workflows.
+In a distributed deployment, some coordination is required, either automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#host-applications-on-dbos-cloud), or manually using the admin API (detailed [here](./production/self-hosting/workflow-recovery.md)).
+
+2. Next, DBOS restarts each interrupted workflow by calling it with its checkpointed inputs.
+As the workflow re-executes, it checks before each step if that step's output is checkpointed in Postgres.
 If there is a checkpoint, the step returns the checkpointed output instead of executing.
 
-3. Eventually, the recovered workflow reaches a step whose output is **not** checkpointed in Postgres.
+3. Eventually, the recovered workflow reaches a step with **no checkpoint**.
+This marks the point where the original execution failed.
 The recovered workflow executes that step normally and proceeds from there, thus **resuming from the last completed step.**
 
 For DBOS to be able to safely recover a workflow, your code must satisfy two requirements:

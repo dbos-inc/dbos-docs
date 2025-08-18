@@ -36,7 +36,7 @@ class KnexDataSource {
   constructor(name: string, config: Knex.Config)  
 }
 
-const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
+const config = {client: 'pg', connectionString: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('knex-ds', config);
 ```
 
