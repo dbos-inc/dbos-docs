@@ -41,9 +41,10 @@ Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
 DBOS is simpler because it runs entirely **in-process**, taking responsibility only for checkpointing and recovering your workflows.
-Your workflows and steps remain normal functions within your application that you can keep using the same way you always have.
+Your workflows and steps remain normal functions within your application that you can call from other application code.
 DBOS simply instruments them to checkpoint their state and recover them from failure.
-By contrast, external orchestration systems also **orchestrate** the execution of workflows themselves, deciding where (and on which workers) each workflow or step runs. That extra layer of orchestration adds complexity.
+By contrast, external orchestration systems also **orchestrate** the execution of workflows themselves, deciding where (and on which workers) each workflow or step runs.
+That extra layer of orchestration adds complexity.
 
 ## Applications and Databases
 
@@ -64,7 +65,7 @@ All servers within an application connect to the application's system database, 
 
 DBOS achieves fault tolerance by checkpointing workflows and steps.
 Every workflow input and step output is durably stored in the system database.
-When execution fails, whether from crashes, network issues, or server restarts, DBOS leverages these checkpoints to recover workflows from their last completed step.
+When workflow execution fails, whether from crashes, network issues, or server restarts, DBOS leverages these checkpoints to recover workflows from their last completed step.
 
 Workflow recovery occurs in three steps:
 
