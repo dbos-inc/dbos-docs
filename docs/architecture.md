@@ -40,7 +40,7 @@ Then, you must also rewrite all interaction between your application and its wor
 Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
 
-DBOS is simpler because it runs entirely **in-process** as a library, your workflows and steps remain normal functions within your application that you can call from other application code.
+DBOS is simpler because it runs entirely **in-process** as a library, so your workflows and steps remain normal functions within your application that you can call from other application code.
 DBOS simply instruments them to checkpoint their state and recover them from failure.
 
 ## Applications and Databases
