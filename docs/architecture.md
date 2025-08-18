@@ -18,6 +18,7 @@ For more detail on how to add DBOS to your application, check out the language-s
 
 Once integrated, DBOS automatically checkpoints every workflow and step execution in your application to Postgres.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
+For more detail on how workflow recovery works, see [this section below](#how-workflow-recovery-works).
 
 <img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
