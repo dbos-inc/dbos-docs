@@ -116,7 +116,7 @@ To see durable execution in action, let's modify the app to serve a DBOS workflo
 Replace the contents of `main.go` with:
 
 
-```go
+```go showLineNumbers title="main.go"
 package main
 
 import (
@@ -230,3 +230,121 @@ Step two completed
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step two without re-executing step one.
 Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
+
+## 3. Queues and Parallelism
+
+To run many functions concurrently, use DBOS _queues_.
+To try them out, copy this code into `main.go`:
+
+```go showLineNumbers title="main.go"
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/gin-gonic/gin"
+)
+
+func taskWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
+	dbos.Sleep(ctx, 5*time.Second)
+	fmt.Printf("Task %d completed\n", i)
+	return i, nil
+}
+
+func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) (int, error) {
+	fmt.Println("Enqueuing tasks")
+	handles := make([]dbos.WorkflowHandle[int], 10)
+	for i := range 10 {
+		handle, err := dbos.RunAsWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue.Name))
+		if err != nil {
+			return 0, err
+		}
+		handles[i] = handle
+	}
+	results := make([]int, 10)
+	for i, handle := range handles {
+		result, err := handle.GetResult()
+		if err != nil {
+			return 0, err
+		}
+		results[i] = result
+	}
+	fmt.Printf("Successfully completed %d tasks\n", len(results))
+	return len(results), nil
+}
+
+func main() {
+	dbosContext, err := dbos.NewDBOSContext(dbos.Config{
+		AppName:     "dbos-starter",
+		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
+	}
+
+	queue := dbos.NewWorkflowQueue(dbosContext, "queue")
+	dbos.RegisterWorkflow(dbosContext, queueWorkflow)
+	dbos.RegisterWorkflow(dbosContext, taskWorkflow)
+
+	err = dbosContext.Launch()
+	if err != nil {
+		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
+	}
+	defer dbosContext.Cancel()
+
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		dbos.RunAsWorkflow(dbosContext, queueWorkflow, queue)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	r.Run(":8080")
+}
+```
+
+When you enqueue a function by passing `dbos.WithQueue(queue.Name)` into `dbos.RunAsWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`dbos.RunAsWorkflow` returns a handle representing the state of the enqueued function.
+This example enqueues ten functions, then waits for them all to finish using `.GetResult()` to wait for each of their handles.
+
+Now, restart your app with:
+
+```shell
+go run main.go
+```
+
+Then, visit this URL: http://localhost:8080.
+Wait five seconds and you should see an output like:
+
+```
+[GIN-debug] Listening and serving HTTP on :8080
+[GIN] 2025/08/19 - 14:42:14 | 200 |    6.961186ms |             ::1 | GET      "/"
+Enqueuing tasks
+Task 0 completed
+Task 2 completed
+Task 1 completed
+Task 4 completed
+Task 3 completed
+Task 5 completed
+Task 6 completed
+Task 7 completed
+Task 8 completed
+Task 9 completed
+Successfully completed 10 tasks
+```
+
+You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
+Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
+
+Congratulations!  You've finished the DBOS TypeScript guide.
+You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/dbos-toolbox) template app.
+
+Next, to learn how to build more complex applications, check out the Go tutorials and [example apps](../examples/index.md).
