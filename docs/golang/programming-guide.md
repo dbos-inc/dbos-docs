@@ -26,7 +26,8 @@ export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:$PGPASSWORD@localhost:5432/d
 ## 2. Workflows and Steps
 
 DBOS helps you add reliability to Go programs.
-The key feature of DBOS is **workflow functions** comprised of **steps**&mdash;DBOS automatically provides durability by checkpointing the state of your workflows and steps to its system database.
+The key feature of DBOS is **workflow functions** comprised of **steps**.
+DBOS automatically provides durability by checkpointing the state of your workflows and steps to its system database.
 If your program crashes or is interrupted, DBOS uses this saved state to recover each of your workflows from its last completed step.
 Thus, DBOS makes your application **resilient to any failure**.
 
