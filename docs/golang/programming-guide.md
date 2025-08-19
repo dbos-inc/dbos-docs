@@ -12,7 +12,7 @@ In an empty directory, initialize a new Go project and install DBOS:
 
 ```shell
 go mod init dbos-starter
-go get go get github.com/dbos-inc/dbos-transact-go
+go get github.com/dbos-inc/dbos-transact-go
 ```
 
 DBOS requires a Postgres database.
@@ -66,7 +66,7 @@ func stepOne(ctx context.Context) (string, error) {
 }
 
 func stepTwo(ctx context.Context) (string, error) {
-	fmt.Println("Step one completed")
+	fmt.Println("Step two completed")
 	return "success", nil
 }
 
@@ -108,9 +108,125 @@ Your program should print output like:
 
 ```
 Step one completed
-Step one completed
+Step two completed
 Workflow result: success
 ```
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Gin.
 Replace the contents of `main.go` with:
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/gin-gonic/gin"
+)
+
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+		return stepOne(stepCtx)
+	})
+	if err != nil {
+		return "", err
+	}
+	for range 5 {
+		fmt.Println("Press Control + C to stop the app...")
+		dbos.Sleep(ctx, time.Second)
+	}
+	_, err = dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+		return stepTwo(stepCtx)
+	})
+	if err != nil {
+		return "", err
+	}
+	return "success", err
+}
+
+func stepOne(ctx context.Context) (string, error) {
+	fmt.Println("Step one completed")
+	return "success", nil
+}
+
+func stepTwo(ctx context.Context) (string, error) {
+	fmt.Println("Step two completed")
+	return "success", nil
+}
+
+func main() {
+	dbosContext, err := dbos.NewDBOSContext(dbos.Config{
+		AppName:     "dbos-starter",
+		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+	})
+	if err != nil {
+		panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
+	}
+
+	dbos.RegisterWorkflow(dbosContext, workflow)
+
+	err = dbosContext.Launch()
+	if err != nil {
+		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
+	}
+	defer dbosContext.Cancel()
+
+	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		dbos.RunAsWorkflow(dbosContext, workflow, "")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
+			return
+		}
+		c.Status(http.StatusOK)
+	})
+
+	r.Run(":8080")
+}
+```
+
+Then, to run it, first install gin:
+
+```shell
+go get github.com/gin-gonic/gin
+```
+
+Then launch the server:
+
+```shell
+go run main.go
+```
+
+Then, visit this URL: http://localhost:8080.
+
+In your terminal, you should see an output like:
+
+```
+[GIN-debug] Listening and serving HTTP on :8080
+[GIN] 2025/08/19 - 14:31:56 | 200 |     6.08315ms |             ::1 | GET      "/"
+Step one completed
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+```
+
+Now, press CTRL+C stop your app. Then, run `go run main.go` to restart it. You should see an output like:
+
+```
+[GIN-debug] Listening and serving HTTP on :8080
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Press Control + C to stop the app...
+Step two completed
+```
+
+You can see how DBOS **recovers your workflow from the last completed step**, executing step two without re-executing step one.
+Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
