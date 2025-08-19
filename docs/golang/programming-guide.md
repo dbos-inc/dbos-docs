@@ -76,14 +76,14 @@ func main() {
 		DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 	})
 	if err != nil {
-		panic(fmt.Sprintf("DBOS initialization failed %v", err))
+		panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
 	}
 
 	dbos.RegisterWorkflow(dbosContext, workflow)
 
 	err = dbosContext.Launch()
 	if err != nil {
-		panic("DBOS service start failed")
+		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
 	}
 	defer dbosContext.Cancel()
 
