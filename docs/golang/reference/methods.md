@@ -63,3 +63,30 @@ Calls to `recv` wait for the next message in the queue, returning an error if th
 - **ctx**: The DBOS context.
 - **topic**: A topic queue on which to wait.
 - **timeoutSeconds**: A timeout in seconds. If the wait times out, return an error.
+
+### Sleep
+
+```go
+func Sleep(ctx DBOSContext, duration time.Duration) (time.Duration, error)
+```
+
+Sleep for the given duration.
+May only be called from within a workflow.
+This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **duration**: The duration to sleep.
+
+### RetrieveWorkflow
+
+```go
+func RetrieveWorkflow[R any](ctx DBOSContext, workflowID string) (*workflowPollingHandle[R], error)
+```
+
+Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
+
+**Parameters**:
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow whose handle to retrieve.
+
