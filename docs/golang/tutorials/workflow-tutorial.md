@@ -47,9 +47,9 @@ func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
 }
 
 func main() {
-	// Create the DBOS context
+	... // Create the DBOS context
 	dbos.RegisterWorkflow(dbosContext, workflow)
-	// Launch DBOS after registering all workflows
+	... // Launch DBOS after registering all workflows
 }
 ```
 
@@ -59,7 +59,7 @@ This starts the workflow in the background and returns a [handle](../reference/w
 Here's an example:
 
 ```go
-func example(input string) error {
+func example(dbosContext dbos.DBOSContext, input string) error {
     handle, err := dbos.RunAsWorkflow(dbosContext, workflow, input)
     if err != nil {
         return err
@@ -96,11 +96,9 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
     return "success", nil
 }
 
-func main() {
-    dbos.RegisterWorkflow(dbosContext, exampleWorkflow)
-    
+func example(dbosContext dbos.DBOSContext, input string) error {    
     myID := "unique-workflow-id-123"
-    handle, err := dbos.RunAsWorkflow(dbosContext, exampleWorkflow, "input", 
+    handle, err := dbos.RunAsWorkflow(dbosContext, exampleWorkflow, input, 
         dbos.WithWorkflowID(myID))
     if err != nil {
         log.Fatal(err)
