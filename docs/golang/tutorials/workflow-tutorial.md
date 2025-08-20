@@ -118,7 +118,7 @@ Workflows are in most respects normal Go functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
+Instead, you should do all database operations in non-deterministic operations in [steps](./step-tutorial.md).
 
 For example, **don't do this**:
 
@@ -160,7 +160,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
         return "", err
     }
     
-    // Process the body in another step or transaction...
+    // Process the body in another step...
     return body, nil
 }
 ```
@@ -395,7 +395,6 @@ These guarantees assume that the application and database may crash and go offli
 
 1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed (returned a value or thrown an exception to the calling workflow), it will never be re-executed.
-3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
 If an exception is thrown from a workflow, the workflow **terminates**&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and **does not recover the workflow**.
 This is because uncaught exceptions are assumed to be nonrecoverable.
