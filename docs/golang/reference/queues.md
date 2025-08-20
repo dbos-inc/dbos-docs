@@ -1,0 +1,106 @@
+---
+sidebar_position: 40
+title: Queues
+---
+
+Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
+Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
+
+All queues should be created before DBOS is launched.
+
+### WorkflowQueue
+
+```go
+type WorkflowQueue struct {
+	Name                 string       `json:"name"`                        // Unique queue name
+	WorkerConcurrency    *int         `json:"workerConcurrency,omitempty"` // Max concurrent workflows per executor
+	GlobalConcurrency    *int         `json:"concurrency,omitempty"`       // Max concurrent workflows across all executors
+	PriorityEnabled      bool         `json:"priorityEnabled,omitempty"`   // Enable priority-based scheduling
+	RateLimit            *RateLimiter `json:"rateLimit,omitempty"`         // Rate limiting configuration
+	MaxTasksPerIteration int          `json:"maxTasksPerIteration"`        // Max workflows to dequeue per iteration
+}
+```
+
+WorkflowQueue defines a named queue for workflow execution.
+Workflows can be enqueued by specifying the queue with `WithQueue` in `RunAsWorkflow`.
+
+### NewWorkflowQueue
+
+```go
+func NewWorkflowQueue(dbosCtx DBOSContext, name string, options ...queueOption) WorkflowQueue
+```
+
+NewWorkflowQueue creates a new workflow queue with the specified name and configuration options.
+Queues must be created before DBOS is launched.
+
+**Parameters:**
+- **dbosCtx**: The DBOSContext.
+- **name**: The name of the queue.  Must be unique among all queues in the application.
+- **options**: Functional options for the queue, documented below.
+
+**Example Syntax:**
+
+```go
+queue := dbos.NewWorkflowQueue(ctx, "email-queue",
+    dbos.WithWorkerConcurrency(5),
+    dbos.WithRateLimiter(&dbos.RateLimiter{
+        Limit:  100,
+        Period: 60.0, // 100 workflows per minute
+    }),
+    dbos.WithPriorityEnabled(true),
+)
+
+// Enqueue workflows to this queue:
+handle, err := dbos.RunAsWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
+```
+
+#### WithWorkerConcurrency
+
+```go
+func WithWorkerConcurrency(concurrency int) queueOption
+```
+
+Set the maximum number of workflows from this queue that may run concurrently within a single DBOS process.
+
+#### WithGlobalConcurrency
+
+```go
+func WithGlobalConcurrency(concurrency int) queueOption
+```
+
+Set the maximum number of workflows from this queue that may run concurrently. Defaults to 0 (no limit).
+This concurrency limit is global across all DBOS processes using this queue.
+
+####  WithMaxTasksPerIteration
+
+```go
+func WithMaxTasksPerIteration(maxTasks int) queueOption
+```
+
+Sets the maximum number of workflows that can be dequeued in a single iteration.
+This controls batch sizes for queue processing.
+
+####  WithPriorityEnabled
+
+```go
+func WithPriorityEnabled(enabled bool) queueOption
+```
+
+Enable setting priority for workflows on this queue.
+
+####  WithRateLimiter
+
+```go
+func WithRateLimiter(limiter *RateLimiter) queueOption
+```
+
+```go
+type RateLimiter struct {
+	Limit  int     // Maximum number of workflows to start within the period
+	Period float64 // Time period in seconds for the rate limit
+}
+```
+
+A limit on the maximum number of functions which may be started in a given period.
+
+
