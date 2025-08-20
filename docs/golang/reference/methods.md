@@ -1,7 +1,10 @@
 ---
 sidebar_position: 30
 title: DBOS Methods & Variables
+toc_max_heading_level: 3
 ---
+
+## DBOS Methods
 
 ### GetEvent
 
@@ -90,3 +93,114 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 
+## Workflow Management Methods
+
+### ListWorkflows
+
+```go
+func ListWorkflows(ctx DBOSContext, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+
+**Example usage:**
+
+```go
+// List all successful workflows from the last 24 hours
+workflows, err := dbos.ListWorkflows(ctx,
+    dbos.WithStatus([]dbos.WorkflowStatusType{dbos.WorkflowStatusSuccess}),
+    dbos.WithStartTime(time.Now().Add(-24*time.Hour)),
+    dbos.WithLimit(100))
+if err != nil {
+    log.Fatal(err)
+}
+
+// List workflows by specific IDs without loading input/output data
+workflows, err := dbos.ListWorkflows(ctx,
+    dbos.WithWorkflowIDs([]string{"workflow1", "workflow2"}),
+    dbos.WithLoadInput(false),
+    dbos.WithLoadOutput(false))
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+#### WithAppVersion
+
+```go
+func WithAppVersion(appVersion string) ListWorkflowsOption
+```
+
+Retrieve workflows tagged with this application version.
+
+
+#### WithEndTime
+
+```go
+func WithEndTime(endTime time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows started before this timestamp.
+
+#### WithLimit
+
+```go
+func WithLimit(limit int) ListWorkflowsOption
+```
+
+Retrieve up to this many workflows.
+
+#### WithLoadInput
+
+```go
+func WithLoadInput(loadInput bool) ListWorkflowsOption
+```
+
+WithLoadInput controls whether to load workflow input data (default: true).
+
+#### WithLoadOutput
+
+```go
+func WithLoadOutput(loadOutput bool) ListWorkflowsOption
+```
+
+WithLoadOutput controls whether to load workflow output data (default: true). 
+
+#### WithName
+
+```go
+func WithName(name string) ListWorkflowsOption
+```
+
+WithName filters workflows by the specified workflow function name.
+
+### Workflow Status
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```go
+type WorkflowStatus struct {
+	ID                 string             `json:"workflow_uuid"`       // Unique identifier for the workflow
+	Status             WorkflowStatusType `json:"status"`              // Current execution status
+	Name               string             `json:"name"`                // Function name of the workflow
+	AuthenticatedUser  *string            `json:"authenticated_user"`  // User who initiated the workflow (if applicable)
+	AssumedRole        *string            `json:"assumed_role"`        // Role assumed during execution (if applicable)
+	AuthenticatedRoles *string            `json:"authenticated_roles"` // Roles available to the user (if applicable)
+	Output             any                `json:"output"`              // Workflow output (available after completion)
+	Error              error              `json:"error"`               // Error information (if status is ERROR)
+	ExecutorID         string             `json:"executor_id"`         // ID of the executor running this workflow
+	CreatedAt          time.Time          `json:"created_at"`          // When the workflow was created
+	UpdatedAt          time.Time          `json:"updated_at"`          // When the workflow status was last updated
+	ApplicationVersion string             `json:"application_version"` // Version of the application that created this workflow
+	ApplicationID      string             `json:"application_id"`      // Application identifier
+	Attempts           int                `json:"attempts"`            // Number of execution attempts
+	QueueName          string             `json:"queue_name"`          // Queue name (if workflow was enqueued)
+	Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
+	Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
+	StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
+	DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
+	Input              any                `json:"input"`               // Input parameters passed to the workflow
+	Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
+}
+```
