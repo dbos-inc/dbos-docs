@@ -164,6 +164,31 @@ class Example {
 }
 ```
 
+### Running Steps In Parallel
+Initiating several concurrent steps in a workflow, followed by awaiting them with `Promise.allSettled`, is valid as long as the steps are started in a deterministic order.  For example the following is allowed:
+```typescript
+const results = await Promise.allSettled([
+  step1("arg1"),
+  step2("arg2"),
+  step3("arg3"),
+  step4("arg4"),
+])
+```
+This is allowed because each step is started in a well-defined sequence before awaiting.
+
+By contrast, the following is not allowed:
+```typescript
+const results = await Promise.allSettled([
+  async () => { await step1("arg1"); await step2("arg3"); },
+  async () => { await step3("arg2"); await step4("arg4"); },
+]);
+```
+Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
+
+If you need to run sequences of operations concurrently, start child workflows with [`startWorkflow`](#starting-workflows-in-the-background) and await the results from their `WorkflowHandle`s.
+
+Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
+
 ## Workflow Timeouts
 
 You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
