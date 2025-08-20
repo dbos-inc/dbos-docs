@@ -47,7 +47,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
-- Do NOT use Promise.all() or anything similar to run multiple functions concurrently. You should instead use DBOS.startWorkflow and DBOS queues.
+- Do NOT use Promise.all() due to the risks posed by multiple rejections.  Using Promise.allSettled() for parallelism is allowed for single-step promises only.  For any complex parallel execution, you should instead use DBOS.startWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
 - Do NOT start workflows from inside a step.
