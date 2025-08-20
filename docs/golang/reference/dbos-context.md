@@ -9,7 +9,7 @@ You should configure and create a DBOS context on program startup, before runnin
 Here, we document its lifecycle.
 Other DBOS methods are documented here.
 
-### dbos.NewDBOSContext
+### NewDBOSContext
 
 ```go
 func NewDBOSContext(inputConfig Config) (DBOSContext, error)
