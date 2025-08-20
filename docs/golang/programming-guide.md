@@ -12,7 +12,8 @@ In an empty directory, initialize a new Go project and install DBOS:
 
 ```shell
 go mod init dbos-starter
-go get github.com/dbos-inc/dbos-transact-go
+go get github.com/dbos-inc/dbos-transact-golang
+go mod download
 ```
 
 DBOS requires a Postgres database.
@@ -42,7 +43,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
 func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
@@ -127,7 +128,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
 )
 
@@ -197,6 +198,7 @@ Then, to run it, first install gin:
 
 ```shell
 go get github.com/gin-gonic/gin
+go mod download
 ```
 
 Then launch the server:
@@ -246,7 +248,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dbos-inc/dbos-transact-go/dbos"
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/gin-gonic/gin"
 )
 
