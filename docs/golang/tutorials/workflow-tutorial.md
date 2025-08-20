@@ -108,6 +108,7 @@ func example(dbosContext dbos.DBOSContext, input string) error {
         log.Fatal(err)
     }
     fmt.Println("Result:", result)
+    return nil
 }
 ```
 
@@ -159,7 +160,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
         return "", err
     }
     
-    // Process body in another step or transaction...
+    // Process the body in another step or transaction...
     return body, nil
 }
 ```
@@ -236,7 +237,7 @@ const PaymentURLKey = "payment_url"
 func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
     // Process order validation...
     
-    paymentsURL := "https://payments.example.com/checkout/" + orderData.OrderID
+    paymentsURL := ... 
     err := dbos.SetEvent(ctx, PaymentURLKey, paymentsURL)
     if err != nil {
         return "", fmt.Errorf("failed to set payment URL event: %w", err)
@@ -249,7 +250,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error)
 The HTTP handler that originally started the workflow uses `GetEvent` to await this URL, then redirects the customer to it:
 
 ```go
-func webCheckoutHandler(w http.ResponseWriter, r *http.Request) {
+func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *http.Request) {
     orderData := parseOrderData(r) // Parse order from request
     
     handle, err := dbos.RunAsWorkflow(dbosContext, checkoutWorkflow, orderData)
