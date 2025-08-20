@@ -76,33 +76,46 @@ func example(input string) error {
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through the `DBOS.workflowID` context variable.
+You can access this ID through [`GetWorkflowID`](../reference/methods.md#getworkflowid).
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow()`.
+You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunAsWorkflow`.
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
 For example:
 
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow(var1: string, var2: string) {
-        // ...
+```go
+func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+    workflowID, err := dbos.GetWorkflowID(ctx)
+    if err != nil {
+        return "", err
     }
+    fmt.Printf("Running workflow with ID: %s\n", workflowID)
+    // ...
+    return "success", nil
 }
 
-async function main() {
-    const myID: string = ...
-    const handle = await DBOS.startWorkflow(Example, {workflowID: myID}).exampleWorkflow("one", "two");
-    const result = await handle.getResult();
+func main() {
+    dbos.RegisterWorkflow(dbosContext, exampleWorkflow)
+    
+    myID := "unique-workflow-id-123"
+    handle, err := dbos.RunAsWorkflow(dbosContext, exampleWorkflow, "input", 
+        dbos.WithWorkflowID(myID))
+    if err != nil {
+        log.Fatal(err)
+    }
+    result, err := handle.GetResult()
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println("Result:", result)
 }
 ```
 
 ## Determinism
 
-Workflows are in most respects normal TypeScript functions.
+Workflows are in most respects normal Go functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
@@ -110,86 +123,82 @@ Instead, you should do all database operations in [transactions](./transaction-t
 
 For example, **don't do this**:
 
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await fetch("https://example.com").then(r => r.text()); 
-        await Example.exampleTransaction(body);
+```go
+func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+    // Don't make an HTTP request directly in a workflow function
+    resp, err := http.Get("https://example.com")
+    if err != nil {
+        return "", err
     }
+    defer resp.Body.Close()
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
+    // Process body...
+    return string(body), nil
 }
 ```
 
 Instead, do this:
-```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await DBOS.runStep(
-          async ()=>{return await fetch("https://example.com").then(r => r.text())},
-          {name: "fetchBody"}
-        );
-        await Example.exampleTransaction(body);
+
+```go
+func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+    // Make HTTP requests in steps
+    body, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+        resp, err := http.Get("https://example.com")
+        if err != nil {
+            return "", err
+        }
+        defer resp.Body.Close()
+        bodyBytes, err := io.ReadAll(resp.Body)
+        if err != nil {
+            return "", err
+        }
+        return string(bodyBytes), nil
+    }, dbos.WithStepName("fetchBody"))
+    if err != nil {
+        return "", err
     }
-}
-```
-
-Or this:
-```javascript
-class Example {
-    @DBOS.step()
-    static async fetchBody() {
-      // Instead, make HTTP requests in steps
-      return await fetch("https://example.com").then(r => r.text());
-    }
-
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        const body = await Example.fetchBody();
-        await Example.exampleTransaction(body);
-    }
-}
-```
-
-## Workflow Timeouts
-
-You can set a timeout for a workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
-When the timeout expires, the workflow **and all its children** are cancelled.
-Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
-
-Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow starts execution.
-Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-
-Example syntax:
-
-```javascript
-async function taskFunction(task) {
-    // ...
-}
-const taskWorkflow = DBOS.registerWorkflow(taskFunction);
-
-async function main() {
-  const task = ...
-  const timeout = ... // Timeout in milliseconds
-  const handle = await DBOS.startWorkflow(taskWorkflow, {timeoutMS: timeout})(task);
+    
+    // Process body in another step or transaction...
+    return body, nil
 }
 ```
 
 ## Durable Sleep
 
-You can use [`DBOS.sleep()`](../reference/methods.md#dbossleep) to put your workflow to sleep for any period of time.
+You can use [`Sleep`](../reference/methods.md#sleep) to put your workflow to sleep for any period of time.
 This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
 
 Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
 For example:
 
-```javascript
-@DBOS.workflow()
-static async exampleWorkflow(timeToSleep, task) {
-    await DBOS.sleep(timeToSleep);
-    await runTask(task);
+```go
+func runTask(ctx dbos.DBOSContext, task string) (string, error) {
+    // Execute the task...
+    return "task completed", nil
+}
+
+func exampleWorkflow(ctx dbos.DBOSContext, input struct {
+    TimeToSleep time.Duration
+    Task        string
+}) (string, error) {
+    // Sleep for the specified duration
+    _, err := dbos.Sleep(ctx, input.TimeToSleep)
+    if err != nil {
+        return "", err
+    }
+    
+    // Execute the task after sleeping
+    result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+        return runTask(ctx, input.Task)
+    })
+    if err != nil {
+        return "", err
+    }
+    
+    return result, nil
 }
 ```
 
@@ -198,54 +207,67 @@ static async exampleWorkflow(timeToSleep, task) {
 Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
 They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
 
-#### setEvent
+#### SetEvent
 
-Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if has already been published.
 
-```typescript
-DBOS.setEvent<T>(key: string, value: T): Promise<void>
+```go
+func SetEvent[P any](ctx DBOSContext, key string, message P) error
 ```
-#### getEvent
 
-You can call [`DBOS.getEvent`](../reference/methods.md#dbosgetevent) to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+#### GetEvent
 
-You can also call `getEvent` from outside of your DBOS application with [DBOS Client](../reference/client.md).
+You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
-```typescript
-DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+```go
+func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in the [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
+For example, in an e-commerce application, the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
-The checkout workflow emits the payments URL using `setEvent()`:
+The checkout workflow emits the payments URL using `SetEvent`:
 
-```javascript
-  @DBOS.workflow()
-  static async checkoutWorkflow(...): Promise<void> {
-    ...
-    const paymentsURL = ...
-    await DBOS.setEvent(PAYMENT_URL, paymentsURL);
-    ... 
-  }
+```go
+const PaymentURLKey = "payment_url"
+
+func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+    // Process order validation...
+    
+    paymentsURL := "https://payments.example.com/checkout/" + orderData.OrderID
+    err := dbos.SetEvent(ctx, PaymentURLKey, paymentsURL)
+    if err != nil {
+        return "", fmt.Errorf("failed to set payment URL event: %w", err)
+    }
+    
+    // Continue with checkout process...
+}
 ```
 
-The HTTP handler that originally started the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
+The HTTP handler that originally started the workflow uses `GetEvent` to await this URL, then redirects the customer to it:
 
-```javascript
-  static async webCheckout(...): Promise<void> {
-    const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
-    const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
-    if (url === null) {
-      DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
-    } else {
-      DBOS.koaContext.redirect(url);
+```go
+func webCheckoutHandler(w http.ResponseWriter, r *http.Request) {
+    orderData := parseOrderData(r) // Parse order from request
+    
+    handle, err := dbos.RunAsWorkflow(dbosContext, checkoutWorkflow, orderData)
+    if err != nil {
+        http.Error(w, "Failed to start checkout", http.StatusInternalServerError)
+        return
     }
-  }
+    
+    // Wait up to 30 seconds for the payment URL event
+    url, err := dbos.GetEvent[string](dbosContext, handle.GetWorkflowID(), PaymentURLKey, 30*time.Second)
+    if err != nil {
+        // Handle a timeout
+    }
+    
+    // Redirect the customer
+}
 ```
 
 #### Reliability Guarantees
@@ -259,114 +281,72 @@ This is useful for sending notifications to an active workflow.
 
 #### Send
 
-You can call `DBOS.send()` to send a message to a workflow.
+You can call [`Send`](../reference/methods.md#send) to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
-You can also call `send` from outside of your DBOS application with [DBOS Client](../reference/client.md).
-
-```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+```go
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
 ```
 
 #### Recv
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
+Workflows can call [`Recv`](../reference/methods.md#recv) to receive messages sent to them, optionally for a particular topic.
+Each call to `Recv` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
-```typescript
-DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
+```go
+func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error)
 ```
 
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in the [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in an e-commerce application, the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
-To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
+To wait for this notification, the payments workflow uses `Recv`, executing failure-handling code if the notification doesn't arrive in time:
 
-```javascript
-@DBOS.workflow()
-static async checkoutWorkflow(...): Promise<void> {
-  ...
-  const notification = await DBOS.recv<string>(PAYMENT_STATUS, timeout);
-  if (notification) {
+```go
+const PaymentStatusTopic = "payment_status"
+
+func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+    // Process initial checkout steps...
+    
+    // Wait for payment notification with a 5-minute timeout
+    notification, err := dbos.Recv[PaymentNotification](ctx, PaymentStatusTopic, 5*time.Minute)
+    if err != nil {
+        ... // Handle timeout or other errors
+    }
+    
+    // Handle the notification
+    if notification.Status == "completed" {
       ... // Handle the notification.
-  } else {
-      ... // Handle a timeout.
-  }
+    } else {
+      ... // Handle a failure
+    }
 }
 ```
 
-A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
+A webhook waits for the payment processor to send the notification, then uses `Send` to forward it to the workflow:
 
-```javascript
-static async paymentWebhook(): Promise<void> {
-  const notificationMessage = ... // Parse the notification.
-  const workflowID = ... // Retrieve the workflow ID from notification metadata.
-  await DBOS.send(workflow_id, notificationMessage, PAYMENT_STATUS);
+```go
+func paymentWebhookHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse the notification from the payment processor
+    notification := ...
+    // Retrieve the workflow ID from notification metadata
+    workflowID := ...
+    
+    // Send the notification to the waiting workflow
+    err := dbos.Send(dbosContext, workflowID, notification, PaymentStatusTopic)
+    if err != nil {
+        http.Error(w, "Failed to send notification", http.StatusInternalServerError)
+        return
+    }    
 }
 ```
 #### Reliability Guarantees
 
-All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
+All messages are persisted to the database, so if `Send` completes successfully, the destination workflow is guaranteed to be able to `Recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
-
-## Workflow Streaming
-
-Workflows can stream data in real time to clients.
-This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
-
-#### Writing to Streams
-
-You can write values to a stream from a workflow or its steps using [`DBOS.writeStream`](../reference/methods.md#dboswritestream).
-A workflow may have any number of streams, each identified by a unique key.
-
-```typescript
-DBOS.writeStream<T>(key: string, value: T): Promise<void>
-```
-
-When you are done writing to a stream, you should close it with [`DBOS.closeStream`](../reference/methods.md#dbosclosestream).
-Otherwise, streams are automatically closed when the workflow terminates.
-
-```typescript
-DBOS.closeStream(key: string): Promise<void>
-```
-
-DBOS streams are immutable and append-only.
-Writes to a stream from a workflow happen exactly-once.
-Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
-Readers will see all values written to the stream from all tries of the step in the order in which they were written.
-
-**Example syntax:**
-
-```typescript
-async function producerWorkflowFunction() {
-  await DBOS.writeStream("example_key", { step: 1, data: "value1" });
-  await DBOS.writeStream("example_key", { step: 2, data: "value2" });
-  await DBOS.closeStream("example_key"); // Signal completion
-}
-
-const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
-```
-
-#### Reading from Streams
-
-You can read values from a stream from anywhere using [`DBOS.readStream`](../reference/methods.md#dbosreadstream).
-This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
-
-```typescript
-DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
-```
-
-**Example syntax:**
-
-```typescript
-for await (const value of DBOS.readStream(workflowID, "example_key")) {
-  console.log(`Received: ${JSON.stringify(value)}`);
-}
-```
 
 ## Workflow Guarantees
 
@@ -386,7 +366,7 @@ DBOS provides [tooling](./workflow-management.md) to help you identify failed wo
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden by setting the `DBOS__APPVERSION` environment variable).
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through configuration).
 All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
