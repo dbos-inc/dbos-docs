@@ -172,7 +172,101 @@ WithLoadOutput controls whether to load workflow output data (default: true).
 func WithName(name string) ListWorkflowsOption
 ```
 
-WithName filters workflows by the specified workflow function name.
+Filter workflows by the specified workflow function name.
+
+#### WithOffset
+
+```go
+func WithOffset(offset int) ListWorkflowsOption
+```
+
+Skip this many workflows from the results returned (for pagination).
+
+#### WithSortDesc
+
+```go
+func WithSortDesc(sortDesc bool) ListWorkflowsOption
+```
+
+Sort the results in descending (true) or ascending (false) order by workflow start time.
+
+#### WithStartTime
+
+```go
+func WithStartTime(startTime time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows started after this timestamp.
+
+#### WithStatus
+
+```go
+func WithStatus(status []WorkflowStatusType) ListWorkflowsOption
+```
+
+Filter workflows by [status](#workflowstatustype). Multiple statuses can be specified.
+
+#### WithUser
+
+```go
+func WithUser(user string) ListWorkflowsOption
+```
+
+Filter workflows run by this authenticated user.
+
+#### WithWorkflowIDs
+
+```go
+func WithWorkflowIDs(workflowIDs []string) ListWorkflowsOption
+```
+
+Filter workflows by specific workflow IDs.
+
+#### WithWorkflowIDPrefix
+
+```go
+func WithWorkflowIDPrefix(prefix string) ListWorkflowsOption
+```
+
+Filter workflows whose IDs start with the specified prefix.
+
+### CancelWorkflow
+
+```go
+func CancelWorkflow(ctx DBOSContext, workflowID string) error
+```
+
+Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow to cancel.
+
+### ResumeWorkflow
+
+```go
+func ResumeWorkflow[R any](ctx DBOSContext, workflowID string) (*WorkflowHandle[R], error)
+```
+
+Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow to resume.
+
+### ForkWorkflow
+
+```go
+func ForkWorkflow[R any](ctx DBOSContext, workflowID string, startStep int, opts ...WorkflowOptions) (*WorkflowHandle[R], error)
+```
+
+Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow to fork.
+- **startStep**: The ID of the step from which to start the forked workflow.
+- **opts**: Optional workflow configuration options (documented [here](./workflows-steps.md#dbosrunasworkflow)).
 
 ### Workflow Status
 
@@ -204,3 +298,44 @@ type WorkflowStatus struct {
 	Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
 }
 ```
+
+### WorkflowStatusType
+
+The `WorkflowStatusType` represents the execution status of a workflow:
+
+```go
+type WorkflowStatusType string
+
+const (
+	WorkflowStatusPending        WorkflowStatusType = "PENDING"
+	WorkflowStatusSuccess        WorkflowStatusType = "SUCCESS"
+	WorkflowStatusError          WorkflowStatusType = "ERROR"
+	WorkflowStatusCancelled      WorkflowStatusType = "CANCELLED"
+	WorkflowStatusEnqueued       WorkflowStatusType = "ENQUEUED"
+	WorkflowStatusRetriesExceeded WorkflowStatusType = "RETRIES_EXCEEDED"
+)
+```
+
+## DBOS Variables
+
+### GetWorkflowID
+
+```go
+func GetWorkflowID(ctx DBOSContext) (string, error)
+```
+
+Return the ID of the current workflow, if in a workflow. Returns an error if not called from within a workflow context.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+
+### GetStepID
+
+```go
+func GetStepID(ctx DBOSContext) (string, error)
+```
+
+Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.
+
+**Parameters:**
+- **ctx**: The DBOS context.
