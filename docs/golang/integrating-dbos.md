@@ -4,13 +4,13 @@ title: Add DBOS To Your App
 ---
 
 
-This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-go) library to your existing application to **durably execute** it and make it resilient to any failure.
+This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-golang) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
 `go get` DBOS into your application.
 
 ```shell
-go get github.com/dbos-inc/dbos-transact-go
+go get github.com/dbos-inc/dbos-transact-golang
 ```
 
 DBOS requires a Postgres database.
