@@ -26,10 +26,6 @@ func workflowFunction(ctx dbos.DBOSContext, input string) (float64, error) {
     }
     return randomNumber, nil
 }
-
-func main() {
-    dbos.RegisterWorkflow(dbosContext, workflowFunction)
-}
 ```
 
 You should make a function a step if you're using it in a DBOS workflow and it performs a [**nondeterministic**](../tutorials/workflow-tutorial.md#determinism) operation.
