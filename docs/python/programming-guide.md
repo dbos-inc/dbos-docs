@@ -53,7 +53,7 @@ Thus, DBOS makes your application **resilient to any failure**.
 DBOS needs a database to durably store workflow and step state.
 By default, it uses SQLite, which requires no configuration.
 For production use, we recommend connecting your DBOS application to a Postgres database.
-You can run these examples with Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
+You can optionally run these examples with Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
 :::
 
 Let's create a simple DBOS program that runs a workflow of two steps.
