@@ -34,7 +34,7 @@ DBOS.launch()
 DBOS needs a database to durably store workflow and step state.
 By default, it uses SQLite, which requires no configuration.
 For production use, we recommend connecting your DBOS application to a Postgres database.
-You can connect this initialization code to Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
+When you're ready for production, you can connect this initialization code to Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
 :::
 
 ### 3. Start Your Application
