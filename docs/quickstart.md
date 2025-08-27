@@ -75,18 +75,6 @@ dbos init --template dbos-app-starter
 <section className="row list">
 
 <article className="col col--6">
-DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string.
-Otherwise, you can start Postgres in a Docker container with this command:
-</article>
-
-<article className="col col--6">
-```bash
-dbos postgres start
-```
-</article>
-
-<article className="col col--6">
 Now, start your app!
 </article>
 
