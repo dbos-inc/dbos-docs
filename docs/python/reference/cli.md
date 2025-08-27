@@ -135,7 +135,7 @@ Use the `-r` flag to grant a role access to that schema.
 
 ### dbos start
 
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#dbos-configuration-file).
 For example:
 
 ```yaml
