@@ -36,7 +36,7 @@ If the workflow you wish to debug does not appear in the list, select the pencil
 
 ![Workflow ID picker](./assets/ttdb-wfid-picker.png)
 
-After selecting a workflow ID, the DBOS debugger will automatically launch your application with the [`dbos debug`](../reference/cli#dbos-debug) 
+After selecting a workflow ID, the DBOS debugger will automatically launch your application.
 command with the VS Code Python debugger attached. 
 From here, you can step through your DBOS workflow and inspect variables as you would when debugging any other Python application.
 
