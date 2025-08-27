@@ -112,20 +112,9 @@ It has the same format as the `system_database_url` you pass to the DBOS constru
 - **database_url**: The connection string to your application database.
 This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
 It has the same format as the `application_database_url` you pass to the DBOS constructor.
-- **runtimeConfig**: The [runtime section](#runtime-section).
-
-#### Runtime Section
-
-- **start**: The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
-- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
-
-**Example**:
-
-```yaml
-runtimeConfig:
-  start:
-    - "fastapi run"
-```
+- **runtimeConfig**:
+  - **start**: The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
+  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 
