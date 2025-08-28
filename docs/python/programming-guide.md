@@ -50,7 +50,7 @@ If your program crashes or is interrupted, DBOS uses this checkpointed state to 
 Thus, DBOS makes your application **resilient to any failure**.
 
 :::info
-DBOS needs a database to durably store workflow and step state.
+DBOS uses a database to durably store workflow and step state.
 By default, it uses SQLite, which requires no configuration.
 For production use, we recommend connecting your DBOS application to a Postgres database.
 You can optionally run these examples with Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
