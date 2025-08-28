@@ -36,7 +36,7 @@ from .schema import OrderStatus, orders, products
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "application_database_url": os.environ.get('DBOS_DATABASE_URL'),
 }
 DBOS(fastapi=app, config=config)
 
@@ -272,37 +272,11 @@ if __name__ == "__main__":
 
 ## Try it Yourself!
 
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/widget-store
 ```
 
-Then create a virtual environment and install DBOS:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install dbos
-```
-
-Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
-
-```shell
-dbos postgres start
-```
-
-Create database tables:
-
-```shell
-dbos migrate
-```
-
-Then start your app:
-
-```shell
-python3 -m widget_store.main
-```
-
-Visit [http://localhost:8000](http://localhost:8000) to see your app! 
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store) to run the app.

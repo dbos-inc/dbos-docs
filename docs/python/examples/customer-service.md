@@ -328,64 +328,11 @@ def frontend():
 
 ## Try it Yourself!
 
-### Creating an OpenAI Account
-
-To run this app, you need an OpenAI developer account.
-Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
-This bot uses `gpt-3.5-turbo` for text generation.
-Make sure you have some credits (~$1) to use it.
-
-Set your API key as an environment variable:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
-export OPENAI_API_KEY=<your_openai_key>
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd python/reliable-refunds-langchain
 ```
 
-### Setting Up SendGrid
-
-This app uses [SendGrid](https://sendgrid.com/en-us) to send emails.
-Create a SendGrid account, verify an email for sending, and generate an API key.
-Then set the API key and sender email as environment variables:
-
-```shell
-export SENDGRID_API_KEY=<your key>
-export SENDGRID_FROM_EMAIL=<your email>
-export ADMIN_EMAIL=<your email>
-```
-
-### Deploying to the Cloud
-
-To serverlessly deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then, run this command to deploy your app:
-
-```shell
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see your chatbot!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First create a virtual environment and install dependencies:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-
-Then start your app in the virtual environment:
-
-```shell
-alembic upgrade head
-dbos start
-```
-
-Visit [`http://localhost:8000`](http://localhost:8000) to see your customer service chatbot!
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/reliable-refunds-langchain) to run the app.

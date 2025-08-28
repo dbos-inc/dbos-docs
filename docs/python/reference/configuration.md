@@ -11,7 +11,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
-    "database_url": os.environ["DBOS_DATABASE_URL"],
+    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
 ```
@@ -22,8 +22,8 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    database_url: Optional[str]
     system_database_url: Optional[str]
+    application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
     log_level: Optional[str]
@@ -36,24 +36,38 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name.
-- **database_url**: A connection string to a Postgres database. DBOS uses this connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
+- **system_database_url**: A connection string to your system database.
+This is the database in which DBOS stores workflow and step state; its schema is documented [here](../../explanations/system-tables.md).
+This may be either Postgres or SQLite, though Postgres is recommended for production.
+DBOS uses this connection string, unmodified, to create a [SQLAlchemy engine](https://docs.sqlalchemy.org/en/20/core/engines.html).
 A valid connection string looks like:
 
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
 
-:::info
-SQLAlchemy requires passwords in connection strings to be escaped if they contain special characters (e.g., with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)).
-:::
+Or with SQLite:
 
-If no connection string is provided, DBOS uses this default:
-
-```shell
-postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
+```
+sqlite:///[path to database file]
 ```
 
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine), applied to both the application and [system database](../../explanations/system-tables) engines. Defaults to:
+:::info
+Passwords in connection strings must be escaped (for example with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)) if they contain special characters.
+:::
+
+If no connection string is provided, DBOS uses a SQLite database:
+
+```shell
+sqlite:///[application_name].sqlite
+```
+- **application_database_url**: A connection string to your application database.
+This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) functions.
+This parameter has the same format and default as `system_database_url`.
+If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
+Defaults to:
+
 ```python
 {
   "pool_size": 20,
@@ -61,7 +75,6 @@ postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
   "pool_timeout": 30,
 }
 ```
-- **system_database_url**: A connection string to a Postgres database, used to create the [system database](../../explanations/system-tables.md) in which DBOS stores internal state. If not supplied, system database is created using `database_url` suffixing the database name with `_dbos_sys`
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
@@ -93,21 +106,15 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name. Must match the name supplied to the DBOS constructor.
 - **language**: The application language. Must be set to `python` for Python applications.
-- **database_url**: A connection string to a Postgres database. This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md). It has the same format as the connection string you pass to the DBOS constructor.
-- **runtimeConfig**: The [runtime section](#runtime-section).
-
-#### Runtime Section
-
-- **start**: The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
-- **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
-
-**Example**:
-
-```yaml
-runtimeConfig:
-  start:
-    - "fastapi run"
-```
+- **system_database_url**: The connection string to your DBOS system database.
+This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
+It has the same format as the `system_database_url` you pass to the DBOS constructor.
+- **database_url**: The connection string to your application database.
+This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
+It has the same format as the `application_database_url` you pass to the DBOS constructor.
+- **runtimeConfig**:
+  - **start**: The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
+  - **setup**: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 
