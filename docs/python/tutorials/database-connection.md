@@ -11,7 +11,8 @@ You can use either a SQLite or Postgres database.
 A SQLite database is just a file on disk, while a Postgres database is a server that your application connects to.
 By default, DBOS uses SQLite.
 SQLite is excellent for prototyping and testing because it requires no configuration or server.
-However, **for production, we recommend using Postgres**.
+However, because a SQLite database is just a file on disk, it can't be used in a distributed setting where an application runs on multiple servers.
+Therefore, **for production, we recommend using Postgres**.
 
 ## Configuring the System Database Connection
 
