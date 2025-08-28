@@ -11,32 +11,9 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 You can see the dashboard live [here](https://demo-earthquake-tracker.cloud.dbos.dev/).
 
-## Import and Initialize the App
-
-In our main file (`earthquake_tracker/main.py`) let's start off with imports and initializing the DBOS app.
-
-
-```python
-import threading
-from datetime import datetime, timedelta
-from typing import TypedDict
-
-import requests
-from dbos import DBOS, DBOSConfig
-from schema import earthquake_tracker
-from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import insert
-
-config: DBOSConfig = {
-    "name": "earthquake-tracker",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
-}
-DBOS(config=config)
-```
-
 ## Retrieving Earthquake Data
 
-Now, let's write a function that queries the USGS for data on recent earthquakes.
+First, let's write a function that queries the USGS for data on recent earthquakes.
 Our function will take in a time range and return the id, place, magnitude, and timestamp of all earthquakes that occured in that time range.
 We annotate the function with [`@DBOS.step`](../tutorials/step-tutorial.md) so we can call it from a durable workflow later on.
 
@@ -120,10 +97,19 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```
 
-Finally, in our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
+Finally, in our main function, let's initialize and launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python
 if __name__ == "__main__":
+    application_database_url = os.environ.get('DBOS_DATABASE_URL')
+    if not application_database_url:
+        raise Exception("DBOS_DATABASE_URL not set")
+
+    config: DBOSConfig = {
+        "name": "earthquake-tracker",
+        "application_database_url": application_database_url,
+    }
+    DBOS(config=config)
     DBOS.launch()
     threading.Event().wait()
 ```

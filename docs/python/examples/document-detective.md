@@ -39,7 +39,7 @@ from .schema import chat_history
 app = FastAPI()
 config: DBOSConfig = {
     "name": "document-detective",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "application_database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
 DBOS(fastapi=app, config=config)
 ```
