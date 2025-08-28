@@ -59,7 +59,7 @@ def example_select(name: str) -> Optional[str]:
 </Tabs>
 
 Transactions should run in the database in which your application stores data.
-You can specify what database transactions run in by setting an `application_database_url` when you configure DBOS.
+You can specify the database in which transactions run by setting an `application_database_url` when you configure DBOS.
 The application database (the database in which transactions run) does not need to be the same database (or even on the same server) as your system database.
 For example:
 
