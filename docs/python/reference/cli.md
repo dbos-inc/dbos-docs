@@ -18,7 +18,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-D, --db-url URL`: Your DBOS application database URL.
 * `-l, --limit INTEGER`: Limit the results returned  [default: 10]
 * `-u, --user TEXT`: Retrieve workflows run by this user
-* `-s, --start-time TEXT`: Retrieve workflows starting after this timestamp (ISO 8601 format)
+* `-t, --start-time TEXT`: Retrieve workflows starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve workflows starting before this timestamp (ISO 8601 format)
 * `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
@@ -104,7 +104,7 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
 - `-D, --db-url URL`: Your DBOS application database URL.
 * `-l, --limit INTEGER`: Limit the results returned
-* `-s, --start-time TEXT`: Retrieve functions starting after this timestamp (ISO 8601 format)
+* `-t, --start-time TEXT`: Retrieve functions starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve functions starting before this timestamp (ISO 8601 format)
 * `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
