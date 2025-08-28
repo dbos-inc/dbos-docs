@@ -232,47 +232,11 @@ st.dataframe(filtered_df, use_container_width=True)
 
 ## Try it Yourself!
 
-### Deploying to the Cloud
-
-To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/earthquake-tracker
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see some earthquakes!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/earthquake-tracker
 ```
 
-Then create a virtual environment:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Then start your app:
-
-```shell
-pip install -r requirements.txt
-alembic upgrade head
-dbos start
-```
-
-Visit [http://localhost:8000](http://localhost:8000) to see some earthquakes! 
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/earthquake-tracker) to run the app.
