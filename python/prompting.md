@@ -64,7 +64,7 @@ from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
     "name": "my-app",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)
 ```
@@ -124,7 +124,7 @@ from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
     "name": "dbos-starter",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)
 
@@ -157,7 +157,7 @@ from fastapi import FastAPI
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-starter",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config, fastapi=app)
 
@@ -192,7 +192,7 @@ from fastapi import FastAPI
 app = FastAPI()
 config: DBOSConfig = {
     "name": "dbos-starter",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config, fastapi=app)
 
@@ -899,7 +899,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
-    "database_url": os.environ["DBOS_DATABASE_URL"],
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)
 ```
@@ -910,8 +910,8 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
-    database_url: Optional[str]
     system_database_url: Optional[str]
+    application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
     log_level: Optional[str]
@@ -924,24 +924,38 @@ class DBOSConfig(TypedDict):
 ```
 
 - **name**: Your application's name.
-- **database_url**: A connection string to a Postgres database. DBOS uses this connection string, unmodified, to create a SQLAlchemy engine.
+- **system_database_url**: A connection string to your system database.
+This is the database in which DBOS stores workflow and step state.
+This may be either Postgres or SQLite, though Postgres is recommended for production.
+DBOS uses this connection string, unmodified, to create a SQLAlchemy engine
 A valid connection string looks like:
 
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
 ```
 
-:::info
-SQLAlchemy requires passwords in connection strings to be escaped if they contain special characters (e.g., with urllib).
-:::
+Or with SQLite:
 
-If no connection string is provided, DBOS uses this default:
-
-```shell
-postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
+```
+sqlite:///[path to database file]
 ```
 
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s `create_engine()`, applied to both the application and system database engines. Defaults to:
+:::info
+Passwords in connection strings must be escaped (for example with urllib) if they contain special characters.
+:::
+
+If no connection string is provided, DBOS uses a SQLite database:
+
+```shell
+sqlite:///[application_name].sqlite
+```
+- **application_database_url**: A connection string to your application database.
+This is the database in which DBOS executes `@DBOS.transaction` functions.
+This parameter has the same format and default as `system_database_url`.
+If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s create_engine()
+Defaults to:
+
 ```python
 {
   "pool_size": 20,
@@ -949,7 +963,6 @@ postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
   "pool_timeout": 30,
 }
 ```
-- **system_database_url**: A connection string to a Postgres database, used to create the system database in which DBOS stores internal state. If not supplied, system database is created using `database_url` suffixing the database name with `_dbos_sys`
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
 - **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
@@ -957,7 +970,7 @@ postgresql://postgres:dbos@localhost:5432/application_name?connect_timeout=10
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows. Workflow versioning is documented here.
+- **application_version**: The code version for this application and its workflows.
 
 
 ### Transactions

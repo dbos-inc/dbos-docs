@@ -130,56 +130,11 @@ def frontend():
 
 ## Try it Yourself!
 
-### Setting Up SendGrid
-
-This app uses [SendGrid](https://sendgrid.com/en-us) to send reminder emails.
-Create a SendGrid account, verify an email for sending, and generate an API key.
-Then, set the API key and sender email as environment variables:
-
-```shell
-export SENDGRID_API_KEY=<your key>
-export SENDGRID_FROM_EMAIL=<your email>
-```
-
-### Deploying to the Cloud
-
-To deploy this app to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/scheduled-reminders
-dbos-cloud app deploy
-```
-This command outputs a URL&mdash;visit it to schedule a reminder!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/scheduled-reminders
 ```
 
-Then create a virtual environment:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Then start your app:
-
-```shell
-pip install -r requirements.txt
-dbos start
-```
-
-Visit [`http://localhost:8000`](http://localhost:8000) to schedule a reminder!
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/scheduled-reminders) to run the app.

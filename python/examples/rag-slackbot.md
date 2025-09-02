@@ -291,24 +291,11 @@ if __name__ == "__main__":
 
 ## Try it Yourself!
 
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/llamabot
 ```
 
-Next, you need to configure the bot in your Slack workspace.
-You must also supply Slack and OpenAI API keys.
-See the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot) for a detailed walkthrough on how to do this.
-
-After that, you can deploy it to the cloud with a single command:
-
-```shell
-dbos-cloud app deploy
-```
-
-Once deployed, you can use your bot from your Slack workspace.
-Llamabot answers questions whenever you tag the bot (`@Llamabot`) in your message or reply to a bot's message, and it stores any other messages as a "fact" in its vector store.
-
-Have fun chatting with the bot!
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/llamabot) to run the app.

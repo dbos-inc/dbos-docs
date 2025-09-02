@@ -106,55 +106,11 @@ if __name__ == "__main__":
 
 ## Try it Yourself!
 
-### Setting Up Slack
-
-To run this app, you need a Slack bot token for your workspace.
-Follow [this tutorial](https://api.slack.com/tutorials/tracks/getting-a-token) to generate one.
-Your token should start with "xoxb".
-Set it as an environment variable like so:
-
-```shell
-export SLACK_HN_BOT_OAUTH_TOKEN=<your_token>
-```
-
-You should also create a Slack channel named `hacker-news-alerts` in your workspace for the bot to post to!
-
-### Deploying to the Cloud
-
-To deploy this app as a persistent scheduled job to DBOS Cloud, first install the DBOS Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/hackernews-alerts
-dbos-cloud app deploy
-```
-You can visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/hackernews-alerts
 ```
 
-Then create a virtual environment:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Then start your app:
-
-```shell
-pip install -r requirements.txt
-dbos start
-```
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hackernews-alerts) to run the app.

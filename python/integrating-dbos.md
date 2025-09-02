@@ -13,19 +13,10 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 pip install dbos
 ```
 
-DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
-Otherwise, you can start Postgres in a Docker container with this command:
-
-```shell
-dbos postgres start
-```
-
 ### 2. Add the DBOS Initializer
 
 Add these lines of code to your program's main function.
 They initialize DBOS when your program starts.
-
 
 ```python
 import os
@@ -33,11 +24,18 @@ from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
     "name": "my-app",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)
 DBOS.launch()
 ```
+
+:::info
+DBOS uses a database to durably store workflow and step state.
+By default, it uses SQLite, which requires no configuration.
+For production use, we recommend connecting your DBOS application to a Postgres database.
+When you're ready for production, you can connect this initialization code to Postgres by setting the `DBOS_SYSTEM_DATABASE_URL` environment variable to a connection string to your Postgres database.
+:::
 
 ### 3. Start Your Application
 

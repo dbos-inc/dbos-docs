@@ -52,6 +52,7 @@
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS
 - [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS decorators to your Python class instance methods.
+- [DBOS Database Connections](https://docs.dbos.dev/python/tutorials/database-connection.md): DBOS uses a database to durably store workflow and step state.
 - [Debugging](https://docs.dbos.dev/python/tutorials/debugging.md): Learn how to debug your DBOS Python workflows.
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): Logging
