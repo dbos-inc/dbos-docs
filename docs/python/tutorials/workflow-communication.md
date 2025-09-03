@@ -3,7 +3,7 @@ sidebar_position: 50
 title: Communicating with Workflows
 ---
 
-DBOS provides a few different ways to communicate with workflows.
+DBOS provides a few different ways to communicate with your workflows.
 You can:
 
 - [Send messages to workflows](#workflow-messaging-and-notifications)
@@ -13,7 +13,7 @@ You can:
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
-This is useful for sending notifications to an active workflow.
+This is useful for sending notifications to a workflow while it's running.
 
 <img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
@@ -80,7 +80,7 @@ If you're sending a message from normal Python code, you can use [`SetWorkflowID
 
 ## Workflow Events
 
-Workflows can emit _events_, which are key-value pairs associated with the workflow.
+Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
 <img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
@@ -201,6 +201,8 @@ DBOS.read_stream(
     key: str
 ) -> Generator[Any, Any, None]
 ```
+
+You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/client.md#read_stream).
 
 **Example syntax:**
 
