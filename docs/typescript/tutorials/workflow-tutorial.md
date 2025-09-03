@@ -232,8 +232,6 @@ static async exampleWorkflow(timeToSleep, task) {
 ```
 
 
-
-
 ## Workflow Guarantees
 
 Workflows provide the following reliability guarantees.
