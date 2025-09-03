@@ -12,8 +12,10 @@ You can:
 
 
 ## Workflow Messaging and Notifications
-You can send messages to a specific workflow ID.
+You can send messages to a specific workflow.
 This is useful for sending notifications to an active workflow.
+
+<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### Send
 
@@ -78,8 +80,10 @@ If you're sending a message from normal Python code, you can use [`SetWorkflowID
 
 ## Workflow Events
 
-Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
-They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
+Workflows can emit _events_, which are key-value pairs associated with the workflow.
+They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
+
+<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### set_event
 
@@ -147,6 +151,8 @@ Additionally, if `get_event` is called in a workflow, the retrieved value is per
 
 Workflows can stream data in real time to clients.
 This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
+
+<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### Writing to Streams
 
