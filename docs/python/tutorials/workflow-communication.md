@@ -19,11 +19,6 @@ This is useful for sending notifications to a workflow while it's running.
 
 #### Send
 
-You can call `DBOS.send()` to send a message to a workflow.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
-
-You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md).
-
 ```python
 DBOS.send(
     destination_id: str,
@@ -32,11 +27,12 @@ DBOS.send(
 ) -> None
 ```
 
-#### Recv
+You can call `DBOS.send()` to send a message to a workflow.
+Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
-If the topic is not specified, this method only receives messages sent without a topic.
+You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md).
+
+#### Recv
 
 ```python
 DBOS.recv(
@@ -44,6 +40,10 @@ DBOS.recv(
     timeout_seconds: float = 60,
 ) -> Any
 ```
+
+Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
 
@@ -87,20 +87,15 @@ They are useful for publishing information about the status of a workflow or to 
 
 #### set_event
 
-Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
-
 ```python
 DBOS.set_event(
     key: str,
     value: Any,
 ) -> None
 ```
+
+Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
 #### get_event
-
-You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
-
-You can also call [`get_event`](../reference/client.md#get_event) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
 ```python
 DBOS.get_event(
@@ -109,6 +104,11 @@ DBOS.get_event(
     timeout_seconds: float = 60,
 ) -> None
 ```
+
+You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
+
+You can also call [`get_event`](../reference/client.md#get_event) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
 #### Events Example
 
@@ -156,15 +156,15 @@ This is useful for streaming results from a long-running workflow or LLM call or
 
 #### Writing to Streams
 
-You can write values to a stream from a workflow or its steps using [`DBOS.write_stream`](../reference/contexts.md#write_stream).
-A workflow may have any number of streams, each identified by a unique key.
-
 ```python
 DBOS.write_stream(
     key: str, 
     value: Any
 ) -> None:
 ```
+
+You can write values to a stream from a workflow or its steps using [`DBOS.write_stream`](../reference/contexts.md#write_stream).
+A workflow may have any number of streams, each identified by a unique key.
 
 When you are done writing to a stream, you should close it with [`DBOS.close_stream`](../reference/contexts.md#close_stream).
 Otherwise, streams are automatically closed when the workflow terminates.
@@ -192,15 +192,15 @@ def producer_workflow():
 
 #### Reading from Streams
 
-You can read values from a stream from anywhere using [`DBOS.read_stream`](../reference/contexts.md#read_stream).
-This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
-
 ```python
 DBOS.read_stream(
     workflow_id: str,
     key: str
 ) -> Generator[Any, Any, None]
 ```
+
+You can read values from a stream from anywhere using [`DBOS.read_stream`](../reference/contexts.md#read_stream).
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
 
 You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/client.md#read_stream).
 

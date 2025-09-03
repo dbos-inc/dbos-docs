@@ -19,24 +19,24 @@ This is useful for sending notifications to a workflow while it's running.
 
 #### Send
 
+```typescript
+DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+```
+
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md).
 
-```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
-```
-
 #### Recv
-
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
-If the topic is not specified, this method only receives messages sent without a topic.
 
 ```typescript
 DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
+
+Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
 
@@ -83,22 +83,22 @@ They are useful for publishing information about the status of a workflow or to 
 
 #### setEvent
 
-Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
-
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
+
 #### getEvent
+
+```typescript
+DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+```
 
 You can call [`DBOS.getEvent`](../reference/methods.md#dbosgetevent) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 You can also call [`getEvent`](../reference/client.md#getevent) from outside of your DBOS application with [DBOS Client](../reference/client.md).
-
-```typescript
-DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
-```
 
 #### Events Example
 
@@ -146,12 +146,12 @@ This is useful for streaming results from a long-running workflow or LLM call or
 
 #### Writing to Streams
 
-You can write values to a stream from a workflow or its steps using [`DBOS.writeStream`](../reference/methods.md#dboswritestream).
-A workflow may have any number of streams, each identified by a unique key.
-
 ```typescript
 DBOS.writeStream<T>(key: string, value: T): Promise<void>
 ```
+
+You can write values to a stream from a workflow or its steps using [`DBOS.writeStream`](../reference/methods.md#dboswritestream).
+A workflow may have any number of streams, each identified by a unique key.
 
 When you are done writing to a stream, you should close it with [`DBOS.closeStream`](../reference/methods.md#dbosclosestream).
 Otherwise, streams are automatically closed when the workflow terminates.
@@ -179,12 +179,12 @@ const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 
 #### Reading from Streams
 
-You can read values from a stream from anywhere using [`DBOS.readStream`](../reference/methods.md#dbosreadstream).
-This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
-
 ```typescript
 DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
 ```
+
+You can read values from a stream from anywhere using [`DBOS.readStream`](../reference/methods.md#dbosreadstream).
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
 
 You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/client.md#readstream).
 
