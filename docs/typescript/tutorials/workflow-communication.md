@@ -13,7 +13,7 @@ You can:
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
-This is useful for sending notifications to a workflow while it's running.
+This is useful for signaling a workflow or sending notifications to it while it's running.
 
 <img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
