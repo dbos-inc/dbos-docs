@@ -61,6 +61,7 @@
 - [Steps](https://docs.dbos.dev/python/tutorials/step-tutorial.md): When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step.
 - [Testing Your App](https://docs.dbos.dev/python/tutorials/testing.md): Testing DBOS Functions
 - [Transactions](https://docs.dbos.dev/python/tutorials/transaction-tutorial.md): Learn how to perform database operations
+- [Communicating with Workflows](https://docs.dbos.dev/python/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/python/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Get Started with DBOS](https://docs.dbos.dev/quickstart.md): DBOS is a library for building reliable programs.
@@ -88,6 +89,7 @@
 - [Scheduled Workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows.md): You can schedule DBOS workflows to run exactly once per time interval.
 - [Steps](https://docs.dbos.dev/typescript/tutorials/step-tutorial.md): Learn how to communicate with external APIs and services
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations
+- [Communicating with Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Upgrading to TSv3](https://docs.dbos.dev/typescript/upgrading.md): With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.

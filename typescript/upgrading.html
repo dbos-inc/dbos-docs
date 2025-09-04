@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.7783e9c4.js" defer="defer"></script>
-<script src="/assets/js/main.f9bfbfdf.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0ef08d0a.js" defer="defer"></script>
+<script src="/assets/js/main.24389d33.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -67,9 +67,7 @@ and <a href="/typescript/reference/workflows-steps#dbosrunstep"><code>DBOS.runSt
 Use of the decoratorless API is not required, but supports a broad range of programming styles and allows DBOS to be used in JavaScript code.</p></div></div>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="accessing-context">Accessing Context<a href="#accessing-context" class="hash-link" aria-label="Direct link to Accessing Context" title="Direct link to Accessing Context">​</a></h2>
 <p>In v1, DBOS methods had a subclass of <code>DBOSContext</code> (<code>StepContext</code>, <code>TransactionContext</code>, <code>WorkflowContext</code>, etc.) as their first parameter.  Capabilities that were originally accessed via these context parameters are now accessed via <code>DBOS</code> class static functions and properties.
-For example, methods like <code>setEvent</code> and <code>recv</code> were accessed via the explicit <code>WorkflowContext</code> parameter in v1, but are now static methods on the <code>DBOS</code> class.
-See <a href="/typescript/tutorials/workflow-tutorial#workflow-events">WorkflowEvents</a>
-and <a href="/typescript/tutorials/workflow-tutorial#workflow-messaging-and-notifications">Workflow Messaging</a> for more information.</p>
+For example, methods like <code>setEvent</code> and <code>recv</code> were accessed via the explicit <code>WorkflowContext</code> parameter in v1, but are now static methods on the <code>DBOS</code> class.</p>
 <p>In DBOS TS v2, the explicit context parameter types and the decorators associated with DBOS application methods that
 used them were marked as deprecated. In DBOS TS v3, those types and decorators have been removed.</p>
 <p>Here are some of the common v1 context methods and properties that have been removed and their v2 replacement.</p>
