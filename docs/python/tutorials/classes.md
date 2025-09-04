@@ -1,5 +1,5 @@
 ---
-sidebar_position: 15
+sidebar_position: 110
 title: Working With Python Classes
 ---
 

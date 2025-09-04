@@ -165,7 +165,7 @@ it is highly recommended that you use the `idempotencyKey` parameter in order to
 
 #### `getEvent`
 
-Retrieves an event published by workflowID for a given key using the [events API](../tutorials/workflow-tutorial#workflow-events).
+Retrieves an event published by workflowID for a given key.
 Identical to [DBOS.getEvent](./methods.md#dbosgetevent)
 
 #### `retrieveWorkflow`
