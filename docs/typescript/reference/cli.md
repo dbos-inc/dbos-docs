@@ -5,7 +5,8 @@ title: DBOS CLI
 
 ## Workflow Management Commands
 
-All workflow management commands first attempt to retrieve your DBOS system database URL from [`dbos-config.yaml`](./configuration.md#dbos-configuration-file), then from the `DBOS_SYSTEM_DATABASE_URL` environment variable.
+These commands all require the URL of your DBOS system database.
+You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ### `npx dbos workflow list`
 
@@ -13,6 +14,7 @@ All workflow management commands first attempt to retrieve your DBOS system data
 List workflows run by your application in JSON format ordered by recency (most recently started workflows last).
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `-n, --name <string>`                 Retrieve functions with this name
 - `-l, --limit <number>`                Limit the results returned (default: "10") 
 - `-u, --user <string>`                 Retrieve workflows run by this user
@@ -62,6 +64,7 @@ A JSON whose fields are:
 ### `npx dbos workflow steps`
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to retrieve
 
 **Output:**
@@ -73,6 +76,7 @@ A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
  Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to cancel.
 
 ### `npx dbos workflow resume`
@@ -83,6 +87,7 @@ You can use this to resume workflows that are cancelled or that have exceeded th
 You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to resume.
 
 ### `npx dbos workflow queue list`
@@ -91,13 +96,13 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 Lists all currently enqueued workflows in JSON format ordered by recency (most recently enqueued workflows last).
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `-n, --name <string>`        Retrieve functions with this name
-- `-s, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
+- `-t, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
 - `-S, --status <string>`      Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
-- `-d, --appDir <string>`      Specify the application root directory
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
