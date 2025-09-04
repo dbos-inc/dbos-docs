@@ -33,6 +33,8 @@ class DBOSConfig(TypedDict):
     admin_port: Optional[int]
     run_admin_server: Optional[bool]
     application_version: Optional[str]
+    executor_id: Optional[str]
+    disable_otlp: Optional[bool]
 ```
 
 - **name**: Your application's name.
@@ -83,6 +85,8 @@ Defaults to:
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 - **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for [distributed workflow recovery](../../production/self-hosting/workflow-recovery.md)
+- **disable_otlp**: If set to True, disables OTLP tracing and logging. Defaults to False.
 
 
 ## DBOS Configuration File
