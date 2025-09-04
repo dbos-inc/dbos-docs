@@ -160,7 +160,7 @@ This command initializes a new DBOS application from a template into a target di
 ### npx dbos start
 
 **Description:**
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md).
 For example:
 
 ```yaml
