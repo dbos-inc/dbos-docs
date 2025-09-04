@@ -8,7 +8,7 @@ title: DBOS CLI
 These commands all require the URL of your DBOS system database.
 You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
-### `npx dbos workflow list`
+### npx dbos workflow list
 
 **Description:**
 List workflows run by your application in JSON format ordered by recency (most recently started workflows last).
@@ -38,7 +38,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-### `npx dbos workflow get`
+### npx dbos workflow get
 
 **Description:**
 Retrieve information on a workflow run by your application.
@@ -61,7 +61,7 @@ A JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-### `npx dbos workflow steps`
+### npx dbos workflow steps
 
 **Arguments:**
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
@@ -70,7 +70,7 @@ A JSON whose fields are:
 **Output:**
 A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
 
-### `npx dbos workflow cancel`
+### npx dbos workflow cancel
 
 **Description:**
  Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
@@ -79,7 +79,7 @@ A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to cancel.
 
-### `npx dbos workflow resume`
+### npx dbos workflow resume
 
 **Description:**
 Resume a workflow from its last completed step.
@@ -90,7 +90,7 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to resume.
 
-### `npx dbos workflow queue list`
+### npx dbos workflow queue list
 
 **Description:**
 Lists all currently enqueued workflows in JSON format ordered by recency (most recently enqueued workflows last).
@@ -122,7 +122,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 
 ## Application Management Commands
 
-### `npx dbos schema`
+### npx dbos schema
 
 **Description:**
 Create the DBOS system database and internal tables.
@@ -138,7 +138,7 @@ Use the `-r` flag to grant a role access to that schema.
 - `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
 - `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
 
-### `npx dbos reset`
+### npx dbos reset
 
 Reset your DBOS [system database](../../explanations//system-tables.md), deleting metadata about past workflows and steps.
 **Use only in a development environment.**
@@ -147,7 +147,7 @@ Reset your DBOS [system database](../../explanations//system-tables.md), deletin
 - `--sys-db-url, -s <string>`: Your DBOS system database URL
 - `--yes, -y`: Skip confirmation prompt.
 
-### `npx @dbos-inc/create`
+### npx @dbos-inc/create
 
 **Description:**
 This command initializes a new DBOS application from a template into a target directory.
@@ -157,7 +157,7 @@ This command initializes a new DBOS application from a template into a target di
 - `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
 
 
-### `npx dbos start`
+### npx dbos start
 
 **Description:**
 Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
