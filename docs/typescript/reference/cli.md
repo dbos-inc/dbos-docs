@@ -3,61 +3,6 @@ sidebar_position: 100
 title: DBOS CLI
 ---
 
-The DBOS Transact CLI helps you run applications locally.
-
-## Commands
-
-### `npx dbos schema`
-
-**Description:**
-Create the DBOS system database and internal tables.
-By default, a DBOS application automatically creates these on startup.
-However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, this command can be run with a privileged user to create all DBOS database tables.
-
-After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
-Use the `-r` flag to grant a role access to that schema.
-
-**Arguments:**
-
-- `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
-- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
-
-### `npx dbos start`
-
-**Description:**
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
-For example:
-
-```yaml
-runtimeConfig:
-  start:
-    - "node dist/main.js"
-```
-
-DBOS Cloud executes this command to start your app.
-
-### `npx @dbos-inc/create`
-
-**Description:**
-This command initializes a new DBOS application from a template into a target directory.
-
-**Arguments:**
-- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
-
-### `npx dbos debug`
-
-**Description:**
-This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow in debug mode.
-You must compile your code (`npm run build`) and start the debug proxy before running this command.
-
-**Arguments:**
-- `-u, --uuid <string>`: The workflow identity to replay.
-- `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-d, --appDir <application-directory>`: The path to your application root directory.
-
 ## Workflow Management Commands
 
 All workflow management commands first attempt to retrieve your DBOS system database URL from [`dbos-config.yaml`](./configuration.md#dbos-configuration-file), then from the `DBOS_SYSTEM_DATABASE_URL` environment variable.
@@ -169,10 +114,54 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
+
+## Application Management Commands
+
+### `npx dbos schema`
+
+**Description:**
+Create the DBOS system database and internal tables.
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, this command can be run with a privileged user to create all DBOS database tables.
+
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the `-r` flag to grant a role access to that schema.
+
+**Arguments:**
+
+- `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
+- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
+
 ### `npx dbos reset`
 
 Reset your DBOS [system database](../../explanations//system-tables.md), deleting metadata about past workflows and steps.
 **Use only in a development environment.**
 
 **Arguments:**
+- `--sys-db-url, -s <string>`: Your DBOS system database URL
 - `--yes, -y`: Skip confirmation prompt.
+
+### `npx @dbos-inc/create`
+
+**Description:**
+This command initializes a new DBOS application from a template into a target directory.
+
+**Arguments:**
+- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
+
+
+### `npx dbos start`
+
+**Description:**
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
+For example:
+
+```yaml
+runtimeConfig:
+  start:
+    - "node dist/main.js"
+```
+
+DBOS Cloud executes this command to start your app.
