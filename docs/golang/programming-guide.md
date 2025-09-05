@@ -264,7 +264,7 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) (int, error) 
 	fmt.Println("Enqueuing tasks")
 	handles := make([]dbos.WorkflowHandle[int], 10)
 	for i := range 10 {
-		handle, err := dbos.RunAsWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue.Name))
+		handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue.Name))
 		if err != nil {
 			return 0, err
 		}
@@ -299,12 +299,12 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
 	}
-	defer dbosContext.Cancel()
+	defer dbosContext.Shutdown(5 * time.Second)
 
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		dbos.RunAsWorkflow(dbosContext, queueWorkflow, queue)
+		dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
 			return
