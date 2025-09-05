@@ -17,11 +17,12 @@ go mod download
 ```
 
 DBOS requires a Postgres database.
-To connect your database to DBOS, set the `DBOS_SYSTEM_DATABASE_URL` to your connection string (later we'll pass that value into DBOS).
-For example:
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+Otherwise, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
 
-```shell
-export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:$PGPASSWORD@localhost:5432/dbos_starter_go
+```
+go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
+dbos postgres start
 ```
 
 ## 2. Workflows and Steps
