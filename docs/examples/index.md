@@ -6,7 +6,7 @@ pagination_next: null
 
 # Featured Examples
 
-import { FaHackerNews, FaSlack } from "react-icons/fa6";
+import { FaHackerNews, FaSlack, FaForwardFast } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
@@ -51,6 +51,13 @@ import { VscGraphLine } from "react-icons/vsc";
     href="python/examples/customer-service"
     description="Use DBOS and LangGraph to build a reliable AI-powered customer service agent."
     icon={<RiCustomerService2Line color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="S3Mirror"
+    href="python/examples/s3mirror"
+    description="Use DBOS to quickly and reliably transfer data between S3 Buckets."
+    icon={<FaForwardFast color="white" size={50}/>}
     language="python"
   />
   <CardLink

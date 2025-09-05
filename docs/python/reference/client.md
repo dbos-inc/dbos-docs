@@ -17,23 +17,22 @@ external applications use `DBOSClient` instead.
 
 ```python
 DBOSClient(
-    database_url: str, 
     *, 
-    system_database: Optional[str] = None,
+    system_database_url: Optional[str] = None,
+    application_database_url: Optional[str] = None,
 )
 ```
 **Parameters:**
-- `database_url`: A connection string to a Postgres database. Please see [Configuring DBOS](configuration.md#configuring-dbos) for more info.
-- `system_database`: The name of your DBOS application's system database. 
-The system database is stored on the same database server as the application database and typically has the same name as your application database, but suffixed with `_dbos_sys`. 
-If you are using a non-standard system database name in your DBOS application, you must also provide its name when creating a `DBOSClient`.
+- `system_database_url`: A connection string to your DBOS system database, with the same format and defaults as in [DBOSConfig](./configuration.md).
+- `application_database_url`: A connection string to your DBOS application database, with the same format and defaults as in [DBOSConfig](./configuration.md).
+Not required unless you use DBOS [transactions](../tutorials/transaction-tutorial.md).
 
 **Example syntax:**
 
-This DBOS client connects to the database specified in the `DBOS_DATABASE_URL` environment variable.
+This DBOS client connects to the system database specified in the `DBOS_SYSTEM_DATABASE_URL` environment variable.
 
 ```python
-client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
 
 ## Workflow Interaction Methods 

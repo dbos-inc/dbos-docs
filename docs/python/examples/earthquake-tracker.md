@@ -11,32 +11,9 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 You can see the dashboard live [here](https://demo-earthquake-tracker.cloud.dbos.dev/).
 
-## Import and Initialize the App
-
-In our main file (`earthquake_tracker/main.py`) let's start off with imports and initializing the DBOS app.
-
-
-```python
-import threading
-from datetime import datetime, timedelta
-from typing import TypedDict
-
-import requests
-from dbos import DBOS, DBOSConfig
-from schema import earthquake_tracker
-from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import insert
-
-config: DBOSConfig = {
-    "name": "earthquake-tracker",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
-}
-DBOS(config=config)
-```
-
 ## Retrieving Earthquake Data
 
-Now, let's write a function that queries the USGS for data on recent earthquakes.
+First, let's write a function that queries the USGS for data on recent earthquakes.
 Our function will take in a time range and return the id, place, magnitude, and timestamp of all earthquakes that occured in that time range.
 We annotate the function with [`@DBOS.step`](../tutorials/step-tutorial.md) so we can call it from a durable workflow later on.
 
@@ -120,10 +97,19 @@ def run_every_minute(scheduled_time: datetime, actual_time: datetime):
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```
 
-Finally, in our main function, let's launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
+Finally, in our main function, let's initialize and launch DBOS, then sleep the main thread forever while the scheduled job runs in the background:
 
 ```python
 if __name__ == "__main__":
+    application_database_url = os.environ.get('DBOS_DATABASE_URL')
+    if not application_database_url:
+        raise Exception("DBOS_DATABASE_URL not set")
+
+    config: DBOSConfig = {
+        "name": "earthquake-tracker",
+        "application_database_url": application_database_url,
+    }
+    DBOS(config=config)
     DBOS.launch()
     threading.Event().wait()
 ```
@@ -232,47 +218,11 @@ st.dataframe(filtered_df, use_container_width=True)
 
 ## Try it Yourself!
 
-### Deploying to the Cloud
-
-To deploy this example to DBOS Cloud, first install the Cloud CLI (requires Node):
-
-```shell
-npm i -g @dbos-inc/dbos-cloud
-```
-
-Then clone the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository and deploy:
-
-```shell
-git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/earthquake-tracker
-dbos-cloud app deploy
-```
-
-This command outputs a URL&mdash;visit it to see some earthquakes!
-You can also visit the [DBOS Cloud Console](https://console.dbos.dev/login-redirect) to see your app's status and logs.
-
-### Running Locally
-
-First, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/earthquake-tracker
 ```
 
-Then create a virtual environment:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Then start your app:
-
-```shell
-pip install -r requirements.txt
-alembic upgrade head
-dbos start
-```
-
-Visit [http://localhost:8000](http://localhost:8000) to see some earthquakes! 
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/earthquake-tracker) to run the app.

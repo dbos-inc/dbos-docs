@@ -277,11 +277,22 @@ For each previous version of this application, emit:
 ### `dbos-cloud app logs`
 
 **Description:**
-It retrieves an application's logs.
+Retrieve an application's logs.
 
 **Arguments:**
 - `[application-name]`: The name of the application.
-- `-l, --last <integer>`: How far back to query, in seconds from current time. By default, retrieve all data.
+- `-l, --last <integer>`: How far back to query, in seconds from current time. Default is 3600 (one hour).
+---
+
+### `dbos-cloud app resource-usage`
+
+**Description:**
+Retrieve your applications' resource usage for a specific time interval. If no time range is provided, queries for a recent completed 1-minute interval of data.
+
+**Arguments:**
+- `-s, --since <string>`: UTC time since which to start querying (formatted as 2006-01-02 15:04:05.000000). Defaults to the start of a 1-minute interval ~2 minutes ago.
+- `-u --upto <string>`: UTC time up to which to start querying (formatted as 2006-01-02 15:04:05.000000). Defaults to the end of a 1-minute interval ~2 minutes ago.
+- `-g, --group-by <string>`: Time interval for grouping data: 'minute', 'hour', or 'day', defaults to 'minute'.
 ---
 
 ### `dbos-cloud app change-database-instance`

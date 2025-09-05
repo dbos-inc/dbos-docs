@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 30
 title: Transactions
 description: Learn how to perform database operations
 ---
@@ -57,6 +57,22 @@ def example_select(name: str) -> Optional[str]:
 
 </TabItem>
 </Tabs>
+
+Transactions should run in the database in which your application stores data.
+You can specify the database in which transactions run by setting an `application_database_url` when you configure DBOS.
+The application database (the database in which transactions run) does not need to be the same database (or even on the same server) as your system database.
+For example:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-example",
+    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
+    "application_database_url": os.environ["APP_DATABASE_URL"],
+}
+DBOS(config=config)
+```
+
+For more information, see the [DBOS configuration reference](../reference/configuration.md).
 
 :::warning
 

@@ -120,8 +120,6 @@ Use of the decoratorless API is not required, but supports a broad range of prog
 
 In v1, DBOS methods had a subclass of `DBOSContext` (`StepContext`, `TransactionContext`, `WorkflowContext`, etc.) as their first parameter.  Capabilities that were originally accessed via these context parameters are now accessed via `DBOS` class static functions and properties.
 For example, methods like `setEvent` and `recv` were accessed via the explicit `WorkflowContext` parameter in v1, but are now static methods on the `DBOS` class. 
-See [WorkflowEvents](./tutorials/workflow-tutorial.md#workflow-events) 
-and [Workflow Messaging](./tutorials/workflow-tutorial.md#workflow-messaging-and-notifications) for more information.
 
 In DBOS TS v2, the explicit context parameter types and the decorators associated with DBOS application methods that 
 used them were marked as deprecated. In DBOS TS v3, those types and decorators have been removed.

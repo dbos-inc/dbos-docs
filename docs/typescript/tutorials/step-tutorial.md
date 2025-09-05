@@ -120,4 +120,4 @@ static async exampleStep() {
 ```
 
 If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
-If that exception is not caught, the workflow [terminates](./workflow-tutorial.md#reliability-guarantees).
+If that exception is not caught, the workflow terminates.

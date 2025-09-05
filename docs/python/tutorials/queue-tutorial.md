@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 40
 title: Queues & Concurrency
 toc_max_heading_level: 3
 ---
@@ -211,7 +211,7 @@ Example:
 ```python
 from dbos import DBOSClient, EnqueueOptions
 
-client = DBOSClient(os.environ["DBOS_DATABASE_URL"])
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 
 options: EnqueueOptions = {
   "queue_name": "process_task",

@@ -619,12 +619,6 @@ uv sync
 source .venv/bin/activate
 ```
 
-Start Postgres (if you already use Postgres, instead set the `DBOS_DATABASE_URL` environment variable to your database connection string):
-
-```shell
-dbos postgres start
-```
-
 Run the agent with any research topic:
 
 ```shell

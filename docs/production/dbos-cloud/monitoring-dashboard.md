@@ -60,19 +60,17 @@ When turning on these filters, the time window filter also still applies. You ma
 
 When using `Workflow UUID` use `_` to match any one character and `%` to match any string (SQL 'like' notation). This is useful for selecting groups of scheduled workflows. For example you can use a string like `sched%T19%` to match any scheduled workflows that ran at 7PM on any of the days in the selected time interval. `Search` also supports this syntax.
 
-#### Requests and CPU Milliseconds
+#### RAM Time, Requests and CPU Milliseconds
 
-The Grafana dashboard tracks the total requests and active CPU milliseconds for all your apps. These totals are updated every time you refresh your dashboard. They are applied against your DBOS Pricing tier's [execution time limit](https://www.dbos.dev/pricing). Please allow up to 20 seconds of delay between an event happening and the dashboard refresh showing it.
+The dashboard tracks the total RAM 512MB-Hours, Requests and active CPU Milliseconds for all your apps. These totals are updated every time you refresh your dashboard. They are applied against your DBOS Pricing tier's [execution time limit](https://www.dbos.dev/pricing). Please allow up to 5 minutes of delay between an event happening and the dashboard refresh showing it.
 
-The number of total active CPU milliseconds since the start of the month is at the top in orange. The light orange "selection" number to the right changes with the selected app(s) and time window. You can select a particular app or workload and see how much it contributes to your total. 
+The number of total CPU milliseconds since the start of the month is in orange. The light orange "selection" number to the right of it changes with the selected app(s) and time window. You can select a particular app or workload and see how much it contributes to your total. 
 
 ![Execution Seconds](./assets/execution-seconds.png)
 
 :::tip
 It is possible for one or two small API calls to not consume a measurable amount of CPU ms. It is also normal for an idle app to use a negligible amount of CPU ms for periodic health checks and background tasks. For best results, run an example workflow of at least 10 API calls (the more the better). Observe how much CPU ms your example uses and extrapolate to your monthly expected usage.
 :::
-
-The total number of Requests since the start of the month is in the top left corner in purple. You can find the total number of requests for a specific app or time window by setting `Trace Operation Type` filter to `handler` and looking at the count at the bottom of the "Traces collected" plot.
 
 #### Memory and CPU Metrics
 
