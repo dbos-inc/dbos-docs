@@ -185,12 +185,12 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
 	}
-	defer dbosContext.Cancel()
+	defer dbosContext.Shutdown(5 * time.Second)
 
 	r := gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		dbos.RunAsWorkflow(dbosContext, workflow, "")
+		dbos.RunWorkflow(dbosContext, workflow, "")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
 			return
@@ -316,8 +316,8 @@ func main() {
 }
 ```
 
-When you enqueue a function by passing `dbos.WithQueue(queue.Name)` into `dbos.RunAsWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
-`dbos.RunAsWorkflow` returns a handle representing the state of the enqueued function.
+When you enqueue a function by passing `dbos.WithQueue(queue.Name)` into `dbos.RunWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`dbos.RunWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.GetResult()` to wait for each of their handles.
 
 Now, restart your app with:
