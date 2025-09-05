@@ -1,5 +1,5 @@
 ---
-sidebar_position: 18
+sidebar_position: 120
 title: Debugging
 description: Learn how to debug your DBOS Python workflows.
 ---
