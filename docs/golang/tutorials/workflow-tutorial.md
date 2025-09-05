@@ -53,14 +53,14 @@ func main() {
 }
 ```
 
-Call workflows with [`dbos.RunAsWorkflow`](../reference/workflows-steps.md#dbosrunasworkflow).
+Call workflows with [`dbos.RunWorkflow`](../reference/workflows-steps.md#dbosrunworkflow).
 This starts the workflow in the background and returns a [handle](../reference/workflows-steps.md#workflowhandle) to it, from which you can access information about the workflow or wait for it to complete and return its result.
 
 Here's an example:
 
 ```go
 func example(dbosContext dbos.DBOSContext, input string) error {
-    handle, err := dbos.RunAsWorkflow(dbosContext, workflow, input)
+    handle, err := dbos.RunWorkflow(dbosContext, workflow, input)
     if err != nil {
         return err
     }
@@ -79,7 +79,7 @@ Every time you execute a workflow, that execution is assigned a unique ID, by de
 You can access this ID through [`GetWorkflowID`](../reference/methods.md#getworkflowid).
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunAsWorkflow`.
+You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunWorkflow`.
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
@@ -98,7 +98,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 
 func example(dbosContext dbos.DBOSContext, input string) error {    
     myID := "unique-workflow-id-123"
-    handle, err := dbos.RunAsWorkflow(dbosContext, exampleWorkflow, input, 
+    handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input, 
         dbos.WithWorkflowID(myID))
     if err != nil {
         log.Fatal(err)
@@ -253,7 +253,7 @@ The HTTP handler that originally started the workflow uses `GetEvent` to await t
 func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *http.Request) {
     orderData := parseOrderData(r) // Parse order from request
     
-    handle, err := dbos.RunAsWorkflow(dbosContext, checkoutWorkflow, orderData)
+    handle, err := dbos.RunWorkflow(dbosContext, checkoutWorkflow, orderData)
     if err != nil {
         http.Error(w, "Failed to start checkout", http.StatusInternalServerError)
         return
