@@ -40,10 +40,13 @@ DBOSContext.Launch() error
 Launch the DBOS runtime including system database, queues, admin server, and workflow recovery.
 `Launch()` should be called by your program during startup before running any workflows.
 
-### DBOSContext.Cancel()
+### DBOSContext.Shutdown()
 
 ```go
-DBOSContext.Cancel()
+Shutdown(timeout time.Duration)
 ```
 
 Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources.
+
+**Parameters:**
+- **timeout**: The time to wait for workflows to complete. After the timeout elapses, execution of incomplete workflows is terminated (the workflows may then be recovered by other processes).
