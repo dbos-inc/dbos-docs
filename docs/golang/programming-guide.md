@@ -113,6 +113,7 @@ Now, install dependencies and run this code with:
 go mod tidy
 go run main.go
 ```
+
 Your program should print output like:
 
 ```
@@ -201,16 +202,10 @@ func main() {
 }
 ```
 
-Then, to run it, first install gin:
+Now, install dependencies and run this code with:
 
 ```shell
-go get github.com/gin-gonic/gin
-go mod download
-```
-
-Then launch the server:
-
-```shell
+go mod tidy
 go run main.go
 ```
 
