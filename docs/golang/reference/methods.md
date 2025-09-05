@@ -238,6 +238,28 @@ func WithQueuesOnly() ListWorkflowsOption
 
 Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
 
+### GetWorkflowSteps
+
+```go
+func GetWorkflowSteps(ctx DBOSContext, workflowID string) ([]StepInfo, error)
+```
+
+```go
+type StepInfo struct {
+	StepID          int    // The sequential ID of the step within the workflow
+	StepName        string // The name of the step function
+	Output          any    // The output returned by the step (if any)
+	Error           error  // The error returned by the step (if any)
+	ChildWorkflowID string // The ID of a child workflow spawned by this step (if applicable)
+}
+```
+
+GetWorkflowSteps retrieves the execution steps of a workflow. Returns a list of step information including step IDs, names, outputs, errors, and child workflow IDs. 
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow to cancel.
+
 ### CancelWorkflow
 
 ```go
@@ -307,7 +329,7 @@ type WorkflowStatus struct {
 }
 ```
 
-### WorkflowStatusType
+#### WorkflowStatusType
 
 The `WorkflowStatusType` represents the execution status of a workflow:
 
