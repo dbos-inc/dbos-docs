@@ -230,6 +230,14 @@ func WithWorkflowIDPrefix(prefix string) ListWorkflowsOption
 
 Filter workflows whose IDs start with the specified prefix.
 
+#### WithQueuesOnly
+
+```go
+func WithQueuesOnly() ListWorkflowsOption
+```
+
+Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
+
 ### CancelWorkflow
 
 ```go
