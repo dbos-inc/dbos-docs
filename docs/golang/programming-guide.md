@@ -12,17 +12,21 @@ In an empty directory, initialize a new Go project and install DBOS:
 
 ```shell
 go mod init dbos-starter
-go get github.com/dbos-inc/dbos-transact-golang
-go mod download
 ```
 
 DBOS requires a Postgres database.
-If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
-Otherwise, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
+If you don't already Postgres, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
 
 ```
 go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
 dbos postgres start
+```
+
+Then set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
+For example:
+
+```shell
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_go
 ```
 
 ## 2. Workflows and Steps
@@ -43,6 +47,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
@@ -88,9 +93,9 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
 	}
-	defer dbosContext.Cancel()
+	defer dbosContext.Shutdown(5 * time.Second)
 
-	handle, err := dbos.RunAsWorkflow(dbosContext, workflow, "")
+	handle, err := dbos.RunWorkflow(dbosContext, workflow, "")
 	if err != nil {
 		panic(fmt.Sprintf("Error in DBOS workflow: %v", err))
 	}
@@ -102,9 +107,10 @@ func main() {
 }
 ```
 
-Now, run this code with:
+Now, install dependencies and run this code with:
 
 ```shell
+go mod tidy
 go run main.go
 ```
 Your program should print output like:
