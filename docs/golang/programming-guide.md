@@ -15,7 +15,7 @@ go mod init dbos-starter
 ```
 
 DBOS requires a Postgres database.
-If you don't already Postgres, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
+If you don't already have Postgres, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
 
 ```
 go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
