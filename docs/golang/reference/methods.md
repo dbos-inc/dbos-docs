@@ -266,7 +266,7 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to fork.
 - **startStep**: The ID of the step from which to start the forked workflow.
-- **opts**: Optional workflow configuration options (documented [here](./workflows-steps.md#dbosrunasworkflow)).
+- **opts**: Optional workflow configuration options (documented [here](./workflows-steps.md#dbosrunworkflow)).
 
 ### Workflow Status
 

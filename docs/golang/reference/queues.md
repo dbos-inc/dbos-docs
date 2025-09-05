@@ -22,7 +22,7 @@ type WorkflowQueue struct {
 ```
 
 WorkflowQueue defines a named queue for workflow execution.
-Workflows can be enqueued by specifying the queue with `WithQueue` in `RunAsWorkflow`.
+Workflows can be enqueued by specifying the queue with `WithQueue` in `RunWorkflow`.
 
 ### NewWorkflowQueue
 
@@ -51,7 +51,7 @@ queue := dbos.NewWorkflowQueue(ctx, "email-queue",
 )
 
 // Enqueue workflows to this queue:
-handle, err := dbos.RunAsWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
+handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
 ```
 
 #### WithWorkerConcurrency
