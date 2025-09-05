@@ -14,11 +14,18 @@ go get github.com/dbos-inc/dbos-transact-golang
 ```
 
 DBOS requires a Postgres database.
-To connect your database to DBOS, set the `DBOS_SYSTEM_DATABASE_URL` to your connection string (later we'll pass that value into DBOS).
+If you don't already have Postgres, you can install the DBOS Go CLI and start Postgres in a Docker container with these commands:
+
+```
+go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
+dbos postgres start
+```
+
+Then set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string (later we'll pass that value into DBOS).
 For example:
 
 ```shell
-export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:$PGPASSWORD@localhost:5432/dbos_starter_go
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_starter_go
 ```
 
 ### 2. Add the DBOS Initializer
@@ -41,7 +48,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
 	}
-	defer dbosContext.Cancel()
+	defer dbosContext.Shutdown(5 * time.Second)
 }
 ```
 
