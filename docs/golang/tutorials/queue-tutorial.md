@@ -13,7 +13,7 @@ To create a queue, use [`NewWorkflowQueue`](../reference/queues.md#newworkflowqu
 queue := dbos.NewWorkflowQueue(dbosContext, "example_queue")
 ```
 
-You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps.md#withqueue) when calling `RunAsWorkflow`.
+You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps.md#withqueue) when calling `RunWorkflow`.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflows-steps.md#workflowhandle) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -26,7 +26,7 @@ func processTask(ctx dbos.DBOSContext, task string) (string, error) {
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     // Enqueue a workflow
     task := "example_task"
-    handle, err := dbos.RunAsWorkflow(dbosContext, processTask, task,
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task,
         dbos.WithQueue(queue.Name))
     if err != nil {
         return err
@@ -58,7 +58,7 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) ([]string, er
 
 	var handles []dbos.WorkflowHandle[string]
 	for _, task := range tasks {
-		handle, err := dbos.RunAsWorkflow(ctx, taskWorkflow, task,
+		handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task,
 			dbos.WithQueue(queue.Name))
 		if err != nil {
 			return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
@@ -80,7 +80,7 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) ([]string, er
 }
 
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
-	handle, err := dbos.RunAsWorkflow(dbosContext, queueWorkflow, queue)
+	handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 
 ### Deduplication
 
-You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](../reference/workflows-steps.md#withdeduplicationid) when calling `RunAsWorkflow`.
+You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](../reference/workflows-steps.md#withdeduplicationid) when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
 
@@ -166,7 +166,7 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
     
-    handle, err := dbos.RunAsWorkflow(dbosContext, taskWorkflow, task,
+    handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
         dbos.WithQueue(queue.Name),
         dbos.WithDeduplicationID(deduplicationID))
     if err != nil {
@@ -186,7 +186,7 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 ### Priority
 
-You can set a priority for an enqueued workflow using [`WithPriority`](../reference/workflows-steps.md#withpriority) when calling `RunAsWorkflow`.
+You can set a priority for an enqueued workflow using [`WithPriority`](../reference/workflows-steps.md#withpriority) when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 If using priority, you must set `WithPriorityEnabled(true)` on your queue.
 
@@ -213,7 +213,7 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     task := "example_task"
     priority := uint(10) // Lower number = higher priority
     
-    handle, err := dbos.RunAsWorkflow(dbosContext, taskWorkflow, task,
+    handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
         dbos.WithQueue(queue.Name),
         dbos.WithPriority(priority))
     if err != nil {
