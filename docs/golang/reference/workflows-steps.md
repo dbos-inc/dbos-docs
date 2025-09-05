@@ -52,10 +52,10 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
-### dbos.RunAsWorkflow
+### dbos.RunWorkflow
 
 ```go
-func RunAsWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+func RunWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Execute a workflow function.
@@ -76,7 +76,7 @@ func workflow(ctx dbos.DBOSContext, input string) (string, error) {
 }
 
 func example(input string) error {
-    handle, err := dbos.RunAsWorkflow(dbosContext, workflow, input)
+    handle, err := dbos.RunWorkflow(dbosContext, workflow, input)
     if err != nil {
         return err
     }
