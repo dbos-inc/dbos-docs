@@ -18,75 +18,6 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ![Widget store UI](./assets/widget_store_ui.png)
 
-## Import and Initialize the App
-
-Let's begin with imports and initializing DBOS and Gin.
-We'll also define some constants and models.
-
-<details>
-<summary><strong>Imports and Models</strong></summary>
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "net/http"
-    "os"
-    "strconv"
-    "time"
-
-    "github.com/dbos-inc/dbos-transact-go/dbos"
-    "github.com/gin-gonic/gin"
-    "github.com/jackc/pgx/v5"
-    "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/sirupsen/logrus"
-)
-
-const (
-    WIDGET_ID      = 1
-    PAYMENT_STATUS = "payment_status"
-    PAYMENT_ID     = "payment_id"
-    ORDER_ID       = "order_id"
-)
-
-type OrderStatus int
-
-const (
-    CANCELLED  OrderStatus = -1
-    PENDING    OrderStatus = 0
-    DISPATCHED OrderStatus = 1
-    PAID       OrderStatus = 2
-)
-
-type Product struct {
-    ProductID   int     `json:"product_id"`
-    Product     string  `json:"product"`
-    Description string  `json:"description"`
-    Inventory   int     `json:"inventory"`
-    Price       float64 `json:"price"`
-}
-
-type Order struct {
-    OrderID           int       `json:"order_id"`
-    OrderStatus       int       `json:"order_status"`
-    LastUpdateTime    time.Time `json:"last_update_time"`
-    ProgressRemaining int       `json:"progress_remaining"`
-}
-
-type UpdateOrderStatusInput struct {
-    OrderID     int
-    OrderStatus OrderStatus
-}
-
-var (
-    db     *pgxpool.Pool
-    logger *logrus.Logger
-)
-```
-
-</details>
 
 ## Building the Checkout Workflow
 
@@ -234,7 +165,7 @@ func paymentEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Logg
 
 Now, let's implement the checkout workflow's steps.
 Each step performs a database operation, like updating inventory or order status.
-These are implemented as regular Go functions that interact with the PostgreSQL database.
+These are implemented as regular Go functions that interact with the Postgres database.
 
 <details>
 <summary><strong>Database Operations</strong></summary>
@@ -367,16 +298,8 @@ func restock(c *gin.Context, db *pgxpool.Pool, logger *slog.Logger) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Restocked successfully"})
 }
-```
-</details>
 
-## Launching and Serving the App
-
-Let's add the final touches to the app and see how everything comes together in the main function.
-
-First, this endpoint crashes the app. Trigger it as many times as you want&mdash;DBOS always comes back, resuming from exactly where it left off!
-
-```go
+// Crash the app--for demonstration purposes only :)
 func crashApplication(c *gin.Context, logger *slog.Logger) {
 	logger.Warn("application crash requested")
 	c.JSON(http.StatusOK, gin.H{"message": "Crashing application..."})
@@ -388,6 +311,9 @@ func crashApplication(c *gin.Context, logger *slog.Logger) {
 	}()
 }
 ```
+</details>
+
+## Launching and Serving the App
 
 Finally, here's the complete main function that initializes DBOS, sets up the database connection, registers workflows, and starts the Gin HTTP server:
 
@@ -433,7 +359,7 @@ func main() {
 
 	r := gin.Default()
 
-	// Serve HTML
+	// Serve the HTML main page
 	r.StaticFile("/", "./html/app.html")
 
 	// HTTP endpoints
