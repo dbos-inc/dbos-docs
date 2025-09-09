@@ -90,6 +90,20 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 - `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to resume.
 
+### npx dbos workflow fork
+
+**Description:**
+Fork a new execution of a workflow, starting at a given step.
+This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#fork_workflow)).
+Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
+
+**Arguments:**
+* `<workflow-id>`: The ID of the workflow to restart.
+- `-s, --sys-db-url URL`: Your DBOS system database URL.
+* `-f, --forked-workflow-id`: Custom ID for the forked workflow
+* `-v, --application-version`: Custom application version for the forked workflow
+* `-S, --step INTEGER`: Restart from this step [default: 1]
+
 ### npx dbos workflow queue list
 
 **Description:**
