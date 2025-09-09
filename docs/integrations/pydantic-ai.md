@@ -101,6 +101,7 @@ Here is a simple but complete example of wrapping an agent for durable execution
 With fewer than 10 additional lines (highlighted below), you can add DBOS into an existing Pydantic AI application.
 
 ```python {title="dbos_agent.py"}
+import asyncio
 # highlight-next-line
 from dbos import DBOS, DBOSConfig
 
@@ -139,7 +140,7 @@ if __name__ == "__main__":
 **Notes:**
 
 1. Workflows and `DBOSAgent` must be defined before [`DBOS.launch()`](../python/reference/dbos-class.md#launch) so that recovery can correctly find all workflows.
-2. [`DBOSAgent.run()`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.durable_exec.dbos.DBOSAgent.run) works like [`Agent.run()`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.Agent.run), but runs as a DBOS workflow and executes model requests, decorated tool calls, and MCP communication as DBOS steps.
+2. [`DBOSAgent.run()`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.durable_exec.dbos.DBOSAgent.run) works like [`Agent.run()`](https://ai.pydantic.dev/api/agent/#pydantic_ai.agent.AbstractAgent.run), but runs as a DBOS workflow and executes model requests, decorated tool calls, and MCP communication as DBOS steps.
 3. This example uses SQLite for simplicity. Postgres is recommended for production.
 4. Each agent must have a unique `name`, which DBOS uses to identify its workflows.
 
