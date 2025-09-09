@@ -11,7 +11,7 @@ hide_table_of_contents: false
 
 :::info
 
-To learn more about how DBOS and Pydantic AI are working together, check out [the DBOS Agent docs page](https://ai.pydantic.dev/durable_execution/dbos)!
+Also check out the integration guide in [the Pydantic docs](https://ai.pydantic.dev/durable_execution/dbos)!
 
 :::
 
