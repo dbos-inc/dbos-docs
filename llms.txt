@@ -9,6 +9,7 @@
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add the open source DBOS Transact library to your existing Django application to durably execute it and make it resilient to any failure.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
+- [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
 - [Account Management](https://docs.dbos.dev/production/dbos-cloud/account-management.md): Learn how to manage DBOS Cloud users
 - [Application Management](https://docs.dbos.dev/production/dbos-cloud/application-management.md): Deploying Applications
@@ -36,6 +37,7 @@
 - [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): This example is also available in TypeScript.
 - [Hacker News Slackbot](https://docs.dbos.dev/python/examples/hacker-news-bot.md): In this example, we use DBOS to build and deploy a scheduled job that periodically searches Hacker News for people commenting about serverless computing and posts the comments to Slack.
 - [AI-Powered Slackbot](https://docs.dbos.dev/python/examples/rag-slackbot.md): In this example, we use DBOS and LlamaIndex to build and deploy a Slackbot that uses retrieval-augmented generation (RAG) to answer questions about previous Slack conversations.
+- [S3 Mirror](https://docs.dbos.dev/python/examples/s3mirror.md): S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv here.
 - [Scheduled Reminders](https://docs.dbos.dev/python/examples/scheduled-reminders.md): In this example, we use DBOS to build and deploy an app that schedules reminder emails for any day in the future.
 - [Stock Tracker](https://docs.dbos.dev/python/examples/stock-tracker.md): In this example, we use DBOS to build and deploy an app that tracks stock prices and sends SMS alerts when the price of a stock crosses a certain threshold.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript.
