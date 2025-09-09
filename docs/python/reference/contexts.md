@@ -636,6 +636,21 @@ You should not use the same `Debouncer` or `debounce_key` with two different wor
 Instead, create at least one unique `Debouncer` per workflow you wish to debounce.
 :::
 
+**Example Syntax**:
+
+```python
+@DBOS.workflow()
+def process_input(input):
+    ...
+
+# Each time a user submits a new input, debounce the process_input workflow.
+# The workflow will wait until 60 seconds after the user stops submitting new inputs,
+# then process the last input submitted.
+def on_user_input_update(user_id, input):
+    debouncer = Debouncer(debounce_key=user_id, debounce_period_sec=60)
+    debouncer.debounce(process_input, input)
+```
+
 ### debounce_async
 
 ```python
