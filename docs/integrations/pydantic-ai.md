@@ -80,7 +80,7 @@ uv add pydantic-ai[dbos]
 </TabItem>
 </Tabs>
 
-Or if you're using the slim package, you can install it with the `dbos` optional group:
+Or if you're using the slim package, you can install it with the `dbos` optional dependency:
 
 <Tabs groupId="python-package" className="small-tabs">
 <TabItem value="pip" label="pip">
