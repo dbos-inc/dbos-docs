@@ -614,14 +614,13 @@ Debouncer.create(
 - `func`: The workflow to debounce.
 - `debounce_key`: The **unique** debounce key for this debouncer. Used to group workflows that will be debounced.
 - `debounce_period_sec`: The time to wait after the last time the workflow was called with `debounce_key` before starting the workflow.
-- `debounce_timeout_sec`: After this time elapses since the first workflow call, the workflow is started regardless of the debounce period.
+- `debounce_timeout_sec`: After this time elapses since the first workflow call with `debounce_key`, the workflow is started regardless of the debounce period.
 - `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of starting it directly.
 
 ### debounce
 
 ```python
 debouncer.debounce(
-    func: Callable[P, R],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandle[R]
@@ -637,15 +636,15 @@ After the workflow starts, the next call to `debounce` begins the debouncing pro
 
 ```python
 @DBOS.workflow()
-def process_input(input):
+def process_input(user_input):
     ...
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
 # then process the last input submitted.
-def on_user_input_update(user_id, input):
-    debouncer = Debouncer(debounce_key=user_id, debounce_period_sec=60)
-    debouncer.debounce(process_input, input)
+def on_user_input_submit(user_id, user_input):
+    debouncer = Debouncer(process_input, debounce_key=user_id, debounce_period_sec=60)
+    debouncer.debounce(user_input)
 ```
 
 ### Debouncer.create_async
@@ -666,7 +665,6 @@ Async version of `Debouncer.create`.
 
 ```python
 debouncer.debounce_async(
-    func: Callable[P, Coroutine[Any, Any, R]],
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandleAsync[R]:
