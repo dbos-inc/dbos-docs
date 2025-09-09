@@ -65,7 +65,7 @@ The original agent, model, and MCP server can still be used normally outside the
 
 ## Installation and Requirements
 
-All you need is to install Pydantic AI with the DBOS extra:
+Simply install Pydantic AI with the DBOS optional dependency:
 
 <Tabs groupId="python-package" className="small-tabs">
 <TabItem value="pip" label="pip">
