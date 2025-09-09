@@ -590,6 +590,64 @@ DBOS.span: opentelemetry.trace.Span
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
 
+## Debouncing
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing a form, you can debounce every change to the form to execute a synchronization workflow only after they haven't edited the form for a certain period of time.
+
+### class dbos.Debouncer
+
+```python
+Debouncer(
+    *,
+    debounce_key: str,
+    debounce_period_sec: float,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+)
+```
+
+**Parameters:**
+- `debounce_key`: The debounce key. This is used to group workflow calls that should be debounced.
+- `debounce_period_sec`: The time to wait after the last time the workflow was called with `debounce_key` before starting the workflow.
+- `debounce_timeout_sec`: After this time elapses since the first workflow call, the workflow is started regardless of the debounce period.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of starting it directly.
+
+### debounce
+
+```python
+debouncer.debounce(
+    func: Callable[P, R],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Start a workflow with a debouncer.
+The workflow is submitted for execution, but its execution is delayed until either `debounce_period_sec` has passed since the workflow was last called or `debounce_timeout_sec` has passed since the workflow was first called.
+When the workflow is eventually called, it is called with the **last** set of inputs passed into `debounce`.
+
+After the workflow starts, the next call to `debounce` begins the debouncing process again for a new workflow execution.
+
+:::tip
+You should not use the same `Debouncer` or `debounce_key` with two different workflows.
+Instead, create at least one unique `Debouncer` per workflow you wish to debounce.
+:::
+
+### debounce_async
+
+```python
+debouncer.debounce(
+    func: Callable[P, Coroutine[Any, Any, R]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandleAsync[R]:
+```
+
+Async version of `debouncer.debounce`.
+
 ## Authentication
 
 ### authenticated_user
