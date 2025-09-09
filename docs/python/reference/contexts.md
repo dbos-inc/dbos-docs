@@ -654,7 +654,7 @@ def on_user_input_update(user_id, input):
 ### debounce_async
 
 ```python
-debouncer.debounce(
+debouncer.debounce_async(
     func: Callable[P, Coroutine[Any, Any, R]],
     *args: P.args,
     **kwargs: P.kwargs,
