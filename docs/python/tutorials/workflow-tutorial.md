@@ -152,7 +152,7 @@ def schedule_task(time_to_sleep, task):
 
 You can debounce workflows to delay their execution until some time has passed since the workflow has last been called.
 This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
-For example, if a user is editing a form, you can debounce every change to the form to execute a processing workflow only after they haven't edited the form for a certain period of time:
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
 
 ```python
 @DBOS.workflow()
