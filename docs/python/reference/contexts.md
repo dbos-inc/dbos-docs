@@ -597,20 +597,22 @@ Debouncing delays workflow execution until some time has passed since the workfl
 This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
 For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
 
-### class dbos.Debouncer
+### Debouncer.create
 
 ```python
-Debouncer(
+Debouncer.create(
+    func: Callable[P, R],
     *,
     debounce_key: str,
     debounce_period_sec: float,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
-)
+) -> Debouncer[P, R]
 ```
 
 **Parameters:**
-- `debounce_key`: The debounce key. This is used to group workflow calls that should be debounced.
+- `func`: The workflow to debounce.
+- `debounce_key`: The **unique** debounce key for this debouncer. Used to group workflows that will be debounced.
 - `debounce_period_sec`: The time to wait after the last time the workflow was called with `debounce_key` before starting the workflow.
 - `debounce_timeout_sec`: After this time elapses since the first workflow call, the workflow is started regardless of the debounce period.
 - `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of starting it directly.
@@ -627,14 +629,9 @@ debouncer.debounce(
 
 Start a workflow with a debouncer.
 The workflow is submitted for execution, but its execution is delayed until either `debounce_period_sec` has passed since the workflow was last called or `debounce_timeout_sec` has passed since the workflow was first called.
-When the workflow is eventually called, it is called with the **last** set of inputs passed into `debounce`.
+When the workflow is eventually started, it uses the **last** set of inputs passed into `debounce`.
 
 After the workflow starts, the next call to `debounce` begins the debouncing process again for a new workflow execution.
-
-:::tip
-You should not use the same `Debouncer` or `debounce_key` with two different workflows.
-Instead, create at least one unique `Debouncer` per workflow you wish to debounce.
-:::
 
 **Example Syntax**:
 
@@ -650,6 +647,20 @@ def on_user_input_update(user_id, input):
     debouncer = Debouncer(debounce_key=user_id, debounce_period_sec=60)
     debouncer.debounce(process_input, input)
 ```
+
+### Debouncer.create_async
+
+```python
+Debouncer.create_async(
+    func: Callable[P, Coroutine[Any, Any, R]],
+    *,
+    debounce_key: str,
+    debounce_period_sec: float,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+) -> Debouncer[P, R]
+```
+Async version of `Debouncer.create`.
 
 ### debounce_async
 
