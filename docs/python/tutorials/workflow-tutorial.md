@@ -148,6 +148,27 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
+## Debouncing Workflows
+
+You can debounce workflows to delay their execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing a form, you can debounce every change to the form to execute a processing workflow only after they haven't edited the form for a certain period of time:
+
+```python
+@DBOS.workflow()
+def process_input(input):
+    ...
+
+# Each time a user submits a new input, debounce the process_input workflow.
+# The workflow will wait until 60 seconds after the user stops submitting new inputs,
+# then process the last input submitted.
+def on_user_input_update(user_id, input):
+    debouncer = Debouncer(debounce_key=user_id, debounce_period_sec=60)
+    debouncer.debounce(process_input, input)
+```
+
+See the [debouncing reference](../reference/contexts.md#debouncing) for more details.
+
 
 ## Coroutine (Async) Workflows
 
