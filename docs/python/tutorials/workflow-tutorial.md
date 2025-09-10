@@ -156,15 +156,16 @@ For example, if a user is editing an input field, you can debounce their changes
 
 ```python
 @DBOS.workflow()
-def process_input(input):
+def process_input(user_input):
     ...
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
 # then process the last input submitted.
-def on_user_input_update(user_id, input):
-    debouncer = Debouncer(debounce_key=user_id, debounce_period_sec=60)
-    debouncer.debounce(process_input, input)
+def on_user_input_submit(user_id, user_input):
+    debounce_period_sec = 60
+    debouncer = Debouncer(process_input, debounce_key=user_id)
+    debouncer.debounce(debounce_period_sec, user_input)
 ```
 
 See the [debouncing reference](../reference/contexts.md#debouncing) for more details.

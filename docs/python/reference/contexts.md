@@ -601,36 +601,36 @@ For example, if a user is editing an input field, you can debounce their changes
 
 ```python
 Debouncer.create(
-    func: Callable[P, R],
+    workflow: Callable[P, R],
     *,
     debounce_key: str,
-    debounce_period_sec: float,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
 ) -> Debouncer[P, R]
 ```
 
 **Parameters:**
-- `func`: The workflow to debounce.
+- `workflow`: The workflow to debounce.
 - `debounce_key`: The **unique** debounce key for this debouncer. Used to group workflows that will be debounced.
-- `debounce_period_sec`: The time to wait after the last time the workflow was called with `debounce_key` before starting the workflow.
-- `debounce_timeout_sec`: After this time elapses since the first workflow call with `debounce_key`, the workflow is started regardless of the debounce period.
-- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of starting it directly.
+- `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
 
 ### debounce
 
 ```python
 debouncer.debounce(
+    debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandle[R]
 ```
 
-Start a workflow with a debouncer.
-The workflow is submitted for execution, but its execution is delayed until either `debounce_period_sec` has passed since the workflow was last called or `debounce_timeout_sec` has passed since the workflow was first called.
-When the workflow is eventually started, it uses the **last** set of inputs passed into `debounce`.
+Submit a workflow for execution but delay it by `debounce_period_sec`.
+Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
 
-After the workflow starts, the next call to `debounce` begins the debouncing process again for a new workflow execution.
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 **Example Syntax**:
 
@@ -643,18 +643,18 @@ def process_input(user_input):
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
-    debouncer = Debouncer(process_input, debounce_key=user_id, debounce_period_sec=60)
-    debouncer.debounce(user_input)
+    debounce_period_sec = 60
+    debouncer = Debouncer(process_input, debounce_key=user_id)
+    debouncer.debounce(debounce_period_sec, user_input)
 ```
 
 ### Debouncer.create_async
 
 ```python
 Debouncer.create_async(
-    func: Callable[P, Coroutine[Any, Any, R]],
+    workflow: Callable[P, Coroutine[Any, Any, R]],
     *,
     debounce_key: str,
-    debounce_period_sec: float,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
 ) -> Debouncer[P, R]
@@ -665,6 +665,7 @@ Async version of `Debouncer.create`.
 
 ```python
 debouncer.debounce_async(
+    debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,
 ) -> WorkflowHandleAsync[R]:
