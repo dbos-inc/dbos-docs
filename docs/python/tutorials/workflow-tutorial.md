@@ -164,7 +164,7 @@ def process_input(user_input):
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
     debounce_period_sec = 60
-    debouncer = Debouncer(process_input, debounce_key=user_id)
+    debouncer = Debouncer.create(process_input, debounce_key=user_id)
     debouncer.debounce(debounce_period_sec, user_input)
 ```
 
