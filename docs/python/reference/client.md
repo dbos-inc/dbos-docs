@@ -530,7 +530,7 @@ Similar to [`Debouncer.debounce`](./contexts.md#debounce).
 client: DBOSClient = ...
 workflow_options: EnqueueOptions = {
     "workflow_name": "process_input",
-    "queue_name": "process_input_queue,
+    "queue_name": "process_input_queue",
 }
 
 # Each time a user submits a new input, debounce the process_input workflow.
