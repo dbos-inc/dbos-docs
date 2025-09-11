@@ -3,71 +3,18 @@ sidebar_position: 100
 title: DBOS CLI
 ---
 
-The DBOS Transact CLI helps you run applications locally.
-
-## Commands
-
-### `npx dbos schema`
-
-**Description:**
-Create the DBOS system database and internal tables.
-By default, a DBOS application automatically creates these on startup.
-However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, this command can be run with a privileged user to create all DBOS database tables.
-
-After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
-Use the `-r` flag to grant a role access to that schema.
-
-**Arguments:**
-
-- `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
-- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
-
-### `npx dbos start`
-
-**Description:**
-Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md#runtime-section).
-For example:
-
-```yaml
-runtimeConfig:
-  start:
-    - "node dist/main.js"
-```
-
-DBOS Cloud executes this command to start your app.
-
-### `npx @dbos-inc/create`
-
-**Description:**
-This command initializes a new DBOS application from a template into a target directory.
-
-**Arguments:**
-- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
-- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
-
-### `npx dbos debug`
-
-**Description:**
-This command launches the DBOS runtime in debug mode to replay a specified workflow.
-It is similar to `dbos start`, but instead of starting an HTTP server, it replays a single workflow in debug mode.
-You must compile your code (`npm run build`) and start the debug proxy before running this command.
-
-**Arguments:**
-- `-u, --uuid <string>`: The workflow identity to replay.
-- `-l, --loglevel <log-level>`: The severity of log entries emitted. Can be one of `debug`, `info`, `warn`, `error`, `emerg`, `crit`, `alert`.
-- `-d, --appDir <application-directory>`: The path to your application root directory.
-
 ## Workflow Management Commands
 
-All workflow management commands first attempt to retrieve your DBOS system database URL from [`dbos-config.yaml`](./configuration.md#dbos-configuration-file), then from the `DBOS_SYSTEM_DATABASE_URL` environment variable.
+These commands all require the URL of your DBOS system database.
+You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
-### `npx dbos workflow list`
+### npx dbos workflow list
 
 **Description:**
 List workflows run by your application in JSON format ordered by recency (most recently started workflows last).
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `-n, --name <string>`                 Retrieve functions with this name
 - `-l, --limit <number>`                Limit the results returned (default: "10") 
 - `-u, --user <string>`                 Retrieve workflows run by this user
@@ -91,7 +38,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-### `npx dbos workflow get`
+### npx dbos workflow get
 
 **Description:**
 Retrieve information on a workflow run by your application.
@@ -114,23 +61,25 @@ A JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-### `npx dbos workflow steps`
+### npx dbos workflow steps
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to retrieve
 
 **Output:**
 A JSON-formatted list of [workflow steps](./methods.md#dboslistworkflowsteps).
 
-### `npx dbos workflow cancel`
+### npx dbos workflow cancel
 
 **Description:**
  Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to cancel.
 
-### `npx dbos workflow resume`
+### npx dbos workflow resume
 
 **Description:**
 Resume a workflow from its last completed step.
@@ -138,21 +87,36 @@ You can use this to resume workflows that are cancelled or that have exceeded th
 You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `<workflow-id>`: The ID of the workflow to resume.
 
-### `npx dbos workflow queue list`
+### npx dbos workflow fork
+
+**Description:**
+Fork a new execution of a workflow, starting at a given step.
+This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#fork_workflow)).
+Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
+
+**Arguments:**
+* `<workflow-id>`: The ID of the workflow to restart.
+- `-s, --sys-db-url URL`: Your DBOS system database URL.
+* `-f, --forked-workflow-id`: Custom ID for the forked workflow
+* `-v, --application-version`: Custom application version for the forked workflow
+* `-S, --step INTEGER`: Restart from this step [default: 1]
+
+### npx dbos workflow queue list
 
 **Description:**
 Lists all currently enqueued workflows in JSON format ordered by recency (most recently enqueued workflows last).
 
 **Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
 - `-n, --name <string>`        Retrieve functions with this name
-- `-s, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
+- `-t, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
 - `-S, --status <string>`      Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
-- `-d, --appDir <string>`      Specify the application root directory
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
@@ -169,10 +133,54 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-### `npx dbos reset`
+
+## Application Management Commands
+
+### npx dbos schema
+
+**Description:**
+Create the DBOS system database and internal tables.
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, this command can be run with a privileged user to create all DBOS database tables.
+
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the `-r` flag to grant a role access to that schema.
+
+**Arguments:**
+
+- `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
+- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
+
+### npx dbos reset
 
 Reset your DBOS [system database](../../explanations//system-tables.md), deleting metadata about past workflows and steps.
 **Use only in a development environment.**
 
 **Arguments:**
+- `--sys-db-url, -s <string>`: Your DBOS system database URL
 - `--yes, -y`: Skip confirmation prompt.
+
+### npx @dbos-inc/create
+
+**Description:**
+This command initializes a new DBOS application from a template into a target directory.
+
+**Arguments:**
+- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+- `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
+
+
+### npx dbos start
+
+**Description:**
+Start your DBOS application by executing the `start` command defined in [`dbos-config.yaml`](./configuration.md).
+For example:
+
+```yaml
+runtimeConfig:
+  start:
+    - "node dist/main.js"
+```
+
+DBOS Cloud executes this command to start your app.
