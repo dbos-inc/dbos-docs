@@ -54,7 +54,7 @@ def example_step():
 ```
 
 If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesExceeded`) to the calling workflow.
-If that exception is not caught, the workflow [terminates](./workflow-tutorial.md#reliability-guarantees).
+If that exception is not caught, the workflow [terminates](./workflow-tutorial.md).
 
 ### Coroutine Steps
 
