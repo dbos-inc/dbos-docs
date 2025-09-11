@@ -611,7 +611,7 @@ Debouncer.create(
 
 **Parameters:**
 - `workflow`: The workflow to debounce.
-- `debounce_key`: The **unique** debounce key for this debouncer. Used to group workflows that will be debounced.
+- `debounce_key`: The debounce key for this debouncer. Used to group workflow executions that will be debounced. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
 - `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
 
