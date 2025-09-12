@@ -504,7 +504,6 @@ DebouncerClient(
     client: DBOSClient,
     workflow_options: EnqueueOptions,
     *,
-    debounce_key: str,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[queue] = None,
 )
@@ -516,6 +515,7 @@ Similar to [`Debouncer.create`](./contexts.md#debouncercreate) but takes in a DB
 
 ```python
 debouncerClient.debounce(
+    debounce_key: str,
     debounce_period_sec: float,
     *args: Any,
     **kwargs: Any,
@@ -532,22 +532,22 @@ workflow_options: EnqueueOptions = {
     "workflow_name": "process_input",
     "queue_name": "process_input_queue",
 }
+debouncer = DebouncerClient(client, workflow_options)
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
+    debounce_key = user_id
     debounce_period_sec = 60
-    debouncer = DebouncerClient(
-        client, workflow_options, debounce_key=user_id
-    )
-    debouncer.debounce(debounce_period_sec, user_input)
+    debouncer.debounce(debounce_key, debounce_period_sec, user_input)
 ```
 
 ### debounce_async
 
 ```python
 debouncerClient.debounce(
+    debounce_key: str,
     debounce_period_sec: float,
     *args: Any,
     **kwargs: Any,

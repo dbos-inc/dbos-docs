@@ -650,8 +650,9 @@ def process_input(user_input):
 debouncer = Debouncer.create(process_input)
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
+    debounce_key = user_id
     debounce_period_sec = 60
-    debouncer.debounce(user_id, debounce_period_sec, user_input)
+    debouncer.debounce(debounce_key, debounce_period_sec, user_input)
 ```
 
 ### Debouncer.create_async
