@@ -603,7 +603,6 @@ For example, if a user is editing an input field, you can debounce their changes
 Debouncer.create(
     workflow: Callable[P, R],
     *,
-    debounce_key: str,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
 ) -> Debouncer[P, R]
@@ -619,6 +618,7 @@ Debouncer.create(
 
 ```python
 debouncer.debounce(
+    debounce_key: str,
     debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,
@@ -632,6 +632,12 @@ When the workflow eventually executes, it uses the **last** set of inputs passed
 
 After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
+**Parameters:**
+- `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `debounce_period_sec`: Delay this workflow's execution by this period.
+- `*args`: Variadic workflow arguments.
+- `**kwargs`: Variadic workflow keyword arguments.
+
 **Example Syntax**:
 
 ```python
@@ -641,11 +647,11 @@ def process_input(user_input):
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
+debouncer = Debouncer.create(process_input)
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
     debounce_period_sec = 60
-    debouncer = Debouncer.create(process_input, debounce_key=user_id)
-    debouncer.debounce(debounce_period_sec, user_input)
+    debouncer.debounce(user_id, debounce_period_sec, user_input)
 ```
 
 ### Debouncer.create_async
@@ -654,7 +660,6 @@ def on_user_input_submit(user_id, user_input):
 Debouncer.create_async(
     workflow: Callable[P, Coroutine[Any, Any, R]],
     *,
-    debounce_key: str,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
 ) -> Debouncer[P, R]
@@ -665,6 +670,7 @@ Async version of `Debouncer.create`.
 
 ```python
 debouncer.debounce_async(
+    debounce_key: str,
     debounce_period_sec: float,
     *args: P.args,
     **kwargs: P.kwargs,

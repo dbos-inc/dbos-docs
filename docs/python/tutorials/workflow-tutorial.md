@@ -161,11 +161,11 @@ def process_input(user_input):
 
 # Each time a user submits a new input, debounce the process_input workflow.
 # The workflow will wait until 60 seconds after the user stops submitting new inputs,
+debouncer = Debouncer.create(process_input)
 # then process the last input submitted.
 def on_user_input_submit(user_id, user_input):
     debounce_period_sec = 60
-    debouncer = Debouncer.create(process_input, debounce_key=user_id)
-    debouncer.debounce(debounce_period_sec, user_input)
+    debouncer.debounce(user_id, debounce_period_sec, user_input)
 ```
 
 See the [debouncing reference](../reference/contexts.md#debouncing) for more details.
