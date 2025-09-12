@@ -456,7 +456,7 @@ interface DebouncerConfig<Args extends unknown[], Return> {
 ```
 
 **Parameters:**
-- **workflow**: The workflow to debounce.
+- **workflow**: The workflow to debounce. Note that workflows from [configured instances](./workflows-steps.md#instance-method-workflows) cannot be debounced.
 - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](#dbosstartworkflow). Applied to all workflows started from this debouncer.
 - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
 
