@@ -251,4 +251,72 @@ Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for
 Start a new execution of a workflow from a specific step. 
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
 
+## Debouncing
+
+Workflows can be debounced with the DBOSClient.
+
+### DebouncerClient
+
+```typescript
+new DebouncerClient(
+  client: DBOSClient,
+  params: DebouncerClientConfig
+)
+```
+
+```typescript
+interface DebouncerClientConfig {
+  workflowName: string;
+  workflowClassName?: string;
+  startWorkflowParams?: StartWorkflowParams;
+  debounceTimeoutMs?: number;
+}
+```
+
+Similar to [`Debouncer`](./methods.md#debouncer) but takes in a DBOSClient and workflow metadata instead of a workflow function.
+
+**Parameters:**
+- **client**: The DBOSClient instance to use.
+- **params**:
+  - **workflowName**: The name of the workflow method to debounce.
+  - **workflowClassName**: The name of the class the workflow method is a member of, if any.
+  - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](./methods.md#dbosstartworkflow). Applied to all workflows started from this debouncer.
+  - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+
+### debouncerClient.debounce
+
+```typescript
+debouncerClient.debounce(
+  debounceKey: string,
+  debouncePeriodMs: number,
+  ...args: unknown[]
+): Promise<WorkflowHandle<unknown>>
+```
+
+Similar to [`Debouncer.debounce`](./methods.md#debouncerdebounce).
+
+**Example Syntax**:
+
+```typescript
+import { DBOSClient, DebouncerClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create({
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL
+});
+
+const debouncer = new DebouncerClient(client, {
+  workflowName: "processInput",
+  debounceTimeoutMs: 120000, // 2 minutes
+});
+
+// Each time a user submits a new input, debounce the processInput workflow.
+// The workflow will wait until 60 seconds after the user stops submitting new inputs,
+// then process the last input submitted.
+async function onUserInputSubmit(userId: string, userInput: string) {
+  const debounceKey = userId;
+  const debouncePeriodMs = 60000; // 60 seconds
+  await debouncer.debounce(debounceKey, debouncePeriodMs, userInput);
+}
+```
+
 
