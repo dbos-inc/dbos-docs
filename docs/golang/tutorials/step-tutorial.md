@@ -6,9 +6,12 @@ title: Steps
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
-You can use [`RunAsStep`](../reference/workflows-steps.md#runasstep) to call a function as a step.
-For a function to be used as a step, it should return a serializable value and an error.
-To pass inputs into a function being called as a step, wrap it in an anonymous function.
+You can use [`RunAsStep`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RunAsStep) to call a function as a step.
+For a function to be used as a step, it should return a serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) value and an error and have this signature:
+
+```go
+type Step[R any] func(ctx context.Context) (R, error)
+```
 
 Here's a simple example:
 
@@ -18,9 +21,7 @@ func generateRandomNumber(ctx context.Context) (float64, error) {
 }
 
 func workflowFunction(ctx dbos.DBOSContext, input string) (float64, error) {
-    randomNumber, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (float64, error) {
-        return generateRandomNumber(stepCtx)
-    }, dbos.WithStepName("generateRandomNumber"))
+    randomNumber, err := dbos.RunAsStep(ctx, generateRandomNumber, dbos.WithStepName("generateRandomNumber"))
     if err != nil {
         return 0, err
     }
@@ -49,43 +50,45 @@ This is useful for automatically handling transient failures, like making reques
 Retries are configurable through step options that can be passed to `RunAsStep`.
 
 Available retry configuration options include:
-- [`WithStepMaxRetries`](../reference/workflows-steps.md#withstepmaxretries) - Maximum number of times this step is automatically retried on failure (default 0)
-- [`WithMaxInterval`](../reference/workflows-steps.md#withmaxinterval) - Maximum delay between retries (default 5s)  
-- [`WithBackoffFactor`](../reference/workflows-steps.md#withbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
-- [`WithBaseInterval`](../reference/workflows-steps.md#withbaseinterval) - Initial delay between retries (default 100ms)
+- [`WithStepName`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithStepName) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
+- [`WithStepMaxRetries`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithStepMaxRetries) - Maximum number of times this step is automatically retried on failure (default 0)
+- [`WithMaxInterval`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithMaxInterval) - Maximum delay between retries (default 5s)
+- [`WithBackoffFactor`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithBackoffFactor) - Exponential backoff multiplier between retries (default 2.0)
+- [`WithBaseInterval`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithBaseInterval) - Initial delay between retries (default 100ms)
 
 For example, let's configure this step to retry failures (such as if `example.com` is temporarily down) up to 10 times:
 
 ```go
-func fetchFunction(ctx context.Context) (string, error) {
-	resp, err := http.Get("https://example.com")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+func fetchFunction(ctx context.Context, url string) (string, error) {
+    resp, err := http.Get(url)
+    if err != nil {
+        return "", err
+    }
+    defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
 
-	return string(body), nil
+    return string(body), nil
 }
 
 func workflowFunction(ctx dbos.DBOSContext, input string) (string, error) {
-	result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-		return fetchFunction(stepCtx)
-	},
-		dbos.WithStepName("fetchFunction"),
-		dbos.WithStepMaxRetries(10),
-		dbos.WithMaxInterval(30*time.Second),
-		dbos.WithBackoffFactor(2.0),
-	)
+    result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+        return fetchFunction(stepCtx, "http://example.com")
+    },
+        dbos.WithStepName("fetchFunction"),
+        dbos.WithStepMaxRetries(10),
+        dbos.WithMaxInterval(30*time.Second),
+        dbos.WithBackoffFactor(2.0),
+        dbos.WithBaseInterval(500*time.Millisecond)
+    )
 
-	if err != nil {
-		return "", err
-	}
-	return result, nil
+    if err != nil {
+        return "", err
+    }
+    return result, nil
 }
 ```
 
