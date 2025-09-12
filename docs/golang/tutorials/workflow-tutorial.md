@@ -8,53 +8,53 @@ Workflows provide **durable execution** so you can write programs that are **res
 Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-To write a workflow, register a Go function with [`dbos.RegisterWorkflow`](../reference/workflows-steps.md#dbosregisterworkflow).
+To write a workflow, register a Go function with [`RegisterWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RegisterWorkflow).
 The function's signature must match:
 
 ```go
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
-In other words, a workflow must take in a DBOS context and one other input of any serializable type and must return one output of any serializable type and error.
+In other words, a workflow must take in a DBOS context and one other input of any serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) type and must return one output of any serializable type and error.
+
+:::info
+Workflows and queues registration must happen before launching the DBOS context with `DBOSContext.Launch()`
+:::
 
 For example:
 
 ```go
 func stepOne(ctx context.Context) (string, error) {
-	fmt.Println("Step one completed")
-	return "success", nil
+    fmt.Println("Step one completed")
+    return "success", nil
 }
 
 func stepTwo(ctx context.Context) (string, error) {
-	fmt.Println("Step two completed")
-	return "success", nil
+    fmt.Println("Step two completed")
+    return "success", nil
 }
 
 func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
-	_, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-		return stepOne(stepCtx)
-	})
-	if err != nil {
-		return "", err
-	}
-	_, err = dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-		return stepTwo(stepCtx)
-	})
-	if err != nil {
-		return "", err
-	}
-	return "success", err
+    _, err := dbos.RunAsStep(ctx, stepOne)
+    if err != nil {
+        return "failure", err
+    }
+    _, err = dbos.RunAsStep(ctx, stepTwo)
+    if err != nil {
+        return "failure", err
+    }
+    return "success", err
 }
 
 func main() {
-	... // Create the DBOS context
-	dbos.RegisterWorkflow(dbosContext, workflow)
-	... // Launch DBOS after registering all workflows
+    ... // Create the DBOS context
+    dbos.RegisterWorkflow(dbosContext, workflow)
+    ... // Launch DBOS after registering all workflows
 }
 ```
 
-Call workflows with [`dbos.RunWorkflow`](../reference/workflows-steps.md#dbosrunworkflow).
-This starts the workflow in the background and returns a [handle](../reference/workflows-steps.md#workflowhandle) to it, from which you can access information about the workflow or wait for it to complete and return its result.
+Call workflows with [`RunWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RunWorkflow).
+This starts the workflow in the background and returns a [workflow handle](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WorkflowHandle) from which you can access information about the workflow or wait for it to complete and return its result.
 
 Here's an example:
 
@@ -76,10 +76,10 @@ func example(dbosContext dbos.DBOSContext, input string) error {
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through [`GetWorkflowID`](../reference/methods.md#getworkflowid).
+You can access this ID through [`GetWorkflowID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#GetWorkflowID), or from the handle's `GetWorkflowID` method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunWorkflow`.
+You can set the workflow ID of a workflow using [`WithWorkflowID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithWorkflowID) when calling `RunWorkflow`.
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
@@ -98,8 +98,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 
 func example(dbosContext dbos.DBOSContext, input string) error {    
     myID := "unique-workflow-id-123"
-    handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input, 
-        dbos.WithWorkflowID(myID))
+    handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input, dbos.WithWorkflowID(myID))
     if err != nil {
         log.Fatal(err)
     }
@@ -155,7 +154,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
             return "", err
         }
         return string(bodyBytes), nil
-    }, dbos.WithStepName("fetchBody"))
+    })
     if err != nil {
         return "", err
     }
@@ -165,9 +164,14 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 }
 ```
 
+:::warning
+Go's `select` is non-deterministic. You should use it inside a step.
+We will be adding durable dbos.Go and dbos.Select methods in an upcoming release.
+:::
+
 ## Durable Sleep
 
-You can use [`Sleep`](../reference/methods.md#sleep) to put your workflow to sleep for any period of time.
+You can use [`Sleep`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Sleep) to put your workflow to sleep for any period of time.
 This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
 
 Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
@@ -208,7 +212,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### SetEvent
 
-Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`SetEvent`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#SetEvent) to publish a key-value pair, or update its value if has already been published.
 
 ```go
 func SetEvent[P any](ctx DBOSContext, key string, message P) error
@@ -216,7 +220,7 @@ func SetEvent[P any](ctx DBOSContext, key string, message P) error
 
 #### GetEvent
 
-You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
+You can call [`GetEvent`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#GetEvent) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
 ```go
@@ -272,7 +276,7 @@ func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *
 #### Reliability Guarantees
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
-Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated later.
+Additionally, if `getEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated later.
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow ID.
@@ -280,7 +284,7 @@ This is useful for sending notifications to an active workflow.
 
 #### Send
 
-You can call [`Send`](../reference/methods.md#send) to send a message to a workflow.
+You can call [`Send`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Send) to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 ```go
@@ -289,7 +293,7 @@ func Send[P any](ctx DBOSContext, destinationID string, message P, topic string)
 
 #### Recv
 
-Workflows can call [`Recv`](../reference/methods.md#recv) to receive messages sent to them, optionally for a particular topic.
+Workflows can call [`Recv`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Recv) to receive messages sent to them, optionally for a particular topic.
 Each call to `Recv` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
@@ -349,11 +353,11 @@ If you're sending a message from a workflow, DBOS guarantees exactly-once delive
 
 ## Scheduled Workflows
 
-You can schedule workflows to run automatically at specified times using cron syntax.
+You can schedule workflows to run automatically at specified times using cron syntax with seconds precision.
 Scheduled workflows are useful for running recurring tasks like data backups, report generation, or cleanup operations.
 
-To create a scheduled workflow, use [`WithSchedule`](../reference/workflows-steps.md#withschedule) when registering your workflow.
-The workflow must have a single `time.Time` input parameter, representing the scheduled execution time.
+To create a scheduled workflow, use [`WithSchedule`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithSchedule) when registering your workflow.
+The workflow must have a single [`time.Time`](https://pkg.go.dev/time#Time) input parameter, representing the scheduled execution time.
 
 **Example syntax:**
 
@@ -375,11 +379,11 @@ func main() {
 
     // Register a workflow to run daily at 2:00 AM
     dbos.RegisterWorkflow(dbosContext, dailyBackup, 
-        dbos.WithSchedule("0 2 * * *")) // Cron: daily at 2:00 AM
+        dbos.WithSchedule("0 0 2 * * *")) // Cron: daily at 2:00 AM
     
     // Register a workflow to run every 15 minutes
     dbos.RegisterWorkflow(dbosContext, frequentTask,
-        dbos.WithSchedule("*/15 * * * *")) // Cron: every 15 minutes
+        dbos.WithSchedule("0 */15 * * * * ")) // Cron: every 15 minutes
     
     // Launch DBOS - scheduled workflows will start automatically
     err := dbosContext.Launch()
@@ -405,11 +409,11 @@ DBOS provides [tooling](./workflow-management.md) to help you identify failed wo
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through configuration).
+When DBOS is launched, it computes an application version from a hash of the application source code (this can be overridden through configuration).
 All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use [`DBOS.forkWorkflow`](./workflow-management.md#forking-workflows) to restart a workflow from a specific step on a specific code version.
+You cannot change the version of a workflow, but you can use [`ForkWorkflow`](./workflow-management.md#forking-workflows) to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
