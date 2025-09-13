@@ -3,7 +3,7 @@ sidebar_position: 5
 title: DBOS Context
 ---
 
-A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](./workflow-tutorial.md), [queues](./queue-tutorial.md) and perform [workflow management](./workflow-management.md) tasks. [`DBOSContext`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#DBOSContext) extends Go's [`context.Context`](https://pkg.go.dev/context#Context) interface and can be used to set [workflow timeouts](./workflow-tutorial.md#workflow-timeouts) or trigger cancellation.
+A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](./workflow-tutorial.md), [queues](./queue-tutorial.md) and perform [workflow management](./workflow-management.md) tasks. [`DBOSContext`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#DBOSContext) extends Go's [`context.Context`](https://pkg.go.dev/context#Context) interface, carry essential internal state across workflow execution, and can be used to set [workflow timeouts](./workflow-tutorial.md#workflow-timeouts) or trigger cancellation.
 
 ## Initialization
 
