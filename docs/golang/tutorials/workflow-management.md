@@ -7,7 +7,7 @@ You can view and manage your durable workflow executions via a web UI ([self-hos
 
 ## Listing Workflows
 
-You can list your application's workflows programmatically via [`ListWorkflows`](../reference/methods.md#listworkflows).
+You can list your application's workflows programmatically via [`ListWorkflows`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#ListWorkflows).
 
 You can also view a searchable and expandable list of your application's workflows from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
 
@@ -22,14 +22,14 @@ For example, here is the graph of a workflow that processes multiple tasks concu
 
 ## Cancelling Workflows
 
-You can cancel the execution of a workflow from the web UI or programmatically via [`CancelWorkflow`](../reference/methods.md#cancelworkflow).
+You can cancel the execution of a workflow from the web UI or programmatically via [`CancelWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#CancelWorkflow).
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
 ## Resuming Workflows
 
-You can resume a workflow from its last completed step from the web UI or programmatically via [`ResumeWorkflow`](../reference/methods.md#resumeworkflow).
+You can resume a workflow from its last completed step from the web UI or programmatically via [`ResumeWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#ResumeWorkflow).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -41,7 +41,7 @@ When you fork a workflow, DBOS generates a new workflow with a new workflow ID, 
 
 Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
 
-You can fork a workflow programmatically using [`ForkWorkflow`](../reference/methods.md#forkworkflow).
+You can fork a workflow programmatically using [`ForkWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#ForkWorkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>
