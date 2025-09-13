@@ -7,27 +7,26 @@ toc_max_heading_level: 3
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, use [`NewWorkflowQueue`](../reference/queues.md#newworkflowqueue):
+To create a queue, use [`NewWorkflowQueue`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#NewWorkflowQueue)
 
 ```go
 queue := dbos.NewWorkflowQueue(dbosContext, "example_queue")
 ```
 
-You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps.md#withqueue) when calling `RunWorkflow`.
-Enqueuing a function submits it for execution and returns a [handle](../reference/workflows-steps.md#workflowhandle) to it.
+You can then enqueue any workflow using [`WithQueue`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithQueue) when calling `RunWorkflow`.
+Enqueuing a function submits it for execution and returns a [handle](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WorkflowHandle) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```go
 func processTask(ctx dbos.DBOSContext, task string) (string, error) {
     // Process the task...
-	return fmt.Sprintf("Processed: %s", task), nil
+    return fmt.Sprintf("Processed: %s", task), nil
 }
 
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     // Enqueue a workflow
     task := "example_task"
-    handle, err := dbos.RunWorkflow(dbosContext, processTask, task,
-        dbos.WithQueue(queue.Name))
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue(queue.Name))
     if err != nil {
         return err
     }
@@ -44,56 +43,55 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 ### Queue Example
 
-Here's an example of a workflow using a queue to process tasks in parallel:
+Here's an example of a workflow using a queue to process tasks concurrently:
 
 ```go
 func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
-	// Process the task...
-	return fmt.Sprintf("Processed: %s", task), nil
+    // Process the task...
+    return fmt.Sprintf("Processed: %s", task), nil
 }
 
 func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) ([]string, error) {
-	// Enqueue each task so all tasks are processed concurrently
-	tasks := []string{"task1", "task2", "task3", "task4", "task5"}
+    // Enqueue each task so all tasks are processed concurrently
+    tasks := []string{"task1", "task2", "task3", "task4", "task5"}
 
-	var handles []dbos.WorkflowHandle[string]
-	for _, task := range tasks {
-		handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task,
-			dbos.WithQueue(queue.Name))
-		if err != nil {
-			return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
-		}
-		handles = append(handles, handle)
-	}
+    var handles []dbos.WorkflowHandle[string]
+    for _, task := range tasks {
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queue.Name))
+        if err != nil {
+            return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
+        }
+        handles = append(handles, handle)
+    }
 
-	// Wait for each task to complete and retrieve its result
-	var results []string
-	for i, handle := range handles {
-		result, err := handle.GetResult()
-		if err != nil {
-			return nil, fmt.Errorf("task %d failed: %w", i, err)
-		}
-		results = append(results, result)
-	}
+    // Wait for each task to complete and retrieve its result
+    var results []string
+    for i, handle := range handles {
+        result, err := handle.GetResult()
+        if err != nil {
+            return nil, fmt.Errorf("task %d failed: %w", i, err)
+        }
+        results = append(results, result)
+    }
 
-	return results, nil
+    return results, nil
 }
 
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
-	handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
-	if err != nil {
-		return err
-	}
+    handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
+    if err != nil {
+        return err
+    }
 
-	results, err := handle.GetResult()
-	if err != nil {
-		return err
-	}
+    results, err := handle.GetResult()
+    if err != nil {
+        return err
+    }
 
-	for _, result := range results {
-		fmt.Println(result)
-	}
-	return nil
+    for _, result := range results {
+        fmt.Println(result)
+    }
+    return nil
 }
 ```
 
@@ -110,8 +108,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", 
-    dbos.WithWorkerConcurrency(5))
+queue := dbos.NewWorkflowQueue(dbosContext, "example_queue",  dbos.WithWorkerConcurrency(5))
 ```
 
 #### Global Concurrency
@@ -125,8 +122,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", 
-    dbos.WithGlobalConcurrency(10))
+queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", dbos.WithGlobalConcurrency(10))
 ```
 
 ### Rate Limiting
@@ -148,7 +144,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 
 ### Deduplication
 
-You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](../reference/workflows-steps.md#withdeduplicationid) when calling `RunWorkflow`.
+You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithDeduplicationID) when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
 
@@ -166,7 +162,8 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
     
-    handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
+    handle, err := dbos.RunWorkflow(
+        dbosContext, taskWorkflow, task,
         dbos.WithQueue(queue.Name),
         dbos.WithDeduplicationID(deduplicationID))
     if err != nil {
@@ -186,9 +183,9 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 ### Priority
 
-You can set a priority for an enqueued workflow using [`WithPriority`](../reference/workflows-steps.md#withpriority) when calling `RunWorkflow`.
+You can set a priority for an enqueued workflow using [`WithPriority`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithPriority) when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `WithPriorityEnabled(true)` on your queue.
+If using priority, you must set [`WithPriorityEnabled`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithPriorityEnabled) on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -197,8 +194,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 To use priorities in a queue, you must enable it when creating the queue:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue",
-    dbos.WithPriorityEnabled(true))
+queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
 ```
 
 **Example syntax:**
