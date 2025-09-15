@@ -12,17 +12,17 @@ All queues should be created before DBOS is launched.
 
 ```go
 type WorkflowQueue struct {
-	Name                 string       `json:"name"`                        // Unique queue name
-	WorkerConcurrency    *int         `json:"workerConcurrency,omitempty"` // Max concurrent workflows per executor
-	GlobalConcurrency    *int         `json:"concurrency,omitempty"`       // Max concurrent workflows across all executors
-	PriorityEnabled      bool         `json:"priorityEnabled,omitempty"`   // Enable priority-based scheduling
-	RateLimit            *RateLimiter `json:"rateLimit,omitempty"`         // Rate limiting configuration
-	MaxTasksPerIteration int          `json:"maxTasksPerIteration"`        // Max workflows to dequeue per iteration
+    Name                 string       `json:"name"`                        // Unique queue name
+    WorkerConcurrency    *int         `json:"workerConcurrency,omitempty"` // Max concurrent workflows per executor
+    GlobalConcurrency    *int         `json:"concurrency,omitempty"`       // Max concurrent workflows across all executors
+    PriorityEnabled      bool         `json:"priorityEnabled,omitempty"`   // Enable priority-based scheduling
+    RateLimit            *RateLimiter `json:"rateLimit,omitempty"`         // Rate limiting configuration
+    MaxTasksPerIteration int          `json:"maxTasksPerIteration"`        // Max workflows to dequeue per iteration
 }
 ```
 
 WorkflowQueue defines a named queue for workflow execution.
-Workflows can be enqueued by specifying the queue with `WithQueue` in `RunWorkflow`.
+Workflows can be enqueued by specifying the queue name with `WithQueue` in `RunWorkflow`.
 
 ### NewWorkflowQueue
 
@@ -45,9 +45,9 @@ queue := dbos.NewWorkflowQueue(ctx, "email-queue",
     dbos.WithWorkerConcurrency(5),
     dbos.WithRateLimiter(&dbos.RateLimiter{
         Limit:  100,
-        Period: 60.0, // 100 workflows per minute
+        Period: 60 * time.Second, // 100 workflows per minute
     }),
-    dbos.WithPriorityEnabled(true),
+    dbos.WithPriorityEnabled(),
 )
 
 // Enqueue workflows to this queue:
@@ -83,7 +83,7 @@ This controls batch sizes for queue processing.
 ####  WithPriorityEnabled
 
 ```go
-func WithPriorityEnabled(enabled bool) queueOption
+func WithPriorityEnabled() queueOption
 ```
 
 Enable setting priority for workflows on this queue.
@@ -96,8 +96,8 @@ func WithRateLimiter(limiter *RateLimiter) queueOption
 
 ```go
 type RateLimiter struct {
-	Limit  int     // Maximum number of workflows to start within the period
-	Period float64 // Time period in seconds for the rate limit
+    Limit  int     // Maximum number of workflows to start within the period
+    Period time.Duration // Time period for the rate limit
 }
 ```
 
