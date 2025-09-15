@@ -87,7 +87,8 @@ const dataSource = new DrizzleDataSource<NodePgDatabase>('app-db', config);
 
 ```typescript
 const config = { connectionString: process.env.DBOS_DATABASE_URL };
-const dataSource = new TypeOrmDataSource('app-db', config, [/*entities*/]);
+const dataSource1 = TypeORMDataSource.createFromConfig('app-db', config, [/*entities*/]);
+const dataSource2 = TypeORMDataSource.createFromDataSource('app-db-2', existingTypeOrmDS);
 ```
 
 </TabItem>
@@ -170,7 +171,7 @@ await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunct
 ```typescript
 async function insertFunction(user: string) {
   type Result = Array<{ greet_count: number }>;
-  const rows = await TypeOrmDataSource.entityManager.sql<Result>`
+  const rows = await dataSource.entityManager.sql<Result>`
      INSERT INTO greetings(name, greet_count) VALUES(${user}, 1)
      ON CONFLICT(name) DO UPDATE SET greet_count = greetings.greet_count + 1
      RETURNING greet_count`;
