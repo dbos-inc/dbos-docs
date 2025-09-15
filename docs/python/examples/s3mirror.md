@@ -48,7 +48,8 @@ def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
 
 ## Starting a Transfer
 
-We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [`DBOS.set_event`](../tutorials/workflow-communication.md#events-example) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
+
+We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-communication.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
 
 ```python
 transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, worker_concurrency = MAX_FILES_PER_WORKER)
