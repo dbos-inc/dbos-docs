@@ -48,7 +48,7 @@ def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
 
 ## Starting a Transfer
 
-We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-tutorial.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
+We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-communication.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
 
 ```python
 transfer_queue = Queue("transfer_queue", concurrency = MAX_FILES_AT_A_TIME, worker_concurrency = MAX_FILES_PER_WORKER)
@@ -68,7 +68,7 @@ This workflow terminates as soon as all of its child workflows are enqueued. Onc
 
 ## Cancelling a Transfer
 
-To stop a previously-started transfer, we use the workflow ID of the `transfer_job` that started it. We call [DBOS.get_event](../tutorials/workflow-tutorial.md#get_event) to retrieve the transfer data stored previously. This gives us the list of transferred files, some metadata about them, and the workflow ID of each respective `s3_transfer_file` step. We then simply call [DBOS.cancel_workflow](../reference/contexts.md#cancel_workflow) for each of those IDs.
+To stop a previously-started transfer, we use the workflow ID of the `transfer_job` that started it. We call [DBOS.get_event](../tutorials/workflow-communication.md#get_event) to retrieve the transfer data stored previously. This gives us the list of transferred files, some metadata about them, and the workflow ID of each respective `s3_transfer_file` step. We then simply call [DBOS.cancel_workflow](../reference/contexts.md#cancel_workflow) for each of those IDs.
 
 ```python
 @app.post("/cancel/{transfer_id}")
@@ -82,7 +82,7 @@ def cancel(transfer_id: str):
 
 ## Monitoring an Existing Transfer
 
-Just like the cancel method, we start by calling [DBOS.get_event](../tutorials/workflow-tutorial.md#get_event) to retrieve file-wise metadata including the enqueued workflow IDs. Instead of calling [DBOS.cancel_workflow](../reference/contexts.md#cancel_workflow), we call [DBOS.list_workflows](../reference/contexts.md#list_workflows) for each ID to retrieve its summary and current status. We can count how many files have a status of "SUCCESS" versus "ERROR". DBOS also tracks the start and update time of each workflow. So, with a handful of lines of code, we can calculate the gigabyte-per-second transfer rate.
+Just like the cancel method, we start by calling [DBOS.get_event](../tutorials/workflow-communication.md#get_event) to retrieve file-wise metadata including the enqueued workflow IDs. Instead of calling [DBOS.cancel_workflow](../reference/contexts.md#cancel_workflow), we call [DBOS.list_workflows](../reference/contexts.md#list_workflows) for each ID to retrieve its summary and current status. We can count how many files have a status of "SUCCESS" versus "ERROR". DBOS also tracks the start and update time of each workflow. So, with a handful of lines of code, we can calculate the gigabyte-per-second transfer rate.
 
 ```python
 @app.get("/transfer_status/{transfer_id}")
