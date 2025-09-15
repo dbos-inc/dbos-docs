@@ -41,7 +41,7 @@ if err != nil {
 
 The newly created DBOSContext must be launched with Launch() before use and should be shut down with Cancel() at program termination.
 
-### DBOSContext.launch()
+### DBOSContext.launch
 
 ```go
 DBOSContext.Launch() error
@@ -56,8 +56,7 @@ Launch the following resources managed by a `DBOSContext`:
 
 `Launch()` should be called by your program during startup before running any workflows.
 
-### DBOSContext.Shutdown()
-
+### DBOSContext.Shutdown
 ```go
 Shutdown(timeout time.Duration)
 ```
@@ -66,3 +65,20 @@ Gracefully shutdown the DBOS runtime, waiting for workflows to complete and clea
 
 **Parameters:**
 - **timeout**: The time to wait for workflows to complete. After the timeout elapses, execution of incomplete workflows is terminated (the workflows may then be recovered by other processes).
+
+
+### DBOSContext.WithTimeout
+
+```go
+func WithTimeout(ctx DBOSContext, timeout time.Duration) (DBOSContext, context.CancelFunc)
+```
+
+WithTimeout returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See [workflow timeouts](./workflow-tutorial.md#workflow-timeouts) for usage.
+
+### DBOSContext.WithoutCancel
+
+```go
+func WithoutCancel(ctx DBOSContext) DBOSContext
+```
+
+WithoutCancel returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.

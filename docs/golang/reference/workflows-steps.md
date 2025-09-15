@@ -72,7 +72,7 @@ Returns a [WorkflowHandle](#workflowhandle) that can be used to check the workfl
 
 ```go
 func workflow(ctx dbos.DBOSContext, input string) (string, error) {
-	return "success", err
+    return "success", err
 }
 
 func example(input string) error {
@@ -114,7 +114,7 @@ func WithDeduplicationID(id string) WorkflowOption
 ```
 
 Set a deduplication ID for this workflow.
-Must be used alongside `WithQueue`.
+Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 
@@ -125,7 +125,7 @@ func WithPriority(priority uint) WorkflowOption
 ```
 
 Set a queue priority for the workflow.
-Must be used alongside `WithQueue`.
+Should be used alongside `WithQueue`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order.
 Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. 
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -214,9 +214,9 @@ WithBaseInterval sets the initial delay between retries. Default value is 100ms.
 
 ```go
 type WorkflowHandle[R any] interface {
-	GetResult() (R, error)           
-	GetStatus() (WorkflowStatus, error)
-	GetWorkflowID() string
+    GetResult() (R, error)
+    GetStatus() (WorkflowStatus, error)
+    GetWorkflowID() string
 }
 ```
 

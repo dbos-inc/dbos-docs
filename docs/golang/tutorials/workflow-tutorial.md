@@ -186,6 +186,8 @@ handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling [CancelWorkflow](./workflow-management.md#cancelling-workflows)).
 
+To detach a child workflow from its parent timeout, you can use [`WithoutCancel`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithoutCancel) to obtain an uncancellable `DBOSContext` and pass it to  `dbos.RunWorkflow`.
+
 ## Durable Sleep
 
 You can use [`Sleep`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Sleep) to put your workflow to sleep for any period of time.

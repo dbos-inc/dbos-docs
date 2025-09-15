@@ -16,10 +16,10 @@ Retrieve the latest value of an event published by the workflow identified by `t
 If the event does not yet exist, wait for it to be published, an error if the wait times out.
 
 **Parameters:**
-- `ctx`: The DBOS context.
-- `targetWorkflowID`: The identifier of the workflow whose events to retrieve.
-- `key`: The key of the event to retrieve.
-- `timeout`: A timeout. If the wait times out, return an error.
+- **ctx**: The DBOS context.
+- **targetWorkflowID**: The identifier of the workflow whose events to retrieve.
+- **key**: The key of the event to retrieve.
+- **timeout**: A timeout. If the wait times out, return an error.
 
 
 ### SetEvent
@@ -249,11 +249,11 @@ This is a list of `StepInfo` objects, with the following structure:
 
 ```go
 type StepInfo struct {
-	StepID          int    // The sequential ID of the step within the workflow
-	StepName        string // The name of the step function
-	Output          any    // The output returned by the step (if any)
-	Error           error  // The error returned by the step (if any)
-	ChildWorkflowID string  // If the step starts or retrieves the result of a workflow, its ID
+    StepID          int    // The sequential ID of the step within the workflow
+    StepName        string // The name of the step function
+    Output          any    // The output returned by the step (if any)
+    Error           error  // The error returned by the step (if any)
+    ChildWorkflowID string  // If the step starts or retrieves the result of a workflow, its ID
 }
 ```
 
@@ -306,27 +306,27 @@ This object has the following definition:
 
 ```go
 type WorkflowStatus struct {
-	ID                 string             `json:"workflow_uuid"`       // Unique identifier for the workflow
-	Status             WorkflowStatusType `json:"status"`              // Current execution status
-	Name               string             `json:"name"`                // Function name of the workflow
-	AuthenticatedUser  *string            `json:"authenticated_user"`  // User who initiated the workflow (if applicable)
-	AssumedRole        *string            `json:"assumed_role"`        // Role assumed during execution (if applicable)
-	AuthenticatedRoles *string            `json:"authenticated_roles"` // Roles available to the user (if applicable)
-	Output             any                `json:"output"`              // Workflow output (available after completion)
-	Error              error              `json:"error"`               // Error information (if status is ERROR)
-	ExecutorID         string             `json:"executor_id"`         // ID of the executor running this workflow
-	CreatedAt          time.Time          `json:"created_at"`          // When the workflow was created
-	UpdatedAt          time.Time          `json:"updated_at"`          // When the workflow status was last updated
-	ApplicationVersion string             `json:"application_version"` // Version of the application that created this workflow
-	ApplicationID      string             `json:"application_id"`      // Application identifier
-	Attempts           int                `json:"attempts"`            // Number of execution attempts
-	QueueName          string             `json:"queue_name"`          // Queue name (if workflow was enqueued)
-	Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
-	Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
-	StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
-	DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
-	Input              any                `json:"input"`               // Input parameters passed to the workflow
-	Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
+    ID                 string             `json:"workflow_uuid"`       // Unique identifier for the workflow
+    Status             WorkflowStatusType `json:"status"`              // Current execution status
+    Name               string             `json:"name"`                // Function name of the workflow
+    AuthenticatedUser  *string            `json:"authenticated_user"`  // User who initiated the workflow (if applicable)
+    AssumedRole        *string            `json:"assumed_role"`        // Role assumed during execution (if applicable)
+    AuthenticatedRoles *string            `json:"authenticated_roles"` // Roles available to the user (if applicable)
+    Output             any                `json:"output"`              // Workflow output (available after completion)
+    Error              error              `json:"error"`               // Error information (if status is ERROR)
+    ExecutorID         string             `json:"executor_id"`         // ID of the executor running this workflow
+    CreatedAt          time.Time          `json:"created_at"`          // When the workflow was created
+    UpdatedAt          time.Time          `json:"updated_at"`          // When the workflow status was last updated
+    ApplicationVersion string             `json:"application_version"` // Version of the application that created this workflow
+    ApplicationID      string             `json:"application_id"`      // Application identifier
+    Attempts           int                `json:"attempts"`            // Number of execution attempts
+    QueueName          string             `json:"queue_name"`          // Queue name (if workflow was enqueued)
+    Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
+    Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
+    StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
+    DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
+    Input              any                `json:"input"`               // Input parameters passed to the workflow
+    Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
 }
 ```
 
@@ -338,12 +338,12 @@ The `WorkflowStatusType` represents the execution status of a workflow:
 type WorkflowStatusType string
 
 const (
-	WorkflowStatusPending        WorkflowStatusType = "PENDING"
-	WorkflowStatusSuccess        WorkflowStatusType = "SUCCESS"
-	WorkflowStatusError          WorkflowStatusType = "ERROR"
-	WorkflowStatusCancelled      WorkflowStatusType = "CANCELLED"
-	WorkflowStatusEnqueued       WorkflowStatusType = "ENQUEUED"
-	WorkflowStatusRetriesExceeded WorkflowStatusType = "RETRIES_EXCEEDED"
+    WorkflowStatusPending                     WorkflowStatusType = "PENDING"                        // Workflow is running or ready to run
+    WorkflowStatusEnqueued                    WorkflowStatusType = "ENQUEUED"                       // Workflow is queued and waiting for execution
+    WorkflowStatusSuccess                     WorkflowStatusType = "SUCCESS"                        // Workflow completed successfully
+    WorkflowStatusError                       WorkflowStatusType = "ERROR"                          // Workflow completed with an error
+    WorkflowStatusCancelled                   WorkflowStatusType = "CANCELLED"                      // Workflow was cancelled (manually or due to timeout)
+    WorkflowStatusMaxRecoveryAttemptsExceeded WorkflowStatusType = "MAX_RECOVERY_ATTEMPTS_EXCEEDED" // Workflow exceeded maximum retry attempts
 )
 ```
 
