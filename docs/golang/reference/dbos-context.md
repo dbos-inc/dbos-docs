@@ -13,7 +13,7 @@ A DBOS Context is at the center of a DBOS-enabled application. Use it to registe
 You can create a DBOS context using [`NewDBOSContext`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#NewDBOSContext), which takes a [`Config`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Config) object where `AppName` and `DatabaseURL` are mandatory.
 
 ```go
-func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error)
+func NewDBOSContext(inputConfig Config) (DBOSContext, error)
 ```
 
 ```go
