@@ -135,7 +135,13 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-Start your app with `python3 main.py`.
+Now, install FastAPI with:
+
+```shell
+pip install fastapi[standard]
+```
+
+Then, start your app with `python3 main.py`.
 Then, visit this URL: http://localhost:8000.
 
 In your terminal, you should see an output like:

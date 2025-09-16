@@ -51,6 +51,8 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <section className="row list">
 <article className="col col--6">
 Create a `requirements.txt` file listing your application's dependencies.
+
+As DBOS Cloud uses OpenTelemetry to export your application's logs and traces, you should install the DBOS OpenTelemetry dependencies through `pip install dbos[otel]` before generating `requirements.txt`.
 </article>
 
 <article className="col col--6">

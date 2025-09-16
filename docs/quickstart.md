@@ -55,14 +55,15 @@ cd dbos-app-starter
 <article className="col col--6">
 
 #### 2. Install and Initialize DBOS
-Install DBOS with `pip install dbos`, then initialize an example application.
+Install DBOS and FastAPI (used by the example application).
+Then initialize an example application.
 
 </article>
 
 <article className="col col--6">
 
 ```shell
-pip install dbos
+pip install dbos fastapi[standard]
 dbos init --template dbos-app-starter
 ```
 
