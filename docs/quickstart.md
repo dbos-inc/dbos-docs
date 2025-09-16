@@ -55,7 +55,7 @@ cd dbos-app-starter
 <article className="col col--6">
 
 #### 2. Install and Initialize DBOS
-Install DBOS and FastAPI (used by the demo application).
+Install DBOS and FastAPI (used by the example application).
 Then initialize an example application.
 
 </article>
