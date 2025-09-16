@@ -4,12 +4,40 @@ title: Testing & Mocking
 ---
 
 
-[`DBOSContext`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#DBOSContext) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
+[`DBOSContext`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
+
+<details>
+<summary>Sample .mockery.yml configuration</summary>
+
+You can use this configuration file to generate mocks by running `mockery`:
+
+```yaml
+all: false
+dir: './mocks'
+filename: '{{.InterfaceName}}_mock.go'
+force-file-write: true
+formatter: goimports
+include-auto-generated: false
+log-level: info
+structname: 'Mock{{.InterfaceName}}'
+pkgname: 'mocks'
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+packages:
+  github.com/dbos-inc/dbos-transact-golang/dbos:
+    interfaces:
+      DBOSContext:
+      WorkflowHandle:
+```
+
+</details>
 
 Here is an example workflow which:
 - Calls a step
 - Spawns a child workflow
-- Calls a workflow management operation, [ListWorkflows](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#ListWorkflows)
+- Calls a workflow management operation, [ListWorkflows](../reference/methods#listworkflows)
 
 
 ```go
@@ -89,13 +117,14 @@ func workflow(ctx dbos.DBOSContext, i int) ([]dbos.WorkflowStatus, error) {
 }
 
 func TestMocks(t *testing.T) {
+    // Create a mock DBOSContext
     mockCtx := mocks.NewMockDBOSContext(t)
 
     // Step
     mockCtx.On("RunAsStep", mockCtx, mock.Anything, mock.Anything).Return(1, nil)
 
     // Child workflow
-    mockChildHandle := mocks.NewMockWorkflowHandle[any](t)
+    mockChildHandle := mocks.NewMockWorkflowHandle[any](t) // mock WorkflowHandle
     mockCtx.On("RunWorkflow", mockCtx, mock.Anything, 2, mock.Anything).Return(mockChildHandle, nil).Once()
     mockChildHandle.On("GetResult").Return(1, nil)
 

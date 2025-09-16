@@ -288,16 +288,23 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 ### ForkWorkflow
 
 ```go
-func ForkWorkflow[R any](ctx DBOSContext, workflowID string, startStep int, opts ...WorkflowOptions) (*WorkflowHandle[R], error)
+func ForkWorkflow[R any](ctx DBOSContext, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
 Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
 
 **Parameters:**
 - **ctx**: The DBOS context.
-- **workflowID**: The ID of the workflow to fork.
-- **startStep**: The ID of the step from which to start the forked workflow.
-- **opts**: Optional workflow configuration options (documented [here](./workflows-steps.md#dbosrunworkflow)).
+- **input**: A `ForkWorkflowInput` struct where `OriginalWorkflowID` is mandatory.
+
+```go
+type ForkWorkflowInput struct {
+    OriginalWorkflowID string // Required: The UUID of the original workflow to fork from
+    ForkedWorkflowID   string // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
+    StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
+    ApplicationVersion string // Optional: Application version for the forked workflow (inherits from original if empty)
+}
+```
 
 ### Workflow Status
 

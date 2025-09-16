@@ -7,14 +7,14 @@ toc_max_heading_level: 3
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, use [`NewWorkflowQueue`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#NewWorkflowQueue)
+To create a queue, use [`NewWorkflowQueue`](../reference/queues#newworkflowqueue)
 
 ```go
 queue := dbos.NewWorkflowQueue(dbosContext, "example_queue")
 ```
 
-You can then enqueue any workflow using [`WithQueue`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithQueue) when calling `RunWorkflow`.
-Enqueuing a function submits it for execution and returns a [handle](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WorkflowHandle) to it.
+You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps#withqueue) when calling `RunWorkflow`.
+Enqueuing a function submits it for execution and returns a [handle](../reference/workflows-steps#workflowhandle) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```go
@@ -144,7 +144,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 
 ### Deduplication
 
-You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithDeduplicationID) when calling `RunWorkflow`.
+You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](../reference/workflows-steps#withdeduplicationid) when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
 
@@ -183,9 +183,9 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 
 ### Priority
 
-You can set a priority for an enqueued workflow using [`WithPriority`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithPriority) when calling `RunWorkflow`.
+You can set a priority for an enqueued workflow using [`WithPriority`](../reference/workflows-steps#withpriority) when calling `RunWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set [`WithPriorityEnabled`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithPriorityEnabled) on your queue.
+If using priority, you must set [`WithPriorityEnabled`](../reference/queues#withpriorityenabled) on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.

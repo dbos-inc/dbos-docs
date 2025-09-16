@@ -5,7 +5,7 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
+Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions, and child workflows, which are workflows started from within a workflow.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#dbosregisterworkflow).
@@ -76,7 +76,7 @@ func example(dbosContext dbos.DBOSContext, input string) error {
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through [`GetWorkflowID`](../reference/dbos-context.md), or from the handle's [`GetWorkflowID`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
+You can access this ID through [`GetWorkflowID`](../reference/dbos-context.md#getworkflowid), or from the handle's [`GetWorkflowID`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunWorkflow`.
@@ -118,6 +118,10 @@ They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
 Instead, you should do all database operations in non-deterministic operations in [steps](./step-tutorial.md).
+
+:::warning
+Go's goroutine scheduler and `select` operation are non-deterministic. You should use them inside a step.
+:::
 
 For example, **don't do this**:
 
@@ -164,16 +168,11 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 }
 ```
 
-:::warning
-Go's goroutine scheduler and `select` operation are non-deterministic. You should use them inside a step.
-We will be adding durable dbos.Go and dbos.Select methods in an upcoming release.
-:::
-
 ## Workflow Timeouts
 
-You can set a timeout for a workflow using its input [`DBOSContext`](../reference/dbos-context.md). Use [`WithTimeout`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithTimeout) to obtain a cancellable `DBOSContext`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
+You can set a timeout for a workflow using its input [`DBOSContext`](../reference/dbos-context.md). Use [`WithTimeout`](../reference/dbos-context#withtimeout) to obtain a cancellable `DBOSContext`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
 
-When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithoutCancel).
+When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](../reference/dbos-context#withoutcancel).
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
@@ -186,11 +185,10 @@ handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling [CancelWorkflow](./workflow-management.md#cancelling-workflows)).
 
-To detach a child workflow from its parent timeout, you can use [`WithoutCancel`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithoutCancel) to obtain an uncancellable `DBOSContext` and pass it to  `dbos.RunWorkflow`.
 
 ## Durable Sleep
 
-You can use [`Sleep`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Sleep) to put your workflow to sleep for any period of time.
+You can use [`Sleep`](../reference/methods#sleep) to put your workflow to sleep for any period of time.
 This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
 
 Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
@@ -231,7 +229,7 @@ They are useful for publishing information about the state of an active workflow
 
 #### SetEvent
 
-Any workflow can call [`SetEvent`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#SetEvent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`SetEvent`](../reference/methods#setevent) to publish a key-value pair, or update its value if has already been published.
 
 ```go
 func SetEvent[P any](ctx DBOSContext, key string, message P) error
@@ -239,7 +237,7 @@ func SetEvent[P any](ctx DBOSContext, key string, message P) error
 
 #### GetEvent
 
-You can call [`GetEvent`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#GetEvent) to retrieve the value published by a particular workflow ID for a particular key.
+You can call [`GetEvent`](../reference/methods#getevent) to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
 ```go
@@ -303,7 +301,7 @@ This is useful for sending notifications to an active workflow.
 
 #### Send
 
-You can call [`Send`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Send) to send a message to a workflow.
+You can call [`Send`](../reference/methods#send) to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 ```go
@@ -312,7 +310,7 @@ func Send[P any](ctx DBOSContext, destinationID string, message P, topic string)
 
 #### Recv
 
-Workflows can call [`Recv`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#Recv) to receive messages sent to them, optionally for a particular topic.
+Workflows can call [`Recv`](../reference/methods#recv) to receive messages sent to them, optionally for a particular topic.
 Each call to `Recv` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
@@ -375,7 +373,7 @@ If you're sending a message from a workflow, DBOS guarantees exactly-once delive
 You can schedule workflows to run automatically at specified times using cron syntax with seconds precision.
 Scheduled workflows are useful for running recurring tasks like data backups, report generation, or cleanup operations.
 
-To create a scheduled workflow, use [`WithSchedule`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithSchedule) when registering your workflow.
+To create a scheduled workflow, use [`WithSchedule`](../reference/workflows-steps#withschedule) when registering your workflow.
 The workflow must have a single [`time.Time`](https://pkg.go.dev/time#Time) input parameter, representing the scheduled execution time.
 
 **Example syntax:**

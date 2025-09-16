@@ -6,7 +6,7 @@ title: Steps
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
-You can use [`RunAsStep`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RunAsStep) to call a function as a step.
+You can use [`RunAsStep`](../reference/workflows-steps#runasstep) to call a function as a step.
 For a function to be used as a step, it should return a serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) value and an error and have this signature:
 
 ```go
@@ -50,11 +50,11 @@ This is useful for automatically handling transient failures, like making reques
 Retries are configurable through step options that can be passed to `RunAsStep`.
 
 Available retry configuration options include:
-- [`WithStepName`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithStepName) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
-- [`WithStepMaxRetries`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithStepMaxRetries) - Maximum number of times this step is automatically retried on failure (default 0)
-- [`WithMaxInterval`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithMaxInterval) - Maximum delay between retries (default 5s)
-- [`WithBackoffFactor`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithBackoffFactor) - Exponential backoff multiplier between retries (default 2.0)
-- [`WithBaseInterval`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithBaseInterval) - Initial delay between retries (default 100ms)
+- [`WithStepName`](../reference/workflows-steps#withstepname) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
+- [`WithStepMaxRetries`](../reference/workflows-steps#withstepmaxretries) - Maximum number of times this step is automatically retried on failure (default 0)
+- [`WithMaxInterval`](../reference/workflows-steps#withmaxinterval) - Maximum delay between retries (default 5s)
+- [`WithBackoffFactor`](../reference/workflows-steps#withbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
+- [`WithBaseInterval`](../reference/workflows-steps#withbaseinterval) - Initial delay between retries (default 100ms)
 
 For example, let's configure this step to retry failures (such as if `example.com` is temporarily down) up to 10 times:
 
