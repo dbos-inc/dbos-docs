@@ -7,7 +7,7 @@ title: Testing & Mocking
 [`DBOSContext`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
 
 <details>
-<summary>Sample .mockery.yml configuration</summary>
+<summary>Sample .mockery.yml v3 configuration</summary>
 
 You can use this configuration file to generate mocks by running `mockery`:
 
