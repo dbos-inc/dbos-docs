@@ -3,7 +3,7 @@ sidebar_position: 20
 title: Workflows & Steps
 ---
 
-### dbos.RegisterWorkflow
+### RegisterWorkflow
 
 ```go
 func RegisterWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], opts ...WorkflowRegistrationOption)
@@ -52,7 +52,7 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
-### dbos.RunWorkflow
+### RunWorkflow
 
 ```go
 func RunWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)

@@ -78,10 +78,11 @@ const sidebars = {
             'golang/reference/workflows-steps',
             'golang/reference/methods',
             'golang/reference/queues',
+            'golang/reference/client',
             {
               type: 'link',
               label: 'DBOS CLI',
-              href: 'https://github.com/dbos-inc/dbos-transact-golang/tree/main/cmd/dbos',
+              href: 'https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/cmd/dbos#section-readme',
             },
           ],
         },

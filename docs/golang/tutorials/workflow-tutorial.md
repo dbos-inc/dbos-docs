@@ -8,7 +8,7 @@ Workflows provide **durable execution** so you can write programs that are **res
 Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-To write a workflow, register a Go function with [`RegisterWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RegisterWorkflow).
+To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#dbosregisterworkflow).
 The function's signature must match:
 
 ```go
@@ -53,8 +53,8 @@ func main() {
 }
 ```
 
-Call workflows with [`RunWorkflow`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#RunWorkflow).
-This starts the workflow in the background and returns a [workflow handle](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WorkflowHandle) from which you can access information about the workflow or wait for it to complete and return its result.
+Call workflows with [`RunWorkflow`](../reference/workflows-steps.md#dbosrunworkflow).
+This starts the workflow in the background and returns a [workflow handle](../reference/workflows-steps.md#workflowhandle) from which you can access information about the workflow or wait for it to complete and return its result.
 
 Here's an example:
 
@@ -76,10 +76,10 @@ func example(dbosContext dbos.DBOSContext, input string) error {
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through [`GetWorkflowID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#GetWorkflowID), or from the handle's `GetWorkflowID` method.
+You can access this ID through [`GetWorkflowID`](../reference/dbos-context.md), or from the handle's [`GetWorkflowID`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow using [`WithWorkflowID`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithWorkflowID) when calling `RunWorkflow`.
+You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunWorkflow`.
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
@@ -171,7 +171,7 @@ We will be adding durable dbos.Go and dbos.Select methods in an upcoming release
 
 ## Workflow Timeouts
 
-You can set a timeout for a workflow using its input [`DBOSContext`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#DBOSContext). Use [`WithTimeout`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithTimeout) to obtain a cancellable `DBOSContext`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
+You can set a timeout for a workflow using its input [`DBOSContext`](../reference/dbos-context.md). Use [`WithTimeout`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithTimeout) to obtain a cancellable `DBOSContext`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
 
 When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](https://pkg.go.dev/github.com/dbos-inc/dbos-transact-golang/dbos#WithoutCancel).
 
