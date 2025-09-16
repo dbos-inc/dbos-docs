@@ -432,6 +432,77 @@ export interface WorkflowStatus {
 }
 ```
 
+## Debouncing
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+### Debouncer
+
+```typescript
+new Debouncer<Args extends unknown[], Return>(
+  params: DebouncerConfig<Args, Return>
+)
+```
+
+```typescript
+interface DebouncerConfig<Args extends unknown[], Return> {
+  workflow: (...args: Args) => Promise<Return>;
+  startWorkflowParams?: StartWorkflowParams;
+  debounceTimeoutMs?: number;
+}
+```
+
+**Parameters:**
+- **workflow**: The workflow to debounce. Note that workflows from [configured instances](./workflows-steps.md#instance-method-workflows) cannot be debounced.
+- **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](#dbosstartworkflow). Applied to all workflows started from this debouncer.
+- **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+
+### debouncer.debounce
+
+```typescript
+debouncer.debounce(
+  debounceKey: string,
+  debouncePeriodMs: number,
+  ...args: Args
+): Promise<WorkflowHandle<Return>>
+```
+
+Submit a workflow for execution but delay it by `debouncePeriodMs`.
+Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounceTimeoutMs`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+**Parameters:**
+- **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- **debouncePeriodMs**: Delay this workflow's execution by this period in milliseconds.
+- **...args**: Variadic workflow arguments.
+
+**Example Syntax**:
+
+```typescript
+async function processInput(userInput: string) {
+  ...
+}
+const processInputWorkflow = DBOS.registerWorkflow(processInput);
+
+// Each time a user submits a new input, debounce the processInput workflow.
+// The workflow will wait until 60 seconds after the user stops submitting new inputs,
+// then process the last input submitted.
+const debouncer = new Debouncer({
+  workflow: processInputWorkflow,
+});
+
+async function onUserInputSubmit(userId: string, userInput: string) {
+  const debounceKey = userId;
+  const debouncePeriodMs = 60000; // 60 seconds
+  await debouncer.debounce(debounceKey, debouncePeriodMs, userInput);
+}
+```
+
 ## DBOS Variables
 
 ### DBOS.logger

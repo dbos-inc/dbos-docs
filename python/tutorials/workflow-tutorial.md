@@ -148,6 +148,29 @@ def schedule_task(time_to_sleep, task):
   run_task(task)
 ```
 
+## Debouncing Workflows
+
+You can debounce workflows to delay their execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+```python
+@DBOS.workflow()
+def process_input(user_input):
+    ...
+
+# Each time a user submits a new input, debounce the process_input workflow.
+# The workflow will wait until 60 seconds after the user stops submitting new inputs,
+debouncer = Debouncer.create(process_input)
+# then process the last input submitted.
+def on_user_input_submit(user_id, user_input):
+    debounce_key = user_id
+    debounce_period_sec = 60
+    debouncer.debounce(debounce_key, debounce_period_sec, user_input)
+```
+
+See the [debouncing reference](../reference/contexts.md#debouncing) for more details.
+
 
 ## Coroutine (Async) Workflows
 
@@ -155,7 +178,7 @@ Coroutinues (functions defined with `async def`, also known as async functions) 
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
 You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
 Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
-Additionally, coroutine workflows should use the asynchronous versions of the workflow [event](#workflow-events) and [messaging and notification](#workflow-messaging-and-notifications) context methods.
+Additionally, coroutine workflows should use the asynchronous versions of the workflow [communication](./workflow-communication.md) context methods.
 
 
 :::tip

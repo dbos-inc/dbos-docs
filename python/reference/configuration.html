@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.3ba25488.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.6565ce30.js" defer="defer"></script>
 <script src="/assets/js/main.b9682cd9.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -62,7 +62,7 @@ Defaults to:</li>
 <li><strong>disable_otlp</strong>: If set to True, disables OTLP tracing and logging. Defaults to False.</li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="dbos-configuration-file">DBOS Configuration File<a href="#dbos-configuration-file" class="hash-link" aria-label="Direct link to DBOS Configuration File" title="Direct link to DBOS Configuration File">​</a></h2>
-<p>Some tools in the DBOS ecosystem, including <a href="/production/dbos-cloud/deploying-to-cloud">DBOS Cloud</a> and the <a href="/python/tutorials/debugging">DBOS debugger</a>, are configured by a <code>dbos-config.yaml</code> file.</p>
+<p>Some tools in the DBOS ecosystem, including <a href="/production/dbos-cloud/deploying-to-cloud">DBOS Cloud</a> and the <a href="/python/reference/cli">DBOS CLI</a>, are configured by a <code>dbos-config.yaml</code> file.</p>
 <p>You can create a <code>dbos-config.yaml</code> with default parameters with:</p>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token plain">dbos init </span><span class="token operator" style="color:#66d9ef">&lt;</span><span class="token plain">app-name</span><span class="token operator" style="color:#66d9ef">&gt;</span><span class="token plain"> </span><span class="token parameter variable" style="color:#f8f8f2">--config</span><br></span></code></pre></div></div>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="configuration-file-fields">Configuration File Fields<a href="#configuration-file-fields" class="hash-link" aria-label="Direct link to Configuration File Fields" title="Direct link to Configuration File Fields">​</a></h3>
@@ -79,7 +79,7 @@ This connection string is used by the DBOS <a href="/python/reference/cli">CLI</
 It has the same format as the <code>application_database_url</code> you pass to the DBOS constructor.</li>
 <li><strong>runtimeConfig</strong>:<!-- -->
 <ul>
-<li><strong>start</strong>: The command(s) with which to start your app. Called from <a href="/python/reference/cli#dbos-start"><code>dbos start</code></a>, which is used to start your app in DBOS Cloud.</li>
+<li><strong>start</strong>: (required only in DBOS Cloud) The command(s) with which to start your app. Called from <a href="/python/reference/cli#dbos-start"><code>dbos start</code></a>, which is used to start your app in DBOS Cloud.</li>
 <li><strong>setup</strong>: Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation <a href="/production/dbos-cloud/application-management#customizing-microvm-setup">here</a>.</li>
 </ul>
 </li>

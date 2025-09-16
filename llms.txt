@@ -74,7 +74,7 @@
 - [Add DBOS To Your App](https://docs.dbos.dev/typescript/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS TypeScript](https://docs.dbos.dev/typescript/programming-guide.md): This guide shows you how to use DBOS to build TypeScript apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/typescript/prompting.md): You may want assistance from an AI model in building a DBOS application.
-- [DBOS CLI](https://docs.dbos.dev/typescript/reference/cli.md): The DBOS Transact CLI helps you run applications locally.
+- [DBOS CLI](https://docs.dbos.dev/typescript/reference/cli.md): Workflow Management Commands
 - [DBOS Client](https://docs.dbos.dev/typescript/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
 - [Configuration](https://docs.dbos.dev/typescript/reference/configuration.md): Configuring DBOS
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/reference/datasource.md): Introduction To Transactions And Datasources

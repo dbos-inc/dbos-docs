@@ -590,6 +590,96 @@ DBOS.span: opentelemetry.trace.Span
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
 
+## Debouncing
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+### Debouncer.create
+
+```python
+Debouncer.create(
+    workflow: Callable[P, R],
+    *,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+) -> Debouncer[P, R]
+```
+
+**Parameters:**
+- `workflow`: The workflow to debounce.
+- `debounce_key`: The debounce key for this debouncer. Used to group workflow executions that will be debounced. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
+
+### debounce
+
+```python
+debouncer.debounce(
+    debounce_key: str,
+    debounce_period_sec: float,
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Submit a workflow for execution but delay it by `debounce_period_sec`.
+Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
+
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+**Parameters:**
+- `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `debounce_period_sec`: Delay this workflow's execution by this period.
+- `*args`: Variadic workflow arguments.
+- `**kwargs`: Variadic workflow keyword arguments.
+
+**Example Syntax**:
+
+```python
+@DBOS.workflow()
+def process_input(user_input):
+    ...
+
+# Each time a user submits a new input, debounce the process_input workflow.
+# The workflow will wait until 60 seconds after the user stops submitting new inputs,
+debouncer = Debouncer.create(process_input)
+# then process the last input submitted.
+def on_user_input_submit(user_id, user_input):
+    debounce_key = user_id
+    debounce_period_sec = 60
+    debouncer.debounce(debounce_key, debounce_period_sec, user_input)
+```
+
+### Debouncer.create_async
+
+```python
+Debouncer.create_async(
+    workflow: Callable[P, Coroutine[Any, Any, R]],
+    *,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+) -> Debouncer[P, R]
+```
+Async version of `Debouncer.create`.
+
+### debounce_async
+
+```python
+debouncer.debounce_async(
+    debounce_key: str,
+    debounce_period_sec: float,
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandleAsync[R]:
+```
+
+Async version of `debouncer.debounce`.
+
 ## Authentication
 
 ### authenticated_user

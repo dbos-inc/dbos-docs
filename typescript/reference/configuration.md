@@ -57,9 +57,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ## DBOS Configuration File
 
-Many tools in the DBOS ecosystem are configured by a `dbos-config.yaml` file.
-Tools that use `dbos-config.yaml` include the [DBOS CLI](./cli.md), [DBOS debugger](../tutorials/debugging.md), and [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md).
-Additionally, the DBOS library will fall back to `dbos-config.yaml` if no configuration object is provided.
+Some tools in the DBOS ecosystem, including [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
 
 Here is an example configuration file with default parameters:
 
@@ -82,36 +80,12 @@ Each `dbos-config.yaml` file has the following fields and sections:
 
 - **name**: Your application's name.  Must match the name supplied to `DBOS.setConfig()`.
 - **language**: The application language.  Must be set to `node` for TypeScript applications.
-- **system_database_url**: Full URL for the [system database](../../explanations/system-tables) in which DBOS stores internal state.  The default is:
-
-```
-postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
-```
-
-#### Database Section
-
-- **migrate**: A list of commands to run to apply your application's schema to the database. 
-
-**Example**:
-
-```yaml
-database:
-  migrate:
-    - npx knex migrate:latest
-```
-
-#### Runtime Section
-
-- **start**: The command(s) with which to start your app. Called from [`npx dbos start`](./cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
-- **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
-
-**Example**:
-
-```yaml
-runtimeConfig:
-  start:
-    - "node dist/main.js"
-```
+- **system_database_url**: The connection string to your DBOS system database.
+This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
+It has the same format as the `system_database_url` you pass to the DBOS constructor.
+- **runtimeConfig**:
+  - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`npx dbos start`](./cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
+  - **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 
