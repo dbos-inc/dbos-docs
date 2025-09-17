@@ -30,12 +30,20 @@ type Client interface {
 ### Constructor
 
 ```go
-func NewClient(ctx context.Context, config Config) (Client, error)
+func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 ```
 
 **Parameters:**
 - `ctx`: A context for initialization operations
-- `config`: A [`Config`](./dbos-context.md#initialization) object with connection and application settings
+- `config`: A `ClientConfig` object with connection and application settings
+
+```go
+type ClientConfig struct {
+    DatabaseURL  string        // Required: Connection URL for the PostgreSQL database
+    Logger       *slog.Logger  // Optional custom logger
+    SystemDBPool *pgxpool.Pool // Optional existing connection pool for the system database
+}
+```
 
 **Returns:**
 - A new `Client` instance or an error if initialization fails
@@ -45,9 +53,8 @@ func NewClient(ctx context.Context, config Config) (Client, error)
 This DBOS client connects to the system database specified in the configuration:
 
 ```go
-config := dbos.Config{
+config := dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-    AppName:     "my-app",
 }
 client, err := dbos.NewClient(context.Background(), config)
 if err != nil {
