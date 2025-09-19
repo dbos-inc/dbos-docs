@@ -5,7 +5,7 @@ title: Fault-Tolerant Checkout
 ---
 
 :::info
-This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial).
+This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial) and [Go](../../golang/examples/widget-store.md).
 :::
 
 In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
