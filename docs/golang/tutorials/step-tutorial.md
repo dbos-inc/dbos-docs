@@ -46,7 +46,8 @@ func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
 		func(stepCtx context.Context) (int, error) {
 			return generateRandomNumber(stepCtx, n)
 		},
-		dbos.WithStepName("generateRandomNumber"))
+		dbos.WithStepName("generateRandomNumber")
+    )
 	if err != nil {
 		return 0, err
 	}

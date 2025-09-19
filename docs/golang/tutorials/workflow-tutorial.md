@@ -181,30 +181,34 @@ For example:
 
 ```go
 func runTask(ctx dbos.DBOSContext, task string) (string, error) {
-    // Execute the task...
-    return "task completed", nil
+	// Execute the task...
+	return "task completed", nil
 }
 
 func exampleWorkflow(ctx dbos.DBOSContext, input struct {
-    TimeToSleep time.Duration
-    Task        string
+	TimeToSleep time.Duration
+	Task        string
 }) (string, error) {
-    // Sleep for the specified duration
-    _, err := dbos.Sleep(ctx, input.TimeToSleep)
-    if err != nil {
-        return "", err
-    }
-    
-    // Execute the task after sleeping
-    result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-        return runTask(ctx, input.Task)
-    })
-    if err != nil {
-        return "", err
-    }
-    
-    return result, nil
+	// Sleep for the specified duration
+	_, err := dbos.Sleep(ctx, input.TimeToSleep)
+	if err != nil {
+		return "", err
+	}
+
+	// Execute the task after sleeping
+	result, err := dbos.RunAsStep(
+		ctx,
+		func(stepCtx context.Context) (string, error) {
+			return runTask(ctx, input.Task)
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
+
 ```
 
 ## Scheduled Workflows
