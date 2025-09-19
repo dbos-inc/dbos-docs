@@ -16,6 +16,7 @@ func NewWorkflowQueue(dbosCtx DBOSContext, name string, options ...queueOption) 
 
 NewWorkflowQueue creates a new workflow queue with the specified name and configuration options.
 Queues must be created before DBOS is launched.
+You can enqueue a workflow using the [`WithQueue`](./workflows-steps.md#withqueue) parameter of [`RunWorkflow`](./workflows-steps.md#runworkflow).
 
 **Parameters:**
 - **dbosCtx**: The DBOSContext.
