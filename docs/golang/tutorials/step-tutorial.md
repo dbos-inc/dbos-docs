@@ -81,39 +81,36 @@ Available retry configuration options include:
 - [`WithBackoffFactor`](../reference/workflows-steps#withbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
 - [`WithBaseInterval`](../reference/workflows-steps#withbaseinterval) - Initial delay between retries (default 100ms)
 
-For example, let's configure this step to retry failures (such as if `example.com` is temporarily down) up to 10 times:
+For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
 
 ```go
-func fetchFunction(ctx context.Context, url string) (string, error) {
-    resp, err := http.Get(url)
-    if err != nil {
-        return "", err
-    }
-    defer resp.Body.Close()
+func fetchStep(ctx context.Context, url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
 
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return "", err
-    }
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
 
-    return string(body), nil
+	return string(body), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, input string) (string, error) {
-    result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-        return fetchFunction(stepCtx, "http://example.com")
-    },
-        dbos.WithStepName("fetchFunction"),
-        dbos.WithStepMaxRetries(10),
-        dbos.WithMaxInterval(30*time.Second),
-        dbos.WithBackoffFactor(2.0),
-        dbos.WithBaseInterval(500*time.Millisecond)
-    )
-
-    if err != nil {
-        return "", err
-    }
-    return result, nil
+func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
+	return dbos.RunAsStep(
+		ctx,
+		func(stepCtx context.Context) (string, error) {
+			return fetchStep(stepCtx, inputURL)
+		},
+		dbos.WithStepName("fetchFunction"),
+		dbos.WithStepMaxRetries(10),
+		dbos.WithMaxInterval(30*time.Second),
+		dbos.WithBackoffFactor(2.0),
+		dbos.WithBaseInterval(500*time.Millisecond),
+	)
 }
 ```
 
