@@ -329,8 +329,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbosContext, err := dbos.NewDBOSContext(dbos.Config{
-		AppName:         "gogogo",
+	dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+		AppName:         "widget-store",
 		DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 		AdminServer:     true,
 		Logger:          logger,
@@ -359,7 +359,7 @@ func main() {
 
 	r := gin.Default()
 
-	// Serve the HTML main page
+	// Serve HTML
 	r.StaticFile("/", "./html/app.html")
 
 	// HTTP endpoints
