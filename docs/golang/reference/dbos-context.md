@@ -19,14 +19,17 @@ func NewDBOSContext(inputConfig Config) (DBOSContext, error)
 
 ```go
 type Config struct {
-    DatabaseURL        string          // PostgreSQL connection string (required)
-    AppName            string          // Application name for identification (required)
-    Logger             *slog.Logger    // Custom logger instance (defaults to a new slog logger)
-    AdminServer        bool            // Enable Transact admin HTTP server (disabled by default)
-    AdminServerPort    int             // Port for the admin HTTP server (default: 3001)
-    ConductorAPIKey    string          // DBOS conductor API key (optional)
-    ApplicationVersion string          // Application version (optional, overridden by DBOS__APPVERSION env var)
-    SystemDBPool       *pgxpool.Pool   // Custom System Database Pool
+    AppName            string        // Application name for identification (required)
+    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string. Either this or SystemDBPool is required.
+    SystemDBPool       *pgxpool.Pool // SystemDBPool is a custom System Database Pool. It's optional and takes precedence over DatabaseURL if both are provided.
+    DatabaseSchema     string        // Database schema name (defaults to "dbos")
+    Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
+    AdminServer        bool          // Enable Transact admin HTTP server (disabled by default)
+    AdminServerPort    int           // Port for the admin HTTP server (default: 3001)
+    ConductorURL       string        // DBOS conductor service URL (optional)
+    ConductorAPIKey    string        // DBOS conductor API key (optional)
+    ApplicationVersion string        // Application version (optional, overridden by DBOS__APPVERSION env var)
+    ExecutorID         string        // Executor ID (optional, overridden by DBOS__VMID env var)
 }
 ```
 

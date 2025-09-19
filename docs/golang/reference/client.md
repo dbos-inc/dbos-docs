@@ -39,9 +39,10 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL  string        // Required: Connection URL for the PostgreSQL database
-    Logger       *slog.Logger  // Optional custom logger
-    SystemDBPool *pgxpool.Pool // Optional existing connection pool for the system database
+    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string. Either this or SystemDBPool is required.
+    SystemDBPool       *pgxpool.Pool // SystemDBPool is a custom System Database Pool. It's optional and takes precedence over DatabaseURL if both are provided.
+    DatabaseSchema string            // Database schema name (defaults to "dbos")
+    Logger             *slog.Logger  // Optional custom logger
 }
 ```
 
