@@ -78,7 +78,7 @@ And a step this signature:
 type Step[R any] func(ctx context.Context) (R, error)
 ```
 
-DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
+DBOS durably executes workflows so if they are ever interrupted, upon restart they automatically resume from the last completed step.
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
