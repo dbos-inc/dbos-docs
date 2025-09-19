@@ -16,16 +16,34 @@ type Step[R any] func(ctx context.Context) (R, error)
 Here's a simple example:
 
 ```go
-func generateRandomNumber(ctx context.Context) (float64, error) {
-    return rand.Float64(), nil
+func generateRandomNumber(ctx context.Context) (int, error) {
+	return rand.Int(), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, input string) (float64, error) {
-    randomNumber, err := dbos.RunAsStep(ctx, generateRandomNumber, dbos.WithStepName("generateRandomNumber"))
-    if err != nil {
-        return 0, err
-    }
-    return randomNumber, nil
+func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+	randomNumber, err := dbos.RunAsStep(ctx, generateRandomNumber, dbos.WithStepName("generateRandomNumber"))
+	if err != nil {
+		return 0, err
+	}
+	return randomNumber, nil
+}
+```
+
+You can pass arguments into a step by wrapping it in an anonymous function, like this:
+
+```go
+func generateRandomNumber(ctx context.Context, n int) (int, error) {
+	return rand.IntN(n), nil
+}
+
+func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+	randomNumber, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (int, error) {
+		return generateRandomNumber(stepCtx, n)
+	}, dbos.WithStepName("generateRandomNumber"))
+	if err != nil {
+		return 0, err
+	}
+	return randomNumber, nil
 }
 ```
 
