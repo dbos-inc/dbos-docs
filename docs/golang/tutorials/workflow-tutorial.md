@@ -5,10 +5,11 @@ toc_max_heading_level: 3
 ---
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions, and child workflows, which are workflows started from within a workflow.
+Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#dbosregisterworkflow).
+Workflow registration must happen before launching the DBOS context with `DBOSContext.Launch()`
 The function's signature must match:
 
 ```go
@@ -16,10 +17,6 @@ type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
 In other words, a workflow must take in a DBOS context and one other input of any serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) type and must return one output of any serializable type and error.
-
-:::info
-Workflows and queues registration must happen before launching the DBOS context with `DBOSContext.Launch()`
-:::
 
 For example:
 
@@ -59,7 +56,7 @@ This starts the workflow in the background and returns a [workflow handle](../re
 Here's an example:
 
 ```go
-func example(dbosContext dbos.DBOSContext, input string) error {
+func runWorkflowExample(dbosContext dbos.DBOSContext, input string) error {
     handle, err := dbos.RunWorkflow(dbosContext, workflow, input)
     if err != nil {
         return err
@@ -120,7 +117,7 @@ If you need to perform a non-deterministic operation like accessing the database
 Instead, you should do all database operations in non-deterministic operations in [steps](./step-tutorial.md).
 
 :::warning
-Go's goroutine scheduler and `select` operation are non-deterministic. You should use them inside a step.
+Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps.
 :::
 
 For example, **don't do this**:
