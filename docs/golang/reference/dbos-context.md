@@ -90,22 +90,6 @@ func WithoutCancel(ctx DBOSContext) DBOSContext
 
 `WithoutCancel` returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
 
-### GetWorkflowID
-
-```go
-func GetWorkflowID(ctx DBOSContext) (string, error)
-```
-
-`GetWorkflowID` retrieves the workflow ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow.
-
-### GetStepID
-
-```go
-func GetStepID(ctx DBOSContext) (int, error)
-```
-
-`GetStepID` retrieves the current step ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow.
-
 ## Context metadata
 ### GetApplicationVersion
 
