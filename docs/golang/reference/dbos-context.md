@@ -11,10 +11,10 @@ A DBOS Context is at the center of a DBOS-enabled application. Use it to registe
 ## Lifecycle
 ### Initialization
 
-You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and `DatabaseURL` are mandatory.
+You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL` or `SystemDBPool` are mandatory.
 
 ```go
-func NewDBOSContext(inputConfig Config) (DBOSContext, error)
+func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error)
 ```
 
 ```go
@@ -44,7 +44,7 @@ if err != nil {
 }
 ```
 
-The newly created DBOSContext must be launched with Launch() before use and should be shut down with Cancel() at program termination.
+The newly created DBOSContext must be launched with Launch() before use and should be shut down with Shutdown() at program termination.
 
 ### launch
 
@@ -59,6 +59,7 @@ Launch the following resources managed by a `DBOSContext`:
 - (Optionally) an admin server
 - (Optionally) a conductor connection
 
+In addition, `Launch()` will perform a round of [workflow recovery](../../architecture.md#how-workflow-recovery-works) for the current DBOS process.
 `Launch()` should be called by your program during startup before running any workflows.
 
 ### Shutdown
@@ -66,10 +67,10 @@ Launch the following resources managed by a `DBOSContext`:
 Shutdown(timeout time.Duration)
 ```
 
-Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. When you shutdown a `DBOSContext`, the underlying `context.Context` will be cancelled.
+Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. When you shutdown a `DBOSContext`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
 
 **Parameters:**
-- **timeout**: The time to wait for workflows to complete. After the timeout elapses, execution of incomplete workflows is terminated (the workflows may then be recovered by other processes).
+- **timeout**: The time to wait for DBOS resources to gracefully terminate.
 
 ## Context management
 
@@ -79,7 +80,7 @@ Gracefully shutdown the DBOS runtime, waiting for workflows to complete and clea
 func WithTimeout(ctx DBOSContext, timeout time.Duration) (DBOSContext, context.CancelFunc)
 ```
 
-WithTimeout returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts) for usage.
+`WithTimeout` returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts) for usage.
 
 ### WithoutCancel
 
@@ -87,7 +88,7 @@ WithTimeout returns a copy of the DBOS context with a timeout. The returned cont
 func WithoutCancel(ctx DBOSContext) DBOSContext
 ```
 
-WithoutCancel returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
+`WithoutCancel` returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
 
 ### GetWorkflowID
 
@@ -95,7 +96,7 @@ WithoutCancel returns a copy of the DBOS context that is not canceled when the p
 func GetWorkflowID(ctx DBOSContext) (string, error)
 ```
 
-GetWorkflowID retrieves the workflow ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow context.
+`GetWorkflowID` retrieves the workflow ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow context.
 
 ### GetStepID
 
@@ -103,7 +104,7 @@ GetWorkflowID retrieves the workflow ID from the context if called within a DBOS
 func GetStepID(ctx DBOSContext) (int, error)
 ```
 
-GetStepID retrieves the current step ID from the context if called within a DBOS workflow. Returns -1 and an error if not called from within a workflow context.
+`GetStepID` retrieves the current step ID from the context if called within a DBOS workflow. Returns -1 and an error if not called from within a workflow context.
 
 ## Context metadata
 ### GetApplicationVersion
@@ -112,7 +113,7 @@ GetStepID retrieves the current step ID from the context if called within a DBOS
 func GetApplicationVersion() string
 ```
 
-GetApplicationVersion returns the application version for this context.
+`GetApplicationVersion` returns the application version for this context.
 
 ### GetExecutorID
 
@@ -120,7 +121,7 @@ GetApplicationVersion returns the application version for this context.
 func GetExecutorID() string
 ```
 
-GetExecutorID returns the executor ID for this context.
+`GetExecutorID` returns the executor ID for this context.
 
 ### GetApplicationID
 
@@ -128,4 +129,4 @@ GetExecutorID returns the executor ID for this context.
 func GetApplicationID() string
 ```
 
-GetApplicationID returns the application ID for this context.
+`GetApplicationID` returns the application ID for this context.
