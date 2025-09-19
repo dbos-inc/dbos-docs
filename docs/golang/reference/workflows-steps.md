@@ -59,7 +59,7 @@ func RunWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts
 ```
 
 Execute a workflow function.
-The workflow can be executed immediately or enqueued for later execution based on options.
+The workflow may execute immediately or be enqueued for later execution based on options.
 Returns a [WorkflowHandle](#workflowhandle) that can be used to check the workflow's status or wait for its completion and retrieve its results.
 
 **Parameters:**
@@ -163,9 +163,12 @@ func step(ctx context.Context, input string) (string, error) {
 }
 
 func workflow(ctx dbos.DBOSContext, input string) (string, error) {
-    output, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-        return step(stepCtx, input)
-    })
+    output, err := dbos.RunAsStep(
+        ctx, 
+        func(stepCtx context.Context) (string, error) {
+            return step(stepCtx, input)
+        }
+    )
 }
 ```
 
