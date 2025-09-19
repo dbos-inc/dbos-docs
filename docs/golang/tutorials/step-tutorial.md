@@ -21,7 +21,11 @@ func generateRandomNumber(ctx context.Context) (int, error) {
 }
 
 func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
-	randomNumber, err := dbos.RunAsStep(ctx, generateRandomNumber, dbos.WithStepName("generateRandomNumber"))
+	randomNumber, err := dbos.RunAsStep(
+        ctx,
+		generateRandomNumber,
+		dbos.WithStepName("generateRandomNumber"),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -32,14 +36,13 @@ func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
 You can pass arguments into a step by wrapping it in an anonymous function, like this:
 
 ```go
-func generateRandomNumber(ctx context.Context, n int) (int, error) {
-	return rand.IntN(n), nil
-}
-
 func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
-	randomNumber, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (int, error) {
-		return generateRandomNumber(stepCtx, n)
-	}, dbos.WithStepName("generateRandomNumber"))
+	randomNumber, err := dbos.RunAsStep(
+		ctx,
+		func(stepCtx context.Context) (int, error) {
+			return generateRandomNumber(stepCtx, n)
+		},
+		dbos.WithStepName("generateRandomNumber"))
 	if err != nil {
 		return 0, err
 	}
