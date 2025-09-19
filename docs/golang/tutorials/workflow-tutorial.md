@@ -124,44 +124,32 @@ For example, **don't do this**:
 
 ```go
 func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
-    // Don't make an HTTP request directly in a workflow function
-    resp, err := http.Get("https://example.com")
-    if err != nil {
-        return "", err
+    randomChoice := rand.Intn(2)
+    if randomChoice == 0 {
+        return dbos.RunAsStep(ctx, stepOne)
+    } else {
+        return dbos.RunAsStep(ctx, stepTwo)
     }
-    defer resp.Body.Close()
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return "", err
-    }
-    // Process body...
-    return string(body), nil
 }
 ```
 
 Instead, do this:
 
 ```go
+func generateChoice(ctx context.Context) (int, error) {
+    return rand.Intn(2), nil
+}
+
 func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
-    // Make HTTP requests in steps
-    body, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
-        resp, err := http.Get("https://example.com")
-        if err != nil {
-            return "", err
-        }
-        defer resp.Body.Close()
-        bodyBytes, err := io.ReadAll(resp.Body)
-        if err != nil {
-            return "", err
-        }
-        return string(bodyBytes), nil
-    })
+    randomChoice, err := dbos.RunAsStep(ctx, generateChoice)
     if err != nil {
         return "", err
     }
-    
-    // Process the body in another step...
-    return body, nil
+    if randomChoice == 0 {
+        return dbos.RunAsStep(ctx, stepOne)
+    } else {
+        return dbos.RunAsStep(ctx, stepTwo)
+    }
 }
 ```
 
