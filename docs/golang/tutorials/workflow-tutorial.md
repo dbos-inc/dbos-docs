@@ -8,7 +8,7 @@ Workflows provide **durable execution** so you can write programs that are **res
 Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#dbosregisterworkflow).
+To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#registerworkflow).
 Workflow registration must happen before launching the DBOS context with `DBOSContext.Launch()`
 The function's signature must match:
 
@@ -50,7 +50,7 @@ func main() {
 }
 ```
 
-Call workflows with [`RunWorkflow`](../reference/workflows-steps.md#dbosrunworkflow).
+Call workflows with [`RunWorkflow`](../reference/workflows-steps.md#runworkflow).
 This starts the workflow in the background and returns a [workflow handle](../reference/workflows-steps.md#workflowhandle) from which you can access information about the workflow or wait for it to complete and return its result.
 
 Here's an example:
@@ -73,7 +73,7 @@ func runWorkflowExample(dbosContext dbos.DBOSContext, input string) error {
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID through [`GetWorkflowID`](../reference/dbos-context.md#getworkflowid), or from the handle's [`GetWorkflowID`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
+You can access this ID through [`GetWorkflowID`](../reference/methods.md#getworkflowid), or from the handle's [`GetWorkflowID`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 You can set the workflow ID of a workflow using [`WithWorkflowID`](../reference/workflows-steps.md#withworkflowid) when calling `RunWorkflow`.

@@ -111,7 +111,7 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#work
 * `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow. 
 If left undefined, it will use the current application version.
 Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery.md#managing-application-versions) for more information.
-* `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#dboscontextwithoutcancel)). The timeout does not begin until the workflow is dequeued and starts execution.
+* `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#withoutcancel)). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 
@@ -169,7 +169,7 @@ Similar to [`RetrieveWorkflow`](./methods.md#retrieveworkflow).
 Send(destinationID string, message any, topic string) error
 ```
 
-Sends a message to a specified workflow. Similar to [`Send`](../tutorials/workflow-tutorial.md#send).
+Sends a message to a specified workflow. Similar to [`Send`](../tutorials/workflow-communication.md#send).
 
 **Parameters:**
 - `destinationID`: The workflow to which to send the message
@@ -184,7 +184,7 @@ GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
-Similar to [`GetEvent`](../tutorials/workflow-tutorial.md#getevent).
+Similar to [`GetEvent`](../tutorials/workflow-communication.md#getevent).
 
 **Parameters:**
 - `targetWorkflowID`: The identifier of the workflow whose events to retrieve
@@ -203,10 +203,10 @@ ListWorkflows(opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
 ```
 
 Retrieve a list of [`WorkflowStatus`](./methods.md#workflow-status) of all workflows matching specified criteria.
-Similar to [`ListWorkflows`](./dbos-context.md#listworkflows).
+Similar to [`ListWorkflows`](./methods.md#listworkflows).
 
 **Options:**
-Options are provided via `ListWorkflowsOption` functions. See [`ListWorkflows`](./dbos-context.md#listworkflows) for available options.
+Options are provided via `ListWorkflowsOption` functions. See [`ListWorkflows`](./methods.md#listworkflows) for available options.
 
 :::warning
 The client `ListWorkflows` method does not include workflow inputs and outputs in its results.
