@@ -254,12 +254,13 @@ export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_too
 <section className="row list">
 
 <article className="col col--6">
-Now, start your app!
+Now, download dependencies and start your app!
 </article>
 
 <article className="col col--6">
 
 ```bash
+go mod tidy
 go run main.go
 ```
 </article>
