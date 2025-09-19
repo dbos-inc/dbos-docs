@@ -8,22 +8,6 @@ Queues are useful for controlling the number of workflows run in parallel, or th
 
 All queues should be created before DBOS is launched.
 
-### WorkflowQueue
-
-```go
-type WorkflowQueue struct {
-    Name                 string       `json:"name"`                        // Unique queue name
-    WorkerConcurrency    *int         `json:"workerConcurrency,omitempty"` // Max concurrent workflows per executor
-    GlobalConcurrency    *int         `json:"concurrency,omitempty"`       // Max concurrent workflows across all executors
-    PriorityEnabled      bool         `json:"priorityEnabled,omitempty"`   // Enable priority-based scheduling
-    RateLimit            *RateLimiter `json:"rateLimit,omitempty"`         // Rate limiting configuration
-    MaxTasksPerIteration int          `json:"maxTasksPerIteration"`        // Max workflows to dequeue per iteration
-}
-```
-
-WorkflowQueue defines a named queue for workflow execution.
-Workflows can be enqueued by specifying the queue name with `WithQueue` in `RunWorkflow`.
-
 ### NewWorkflowQueue
 
 ```go
