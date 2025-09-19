@@ -4,13 +4,12 @@ title: DBOS Client
 ---
 
 `Client` provides a programmatic way to interact with your DBOS application from external code.
-`Client` includes methods similar to [`DBOSContext`](./dbos-context.md) that can be used outside of a DBOS application, 
-such as [`Enqueue`](#enqueue) or [`GetEvent`](#getevent).
+`Client` includes methods similar to [`DBOSContext`](./dbos-context.md) that can be used outside of a DBOS application.
 
 :::note 
 `Client` is included in the `dbos` package, the same package that is used by DBOS applications.
 Where DBOS applications use the [`DBOSContext` methods](./dbos-context.md),
-external applications use `Client` instead.
+external applications use `Client` methods instead.
 :::
 
 ```go
@@ -85,7 +84,8 @@ Gracefully shuts down the client and releases the system database connection poo
 ```go
 func Enqueue[P any, R any](
     c Client, 
-    queueName, workflowName string, 
+    queueName string,
+    workflowName string, 
     input P, 
     opts ...EnqueueOption
 ) (WorkflowHandle[R], error)
@@ -94,12 +94,12 @@ func Enqueue[P any, R any](
 Enqueue a workflow for processing and return a handle to it, similar to [RunWorkflow with the WithQueue option](./workflows-steps.md#withqueue).
 Returns a [WorkflowHandle](./workflows-steps.md#workflowhandle).
 
-When enqueuing a workflow from the DBOS client, the only notable difference is that you must specify the name of the workflow to enqueue (rather than passing a workflow function as with `RunWorkflow`.)
+When enqueuing a workflow from the DBOS client, you must specify the name of the workflow to enqueue (rather than passing a workflow function as with `RunWorkflow`.)
 
 Required parameters:
 
 * `c`: The DBOS client instance
-* `queueName`: The name of the [Queue](./queues.md) to enqueue the workflow on
+* `queueName`: The name of the [queue](./queues.md) on which to enqueue the workflow
 * `workflowName`: The name of the workflow function being enqueued
 * `input`: The input to pass to the workflow
 
