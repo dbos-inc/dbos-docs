@@ -20,16 +20,16 @@ func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error
 ```go
 type Config struct {
     AppName            string        // Application name for identification (required)
-    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string. Either this or SystemDBPool is required.
-    SystemDBPool       *pgxpool.Pool // SystemDBPool is a custom System Database Pool. It's optional and takes precedence over DatabaseURL if both are provided.
+    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string to your system database. Either this or SystemDBPool is required.
+    SystemDBPool       *pgxpool.Pool // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
     DatabaseSchema     string        // Database schema name (defaults to "dbos")
     Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
     AdminServer        bool          // Enable Transact admin HTTP server (disabled by default)
     AdminServerPort    int           // Port for the admin HTTP server (default: 3001)
     ConductorURL       string        // DBOS conductor service URL (optional)
     ConductorAPIKey    string        // DBOS conductor API key (optional)
-    ApplicationVersion string        // Application version (optional, overridden by DBOS__APPVERSION env var)
-    ExecutorID         string        // Executor ID (optional, overridden by DBOS__VMID env var)
+    ApplicationVersion string        // Application version (optional)
+    ExecutorID         string        // Executor ID (optional)
 }
 ```
 
@@ -44,7 +44,7 @@ if err != nil {
 }
 ```
 
-The newly created DBOSContext must be launched with Launch() before use and should be shut down with Shutdown() at program termination.
+The newly created DBOSContext must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
 
 ### launch
 
@@ -57,9 +57,9 @@ Launch the following resources managed by a `DBOSContext`:
 - A [workflow scheduler](../tutorials/workflow-tutorial.md#scheduled-workflows)
 - A [workflow queue runner](../tutorials/queue-tutorial.md)
 - (Optionally) an admin server
-- (Optionally) a conductor connection
+- (Optionally) a Conductor connection
 
-In addition, `Launch()` will perform a round of [workflow recovery](../../architecture.md#how-workflow-recovery-works) for the current DBOS process.
+In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works).
 `Launch()` should be called by your program during startup before running any workflows.
 
 ### Shutdown
@@ -96,7 +96,7 @@ func WithoutCancel(ctx DBOSContext) DBOSContext
 func GetWorkflowID(ctx DBOSContext) (string, error)
 ```
 
-`GetWorkflowID` retrieves the workflow ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow context.
+`GetWorkflowID` retrieves the workflow ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow.
 
 ### GetStepID
 
@@ -104,7 +104,7 @@ func GetWorkflowID(ctx DBOSContext) (string, error)
 func GetStepID(ctx DBOSContext) (int, error)
 ```
 
-`GetStepID` retrieves the current step ID from the context if called within a DBOS workflow. Returns -1 and an error if not called from within a workflow context.
+`GetStepID` retrieves the current step ID from the context if called within a DBOS workflow. Returns an error if not called from within a workflow.
 
 ## Context metadata
 ### GetApplicationVersion
@@ -122,11 +122,3 @@ func GetExecutorID() string
 ```
 
 `GetExecutorID` returns the executor ID for this context.
-
-### GetApplicationID
-
-```go
-func GetApplicationID() string
-```
-
-`GetApplicationID` returns the application ID for this context.
