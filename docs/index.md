@@ -78,6 +78,38 @@ import { FaHackerNews } from "react-icons/fa6";
   />
 </section>
 </LargeTabItem>
+<LargeTabItem value="golang" label="Go">
+<section className="row list">
+  <IndexCardLink
+    label="Run Your First Durable App"
+    href="/quickstart"
+    description="Install DBOS on your computer and run your first durable app"
+    index="1"
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Learn DBOS Go"
+    href="/golang/programming-guide"
+    description="Learn how to build reliable applications with DBOS"
+    index="2️"
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Add DBOS To Your App"
+    href="/golang/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
+    index="3"
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
+    index="4"
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+</section>
+</LargeTabItem>
 </LargeTabs>
 
 ### Example Applications
