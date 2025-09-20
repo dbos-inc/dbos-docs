@@ -208,4 +208,71 @@ Next:
 </section>
 
 </LargeTabItem>
+
+<LargeTabItem value="golang" label="Go">
+
+#### 1. Initialize an Application
+
+<section className="row list">
+<article className="col col--6">
+
+Install the DBOS Go CLI, then initialize a starter application and enter its directory.
+DBOS requires Go 1.23.0 or higher.
+</article>
+
+<article className="col col--6">
+
+```shell
+go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos
+dbos init
+cd dbos-toolbox
+```
+</article>
+</section>
+
+#### 2. Launch Postgres
+
+<section className="row list">
+<article className="col col--6">
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_SYSTEM_DATABASE_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container with this command:
+</article>
+
+<article className="col col--6">
+
+```shell
+dbos postgres start
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_toolbox_go
+```
+</article>
+</section>
+
+#### 3. Start Your App
+
+<section className="row list">
+
+<article className="col col--6">
+Now, download dependencies and start your app!
+</article>
+
+<article className="col col--6">
+
+```bash
+go mod tidy
+go run main.go
+```
+</article>
+</section>
+
+To see that your app is working, visit this URL in your browser: http://localhost:8080/
+
+Congratulations, you've run your first durable workflow with DBOS!
+Next:
+
+- Check out the [**DBOS programming guide**](./golang/programming-guide.md) to learn how to build reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./golang/integrating-dbos.md) to make it reliable with just a few lines of code.
+
+</LargeTabItem>
 </LargeTabs>

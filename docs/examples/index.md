@@ -37,7 +37,7 @@ import { VscGraphLine } from "react-icons/vsc";
     href="python/examples/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language={["python", "typescript"]}
+    language={["python", "typescript", "go"]}
   />
   <CardLink
     label="Stock Tracker"

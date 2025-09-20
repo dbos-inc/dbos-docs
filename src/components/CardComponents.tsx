@@ -58,6 +58,8 @@ function CardLayout({
         return 'img/python-logo-only.svg';
       case 'typescript':
         return 'img/typescript-logo.svg';
+      case 'go':
+        return 'img/go-logo.svg'
       default:
         return '';
     }
