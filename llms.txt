@@ -6,6 +6,21 @@
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
+- [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript and Python.
+- [Add DBOS To Your App](https://docs.dbos.dev/golang/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
+- [Learn DBOS Go](https://docs.dbos.dev/golang/programming-guide.md): This guide shows you how to use DBOS to build Go apps that are resilient to any failure.
+- [DBOS CLI](https://docs.dbos.dev/golang/reference/cli.md): Click here to view the DBOS CLI documentation →
+- [DBOS Client](https://docs.dbos.dev/golang/reference/client.md): Client provides a programmatic way to interact with your DBOS application from external code.
+- [DBOS Context](https://docs.dbos.dev/golang/reference/dbos-context.md): A DBOS Context is at the center of a DBOS-enabled application. Use it to register workflows, queues and perform workflow management tasks.
+- [DBOS Methods & Variables](https://docs.dbos.dev/golang/reference/methods.md): DBOS Methods
+- [Queues](https://docs.dbos.dev/golang/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
+- [Workflows & Steps](https://docs.dbos.dev/golang/reference/workflows-steps.md): RegisterWorkflow
+- [Queues & Concurrency](https://docs.dbos.dev/golang/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
+- [Steps](https://docs.dbos.dev/golang/tutorials/step-tutorial.md): When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a step.
+- [Testing & Mocking](https://docs.dbos.dev/golang/tutorials/testing.md): DBOSContext is a fully mockable interface, which you manually mock, or can generate mocks using tools like mockery.
+- [Communicating with Workflows](https://docs.dbos.dev/golang/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
+- [Workflow Management](https://docs.dbos.dev/golang/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud) or programmatically.
+- [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add the open source DBOS Transact library to your existing Django application to durably execute it and make it resilient to any failure.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
@@ -40,7 +55,7 @@
 - [S3 Mirror](https://docs.dbos.dev/python/examples/s3mirror.md): S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv here.
 - [Scheduled Reminders](https://docs.dbos.dev/python/examples/scheduled-reminders.md): In this example, we use DBOS to build and deploy an app that schedules reminder emails for any day in the future.
 - [Stock Tracker](https://docs.dbos.dev/python/examples/stock-tracker.md): In this example, we use DBOS to build and deploy an app that tracks stock prices and sends SMS alerts when the price of a stock crosses a certain threshold.
-- [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript.
+- [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript and Go.
 - [Add DBOS To Your App](https://docs.dbos.dev/python/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Python](https://docs.dbos.dev/python/programming-guide.md): This guide shows you how to use DBOS to build Python apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/python/prompting.md): You may want assistance from an AI model in building a DBOS application.
@@ -67,7 +82,7 @@
 - [Workflow Management](https://docs.dbos.dev/python/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Get Started with DBOS](https://docs.dbos.dev/quickstart.md): DBOS is a library for building reliable programs.
-- [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): This example is also available in Python.
+- [Fault-Tolerant Checkout](https://docs.dbos.dev/typescript/examples/checkout-tutorial.md): This example is also available in Python and Go.
 - [Hacker News Research Agent](https://docs.dbos.dev/typescript/examples/hacker-news-agent.md): This example is also available in Python.
 - [Kafka Alert Queue](https://docs.dbos.dev/typescript/examples/kafka-alert-queue.md): In this example, we use DBOS to build an app that consumes Alert notifications as Kafka messages. Every Kafka message is handled exactly once, even if the app is stopped and restarted at any point.  All source code is available on GitHub.
 - [DBOS Task Scheduler](https://docs.dbos.dev/typescript/examples/task-scheduler.md): Learn how to combine DBOS + Next.js with this cloud scheduling tool

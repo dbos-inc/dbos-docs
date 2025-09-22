@@ -104,7 +104,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `None`.
+- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
