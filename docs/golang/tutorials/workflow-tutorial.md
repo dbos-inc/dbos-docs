@@ -269,7 +269,7 @@ DBOS provides [tooling](./workflow-management.md) to help you identify failed wo
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the application source code (this can be overridden through configuration).
+When DBOS is launched, it computes an application version from a hash of the application source code (this can be overridden through [configuration](../reference/dbos-context.md)).
 All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
