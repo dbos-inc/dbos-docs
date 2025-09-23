@@ -17,7 +17,7 @@ DBOS requires a Postgres database.
 If you don't already have Postgres, you can install the DBOS Go CLI with [go install](https://pkg.go.dev/cmd/go#hdr-Compile_and_install_packages_and_dependencies) and start Postgres in a Docker container with these commands:
 
 ```shell
-go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos
+go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
 dbos postgres start
 ```
 
