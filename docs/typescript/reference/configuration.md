@@ -32,6 +32,8 @@ export interface DBOSConfig {
 
   readonly runAdminServer?: boolean;
   readonly adminPort?: number;
+
+  readonly applicationVersion?: string;
 }
 ```
 
@@ -53,6 +55,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
+- **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 
 
 ## DBOS Configuration File
