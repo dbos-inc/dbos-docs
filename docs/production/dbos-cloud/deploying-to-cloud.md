@@ -156,6 +156,14 @@ dbos-cloud app deploy
 </section>
 
 </LargeTabItem>
+
+
+<LargeTabItem value="golang" label="Go">
+:::info
+DBOS Cloud support in Go is coming soon!
+:::
+</LargeTabItem>
+
 </LargeTabs>
 
 ## DBOS Cloud How-Tos

@@ -104,7 +104,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `None`.
+- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -572,6 +572,15 @@ DBOS.span: Span | undefined
 
 Retrieve the OpenTelemetry span associated with the current workflow.
 You can use this to set custom attributes in your span.
+
+
+### DBOS.applicationVersion
+
+```typescript
+DBOS.applicationVersion: string
+```
+
+Return the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 
 ## Workflow Handles
 
