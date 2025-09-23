@@ -573,6 +573,15 @@ DBOS.span: Span | undefined
 Retrieve the OpenTelemetry span associated with the current workflow.
 You can use this to set custom attributes in your span.
 
+
+### DBOS.applicationVersion
+
+```typescript
+DBOS.applicationVersion: string
+```
+
+Return the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+
 ## Workflow Handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
