@@ -590,6 +590,14 @@ DBOS.span: opentelemetry.trace.Span
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
 
+### application_version
+
+```python
+DBOS.application_version: str
+```
+
+Retrieve the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+
 ## Debouncing
 
 You can create a `Debouncer` to debounce your workflows.
