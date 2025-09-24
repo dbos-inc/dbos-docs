@@ -223,7 +223,7 @@ DBOS requires Go 1.23.0 or higher.
 <article className="col col--6">
 
 ```shell
-go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos
+go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
 dbos init
 cd dbos-toolbox
 ```
