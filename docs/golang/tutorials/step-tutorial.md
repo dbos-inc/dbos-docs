@@ -17,19 +17,19 @@ Here's a simple example:
 
 ```go
 func generateRandomNumber(ctx context.Context) (int, error) {
-	return rand.Int(), nil
+    return rand.Int(), nil
 }
 
 func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
-	randomNumber, err := dbos.RunAsStep(
+    randomNumber, err := dbos.RunAsStep(
         ctx,
-		generateRandomNumber,
-		dbos.WithStepName("generateRandomNumber"),
-	)
-	if err != nil {
-		return 0, err
-	}
-	return randomNumber, nil
+        generateRandomNumber,
+        dbos.WithStepName("generateRandomNumber"),
+    )
+    if err != nil {
+        return 0, err
+    }
+    return randomNumber, nil
 }
 ```
 
@@ -37,21 +37,21 @@ You can pass arguments into a step by wrapping it in an anonymous function, like
 
 ```go
 func generateRandomNumber(ctx context.Context, n int) (int, error) {
-	return rand.IntN(n), nil
+    return rand.IntN(n), nil
 }
 
 func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
-	randomNumber, err := dbos.RunAsStep(
-		ctx,
-		func(stepCtx context.Context) (int, error) {
-			return generateRandomNumber(stepCtx, n)
-		},
-		dbos.WithStepName("generateRandomNumber")
-	)
-	if err != nil {
-		return 0, err
-	}
-	return randomNumber, nil
+    randomNumber, err := dbos.RunAsStep(
+        ctx,
+        func(stepCtx context.Context) (int, error) {
+            return generateRandomNumber(stepCtx, n)
+        },
+        dbos.WithStepName("generateRandomNumber")
+    )
+    if err != nil {
+        return 0, err
+    }
+    return randomNumber, nil
 }
 ```
 
@@ -86,32 +86,32 @@ For example, let's configure this step to retry failures (such as if the site to
 
 ```go
 func fetchStep(ctx context.Context, url string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+    resp, err := http.Get(url)
+    if err != nil {
+        return "", err
+    }
+    defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
 
-	return string(body), nil
+    return string(body), nil
 }
 
 func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
-	return dbos.RunAsStep(
-		ctx,
-		func(stepCtx context.Context) (string, error) {
-			return fetchStep(stepCtx, inputURL)
-		},
-		dbos.WithStepName("fetchFunction"),
-		dbos.WithStepMaxRetries(10),
-		dbos.WithMaxInterval(30*time.Second),
-		dbos.WithBackoffFactor(2.0),
-		dbos.WithBaseInterval(500*time.Millisecond),
-	)
+    return dbos.RunAsStep(
+        ctx,
+        func(stepCtx context.Context) (string, error) {
+            return fetchStep(stepCtx, inputURL)
+        },
+        dbos.WithStepName("fetchFunction"),
+        dbos.WithStepMaxRetries(10),
+        dbos.WithMaxInterval(30*time.Second),
+        dbos.WithBackoffFactor(2.0),
+        dbos.WithBaseInterval(500*time.Millisecond),
+    )
 }
 ```
 
