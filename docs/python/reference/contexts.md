@@ -185,6 +185,28 @@ DBOS.get_event_async(
 
 Coroutine version of [`get_event`](#get_event)
 
+### get_all_events
+
+```python
+DBOS.get_all_events(
+    workflow_id: str
+) -> Dict[str, Any]
+```
+
+Retrieve the latest values of all events published by `workflow_id`.
+- `workflow_id`: The identifier of the workflow whose events to retrieve.
+
+### get_all_events_async
+
+```python
+DBOS.get_all_events_async(
+    workflow_id: str
+) -> Dict[str, Any]
+```
+
+Coroutine version of [`get_all_events`](#get_all_events).
+
+
 ### sleep
 
 ```python
