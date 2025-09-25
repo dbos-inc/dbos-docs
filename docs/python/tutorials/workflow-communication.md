@@ -110,6 +110,16 @@ If the event does not yet exist, this call waits for it to be published, returni
 
 You can also call [`get_event`](../reference/client.md#get_event) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
+#### get_all_events
+
+```python
+DBOS.get_all_events(
+    workflow_id: str
+) -> Dict[str, Any]
+```
+
+You can use `DBOS.get_all_events` to retrieve the latest values of all events published by a workflow.
+
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.

@@ -36,8 +36,12 @@ This initiates a websocket connection with Conductor:
 <TabItem value="python" label="Python">
 
 ```python
-conductor_key=os.environ.get("DBOS_CONDUCTOR_KEY", None)
-DBOS(conductor_key=conductor_key)
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
+}
+DBOS(config=config)
 ```
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
@@ -86,9 +90,9 @@ To facilitate this, pass in your application name as an environment variable, fo
 config: DBOSConfig = {
     "name": os.environ.get("DBOS_APPLICATION_NAME"),
     "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
 }
-conductor_key=os.environ.get("DBOS_CONDUCTOR_KEY", None)
-DBOS(config=config, conductor_key=conductor_key)
+DBOS(config=config)
 ```
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
