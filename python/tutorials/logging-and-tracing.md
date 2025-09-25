@@ -26,6 +26,26 @@ DBOS(config=config)
 
 ### Tracing 
 
+:::info
+To use OpenTelemetry features such as tracing and export, you must install the DBOS OpenTelemetry dependencies through:
+
+```
+pip install dbos[otel]
+```
+
+You must also enable OpenTelemetry in DBOS configuration through the `enable_otlp` flag:
+
+```python
+config: DBOSConfig = {
+  "name": "my-app",
+  "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+  "enable_otlp": True,
+}
+DBOS(config=config)
+```
+
+:::
+
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) traces of all workflows and their steps.
 If you are using FastAPI or Flask, it also automatically traces each HTTP request.
 
@@ -39,12 +59,13 @@ You can access your current span via [`DBOS.span`](../reference/contexts.md#span
 
 You can export DBOS traces and logs to any OpenTelemetry Protocol (OTLP)-compliant receiver.
 
-You can [configure](../reference/configuration.md) exporters through the DBOS constructor.
-For example:
+You can [configure](../reference/configuration.md) exporters like this:
 
 ```python
 config: DBOSConfig = {
-  "name": "my-app"
+  "name": "my-app",
+  "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+  "enable_otlp": True,
   "otlp_traces_endpoints": ["http://localhost:4318/v1/traces"]
   "otlp_logs_endpoints": ["http://localhost:4318/v1/traces"]
 }

@@ -22,19 +22,27 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
-    log_level: Optional[str]
+    dbos_system_schema: Optional[str]
+    system_database_engine: Optional[sqlalchemy.Engine]
+
+    conductor_key: Optional[str]
+
+    enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
-    admin_port: Optional[int]
+    log_level: Optional[str]
+
     run_admin_server: Optional[bool]
+    admin_port: Optional[int]
+
     application_version: Optional[str]
     executor_id: Optional[str]
-    disable_otlp: Optional[bool]
 ```
 
 - **name**: Your application's name.
@@ -78,15 +86,18 @@ Defaults to:
 }
 ```
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
-- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers.
-- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
+- **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
+- **conductor_key**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **enable_otlp**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging-and-tracing.md). Defaults to False.
+- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 - **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 - **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for [distributed workflow recovery](../../production/self-hosting/workflow-recovery.md)
-- **disable_otlp**: If set to True, disables OTLP tracing and logging. Defaults to False.
 
 
 ## DBOS Configuration File
