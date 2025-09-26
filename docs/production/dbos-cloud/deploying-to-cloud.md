@@ -159,9 +159,102 @@ dbos-cloud app deploy
 
 
 <LargeTabItem value="golang" label="Go">
+
+#### 1. Install the DBOS Cloud CLI
+<section className="row list">
+<article className="col col--6">
+
+The Cloud CLI requires Node.js 20 or later.
+</article>
+
+<article className="col col--6">
+
+<details>
+<summary>Instructions to install Node.js</summary>
+
+<InstallNode />
+
+</details>
+</article>
+
+<article className="col col--6">
+Run this command to install it.
+</article>
+
+<article className="col col--6">
+```shell
+npm i -g @dbos-inc/dbos-cloud@latest
+```
+</article>
+</section>
+
+
+#### 2. Configure DBOS
+<section className="row list">
+<article className="col col--6">
+
+Your DBOSContext [Config](../../golang/reference/dbos-context.md) must be set with:
+- `AdminServer` enabled and set of listen on port 3001 (the default port)
+- `DatabaseURL` (or your custom `pgxpool`) must point to an environment variable named `DBOS_SYSTEM_DATABASE_URL`
+
+</article>
+
+<article className="col col--6">
+```go
+dbos.Config{
+    AppName:     "dbos-starter",
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    AdminServer: true,
+}
+```
+</article>
+
+</section>
+
+#### 3. Provide a configuration file
+
+<section className="row list">
+<article className="col col--6">
+
+In a file named `dbos-config.yaml`, set these fields:
+- `name`: your application name. Must match `AppName` in your `dbos.Config`
+- `language`: must be `go`
+
+</article>
+
+<article className="col col--6">
+
+```yaml
+name: your-app-name
+language: go
+```
+
+</article>
+
+</section>
+
+#### 4. Deploy to DBOS Cloud
+<section className="row list">
+<article className="col col--6">
+
+Finally, build your application under the name `main`, against linux/adm64, then run this command to deploy your application to DBOS Cloud!
+
 :::info
-DBOS Cloud support in Go is coming soon!
+DBOS Cloud will serve HTTPS traffic on port 8080. Make sure to use that port when configuring web servers.
 :::
+
+</article>
+
+<article className="col col--6">
+
+```shell
+GOOS=linux GOARCH=amd64 go build -o main .
+dbos-cloud app deploy
+```
+
+</article>
+</section>
+
 </LargeTabItem>
 
 </LargeTabs>
