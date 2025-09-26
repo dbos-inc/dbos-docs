@@ -32,7 +32,7 @@ Setting `logLevel` also affects any log messages emitted by the DBOS library.
 To use OpenTelemetry features such as tracing and export, you must install the DBOS OpenTelemetry dependencies through:
 
 ```
-npm install @dbos-inc/otel
+npm i @dbos-inc/otel@latest
 ```
 
 You must also enable OpenTelemetry in DBOS configuration through the `enable_otlp` flag:
