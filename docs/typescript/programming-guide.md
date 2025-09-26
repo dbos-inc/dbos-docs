@@ -126,10 +126,10 @@ async function main() {
 main().catch(console.log);
 ```
 
-Now, install Express.js, then rebuild and restart your app with:
+Now, install Express.js and its types, then rebuild and restart your app with:
 
 ```shell
-npm install express
+npm install express @types/express
 npm run build
 npm run start
 ```
