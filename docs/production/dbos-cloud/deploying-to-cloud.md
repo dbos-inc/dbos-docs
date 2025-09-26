@@ -240,7 +240,7 @@ language: go
 Finally, build your application under the name `main`, against linux/adm64, then run this command to deploy your application to DBOS Cloud!
 
 :::info
-DBOS Cloud will serve HTTPS traffic on port 8080. Make sure to use that port when configuring web servers.
+DBOS Cloud will serve HTTP traffic on port 8080. Make sure to use that port when configuring web servers.
 :::
 
 </article>
