@@ -194,7 +194,7 @@ npm i -g @dbos-inc/dbos-cloud@latest
 <article className="col col--6">
 
 Your DBOSContext [Config](../../golang/reference/dbos-context.md) must be set with:
-- `AdminServer` enabled and set of listen on port 3001 (the default port)
+- `AdminServer` enabled and listening on port 3001 (the default port)
 - `DatabaseURL` (or your custom `pgxpool`) must point to an environment variable named `DBOS_SYSTEM_DATABASE_URL`
 
 </article>
