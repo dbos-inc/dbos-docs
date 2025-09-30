@@ -138,6 +138,14 @@ func WithApplicationVersion(version string) WorkflowOption
 
 Set the application version for this workflow, overriding the version in DBOSContext.
 
+#### WithAuthenticatedUser
+
+```go
+func WithAuthenticatedUser(user string) WorkflowOption
+```
+
+Associate the workflow execution with a user name. Useful to define workflow identity.
+
 ### RunAsStep
 
 ```go
@@ -153,7 +161,7 @@ Execute a function as a step in a durable workflow.
 
 **Example Syntax:**
 
-Any Go function can be a step as long as it outputs one value and an error.
+Any Go function can be a step as long as it outputs one [gob-encodable](https://pkg.go.dev/encoding/gob) value and an error.
 To pass inputs into a function being called as a step, wrap it in an anonymous function as shown below:
 
 ```go

@@ -49,7 +49,7 @@ The newly created DBOSContext must be launched with `Launch()` before use and sh
 ### launch
 
 ```go
-DBOSContext.Launch() error
+dbos.Launch(ctx DBOSContext) error
 ```
 
 Launch the following resources managed by a `DBOSContext`:
@@ -64,7 +64,7 @@ In addition, `Launch()` may perform [workflow recovery](../../architecture.md#ho
 
 ### Shutdown
 ```go
-Shutdown(timeout time.Duration)
+dbos.Shutdown(ctx DBOSContext, timeout time.Duration)
 ```
 
 Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. When you shutdown a `DBOSContext`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
