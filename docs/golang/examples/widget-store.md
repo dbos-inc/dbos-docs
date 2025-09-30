@@ -343,12 +343,12 @@ func main() {
     dbos.RegisterWorkflow(dbosContext, checkoutWorkflow)
     dbos.RegisterWorkflow(dbosContext, dispatchOrderWorkflow)
 
-    err = dbosContext.Launch()
+    err = dbos.Launch(dbosContext)
     if err != nil {
         logger.Error("DBOS service start failed", "error", err)
         os.Exit(1)
     }
-    defer dbosContext.Shutdown(10 * time.Second)
+    defer dbos.Shutdown(dbosContext, 10 * time.Second)
 
     db, err = pgxpool.New(context.Background(), dbURL)
     if err != nil {

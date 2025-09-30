@@ -9,7 +9,7 @@ Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go f
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#registerworkflow).
-Workflow registration must happen before launching the DBOS context with `DBOSContext.Launch()`
+Workflow registration must happen before launching the DBOS context with `dbos.Launch()`
 The function's signature must match:
 
 ```go
@@ -246,7 +246,7 @@ func main() {
         dbos.WithSchedule("0 */15 * * * * ")) // Cron: every 15 minutes
     
     // Launch DBOS - scheduled workflows will start automatically
-    err := dbosContext.Launch()
+    err := dbos.Launch(dbosContext)
     if err != nil {
         log.Fatal(err)
     }
