@@ -138,6 +138,14 @@ func WithApplicationVersion(version string) WorkflowOption
 
 Set the application version for this workflow, overriding the version in DBOSContext.
 
+#### WithAuthenticatedUser
+
+```go
+func WithAuthenticatedUser(user string) WorkflowOption
+```
+
+Associate the workflow execution with a user name. Useful to define workflow identity.
+
 ### RunAsStep
 
 ```go
