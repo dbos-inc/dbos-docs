@@ -152,6 +152,7 @@ For example:
 DBOS.setConfig({
   name: 'my-app',
   otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
+  otlpLogsEndpoints: ["http://localhost:4318/v1/logs"]
 });
 await DBOS.launch();
 ```
