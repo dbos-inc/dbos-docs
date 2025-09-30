@@ -35,7 +35,7 @@ To use OpenTelemetry features such as tracing and export, you must install the D
 npm i @dbos-inc/otel@latest
 ```
 
-You must also enable OpenTelemetry in DBOS configuration through the `enable_otlp` flag:
+You must also enable OpenTelemetry in DBOS configuration through the `enableOTLP` flag:
 
 ```typescript
 DBOS.setConfig({
