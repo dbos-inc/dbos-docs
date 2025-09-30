@@ -28,6 +28,24 @@ Setting `logLevel` also affects any log messages emitted by the DBOS library.
 
 ### Tracing
 
+:::info
+To use OpenTelemetry features such as tracing and export, you must install the DBOS OpenTelemetry dependencies through:
+
+```
+npm i @dbos-inc/otel@latest
+```
+
+You must also enable OpenTelemetry in DBOS configuration through the `enableOTLP` flag:
+
+```typescript
+DBOS.setConfig({
+  "name": "dbos-node-starter",
+  "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+  "enableOTLP": true,
+});
+```
+:::
+
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for all workflows and their steps.  These spans are attached to the current trace if one exists, otherwise DBOS will create a new trace.
 
 For example, if an instrumented HTTP server endpoint calls a workflow that then calls a step, DBOS will construct spans for both the workflow and the step.
@@ -152,6 +170,7 @@ For example:
 DBOS.setConfig({
   name: 'my-app',
   otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
+  otlpLogsEndpoints: ["http://localhost:4318/v1/logs"]
 });
 await DBOS.launch();
 ```
