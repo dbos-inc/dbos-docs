@@ -67,7 +67,7 @@ config: DBOSConfig = {
   "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
   "enable_otlp": True,
   "otlp_traces_endpoints": ["http://localhost:4318/v1/traces"]
-  "otlp_logs_endpoints": ["http://localhost:4318/v1/traces"]
+  "otlp_logs_endpoints": ["http://localhost:4318/v1/logs"]
 }
 DBOS(config=config)
 ```
