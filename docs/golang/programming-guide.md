@@ -86,11 +86,11 @@ func main() {
 
     dbos.RegisterWorkflow(dbosContext, workflow)
 
-    err = dbosContext.Launch()
+    err = dbos.Launch(dbosContext)
     if err != nil {
         panic(fmt.Sprintf("Launching DBOS failed: %v", err))
     }
-    defer dbosContext.Shutdown(5 * time.Second)
+    defer dbos.Shutdown(dbosContext, 5 * time.Second)
 
     handle, err := dbos.RunWorkflow(dbosContext, workflow, "")
     if err != nil {
@@ -174,11 +174,11 @@ func main() {
 
     dbos.RegisterWorkflow(dbosContext, workflow)
 
-    err = dbosContext.Launch()
+    err = dbos.Launch(dbosContext)
     if err != nil {
         panic(fmt.Sprintf("Launching DBOS failed: %v", err))
     }
-    defer dbosContext.Shutdown(5 * time.Second)
+    defer dbos.Shutdown(dbosContext, 5 * time.Second)
 
     r := gin.Default()
 
@@ -289,11 +289,11 @@ func main() {
     dbos.RegisterWorkflow(dbosContext, queueWorkflow)
     dbos.RegisterWorkflow(dbosContext, taskWorkflow)
 
-    err = dbosContext.Launch()
+    err = dbos.Launch(dbosContext)
     if err != nil {
         panic(fmt.Sprintf("Launching DBOS failed: %v", err))
     }
-    defer dbosContext.Shutdown(5 * time.Second)
+    defer dbos.Shutdown(dbosContext, 5 * time.Second)
 
     r := gin.Default()
 

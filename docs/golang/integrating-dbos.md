@@ -44,11 +44,11 @@ func main() {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
     }
 
-    err = dbosContext.Launch()
+    err = dbos.Launch(dbosContext)
     if err != nil {
         panic(fmt.Sprintf("Launching DBOS failed: %v", err))
     }
-    defer dbosContext.Shutdown(5 * time.Second)
+    defer dbos.Shutdown(dbosContext, 5 * time.Second)
 }
 ```
 
