@@ -116,6 +116,16 @@ Run this command to install the Cloud CLI globally.
 npm i -g @dbos-inc/dbos-cloud@latest
 ```
 </article>
+
+<article className="col col--6">
+As DBOS Cloud uses OpenTelemetry to export your application's logs and traces, you must install the DBOS OpenTelemetry dependencies into your application:
+</article>
+
+<article className="col col--6">
+```shell
+npm i @dbos-inc/otel@latest
+```
+</article>
 </section>
 
 #### 2. Define a Start Command
@@ -126,7 +136,7 @@ Set the `start` command in the `runtimeConfig` section of your [`dbos-config.yam
 
 If your application includes an HTTP server, configure it to listen on port 3000.
 
-To test that it works, try launching your application with `npxdbos start`.
+To test that it works, try launching your application with `npx dbos start`.
 </article>
 
 <article className="col col--6">
