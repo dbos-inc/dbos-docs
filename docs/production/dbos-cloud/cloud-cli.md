@@ -284,6 +284,16 @@ Retrieve an application's logs.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. Default is 3600 (one hour).
 ---
 
+### `dbos-cloud app cmd`
+
+**Description:**
+A debugging utility that lets you run a shell command on one of your app's executors. Prints the `stderr` and `stdout` output by the command. The command must finish in 10 seconds. Every command is also recorded, without its output, in the app logs at `WARN` level. Note that stopping the running `dbos` process destroys the executor and causes it to be replaced by a new one.
+
+**Arguments:**
+- `-e, --executor-id <string>`: The ID of the executor to use (see app logs).
+- `-c, --command <string>`: The shell command to run.
+---
+
 ### `dbos-cloud app resource-usage`
 
 **Description:**
@@ -293,16 +303,6 @@ Retrieve your applications' resource usage for a specific time interval. If no t
 - `-s, --since <string>`: UTC time since which to start querying (formatted as 2006-01-02 15:04:05.000000). Defaults to the start of a 1-minute interval ~2 minutes ago.
 - `-u --upto <string>`: UTC time up to which to start querying (formatted as 2006-01-02 15:04:05.000000). Defaults to the end of a 1-minute interval ~2 minutes ago.
 - `-g, --group-by <string>`: Time interval for grouping data: 'minute', 'hour', or 'day', defaults to 'minute'.
----
-
-### `dbos-cloud app cmd`
-
-**Description:**
-A debugging utility that lets you run a shell command on one of your app's executors. Prints the `stderr` and `stdout` output by the command. The command must finish in 10 seconds or less. Every command is also recorded, without its output, in the app logs at `WARN` level. Note that stopping the running `dbos` process destroys the executor and causes it to be replaced by a new one after a slight delay.
-
-**Arguments:**
-- `-e, --executor-id <string>`: The ID of the executor to use, usually emitted with the application logs.
-- `-c, --command <string>`: The shell command to run.
 ---
 
 ### `dbos-cloud app change-database-instance`
@@ -315,7 +315,6 @@ It redeploys the application to a new database instance.
 - `--verbose`: Logs debug information about the deployment process, including config file processing and files sent.
 - `-d, --database <string>` The name of the new database instance for this application.
 - `-p, --previous-version [number]`: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory.
-
 ---
 
 ### `dbos-cloud app secrets create`
