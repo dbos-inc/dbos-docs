@@ -103,15 +103,19 @@ You can enqueue a workflow from within a DBOS app directly or from anywhere usin
 
 When you enqueue a workflow, it may be executed on any of your application's servers.
 All DBOS applications periodically poll their queues to find and execute new work.
-This is in contrast to other queue services that have separate "worker servers" that can execute queued tasks.
-In DBOS, all of your application servers act as queue workers, as in this diagram:
+Essentially, all of your application servers act as queue workers, as in this diagram:
 
 <img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
+
+Sometimes, you want to separate the worker servers that execute your queued tasks from the rest of your application.
+For example, you may want to scale them separately.
+To do this in DBOS, deploy your queue workers as a separate [application](#applications-and-databases) with their own system database.
+Then, use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to enqueue and manage workflows on your worker application from your other applications.
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
-For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md)).
+For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md)).
 
 ## Self-Hosting DBOS with Conductor
 
