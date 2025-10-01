@@ -68,6 +68,33 @@ async function queueFunction(tasks) {
 const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
 ```
 
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with `task` as an argument.
+
+```ts
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+
+type ProcessTask = typeof Tasks.processTask;
+await client.enqueue<ProcessTask>(
+    {
+        workflowName: 'dataPipeline',
+        queueName: 'pipelineQueue',
+    }, 
+    task);
+```
+
+
 
 ### Managing Concurrency
 
@@ -229,26 +256,3 @@ async function main() {
 main().catch(console.log);
 ```
 
-### Enqueue with DBOSClient
-
-[`DBOSClient`](../reference/client.md) provides a way to programmatically interact with your DBOS application from external code.
-Among other things, this allows you to enqueue workflows from outside your DBOS application.
-
-Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
-
-Example: 
-
-```ts
-import { DBOSClient } from "@dbos-inc/dbos-sdk";
-
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
-
-type ProcessTask = typeof Tasks.processTask;
-await client.enqueue<ProcessTask>(
-    {
-        workflowName: 'processTask',
-        workflowClassName: 'Tasks',
-        queueName: 'example_queue',
-    }, 
-    task);
-```
