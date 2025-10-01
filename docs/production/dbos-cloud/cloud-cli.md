@@ -295,6 +295,16 @@ Retrieve your applications' resource usage for a specific time interval. If no t
 - `-g, --group-by <string>`: Time interval for grouping data: 'minute', 'hour', or 'day', defaults to 'minute'.
 ---
 
+### `dbos-cloud app cmd`
+
+**Description:**
+A debugging utility that lets you run a shell command on one of your app's executors. Prints the `stderr` and `stdout` output by the command. The command must finish in 10 seconds or less. Every command is also recorded, without its output, in the app logs at `WARN` level. Note that stopping the running `dbos` process destroys the executor and causes it to be replaced by a new one after a slight delay.
+
+**Arguments:**
+- `-e, --executor-id <string>`: The ID of the executor to use, usually emitted with the application logs.
+- `-c, --command <string>`: The shell command to run.
+---
+
 ### `dbos-cloud app change-database-instance`
 
 **Description:**
