@@ -8,17 +8,17 @@ Architecturally, an application built with DBOS looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-You can integrate DBOS into your existing application running on your existing servers and infrastructure in just three steps:
+In words, DBOS runs as a library in your application servers.
+It checkpoints your application's workflows and steps to a Postgres database.
+When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
+
+Because DBOS is just a library, you can integrate it into your existing application running on your existing servers and infrastructure in just three steps:
 
 1. Install the DBOS library into your application.
 2. Connect to any Postgres database.
 3. Annotate workflows and steps directly in your application code.
 
-For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md)).
-
-Once integrated, DBOS automatically checkpoints every workflow and step execution in your application to Postgres.
-When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
-For more detail on how workflow recovery works, see [this section below](#how-workflow-recovery-works).
+For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
 
 <img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
