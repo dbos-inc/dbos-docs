@@ -4,13 +4,12 @@ title: DBOS Architecture
 ---
 
 DBOS provides a lightweight library for durable workflows built on top of Postgres.
+
+The DBOS library checkpoints your application's workflows and steps to a Postgres database.
+When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 Architecturally, an application built with DBOS looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
-
-In words, DBOS runs as a library in your application servers.
-It checkpoints your application's workflows and steps to a Postgres database.
-When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 
 Because DBOS is just a library, you can integrate it into your existing application running on your existing servers and infrastructure in just three steps:
 
