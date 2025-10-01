@@ -5,21 +5,18 @@ title: DBOS Architecture
 
 DBOS provides a lightweight library for durable workflows built on top of Postgres.
 
-The DBOS library checkpoints your application's workflows and steps to a Postgres database.
+You use DBOS by installing the open-source library into your application and annotating workflows and steps.
+While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
+
+<img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
 Architecturally, an application built with DBOS looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-Because DBOS is just a library, you can integrate it into your existing application running on your existing servers and infrastructure in just three steps:
-
-1. Install the DBOS library into your application.
-2. Connect to any Postgres database.
-3. Annotate workflows and steps directly in your application code.
-
 For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
 
-<img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ## Comparison to External Workflow Orchestrators
 
