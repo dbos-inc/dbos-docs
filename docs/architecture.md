@@ -21,12 +21,12 @@ For more detail on how to add DBOS to your application, check out the language-s
 ## Comparison to External Workflow Orchestrators
 
 The DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
-All these systems implement workflows via **external orchestration**.
+These systems implement workflows via **external orchestration**.
 At a high-level, their architectures look like this:
 
 <img src={require('@site/static/img/architecture/external-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 
-Externally orchestrated systems are made up of an orchestrator and a set of workers. The orchestrator runs workflow code, dispatching steps to workers through queues.
+Externally orchestrated systems are made up of an orchestrator and a set of workers. The orchestrator runs workflow code, dispatching steps to workers.
 Workers execute steps, then return their output to the orchestrator, which persists that output to a data store then dispatches the next step.
 Application code can't call workflows directly, but instead sends requests to the orchestrator server to start workflows and fetch their results.
 
