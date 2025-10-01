@@ -45,14 +45,15 @@ Each DBOS application server connects to a Postgres database, called the system 
 This database serves as the persistence layer for all workflow checkpoints, step outputs, and queue state.
 The complete schema and table structure are documented [here](./explanations/system-tables.md).
 
-A single Postgres server can host multiple system databases, with each database serving a separate DBOS application.
-However, each application must maintain its own isolated system database: you should not share a system database between separate applications (separate code bases).
+Often, you have multiple applications or services that need durable workflows.
+For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
+You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
+This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
 
-For example, in this diagram we deploy two DBOS applications, each running three application servers.
-While both applications share the same physical Postgres server, each maintains its own system database.
-All servers within an application connect to the application's system database, ensuring consistent state across the distributed deployment.
-
-<img src={require('@site/static/img/architecture/dbos-system-database.png').default} alt="DBOS System Database" width="750" className="custom-img"/>
+Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
+For example, you might want your API server to enqueue a job on your data processing service.
+You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to programmatically interact with your application from external code.
+For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 
 ## How Workflow Recovery Works
 
