@@ -90,11 +90,9 @@ await client.enqueue<ProcessTask>(
     {
         workflowName: 'dataPipeline',
         queueName: 'pipelineQueue',
-    }, 
+    },
     task);
 ```
-
-
 
 ### Managing Concurrency
 
