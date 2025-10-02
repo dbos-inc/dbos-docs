@@ -9,13 +9,24 @@ You use DBOS by installing the open-source library into your application and ann
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 
-<img src={require('@site/static/img/architecture/dbos-steps.jpg').default} alt="DBOS Steps" width="750" className="custom-img"/>
-
-Architecturally, an application built with DBOS looks like this:
+Architecturally, an application built with DBOS looks the below diagram.
+DBOS is implemented entirely in the open-source library you install into your application.
+The library handles both checkpointing workflows and steps and recovering workflows from failures.
+There's no orchestration server and no external dependencies except a Postgres database.
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
+
+
+## Using DBOS in a Distributed Setting
+
+DBOS naturally scales to a distributed setting with many servers per application and many applications.
+For example, you might deploy a DBOS application to a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
+Every server in your application should connect to the same Postgres database, called the system database.
+This database stores all workflow checkpoints, step outputs, and queue state.
+By default, each workflow runs on only a single server.
+However, you can use mechanisms like [durable queues](#durable-queues) to distribute work across many servers.
 
 
 ## Comparison to External Workflow Orchestrators
