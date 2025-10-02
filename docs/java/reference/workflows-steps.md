@@ -116,3 +116,63 @@ StartWorkflowOptions withQueue(Queue queue, String deduplicationId, int priority
 ```
 
 TODO: Document these once they're broken up appropriately.
+
+
+### runStep
+
+```java
+public <T, E extends Exception> T runStep(
+    ThrowingSupplier<T, E> stepfunc, 
+    StepOptions opts
+) throws E
+```
+
+Run a function as a step in a workflow.
+Can only be called from a durable workflow.
+Returns the output of the step.
+
+This method takes in the following options:
+
+```java
+public record StepOptions(
+    String name,
+    boolean retriesAllowed,
+    int maxAttempts,
+    double intervalSeconds,
+    double backOffRate
+)
+```
+
+**Constructors:**
+
+```java
+new StepOptions(String name)
+```
+
+Provide a name for this step.
+
+**Methods:**
+
+```java
+StepOptions withRetriesAllowed(boolean b)
+```
+
+Whether to retry the step if it throws an exception. Defaults to false.
+
+```java
+StepOptions withMaxAttempts(int n)
+```
+
+How many times to retry a step that is throwing exceptions.
+
+```java
+StepOptions withIntervalSeconds(double t)
+```
+
+How long to wait before the initial retry.
+
+```java
+StepOptions withBackoffRate(double t) 
+```
+
+How much to multiplicatively increase `intervalSeconds` between retries.
