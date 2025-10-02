@@ -299,7 +299,7 @@ const config = {
         },
       },
       prism: {
-        additionalLanguages: ['bash'],
+        additionalLanguages: ['bash', 'java'],
         theme: {
           ...prismThemes.okaidia,
           styles: [
