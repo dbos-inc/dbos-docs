@@ -142,7 +142,7 @@ If one of your application servers fails, Conductor detects the failure through 
 This architecture has two useful implications:
 
 1. Conductor is **secure** and **privacy-preserving**. It does not have access to your database, nor does it need direct access to your application servers. Instead, your servers open outbound websocket connections to it and communicate exclusively through its websocket protocol.
-2. Conductor is **out-of-band**. Conductor is **only** used for observability and recovery and is never in the critical path of workflow execution (unlike the external orchestrators of other workflow systems).
+2. Conductor is **out of band** and **off your critical path**. Conductor is **only** used for observability and recovery and is never involved in workflow execution (unlike the external orchestrators of other workflow systems).
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
 For more information on Conductor, see [its docs](./production/self-hosting/conductor.md).
