@@ -16,18 +16,27 @@ There's no orchestration server and no external dependencies except a Postgres d
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-For more detail on how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
+To learn more about how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
 
 
 ## Using DBOS in a Distributed Setting
 
 DBOS naturally scales to a distributed setting with many servers per application and many applications.
 For example, you might deploy a DBOS application to a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
-Every server in your application should connect to the same Postgres database, called the system database.
+Each of your application's servers should connect to the same Postgres database, called the system database.
 This database stores all workflow checkpoints, step outputs, and queue state.
 By default, each workflow runs on only a single server.
 However, you can use mechanisms like [durable queues](#durable-queues) to distribute work across many servers.
 
+Often, you have multiple applications or services that need durable workflows.
+For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
+You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
+This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
+
+Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
+For example, you might want your API server to enqueue a job on your data processing service.
+You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to programmatically interact with your application from external code.
+For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 
 ## Comparison to External Workflow Orchestrators
 
@@ -49,22 +58,6 @@ Finally, you must operate and scale the orchestration server and its underlying 
 
 DBOS is simpler because it runs entirely **in-process** as a library, so your workflows and steps remain normal functions within your application that you can call from other application code.
 DBOS simply instruments them to checkpoint their state and recover them from failure.
-
-## Applications and Databases
-
-Each DBOS application server connects to a Postgres database, called the system database.
-This database serves as the persistence layer for all workflow checkpoints, step outputs, and queue state.
-The complete schema and table structure are documented [here](./explanations/system-tables.md).
-
-Often, you have multiple applications or services that need durable workflows.
-For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
-
-Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
-For example, you might want your API server to enqueue a job on your data processing service.
-You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to programmatically interact with your application from external code.
-For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 
 ## How Workflow Recovery Works
 
