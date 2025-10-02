@@ -37,6 +37,9 @@ Sometimes, you need to communicate between separate DBOS applications, or betwee
 For example, you might want your API server to enqueue a job on your data processing service.
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to programmatically interact with your application from external code.
 For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
+Here's a diagram of what that might look like:
+
+<img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 ## Comparison to External Workflow Orchestrators
 
