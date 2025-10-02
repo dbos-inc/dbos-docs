@@ -108,7 +108,7 @@ For more information, see the [workflow recovery documentation](./production/sel
 One powerful feature of DBOS is that you can **enqueue** workflows for distributed execution with flow control.
 You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
 
-An enequeued workflow may be dequeued and executed by any of your application's servers.
+An enqueued workflow may be dequeued and executed by any of your application's servers.
 All processes running DBOS periodically poll their queues to find and execute new work.
 Essentially, all of your application servers act as queue workers, as in this diagram:
 
