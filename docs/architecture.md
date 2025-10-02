@@ -113,7 +113,7 @@ Essentially, all of your application servers act as queue workers, as in this di
 
 Sometimes, you want to separate the worker servers that execute your queued tasks from the rest of your application.
 For example, you may want to scale them separately.
-To do this in DBOS, deploy your queue workers as a separate [application](#applications-and-databases) with their own system database.
+To do this in DBOS, deploy your queue workers as a separate [application](#using-dbos-in-a-distributed-setting) with their own system database.
 Then, use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to enqueue and manage workflows on your worker application from your other applications.
 
 To help you operate at scale, DBOS queues provide **flow control**.
