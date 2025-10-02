@@ -40,3 +40,17 @@ public static class WorkflowBuilder<T> {
 Proxy a class whose methods contain `@Workflow` annotations.
 Methods can then be invoked as durable workflows using the proxy.
 All proxies must be created before DBOS is launched.
+
+### startWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(
+    ThrowingSupplier<T, E> workflow, 
+    StartWorkflowOptions options
+)
+```
+
+Start a workflow in the background and return a handle to it.
+Optionally enqueue it on a DBOS queue.
+The `startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
