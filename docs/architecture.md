@@ -102,11 +102,11 @@ For more information, see the [workflow recovery documentation](./production/sel
 
 ## Durable Queues
 
-One powerful feature of DBOS is that you can **enqueue** workflows for later execution with managed concurrency.
+One powerful feature of DBOS is that you can **enqueue** workflows for distributed execution with flow control.
 You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
 
-When you enqueue a workflow, it may be executed on any of your application's servers.
-All DBOS applications periodically poll their queues to find and execute new work.
+An enequeued workflow may be dequeued and executed by any of your application's servers.
+All processes running DBOS periodically poll their queues to find and execute new work.
 Essentially, all of your application servers act as queue workers, as in this diagram:
 
 <img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
