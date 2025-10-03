@@ -41,6 +41,27 @@ Proxy a class whose methods contain `@Workflow` annotations.
 Methods can then be invoked as durable workflows using the proxy.
 All proxies must be created before DBOS is launched.
 
+**Example Syntax:**
+
+```java
+interface Example {
+    public void workflow();
+}
+
+class ExampleImpl implements Example {
+    @Workflow(name="workflow")
+    public void workflow() {
+        return;
+    }
+}
+
+Example proxy = dbos.<Example>Workflow()
+    .interfaceClass(Example.class)
+    .implementation(new ExampleImpl())
+    .build();
+proxy.workflow();
+```
+
 ### startWorkflow
 
 ```java
@@ -53,6 +74,28 @@ All proxies must be created before DBOS is launched.
 Start a workflow in the background and return a handle to it.
 Optionally enqueue it on a DBOS queue.
 The `startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
+
+**Example Syntax**:
+
+```java
+interface Example {
+    public void workflow();
+}
+
+class ExampleImpl implements Example {
+    @Workflow(name="workflow")
+    public void workflow() {
+        return;
+    }
+}
+
+Example proxy = dbos.<Example>Workflow()
+    .interfaceClass(Example.class)
+    .implementation(new ExampleImpl())
+    .build();
+dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions())
+```
+
 
 **Options:**
 
@@ -82,7 +125,6 @@ Create workflow options with all fields set to their defaults.
   Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout. You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
 
 - **`withQueue(Queue queue)`** / **`withQueue(Queue queue, String deduplicationId)`** / **`withQueue(Queue queue, int priority)`** / **`withQueue(Queue queue, String deduplicationId, int priority)`** - TODO: Document these once they're broken up appropriately.
-
 
 ### runStep
 
