@@ -13,10 +13,91 @@ static DBOS initialize(DBOSConfig config)
 ```
 
 Initialize the DBOS singleton from configuration.
+This method takes in the following configuration object:
 
-### DBOSConfig
+```java
+public record DBOSConfig(
+    String appName,
+    String databaseUrl,
+    String dbUser,
+    String dbPassword,
+    int maximumPoolSize,
+    int connectionTimeout,
+    boolean adminServer,
+    int adminServerPort,
+    String conductorKey,
+    String appVersion,
+)
+```
 
-TODO: Will document this once it's cleaned up.
+**Constructors:**
+
+```java
+new DBOSConfig.Builder()
+```
+
+**Methods:**
+
+```java
+Builder appName(String appName)
+```
+
+Your application's name. Required.
+
+```java
+Builder databaseUrl(String databaseUrl)
+```
+
+The JDBC URL for your system database. Required.
+A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
+
+```java
+Builder dbUser(String dbUser)
+```
+
+Your Postgres username or role. Required.
+
+```java
+Builder dbPassword(String dbPassword)
+```
+
+The password for your Postgres user or role. Required.
+
+```java
+Builder maximumPoolSize(int maximumPoolSize)
+```
+
+The maximum size for the system database connection pool created by DBOS.
+
+```java
+Builder connectionTimeout(int connectionTimeout)
+```
+
+The connection timeout for the system database connection created by DBOS.
+
+```java
+Builder runAdminServer()
+```
+
+Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to true.
+
+```java
+Builder adminServerPort(int port)
+```
+
+The port on which the admin server runs. Defaults to 3001.
+
+```java
+Builder conductorKey(String key)
+```
+
+An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+
+```java
+Builder appVersion(String appVersion)
+```
+
+The code version for this application and its workflows. Workflow versioning is documented here.
 
 ### DBOS.launch
 
