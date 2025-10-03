@@ -36,7 +36,7 @@ Thus, DBOS makes your application **resilient to any failure**.
 Let's create a simple DBOS program that runs a workflow of two steps.
 Add the following code to your `App.java` file:
 
-```java
+```java showLineNumbers title="App.java"
 package com.example;
 
 import org.slf4j.LoggerFactory;
@@ -118,7 +118,7 @@ Step two completed!
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Javalin.
 Replace the contents of `App.java` with:
 
-```java
+```java showLineNumbers title="App.java"
 package com.example;
 
 import org.slf4j.LoggerFactory;
