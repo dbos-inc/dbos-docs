@@ -54,7 +54,7 @@ Start a workflow in the background and return a handle to it.
 Optionally enqueue it on a DBOS queue.
 The `startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
-This method takes in the following options:
+**Options:**
 
 ```java
 public record StartWorkflowOptions(
@@ -67,13 +67,12 @@ public record StartWorkflowOptions(
 ```
 
 **Constructors:**
-
 ```java
 new StartWorkflowOptions()
 ```
+Create workflow options with all fields set to their defaults.
 
 **Methods:**
-
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
@@ -98,7 +97,7 @@ Run a function as a step in a workflow.
 Can only be called from a durable workflow.
 Returns the output of the step.
 
-This method takes in the following options:
+**Options:**
 
 ```java
 public record StepOptions(
@@ -111,15 +110,12 @@ public record StepOptions(
 ```
 
 **Constructors:**
-
 ```java
 new StepOptions(String name)
 ```
-
-Provide a name for this step.
+Create step options and provide a name for this step.
 
 **Methods:**
-
 - **`withRetriesAllowed(boolean b)`** - Whether to retry the step if it throws an exception. Defaults to false.
 
 - **`withMaxAttempts(int n)`** - How many times to retry a step that is throwing exceptions.

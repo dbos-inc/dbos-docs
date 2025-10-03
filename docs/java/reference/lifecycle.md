@@ -13,7 +13,8 @@ static DBOS initialize(DBOSConfig config)
 ```
 
 Initialize the DBOS singleton from configuration.
-This method takes in the following configuration object:
+
+**Options:**
 
 ```java
 public record DBOSConfig(
@@ -35,6 +36,8 @@ public record DBOSConfig(
 ```java
 new DBOSConfig.Builder()
 ```
+
+Create a DBOSConfig object.
 
 **Methods:**
 
