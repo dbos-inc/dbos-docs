@@ -26,7 +26,7 @@ public record DBOSConfig(
     boolean adminServer,
     int adminServerPort,
     String conductorKey,
-    String appVersion,
+    String appVersion
 )
 ```
 
@@ -38,66 +38,25 @@ new DBOSConfig.Builder()
 
 **Methods:**
 
-```java
-Builder appName(String appName)
-```
+- **`appName(String appName)`** - Your application's name. Required.
 
-Your application's name. Required.
+- **`databaseUrl(String databaseUrl)`** - The JDBC URL for your system database. Required. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
 
-```java
-Builder databaseUrl(String databaseUrl)
-```
+- **`dbUser(String dbUser)`** - Your Postgres username or role. Required.
 
-The JDBC URL for your system database. Required.
-A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
+- **`dbPassword(String dbPassword)`** - The password for your Postgres user or role. Required.
 
-```java
-Builder dbUser(String dbUser)
-```
+- **`maximumPoolSize(int maximumPoolSize)`** - The maximum size for the system database connection pool created by DBOS.
 
-Your Postgres username or role. Required.
+- **`connectionTimeout(int connectionTimeout)`** - The connection timeout for the system database connection created by DBOS.
 
-```java
-Builder dbPassword(String dbPassword)
-```
+- **`runAdminServer()`** - Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to true.
 
-The password for your Postgres user or role. Required.
+- **`adminServerPort(int port)`** - The port on which the admin server runs. Defaults to 3001.
 
-```java
-Builder maximumPoolSize(int maximumPoolSize)
-```
+- **`conductorKey(String key)`** - An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
-The maximum size for the system database connection pool created by DBOS.
-
-```java
-Builder connectionTimeout(int connectionTimeout)
-```
-
-The connection timeout for the system database connection created by DBOS.
-
-```java
-Builder runAdminServer()
-```
-
-Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to true.
-
-```java
-Builder adminServerPort(int port)
-```
-
-The port on which the admin server runs. Defaults to 3001.
-
-```java
-Builder conductorKey(String key)
-```
-
-An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
-
-```java
-Builder appVersion(String appVersion)
-```
-
-The code version for this application and its workflows. Workflow versioning is documented here.
+- **`appVersion(String appVersion)`** - The code version for this application and its workflows. Workflow versioning is documented here.
 
 ### DBOS.launch
 

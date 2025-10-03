@@ -74,48 +74,15 @@ new StartWorkflowOptions()
 
 **Methods:**
 
-```java
-StartWorkflowOptions withWorkflowId(String workflowId)
-```
+- **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
-Set the workflow ID of this workflow.
+- **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
-```java
-StartWorkflowOptions withTimeout(Duration timeout)
-```
+  Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
-```java
-StartWorkflowOptions withTimeout(long value, TimeUnit unit)
-```
+  Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout. You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
 
-Set a timeout for this workflow.
-When the timeout expires, the workflow **and all its children** are cancelled.
-Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
-
-Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
-Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-
-Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
-If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout.
-You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
-
-```java
-StartWorkflowOptions withQueue(Queue queue)
-```
-
-```java
-StartWorkflowOptions withQueue(Queue queue, String deduplicationId)
-```
-
-```java
-StartWorkflowOptions withQueue(Queue queue, int priority)
-```
-
-```java
-StartWorkflowOptions withQueue(Queue queue, String deduplicationId, int priority)
-```
-
-TODO: Document these once they're broken up appropriately.
+- **`withQueue(Queue queue)`** / **`withQueue(Queue queue, String deduplicationId)`** / **`withQueue(Queue queue, int priority)`** / **`withQueue(Queue queue, String deduplicationId, int priority)`** - TODO: Document these once they're broken up appropriately.
 
 
 ### runStep
@@ -153,26 +120,10 @@ Provide a name for this step.
 
 **Methods:**
 
-```java
-StepOptions withRetriesAllowed(boolean b)
-```
+- **`withRetriesAllowed(boolean b)`** - Whether to retry the step if it throws an exception. Defaults to false.
 
-Whether to retry the step if it throws an exception. Defaults to false.
+- **`withMaxAttempts(int n)`** - How many times to retry a step that is throwing exceptions.
 
-```java
-StepOptions withMaxAttempts(int n)
-```
+- **`withIntervalSeconds(double t)`** - How long to wait before the initial retry.
 
-How many times to retry a step that is throwing exceptions.
-
-```java
-StepOptions withIntervalSeconds(double t)
-```
-
-How long to wait before the initial retry.
-
-```java
-StepOptions withBackoffRate(double t) 
-```
-
-How much to multiplicatively increase `intervalSeconds` between retries.
+- **`withBackoffRate(double t)`** - How much to multiplicatively increase `intervalSeconds` between retries.
