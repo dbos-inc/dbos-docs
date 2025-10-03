@@ -82,12 +82,10 @@ public class App {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
         DBOSConfig config = new DBOSConfig.Builder()
-            .name("dbos-java-starter")
-            .dbHost("localhost")
-            .dbPort(5432)
-            .dbUser("postgres")
-            .dbPassword("dbos")
-            .sysDbName("dbos_java_starter")
+            .appName("dbos-java-starter")
+            .databaseUrl(System.getenv("DBOS_JDBC_URL"))
+            .dbUser(System.getenv("PGUSER"))
+            .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS dbos = DBOS.initialize(config);
         Example proxy = dbos.<Example>Workflow()
@@ -168,12 +166,10 @@ public class App {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
         DBOSConfig config = new DBOSConfig.Builder()
-            .name("dbos-java-starter")
-            .dbHost("localhost")
-            .dbPort(5432)
-            .dbUser("postgres")
-            .dbPassword("dbos")
-            .sysDbName("dbos_java_starter")
+            .appName("dbos-java-starter")
+            .databaseUrl(System.getenv("DBOS_JDBC_URL"))
+            .dbUser(System.getenv("PGUSER"))
+            .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS dbos = DBOS.initialize(config);
         Example proxy = dbos.<Example>Workflow()
