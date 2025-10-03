@@ -139,6 +139,33 @@ Run a function as a step in a workflow.
 Can only be called from a durable workflow.
 Returns the output of the step.
 
+**Example Syntax:**
+
+```java
+class ExampleImpl implements Example {
+
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
+    private void stepOne() {
+        System.out.println("Step one completed!");
+    }
+
+    private void stepTwo() {
+        System.out.println("Step two completed!");
+    }
+
+    @Workflow(name="workflow")
+    public void workflow() throws InterruptedException {
+        this.dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        this.dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+    }
+}
+```
+
 **Options:**
 
 ```java
