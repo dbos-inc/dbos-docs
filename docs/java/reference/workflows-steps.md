@@ -93,9 +93,8 @@ Example proxy = dbos.<Example>Workflow()
     .interfaceClass(Example.class)
     .implementation(new ExampleImpl())
     .build();
-dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions())
+dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
-
 
 **Options:**
 
