@@ -1,6 +1,7 @@
 ---
 sidebar_position: 20
 title: Workflows & Steps
+toc_max_heading_level: 3
 ---
 
 ### @Workflow
@@ -191,3 +192,44 @@ Create step options and provide a name for this step.
 - **`withIntervalSeconds(double t)`** - How long to wait before the initial retry.
 
 - **`withBackoffRate(double t)`** - How much to multiplicatively increase `intervalSeconds` between retries.
+
+### WorkflowHandle
+
+```java
+public interface WorkflowHandle<T, E extends Exception> {
+
+  String getWorkflowId();
+
+  T getResult() throws E;
+
+  WorkflowStatus getStatus();
+}
+```
+
+WorkflowHandle provides methods to interact with a running or completed workflow.
+The type parameters `T` and `E` represents the expected return type of the workflow and the checked exceptions it may throw.
+Handles can be used to wait for workflow completion, check status, and retrieve results. 
+
+#### WorkflowHandle.getResult
+
+```java
+T getResult() throws E;
+```
+
+Wait for the workflow to complete and return its result.
+
+#### WorkflowHandle.getStatus
+
+```java
+WorkflowStatus getStatus();
+```
+
+Retrieve the WorkflowStatus of the workflow.
+
+#### WorkflowHandle.getWorkflowId
+
+```java
+String getWorkflowId();
+```
+
+Retrieve the ID of the workflow.
