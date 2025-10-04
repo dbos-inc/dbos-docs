@@ -81,3 +81,7 @@ By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
 Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
+
+### How does DBOS scale?
+
+The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
