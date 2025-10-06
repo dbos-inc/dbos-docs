@@ -5,7 +5,7 @@ title: DBOS Client
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
 
-### DBOSClient
+## DBOSClient
 
 ```java
 DBOSClient(String url, String user, String password)
@@ -17,6 +17,8 @@ Construct the DBOSClient.
 - **url**: The JDBC URL for your system database.
 - **user**: Your Postgres username or role.
 - **password**: The password for your Postgres user or role.
+
+## Workflow Interaction Methods
 
 ### enqueueWorkflow
 
@@ -76,3 +78,80 @@ Please see [Managing Application Versions](../../production/self-hosting/workflo
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - **`withPriority(int priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - **`withInstanceName`**: The enqueued workflow should run on this particular named class instance.
+
+
+
+### send
+
+```java
+send(String destinationId, Object message, String topic, String idempotencyKey) 
+```
+
+Similar to [`dbos.send`](./methods.md#send).
+
+### getEvent
+
+```java
+Object getEvent(String targetId, String key, double timeoutSeconds)
+```
+
+Similar to [`dbos.getEvent`](./methods.md#getevent).
+
+## Workflow Management Methods
+
+### retrieveWorkflow
+
+```java
+WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
+```
+
+Similar to [`dbos.retrieveWorkflow`](./methods.md#retrieveworkflow).
+
+### getWorkflowStatus
+
+```java
+Optional<WorkflowStatus> getWorkflowStatus(String workflowId)
+```
+
+Retrieve the [`WorkflowStatus`](./methods.md#workflowstatus) of a workflow.
+
+### listWorkflows
+
+```java
+List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+```
+
+Similar to [`dbos.listWorkflows`](./methods.md#listworkflows).
+
+### listWorkflowSteps
+
+```java
+List<StepInfo> listWorkflowSteps(String workflowId)
+```
+
+Similar to [`dbos.listWorkflowSteps`](./methods.md#listworkflowsteps).
+
+### cancelWorkflow
+
+```java
+void cancelWorkflow(String workflowId)
+```
+
+Similar to [`dbos.cancelWorkflow`](./methods.md#cancelWorkflow).
+
+### resumeWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+```
+
+Similar to [`dbos.resumeWorkflow`](./methods.md#resumeWorkflow).
+
+### forkWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
+      String originalWorkflowId, int startStep, ForkOptions options)
+```
+
+Similar to [`dbos.forkWorkflow`](./methods.md#forkWorkflow).
