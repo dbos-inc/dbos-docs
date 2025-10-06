@@ -41,6 +41,19 @@ Here's a diagram of what that might look like:
 
 <img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
+## How DBOS Scales
+
+You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
+The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step's outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).
+
+As these writes are checkpointing workflow inputs and outputs and step outputs, the sizes of the writes are determined by the sizes of your inputs and outputs.
+If your steps return small objects, the write sizes will be negligible, but if they return large files, the write sizes will be large.
+Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
+
+While exact numbers depend on the database you are using, a large Postgres database can typically sustain well over 10K writes per second (for example, [this benchmark shows 12-18K writes/second](https://planetscale.com/benchmarks/aurora); most large-scale Postgres benchmarks have similar results).
+Thus, a DBOS application using a single Postgres database can sustain a throughput of several thousand workflows or steps per second.
+Scaling beyond that is possible by sharding workflows across multiple Postgres databases.
+
 ## Comparison to External Workflow Orchestrators
 
 The DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
