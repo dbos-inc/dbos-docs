@@ -96,6 +96,109 @@ List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 
 Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
 
+#### ListWorkflowsInput
+
+`ListWorkflowsInput` is a builder-based configuration record for filtering and customizing workflow queries. All fields are optional.
+
+**Builder Methods:**
+
+##### workflowID
+```java
+Builder workflowID(String workflowID)
+```
+Add a workflow ID to filter by.
+
+##### workflowIDs
+```java
+Builder workflowIDs(List<String> workflowIDs)
+```
+Add multiple workflow IDs to filter by.
+
+##### className
+```java
+Builder className(String className)
+```
+Filter workflows by the class name containing the workflow function.
+
+##### instanceName
+```java
+Builder instanceName(String instanceName)
+```
+Filter workflows by the instance name of the class.
+
+##### workflowName
+```java
+Builder workflowName(String workflowName)
+```
+Filter workflows by the workflow function name.
+
+##### authenticatedUser
+```java
+Builder authenticatedUser(String authenticatedUser)
+```
+Filter workflows run by this authenticated user.
+
+##### startTime
+```java
+Builder startTime(OffsetDateTime startTime)
+```
+Retrieve workflows started after this timestamp.
+
+##### endTime
+```java
+Builder endTime(OffsetDateTime endTime)
+```
+Retrieve workflows started before this timestamp.
+
+##### status
+```java
+Builder status(WorkflowState status)
+Builder status(String status)
+```
+Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+
+##### applicationVersion
+```java
+Builder applicationVersion(String applicationVersion)
+```
+Retrieve workflows tagged with this application version.
+
+##### limit
+```java
+Builder limit(Integer limit)
+```
+Retrieve up to this many workflows.
+
+##### offset
+```java
+Builder offset(Integer offset)
+```
+Skip this many workflows from the results returned (for pagination).
+
+##### sortDesc
+```java
+Builder sortDesc(Boolean sortDesc)
+```
+Sort the results in descending (true) or ascending (false) order by workflow start time.
+
+##### workflowIdPrefix
+```java
+Builder workflowIdPrefix(String workflowIdPrefix)
+```
+Filter workflows whose IDs start with the specified prefix.
+
+##### loadInput
+```java
+Builder loadInput(Boolean value)
+```
+Controls whether to load workflow input data (default: true).
+
+##### loadOutput
+```java
+Builder loadOutput(Boolean value)
+```
+Controls whether to load workflow output data (default: true).
+
 
 ### WorkflowStatus
 
