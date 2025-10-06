@@ -23,18 +23,19 @@ All fields except `name` are optional.
 export interface DBOSConfig {
   name?: string;
 
-  readonly systemDatabaseUrl?: string;
-  readonly systemDatabasePoolSize?: number;
+  systemDatabaseUrl?: string;
+  systemDatabasePoolSize?: number;
+  systemDatabasePool?: Pool;
 
-  readonly enableOTLP?: boolean;
-  readonly logLevel?: string;
-  readonly otlpLogsEndpoints?: string[];
-  readonly otlpTracesEndpoints?: string[];
+  enableOTLP?: boolean;
+  logLevel?: string;
+  otlpLogsEndpoints?: string[];
+  otlpTracesEndpoints?: string[];
 
-  readonly runAdminServer?: boolean;
-  readonly adminPort?: number;
+  runAdminServer?: boolean;
+  adminPort?: number;
 
-  readonly applicationVersion?: string;
+  applicationVersion?: string;
 }
 ```
 
@@ -50,7 +51,8 @@ The default is:
 postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
-- **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 10.
+- **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging.md). Defaults to False.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.

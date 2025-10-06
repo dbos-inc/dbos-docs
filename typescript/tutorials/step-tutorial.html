@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.a5b580cf.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.68f7d312.js" defer="defer"></script>
 <script src="/assets/js/main.b5982dd4.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -38,7 +38,6 @@ Common nondeterministic operations include:</p>
 <li>Getting the current time.</li>
 </ul>
 <p>You <strong>cannot</strong> call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like <code>DBOS.send</code> or <code>DBOS.setEvent</code> from within steps  (<a href="/typescript/tutorials/workflow-communication#workflow-streaming">streams</a> are an exception).
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step&#x27;s execution rather than functioning as a separate step.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="configurable-retries">Configurable Retries<a href="#configurable-retries" class="hash-link" aria-label="Direct link to Configurable Retries" title="Direct link to Configurable Retries">​</a></h3>
