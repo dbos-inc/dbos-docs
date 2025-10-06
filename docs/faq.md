@@ -5,15 +5,14 @@ title: Troubleshooting & FAQ
 ### Where do I find the DBOS tables?
 
 DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
-By default, the name of your system database is your application database name suffixed with `_dbos_sys`.
-For example, if your application database is `dbos_app_starter`, your system database is `dbos_app_starter_dbos_sys`.
+You connect to this database through the `system_database_url` parameter in DBOS configuration.
 You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
 Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
 All system database tables are documented [here](./explanations/system-tables.md).
 
 :::tip
-If you're using Supabase, the default application database name is `postgres`, so the default system database name is `postgres_dbos_sys`.
-You cannot connect to or view non-default databases from the Supabase web console, but you can still connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
+If you're using Supabase, only the `postgres` database is visible from the Supabase web console.
+You can use `postgres` as your system database, or you can use a different system database and connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
 :::
 
 ### Why is my queue stuck?
@@ -27,8 +26,8 @@ If you need to, you can cancel tasks to remove them from the queue.
 
 DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, be **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript and with pickle in Python.
-See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled)) for information on what objects can and cannot be serialized.
+DBOS serializes objects to JSON in TypeScript, with `pickle` in Python, and with `gob` in Go.
+See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled), [Go](https://pkg.go.dev/encoding/gob)) for information on what objects can and cannot be serialized.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow or construct it globally and access it from the workflow or the appropriate steps.
@@ -55,7 +54,7 @@ However, the called step becomes part of the calling step's execution rather tha
 
 ### Can I start, monitor, or cancel DBOS workflows from a non-DBOS application?
 
-Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
+Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md), [Go docs](./golang/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
 
 ### What happens if you start two workflows with the same workflow ID?
 
@@ -68,16 +67,24 @@ The first process to complete the step will checkpoint its outcome and continue 
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset)).
+You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
 
 ### How can I cancel a large number of workflows in a batch?
 
-Write a script using the DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) to list all the workflows you need cancelled, then iteratively cancel them.
+Write a script using the DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md), [Go docs](./golang/reference/client.md)) to list all the workflows you need cancelled, then iteratively cancel them.
 
 ### Why do I get insufficient privilege errors when starting DBOS?
 
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
+In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
 Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
+
+### How does DBOS scale?
+
+The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
+
+### Can I use DBOS with a connection pooler?
+
+You can connect a DBOS application to its system database through a connection pooler like [PgBouncer](https://www.pgbouncer.org/), but **only in session mode**, not in transaction mode. See [this page](https://www.pgbouncer.org/features.html) for more information on the difference between session and transaction mode.
