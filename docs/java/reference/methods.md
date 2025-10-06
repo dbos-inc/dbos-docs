@@ -268,7 +268,7 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
   - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
   - **timeout**: A timeout for the forked workflow.
 
-  ### WorkflowStatus
+### WorkflowStatus
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
 This object has the following definition:
