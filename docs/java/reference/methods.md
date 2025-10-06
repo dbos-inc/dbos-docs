@@ -85,3 +85,56 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 
 **Parameters**:
 - **workflowId**: The ID of the workflow whose handle to retrieve.
+
+## Workflow Management Methods
+
+### listWorkflows
+
+```java
+List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+
+
+### WorkflowStatus
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```java
+public record WorkflowStatus(
+    // The workflow ID
+    String workflowId,
+    // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    String status,
+    // The name of the workflow function
+    String name,
+    // The class of the workflow function
+    String className,
+    // The name given to the class instance, if any
+    String instanceName,
+    // The deserialized workflow input object
+    Object[] input,
+    // The workflow's output, if any
+    Object output,
+    // The error the workflow threw, if any
+    ErrorResult error,
+    // Workflow start time, as a Unix epoch timestamp in ms
+    Long createdAt,
+    // The last time the workflow status was updated, as a Unix epoch timestamp in ms
+    Long updatedAt,
+    // If this workflow was enqueued, on which queue
+    String queueName,
+    // The ID of the executor (process) that most recently executed this workflow
+    String executorId,
+    // The application version on which this workflow was started
+    String appVersion,
+    // The workflow timeout, if any
+    Long workflowTimeoutMs,
+    // The Unix epoch timestamp at which this workflow will time out, if any
+    Long workflowDeadlineEpochMs,
+    // The number of times this workflow has been started
+    Integer recoveryAttempts
+)
+```
