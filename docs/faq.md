@@ -5,15 +5,14 @@ title: Troubleshooting & FAQ
 ### Where do I find the DBOS tables?
 
 DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
-By default, the name of your system database is your application database name suffixed with `_dbos_sys`.
-For example, if your application database is `dbos_app_starter`, your system database is `dbos_app_starter_dbos_sys`.
+You connect to this database through the `system_database_url` parameter in DBOS configuration.
 You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
 Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
 All system database tables are documented [here](./explanations/system-tables.md).
 
 :::tip
-If you're using Supabase, the default application database name is `postgres`, so the default system database name is `postgres_dbos_sys`.
-You cannot connect to or view non-default databases from the Supabase web console, but you can still connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
+If you're using Supabase, only the `postgres` database is visible from the Supabase web console.
+You can use `postgres` as your system database, or you can use a different system database and connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
 :::
 
 ### Why is my queue stuck?
