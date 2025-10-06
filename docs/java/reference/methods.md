@@ -200,7 +200,75 @@ Builder loadOutput(Boolean value)
 Controls whether to load workflow output data (default: true).
 
 
-### WorkflowStatus
+### listWorkflowSteps
+
+```java
+List<StepInfo> listWorkflowSteps(String workflowId)
+```
+
+Retrieve the execution steps of a workflow.
+This is a list of `StepInfo` objects, with the following structure:
+
+```java
+StepInfo(
+    // The sequential ID of the step within the workflow
+    int functionId,
+    // The name of the step function
+    String functionName,
+    // The output returned by the step, if any
+    Object output,
+    // The error returned by the step, if any
+    ErrorResult error,
+    // If the step starts or retrieves the result of a workflow, its ID
+    String childWorkflowId
+)
+```
+
+### cancelWorkflow
+
+```java
+cancelWorkflow(String workflowId)
+```
+
+Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+
+### resumeWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+```
+
+Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### forkWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
+      String workflowId, 
+      int startStep, 
+      ForkOptions options
+)
+```
+
+```java
+public record ForkOptions(
+    String forkedWorkflowId, 
+    String applicationVersion, 
+    Duration timeout
+)
+```
+
+Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to fork
+- **startStep**: The step from which to fork the workflow
+- **options**:
+  - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
+  - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
+  - **timeout**: A timeout for the forked workflow.
+
+  ### WorkflowStatus
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
 This object has the following definition:
