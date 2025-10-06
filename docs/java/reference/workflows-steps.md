@@ -4,6 +4,8 @@ title: Workflows & Steps
 toc_max_heading_level: 3
 ---
 
+## Annotations
+
 ### @Workflow
 
 ```java
@@ -21,6 +23,32 @@ An annotation that can be applied to a class method to mark it as a durable work
 - **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+
+### @Scheduled
+
+```java
+public @interface Scheduled {
+  String cron();
+}
+```
+
+An annotation that can be applied to a workflow method to register it to run periodically on a cron schedule.
+The schedule string follows standard cron format with second precision.
+Scheduled workflows automatically receive two `Instant` parameters: one for the scheduled time at which the workflow should start, one for the time at which it actually started.
+
+**Example Syntax:**
+
+```java
+public class ExampleImpl implements Example {
+    @Workflow(name = "runEveryMinute")
+    @Scheduled(cron = "0 * * * * ?")
+    public void runEveryMinute(Instant schedule, Instant actual) {
+        System.out.println("This workflow runs every minute.");
+    }
+}
+```
+
+## Methods
 
 ### Workflow
 
