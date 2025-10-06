@@ -114,14 +114,16 @@ This is useful if your operations have side effects like making a payment or sen
 For example:
 
 ```java
-@Workflow(name = "exampleWorkflow")
-public String exampleWorkflow() {
-    System.out.println("Running workflow");
-    // ...
-    return "success";
+class ExampleImpl implements Example {
+    @Workflow(name = "exampleWorkflow")
+    public String exampleWorkflow() {
+        System.out.println("Running workflow");
+        // ...
+        return "success";
+    }
 }
 
-public void example() throws Exception {
+public void example(Example proxy) throws Exception {
     String myID = "unique-workflow-id-123";
     WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.exampleWorkflow(),
