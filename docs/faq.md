@@ -85,3 +85,7 @@ Then, a DBOS application can run without privilege (requiring only access to the
 ### How does DBOS scale?
 
 The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
+
+### Can I use DBOS with a connection pooler?
+
+You can connect a DBOS application to its system database through a connection pooler like [PgBouncer](https://www.pgbouncer.org/), but **only in session mode**, not in transaction mode. See [this page](https://www.pgbouncer.org/features.html) for more information on the difference between session and transaction mode.
