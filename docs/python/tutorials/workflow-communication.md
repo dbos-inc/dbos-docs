@@ -94,7 +94,7 @@ DBOS.set_event(
 ) -> None
 ```
 
-Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
+Any workflow or step can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
 #### get_event
 
 ```python
