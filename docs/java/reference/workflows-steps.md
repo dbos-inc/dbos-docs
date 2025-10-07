@@ -80,9 +80,9 @@ proxy.workflow();
 ```
 
 **Parameters:**
-- **interfaceClass**: The interface class
-- **implementation**: An instance of the class
-- **instanceName**: A unique name for this class instance. Use only when creating multiple instances of a class. This ensures workflows are recovered with the right class instance.
+- **interfaceClass**: The interface class to be proxied.
+- **implementation**: An instance of the class to proxy.
+- **instanceName**: A unique name for this class instance. Use only when you are creating multiple instances of a class and your workflow depends on class instance variables. When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `instanceName` so it can recover the workflow using the right instance of its class.
 
 
 ### startWorkflow
