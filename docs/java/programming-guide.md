@@ -69,13 +69,12 @@ class ExampleImpl implements Example {
         System.out.println("Step two completed!");
     }
 
-    @Workflow(name="workflow")
+    @Workflow(name = "workflow")
     public void workflow() {
         this.dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
         this.dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
-
 
 public class App {
     public static void main(String[] args) throws Exception {
@@ -88,10 +87,7 @@ public class App {
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS dbos = DBOS.initialize(config);
-        Example proxy = dbos.<Example>Workflow()
-            .interfaceClass(Example.class)
-            .implementation(new ExampleImpl(dbos))
-            .build();
+        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
         dbos.launch();
         proxy.workflow();
         dbos.shutdown();
@@ -172,10 +168,7 @@ public class App {
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS dbos = DBOS.initialize(config);
-        Example proxy = dbos.<Example>Workflow()
-            .interfaceClass(Example.class)
-            .implementation(new ExampleImpl(dbos))
-            .build();
+        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
         dbos.launch();
         Javalin.create().get("/", ctx -> {
             proxy.workflow();
@@ -305,10 +298,7 @@ public class App {
         DBOS dbos = DBOS.initialize(config);
         Queue queue = dbos.Queue("example-queue").build();
         ExampleImpl impl = new ExampleImpl(dbos, queue);
-        Example proxy = dbos.<Example>Workflow()
-                .interfaceClass(Example.class)
-                .implementation(impl)
-                .build();
+        Example proxy = dbos.<Example>registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
         dbos.launch();
         Javalin.create().get("/", ctx -> {
