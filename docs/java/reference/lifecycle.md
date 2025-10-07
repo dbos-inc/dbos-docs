@@ -59,7 +59,7 @@ Create a DBOSConfig object.
 
 - **`conductorKey(String key)`** - An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
-- **`appVersion(String appVersion)`** - The code version for this application and its workflows. Workflow versioning is documented here.
+- **`appVersion(String appVersion)`** - The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 
 ### DBOS.launch
 
