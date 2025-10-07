@@ -14,7 +14,7 @@ First, initialize a new project with Gradle:
 gradle init --type java-application --dsl groovy --test-framework junit --package com.example --project-name myapp --no-split-project --java-version 17
 ```
 
-Then, install DBOS by adding the following lines to your `build.gradle` depedencies:
+Then, install DBOS by adding the following lines to your `build.gradle` dependencies:
 
 ```
 implementation 'dev.dbos:transact:0.5.+'
