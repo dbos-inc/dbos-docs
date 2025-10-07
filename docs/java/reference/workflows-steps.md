@@ -50,20 +50,11 @@ public class ExampleImpl implements Example {
 
 ## Methods
 
-### Workflow
+### registerWorkflows
 
 ```java
-<T> WorkflowBuilder<T> Workflow()
-```
-
-```java
-public static class WorkflowBuilder<T> {
-    public WorkflowBuilder<T> interfaceClass(Class<T> iface)
-
-    public WorkflowBuilder<T> implementation(Object impl)
-
-    public T build()
-}
+<T> T registerWorkflows(Class<T> interfaceClass, T implementation)
+<T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
 Proxy a class whose methods contain `@Workflow` annotations.
@@ -84,12 +75,15 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = dbos.<Example>Workflow()
-    .interfaceClass(Example.class)
-    .implementation(new ExampleImpl())
-    .build();
+Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl());
 proxy.workflow();
 ```
+
+**Parameters:**
+- **interfaceClass**: The interface class
+- **implementation**: An instance of the class
+- **instanceName**: A unique name for this class instance. Use only when creating multiple instances of a class. This ensures workflows are recovered with the right class instance.
+
 
 ### startWorkflow
 
