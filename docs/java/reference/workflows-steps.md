@@ -112,10 +112,7 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = dbos.<Example>Workflow()
-    .interfaceClass(Example.class)
-    .implementation(new ExampleImpl())
-    .build();
+Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl());
 dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
