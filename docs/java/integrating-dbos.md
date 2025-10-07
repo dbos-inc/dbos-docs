@@ -116,10 +116,7 @@ To use your workflows, create a proxy before launching DBOS:
 
 ```java
 // Create workflow proxy (before dbos.launch())
-MyWorkflows workflows = dbos.<MyWorkflows>Workflow()
-    .interfaceClass(MyWorkflows.class)
-    .implementation(new MyWorkflowsImpl(dbos))
-    .build();
+MyWorkflows workflows = dbos.<MyWorkflows>registerWorkflows(MyWorkflows.class, new MyWorkflowsImpl(dbos));
 
 // Launch DBOS
 dbos.launch();

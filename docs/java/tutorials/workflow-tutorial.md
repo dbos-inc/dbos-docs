@@ -52,10 +52,7 @@ public class App {
         DBOS dbos = DBOS.initialize(config);
 
         // Create the workflow proxy
-        Example proxy = dbos.<Example>Workflow()
-            .interfaceClass(Example.class)
-            .implementation(new ExampleImpl(dbos))
-            .build();
+        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
 
         // Launch DBOS after registering all workflows
         dbos.launch();

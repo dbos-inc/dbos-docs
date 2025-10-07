@@ -115,10 +115,7 @@ public class App {
 
         Queue queue = dbos.Queue("example-queue").build();
         ExampleImpl impl = new ExampleImpl(dbos, queue);
-        Example proxy = dbos.<Example>Workflow()
-            .interfaceClass(Example.class)
-            .implementation(impl)
-            .build();
+        Example proxy = dbos.<Example>registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
 
         dbos.launch();
