@@ -284,6 +284,16 @@ Retrieve an application's logs.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. Default is 3600 (one hour).
 ---
 
+### `dbos-cloud app cmd`
+
+**Description:**
+A debugging utility that lets you run a shell command on one of your app's executors. Prints the `stderr` and `stdout` output by the command. The command must finish in 10 seconds. Every command is also recorded, without its output, in the app logs at `WARN` level. Note that stopping the running `dbos` process destroys the executor and causes it to be replaced by a new one.
+
+**Arguments:**
+- `-e, --executor-id <string>`: The ID of the executor to use (see app logs).
+- `-c, --command <string>`: The shell command to run.
+---
+
 ### `dbos-cloud app resource-usage`
 
 **Description:**
