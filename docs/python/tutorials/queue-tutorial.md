@@ -233,7 +233,7 @@ When you enqueue a workflow on a partitioned queue, you must supply a queue part
 Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "virtual queue" you dynamically create by enqueueing a workflow with a partition key.
 
-For example, suppose you want your users to each be able to run only one task at a time.
+For example, suppose you want your users to each be able to run at most one task at a time.
 You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
 
 **Example Syntax**
