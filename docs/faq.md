@@ -26,7 +26,7 @@ If you need to, you can cancel tasks to remove them from the queue.
 
 DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, be **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript, with `pickle` in Python, and with `gob` in Go.
+DBOS serializes objects to JSON in TypeScript, with `pickle` in Python (this is customizable), and with `gob` in Go.
 See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled), [Go](https://pkg.go.dev/encoding/gob)) for information on what objects can and cannot be serialized.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.

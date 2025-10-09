@@ -7,7 +7,7 @@ When using DBOS workflows, you should annotate any function that performs comple
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can turn **any** Python function into a step by annotating it with the [`@DBOS.step`](../reference/decorators.md#step) decorator.
-The only requirement is that its inputs and outputs should be serializable ([pickle](https://docs.python.org/3/library/pickle.html)-able).
+The only requirement is that its outputs should be serializable.
 Here's a simple example:
 
 ```python
