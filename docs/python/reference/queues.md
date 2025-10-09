@@ -145,12 +145,15 @@ These options are **not propagated** to child workflows.
 **Deduplication Example**
 
 ```python
+from dbos import DBOS, Queue, SetEnqueueOptions
+from dbos import error as dboserror
+
 queue = Queue("example_queue")
 
 with SetEnqueueOptions(deduplication_id="my_dedup_id"):
     try:
         handle = queue.enqueue(example_workflow, ...)
-    except DBOSQueueDeduplicatedError as e:
+    except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
 ```
 
@@ -168,7 +171,6 @@ with SetEnqueueOptions(priority=10):
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
-
 ```
 
 **Partitioned Queue Example**
@@ -184,8 +186,8 @@ def process_task(task: Task):
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a
     # maximum concurrency of 1, this means that at most one
-    # task can run at once per user (but tasks from different)
-    # users can run concurrently.
+    # task can run at once per user (but tasks from different
+    # users can run concurrently).
     with SetEnqueueOptions(queue_partition_key=user_id):
         queue.enqueue(process_task, task)
 ```

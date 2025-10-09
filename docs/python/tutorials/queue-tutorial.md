@@ -191,6 +191,8 @@ Example syntax:
 from dbos import DBOS, Queue, SetEnqueueOptions
 from dbos import error as dboserror
 
+queue = Queue("example_queue")
+
 with SetEnqueueOptions(deduplication_id="my_dedup_id"):
     try:
         handle = queue.enqueue(example_workflow, ...)
@@ -211,7 +213,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```python
-queue = Queue("priority_queue", priority_enabled=True)
+queue = Queue("example_queue", priority_enabled=True)
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
@@ -219,8 +221,36 @@ with SetEnqueueOptions(priority=10):
     for task in tasks:
         queue.enqueue(task_workflow, task)
 
+# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
+```
 
-# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
+## Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "virtual queue" you can create dynamically by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run only one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```python
+queue = Queue("queue", partition_queue=True, concurrency=1)
+
+@DBOS.workflow()
+def process_task(task: Task):
+  ...
+
+
+def on_user_task_submission(user_id: str, task: Task):
+    # Partition the task queue by user ID. As the queue has a
+    # maximum concurrency of 1, this means that at most one
+    # task can run at once per user (but tasks from different
+    # users can run concurrently).
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        queue.enqueue(process_task, task)
 ```
