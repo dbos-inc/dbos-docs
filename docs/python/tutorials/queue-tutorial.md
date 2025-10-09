@@ -213,7 +213,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```python
-queue = Queue("example_queue", priority_enabled=True)
+queue = Queue("priority_queue", priority_enabled=True)
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
@@ -239,7 +239,7 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 **Example Syntax**
 
 ```python
-queue = Queue("queue", partition_queue=True, concurrency=1)
+queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
 
 @DBOS.workflow()
 def process_task(task: Task):

@@ -160,7 +160,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 **Priority Example**
 
 ```python
-queue = Queue("example_queue", priority_enabled=True)
+queue = Queue("priority_queue", priority_enabled=True)
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
@@ -176,7 +176,7 @@ with SetEnqueueOptions(priority=1):
 **Partitioned Queue Example**
 
 ```python
-queue = Queue("queue", partition_queue=True, concurrency=1)
+queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
 
 @DBOS.workflow()
 def process_task(task: Task):
