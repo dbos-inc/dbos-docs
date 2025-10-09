@@ -95,6 +95,49 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 }
 ```
 
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with a `ProcessInput` argument:
+
+```go
+type ProcessInput struct {
+    TaskID string
+    Data   string
+}
+
+type ProcessOutput struct {
+    Result string
+    Status string
+}
+
+config := dbos.ClientConfig{
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+}
+client, err := dbos.NewClient(context.Background(), config)
+if err != nil {
+    log.Fatal(err)
+}
+defer client.Shutdown(5 * time.Second)
+
+handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+    client, 
+    "pipelineQueue",
+    "dataPipeline",
+    ProcessInput{TaskID: "task-123", Data: "data"},
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
 
 ### Managing Concurrency
 

@@ -94,7 +94,7 @@ DBOS.set_event(
 ) -> None
 ```
 
-Any workflow can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
+Any workflow or step can call [`DBOS.set_event`](../reference/contexts.md#set_event) to publish a key-value pair, or update its value if has already been published.
 #### get_event
 
 ```python
@@ -185,7 +185,7 @@ DBOS.close_stream(
 ) -> None
 ```
 
-DBOS streams are immutable and append-only:.
+DBOS streams are immutable and append-only.
 Writes to a stream from a workflow happen exactly-once.
 Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
 Readers will see all values written to the stream from all tries of the step in the order in which they were written.
