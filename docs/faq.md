@@ -22,7 +22,7 @@ If you need to, you can cancel tasks to remove them from the queue.
 
 ### Why is my workflow not finishing?
 
-When workflows won't proceed from `PENDING` to `SUCCESS` or `ERROR`, a common cause is [version mismatch](./architecture.md#application-and-workflow-versions) when self-hosting. Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/self-hosting/workflow-management.md#workflow-management) to resume them on the new app version. 
+When self-hosted workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/self-hosting/workflow-management.md#workflow-management) to resume them on a new app version.
 
 A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for DBOS Cloud or Conductor to begin workflow recovery.
 
@@ -80,11 +80,11 @@ The first process to complete the step will checkpoint its outcome and continue 
 
 You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
 
-### How can I reduce the number of Postgres Connections DBOS uses?
+### How can I reduce the number of Postgres connections DBOS uses?
 
 You can use the app config to reduce the system database pool size. Do not use values less than 5 ([Python](./python/reference/configuration.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md)).
 
-### Can I use DBOS with an external Postgres Connection pooler?
+### Can I use DBOS with an external Postgres connection pooler?
 
 You can connect a DBOS application to its system database through a connection pooler like [PgBouncer](https://www.pgbouncer.org/), but **only in session mode**, not in transaction mode. See [this page](https://www.pgbouncer.org/features.html) for more information on the difference between session and transaction mode.
 
