@@ -7,7 +7,7 @@ When using DBOS workflows, you should annotate any function that performs comple
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can turn **any** Python function into a step by annotating it with the [`@DBOS.step`](../reference/decorators.md#step) decorator.
-The only requirement is that its inputs and outputs should be serializable ([pickle](https://docs.python.org/3/library/pickle.html)-able).
+The only requirement is that its outputs should be serializable.
 Here's a simple example:
 
 ```python
@@ -26,7 +26,6 @@ Common nondeterministic operations include:
 - Getting the current time.
 
 You **cannot** call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like `DBOS.send` or `DBOS.set_event` from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
 
