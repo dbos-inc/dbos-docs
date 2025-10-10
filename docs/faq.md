@@ -18,22 +18,32 @@ You cannot connect to or view non-default databases from the Supabase web consol
 
 ### Why is my queue stuck?
 
-If a DBOS queue is stuck (newly submitted tasks are not being dequeued), it is likely that either the number of queued workflows in a `PENDING` state exceeds the queue's global concurrency limit or the number of queued workflows in a `PENDING` state on each of your processes exceeds the queue's worker concurrency limit.
-In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled.
-You can view all tasks executing on a queue from the queues tab of the DBOS Console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)).
+If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the DBOS Console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)).
 If you need to, you can cancel tasks to remove them from the queue.
 
-### I'm seeing errors that objects cannot be deserialized?
+### Why is my workflow not finishing?
 
-DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, be **serializable**.
+When workflows won't proceed from `PENDING` to `SUCCESS` or `ERROR`, a common cause is [version mismatch](./architecture.md#application-and-workflow-versions) when self-hosting. Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/self-hosting/workflow-management.md#workflow-management) to resume them on the new app version. 
+
+A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for DBOS Cloud or Conductor to begin workflow recovery.
+
+Workflows may also get "stuck" due to their logic: infinite loops, indefinitely waiting for an event or improper use of async.
+
+### How can I cancel or fork a large number of workflows in a batch?
+
+Write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md) or [Go](./golang/reference/client.md)) to list all the workflows that fit your criteria, then iteratively process them.
+
+### Why am I seeing errors that objects cannot be deserialized?
+
+DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, are **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
 DBOS serializes objects to JSON in TypeScript and with pickle in Python.
 See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled)) for information on what objects can and cannot be serialized.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
-Instead, either construct the object inside the workflow from parameters passed into the workflow or construct it globally and access it from the workflow or the appropriate steps.
+Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.
 
-### I'm seeing an error that function X was recorded when Y was expected?
+### Why am I seeing an error that function X was recorded when Y was expected?
 
 This error arises when DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead.
 Typically, this occurs because the workflow function is not **deterministic**.
@@ -55,7 +65,7 @@ However, the called step becomes part of the calling step's execution rather tha
 
 ### Can I start, monitor, or cancel DBOS workflows from a non-DBOS application?
 
-Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
+Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md), [Go docs](./golang/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
 
 ### What happens if you start two workflows with the same workflow ID?
 
@@ -63,16 +73,21 @@ In DBOS, workflow IDs are unique identifiers of workflow executions.
 If you enqueue a workflow with the ID of a workflow that already exists, it's a no-op and a handle to the existing workflow execution is returned.
 If you start a workflow with the ID of a workflow that has already completed, it will return the result of the previous execution.
 If you start a workflow with the ID of a workflow that is currently executing, it will attempt to recover that workflow's execution, continuing execution from the last completed step.
+
 If another process is concurrently executing the same workflow, both processes may execute the step.
-The first process to complete the step will checkpoint its outcome and continue executing the workflow; the other will see that a checkpoint has already been written and wait for the first process to complete the workflow.
+The first process to complete the step will checkpoint its outcome and continue executing the workflow. The second process will see that a checkpoint has already been written, wait for the first process to complete the workflow, retrieve the result from the database and return it.
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset)).
+You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
 
-### How can I cancel a large number of workflows in a batch?
+### How can I reduce the number of Postgres Connections DBOS uses?
 
-Write a script using the DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md)) to list all the workflows you need cancelled, then iteratively cancel them.
+You can use the app config to reduce the system database pool size. Do not use values less than 5 ([Python](./python/reference/configuration.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md)).
+
+### Can I use DBOS with an external Postgres Connection pooler?
+
+Yes, DBOS is often used with poolers such as PgBouncer, as long as the pooler is in "Session Mode."
 
 ### Why do I get insufficient privilege errors when starting DBOS?
 
