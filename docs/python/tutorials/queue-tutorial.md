@@ -231,7 +231,7 @@ with SetEnqueueOptions(priority=1):
 You can **partition** queues to distribute work across dynamically created queue partitions.
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
 Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
-Essentially, you can think of each partition as a "virtual queue" you dynamically create by enqueueing a workflow with a partition key.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
 You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
