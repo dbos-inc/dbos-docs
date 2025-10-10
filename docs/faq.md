@@ -5,15 +5,14 @@ title: Troubleshooting & FAQ
 ### Where do I find the DBOS tables?
 
 DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
-By default, the name of your system database is your application database name suffixed with `_dbos_sys`.
-For example, if your application database is `dbos_app_starter`, your system database is `dbos_app_starter_dbos_sys`.
+You connect to this database through the `system_database_url` parameter in DBOS configuration.
 You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
 Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
 All system database tables are documented [here](./explanations/system-tables.md).
 
 :::tip
-If you're using Supabase, the default application database name is `postgres`, so the default system database name is `postgres_dbos_sys`.
-You cannot connect to or view non-default databases from the Supabase web console, but you can still connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
+If you're using Supabase, only the `postgres` database is visible from the Supabase web console.
+You can use `postgres` as your system database, or you can use a different system database and connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
 :::
 
 ### Why is my queue stuck?
@@ -37,8 +36,8 @@ Write a script using the DBOS Client ([Python](./python/reference/client.md), [T
 
 DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, are **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript and with pickle in Python.
-See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled), or [Go](https://pkg.go.dev/encoding/gob)) for information on what objects can and cannot be serialized.
+DBOS serializes objects to JSON in TypeScript, with `pickle` in Python (this is customizable), and with `gob` in Go.
+See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled), [Go](https://pkg.go.dev/encoding/gob)) for information on what objects can and cannot be serialized.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.
@@ -94,5 +93,13 @@ Yes, DBOS is often used with poolers such as PgBouncer, as long as the pooler is
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
+In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
 Then, a DBOS application can run without privilege (requiring only access to the application and system databases).
+
+### How does DBOS scale?
+
+The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
+
+### Can I use DBOS with a connection pooler?
+
+You can connect a DBOS application to its system database through a connection pooler like [PgBouncer](https://www.pgbouncer.org/), but **only in session mode**, not in transaction mode. See [this page](https://www.pgbouncer.org/features.html) for more information on the difference between session and transaction mode.

@@ -55,6 +55,31 @@ def process_tasks(tasks):
   return [handle.get_result() for handle in task_handles]
 ```
 
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code enqueues the `data_pipeline` workflow on the `pipeline_queue` queue with `task` as an argument.
+
+```python
+from dbos import DBOSClient, EnqueueOptions
+
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+options: EnqueueOptions = {
+  "queue_name": "pipeline_queue",
+  "workflow_name": "data_pipeline",
+}
+handle = client.enqueue(options, task)
+result = handle.get_result()
+```
+
 ### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
@@ -198,25 +223,4 @@ with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
 
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
-```
-
-## Enqueueing with DBOS Client
-
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting to Postgres directly.
-
-Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
-
-Example: 
-
-```python
-from dbos import DBOSClient, EnqueueOptions
-
-client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
-
-options: EnqueueOptions = {
-  "queue_name": "process_task",
-  "workflow_name": "example_queue",
-}
-handle = client.enqueue(options, task)
-result = handle.get_result()
 ```

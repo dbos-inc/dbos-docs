@@ -98,7 +98,7 @@ DBOS.recv(
 ```
 
 Receive and return a message sent to this workflow.
-Can only be called from within a workflow.
+Can only be called from within a workflow or step.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
@@ -874,3 +874,43 @@ DBOSContextSetAuth(user: Optional[str], roles: Optional[List[str]])
 `with DBOSContextSetAuth` sets the current authorized user and roles for the code inside the `with` block.  Similar to `DBOSContextEnsure`, `DBOSContextSetAuth` also ensures that there is a DBOS context associated with the enclosed code prior to calling DBOS functions.
 
 `DBOSContextSetAuth` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.
+
+## Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
+By default, data is serialized with `pickle` then Base64-encoded, but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must match this interface:
+
+```python
+class Serializer(ABC):
+
+    @abstractmethod
+    def serialize(self, data: Any) -> str:
+        pass
+
+    @abstractmethod
+    def deserialize(cls, serialized_data: str) -> Any:
+        pass
+```
+
+For example, here is how to configure DBOS to use a JSON serializer:
+
+```python
+from dbos import DBOS, DBOSConfig, Serializer
+
+class JsonSerializer(Serializer):
+    def serialize(self, data: Any) -> str:
+        return json.dumps(data)
+
+    def deserialize(cls, serialized_data: str) -> Any:
+        return json.loads(serialized_data)
+
+serializer = JsonSerializer()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "serializer": serializer
+}
+DBOS(config=config)
+DBOS.launch()
+```
