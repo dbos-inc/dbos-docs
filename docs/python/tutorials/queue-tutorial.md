@@ -99,7 +99,6 @@ queue = Queue("example_queue", worker_concurrency=5)
 
 #### Global Concurrency
 
-
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
 For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
 
@@ -114,22 +113,7 @@ from dbos import Queue
 queue = Queue("example_queue", concurrency=10)
 ```
 
-
-
-
-### Rate Limiting
-
-You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
-Rate limits are global across all DBOS processes using this queue.
-For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
-
-```python
-queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
-```
-
-Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
-
-### In-Order Processing
+#### In-Order Processing
 
 You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
 Only a single event will be processed at a time.
@@ -153,6 +137,18 @@ def event_endpoint(event: str):
     queue.enqueue(process_event, event)
  ```
 
+### Rate Limiting
+
+You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
+Rate limits are global across all DBOS processes using this queue.
+For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
+
+```python
+queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
+```
+
+Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+
 
 ## Setting Timeouts
 
@@ -175,6 +171,35 @@ queue = Queue("example-queue")
 # If the workflow does not complete within 10 seconds after being dequeued, it times out and is cancelled
 with SetWorkflowTimeout(10):
     queue.enqueue(example_workflow)
+```
+
+## Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```python
+queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
+
+@DBOS.workflow()
+def process_task(task: Task):
+  ...
+
+
+def on_user_task_submission(user_id: str, task: Task):
+    # Partition the task queue by user ID. As the queue has a
+    # maximum concurrency of 1, this means that at most one
+    # task can run at once per user (but tasks from different
+    # users can run concurrently).
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        queue.enqueue(process_task, task)
 ```
 
 ## Deduplication
@@ -224,33 +249,4 @@ with SetEnqueueOptions(priority=10):
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
-```
-
-## Partitioning Queues
-
-You can **partition** queues to distribute work across dynamically created queue partitions.
-When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
-Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
-
-For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
-
-**Example Syntax**
-
-```python
-queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
-
-@DBOS.workflow()
-def process_task(task: Task):
-  ...
-
-
-def on_user_task_submission(user_id: str, task: Task):
-    # Partition the task queue by user ID. As the queue has a
-    # maximum concurrency of 1, this means that at most one
-    # task can run at once per user (but tasks from different
-    # users can run concurrently).
-    with SetEnqueueOptions(queue_partition_key=user_id):
-        queue.enqueue(process_task, task)
 ```

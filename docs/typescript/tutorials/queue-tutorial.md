@@ -126,6 +126,41 @@ import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 const queue = new WorkflowQueue("example_queue", { concurrency: 10 });
 ```
 
+#### In-Order Processing
+
+You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+Only a single event will be processed at a time.
+For example, this app processes events sequentially in the order of their arrival:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+const serialQueue = new WorkflowQueue("in_order_queue", { concurrency: 1 });
+const app = express();
+
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task){
+    // ... process task
+  }
+}
+
+app.get("/events/:event", async (req, res) => {
+  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
+  await res.send("Workflow Started!");
+});
+
+// Launch DBOS and start the server
+async function main() {
+  await DBOS.launch();
+  app.listen(3000, () => {});
+}
+
+main().catch(console.log);
+```
+
+
 ### Rate Limiting
 
 You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
@@ -161,6 +196,30 @@ async function main() {
   const task = ...
   const timeout = ... // Timeout in milliseconds
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+}
+```
+
+### Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```ts
+const queue = new WorkflowQueue("example_queue", { partitionQueue: true, concurrency: 1 });
+
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // Partition the task queue by user ID. As the queue has a
+    // maximum concurrency of 1, this means that at most one
+    // task can run at once per user (but tasks from different
+    // users can run concurrently).
+    await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {queuePartitionKey: userID}})(task);
 }
 ```
 
@@ -219,38 +278,3 @@ async function main() {
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
 }
 ```
-
-### In-Order Processing
-
-You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
-Only a single event will be processed at a time.
-For example, this app processes events sequentially in the order of their arrival:
-
-```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-import express from "express";
-
-const serialQueue = new WorkflowQueue("in_order_queue", { concurrency: 1 });
-const app = express();
-
-class Tasks {
-  @DBOS.workflow()
-  static async processTask(task){
-    // ... process task
-  }
-}
-
-app.get("/events/:event", async (req, res) => {
-  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
-  await res.send("Workflow Started!");
-});
-
-// Launch DBOS and start the server
-async function main() {
-  await DBOS.launch();
-  app.listen(3000, () => {});
-}
-
-main().catch(console.log);
-```
-
