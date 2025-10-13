@@ -119,7 +119,11 @@ Create workflow options with all fields set to their defaults.
 
   Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout. You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
 
-- **`withQueue(Queue queue)`** / **`withQueue(Queue queue, String deduplicationId)`** / **`withQueue(Queue queue, int priority)`** / **`withQueue(Queue queue, String deduplicationId, int priority)`** - TODO: Document these once they're broken up appropriately.
+- **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
+
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueueing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+
+- **`withPriority(int priority)`** - May only be used when enqueueing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 
 ### runStep
 
