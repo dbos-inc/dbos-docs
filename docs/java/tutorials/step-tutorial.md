@@ -14,19 +14,13 @@ Here's a simple example:
 ```java
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
     private int generateRandomNumber(int n) {
         return new Random().nextInt(n);
     }
 
     @Workflow(name = "workflowFunction")
     public int workflowFunction(int n) {
-        int randomNumber = dbos.runStep(
+        int randomNumber = DBOS.runStep(
             () -> generateRandomNumber(n),
             new StepOptions("generateRandomNumber")
         );
@@ -65,13 +59,7 @@ For example, let's configure this step to retry failures (such as if the site to
 ```java
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
-    private String fetchStep(String url) throws IOException {
+    private String fetchStep(String url) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
@@ -86,8 +74,8 @@ class ExampleImpl implements Example {
     }
 
     @Workflow(name = "fetchWorkflow")
-    public String fetchWorkflow(String inputURL) throws IOException {
-        return dbos.runStep(
+    public String fetchWorkflow(String inputURL) throws Exception {
+        return DBOS.runStep(
             () -> fetchStep(inputURL),
             new StepOptions("fetchFunction")
                 .withRetriesAllowed(true)
