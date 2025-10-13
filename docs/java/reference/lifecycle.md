@@ -13,7 +13,7 @@ Here, we document configuration and lifecycle methods.
 static synchronized Instance configure(DBOSConfig config)
 ```
 
-Initialize the DBOS singleton from configuration.
+Configure the DBOS singleton.
 
 **Options:**
 

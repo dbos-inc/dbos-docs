@@ -41,7 +41,7 @@ class ExampleImpl implements Example {
 
 public class App {
     public static void main(String[] args) throws Exception {
-        // Initialize DBOS
+        // Configure DBOS
         DBOSConfig config = ...
         DBOS.configure(config);
 
