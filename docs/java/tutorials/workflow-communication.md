@@ -19,7 +19,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```java
-void send(String destinationId, Object message, String topic)
+static void send(String destinationId, Object message, String topic)
 ```
 
 You can call `dbos.send()` to send a message to a workflow.
@@ -30,7 +30,7 @@ You can also call [`send`](../reference/client.md#send) from outside of your DBO
 #### Recv
 
 ```java
-Object recv(String topic, float timeoutSeconds)
+static Object recv(String topic, float timeoutSeconds)
 ```
 
 Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
@@ -51,16 +51,12 @@ interface Checkout {
 
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_STATUS = "payment_status";
-    private final DBOS dbos;
-
-    public CheckoutImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
 
     @Workflow(name = "checkout-workflow")
     public void checkoutWorkflow() {
-        // Validate the order, then redirect customers to a payments service.
-        String paymentStatus = (String) dbos.recv(PAYMENT_STATUS, 60);
+        // Validate the order, redirect the customer to a payments page,
+        // then wait for a notification.
+        String paymentStatus = (String) DBOS.recv(PAYMENT_STATUS, 60);
         if (paymentStatus != null && paymentStatus.equals("paid")) {
             // Handle a successful payment.
         } else {
@@ -78,7 +74,7 @@ app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
     String workflowId = ctx.pathParam("workflow_id");
     String paymentStatus = ctx.pathParam("payment_status");
     // Send the payment status to the checkout workflow.
-    dbos.send(workflowId, paymentStatus, PAYMENT_STATUS);
+    DBOS.send(workflowId, paymentStatus, PAYMENT_STATUS);
     ctx.result("Payment status sent");
 });
 ```
@@ -99,7 +95,7 @@ They are useful for publishing information about the status of a workflow or to 
 #### setEvent
 
 ```java
-void setEvent(String key, Object value)
+static void setEvent(String key, Object value)
 ```
 
 Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
@@ -107,7 +103,7 @@ Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to pub
 #### getEvent
 
 ```java
-Object getEvent(String workflowId, String key, float timeoutSeconds)
+static Object getEvent(String workflowId, String key, float timeoutSeconds)
 ```
 
 You can call [`dbos.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
@@ -130,17 +126,12 @@ interface Checkout {
 
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_ID = "payment_id";
-    private final DBOS dbos;
-
-    public CheckoutImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
 
     @Workflow(name = "checkout-workflow")
     public void checkoutWorkflow() {
         // ... validation logic
         String paymentId = generatePaymentId();
-        dbos.setEvent(PAYMENT_ID, paymentId);
+        DBOS.setEvent(PAYMENT_ID, paymentId);
         // ... continue processing
     }
 }
@@ -154,13 +145,13 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     String idempotencyKey = ctx.pathParam("idempotency_key");
 
     // Idempotently start the checkout workflow in the background.
-    WorkflowHandle<Void, RuntimeException> handle = dbos.startWorkflow(
+    WorkflowHandle<Void, RuntimeException> handle = DBOS.startWorkflow(
         () -> checkoutProxy.checkoutWorkflow(),
         new StartWorkflowOptions().withWorkflowId(idempotencyKey)
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = (String) dbos.getEvent(handle.getWorkflowId(), PAYMENT_ID, 60);
+    String paymentId = (String) DBOS.getEvent(handle.getWorkflowId(), PAYMENT_ID, 60);
     if (paymentId == null) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
