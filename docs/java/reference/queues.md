@@ -38,7 +38,7 @@ You can enqueue a workflow using the `withQueue` parameter of [`startWorkflow`](
 **Example Syntax:**
 
 ```java
-Queue queue = dbos.Queue("example-queue")
+Queue queue = DBOS.Queue("example-queue")
   .workerConcurrency(1)
   .build();
 ```
