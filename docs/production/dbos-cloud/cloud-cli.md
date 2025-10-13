@@ -184,12 +184,13 @@ It executes the migration commands declared in `dbos-config.yaml`, deploys the a
 ### `dbos-cloud app update`
 
 **Description:**
-Update an application metadata in DBOS Cloud.
+Update an application metadata in DBOS Cloud. Increasing RAM or adjusting autoscaling configuration requires a DBOS Pro subsciption.
 
 **Arguments:**
 - `[application-name]`: The name of the application to update.
-- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. This feature requires a DBOS Pro subscription. Additional RAM is [billed](https://www.dbos.dev/dbos-pricing).
-- `--min-executors <number>`: The minimum number of microVMs to be allocated to this application. Acts as a floor for autoscaling. This feature requires a DBOS Pro subscrption.
+- `--executors-memory-mib`: The amount of RAM, in MiB, to allocate to the application's executors. This value must be between 512 and 5120. Additional RAM is [billed](https://www.dbos.dev/dbos-pricing).
+- `--min-executors <number>`: The minimum number of microVMs to be allocated to this application. Acts as a floor for autoscaling.
+- `--max-executors <number>`: The maximum number of microVMs to be allocated to this application. The app won't auto-scale to a larger number.
 
 :::info
 This command does not trigger a redeployment of the application. To apply changes affecting the application's executors, you must redeploy the application with [`dbos-cloud app deploy`](#dbos-cloud-app-deploy).
@@ -282,6 +283,16 @@ Retrieve an application's logs.
 **Arguments:**
 - `[application-name]`: The name of the application.
 - `-l, --last <integer>`: How far back to query, in seconds from current time. Default is 3600 (one hour).
+---
+
+### `dbos-cloud app cmd`
+
+**Description:**
+A debugging utility that lets you run a shell command on one of your app's executors. Prints the `stderr` and `stdout` output by the command. The command must finish in 10 seconds. Every command is also recorded, without its output, in the app logs at `WARN` level. Note that stopping the running `dbos` process destroys the executor and causes it to be replaced by a new one.
+
+**Arguments:**
+- `-e, --executor-id <string>`: The ID of the executor to use (see app logs).
+- `-c, --command <string>`: The shell command to run.
 ---
 
 ### `dbos-cloud app resource-usage`
