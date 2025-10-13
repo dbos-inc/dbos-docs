@@ -32,20 +32,20 @@ class ExampleImpl implements Example {
         // Process the task...
         return "Processed: " + task;
     }
+}
 
-    public String example(Example proxy) throws Exception {
-        // Enqueue a workflow
-        String task = "example_task";
-        WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
-            () -> proxy.processTask(task),
-            new StartWorkflowOptions().withQueue(queue)
-        );
+public String example(Example proxy) throws Exception {
+    // Enqueue a workflow
+    String task = "example_task";
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+        () -> proxy.processTask(task),
+        new StartWorkflowOptions().withQueue(queue)
+    );
 
-        // Get the result
-        String result = handle.getResult();
-        System.out.println("Task result: " + result);
-        return result;
-    }
+    // Get the result
+    String result = handle.getResult();
+    System.out.println("Task result: " + result);
+    return result;
 }
 ```
 
