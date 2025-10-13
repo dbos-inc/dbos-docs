@@ -9,7 +9,7 @@ toc_max_heading_level: 3
 ### getEvent
 
 ```java
-Object getEvent(String workflowId, String key, float timeOut)
+static Object getEvent(String workflowId, String key, float timeOut)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflowId` to the key `key`.
@@ -23,7 +23,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 ### setEvent
 
 ```java
-void setEvent(String key, Object value)
+static void setEvent(String key, Object value)
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -36,7 +36,7 @@ Can only be called from within a workflow.
 ### send
 
 ```java
-void send(String destinationId, Object message, String topic)
+static void send(String destinationId, Object message, String topic)
 ```
 
 Send a message to the workflow identified by `destinationID`.
@@ -50,7 +50,7 @@ Messages can optionally be associated with a topic.
 ### recv
 
 ```java
-Object recv(String topic, float timeoutSeconds)
+static Object recv(String topic, float timeoutSeconds)
 ```
 
 Receive and return a message sent to this workflow.
@@ -65,7 +65,7 @@ Calls to `recv` wait for the next message in the queue, returning an error if th
 ### sleep
 
 ```java
-void sleep(float seconds)
+static void sleep(float seconds)
 ```
 
 Sleep for the given duration.
@@ -78,7 +78,7 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 ### retrieveWorkflow
 
 ```go
-WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
+static WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
 ```
 
 Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
@@ -91,7 +91,7 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 ### listWorkflows
 
 ```java
-List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+static List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 ```
 
 Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
@@ -203,7 +203,7 @@ Controls whether to load workflow output data (default: true).
 ### listWorkflowSteps
 
 ```java
-List<StepInfo> listWorkflowSteps(String workflowId)
+static List<StepInfo> listWorkflowSteps(String workflowId)
 ```
 
 Retrieve the execution steps of a workflow.
@@ -227,7 +227,7 @@ StepInfo(
 ### cancelWorkflow
 
 ```java
-cancelWorkflow(String workflowId)
+static cancelWorkflow(String workflowId)
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
@@ -235,7 +235,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### resumeWorkflow
 
 ```java
-<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+static <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -243,7 +243,7 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 ### forkWorkflow
 
 ```java
-<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
+static <T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
       String workflowId, 
       int startStep, 
       ForkOptions options
