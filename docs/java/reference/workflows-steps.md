@@ -24,37 +24,13 @@ An annotation that can be applied to a class method to mark it as a durable work
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
 
-### @Scheduled
-
-```java
-public @interface Scheduled {
-  String cron();
-}
-```
-
-An annotation that can be applied to a workflow method to register it to run periodically on a cron schedule.
-The schedule string follows standard cron format with second precision.
-Scheduled workflows automatically receive two `Instant` parameters: one for the scheduled time at which the workflow should start, one for the time at which it actually started.
-
-**Example Syntax:**
-
-```java
-public class ExampleImpl implements Example {
-    @Workflow(name = "runEveryMinute")
-    @Scheduled(cron = "0 * * * * ?")
-    public void runEveryMinute(Instant schedule, Instant actual) {
-        System.out.println("This workflow runs every minute.");
-    }
-}
-```
-
 ## Methods
 
 ### registerWorkflows
 
 ```java
-<T> T registerWorkflows(Class<T> interfaceClass, T implementation)
-<T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
+static <T> T registerWorkflows(Class<T> interfaceClass, T implementation)
+static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
 Proxy a class whose methods contain `@Workflow` annotations.
@@ -75,7 +51,7 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl());
+Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
 proxy.workflow();
 ```
 
@@ -88,7 +64,7 @@ proxy.workflow();
 ### startWorkflow
 
 ```java
-<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(
+static <T, E extends Exception> WorkflowHandle<T, E> startWorkflow(
     ThrowingSupplier<T, E> workflow, 
     StartWorkflowOptions options
 )
@@ -112,8 +88,8 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl());
-dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
+Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+DBOS.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
 **Options:**
@@ -148,7 +124,7 @@ Create workflow options with all fields set to their defaults.
 ### runStep
 
 ```java
-public <T, E extends Exception> T runStep(
+static <T, E extends Exception> T runStep(
     ThrowingSupplier<T, E> stepfunc, 
     StepOptions opts
 ) throws E
@@ -163,12 +139,6 @@ Returns the output of the step.
 ```java
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
     private void stepOne() {
         System.out.println("Step one completed!");
     }
@@ -179,8 +149,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
-        this.dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        this.dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
 ```
