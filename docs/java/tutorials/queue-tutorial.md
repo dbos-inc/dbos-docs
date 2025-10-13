@@ -49,7 +49,7 @@ Here's an example of a workflow using a queue to process tasks concurrently:
 interface Example {
     public void setProxy(Example proxy);
     public String taskWorkflow(String task);
-    public List<String> queueWorkflow() throws Exception;
+    public List<String> queueWorkflow(String[] tasks) throws Exception;
 }
 
 class ExampleImpl implements Example {
@@ -72,10 +72,8 @@ class ExampleImpl implements Example {
     }
 
     @Workflow(name = "queueWorkflow")
-    public List<String> queueWorkflow() throws Exception {
+    public List<String> queueWorkflow(String[] tasks) throws Exception {
         // Enqueue each task so all tasks are processed concurrently
-        String[] tasks = {"task1", "task2", "task3", "task4", "task5"};
-
         List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
         for (String task : tasks) {
             WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
@@ -109,7 +107,8 @@ public class App {
         DBOS.launch();
 
         // Run the queue workflow
-        List<String> results = proxy.queueWorkflow();
+        String[] tasks = {"task1", "task2", "task3", "task4", "task5"};
+        List<String> results = proxy.queueWorkflow(tasks);
         for (String result : results) {
             System.out.println(result);
         }
