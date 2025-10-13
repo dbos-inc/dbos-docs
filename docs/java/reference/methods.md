@@ -181,11 +181,35 @@ Builder sortDesc(Boolean sortDesc)
 ```
 Sort the results in descending (true) or ascending (false) order by workflow start time.
 
+##### executorId
+```java
+Builder executorId(String executorId)
+```
+Retrieve workflows that ran on this executor process.
+
+##### queueName
+```java
+Builder queueName(String queueName)
+```
+Retrieve workflows that were enqueued on this queue.
+
 ##### workflowIdPrefix
 ```java
 Builder workflowIdPrefix(String workflowIdPrefix)
 ```
 Filter workflows whose IDs start with the specified prefix.
+
+##### workflowIdPrefix
+```java
+Builder workflowIdPrefix(String workflowIdPrefix)
+```
+Filter workflows whose IDs start with the specified prefix.
+
+##### queuedOnly
+```java
+Builder queuedOnly(Boolean queuedOnly)
+```
+Select only workflows that are currently enqueued (status `PENDING` or `ENQUEUED` and on a queue).
 
 ##### loadInput
 ```java
