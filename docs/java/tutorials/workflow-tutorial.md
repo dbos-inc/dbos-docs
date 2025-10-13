@@ -90,7 +90,7 @@ public void runWorkflowExample(Example proxy) throws Exception {
 After starting a workflow in the background, you can use [`retrieveWorkflow`](../reference/methods.md#retrieveworkflow) to retrieve a workflow's handle from its ID.
 You can also retrieve a workflow's handle from outside of your DBOS application with [`DBOSClient.retrieveWorkflow`](../reference/client.md#retrieveworkflow).
 
-If you need to run many workflows in the background and manage their concurrency or flow control, you can also use [DBOS queues](./queue-tutorial.md).
+If you need to run many workflows in the background and manage their concurrency or flow control, use [queues](./queue-tutorial.md).
 
 ## Workflow IDs and Idempotency
 
