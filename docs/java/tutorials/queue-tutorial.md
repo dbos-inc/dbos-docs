@@ -27,9 +27,8 @@ class ExampleImpl implements Example {
     }
 }
 
-public String example(Queue queue, Example proxy) throws Exception {
+public String example(Queue queue, Example proxy, String task) throws Exception {
     // Enqueue a workflow
-    String task = "example_task";
     WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
         () -> proxy.processTask(task),
         new StartWorkflowOptions().withQueue(queue)
