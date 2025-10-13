@@ -205,7 +205,7 @@ Step two completed!
 ```
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step two without re-executing step one.
-Learn more about workflows, steps, and their guarantees here.
+Learn more about workflows, steps, and their guarantees [here](./tutorials/workflow-tutorial.md).
 
 ## 3. Queues and Parallelism
 
@@ -327,7 +327,7 @@ Successfully completed 10 workflows!
 ```
 
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
-Learn more about DBOS queues here.
+Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
 Congratulations! You've finished the DBOS Java guide.
 You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/java/dbos-toolbox) template app.
