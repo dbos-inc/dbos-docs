@@ -263,7 +263,8 @@ class ExampleImpl implements Example {
         for (int i = 0; i < 10; i++) {
             final int index = i;
             WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
-                    () -> this.proxy.taskWorkflow(index), new StartWorkflowOptions().withQueue(this.queue));
+                    () -> this.proxy.taskWorkflow(index),
+                    new StartWorkflowOptions().withQueue(this.queue));
             handles.add(handle);
         }
         for (WorkflowHandle<Void, InterruptedException> handle : handles) {
