@@ -298,8 +298,8 @@ public class App {
 }
 ```
 
-When you enqueue a function by passing `new StartWorkflowOptions().withQueue(this.queue)` into `dbos.startWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
-`dbos.startWorkflow` returns a handle representing the state of the enqueued function.
+When you enqueue a function by passing `new StartWorkflowOptions().withQueue(this.queue)` into `DBOS.startWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`DBOS.startWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.getResult()` to wait for each of their handles.
 
 Now, restart your app with:
