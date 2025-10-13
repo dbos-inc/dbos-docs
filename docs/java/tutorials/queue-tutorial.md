@@ -11,7 +11,7 @@ To create a queue, use [`Queue`](../reference/queues.md#queue).
 All queues should be created before DBOS is launched.
 
 ```java
-Queue queue = dbos.Queue("example-queue").build();
+Queue queue = DBOS.Queue("example-queue").build();
 ```
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
@@ -21,11 +21,9 @@ Queued tasks are started in first-in, first-out (FIFO) order.
 ```java
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
     private final Queue queue;
 
-    public ExampleImpl(DBOS dbos, Queue queue) {
-        this.dbos = dbos;
+    public ExampleImpl(Queue queue) {
         this.queue = queue;
     }
 
@@ -38,7 +36,7 @@ class ExampleImpl implements Example {
     public String example(Example proxy) throws Exception {
         // Enqueue a workflow
         String task = "example_task";
-        WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+        WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
             () -> proxy.processTask(task),
             new StartWorkflowOptions().withQueue(queue)
         );
@@ -64,12 +62,10 @@ interface Example {
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
     private final Queue queue;
     private Example proxy;
 
-    public ExampleImpl(DBOS dbos, Queue queue) {
-        this.dbos = dbos;
+    public ExampleImpl(Queue queue) {
         this.queue = queue;
     }
 
@@ -90,7 +86,7 @@ class ExampleImpl implements Example {
 
         List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
         for (String task : tasks) {
-            WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+            WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
                 () -> proxy.taskWorkflow(task),
                 new StartWorkflowOptions().withQueue(queue)
             );
@@ -111,14 +107,14 @@ class ExampleImpl implements Example {
 public class App {
     public static void main(String[] args) throws Exception {
         DBOSConfig config = ...
-        DBOS dbos = DBOS.initialize(config);
+        DBOS.configure(config);
 
-        Queue queue = dbos.Queue("example-queue").build();
-        ExampleImpl impl = new ExampleImpl(dbos, queue);
+        Queue queue = DBOS.Queue("example-queue").build();
+        ExampleImpl impl = new ExampleImpl(queue);
         Example proxy = dbos.<Example>registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
 
-        dbos.launch();
+        DBOS.launch();
 
         // Run the queue workflow
         List<String> results = proxy.queueWorkflow();
@@ -171,7 +167,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-Queue queue = dbos.Queue("example-queue")
+Queue queue = DBOS.Queue("example-queue")
     .workerConcurrency(5)
     .build();
 ```
@@ -187,7 +183,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-Queue queue = dbos.Queue("example-queue")
+Queue queue = DBOS.Queue("example-queue")
     .concurrency(10)
     .build();
 ```
@@ -199,7 +195,7 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```java
-Queue queue = dbos.Queue("example-queue")
+Queue queue = DBOS.Queue("example-queue")
     .limit(100, 60.0)  // 100 workflows per 60 seconds
     .build();
 ```
@@ -223,13 +219,11 @@ public String taskWorkflow(String task) {
     return "completed";
 }
 
-public void example(Example proxy) throws Exception {
-    String task = "example_task";
-    String deduplicationID = "user_12345"; // Use user ID for deduplication
-
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+public void example(Example proxy, String task, String userID) throws Exception {
+    // Use user ID for deduplication
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
         () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue, deduplicationID)
+        new StartWorkflowOptions().withQueue(queue).withDeduplicationId(userID)
     );
 
     String result = handle.getResult();
@@ -250,7 +244,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 To use priorities in a queue, you must enable it when creating the queue:
 
 ```java
-Queue queue = dbos.Queue("example-queue")
+Queue queue = DBOS.Queue("example-queue")
     .priorityEnabled(true)
     .build();
 ```
@@ -264,13 +258,10 @@ public String taskWorkflow(String task) {
     return "completed";
 }
 
-public void example(Example proxy) throws Exception {
-    String task = "example_task";
-    int priority = 10; // Lower number = higher priority
-
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+public void example(Example proxy, String task, int priority) throws Exception {
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
         () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue, priority)
+        new StartWorkflowOptions().withQueue(queue).withPriority(priority)
     );
 
     String result = handle.getResult();
