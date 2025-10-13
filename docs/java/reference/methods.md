@@ -309,3 +309,21 @@ public record WorkflowStatus(
     Integer recoveryAttempts
 )
 ```
+
+## DBOS Variables
+
+### workflowId
+
+```java
+static String workflowId()
+```
+
+Retrieve the ID of the current workflow. Returns `null` if not called from a workflow or step.
+
+### stepId
+
+```java
+static Integer stepId()
+```
+
+Returns the unique ID of the current step within its workflow. Returns `null` if not called from a step.
