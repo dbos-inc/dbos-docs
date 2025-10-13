@@ -21,12 +21,6 @@ interface Example {
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
     private String stepOne() {
         System.out.println("Step one completed");
         return "success";
@@ -39,8 +33,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflow")
     public String workflow() {
-        dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
         return "success";
     }
 }
@@ -49,13 +43,13 @@ public class App {
     public static void main(String[] args) throws Exception {
         // Initialize DBOS
         DBOSConfig config = ...
-        DBOS dbos = DBOS.initialize(config);
+        DBOS.configure(config);
 
         // Create the workflow proxy
-        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
+        Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
 
         // Launch DBOS after registering all workflows
-        dbos.launch();
+        DBOS.launch();
 
         // Call the workflow
         String result = proxy.workflow();
@@ -83,7 +77,7 @@ class ExampleImpl implements Example {
 
 public void runWorkflowExample(Example proxy) throws Exception {
     // Start the background task
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
         () -> proxy.backgroundTask("input"),
         new StartWorkflowOptions()
     );
@@ -101,10 +95,10 @@ If you need to run many workflows in the background and manage their concurrency
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID from the handle's [`getWorkflowId`](../reference/workflows-steps.md#workflowhandlegetworkflowid) method.
+You can access this ID from the [`DBOS.workflowId`](../reference/methods.md#workflowid-1) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow using [`withWorkflowId`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
+You can set the workflow ID of a workflow using `withWorkflowId` when calling `startWorkflow`.
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
@@ -114,7 +108,7 @@ For example:
 class ExampleImpl implements Example {
     @Workflow(name = "exampleWorkflow")
     public String exampleWorkflow() {
-        System.out.println("Running workflow");
+        System.out.println("Running workflow with ID: " + DBOS.workflowId());
         // ...
         return "success";
     }
@@ -122,7 +116,7 @@ class ExampleImpl implements Example {
 
 public void example(Example proxy) throws Exception {
     String myID = "unique-workflow-id-123";
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
         () -> proxy.exampleWorkflow(),
         new StartWorkflowOptions().withWorkflowId(myID)
     );
@@ -150,9 +144,9 @@ For example, **don't do this**:
 public String exampleWorkflow() {
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        return DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
     } else {
-        return dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        return DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
 ```
@@ -166,11 +160,11 @@ private int generateChoice() {
 
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow() {
-    int randomChoice = dbos.runStep(() -> generateChoice(), new StepOptions("generateChoice"));
+    int randomChoice = DBOS.runStep(() -> generateChoice(), new StepOptions("generateChoice"));
     if (randomChoice == 0) {
-        return dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        return DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
     } else {
-        return dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        return DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
 ```
@@ -189,7 +183,7 @@ public void exampleWorkflow() throws InterruptedException {
     // Workflow implementation
 }
 
-WorkflowHandle<Void, InterruptedException> handle = dbos.startWorkflow(
+WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
     () -> proxy.exampleWorkflow(),
     new StartWorkflowOptions().withTimeout(Duration.ofHours(12))
 );
@@ -215,10 +209,10 @@ public String runTask(String task) {
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
     // Sleep for the specified duration
-    dbos.sleep(timeToSleepSeconds);
+    DBOS.sleep(timeToSleepSeconds);
 
     // Execute the task after sleeping
-    String result = dbos.runStep(
+    String result = DBOS.runStep(
         () -> runTask(task),
         new StepOptions("runTask")
     );
