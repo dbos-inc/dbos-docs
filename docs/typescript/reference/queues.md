@@ -20,6 +20,7 @@ interface QueueParameters {
   concurrency?: number;
   rateLimit?: QueueRateLimit;
   priorityEnabled?: boolean;
+  partitionQueue?: boolean;
 }
 
 interface QueueRateLimit {
@@ -37,6 +38,8 @@ This concurrency limit is global across all DBOS processes using this queue.
   - **rateLimit.limitPerPeriod**: The number of workflows that may be started within the specified time period.
   - **rateLimit.periodSec**: The time period across which `limitPerPeriod` applies.
 - **priorityEnabled**: Enable setting priority for workflows on this queue.
+- **partitionQueue**: Enable partitioning for this queue.
+
 
 **Example syntax:**
 
