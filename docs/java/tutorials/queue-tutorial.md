@@ -20,13 +20,6 @@ Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```java
 class ExampleImpl implements Example {
-
-    private final Queue queue;
-
-    public ExampleImpl(Queue queue) {
-        this.queue = queue;
-    }
-
     @Workflow(name = "processTask")
     public String processTask(String task) {
         // Process the task...
