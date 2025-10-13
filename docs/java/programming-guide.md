@@ -55,12 +55,6 @@ interface Example {
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
     private void stepOne() {
         System.out.println("Step one completed!");
     }
@@ -71,8 +65,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflow")
     public void workflow() {
-        this.dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        this.dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
 
@@ -86,11 +80,11 @@ public class App {
             .dbUser(System.getenv("PGUSER"))
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
-        DBOS dbos = DBOS.initialize(config);
-        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
-        dbos.launch();
+        DBOS.configure(config);
+        Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+        DBOS.launch();
         proxy.workflow();
-        dbos.shutdown();
+        DBOS.shutdown();
     }
 }
 ```
@@ -115,6 +109,8 @@ Replace the contents of `App.java` with:
 ```java showLineNumbers title="App.java"
 package com.example;
 
+import java.time.Duration;
+
 import org.slf4j.LoggerFactory;
 
 import dev.dbos.transact.DBOS;
@@ -131,12 +127,6 @@ interface Example {
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
     private void stepOne() {
         System.out.println("Step one completed!");
     }
@@ -147,12 +137,12 @@ class ExampleImpl implements Example {
 
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
-        this.dbos.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
         for (int i = 0; i < 5; i++) {
             System.out.println("Press Control + C to stop the app...");
-            Thread.sleep(1000);
+            DBOS.sleep(Duration.ofSeconds(1));
         }
-        this.dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
     }
 }
 
@@ -167,9 +157,9 @@ public class App {
             .dbUser(System.getenv("PGUSER"))
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
-        DBOS dbos = DBOS.initialize(config);
-        Example proxy = dbos.<Example>registerWorkflows(Example.class, new ExampleImpl(dbos));
-        dbos.launch();
+        DBOS.configure(config);
+        Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+        DBOS.launch();
         Javalin.create().get("/", ctx -> {
             proxy.workflow();
             ctx.result("Workflow executed!");
@@ -250,12 +240,10 @@ interface Example {
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
     private final Queue queue;
     private Example proxy;
 
-    public ExampleImpl(DBOS dbos, Queue queue) {
-        this.dbos = dbos;
+    public ExampleImpl(Queue queue) {
         this.queue = queue;
     }
 
@@ -274,7 +262,7 @@ class ExampleImpl implements Example {
         List<WorkflowHandle<Void, InterruptedException>> handles = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             final int index = i;
-            WorkflowHandle<Void, InterruptedException> handle = this.dbos.startWorkflow(
+            WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
                     () -> this.proxy.taskWorkflow(index), new StartWorkflowOptions().withQueue(this.queue));
             handles.add(handle);
         }
@@ -295,12 +283,12 @@ public class App {
                 .dbUser(System.getenv("PGUSER"))
                 .dbPassword(System.getenv("PGPASSWORD"))
                 .build();
-        DBOS dbos = DBOS.initialize(config);
-        Queue queue = dbos.Queue("example-queue").build();
-        ExampleImpl impl = new ExampleImpl(dbos, queue);
-        Example proxy = dbos.<Example>registerWorkflows(Example.class, impl);
+        DBOS.configure(config);
+        Queue queue = DBOS.Queue("example-queue").build();
+        ExampleImpl impl = new ExampleImpl(queue);
+        Example proxy = DBOS.<Example>registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
-        dbos.launch();
+        DBOS.launch();
         Javalin.create().get("/", ctx -> {
             proxy.queueWorkflow();
             ctx.result("Workflow executed!");
