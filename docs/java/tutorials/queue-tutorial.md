@@ -133,8 +133,8 @@ var client = new DBOSClient(dbUrl, dbUser, dbPassword);
 
 var options = new DBOSClient.EnqueueOptions(
     "com.example.DataPipelineImpl",  // Class name
-    "dataPipeline",                   // Workflow name
-    "pipelineQueue"                   // Queue name
+    "dataPipeline",                  // Workflow name
+    "pipelineQueue"                  // Queue name
 );
 
 var handle = client.enqueueWorkflow(
