@@ -69,8 +69,8 @@ static void sleep(Duration sleepduration)
 ```
 
 Sleep for the given duration.
-May only be called from within a workflow.
-This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+If called from within a workflow, this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+If called from outside a workflow, or from within a step, it behaves like a regular sleep.
 
 **Parameters:**
 - **sleepduration**: The duration to sleep.
@@ -102,15 +102,15 @@ Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching
 
 **Builder Methods:**
 
-##### workflowID
+##### workflowId
 ```java
-Builder workflowID(String workflowID)
+Builder workflowId(String workflowId)
 ```
 Add a workflow ID to filter by.
 
-##### workflowIDs
+##### workflowIds
 ```java
-Builder workflowIDs(List<String> workflowIDs)
+Builder workflowIds(List<String> workflowIDs)
 ```
 Add multiple workflow IDs to filter by.
 

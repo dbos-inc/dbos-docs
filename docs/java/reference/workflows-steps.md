@@ -132,10 +132,14 @@ static <T, E extends Exception> T runStep(
     ThrowingSupplier<T, E> stepfunc, 
     StepOptions opts
 ) throws E
+
+static <T, E extends Exception> T runStep(
+    ThrowingSupplier<T, E> stepfunc, 
+    String stepName
+) throws E
 ```
 
-Run a function as a step in a workflow.
-Can only be called from a durable workflow.
+Run a function as a step.  If called from within a workflow, the result is durably stored.
 Returns the output of the step.
 
 **Example Syntax:**
@@ -153,8 +157,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
-        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), "stepOne");
+        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo").withRetriesAllowed(false));
     }
 }
 ```
