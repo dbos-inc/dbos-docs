@@ -58,7 +58,7 @@ public class MyApp {
 :::info
 DBOS uses a Postgres database to durably store workflow and step state.
 You can connect to your database by setting these environment variables:
-- `DBOS_JDBC_URL`: The JDBC URL for your Postgres database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
+- `DBOS_SYSTEM_JDBC_URL`: The JDBC URL for your Postgres database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
 - `PGUSER`: Your Postgres username
 - `PGPASSWORD`: Your Postgres password
 
@@ -109,7 +109,7 @@ To use your workflows, create a proxy before launching DBOS:
 
 ```java
 // Create a workflow proxy (before launching DBOS)
-MyWorkflows workflows = DBOS.<MyWorkflows>registerWorkflows(MyWorkflows.class, new MyWorkflowsImpl());
+MyWorkflows workflows = DBOS.registerWorkflows(MyWorkflows.class, new MyWorkflowsImpl());
 
 // Launch DBOS
 DBOS.launch();

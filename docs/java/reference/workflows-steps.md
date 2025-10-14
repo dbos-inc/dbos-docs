@@ -51,7 +51,7 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
 proxy.workflow();
 ```
 
@@ -88,7 +88,7 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
 DBOS.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 

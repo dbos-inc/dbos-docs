@@ -81,7 +81,7 @@ public class App {
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS.configure(config);
-        Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+        Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
         DBOS.launch();
         proxy.workflow();
         DBOS.shutdown();
@@ -158,7 +158,7 @@ public class App {
             .dbPassword(System.getenv("PGPASSWORD"))
             .build();
         DBOS.configure(config);
-        Example proxy = DBOS.<Example>registerWorkflows(Example.class, new ExampleImpl());
+        Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
         DBOS.launch();
         Javalin.create().get("/", ctx -> {
             proxy.workflow();
@@ -287,7 +287,7 @@ public class App {
         DBOS.configure(config);
         Queue queue = DBOS.Queue("example-queue").build();
         ExampleImpl impl = new ExampleImpl(queue);
-        Example proxy = DBOS.<Example>registerWorkflows(Example.class, impl);
+        Example proxy = DBOS.registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
         DBOS.launch();
         Javalin.create().get("/", ctx -> {

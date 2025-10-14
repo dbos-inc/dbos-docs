@@ -101,7 +101,7 @@ public class App {
 
         Queue queue = DBOS.Queue("example-queue").build();
         ExampleImpl impl = new ExampleImpl(queue);
-        Example proxy = dbos.<Example>registerWorkflows(Example.class, impl);
+        Example proxy = dbos.registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
 
         DBOS.launch();
