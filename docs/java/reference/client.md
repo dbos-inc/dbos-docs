@@ -137,7 +137,7 @@ Similar to [`DBOS.listWorkflowSteps`](./methods.md#listworkflowsteps).
 void cancelWorkflow(String workflowId)
 ```
 
-Similar to [`DBOS.cancelWorkflow`](./methods.md#cancelWorkflow).
+Similar to [`DBOS.cancelWorkflow`](./methods.md#cancelworkflow).
 
 ### resumeWorkflow
 
@@ -145,7 +145,7 @@ Similar to [`DBOS.cancelWorkflow`](./methods.md#cancelWorkflow).
 <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
 ```
 
-Similar to [`DBOS.resumeWorkflow`](./methods.md#resumeWorkflow).
+Similar to [`DBOS.resumeWorkflow`](./methods.md#resumeworkflow).
 
 ### forkWorkflow
 
@@ -154,4 +154,4 @@ Similar to [`DBOS.resumeWorkflow`](./methods.md#resumeWorkflow).
       String originalWorkflowId, int startStep, ForkOptions options)
 ```
 
-Similar to [`DBOS.forkWorkflow`](./methods.md#forkWorkflow).
+Similar to [`DBOS.forkWorkflow`](./methods.md#forkworkflow).

@@ -94,7 +94,7 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 static List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching specified criteria.
 
 #### ListWorkflowsInput
 
