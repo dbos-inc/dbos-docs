@@ -9,7 +9,7 @@ toc_max_heading_level: 3
 ### getEvent
 
 ```java
-static Object getEvent(String workflowId, String key, float timeOut)
+static Object getEvent(String workflowId, String key, Duration timeout)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflowId` to the key `key`.
@@ -18,7 +18,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 **Parameters:**
 - **workflowId**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeout**: A timeout in seconds. If the wait times out, return null.
+- **timeout**: A timeout duration. If the wait times out, return null.
 
 ### setEvent
 
@@ -50,7 +50,7 @@ Messages can optionally be associated with a topic.
 ### recv
 
 ```java
-static Object recv(String topic, float timeoutSeconds)
+static Object recv(String topic, Duration timeout)
 ```
 
 Receive and return a message sent to this workflow.
@@ -60,12 +60,12 @@ Calls to `recv` wait for the next message in the queue, returning an error if th
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return null.
+- **timeout**: A timeout duration. If the wait times out, return null.
 
 ### sleep
 
 ```java
-static void sleep(float seconds)
+static void sleep(Duration sleepduration)
 ```
 
 Sleep for the given duration.
@@ -73,7 +73,7 @@ May only be called from within a workflow.
 This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
 
 **Parameters:**
-- **seconds**: The duration to sleep in seconds.
+- **sleepduration**: The duration to sleep.
 
 ### retrieveWorkflow
 

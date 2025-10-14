@@ -209,7 +209,7 @@ public String runTask(String task) {
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
     // Sleep for the specified duration
-    DBOS.sleep(timeToSleepSeconds);
+    DBOS.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
 
     // Execute the task after sleeping
     String result = DBOS.runStep(

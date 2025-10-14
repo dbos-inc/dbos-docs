@@ -30,7 +30,7 @@ You can also call [`send`](../reference/client.md#send) from outside of your DBO
 #### Recv
 
 ```java
-static Object recv(String topic, float timeoutSeconds)
+static Object recv(String topic, Duration timeout)
 ```
 
 Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
@@ -103,7 +103,7 @@ Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to pub
 #### getEvent
 
 ```java
-static Object getEvent(String workflowId, String key, float timeoutSeconds)
+static Object getEvent(String workflowId, String key, Duration timeout)
 ```
 
 You can call [`dbos.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
