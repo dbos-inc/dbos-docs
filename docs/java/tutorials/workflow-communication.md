@@ -56,7 +56,7 @@ class CheckoutImpl implements Checkout {
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
-        String paymentStatus = (String) DBOS.recv(PAYMENT_STATUS, 60);
+        String paymentStatus = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
         if (paymentStatus != null && paymentStatus.equals("paid")) {
             // Handle a successful payment.
         } else {
@@ -151,7 +151,7 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = (String) DBOS.getEvent(handle.getWorkflowId(), PAYMENT_ID, 60);
+    String paymentId = (String) DBOS.getEvent(handle.getWorkflowId(), PAYMENT_ID, Duration.ofSeconds(60));
     if (paymentId == null) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
