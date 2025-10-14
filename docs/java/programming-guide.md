@@ -65,8 +65,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflow")
     public void workflow() {
-        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), "stepOne");
+        DBOS.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 
@@ -137,12 +137,12 @@ class ExampleImpl implements Example {
 
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
-        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        DBOS.runStep(() -> stepOne(), "stepOne");
         for (int i = 0; i < 5; i++) {
             System.out.println("Press Control + C to stop the app...");
             DBOS.sleep(Duration.ofSeconds(1));
         }
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 

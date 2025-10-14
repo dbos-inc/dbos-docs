@@ -21,8 +21,8 @@ class ExampleImpl implements Example {
     @Workflow(name = "workflowFunction")
     public int workflowFunction(int n) {
         int randomNumber = DBOS.runStep(
-            () -> generateRandomNumber(n),
-            new StepOptions("generateRandomNumber")
+            () -> generateRandomNumber(n), // Code to run as a checkpointed step
+            "generateRandomNumber" // StepOptions can also be used here
         );
         return randomNumber;
     }

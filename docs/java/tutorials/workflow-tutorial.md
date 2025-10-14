@@ -33,8 +33,8 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflow")
     public String workflow() {
-        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), "stepOne");
+        DBOS.runStep(() -> stepTwo(), "stepTwo");
         return "success";
     }
 }
@@ -144,9 +144,9 @@ For example, **don't do this**:
 public String exampleWorkflow() {
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        return DBOS.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        return DBOS.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -160,11 +160,11 @@ private int generateChoice() {
 
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow() {
-    int randomChoice = DBOS.runStep(() -> generateChoice(), new StepOptions("generateChoice"));
+    int randomChoice = DBOS.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
+        return DBOS.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        return DBOS.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -214,7 +214,7 @@ public String exampleWorkflow(float timeToSleepSeconds, String task) throws Inte
     // Execute the task after sleeping
     String result = DBOS.runStep(
         () -> runTask(task),
-        new StepOptions("runTask")
+        "runTask"
     );
 
     return result;

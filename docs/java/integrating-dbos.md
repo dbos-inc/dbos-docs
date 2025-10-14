@@ -99,8 +99,8 @@ class MyWorkflowsImpl implements MyWorkflows {
 
     @Workflow(name = "reliable-workflow")
     public void reliableWorkflow() {
-        DBOS.runStep(() -> stepOne(), new StepOptions("stepOne"));
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo"));
+        DBOS.runStep(() -> stepOne(), "stepOne");
+        DBOS.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
