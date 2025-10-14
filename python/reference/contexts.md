@@ -803,50 +803,6 @@ with SetWorkflowTimeout(10):
     example_workflow()
 ```
 
-### SetEnqueueOptions
-
-```python
-SetEnqueueOptions(
-    *,
-    deduplication_id: Optional[str] = None,
-    priority: Optional[int] = None,
-)
-```
-
-Set options for enclosed workflow enqueue operations.
-These options are **not propagated** to child workflows.
-
-**Parameters:**
-
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
-- `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Defaults to `None`. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-
-
-**Deduplication Example**
-
-```python
-with SetEnqueueOptions(deduplication_id="my_dedup_id"):
-    try:
-        handle = queue.enqueue(example_workflow, ...)
-    except DBOSQueueDeduplicatedError as e:
-        # Handle deduplication error
-```
-
-**Priority Example**
-
-```python
-with SetEnqueueOptions(priority=10):
-    # All workflows are enqueued with priority set to 10
-    # They will be dequeued in FIFO order
-    for task in tasks:
-        queue.enqueue(task_workflow, task)
-
-with SetEnqueueOptions(priority=1):
-    queue.enqueue(first_workflow)
-
-# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
-```
-
 ### DBOSContextEnsure
 
 ```python
@@ -874,3 +830,43 @@ DBOSContextSetAuth(user: Optional[str], roles: Optional[List[str]])
 `with DBOSContextSetAuth` sets the current authorized user and roles for the code inside the `with` block.  Similar to `DBOSContextEnsure`, `DBOSContextSetAuth` also ensures that there is a DBOS context associated with the enclosed code prior to calling DBOS functions.
 
 `DBOSContextSetAuth` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.
+
+## Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
+By default, data is serialized with `pickle` then Base64-encoded, but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must match this interface:
+
+```python
+class Serializer(ABC):
+
+    @abstractmethod
+    def serialize(self, data: Any) -> str:
+        pass
+
+    @abstractmethod
+    def deserialize(cls, serialized_data: str) -> Any:
+        pass
+```
+
+For example, here is how to configure DBOS to use a JSON serializer:
+
+```python
+from dbos import DBOS, DBOSConfig, Serializer
+
+class JsonSerializer(Serializer):
+    def serialize(self, data: Any) -> str:
+        return json.dumps(data)
+
+    def deserialize(cls, serialized_data: str) -> Any:
+        return json.loads(serialized_data)
+
+serializer = JsonSerializer()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "serializer": serializer
+}
+DBOS(config=config)
+DBOS.launch()
+```
