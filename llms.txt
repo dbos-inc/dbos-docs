@@ -9,6 +9,7 @@
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/golang/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Go](https://docs.dbos.dev/golang/programming-guide.md): This guide shows you how to use DBOS to build Go apps that are resilient to any failure.
+- [AI Model Prompting](https://docs.dbos.dev/golang/prompting.md): You may want assistance from an AI model in building a DBOS application.
 - [DBOS CLI](https://docs.dbos.dev/golang/reference/cli.md): Click here to view the DBOS CLI documentation →
 - [DBOS Client](https://docs.dbos.dev/golang/reference/client.md): Client provides a programmatic way to interact with your DBOS application from external code.
 - [DBOS Context](https://docs.dbos.dev/golang/reference/dbos-context.md): A DBOS Context is at the center of a DBOS-enabled application. Use it to register workflows, queues and perform workflow management tasks.
@@ -23,6 +24,7 @@
 - [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add the open source DBOS Transact library to your existing Django application to durably execute it and make it resilient to any failure.
+- [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!

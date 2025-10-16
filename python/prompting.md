@@ -49,7 +49,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.start_workflow, DBOS.sleep, DBOS.set_event, DBOS.get_event) from a step.
+- Do NOT call DBOS.start_workflow or DBOS.recv from a step
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.set_event and DBOS.recv from outside a workflow.
 
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-#### Scheduled Workflow
+### Scheduled Workflow
 
 You can schedule DBOS workflows to run exactly once per time interval. To do this, annotate the workflow with the @DBOS.scheduled decorator and specify the schedule in crontab syntax. For example:
 
@@ -236,63 +236,369 @@ def run_every_minute(scheduled_time, actual_time):
 
 ## Workflow Documentation:
 
-If an exception is thrown from a workflow, the workflow TERMINATES.
-DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
+---
+sidebar_position: 10
+title: Workflows
+toc_max_heading_level: 3
+---
 
-## Workflow IDs
+Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
+
+You can make a function a workflow by annotating it with `@DBOS.workflow()`.
+Workflows call steps, which are Python functions annotated with `@DBOS.step()`.
+If a workflow is interrupted for any reason, DBOS automatically recovers its execution from the last completed step.
+
+Here's an example of a workflow:
+
+```python
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
+
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
+
+@DBOS.workflow()
+def workflow():
+    step_one()
+    step_two()
+```
+
+## Starting Workflows In The Background
+
+One common use-case for workflows is building reliable background tasks that keep running even when the program is interrupted, restarted, or crashes.
+You can use `DBOS.start_workflow` to start a workflow in the background.
+If you start a workflow this way, it returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
+
+Here's an example:
+
+```python
+@DBOS.workflow()
+def background_task(input):
+    # ...
+    return output
+
+# Start the background task
+handle: WorkflowHandle = DBOS.start_workflow(background_task, input)
+# Wait for the background task to complete and retrieve its result.
+output = handle.get_result()
+```
+
+After starting a workflow in the background, you can use `DBOS.retrieve_workflow` to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with `DBOSClient.retrieve_workflow`.
+
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use DBOS queues.
+
+## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
 You can access this ID through the `DBOS.workflow_id` context variable.
+Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-Set the workflow ID of a workflow with SetWorkflowID.
-If a workflow is called multiple times with the same ID, it executes ONLY ONCE.
+You can set the workflow ID of a workflow with `SetWorkflowID`.
+Workflow IDs must be **globally unique** for your application.
+An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
+This is useful if your operations have side effects like making a payment or sending an email.
+For example:
 
 ```python
 @DBOS.workflow()
 def example_workflow():
     DBOS.logger.info(f"I am a workflow with ID {DBOS.workflow_id}")
 
-workflow_id = "my-workflow-id"
-
-with SetWorkflowID(workflow_id):
+with SetWorkflowID("very-unique-id"):
     example_workflow()
 ```
 
-## Starting in the Background
+## Determinism
 
-You can use DBOS.start_workflow to start a workflow in the background without waiting for it to complete.
-This is useful for long-running or interactive workflows.
+Workflows are in most respects normal Python functions.
+They can have loops, branches, conditionals, and so on.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
+If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
+Instead, you should do all database operations in transactions and all other non-deterministic operations in steps.
 
-`start_workflow` returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `start_workflow` method resolves after the handle is durably created; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
-
-NEVER start a workflow from inside a step.
-
-Here's an example:
+For example, **don't do this**:
 
 ```python
 @DBOS.workflow()
-def example_workflow(var1: str, var2: str):
-    DBOS.sleep(10) # Sleep for 10 seconds
-    return var1 + var2
-
-# Start example_workflow in the background
-handle: WorkflowHandle = DBOS.start_workflow(example_workflow, "var1", "var2")
-# Wait for the workflow to complete and retrieve its result.
-result = handle.get_result()
+def example_workflow():
+    choice = random.randint(0, 1)
+    if choice == 0:
+        step_one()
+    else:
+        step_two()
 ```
 
-You can also use DBOS.retrieve_workflow to retrieve a workflow's handle from its ID.
+Do this instead:
+
+```python
+@DBOS.step()
+def generate_choice():
+    return random.randint(0, 1)
+
+@DBOS.workflow()
+def example_workflow(friend: str):
+    choice = generate_choice()
+    if choice == 0:
+        step_one()
+    else:
+        step_two()
+```
+
+
+## Workflow Timeouts
+
+You can set a timeout for a workflow with `SetWorkflowTimeout`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+# If the workflow does not complete within 10 seconds, it times out and is cancelled
+with SetWorkflowTimeout(10):
+    example_workflow()
+```
+
+## Durable Sleep
+
+You can use `DBOS.sleep()` to put your workflow to sleep for any period of time.
+This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
+
+Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
+For example:
+
+```python
+@DBOS.workflow()
+def schedule_task(time_to_sleep, task):
+  # Durably sleep for some time before running the task
+  DBOS.sleep(time_to_sleep)
+  run_task(task)
+```
+
+## Debouncing Workflows
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+### Debouncer.create
+
+```python
+Debouncer.create(
+    workflow: Callable[P, R],
+    *,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+) -> Debouncer[P, R]
+```
+
+**Parameters:**
+- `workflow`: The workflow to debounce.
+- `debounce_key`: The debounce key for this debouncer. Used to group workflow executions that will be debounced. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+- `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
+
+### debounce
+
+```python
+debouncer.debounce(
+    debounce_key: str,
+    debounce_period_sec: float,
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Submit a workflow for execution but delay it by `debounce_period_sec`.
+Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounce_timeout_sec`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
+
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+**Parameters:**
+- `debounce_key`: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- `debounce_period_sec`: Delay this workflow's execution by this period.
+- `*args`: Variadic workflow arguments.
+- `**kwargs`: Variadic workflow keyword arguments.
+
+**Example Syntax**:
+
+```python
+@DBOS.workflow()
+def process_input(user_input):
+    ...
+
+# Each time a user submits a new input, debounce the process_input workflow.
+# The workflow will wait until 60 seconds after the user stops submitting new inputs,
+debouncer = Debouncer.create(process_input)
+# then process the last input submitted.
+def on_user_input_submit(user_id, user_input):
+    debounce_key = user_id
+    debounce_period_sec = 60
+    debouncer.debounce(debounce_key, debounce_period_sec, user_input)
+```
+
+### Debouncer.create_async
+
+```python
+Debouncer.create_async(
+    workflow: Callable[P, Coroutine[Any, Any, R]],
+    *,
+    debounce_timeout_sec: Optional[float] = None,
+    queue: Optional[Queue] = None,
+) -> Debouncer[P, R]
+```
+Async version of `Debouncer.create`.
+
+### debounce_async
+
+```python
+debouncer.debounce_async(
+    debounce_key: str,
+    debounce_period_sec: float,
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandleAsync[R]:
+```
+
+Async version of `debouncer.debounce`.
+
+## Coroutine (Async) Workflows
+
+Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
+Coroutine workflows may invoke coroutine steps via await expressions.
+You should start coroutine workflows using `DBOS.start_workflow_async` and enqueue them using `enqueue_async`.
+Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
+Additionally, coroutine workflows should use the asynchronous versions of the workflow communication context methods.
+
+
+:::tip
+
+At this time, DBOS does not support coroutine transactions.
+To execute transaction functions without blocking the event loop, use `asyncio.to_thread`.
+
+:::
+
+```python
+@DBOS.step()
+async def example_step():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://example.com") as response:
+            return await response.text()
+
+@DBOS.workflow()
+async def example_workflow(friend: str):
+    await DBOS.sleep_async(10)
+    body = await example_step()
+    result = await asyncio.to_thread(example_transaction, body)
+    return result
+```
+
+## Workflow Versioning and Recovery
+
+Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
+To guard against this, DBOS _versions_ applications and their workflows.
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `application_version`) configuration parameter.
+All workflows are tagged with the application version on which they started.
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents unsafe recovery of workflows that depend on different code.
+You cannot change the version of a workflow, but you can use `DBOS.fork_workflow` to restart a workflow from a specific step on a specific code version.
+
+## Communicating with Workflows
+
+DBOS provides a few different ways to communicate with your workflows.
+You can:
+
+- Send messages to workflows
+- Publish events from workflows for clients to read
+- Stream values from workflows to clients
+
+
+## Workflow Messaging and Notifications
+You can send messages to a specific workflow.
+This is useful for signaling a workflow or sending notifications to it while it's running.
+
+### Send
+
+```python
+DBOS.send(
+    destination_id: str,
+    message: Any,
+    topic: Optional[str] = None
+) -> None
+```
+
+You can call `DBOS.send()` to send a message to a workflow.
+Messages can optionally be associated with a topic and are queued on the receiver per topic.
+
+You can also call `send` from outside of your DBOS application with the DBOS Client.
+
+### Recv
+
+```python
+DBOS.recv(
+    topic: Optional[str] = None,
+    timeout_seconds: float = 60,
+) -> Any
+```
+
+Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
+
+### Messages Example
+
+Messages are especially useful for sending notifications to a workflow.
+For example, in the widget store demo, the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
+
+To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
+
+```python
+@DBOS.workflow()
+def checkout_workflow():
+  ... # Validate the order, then redirect customers to a payments service.
+  payment_status = DBOS.recv(PAYMENT_STATUS)
+  if payment_status is not None and payment_status == "paid":
+      ... # Handle a successful payment.
+  else:
+      ... # Handle a failed payment or timeout.
+```
+
+An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
+
+```python
+@app.post("/payment_webhook/{workflow_id}/{payment_status}")
+def payment_endpoint(payment_id: str, payment_status: str) -> Response:
+    # Send the payment status to the checkout workflow.
+    DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
+```
+
+### Reliability Guarantees
+
+All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
+If you're sending a message from normal Python code, you can use `SetWorkflowID` with an idempotency key to guarantee exactly-once delivery.
 
 ## Workflow Events
 
-Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
-They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
+Workflows can publish _events_, which are key-value pairs associated with the workflow.
+They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
-#### set_event
-
-Any workflow can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
-ONLY call this from a workflow function, NEVER from a step.
+### set_event
 
 ```python
 DBOS.set_event(
@@ -300,11 +606,10 @@ DBOS.set_event(
     value: Any,
 ) -> None
 ```
-#### get_event
 
-You can call `DBOS.get_event` to retrieve the value published by a particular workflow identity for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
-NEVER call this from inside a step.
+Any workflow or step can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
+
+### get_event
 
 ```python
 DBOS.get_event(
@@ -314,10 +619,25 @@ DBOS.get_event(
 ) -> None
 ```
 
-#### Events Example
+You can call `DBOS.get_event` to retrieve the value published by a particular workflow identity for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
+
+You can also call `get_event` from outside of your DBOS application with DBOS Client.
+
+### get_all_events
+
+```python
+DBOS.get_all_events(
+    workflow_id: str
+) -> Dict[str, Any]
+```
+
+You can use `DBOS.get_all_events` to retrieve the latest values of all events published by a workflow.
+
+### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in one demo, the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
+For example, in the widget store demo, the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
 To communicate the payment ID to the customer, it uses events.
 
 The payments workflow emits the payment ID using `set_event()`:
@@ -346,99 +666,73 @@ def checkout_endpoint(idempotency_key: str) -> Response:
     return Response(payment_id)
 ```
 
-## Workflow Messaging and Notifications
-You can send messages to a specific workflow ID.
-This is useful for sending notifications to an active workflow.
+### Reliability Guarantees
 
-#### Send
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
 
-You can call `DBOS.send()` to send a message to a workflow.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
-NEVER call this from a step.
+## Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
+
+<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
+### Writing to Streams
 
 ```python
-DBOS.send(
-    destination_id: str,
-    message: Any,
-    topic: Optional[str] = None
+DBOS.write_stream(
+    key: str, 
+    value: Any
+) -> None:
+```
+
+You can write values to a stream from a workflow or its steps using `DBOS.write_stream`.
+A workflow may have any number of streams, each identified by a unique key.
+
+When you are done writing to a stream, you should close it with `DBOS.close_stream`.
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```python
+DBOS.close_stream(
+    key: str
 ) -> None
 ```
 
-#### Recv
+DBOS streams are immutable and append-only.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+Readers will see all values written to the stream from all tries of the step in the order in which they were written.
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
-If the topic is not specified, this method only receives messages sent without a topic.
-ONLY call this from inside a workflow function, NEVER from a step.
-
-```python
-DBOS.recv(
-    topic: Optional[str] = None,
-    timeout_seconds: float = 60,
-) -> Any
-```
-
-#### Messages Example
-
-Messages are especially useful for sending notifications to a workflow.
-For example, in one demo, the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
-
-To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
+**Example syntax:**
 
 ```python
 @DBOS.workflow()
-def checkout_workflow():
-  ... # Validate the order, then redirect customers to a payments service.
-  payment_status = DBOS.recv(PAYMENT_STATUS)
-  if payment_status is not None and payment_status == "paid":
-      ... # Handle a successful payment.
-  else:
-      ... # Handle a failed payment or timeout.
+def producer_workflow():
+    DBOS.write_stream(example_key, {"step": 1, "data": "value1"})
+    DBOS.write_stream(example_key, {"step": 2, "data": "value2"})
+    DBOS.close_stream(example_key)  # Signal completion
 ```
 
-An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
+### Reading from Streams
 
 ```python
-@app.post("/payment_webhook/{workflow_id}/{payment_status}")
-def payment_endpoint(payment_id: str, payment_status: str) -> Response:
-    # Send the payment status to the checkout workflow.
-    DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
+DBOS.read_stream(
+    workflow_id: str,
+    key: str
+) -> Generator[Any, Any, None]
 ```
 
-### sleep
+You can read values from a stream from anywhere using `DBOS.read_stream`.
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
+
+You can also read from a stream from outside a DBOS application with a DBOS Client.
+
+**Example syntax:**
 
 ```python
-DBOS.sleep(
-    seconds: float
-) -> None
-```
-
-Sleep for the given number of seconds.
-May only be called from within a workflow.
-This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
-
-## Coroutine (Async) Workflows
-
-- Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
-- If provided with async code, you MUST use coroutine workflows and steps
-- Coroutine workflows may invoke and await on coroutine steps
-- You MUST use start_workflow_async and enqueue_async to start or enqueue coroutine workflows.
--  You MUST use the async versions of the event and messaging context methods for coroutines (get_event_async, send_async, etc.). They have the same API but are async.
-
-
-```python
-@DBOS.step()
-async def example_step():
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://example.com") as response:
-            return await response.text()
-
-@DBOS.workflow()
-async def example_workflow(friend: str):
-    await DBOS.sleep_async(10)
-    body = await example_step()
-    result = await asyncio.to_thread(example_transaction, body)
-    return result
+for value in DBOS.read_stream(workflow_id, example_key):
+    print(f"Received: {value}")
 ```
 
 ### Configurable Retries
@@ -464,11 +758,10 @@ def example_step():
     return requests.get("https://example.com").text
 ```
 
-### DBOS Queues
+## DBOS Queues
 
-
-Queues allow you to run functions with managed concurrency.
-They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+You can use queues to run many workflows at once with managed concurrency.
+Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, specify its name:
 
@@ -478,14 +771,14 @@ from dbos import Queue
 queue = Queue("example_queue")
 ```
 
-You can then enqueue any DBOS workflow, step, or transaction.
+You can then enqueue any DBOS workflow or step.
 Enqueuing a function submits it for execution and returns a handle to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```python
 queue = Queue("example_queue")
 
-@DBOS.step()
+@DBOS.workflow()
 def process_task(task):
   ...
 
@@ -502,7 +795,7 @@ from dbos import DBOS, Queue
 
 queue = Queue("example_queue")
 
-@DBOS.step()
+@DBOS.workflow()
 def process_task(task):
   ...
 
@@ -518,36 +811,65 @@ def process_tasks(tasks):
   return [handle.get_result() for handle in task_handles]
 ```
 
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use the DBOS Client to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code enqueues the `data_pipeline` workflow on the `pipeline_queue` queue with `task` as an argument.
+
+```python
+from dbos import DBOSClient, EnqueueOptions
+
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+options: EnqueueOptions = {
+  "queue_name": "pipeline_queue",
+  "workflow_name": "data_pipeline",
+}
+handle = client.enqueue(options, task)
+result = handle.get_result()
+```
+
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
-Global concurrency limits are applied across all DBOS processes using this queue.
-Per process concurrency limits are applied to each DBOS process using this queue.
-If no limit is provided, any number of functions may run concurrently.
-For example, this queue has a maximum global concurrency of 10 and a per process maximum concurrency of 5, so at most 10 functions submitted to it may run at once, up to 5 per process:
+You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
+This helps prevent resource exhaustion when workflows consume significant memory or processing power.
+
+#### Worker Concurrency
+
+Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
+This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
+For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```python
 from dbos import Queue
 
-queue = Queue("example_queue", concurrency=10, worker_concurrency=5)
+queue = Queue("example_queue", worker_concurrency=5)
 ```
 
-You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
-The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the process.
+#### Global Concurrency
 
-### Rate Limiting
+Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
+For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
 
-You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
-Rate limits are global across all DBOS processes using this queue.
-For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
+:::warning
+Worker concurrency limits are recommended for most use cases.
+Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions
+:::
 
 ```python
-queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
+from dbos import Queue
+
+queue = Queue("example_queue", concurrency=10)
 ```
 
-Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
-
-### In-Order Processing
+#### In-Order Processing
 
 You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
 Only a single event will be processed at a time.
@@ -571,9 +893,22 @@ def event_endpoint(event: str):
     queue.enqueue(process_event, event)
  ```
 
- ## Setting Timeouts
+### Rate Limiting
 
-You can set a timeout for an enqueued workflow with SetWorkflowTimeout.
+You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
+Rate limits are global across all DBOS processes using this queue.
+For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
+
+```python
+queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
+```
+
+Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+
+
+## Setting Timeouts
+
+You can set a timeout for an enqueued workflow with `SetWorkflowTimeout`.
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
@@ -594,9 +929,38 @@ with SetWorkflowTimeout(10):
     queue.enqueue(example_workflow)
 ```
 
+## Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```python
+queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
+
+@DBOS.workflow()
+def process_task(task: Task):
+  ...
+
+
+def on_user_task_submission(user_id: str, task: Task):
+    # Partition the task queue by user ID. As the queue has a
+    # maximum concurrency of 1, this means that at most one
+    # task can run at once per user (but tasks from different
+    # users can run concurrently).
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        queue.enqueue(process_task, task)
+```
+
 ## Deduplication
 
-You can set a deduplication ID for an enqueued workflow with SetEnqueueOptions`.
+You can set a deduplication ID for an enqueued workflow with `SetEnqueueOptions`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
@@ -605,10 +969,15 @@ For example, this is useful if you only want to have one workflow active at a ti
 Example syntax:
 
 ```python
+from dbos import DBOS, Queue, SetEnqueueOptions
+from dbos import error as dboserror
+
+queue = Queue("example_queue")
+
 with SetEnqueueOptions(deduplication_id="my_dedup_id"):
     try:
         handle = queue.enqueue(example_workflow, ...)
-    except DBOSQueueDeduplicatedError as e:
+    except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
 ```
 
@@ -633,11 +1002,11 @@ with SetEnqueueOptions(priority=10):
     for task in tasks:
         queue.enqueue(task_workflow, task)
 
+# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
-
-# first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 ```
+
 
 ## Python Classes
 
@@ -891,6 +1260,7 @@ class WorkflowStatus:
 
 Retrieve the workflow status:
 
+
 ### Configuring DBOS
 
 To configure DBOS, pass a `DBOSConfig` object to its constructor.
@@ -899,7 +1269,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
 ```
@@ -910,24 +1280,36 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
-    log_level: Optional[str]
+    dbos_system_schema: Optional[str]
+    system_database_engine: Optional[sqlalchemy.Engine]
+
+    conductor_key: Optional[str]
+
+    enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
-    admin_port: Optional[int]
+    log_level: Optional[str]
+
     run_admin_server: Optional[bool]
+    admin_port: Optional[int]
+
     application_version: Optional[str]
+    executor_id: Optional[str]
+
+    serializer: Optional[Serializer]
 ```
 
 - **name**: Your application's name.
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state.
 This may be either Postgres or SQLite, though Postgres is recommended for production.
-DBOS uses this connection string, unmodified, to create a SQLAlchemy engine
+DBOS uses this connection string, unmodified, to create a SQLAlchemy Engine
 A valid connection string looks like:
 
 ```
@@ -953,7 +1335,7 @@ sqlite:///[application_name].sqlite
 This is the database in which DBOS executes `@DBOS.transaction` functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s create_engine()
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s `create_engine()`.
 Defaults to:
 
 ```python
@@ -964,14 +1346,59 @@ Defaults to:
 }
 ```
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
-- **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers.
-- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
+- **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
+- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
+- **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
+- **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows.
+- **application_version**: The code version for this application and its workflows. Workflow versioning is documented here.
+- **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for distributed workflow recovery
+- **serializer**: A custom serializer for the system database.
 
+#### Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
+By default, data is serialized with `pickle` then Base64-encoded, but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must match this interface:
+
+```python
+class Serializer(ABC):
+
+    @abstractmethod
+    def serialize(self, data: Any) -> str:
+        pass
+
+    @abstractmethod
+    def deserialize(cls, serialized_data: str) -> Any:
+        pass
+```
+
+For example, here is how to configure DBOS to use a JSON serializer:
+
+```python
+from dbos import DBOS, DBOSConfig, Serializer
+
+class JsonSerializer(Serializer):
+    def serialize(self, data: Any) -> str:
+        return json.dumps(data)
+
+    def deserialize(cls, serialized_data: str) -> Any:
+        return json.loads(serialized_data)
+
+serializer = JsonSerializer()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "serializer": serializer
+}
+DBOS(config=config)
+DBOS.launch()
+```
 
 ### Transactions
 

@@ -20,6 +20,13 @@ npm i @dbos-inc/knex-datasource
 ```
 
 </TabItem>
+<TabItem value="kysely" label="Kysely">
+
+```shell
+npm i @dbos-inc/kysely-datasource
+```
+
+</TabItem>
 <TabItem value="drizzle" label="Drizzle">
 
 ```shell
@@ -72,6 +79,15 @@ Before using a datasource, you must configure and construct it:
 ```typescript
 const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('app-db', config);
+```
+
+</TabItem>
+<TabItem value="kysely" label="Kysely">
+
+
+```typescript
+const config = { connectionString: process.env.DBOS_DATABASE_URL };
+const dataSource = new KyselyDataSource<Database>('app-db', config);
 ```
 
 </TabItem>
@@ -137,6 +153,33 @@ async function insertFunction(user: string) {
   const row = rows.length > 0 ? rows[0] : undefined;
 
   return { user, greet_count: row?.greet_count, now: Date.now() };
+}
+
+await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
+```
+
+</TabItem>
+
+<TabItem value="kysely" label="Kysely">
+
+```typescript
+async function insertFunction(user: string) {
+  const row = await dataSource.client
+    .insertInto('greetings')
+    .values({ name: user, greet_count: 1 })
+    .onConflict((oc) =>
+      oc.column('name').doUpdateSet({
+        greet_count: sql`greetings.greet_count + 1`,
+      }),
+    )
+    .returning('greet_count')
+    .executeTakeFirst();
+
+  return {
+    user,
+    greet_count: row?.greet_count!,
+    now: Date.now()
+  }
 }
 
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
@@ -226,8 +269,8 @@ await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunct
 ```typescript
 async function insertFunction(user: string) {
   const { rows } = await dataSource.client.query<Pick<greetings, 'greet_count'>>(
-    `INSERT INTO greetings(name, greet_count) 
-     VALUES($1, 1) 
+    `INSERT INTO greetings(name, greet_count)
+     VALUES($1, 1)
      ON CONFLICT(name)
      DO UPDATE SET greet_count = greetings.greet_count + 1
      RETURNING greet_count`,
@@ -246,8 +289,8 @@ await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunct
 ```typescript
 async function insertFunction(user: string) {
   const rows = await dataSource.client<Pick<greetings, 'greet_count'>[]>`
-    INSERT INTO greetings(name, greet_count) 
-    VALUES(${user}, 1) 
+    INSERT INTO greetings(name, greet_count)
+    VALUES(${user}, 1)
     ON CONFLICT(name)
     DO UPDATE SET greet_count = greetings.greet_count + 1
     RETURNING greet_count`;
