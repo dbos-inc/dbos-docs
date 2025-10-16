@@ -221,7 +221,7 @@ async function main() {
 main().catch(console.log);
 ```
 
-#### Scheduled Workflow
+### Scheduled Workflow
 
 You can schedule DBOS workflows to run exactly once per time interval.
 To do this, use the the `DBOS.registerScheduled` method or the `DBOS.scheduled` decorator and specify the schedule in crontab syntax.  For example:
@@ -578,7 +578,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 
 <img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### Send
+### Send
 
 ```typescript
 DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
@@ -589,7 +589,7 @@ Messages can optionally be associated with a topic and are queued on the receive
 
 You can also call `send` from outside of your DBOS application with the DBOS Client.
 
-#### Recv
+### Recv
 
 ```typescript
 DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
@@ -599,7 +599,7 @@ Workflows can call `DBOS.recv()` to receive messages sent to them, optionally fo
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
-#### Messages Example
+### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
 For example, in the e-commerce demo, the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
@@ -629,7 +629,7 @@ static async paymentWebhook(): Promise<void> {
 }
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
@@ -642,7 +642,7 @@ They are useful for publishing information about the status of a workflow or to 
 
 <img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### setEvent
+### setEvent
 
 ```typescript
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
@@ -650,7 +650,7 @@ DBOS.setEvent<T>(key: string, value: T): Promise<void>
 
 Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
 
-#### getEvent
+### getEvent
 
 ```typescript
 DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
@@ -661,7 +661,7 @@ If the event does not yet exist, this call waits for it to be published, returni
 
 You can also call `getEvent` from outside of your DBOS application with DBOS Client.
 
-#### Events Example
+### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
 For example, in the e-commerce demo, the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
@@ -693,7 +693,7 @@ static async webCheckout(...): Promise<void> {
 }
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `getEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
@@ -705,7 +705,7 @@ This is useful for streaming results from a long-running workflow or LLM call or
 
 <img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### Writing to Streams
+### Writing to Streams
 
 ```typescript
 DBOS.writeStream<T>(key: string, value: T): Promise<void>
@@ -738,7 +738,7 @@ async function producerWorkflowFunction() {
 const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 ```
 
-#### Reading from Streams
+### Reading from Streams
 
 ```typescript
 DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>

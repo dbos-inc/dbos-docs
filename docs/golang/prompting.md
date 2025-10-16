@@ -742,7 +742,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 
 <img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### Send
+### Send
 
 ```go
 func SendP any error
@@ -751,7 +751,7 @@ func SendP any error
 You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
-#### Recv
+### Recv
 
 ```go
 func RecvR any (R, error)
@@ -761,7 +761,7 @@ Workflows can call `Recv()` to receive messages sent to them, optionally for a p
 Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
-#### Messages Example
+### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
 For example, in an e-commerce application, the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
@@ -807,7 +807,7 @@ func paymentWebhookHandler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All messages are persisted to the database, so if `Send` completes successfully, the destination workflow is guaranteed to be able to `Recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
@@ -819,7 +819,7 @@ They are useful for publishing information about the status of a workflow or to 
 
 <img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### SetEvent
+### SetEvent
 
 ```go
 func SetEventP any error
@@ -827,7 +827,7 @@ func SetEventP any error
 
 Any workflow can call `SetEvent` to publish a key-value pair, or update its value if has already been published.
 
-#### GetEvent
+### GetEvent
 
 ```go
 func GetEventR any (R, error)
@@ -836,7 +836,7 @@ func GetEventR any (R, error)
 You can call `GetEvent` to retrieve the value published by a particular workflow ID for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
-#### Events Example
+### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
 For example, in an e-commerce application, the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
@@ -882,7 +882,7 @@ func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *
 }
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `GetEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.

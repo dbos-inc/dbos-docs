@@ -219,7 +219,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-#### Scheduled Workflow
+### Scheduled Workflow
 
 You can schedule DBOS workflows to run exactly once per time interval. To do this, annotate the workflow with the @DBOS.scheduled decorator and specify the schedule in crontab syntax. For example:
 
@@ -532,7 +532,7 @@ You can:
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
 
-#### Send
+### Send
 
 ```python
 DBOS.send(
@@ -547,7 +547,7 @@ Messages can optionally be associated with a topic and are queued on the receive
 
 You can also call `send` from outside of your DBOS application with the DBOS Client.
 
-#### Recv
+### Recv
 
 ```python
 DBOS.recv(
@@ -560,7 +560,7 @@ Workflows can call `DBOS.recv()` to receive messages sent to them, optionally fo
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
-#### Messages Example
+### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
 For example, in the widget store demo, the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
@@ -587,7 +587,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
     DBOS.send(payment_id, payment_status, PAYMENT_STATUS)
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
@@ -598,7 +598,7 @@ If you're sending a message from normal Python code, you can use `SetWorkflowID`
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
-#### set_event
+### set_event
 
 ```python
 DBOS.set_event(
@@ -608,7 +608,8 @@ DBOS.set_event(
 ```
 
 Any workflow or step can call `DBOS.set_event` to publish a key-value pair, or update its value if has already been published.
-#### get_event
+
+### get_event
 
 ```python
 DBOS.get_event(
@@ -623,7 +624,7 @@ If the event does not yet exist, this call waits for it to be published, returni
 
 You can also call `get_event` from outside of your DBOS application with DBOS Client.
 
-#### get_all_events
+### get_all_events
 
 ```python
 DBOS.get_all_events(
@@ -633,7 +634,7 @@ DBOS.get_all_events(
 
 You can use `DBOS.get_all_events` to retrieve the latest values of all events published by a workflow.
 
-#### Events Example
+### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
 For example, in the widget store demo, the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
@@ -665,7 +666,7 @@ def checkout_endpoint(idempotency_key: str) -> Response:
     return Response(payment_id)
 ```
 
-#### Reliability Guarantees
+### Reliability Guarantees
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `get_event` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
@@ -677,7 +678,7 @@ This is useful for streaming results from a long-running workflow or LLM call or
 
 <img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### Writing to Streams
+### Writing to Streams
 
 ```python
 DBOS.write_stream(
@@ -713,7 +714,7 @@ def producer_workflow():
     DBOS.close_stream(example_key)  # Signal completion
 ```
 
-#### Reading from Streams
+### Reading from Streams
 
 ```python
 DBOS.read_stream(
