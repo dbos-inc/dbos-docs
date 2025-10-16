@@ -16,9 +16,9 @@ If you are using an AI-powered IDE, you can add this prompt to your project's co
 For example:
 
 - Claude Code: Add the prompt, or a link to it, to your CLAUDE.md file.
-- Cursor: Add the prompt to [your project rules](https://docs.cursor.com/context/rules-for-ai).
-- Zed: Copy the prompt to a file in your project, then use the [`/file`](https://zed.dev/docs/assistant/commands?highlight=%2Ffile#file) command to add the file to your context.
-- GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
+- Cursor: Add the prompt to your project rules.
+- Zed: Copy the prompt to a file in your project, then use the `/file` command to add the file to your context.
+- GitHub Copilot: Create a `.github/copilot-instructions.md` file in your repository and add the prompt to it.
 
 ## Prompt
 
@@ -615,3 +615,280 @@ This prevents unsafe recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `ForkWorkflow` to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out the guide.
+
+
+## Steps
+
+When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
+If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
+
+You can use `RunAsStep` to call a function as a step.
+For a function to be used as a step, it should return a serializable (gob-encodable) value and an error and have this signature:
+
+```go
+type Step[R any] func(ctx context.Context) (R, error)
+```
+
+Here's a simple example:
+
+```go
+func generateRandomNumber(ctx context.Context) (int, error) {
+    return rand.Int(), nil
+}
+
+func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+    randomNumber, err := dbos.RunAsStep(
+        ctx,
+        generateRandomNumber,
+        dbos.WithStepName("generateRandomNumber"),
+    )
+    if err != nil {
+        return 0, err
+    }
+    return randomNumber, nil
+}
+```
+
+You can pass arguments into a step by wrapping it in an anonymous function, like this:
+
+```go
+func generateRandomNumber(ctx context.Context, n int) (int, error) {
+    return rand.IntN(n), nil
+}
+
+func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+    randomNumber, err := dbos.RunAsStep(
+        ctx,
+        func(stepCtx context.Context) (int, error) {
+            return generateRandomNumber(stepCtx, n)
+        },
+        dbos.WithStepName("generateRandomNumber")
+    )
+    if err != nil {
+        return 0, err
+    }
+    return randomNumber, nil
+}
+```
+
+You should make a function a step if you're using it in a DBOS workflow and it performs a **nondeterministic** operation.
+A nondeterministic operation is one that may return different outputs given the same inputs.
+Common nondeterministic operations include:
+
+- Accessing an external API or service, like serving a file from AWS S3, calling an external API like Stripe, or accessing an external data store like Elasticsearch.
+- Accessing files on disk.
+- Generating a random number.
+- Getting the current time.
+
+You **cannot** call, start, or enqueue workflows from within steps.
+You also cannot call DBOS methods like `Send` or `SetEvent` from within steps.
+These operations should be performed from workflow functions.
+You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+
+### Configurable Retries
+
+You can optionally configure a step to automatically retry any error a set number of times with exponential backoff.
+This is useful for automatically handling transient failures, like making requests to unreliable APIs.
+Retries are configurable through step options that can be passed to `RunAsStep`.
+
+Available retry configuration options include:
+- `WithStepName` - Custom name for the step (default to the Go runtime reflection value)
+- `WithStepMaxRetries` - Maximum number of times this step is automatically retried on failure (default 0)
+- `WithMaxInterval` - Maximum delay between retries (default 5s)
+- `WithBackoffFactor` - Exponential backoff multiplier between retries (default 2.0)
+- `WithBaseInterval` - Initial delay between retries (default 100ms)
+
+For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
+
+```go
+func fetchStep(ctx context.Context, url string) (string, error) {
+    resp, err := http.Get(url)
+    if err != nil {
+        return "", err
+    }
+    defer resp.Body.Close()
+
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
+
+    return string(body), nil
+}
+
+func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
+    return dbos.RunAsStep(
+        ctx,
+        func(stepCtx context.Context) (string, error) {
+            return fetchStep(stepCtx, inputURL)
+        },
+        dbos.WithStepName("fetchFunction"),
+        dbos.WithStepMaxRetries(10),
+        dbos.WithMaxInterval(30*time.Second),
+        dbos.WithBackoffFactor(2.0),
+        dbos.WithBaseInterval(500*time.Millisecond),
+    )
+}
+```
+
+If a step exhausts all retry attempts, it returns an error to the calling workflow.
+
+## Workflow Communication
+
+DBOS provides a few different ways to communicate with your workflows.
+You can:
+
+- Send messages to workflows
+- Publish events from workflows for clients to read
+
+
+## Workflow Messaging and Notifications
+You can send messages to a specific workflow.
+This is useful for signaling a workflow or sending notifications to it while it's running.
+
+<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
+#### Send
+
+```go
+func SendP any error
+```
+
+You can call `Send()` to send a message to a workflow.
+Messages can optionally be associated with a topic and are queued on the receiver per topic.
+
+#### Recv
+
+```go
+func RecvR any (R, error)
+```
+
+Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
+
+#### Messages Example
+
+Messages are especially useful for sending notifications to a workflow.
+For example, in an e-commerce application, the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+
+To wait for this notification, the payments workflow uses `Recv()`, executing failure-handling code if the notification doesn't arrive in time:
+
+```go
+const PaymentStatusTopic = "payment_status"
+
+func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+    // Process initial checkout steps...
+
+    // Wait for payment notification with a 5-minute timeout
+    notification, err := dbos.RecvPaymentNotification
+    if err != nil {
+        ... // Handle timeout or other errors
+    }
+
+    // Handle the notification
+    if notification.Status == "completed" {
+      ... // Handle the notification.
+    } else {
+      ... // Handle a failure
+    }
+}
+```
+
+A webhook waits for the payment processor to send the notification, then uses `Send()` to forward it to the workflow:
+
+```go
+func paymentWebhookHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse the notification from the payment processor
+    notification := ...
+    // Retrieve the workflow ID from notification metadata
+    workflowID := ...
+
+    // Send the notification to the waiting workflow
+    err := dbos.Send(dbosContext, workflowID, notification, PaymentStatusTopic)
+    if err != nil {
+        http.Error(w, "Failed to send notification", http.StatusInternalServerError)
+        return
+    }
+}
+```
+
+#### Reliability Guarantees
+
+All messages are persisted to the database, so if `Send` completes successfully, the destination workflow is guaranteed to be able to `Recv` it.
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
+
+## Workflow Events
+
+Workflows can publish _events_, which are key-value pairs associated with the workflow.
+They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
+
+<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
+#### SetEvent
+
+```go
+func SetEventP any error
+```
+
+Any workflow can call `SetEvent` to publish a key-value pair, or update its value if has already been published.
+
+#### GetEvent
+
+```go
+func GetEventR any (R, error)
+```
+
+You can call `GetEvent` to retrieve the value published by a particular workflow ID for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
+
+#### Events Example
+
+Events are especially useful for writing interactive workflows that communicate information to their caller.
+For example, in an e-commerce application, the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
+To communicate the payments URL to the customer, it uses events.
+
+The checkout workflow emits the payments URL using `SetEvent()`:
+
+```go
+const PaymentURLKey = "payment_url"
+
+func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+    // Process order validation...
+
+    paymentsURL := ...
+    err := dbos.SetEvent(ctx, PaymentURLKey, paymentsURL)
+    if err != nil {
+        return "", fmt.Errorf("failed to set payment URL event: %w", err)
+    }
+
+    // Continue with checkout process...
+}
+```
+
+The HTTP handler that originally started the workflow uses `GetEvent()` to await this URL, then redirects the customer to it:
+
+```go
+func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *http.Request) {
+    orderData := parseOrderData(r) // Parse order from request
+
+    handle, err := dbos.RunWorkflow(dbosContext, checkoutWorkflow, orderData)
+    if err != nil {
+        http.Error(w, "Failed to start checkout", http.StatusInternalServerError)
+        return
+    }
+
+    // Wait up to 30 seconds for the payment URL event
+    url, err := dbos.GetEventstring, PaymentURLKey, 30*time.Second)
+    if err != nil {
+        // Handle a timeout
+    }
+
+    // Redirect the customer
+}
+```
+
+#### Reliability Guarantees
+
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `GetEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
