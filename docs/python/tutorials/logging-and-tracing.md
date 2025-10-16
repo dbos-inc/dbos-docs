@@ -73,4 +73,4 @@ DBOS(config=config)
 ```
 
 
-For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application.
+For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application, or export your logs and traces to [Logfire](../../integrations/logfire).
