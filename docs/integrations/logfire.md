@@ -21,6 +21,12 @@ Then, set the `OTEL_EXPORTER_OTLP_HEADERS` environment variable to include your 
 export OTEL_EXPORTER_OTLP_HEADERS='Authorization=your-write-token'
 ```
 
+:::tip
+
+If you're deploying your app on DBOS Cloud, make sure to set `OTEL_EXPORTER_OTLP_HEADERS` in your application's [environment variables](../production/dbos-cloud/secrets).
+
+:::
+
 ## Configure DBOS OpenTelemetry Export
 
 Configure your DBOS application to enable OpenTelemetry traces and export them to Logfire:
