@@ -16,9 +16,9 @@ If you are using an AI-powered IDE, you can add this prompt to your project's co
 For example:
 
 - Claude Code: Add the prompt, or a link to it, to your CLAUDE.md file.
-- Cursor: Add the prompt to [your project rules](https://docs.cursor.com/context/rules-for-ai).
-- Zed: Copy the prompt to a file in your project, then use the [`/file`](https://zed.dev/docs/assistant/commands?highlight=%2Ffile#file) command to add the file to your context.
-- GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
+- Cursor: Add the prompt to your project rules.
+- Zed: Copy the prompt to a file in your project, then use the `/file` command to add the file to your context.
+- GitHub Copilot: Create a `.github/copilot-instructions.md` file in your repository and add the prompt to it.
 
 ## Prompt
 
@@ -252,6 +252,10 @@ class ScheduledExample{
 
 ## Workflow Documentation:
 
+Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+Workflows are comprised of steps, which wrap ordinary TypeScript (or JavaScript) functions.
+If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+
 To write a workflow, register a TypeScript function with `DBOS.registerWorkflow`.
 The function's inputs and outputs must be serializable to JSON.
 For example:
@@ -275,7 +279,6 @@ await workflow();
 ```
 
 Alternatively, you can register workflows and steps with decorators:
-NEVER do this unless specifically asked for.
 
 ```typescript
 export class Example {
@@ -300,98 +303,34 @@ export class Example {
 await Example.exampleWorkflow();
 ```
 
-If an exception is thrown from a workflow, the workflow TERMINATES.
-DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
-
-## Workflow IDs
-
-Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
-You can access this ID through the `DBOS.workflowID` context variable.
-
-Set the workflow ID of a workflow with `DBOS.withNextWorkflowID`.
-If a workflow is called multiple times with the same ID, it executes ONLY ONCE.
-
-```javascript
-class Example {
-  @DBOS.workflow()
-  static async exampleWorkflow(var1: string, var2: string) {
-      return var1 + var2;
-  }
-}
-
-const workflowID = "my-workflow-id"
-
-await DBOS.withNextWorkflowID(workflowID, async () => {
-  return await Example.exampleWorkflow("one", "two");
-});
-```
-
-### DBOS.startWorkflow
-
-```typescript
-static startWorkflow<Args extends unknown[], Return>(
-  target: (...args: Args) => Promise<Return>,
-  params?: StartWorkflowParams,
-): (...args: Args) => Promise<WorkflowHandle<Return>>;
-```
-
-```typescript
-interface StartWorkflowParams {
-  workflowID?: string;
-  queueName?: string;
-  timeoutMS?: number | null;
-  enqueueOptions?: EnqueueOptions;
-}
-
-export interface EnqueueOptions {
-  deduplicationID?: string;
-  priority?: number;
-}
-```
+## Starting Workflows In The Background
 
 One common use-case for workflows is building reliable background tasks that keep running even when your program is interrupted, restarted, or crashes.
 You can use `DBOS.startWorkflow` to start a workflow in the background.
-You can optionally enqueue the workflow on a DBOS queue.
 If you start a workflow this way, it returns a workflow handle, from which you can access information about the workflow or wait for it to complete and retrieve its result.
-The `DBOS.startWorkflow` method resolves after the workflow is durably started; at this point the workflow is guaranteed to run to completion even if the app is interrupted.
 
-**Example syntax:**
+Here's an example:
 
-To start a workflow created by registering a function:
-
-```typescript
-async function example(input: number) {
-    // Call steps
-}
-const exampleWorkflow = DBOS.registerWorkflow(example);
-
-const input = 10;
-const handle = await DBOS.startWorkflow(exampleWorkflow)(input);
-```
-
-To start a workflow created by decorating a class method:
-
-```typescript
-export class Example {
-  @DBOS.workflow()
-  static async exampleWorkflow(input: number) {
-    // Call steps
-  }
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow(var1: string, var2: string) {
+        return var1 + var2;
+    }
 }
 
-const input = 10;
-const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
+async function main() {
+    // Start exampleWorkflow in the background
+    const handle = await DBOS.startWorkflow(Example).exampleWorkflow("one", "two");
+    // Wait for the workflow to complete and return its results
+    const result = await handle.getResult();
+}
 ```
 
-**Parameters:**
+After starting a workflow in the background, you can use `DBOS.retrieveWorkflow` to retrieve a workflow's handle from its ID.
+You can also retrieve a workflow's handle from outside of your DBOS application with 'DBOSClient.retrieveWorkflow`.
 
-- **target**: The workflow to start.
-- **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
-- **queueName**: The name of the queue on which to enqueue this workflow, if any.
-- **timeoutMS**: The timeout of this workflow in milliseconds.
-- **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
-- **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-
+If you need to run many workflows in the background and manage their concurrency or flow control, you can also use DBOS queues.
 
 ## Workflow IDs and Idempotency
 
@@ -403,6 +342,8 @@ You can set the workflow ID of a workflow as an argument to `DBOS.startWorkflow(
 Workflow IDs must be **globally unique** for your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
+Workflow IDs are also useful for communicating with workflows and developing interactive workflows - see Communicating with Workflows for more details.
+
 For example:
 
 ```javascript
@@ -420,60 +361,83 @@ async function main() {
 }
 ```
 
-## Workflow Events
+## Determinism
 
-Workflows can emit _events_, which are key-value pairs associated with the workflow's ID.
-They are useful for publishing information about the state of an active workflow, for example to transmit information to the workflow's caller.
+Workflows are in most respects normal TypeScript functions.
+They can have loops, branches, conditionals, and so on.
+However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
+If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
+Instead, you should do all database operations in transactions and all other non-deterministic operations in steps.
 
-#### setEvent
-
-Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
-ONLY call this from a workflow function, NEVER from a step.
-
-```typescript
-DBOS.setEvent<T>(key: string, value: T): Promise<void>
-```
-#### getEvent
-
-You can call `DBOS.getEvent` to retrieve the value published by a particular workflow identity for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `None` if the wait times out.
-NEVER call this from inside a step.
-
-```typescript
-DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
-```
-
-#### Events Example
-
-Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in one demo, the checkout workflow, after validating an order, needs to send the customer a unique payment ID.
-To communicate the payment ID to the customer, it uses events.
-
-The payments workflow emits the payment ID using `setEvent()`:
+For example, **don't do this**:
 
 ```javascript
-  @DBOS.workflow()
-  static async checkoutWorkflow(...): Promise<void> {
-    ...
-    const paymentsURL = ...
-    await DBOS.setEvent(PAYMENT_URL, paymentsURL);
-    ... 
-  }
-```
-
-The Express handler that originally started the workflow uses `getEvent()` to await this payment ID, then returns it:
-
-```javascript
-static async webCheckout(...): Promise<void> {
-const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
-const paymentID = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_ID_EVENT);
-  if (paymentID === null) {
-    DBOS.logger.error('checkout failed');
-    return reply.code(500).send('Error starting checkout');
-  }
-  return paymentID;
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        // Don't make an HTTP request in a workflow function
+        const body = await fetch("https://example.com").then(r => r.text()); 
+        await Example.exampleTransaction(body);
+    }
 }
 ```
+
+Instead, do this:
+```javascript
+class Example {
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        // Don't make an HTTP request in a workflow function
+        const body = await DBOS.runStep(
+          async ()=>{return await fetch("https://example.com").then(r => r.text())},
+          {name: "fetchBody"}
+        );
+        await Example.exampleTransaction(body);
+    }
+}
+```
+
+Or this:
+```javascript
+class Example {
+    @DBOS.step()
+    static async fetchBody() {
+      // Instead, make HTTP requests in steps
+      return await fetch("https://example.com").then(r => r.text());
+    }
+
+    @DBOS.workflow()
+    static async exampleWorkflow() {
+        const body = await Example.fetchBody();
+        await Example.exampleTransaction(body);
+    }
+}
+```
+
+### Running Steps In Parallel
+Initiating several concurrent steps in a workflow, followed by awaiting them with `Promise.allSettled`, is valid as long as the steps are started in a deterministic order.  For example the following is allowed:
+```typescript
+const results = await Promise.allSettled([
+  step1("arg1"),
+  step2("arg2"),
+  step3("arg3"),
+  step4("arg4"),
+])
+```
+This is allowed because each step is started in a well-defined sequence before awaiting.
+
+By contrast, the following is not allowed:
+```typescript
+const results = await Promise.allSettled([
+  async () => { await step1("arg1"); await step2("arg3"); },
+  async () => { await step3("arg2"); await step4("arg4"); },
+]);
+```
+Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.
+
+If you need to run sequences of operations concurrently, start child workflows with `startWorkflow` and await the results from their `WorkflowHandle`s.
+
+Avoid using `Promise.all` because of how it handles errors and rejections.  When any promise rejects, `Promise.all` immediately fails, leaving the other promises unresolved.  If one of those later throws an unhandled exception, it can crash your Node.js process.  Instead, prefer `Promise.allSettled`, which safely waits for all promises to complete and reports their outcomes.
 
 ## Workflow Timeouts
 
@@ -501,8 +465,8 @@ async function main() {
 
 ## Durable Sleep
 
-You can use DBOS.sleep to put your workflow to sleep for any period of time.
-This sleep is durable, DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
+You can use `DBOS.sleep()` to put your workflow to sleep for any period of time.
+This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
 
 Sleeping is useful for scheduling a workflow to run in the future (even days, weeks, or months from now).
 For example:
@@ -515,35 +479,130 @@ static async exampleWorkflow(timeToSleep, task) {
 }
 ```
 
+## Debouncing Workflows
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow has last been called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+### Debouncer
+
+```typescript
+new Debouncer<Args extends unknown[], Return>(
+  params: DebouncerConfig<Args, Return>
+)
+```
+
+```typescript
+interface DebouncerConfig<Args extends unknown[], Return> {
+  workflow: (...args: Args) => Promise<Return>;
+  startWorkflowParams?: StartWorkflowParams;
+  debounceTimeoutMs?: number;
+}
+```
+
+**Parameters:**
+- **workflow**: The workflow to debounce. Note that workflows from configured instances cannot be debounced.
+- **startWorkflowParams**: Optional workflow parameters, as in `startWorkflow`. Applied to all workflows started from this debouncer.
+- **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+
+### debouncer.debounce
+
+```typescript
+debouncer.debounce(
+  debounceKey: string,
+  debouncePeriodMs: number,
+  ...args: Args
+): Promise<WorkflowHandle<Return>>
+```
+
+Submit a workflow for execution but delay it by `debouncePeriodMs`.
+Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounceTimeoutMs`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+**Parameters:**
+- **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
+- **debouncePeriodMs**: Delay this workflow's execution by this period in milliseconds.
+- **...args**: Variadic workflow arguments.
+
+**Example Syntax**:
+
+```typescript
+async function processInput(userInput: string) {
+  ...
+}
+const processInputWorkflow = DBOS.registerWorkflow(processInput);
+
+// Each time a user submits a new input, debounce the processInput workflow.
+// The workflow will wait until 60 seconds after the user stops submitting new inputs,
+// then process the last input submitted.
+const debouncer = new Debouncer({
+  workflow: processInputWorkflow,
+});
+
+async function onUserInputSubmit(userId: string, userInput: string) {
+  const debounceKey = userId;
+  const debouncePeriodMs = 60000; // 60 seconds
+  await debouncer.debounce(debounceKey, debouncePeriodMs, userInput);
+}
+```
+
+## Workflow Versioning and Recovery
+
+Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
+To guard against this, DBOS _versions_ applications and their workflows.
+When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `applicationVersion`) configuration parameter.
+All workflows are tagged with the application version on which they started.
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents unsafe recovery of workflows that depend on different code.
+You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+
+
+## Workflow Communication
+
+DBOS provides a few different ways to communicate with your workflows.
+You can:
+
+- Send messages to workflows
+- Publish events from workflows for clients to read
+- Stream values from workflows to clients
+
+
 ## Workflow Messaging and Notifications
-You can send messages to a specific workflow ID.
-This is useful for sending notifications to an active workflow.
+You can send messages to a specific workflow.
+This is useful for signaling a workflow or sending notifications to it while it's running.
+
+<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### Send
-
-You can call `DBOS.send()` to send a message to a workflow.
-Messages can optionally be associated with a topic and are queued on the receiver per topic.
-NEVER call this from a step.
 
 ```typescript
 DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
 ```
 
-#### Recv
+You can call `DBOS.send()` to send a message to a workflow.
+Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `None` if the wait times out.
-If the topic is not specified, this method only receives messages sent without a topic.
-ONLY call this from inside a workflow function, NEVER from a step.
+You can also call `send` from outside of your DBOS application with the DBOS Client.
+
+#### Recv
 
 ```typescript
 DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
+Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+If the topic is not specified, this method only receives messages sent without a topic.
+
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in one demo, the checkout workflow, after redirecting customers to a payments page, must wait for a notification that the user has paid.
+For example, in the e-commerce demo, the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
@@ -560,16 +619,145 @@ static async checkoutWorkflow(...): Promise<void> {
 }
 ```
 
-An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
+A webhook waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```javascript
-@DBOS.postApi('/payment_webhook')
 static async paymentWebhook(): Promise<void> {
   const notificationMessage = ... // Parse the notification.
   const workflowID = ... // Retrieve the workflow ID from notification metadata.
-  await DBOS.send(workflow_id, notificationMessage, PAYMENT_STATUS);
+  await DBOS.send(workflowID, notificationMessage, PAYMENT_STATUS);
 }
 ```
+
+#### Reliability Guarantees
+
+All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
+If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
+If you're sending a message from normal TypeScript code, you can specify an idempotency key for `send` to guarantee exactly-once delivery.
+
+## Workflow Events
+
+Workflows can publish _events_, which are key-value pairs associated with the workflow.
+They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
+
+<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
+#### setEvent
+
+```typescript
+DBOS.setEvent<T>(key: string, value: T): Promise<void>
+```
+
+Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
+
+#### getEvent
+
+```typescript
+DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+```
+
+You can call `DBOS.getEvent` to retrieve the value published by a particular workflow ID for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+
+You can also call `getEvent` from outside of your DBOS application with DBOS Client.
+
+#### Events Example
+
+Events are especially useful for writing interactive workflows that communicate information to their caller.
+For example, in the e-commerce demo, the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
+To communicate the payments URL to the customer, it uses events.
+
+The checkout workflow emits the payments URL using `setEvent()`:
+
+```javascript
+@DBOS.workflow()
+static async checkoutWorkflow(...): Promise<void> {
+  ...
+  const paymentsURL = ...
+  await DBOS.setEvent(PAYMENT_URL, paymentsURL);
+  ... 
+}
+```
+
+The HTTP handler that originally started the workflow uses `getEvent()` to await this URL, then redirects the customer to it:
+
+```javascript
+static async webCheckout(...): Promise<void> {
+  const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
+  const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
+  if (url === null) {
+    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+  } else {
+    DBOS.koaContext.redirect(url);
+  }
+}
+```
+
+#### Reliability Guarantees
+
+All events are persisted to the database, so the latest version of an event is always retrievable.
+Additionally, if `getEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
+
+## Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
+
+<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
+
+#### Writing to Streams
+
+```typescript
+DBOS.writeStream<T>(key: string, value: T): Promise<void>
+```
+
+You can write values to a stream from a workflow or its steps using `DBOS.writeStream`.
+A workflow may have any number of streams, each identified by a unique key.
+
+When you are done writing to a stream, you should close it with `DBOS.closeStream`.
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```typescript
+DBOS.closeStream(key: string): Promise<void>
+```
+
+DBOS streams are immutable and append-only.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+Readers will see all values written to the stream from all tries of the step in the order in which they were written.
+
+**Example syntax:**
+
+```typescript
+async function producerWorkflowFunction() {
+  await DBOS.writeStream("example_key", { step: 1, data: "value1" });
+  await DBOS.writeStream("example_key", { step: 2, data: "value2" });
+  await DBOS.closeStream("example_key"); // Signal completion
+}
+
+const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
+```
+
+#### Reading from Streams
+
+```typescript
+DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+```
+
+You can read values from a stream from anywhere using `DBOS.readStream`.
+This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
+
+You can also read from a stream from outside a DBOS application with a DBOS Client.
+
+**Example syntax:**
+
+```typescript
+for await (const value of DBOS.readStream(workflowID, "example_key")) {
+  console.log(`Received: ${JSON.stringify(value)}`);
+}
+```
+
+## Steps
 
 
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
@@ -671,12 +859,10 @@ static async exampleStep() {
   return await fetch("https://example.com").then(r => r.text());
 }
 ```
+## Queues
 
-### DBOS Queues
-
-
-Queues allow you to run functions with managed concurrency.
-They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+You can use queues to run many workflows at once with managed concurrency.
+Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, specify its name:
 
@@ -686,7 +872,7 @@ import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 const queue = new WorkflowQueue("example_queue");
 ```
 
-You can then enqueue any DBOS workflow, step, or transaction.
+You can then enqueue any workflow by passing the queue as an argument to `DBOS.startWorkflow`.
 Enqueuing a function submits it for execution and returns a handle to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -708,7 +894,7 @@ async function main() {
 
 ### Queue Example
 
-Here's an example of a workflow using a queue to process tasks concurrently:
+Here's an example of a workflow using a queue to process tasks in parallel:
 
 ```javascript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
@@ -737,6 +923,32 @@ async function queueFunction(tasks) {
   return results
 }
 const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
+```
+
+### Enqueueing from Another Application
+
+Often, you want to enqueue a workflow from outside your DBOS application.
+For example, let's say you have an API server and a data processing service.
+You're using DBOS to build a durable data pipeline in the data processing service.
+When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
+
+You can use the DBOS Client to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
+
+For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with `task` as an argument.
+
+```ts
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+
+type ProcessTask = typeof Tasks.processTask;
+await client.enqueue<ProcessTask>(
+    {
+        workflowName: 'dataPipeline',
+        queueName: 'pipelineQueue',
+    },
+    task);
 ```
 
 ### Managing Concurrency
@@ -770,6 +982,41 @@ import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
 const queue = new WorkflowQueue("example_queue", { concurrency: 10 });
 ```
+
+#### In-Order Processing
+
+You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+Only a single event will be processed at a time.
+For example, this app processes events sequentially in the order of their arrival:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import express from "express";
+
+const serialQueue = new WorkflowQueue("in_order_queue", { concurrency: 1 });
+const app = express();
+
+class Tasks {
+  @DBOS.workflow()
+  static async processTask(task){
+    // ... process task
+  }
+}
+
+app.get("/events/:event", async (req, res) => {
+  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
+  await res.send("Workflow Started!");
+});
+
+// Launch DBOS and start the server
+async function main() {
+  await DBOS.launch();
+  app.listen(3000, () => {});
+}
+
+main().catch(console.log);
+```
+
 
 ### Rate Limiting
 
@@ -809,13 +1056,37 @@ async function main() {
 }
 ```
 
+### Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```ts
+const queue = new WorkflowQueue("example_queue", { partitionQueue: true, concurrency: 1 });
+
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // Partition the task queue by user ID. As the queue has a
+    // maximum concurrency of 1, this means that at most one
+    // task can run at once per user (but tasks from different
+    // users can run concurrently).
+    await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {queuePartitionKey: userID}})(task);
+}
+```
+
 ### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
-For example, this is useful if you only want to have one workflow active at a time per user, set the deduplication ID to the user's ID.
+For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
 Example syntax:
 
@@ -863,64 +1134,6 @@ async function main() {
   const priority: number = ...
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
 }
-```
-
-### In-Order Processing
-
-You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
-Only a single event will be processed at a time.
-For example, this app processes events sequentially in the order of their arrival:
-
-```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-import express from "express";
-
-const serialQueue = new WorkflowQueue("in_order_queue", { concurrency: 1 });
-const app = express();
-
-class Tasks {
-  @DBOS.workflow()
-  static async processTask(task){
-    // ... process task
-  }
-}
-
-app.get("/events/:event", async (req, res) => {
-  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
-  await res.send("Workflow Started!");
-});
-
-// Launch DBOS and start the server
-async function main() {
-  await DBOS.launch();
-  app.listen(3000, () => {});
-}
-
-main().catch(console.log);
-```
-
-### Enqueue with DBOSClient
-
-DBOSClient provides a way to programmatically interact with your DBOS application from external code.
-Among other things, this allows you to enqueue workflows from outside your DBOS application.
-
-Since `DBOSClient` is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
-
-Example: 
-
-```ts
-import { DBOSClient } from "@dbos-inc/dbos-sdk";
-
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
-
-type ProcessTask = typeof Tasks.processTask;
-await client.enqueue<ProcessTask>(
-    {
-        workflowName: 'processTask',
-        workflowClassName: 'Tasks',
-        queueName: 'example_queue',
-    }, 
-    task);
 ```
 
 ## Classes
