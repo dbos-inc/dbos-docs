@@ -520,20 +520,34 @@ def process_tasks(tasks):
 
 ### Managing Concurrency
 
-You can specify the _concurrency_ of a queue, the maximum number of functions from this queue that may run concurrently, at two scopes: global and per process.
-Global concurrency limits are applied across all DBOS processes using this queue.
-Per process concurrency limits are applied to each DBOS process using this queue.
-If no limit is provided, any number of functions may run concurrently.
-For example, this queue has a maximum global concurrency of 10 and a per process maximum concurrency of 5, so at most 10 functions submitted to it may run at once, up to 5 per process:
+You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
+This helps prevent resource exhaustion when workflows consume significant memory or processing power.
+
+#### Worker Concurrency
+
+Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
+This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
+For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```python
 from dbos import Queue
 
-queue = Queue("example_queue", concurrency=10, worker_concurrency=5)
+queue = Queue("example_queue", worker_concurrency=5)
 ```
 
-You may want to specify a maximum concurrency if functions in your queue submit work to an external process with limited resources.
-The concurrency limit guarantees that even if many functions are submitted at once, they won't overwhelm the process.
+#### Global Concurrency
+
+Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
+For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
+
+Worker concurrency limits are recommended for most use cases.
+Take care when using a global concurrency limit as any `PENDING` workflow on the queue counts toward the limit, including workflows from previous application versions
+
+```python
+from dbos import Queue
+
+queue = Queue("example_queue", concurrency=10)
+```
 
 ### Rate Limiting
 
@@ -637,6 +651,35 @@ with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
 
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
+```
+
+## Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```python
+queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
+
+@DBOS.workflow()
+def process_task(task: Task):
+  ...
+
+
+def on_user_task_submission(user_id: str, task: Task):
+    # Partition the task queue by user ID. As the queue has a
+    # maximum concurrency of 1, this means that at most one
+    # task can run at once per user (but tasks from different
+    # users can run concurrently).
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        queue.enqueue(process_task, task)
 ```
 
 ## Python Classes
@@ -891,6 +934,7 @@ class WorkflowStatus:
 
 Retrieve the workflow status:
 
+
 ### Configuring DBOS
 
 To configure DBOS, pass a `DBOSConfig` object to its constructor.
@@ -899,7 +943,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
 ```
@@ -910,24 +954,36 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
-    log_level: Optional[str]
+    dbos_system_schema: Optional[str]
+    system_database_engine: Optional[sqlalchemy.Engine]
+
+    conductor_key: Optional[str]
+
+    enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
-    admin_port: Optional[int]
+    log_level: Optional[str]
+
     run_admin_server: Optional[bool]
+    admin_port: Optional[int]
+
     application_version: Optional[str]
+    executor_id: Optional[str]
+
+    serializer: Optional[Serializer]
 ```
 
 - **name**: Your application's name.
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state.
 This may be either Postgres or SQLite, though Postgres is recommended for production.
-DBOS uses this connection string, unmodified, to create a SQLAlchemy engine
+DBOS uses this connection string, unmodified, to create a SQLAlchemy Engine
 A valid connection string looks like:
 
 ```
@@ -953,7 +1009,7 @@ sqlite:///[application_name].sqlite
 This is the database in which DBOS executes `@DBOS.transaction` functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s create_engine()
+- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s `create_engine()`.
 Defaults to:
 
 ```python
@@ -964,14 +1020,59 @@ Defaults to:
 }
 ```
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
-- **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers.
-- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers.
+- **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
+- **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
+- **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
+- **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
+- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows.
+- **application_version**: The code version for this application and its workflows. Workflow versioning is documented here.
+- **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for distributed workflow recovery
+- **serializer**: A custom serializer for the system database.
 
+#### Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
+By default, data is serialized with `pickle` then Base64-encoded, but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must match this interface:
+
+```python
+class Serializer(ABC):
+
+    @abstractmethod
+    def serialize(self, data: Any) -> str:
+        pass
+
+    @abstractmethod
+    def deserialize(cls, serialized_data: str) -> Any:
+        pass
+```
+
+For example, here is how to configure DBOS to use a JSON serializer:
+
+```python
+from dbos import DBOS, DBOSConfig, Serializer
+
+class JsonSerializer(Serializer):
+    def serialize(self, data: Any) -> str:
+        return json.dumps(data)
+
+    def deserialize(cls, serialized_data: str) -> Any:
+        return json.loads(serialized_data)
+
+serializer = JsonSerializer()
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "serializer": serializer
+}
+DBOS(config=config)
+DBOS.launch()
+```
 
 ### Transactions
 
