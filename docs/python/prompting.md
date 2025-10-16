@@ -49,7 +49,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT use threads to start workflows or to start steps in workflows. You should instead use DBOS.start_workflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.start_workflow, DBOS.sleep, DBOS.set_event, DBOS.get_event) from a step.
+- Do NOT call DBOS.start_workflow or DBOS.recv from a step
 - Do NOT start workflows from inside a step.
 - Do NOT call DBOS.set_event and DBOS.recv from outside a workflow.
 
