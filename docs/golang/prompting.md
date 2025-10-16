@@ -414,7 +414,7 @@ func runWorkflowExample(dbosContext dbos.DBOSContext, input string) error {
 }
 ```
 
-## Workflow IDs and Idempotency
+### Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a UUID.
 You can access this ID through `GetWorkflowID`, or from the handle's `GetWorkflowID` method.
@@ -452,7 +452,7 @@ func example(dbosContext dbos.DBOSContext, input string) error {
 }
 ```
 
-## Determinism
+### Determinism
 
 Workflows are in most respects normal Go functions.
 They can have loops, branches, conditionals, and so on.
@@ -497,7 +497,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 }
 ```
 
-## Workflow Timeouts
+### Workflow Timeouts
 
 You can set a timeout for a workflow using its input `DBOSContext`. Use `WithTimeout` to obtain a cancellable `DBOSContext`, as you would with a normal `context.Context`.
 
@@ -515,7 +515,7 @@ handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 You can also manually cancel the workflow by calling its `cancel` function (or calling CancelWorkflow).
 
 
-## Durable Sleep
+### Durable Sleep
 
 You can use `Sleep` to put your workflow to sleep for any period of time.
 This sleep is **durable**&mdash;DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
@@ -555,7 +555,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input struct {
 
 ```
 
-## Scheduled Workflows
+### Scheduled Workflows
 
 You can schedule workflows to run automatically at specified times using cron syntax with seconds precision.
 Scheduled workflows are useful for running recurring tasks like data backups, report generation, or cleanup operations.
@@ -597,7 +597,7 @@ func main() {
 }
 ```
 
-## Workflow Versioning and Recovery
+### Workflow Versioning and Recovery
 
 Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
 To guard against this, DBOS _versions_ applications and their workflows.
@@ -736,7 +736,7 @@ You can:
 - Publish events from workflows for clients to read
 
 
-## Workflow Messaging and Notifications
+### Workflow Messaging and Notifications
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
 
@@ -812,7 +812,7 @@ func paymentWebhookHandler(w http.ResponseWriter, r *http.Request) {
 All messages are persisted to the database, so if `Send` completes successfully, the destination workflow is guaranteed to be able to `Recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
 
-## Workflow Events
+### Workflow Events
 
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
