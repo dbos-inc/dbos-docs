@@ -42,6 +42,10 @@ See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/Java
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.
 
+### How large can serialized step and workflow outputs be?
+
+DBOS stores two serialized fields (`inputs` and `output`) for each workflow  and one `output` field for each step. Each of these is stored as a Postgres `TEXT` value which is limited by the maximum field size; currently 1GB. See [Postgres documentation](https://wiki.postgresql.org/wiki/FAQ#What_is_the_maximum_size_for_a_row.2C_a_table.2C_and_a_database.3F).
+
 ### Why am I seeing an error that function X was recorded when Y was expected?
 
 This error arises when DBOS is recovering a workflow and attempts to execute step Y, but finds a checkpoint in the database for step X instead.
