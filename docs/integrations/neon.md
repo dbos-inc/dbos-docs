@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 20
 title: Neon
 hide_table_of_contents: true
 ---
