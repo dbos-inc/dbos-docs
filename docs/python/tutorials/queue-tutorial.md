@@ -227,7 +227,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 
 ## Priority
 
-You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions).
+You can set a priority for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 If using priority, you must set `priority_enabled=True` on your queue.
 
