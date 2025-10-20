@@ -25,6 +25,7 @@
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add the open source DBOS Transact library to your existing Django application to durably execute it and make it resilient to any failure.
 - [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
+- [Neon](https://docs.dbos.dev/integrations/neon.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
