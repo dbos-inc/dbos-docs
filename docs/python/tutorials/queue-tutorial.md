@@ -204,7 +204,7 @@ def on_user_task_submission(user_id: str, task: Task):
 
 ## Deduplication
 
-You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/contexts.md#setenqueueoptions).
+You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
