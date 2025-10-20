@@ -4,6 +4,8 @@ title: Neon
 hide_table_of_contents: true
 ---
 
+# Use DBOS With Neon
+
 Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 
 ### 1. Set up a Local Application
