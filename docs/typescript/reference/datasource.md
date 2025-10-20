@@ -43,7 +43,7 @@ const dataSource = new KnexDataSource('knex-ds', config);
 
 Note that each datasource is given a `name` upon construction.  These names are used internally within DBOS and must be unique.
 
-To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment varialbe should be checked within configuration to connect to the primary application database.
+To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment variable should be checked within configuration to connect to the primary application database.
 
 ### Installing the DBOS Schema
 
