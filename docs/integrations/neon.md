@@ -16,7 +16,7 @@ The rest of this guide will assume you have a local application.
 Next, open your Neon dashboard at [`console.neon.tech`](https://console.neon.tech), select a project, and click "Connect" to retrieve connection information for your Neon database.
 You should see a screen that looks like this:
 
-<img src={require('@site/static/img/neon/neon-connect.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+<img src={require('@site/static/img/neon/neon-connect.png').default} alt="Neon Connection Information" width="800" className="custom-img"/>
 
 This page shows the connection string for your database.
 There are a few settings you may wish to alter before retrieving this connection string:
@@ -42,4 +42,4 @@ For your database, select the database to which you connected your DBOS applicat
 For your schema, select "dbos". 
 You can now see DBOS durably checkpoint your workflows to your Neon database:
 
-<img src={require('@site/static/img/neon/neon-tables.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+<img src={require('@site/static/img/neon/neon-tables.png').default} alt="Neon Tables Dashboard" width="800" className="custom-img"/>
