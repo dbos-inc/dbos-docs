@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 30
 title: Pydantic AI
 hide_table_of_contents: false
 ---
