@@ -13,7 +13,7 @@ The rest of this guide will assume you have a local application.
 
 ### 2. Connect to Your Neon Database
 
-Next, open your Neon dashboard at [`console.neon.tech`](https://console.neon.tech), select a project, and click "Connect" to retrieve connection information for your Neon database.
+Next, open your [Neon dashboard](https://console.neon.tech), select a project, and click "Connect" to retrieve connection information for your Neon database.
 You should see a screen that looks like this:
 
 <img src={require('@site/static/img/neon/neon-connect.png').default} alt="Neon Connection Information" width="800" className="custom-img"/>
