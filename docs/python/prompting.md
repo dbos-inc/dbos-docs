@@ -159,7 +159,7 @@ config: DBOSConfig = {
     "name": "dbos-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
-DBOS(config=config, fastapi=app)
+DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -194,7 +194,7 @@ config: DBOSConfig = {
     "name": "dbos-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
-DBOS(config=config, fastapi=app)
+DBOS(config=config)
 
 queue = Queue("example-queue")
 
@@ -879,16 +879,12 @@ For example, this app processes events sequentially in the order of their arriva
 from fastapi import FastAPI
 from dbos import DBOS, Queue
 
-app = FastAPI()
-DBOS(fastapi=app)
-
 queue = Queue("in_order_queue", concurrency=1)
 
 @DBOS.step()
 def process_event(event: str):
     ...
 
-@app.post("/events/{event}")
 def event_endpoint(event: str):
     queue.enqueue(process_event, event)
  ```
