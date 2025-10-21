@@ -33,19 +33,33 @@ Should be called after all decorators run.
 
 **Example:**
 ```python
-from dbos import DBOS
+import os
+from dbos import DBOS, DBOSConfig
 
-# Initialize the DBOS object
-DBOS()
+# Configure and initialize DBOS
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+}
+DBOS(config=config)
 
-# Define a scheduled workflow
-@DBOS.scheduled("* * * * *")
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
+
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
+
 @DBOS.workflow()
-def run_every_minute(scheduled_time: datetime, actual_time: datetime):
-    DBOS.logger.info("This is a scheduled workflow!")
+def dbos_workflow():
+    step_one()
+    step_two()
 
-# After all decorators run, launch DBOS
-DBOS.launch()
+# Launch DBOS, then run a workflow.
+if __name__ == "__main__":
+    DBOS.launch()
+    dbos_workflow()
 ```
 
 ### destroy
