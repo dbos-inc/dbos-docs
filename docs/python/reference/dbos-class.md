@@ -14,15 +14,11 @@ Decorators are documented [here](./decorators.md) and context methods and variab
 DBOS(
     *,
     config: Optional[DBOSConfig] = None,
-    fastapi: Optional[FastAPI] = None,
-    flask: Optional[Flask] = None,
 )
 ```
 
 **Parameters:**
 - `config`: Configuration parameters for DBOS. See the [configuration docs](./configuration.md).
-- `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
-- `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
 
 
 ### launch
@@ -79,6 +75,7 @@ Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -
 
 ```python
 DBOS.destroy(
+    workflow_completion_timeout_sec: int = 0,
     destroy_registry: bool = False
 )
 ```
@@ -88,6 +85,7 @@ After this completes, the singleton can be re-initialized.
 Useful for testing.
 
 **Parameters:**
+- `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
 
 
