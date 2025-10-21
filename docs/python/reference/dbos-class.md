@@ -27,7 +27,7 @@ DBOS(
 DBOS.launch()
 ```
 
-Launch DBOS, initializing database connections and starting scheduled workflows.
+Launch DBOS, initializing database connections and starting queues and scheduled workflows.
 Should be called after all decorators run.
 **You should not run a DBOS workflow until after DBOS is launched.**
 
