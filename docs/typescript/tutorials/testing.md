@@ -92,7 +92,7 @@ jest.mock('@dbos-inc/dbos-sdk', () => ({
 
 It's important to mock `DBOS.registerWorkflow` to directly return the workflow function instead of wrapping it with durable workflow code.
 
-Then we can unit test the workflow business logic.
+Then we can unit test the workflow code:
 
 ```ts
 describe('checkout workflow unit tests', () => {
