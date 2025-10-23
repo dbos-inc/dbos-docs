@@ -84,7 +84,6 @@ If it's ever interrupted or restarted, it recovers the indexing of each document
 ```python
 queue = Queue("indexing_queue")
 
-
 @DBOS.workflow()
 def index_documents(urls: List[HttpUrl]):
     handles: List[WorkflowHandle] = []
