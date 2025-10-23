@@ -1,6 +1,6 @@
 ---
 sidebar_position: 104
-title: Testing
+title: Testing & Mocking
 ---
 
 You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like [Jest](https://jestjs.io/) or [Vitest](https://vitest.dev/).
