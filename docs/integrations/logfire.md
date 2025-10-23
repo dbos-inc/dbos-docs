@@ -97,7 +97,7 @@ If you're deploying your app on DBOS Cloud, make sure to set `LOGFIRE_TOKEN` in 
 
 :::
 
-Then, configure your DBOS application to use Logfire and enable OpenTelemetry traces. You don't need to set `otlp_traces_endpoints` or `otlp_logs_endpoints`, because Logfire SDK already automatically sets up exporters.
+Then, configure your DBOS application to use Logfire and enable OpenTelemetry traces. You don't need to set `otlp_traces_endpoints` or `otlp_logs_endpoints`, because the Logfire SDK automatically configures exporters.
 
 
 ```python
