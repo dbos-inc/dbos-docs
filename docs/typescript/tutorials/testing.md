@@ -102,26 +102,26 @@ describe('checkout workflow unit tests', () => {
 
   describe('successful checkout flow', () => {
     it('should complete checkout when inventory is available and payment succeeds', async () => {
-      const mockOrderID = 'order-456';
+      const mockOrderID = 456;
 
       // Mock successful inventory subtraction
-      (subtractInventory as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(subtractInventory).mockResolvedValue(undefined);
 
       // Mock order creation
-      (createOrder as jest.Mock).mockResolvedValue(mockOrderID);
+      jest.mocked(createOrder).mockResolvedValue(mockOrderID);
 
       // Mock payment notification as successful
-      (DBOS.recv as jest.Mock).mockResolvedValue('paid');
+      jest.mocked(DBOS.recv).mockResolvedValue('paid');
 
       // Mock marking order as paid
-      (markOrderPaid as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(markOrderPaid).mockResolvedValue(undefined);
 
       // Mock startWorkflow to return a function
       const mockWorkflowFunction = jest.fn().mockResolvedValue(undefined);
-      (DBOS.startWorkflow as jest.Mock).mockReturnValue(mockWorkflowFunction);
+      jest.mocked(DBOS.startWorkflow).mockReturnValue(mockWorkflowFunction);
 
       // Mock setEvent
-      (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
+      jest.mocked(DBOS.setEvent).mockResolvedValue(undefined);
 
       // Execute the workflow
       await checkoutWorkflow();
