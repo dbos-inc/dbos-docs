@@ -40,7 +40,8 @@ Within seconds, your app will recover to exactly the state it was in before the 
 
 
 ```javascript
-export async function checkoutWorkflowFunction() {
+export const checkoutWorkflow = DBOS.registerWorkflow(
+  async () => {
     // Attempt to reserve inventory, failing if no inventory remains
     try {
       await subtractInventory();
@@ -73,10 +74,7 @@ export async function checkoutWorkflowFunction() {
     // Finally, send the order ID to the payment endpoint so it can redirect
     // the customer to the order status page.
     await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-}
-
-const checkoutWorkflow = DBOS.registerWorkflow(
-  checkoutWorkflowFunction,
+  },
   { name: 'checkoutWorkflow' },
 );
 ```

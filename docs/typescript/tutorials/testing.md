@@ -23,7 +23,8 @@ For example, say we want to test the checkout workflow from the [Fault-Tolerant 
 <summary><strong>Checkout Workflow</strong></summary>
 
 ```ts
-export async function checkoutWorkflowFunction() {
+export const checkoutWorkflow = DBOS.registerWorkflow(
+  async () => {
     // Attempt to reserve inventory, failing if no inventory remains
     try {
       await subtractInventory();
@@ -56,10 +57,7 @@ export async function checkoutWorkflowFunction() {
     // Finally, send the order ID to the payment endpoint so it can redirect
     // the customer to the order status page.
     await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-}
-
-const checkoutWorkflow = DBOS.registerWorkflow(
-  checkoutWorkflowFunction,
+  },
   { name: 'checkoutWorkflow' },
 );
 ```
@@ -82,7 +80,8 @@ jest.mock('../src/shop', () => ({
 // Mock DBOS
 jest.mock('@dbos-inc/dbos-sdk', () => ({
   DBOS: {
-    registerWorkflow: jest.fn(),
+    // IMPORTANT: Mock registerWorkflow to just return the workflow function
+    registerWorkflow: jest.fn((fn) => fn),
     setEvent: jest.fn(),
     recv: jest.fn(),
     startWorkflow: jest.fn(),
@@ -91,8 +90,9 @@ jest.mock('@dbos-inc/dbos-sdk', () => ({
 }));
 ```
 
+It's important to mock `DBOS.registerWorkflow` to just return the workflow function instead of wrapping it with durable workflow code.
+
 Then we can unit test the workflow business logic.
-Note that the unit test calls the workflow function directly (`checkoutWorkflowFunction`), not the wrapped and registered workflow (`checkoutWorkflow`).
 
 ```ts
 describe('checkout workflow unit tests', () => {
@@ -124,7 +124,7 @@ describe('checkout workflow unit tests', () => {
       (DBOS.setEvent as jest.Mock).mockResolvedValue(undefined);
 
       // Execute the workflow
-      await checkoutWorkflowFunction();
+      await checkoutWorkflow();
 
       // Verify inventory was subtracted
       expect(subtractInventory).toHaveBeenCalledTimes(1);
