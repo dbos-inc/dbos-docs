@@ -17,7 +17,7 @@ There are two basic approaches to testing workflows:
 
 You can unit test workflows in isolation by mocking the DBOS interface.
 This can be done with popular tools such as `jest.mock`.
-For example, let us say we want to test the checkout workflow from the [Fault-Tolerant Checkout example](../examples/checkout-tutorial.md):
+For example, say we want to test the checkout workflow from the [Fault-Tolerant Checkout example](../examples/checkout-tutorial.md):
 
 <details>
 <summary><strong>Checkout Workflow</strong></summary>
