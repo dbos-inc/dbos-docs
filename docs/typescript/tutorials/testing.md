@@ -156,7 +156,7 @@ describe('checkout workflow unit tests', () => {
 });
 ```
 
-You can find a complete unit test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
+You can find a complete unit test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/widget-store/tests/shop-unit.test.ts).
 
 ## Integration Testing
 
@@ -215,4 +215,4 @@ describe('example integration tests', () => {
 
 With the DBOS environment correctly configured between tests, you can freely call your workflows, steps, and DBOS interface methods and test them any way you need.
 
-You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
+You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/widget-store/tests/shop-integration.test.ts).
