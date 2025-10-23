@@ -78,27 +78,28 @@ Because ingesting and indexing documents may take a long time, we need to build 
 It needs to process multiple documents at once and it needs to be resilient to failures, so if the application is interrupted or restarted, or encounters an error, it can recover from where it left off instead of restarting from the beginning or losing some documents entirely.
 
 We'll build a concurrent, reliable data ingestion pipeline using DBOS workflows and queues.
-This workflow takes in a batch of document URLs and enqueues them for ingestion.
-It then waits for them all to complete and counts how many total documents and pages were ingested.
-If it's ever interrupted or restarted, it recovers the ingestion of each document from the last completed step, guaranteeing that every document is ingested and none are lost.
+This workflow takes in a batch of document URLs, enqueues them all for indexing, and waits for all documents to finish being indexed.
+If it's ever interrupted or restarted, it recovers the indexing of each document from the last completed step, guaranteeing that every document is indexed and none are lost.
 
 ```python
 queue = Queue("indexing_queue")
 
 
 @DBOS.workflow()
-def indexing_workflow(urls: List[HttpUrl]):
+def index_documents(urls: List[HttpUrl]):
     handles: List[WorkflowHandle] = []
+    # Enqueue each document for indexing
     for url in urls:
         handle = queue.enqueue(index_document, url)
         handles.append(handle)
+    # Wait for all documents to finish indexing, count the total number of indexed pages
     indexed_pages = 0
     for handle in handles:
         indexed_pages += handle.get_result()
     print(f"Indexed {len(urls)} documents totaling {indexed_pages} pages")
 ```
 
-This workflow ingests an individual document.
+This workflow indexes an individual document.
 It calls two steps: `download_document` to download the document and parse it into pages, then `index_page` to add a parsed page to the vector index.
 
 ```python
@@ -110,7 +111,7 @@ def index_document(document_url: HttpUrl) -> int:
     return len(pages)
 ```
 
-Here's the code for the two steps in `index_document`:
+Here's the code for the steps in `index_document`:
 
 ```python
 @DBOS.step()
@@ -146,10 +147,9 @@ It starts the indexing workflow in the background on a batch of documents.
 class URLList(BaseModel):
     urls: List[HttpUrl]
 
-
 @app.post("/index")
-async def index_endpoint(urls: URLList):
-    DBOS.start_workflow(indexing_workflow, urls.urls)
+def index_endpoint(urls: URLList):
+    DBOS.start_workflow(index_documents, urls.urls)
 ```
 
 ## Chatting With Your Data
