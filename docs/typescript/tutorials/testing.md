@@ -214,4 +214,6 @@ describe('example integration tests', () => {
 });
 ```
 
+With the DBOS environment correctly configured between tests, you can freely call your workflows and test them any way you need.
+
 You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
