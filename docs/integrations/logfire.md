@@ -114,7 +114,7 @@ dbos_config: DBOSConfig = {
 DBOS(config=dbos_config)
 ```
 
-Now start your DBOS application. You should see your logs and traces appear on the Logfire dashboard! The following screenshot shows using DBOS durable agent integration, you can correlate Pydantic AI agent traces (e.g., token usage) and DBOS workflow execution in the same view.
+Now start your DBOS application. You should see your logs and traces appear on the Logfire dashboard! The following screenshot shows how in a durable Pydantic AI agent built with DBOS, you can correlate Pydantic AI agent traces (e.g., token usage) and DBOS workflow execution in the same view.
 
 ![DBOS Agent Logs and Traces on Logfire](./assets/logfire-agent-screenshot.png)
 
