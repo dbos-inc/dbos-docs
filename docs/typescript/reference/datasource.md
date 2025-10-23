@@ -18,6 +18,7 @@ This package, along with its underlying database libraries, should be installed 
 
 - [@dbos-inc/drizzle-datasource](https://www.npmjs.com/package/@dbos-inc/drizzle-datasource): [drizzle](https://orm.drizzle.team/)
 - [@dbos-inc/knex-datasource](https://www.npmjs.com/package/@dbos-inc/knex-datasource): [Knex.js](https://knexjs.org/)
+- [@dbos-inc/kysely-datasource](https://www.npmjs.com/package/@dbos-inc/kysely-datasource): [Kysely](https://kysely.dev/)
 - [@dbos-inc/nodepg-datasource](https://www.npmjs.com/package/@dbos-inc/nodepg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
 - [@dbos-inc/postgres-datasource](https://www.npmjs.com/package/@dbos-inc/postgres-datasource): [Postgres.js](https://github.com/porsager/postgres)
 - [@dbos-inc/prisma-datasource](https://www.npmjs.com/package/@dbos-inc/prisma-datasource): [Prisma](https://www.prisma.io/)
@@ -33,7 +34,7 @@ class KnexDataSource {
    * @param name - A unique name for the datasource.
    * @param config - A Knex configuration for the datasource. Passed directly into the Knex pool object.
    */
-  constructor(name: string, config: Knex.Config)  
+  constructor(name: string, config: Knex.Config)
 }
 
 const config = {client: 'pg', connectionString: process.env.DBOS_DATABASE_URL}
@@ -42,7 +43,7 @@ const dataSource = new KnexDataSource('knex-ds', config);
 
 Note that each datasource is given a `name` upon construction.  These names are used internally within DBOS and must be unique.
 
-To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment varialbe should be checked within configuration to connect to the primary application database.
+To support operation in DBOS Cloud, `DBOS_DATABASE_URL` environment variable should be checked within configuration to connect to the primary application database.
 
 ### Installing the DBOS Schema
 

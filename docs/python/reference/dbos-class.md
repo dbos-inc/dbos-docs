@@ -14,15 +14,11 @@ Decorators are documented [here](./decorators.md) and context methods and variab
 DBOS(
     *,
     config: Optional[DBOSConfig] = None,
-    fastapi: Optional[FastAPI] = None,
-    flask: Optional[Flask] = None,
 )
 ```
 
 **Parameters:**
 - `config`: Configuration parameters for DBOS. See the [configuration docs](./configuration.md).
-- `fastapi`: If your application is using FastAPI, the `FastAPI` object. If this is passed in, DBOS automatically calls [`dbos.launch`](#launch) when FastAPI is fully initialized. DBOS also adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through FastAPI HTTP endpoints.
-- `flask`: If your application is using Flask, the `flask` object. If this is passed in, DBOS adds to all routes a middleware that enables [tracing](../tutorials/logging-and-tracing.md#tracing) through Flask HTTP endpoints.
 
 
 ### launch
@@ -31,54 +27,46 @@ DBOS(
 DBOS.launch()
 ```
 
-Launch DBOS, initializing database connections and starting scheduled workflows.
+Launch DBOS, initializing database connections and starting queues and scheduled workflows.
 Should be called after all decorators run.
-**You should not call a DBOS function until after DBOS is launched.**
-If a FastAPI app is passed into the `DBOS` constructor, `launch` is called automatically during FastAPI setup.
+**You should not run a DBOS workflow until after DBOS is launched.**
 
 **Example:**
 ```python
-from dbos import DBOS
+import os
+from dbos import DBOS, DBOSConfig
 
-# Initialize the DBOS object
-DBOS()
+# Configure and initialize DBOS
+config: DBOSConfig = {
+    "name": "dbos-starter",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+}
+DBOS(config=config)
 
-# Define a scheduled workflow
-@DBOS.scheduled("* * * * *")
+@DBOS.step()
+def step_one():
+    print("Step one completed!")
+
+@DBOS.step()
+def step_two():
+    print("Step two completed!")
+
 @DBOS.workflow()
-def run_every_minute(scheduled_time: datetime, actual_time: datetime):
-    DBOS.logger.info("This is a scheduled workflow!")
+def dbos_workflow():
+    step_one()
+    step_two()
 
-# After all decorators run, launch DBOS
-DBOS.launch()
-```
-
-**Example using Flask:**
-```python
-from flask import Flask
-from dbos import DBOS
-
-app = Flask(__name__)
-DBOS(flask=app)
-
-@app.route("/")
-@DBOS.workflow()
-def test_workflow():
-    return "<p>Workflow successful!</p>"
-
-# After all decorators run, launch DBOS
-DBOS.launch()
-
+# Launch DBOS, then run a workflow.
 if __name__ == "__main__":
-    app.run()
+    DBOS.launch()
+    dbos_workflow()
 ```
-
-Assuming your file is `main.py`, run with `python3 -m main` (dev) or `gunicorn -w 1 'main:app' -b 0.0.0.0:8000` (prod)
 
 ### destroy
 
 ```python
 DBOS.destroy(
+    workflow_completion_timeout_sec: int = 0,
     destroy_registry: bool = False
 )
 ```
@@ -88,6 +76,7 @@ After this completes, the singleton can be re-initialized.
 Useful for testing.
 
 **Parameters:**
+- `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
 
 

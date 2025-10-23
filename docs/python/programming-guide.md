@@ -111,7 +111,7 @@ config: DBOSConfig = {
     "name": "dbos-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
-DBOS(config=config, fastapi=app)
+DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -186,7 +186,7 @@ config: DBOSConfig = {
     "name": "dbos-starter",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
-DBOS(config=config, fastapi=app)
+DBOS(config=config)
 
 queue = Queue("example-queue")
 
