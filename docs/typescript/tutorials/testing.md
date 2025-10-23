@@ -193,7 +193,6 @@ describe('example integration tests', () => {
     // Shut down DBOS (in case a previous test launched it) and reset the database.
     await DBOS.shutdown();
     await resetDatabase(databaseUrl);
-    await migrateShopDatabase(databaseUrl);
 
     // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
