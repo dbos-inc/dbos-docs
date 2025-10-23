@@ -85,7 +85,7 @@ Now start your DBOS application. You should see your logs and traces appear on t
 
 ## Configure DBOS with Logfire SDK
 
-If you're using the Logfire SDK (currently only support Python), set the `LOGFIRE_TOKEN` environment variable to your write token:
+If you're using the Logfire SDK (currently only supported in Python), set the `LOGFIRE_TOKEN` environment variable to your write token:
 
 ```shell
 export LOGFIRE_TOKEN='your-write-token'
