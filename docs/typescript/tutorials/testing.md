@@ -69,7 +69,7 @@ This workflow calls several steps as well as several DBOS interface methods.
 We'll mock them:
 
 ```ts
-// Mock the shop module
+// Mock steps in the shop module
 jest.mock('../src/shop', () => ({
   subtractInventory: jest.fn(),
   createOrder: jest.fn(),
@@ -156,3 +156,62 @@ describe('checkout workflow unit tests', () => {
 });
 ```
 
+You can find a complete unit test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
+
+## Integration Testing
+
+You can also write integration tests for workflows, testing interactions with DBOS.
+This requires a Postgres database.
+
+When writing integration tests, you likely want to reset DBOS and its system database between tests.
+Here is some example code for this:
+
+```ts
+export async function resetDatabase(databaseUrl: string) {
+  const dbName = new URL(databaseUrl).pathname.slice(1);
+  const postgresDatabaseUrl = new URL(databaseUrl);
+  postgresDatabaseUrl.pathname = '/postgres';
+
+  const client = new Client({ connectionString: postgresDatabaseUrl.toString() });
+  await client.connect();
+  try {
+    await client.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+    await client.query(`CREATE DATABASE ${dbName}`);
+  } finally {
+    await client.end();
+  }
+}
+
+describe('example integration tests', () => {
+  beforeEach(async () => {
+    // An integration test requires a Postgres connection
+    const databaseUrl = process.env.DBOS_TEST_DATABASE_URL;
+    if (!databaseUrl) {
+      throw Error("DBOS_TEST_DATABASE_URL must be set to run this test")
+    }
+
+    // Shut down DBOS (in case a previous test launched it) and reset the database.
+    await DBOS.shutdown();
+    await resetDatabase(databaseUrl);
+    await migrateShopDatabase(databaseUrl);
+
+    // Configure and launch DBOS
+    const dbosTestConfig: DBOSConfig = {
+      name: "my-integration-test",
+      systemDatabaseUrl: databaseUrl,
+    };
+    DBOS.setConfig(dbosTestConfig);
+    await DBOS.launch();
+  }, 10000);
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  it('my integration test', async () => {
+    // test goes here
+  });
+});
+```
+
+You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
