@@ -40,13 +40,12 @@ Within seconds, your app will recover to exactly the state it was in before the 
 
 
 ```javascript
-const checkoutWorkflow = DBOS.registerWorkflow(
-  async () => {
+export async function checkoutWorkflowFunction() {
     // Attempt to reserve inventory, failing if no inventory remains
     try {
       await subtractInventory();
     } catch (error) {
-      DBOS.logger.error(`Failed to update inventory: ${(error as Error).message}`);
+      console.error(`Failed to update inventory: ${(error as Error).message}`);
       await DBOS.setEvent(PAYMENT_ID_EVENT, null);
       return;
     }
@@ -62,11 +61,11 @@ const checkoutWorkflow = DBOS.registerWorkflow(
     // If payment succeeded, mark the order as paid and start the order dispatch workflow.
     // Otherwise, return reserved inventory and cancel the order.
     if (notification && notification === 'paid') {
-      DBOS.logger.info(`Payment successful!`);
+      console.info(`Payment successful!`);
       await markOrderPaid(orderID);
       await DBOS.startWorkflow(dispatchOrder)(orderID);
     } else {
-      DBOS.logger.warn(`Payment failed...`);
+      console.warn(`Payment failed...`);
       await errorOrder(orderID);
       await undoSubtractInventory();
     }
@@ -74,7 +73,10 @@ const checkoutWorkflow = DBOS.registerWorkflow(
     // Finally, send the order ID to the payment endpoint so it can redirect
     // the customer to the order status page.
     await DBOS.setEvent(ORDER_ID_EVENT, orderID);
-  },
+}
+
+const checkoutWorkflow = DBOS.registerWorkflow(
+  checkoutWorkflowFunction,
   { name: 'checkoutWorkflow' },
 );
 ```
@@ -336,7 +338,9 @@ async function main() {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 }
 
-main().catch(console.log);
+if (require.main === module) {
+  main().catch(console.log);
+}
 ```
 
 ## Try it Yourself!
