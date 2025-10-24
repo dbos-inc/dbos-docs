@@ -27,42 +27,50 @@ public record DBOSConfig(
     int connectionTimeout,
     boolean adminServer,
     int adminServerPort,
+    boolean migrate,
     String conductorKey,
-    String appVersion
+    String conductorDomain,
+    String appVersion,
+    String executorId
 )
 ```
 
-**Constructors:**
+**Additional Constructors:**
 
 ```java
-new DBOSConfig.Builder()
+new DBOSConfig();
+DBOSConfig.defaults();
 ```
 
-Create a DBOSConfig object.
+Create a DBOSConfig object.  This configuration can be adjusted by using `with` methods that produce new configurations.
 
-**Methods:**
+**With Methods:**
 
-- **`appName(String appName)`**: Your application's name. Required.
+- **`withAppName(String appName)`**: Your application's name. Required.
 
-- **`databaseUrl(String databaseUrl)`**: The JDBC URL for your system database. Required. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
+- **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. Required. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
 
-- **`dbUser(String dbUser)`**: Your Postgres username or role. Required.
+- **`withDbUser(String dbUser)`**: Your Postgres username or role. Required.
 
-- **`dbPassword(String dbPassword)`**: The password for your Postgres user or role. Required.
+- **`withDbPassword(String dbPassword)`**: The password for your Postgres user or role. Required.
 
-- **`maximumPoolSize(int maximumPoolSize)`**: The maximum size for the system database connection pool created by DBOS.
+- **`withMaximumPoolSize(int maximumPoolSize)`**: The maximum size for the system database connection pool created by DBOS.
 
-- **`connectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection created by DBOS.
+- **`withConnectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection created by DBOS.
 
-- **`runAdminServer()`**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to true.
+- **`withAdminServer(boolean enable)`**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to false.
 
-- **`adminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
+- **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
 
-- **`conductorKey(String key)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
 
-- **`appVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
-- **`build()`**: Build the configuration object. Must be called after all parameters are set.
+- **`withConductorDomain(String domain)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+
+- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+
+- **`withExecutorId(String executorId)`**: The executor id, for recovery.
 
 ### DBOS.launch
 

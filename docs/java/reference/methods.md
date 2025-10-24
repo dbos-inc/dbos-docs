@@ -18,7 +18,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 **Parameters:**
 - **workflowId**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeout**: A timeout duration. If the wait times out, return null.
+- **timeout**: A timeout duration. If the wait times out, `null` is returned.
 
 ### setEvent
 
@@ -27,11 +27,11 @@ static void setEvent(String key, Object value)
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
-Can only be called from within a workflow.
+`setEvent` can only be called from within a workflow.
 
 **Parameters:**
 - **key**: The key of the event.
-- **message**: The value of the event. Must be serializable.
+- **value**: The value of the event. Must be serializable.
 
 ### send
 
@@ -56,7 +56,7 @@ static Object recv(String topic, Duration timeout)
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning an error if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning null if the wait times out.
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
@@ -98,130 +98,125 @@ Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching
 
 #### ListWorkflowsInput
 
-`ListWorkflowsInput` is a builder-based configuration record for filtering and customizing workflow queries. All fields are optional.
+`ListWorkflowsInput` is a with-based configuration record for filtering and customizing workflow queries.  All fields are optional.
 
-**Builder Methods:**
+**`with` Methods:**
 
-##### workflowId
+##### withWorkflowId
 ```java
-Builder workflowId(String workflowId)
+ListWorkflowsInput withWorkflowId(String workflowId)
 ```
 Add a workflow ID to filter by.
 
-##### workflowIds
+##### withWorkflowIds
 ```java
-Builder workflowIds(List<String> workflowIDs)
+ListWorkflowsInput withWorkflowIds(List<String> workflowIDs)
 ```
 Add multiple workflow IDs to filter by.
 
-##### className
+##### withClassName
 ```java
-Builder className(String className)
+ListWorkflowsInput withClassName(String className)
 ```
 Filter workflows by the class name containing the workflow function.
 
-##### instanceName
+##### withInstanceName
 ```java
-Builder instanceName(String instanceName)
+ListWorkflowsInput withInstanceName(String instanceName)
 ```
 Filter workflows by the instance name of the class.
 
-##### workflowName
+##### withWorkflowName
 ```java
-Builder workflowName(String workflowName)
+ListWorkflowsInput withWorkflowName(String workflowName)
 ```
 Filter workflows by the workflow function name.
 
-##### authenticatedUser
+##### withAuthenticatedUser
 ```java
-Builder authenticatedUser(String authenticatedUser)
+ListWorkflowsInput withAuthenticatedUser(String authenticatedUser)
 ```
 Filter workflows run by this authenticated user.
 
-##### startTime
+##### withStartTime
 ```java
-Builder startTime(OffsetDateTime startTime)
+ListWorkflowsInput withStartTime(OffsetDateTime startTime)
 ```
 Retrieve workflows started after this timestamp.
 
-##### endTime
+##### withEndTime
 ```java
-Builder endTime(OffsetDateTime endTime)
+ListWorkflowsInput withEndTime(OffsetDateTime endTime)
 ```
 Retrieve workflows started before this timestamp.
 
-##### status
+##### withStatus
 ```java
-Builder status(WorkflowState status)
-Builder status(String status)
+ListWorkflowsInput withStatus(WorkflowState status)
+ListWorkflowsInput withStatus(String status)
+ListWorkflowsInput withStatuses(List<String> status)
 ```
 Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
 
-##### applicationVersion
+##### withApplicationVersion
 ```java
-Builder applicationVersion(String applicationVersion)
+ListWorkflowsInput withApplicationVersion(String applicationVersion)
 ```
 Retrieve workflows tagged with this application version.
 
-##### limit
+##### withLimit
 ```java
-Builder limit(Integer limit)
+ListWorkflowsInput withLimit(Integer limit)
 ```
 Retrieve up to this many workflows.
 
-##### offset
+##### withOffset
 ```java
-Builder offset(Integer offset)
+ListWorkflowsInput withOffset(Integer offset)
 ```
 Skip this many workflows from the results returned (for pagination).
 
-##### sortDesc
+##### withSortDesc
 ```java
-Builder sortDesc(Boolean sortDesc)
+ListWorkflowsInput withSortDesc(Boolean sortDesc)
 ```
 Sort the results in descending (true) or ascending (false) order by workflow start time.
 
-##### executorId
+##### withExecutorId
 ```java
-Builder executorId(String executorId)
+ListWorkflowsInput withExecutorId(String executorId)
 ```
 Retrieve workflows that ran on this executor process.
 
-##### queueName
+##### withQueueName
 ```java
-Builder queueName(String queueName)
+ListWorkflowsInput withQueueName(String queueName)
 ```
 Retrieve workflows that were enqueued on this queue.
 
-##### workflowIdPrefix
+##### withWorkflowIdPrefix
 ```java
-Builder workflowIdPrefix(String workflowIdPrefix)
+ListWorkflowsInput withWorkflowIdPrefix(String workflowIdPrefix)
 ```
 Filter workflows whose IDs start with the specified prefix.
 
-##### workflowIdPrefix
+##### withQueuesOnly
 ```java
-Builder workflowIdPrefix(String workflowIdPrefix)
+ListWorkflowsInput withQueuesOnly(Boolean queuedOnly)
 ```
-Filter workflows whose IDs start with the specified prefix.
+Select only workflows that were enqueued.
 
-##### queuedOnly
+##### withLoadInput
 ```java
-Builder queuedOnly(Boolean queuedOnly)
-```
-Select only workflows that are currently enqueued (status `PENDING` or `ENQUEUED` and on a queue).
-
-##### loadInput
-```java
-Builder loadInput(Boolean value)
+ListWorkflowsInput withLoadInput(Boolean value)
 ```
 Controls whether to load workflow input data (default: true).
 
-##### loadOutput
+##### withLoadOutput
 ```java
-Builder loadOutput(Boolean value)
+ListWorkflowsInput withLoadOutput(Boolean value)
 ```
-Controls whether to load workflow output data (default: true).
+Controls whether to load workflow output data (results and errors) (default: true).
 
 
 ### listWorkflowSteps
@@ -280,6 +275,11 @@ public record ForkOptions(
     String applicationVersion, 
     Duration timeout
 )
+{
+    ForkOptions withForkedWorkflowId(String forkedWorkflowId);
+    ForkOptions withApplicationVersion(String applicationVersion);
+    ForkOptions withTimeout(Duration timeout);
+}
 ```
 
 Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
@@ -351,3 +351,19 @@ static Integer stepId()
 ```
 
 Returns the unique ID of the current step within its workflow. Returns `null` if not called from a step.
+
+### inWorkflow
+
+```java
+static boolean inWorkflow();
+```
+
+Return `true` if the current calling context is executing a workflow, or `false` otherwise.
+
+### inStep
+
+```java
+static boolean inStep();
+```
+
+Return `true` if the current calling context is executing a workflow step, or `false` otherwise.

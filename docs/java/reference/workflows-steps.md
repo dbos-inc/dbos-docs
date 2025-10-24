@@ -100,7 +100,7 @@ public record StartWorkflowOptions(
     Duration timeout,
     String queueName,
     String deduplicationId,
-    OptionalInt priority
+    Integer priority
 )
 ```
 
@@ -121,9 +121,9 @@ Create workflow options with all fields set to their defaults.
 
 - **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueueing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
-- **`withPriority(int priority)`** - May only be used when enqueueing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 
 ### runStep
 
@@ -135,6 +135,16 @@ static <T, E extends Exception> T runStep(
 
 static <T, E extends Exception> T runStep(
     ThrowingSupplier<T, E> stepfunc, 
+    String stepName
+) throws E
+
+static <E extends Exception> void runStep(
+    ThrowingRunnable<E> stepfunc, 
+    StepOptions opts
+) throws E
+
+static <E extends Exception> runStep(
+    ThrowingRunnable<E> stepfunc, 
     String stepName
 ) throws E
 ```

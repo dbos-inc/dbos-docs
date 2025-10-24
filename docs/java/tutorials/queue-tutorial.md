@@ -8,10 +8,11 @@ You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, use [`Queue`](../reference/queues.md#queue).
-All queues should be created before DBOS is launched.
+All queues should be created and registered before DBOS is launched.
 
 ```java
-Queue queue = DBOS.Queue("example-queue").build();
+Queue queue = new Queue("example-queue");
+DBOS.registerQueue(queue);
 ```
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
@@ -99,9 +100,10 @@ public class App {
         DBOSConfig config = ...
         DBOS.configure(config);
 
-        Queue queue = DBOS.Queue("example-queue").build();
+        Queue queue = new Queue("example-queue");
+        DBOS.registerQueue(queue);
         ExampleImpl impl = new ExampleImpl(queue);
-        Example proxy = dbos.registerWorkflows(Example.class, impl);
+        Example proxy = DBOS.registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);
 
         DBOS.launch();
@@ -158,9 +160,9 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-Queue queue = DBOS.Queue("example-queue")
-    .workerConcurrency(5)
-    .build();
+Queue queue = new Queue("example-queue")
+    .withWorkerConcurrency(5);
+DBOS.registerQueue(queue);
 ```
 
 ### Global Concurrency
@@ -174,9 +176,9 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-Queue queue = DBOS.Queue("example-queue")
-    .concurrency(10)
-    .build();
+Queue queue = new Queue("example-queue")
+    .withConcurrency(10);
+DBOS.registerQueue(queue);
 ```
 
 ## Rate Limiting
@@ -186,9 +188,9 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```java
-Queue queue = DBOS.Queue("example-queue")
-    .limit(100, 60.0)  // 100 workflows per 60 seconds
-    .build();
+Queue queue = new Queue("example-queue")
+    .withRateLimit(100, 60.0);  // 100 workflows per 60 seconds
+DBOS.registerQueue(queue);
 ```
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
@@ -235,9 +237,9 @@ Workflows without assigned priorities have the highest priority and are dequeued
 To use priorities in a queue, you must enable it when creating the queue:
 
 ```java
-Queue queue = DBOS.Queue("example-queue")
-    .priorityEnabled(true)
-    .build();
+Queue queue = new Queue("example-queue")
+    .withPriorityEnabled(true);
+DBOS.registerQueue(queue);
 ```
 
 **Example syntax:**

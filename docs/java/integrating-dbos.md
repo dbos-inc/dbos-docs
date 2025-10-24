@@ -39,12 +39,10 @@ import dev.dbos.transact.config.DBOSConfig;
 public class MyApp {
     public static void main(String[] args) throws Exception {
         // Configure DBOS
-        DBOSConfig config = new DBOSConfig.Builder()
-            .appName("my-app")
-            .databaseUrl(System.getenv("DBOS_JDBC_URL"))
-            .dbUser(System.getenv("PGUSER"))
-            .dbPassword(System.getenv("PGPASSWORD"))
-            .build();
+        DBOSConfig config = new DBOSConfig("my-app")
+            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+            .withDbUser(System.getenv("PGUSER"))
+            .withDbPassword(System.getenv("PGPASSWORD"));
         DBOS.configure(config);
 
         // Register your workflows and queues (see step 4)

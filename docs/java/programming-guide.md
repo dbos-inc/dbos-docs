@@ -74,12 +74,10 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig.Builder()
-            .appName("dbos-java-starter")
-            .databaseUrl(System.getenv("DBOS_JDBC_URL"))
-            .dbUser(System.getenv("PGUSER"))
-            .dbPassword(System.getenv("PGPASSWORD"))
-            .build();
+        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+            .withDbUser(System.getenv("PGUSER"))
+            .withDbPassword(System.getenv("PGPASSWORD"));
         DBOS.configure(config);
         Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
         DBOS.launch();
@@ -151,12 +149,10 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig.Builder()
-            .appName("dbos-java-starter")
-            .databaseUrl(System.getenv("DBOS_JDBC_URL"))
-            .dbUser(System.getenv("PGUSER"))
-            .dbPassword(System.getenv("PGPASSWORD"))
-            .build();
+        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+            .withDbUser(System.getenv("PGUSER"))
+            .withDbPassword(System.getenv("PGPASSWORD"));
         DBOS.configure(config);
         Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
         DBOS.launch();
@@ -278,14 +274,13 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig.Builder()
-                .appName("dbos-java-starter")
-                .databaseUrl(System.getenv("DBOS_JDBC_URL"))
-                .dbUser(System.getenv("PGUSER"))
-                .dbPassword(System.getenv("PGPASSWORD"))
-                .build();
+        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+            .withDbUser(System.getenv("PGUSER"))
+            .withDbPassword(System.getenv("PGPASSWORD"));
         DBOS.configure(config);
-        Queue queue = DBOS.Queue("example-queue").build();
+        Queue queue = new Queue("example-queue");
+        DBOS.registerQueue(queue);
         ExampleImpl impl = new ExampleImpl(queue);
         Example proxy = DBOS.registerWorkflows(Example.class, impl);
         impl.setProxy(proxy);

@@ -22,7 +22,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 static void send(String destinationId, Object message, String topic)
 ```
 
-You can call `dbos.send()` to send a message to a workflow.
+You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md).
@@ -33,7 +33,7 @@ You can also call [`send`](../reference/client.md#send) from outside of your DBO
 static Object recv(String topic, Duration timeout)
 ```
 
-Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
+Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
@@ -98,7 +98,7 @@ They are useful for publishing information about the status of a workflow or to 
 static void setEvent(String key, Object value)
 ```
 
-Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
 
 #### getEvent
 
@@ -106,7 +106,7 @@ Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to pub
 static Object getEvent(String workflowId, String key, Duration timeout)
 ```
 
-You can call [`dbos.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
+You can call [`DBOS.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 You can also call [`getEvent`](../reference/client.md#getevent) from outside of your DBOS application with [DBOS Client](../reference/client.md).

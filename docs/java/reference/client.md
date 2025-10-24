@@ -57,7 +57,7 @@ public record EnqueueOptions(
       String appVersion,
       Duration timeout,
       String deduplicationId,
-      OptionalInt priority
+      Integer priority
 )
 ```
 
@@ -71,13 +71,14 @@ Specify the name and class name of the workflow to enqueue and the name of the q
 
 **Methods:**
 
+- **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. 
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
 Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 - **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
-- **`withPriority(int priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-- **`withInstanceName`**: The enqueued workflow should run on this particular named class instance.
+- **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 
 
 
@@ -92,7 +93,7 @@ Similar to [`DBOS.send`](./methods.md#send).
 ### getEvent
 
 ```java
-Object getEvent(String targetId, String key, double timeoutSeconds)
+Object getEvent(String targetId, String key, Duration timeoutSeconds)
 ```
 
 Similar to [`DBOS.getEvent`](./methods.md#getevent).

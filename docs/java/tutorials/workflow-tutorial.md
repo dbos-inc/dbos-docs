@@ -95,7 +95,7 @@ If you need to run many workflows in the background and manage their concurrency
 ## Workflow IDs and Idempotency
 
 Every time you execute a workflow, that execution is assigned a unique ID, by default a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-You can access this ID from the [`DBOS.workflowId`](../reference/methods.md#workflowid-1) method.
+You can access this ID from the [`DBOS.workflowId`](../reference/methods.md#workflowid) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
 You can set the workflow ID of a workflow using `withWorkflowId` when calling `startWorkflow`.
