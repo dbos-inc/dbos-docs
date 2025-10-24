@@ -205,7 +205,7 @@ Create step options and provide a name for this step.
 ```java
 public interface WorkflowHandle<T, E extends Exception> {
 
-  String getWorkflowId();
+  String workflowId();
 
   T getResult() throws E;
 
@@ -233,10 +233,10 @@ WorkflowStatus getStatus();
 
 Retrieve the WorkflowStatus of the workflow.
 
-#### WorkflowHandle.getWorkflowId
+#### WorkflowHandle.workflowId
 
 ```java
-String getWorkflowId();
+String workflowId();
 ```
 
-Retrieve the ID of the workflow.
+Return the ID of the workflow underlying this handle.

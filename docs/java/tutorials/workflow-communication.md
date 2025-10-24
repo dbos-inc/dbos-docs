@@ -151,7 +151,7 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = (String) DBOS.getEvent(handle.getWorkflowId(), PAYMENT_ID, Duration.ofSeconds(60));
+    String paymentId = (String) DBOS.getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60));
     if (paymentId == null) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
