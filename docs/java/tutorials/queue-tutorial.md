@@ -196,7 +196,7 @@ Queue queue = new Queue("example-queue")
 DBOS.registerQueue(queue);
 ```
 
-Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+Rate limits are especially useful when working with a rate-limited API.
 
 ## Deduplication
 
