@@ -9,7 +9,7 @@ Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Java
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, annotate a method with [`@Workflow`](../reference/workflows-steps.md#workflow).
-All workflow methods must be registered with DBOS by creating a proxy before DBOS is launched.
+All workflow methods must be registered before DBOS is launched.
 A workflow method can have any parameters and return type (including void), as long as they are serializable.
 
 Here's an example of a workflow:
@@ -45,13 +45,13 @@ public class App {
         DBOSConfig config = ...
         DBOS.configure(config);
 
-        // Create the workflow proxy
+        // Register the workflow, creating a proxy object
         Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
 
         // Launch DBOS after registering all workflows
         DBOS.launch();
 
-        // Call the workflow
+        // Call the registered workflow through the proxy
         String result = proxy.workflow();
         System.out.println("Workflow result: " + result);
     }
@@ -188,9 +188,6 @@ WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
     new StartWorkflowOptions().withTimeout(Duration.ofHours(12))
 );
 ```
-
-You can also manually cancel the workflow by calling [`cancelWorkflow`](../reference/methods.md#cancelworkflow).
-
 
 ## Durable Sleep
 
