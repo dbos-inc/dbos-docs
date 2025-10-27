@@ -24,6 +24,19 @@ An annotation that can be applied to a class method to mark it as a durable work
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
 
+### @Scheduled
+
+```java
+public @interface Scheduled {
+  String cron();
+}
+```
+
+An annotation that can be applied to a workflow to schedule it on a cron schedule.
+
+**Parameters:**
+- **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
+
 ## Methods
 
 ### registerWorkflows
@@ -33,9 +46,8 @@ static <T> T registerWorkflows(Class<T> interfaceClass, T implementation)
 static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
-Proxy a class whose methods contain `@Workflow` annotations.
-Methods can then be invoked as durable workflows using the proxy.
-All proxies must be created before DBOS is launched.
+Register the workflows in a class, returning a proxy object from which the class methods may be invoked as durable workflows.
+All workflows must be registered before DBOS is launched.
 
 **Example Syntax:**
 
@@ -56,8 +68,8 @@ proxy.workflow();
 ```
 
 **Parameters:**
-- **interfaceClass**: The interface class to be proxied.
-- **implementation**: An instance of the class to proxy.
+- **interfaceClass**: The interface class whose workflows are to be registered.
+- **implementation**: An instance of the class whose workflows to register.
 - **instanceName**: A unique name for this class instance. Use only when you are creating multiple instances of a class and your workflow depends on class instance variables. When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `instanceName` so it can recover the workflow using the right instance of its class.
 
 
@@ -113,13 +125,13 @@ Create workflow options with all fields set to their defaults.
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
+- **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
+
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
   Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout. You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
-
-- **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
 
 - **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
