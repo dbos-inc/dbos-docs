@@ -157,11 +157,11 @@ Accounts on the free 30-day trial are limited to 1 microVM per app. Apps for Pro
 
 Scaling up occurs when:
 - the average microVM CPU utilization exceeds 85% for several seconds, or
-- the task capacity is below the number of enqueued tasks for at least one of the queues
+- the number of enqueued tasks exceeds capacity for at least one of the queues.
 
 Inversely, the app scales down when the average CPU utilization drops below 40% and the number of enqueued tasks drops below capacity for all queues.
 
-To alter the auto-scaling behavior, you can manually set `min-executors` and/or `max-executors` as part of `app update` (see below). 
+To alter the auto-scaling behavior, you can manually set `min-executors` and/or `max-executors` using `app update` (see below). 
 
 ### Updating Applications
 
