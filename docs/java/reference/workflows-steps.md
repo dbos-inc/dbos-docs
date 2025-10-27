@@ -104,17 +104,9 @@ Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
 DBOS.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
-**Options:**
+#### StartWorkflowOptions
 
-```java
-public record StartWorkflowOptions(
-    String workflowId,
-    Duration timeout,
-    String queueName,
-    String deduplicationId,
-    Integer priority
-)
-```
+`StartWorkflowOptions` is a with-based configuration record for parameterizing `DBOS.startWorkflow`. All fields are optional.
 
 **Constructors:**
 ```java
@@ -185,17 +177,9 @@ class ExampleImpl implements Example {
 }
 ```
 
-**Options:**
+#### StepOptions
 
-```java
-public record StepOptions(
-    String name,
-    boolean retriesAllowed,
-    int maxAttempts,
-    double intervalSeconds,
-    double backOffRate
-)
-```
+`StepOptions` is a with-based configuration record for parameterizing `DBOS.runStep`. All fields except step name are optional.
 
 **Constructors:**
 ```java
