@@ -39,7 +39,7 @@ import dev.dbos.transact.config.DBOSConfig;
 public class MyApp {
     public static void main(String[] args) throws Exception {
         // Configure DBOS
-        DBOSConfig config = new DBOSConfig("my-app")
+        DBOSConfig config = DBOSConfig.defaults("my-app")
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
