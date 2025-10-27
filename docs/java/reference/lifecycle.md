@@ -15,25 +15,11 @@ static synchronized Instance configure(DBOSConfig config)
 
 Configure the DBOS singleton.
 
-**Options:**
+**DBOSConfig**
 
-```java
-public record DBOSConfig(
-    String appName,
-    String databaseUrl,
-    String dbUser,
-    String dbPassword,
-    int maximumPoolSize,
-    int connectionTimeout,
-    boolean adminServer,
-    int adminServerPort,
-    boolean migrate,
-    String conductorKey,
-    String conductorDomain,
-    String appVersion,
-    String executorId
-)
-```
+`StepOptions` is a with-based configuration record for configuring DBOS.
+The application name, database URL, database user, and database password are required.
+
 
 **Constructor:**
 
