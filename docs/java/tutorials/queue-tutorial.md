@@ -7,7 +7,7 @@ toc_max_heading_level: 3
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, use [`Queue`](../reference/queues.md#queue).
+To create a queue, instantiate and register a [`Queue`](../reference/queues.md#queue) object.
 All queues should be created and registered before DBOS is launched.
 
 ```java
@@ -100,10 +100,13 @@ public class App {
         DBOSConfig config = ...
         DBOS.configure(config);
 
+        // Create and register a queue
         Queue queue = new Queue("example-queue");
         DBOS.registerQueue(queue);
+        // Instantiate an Example and register its workflows
         ExampleImpl impl = new ExampleImpl(queue);
         Example proxy = DBOS.registerWorkflows(Example.class, impl);
+        // Provide the workflow proxy to the class so its methods can invoke workflows
         impl.setProxy(proxy);
 
         DBOS.launch();
