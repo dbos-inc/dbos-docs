@@ -21,8 +21,8 @@ class ExampleImpl implements Example {
     @Workflow(name = "workflowFunction")
     public int workflowFunction(int n) {
         int randomNumber = DBOS.runStep(
-            () -> generateRandomNumber(n), // Code to run as a checkpointed step
-            "generateRandomNumber" // StepOptions can also be used here
+            () -> generateRandomNumber(n), // Run generateRandomNumber as a checkpointed step
+            "generateRandomNumber" // A name for the step
         );
         return randomNumber;
     }
@@ -54,7 +54,7 @@ Available retry configuration options include:
 - [`withIntervalSeconds`](../reference/workflows-steps.md#runstep) - Initial delay between retries in seconds.
 - [`withBackoffRate`](../reference/workflows-steps.md#runstep) - Exponential backoff multiplier between retries.
 
-For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
+For example, let's write a step that fetches a website, and configure it to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
 
 ```java
 class ExampleImpl implements Example {
