@@ -17,7 +17,7 @@ Configure the DBOS singleton.
 
 **DBOSConfig**
 
-`StepOptions` is a with-based configuration record for configuring DBOS.
+`DBOSConfig` is a with-based configuration record for configuring DBOS.
 The application name, database URL, database user, and database password are required.
 
 
