@@ -129,7 +129,6 @@ import org.slf4j.LoggerFactory;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
-import dev.dbos.transact.workflow.StepOptions;
 import dev.dbos.transact.workflow.Workflow;
 import io.javalin.Javalin;
 import ch.qos.logback.classic.Level;
@@ -165,7 +164,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+        DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
@@ -235,7 +234,7 @@ import org.slf4j.LoggerFactory;
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
-import dev.dbos.transact.queue.Queue;
+import dev.dbos.transact.workflow.Queue;
 import dev.dbos.transact.workflow.Workflow;
 import dev.dbos.transact.workflow.WorkflowHandle;
 import io.javalin.Javalin;
@@ -290,7 +289,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+        DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
