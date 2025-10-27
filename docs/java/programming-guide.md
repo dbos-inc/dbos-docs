@@ -26,7 +26,7 @@ If you don't already have Postgres, you can launch it in a Docker container with
 
 ```shell
 docker run -d \
-  --name postgres \
+  --name dbos-postgres \
   -e POSTGRES_PASSWORD=dbos \
   -p 5432:5432 \
   postgres:17

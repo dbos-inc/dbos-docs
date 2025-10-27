@@ -62,7 +62,11 @@ You can connect to your database by setting these environment variables:
 
 If you don't have a Postgres database, you can start one locally with Docker:
 ```shell
-docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 postgres
+docker run -d \
+  --name dbos-postgres \
+  -e POSTGRES_PASSWORD=dbos \
+  -p 5432:5432 \
+  postgres:17
 ```
 :::
 
