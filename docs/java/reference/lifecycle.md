@@ -35,11 +35,10 @@ public record DBOSConfig(
 )
 ```
 
-**Additional Constructors:**
+**Constructor:**
 
 ```java
-new DBOSConfig();
-DBOSConfig.defaults();
+DBOSConfig.defaults(String appName)
 ```
 
 Create a DBOSConfig object.  This configuration can be adjusted by using `with` methods that produce new configurations.
@@ -66,11 +65,7 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
-- **`withConductorDomain(String domain)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
-
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
-
-- **`withExecutorId(String executorId)`**: The executor id, for recovery.
 
 ### DBOS.launch
 
