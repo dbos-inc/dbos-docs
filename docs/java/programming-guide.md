@@ -14,7 +14,7 @@ First, initialize a new project with Gradle:
 gradle init --type java-application --dsl groovy --test-framework junit --package com.example --project-name myapp --no-split-project --java-version 17
 ```
 
-Then, install DBOS by adding the following lines to your `build.gradle` dependencies:
+Then, install DBOS (plus Logback for logging) by adding the following lines to your `build.gradle` dependencies:
 
 ```
 implementation 'dev.dbos:transact:0.5.+'
@@ -22,8 +22,24 @@ implementation 'ch.qos.logback:logback-classic:1.5.18'
 ```
 
 DBOS requires a Postgres database.
+If you don't already have Postgres, you can launch it in a Docker container with this command:
 
-TODO: Instructions on how to set up Postgres.
+```shell
+docker run -d \
+  --name postgres \
+  -e POSTGRES_PASSWORD=dbos \
+  -p 5432:5432 \
+  postgres:17
+```
+
+Then, set the following environment variables to your connection information (later, we'll pass them into DBOS).
+For example:
+
+```shell
+export PGUSER=postgres
+export PGPASSWORD=dbos
+export DBOS_SYSTEM_JDBC_URL=jdbc:postgresql://localhost:5432/dbos_java_starter
+```
 
 ## 2. Workflows and Steps
 
@@ -74,7 +90,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
-        DBOSConfig config = new DBOSConfig("dbos-java-starter")
+        DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
