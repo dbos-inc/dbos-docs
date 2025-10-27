@@ -133,12 +133,12 @@ dbos-cloud app deploy --previous-version <version-id>
 
 ### MicroVM Termination
 
-DBOS Cloud may, from time to time, stop your microVMs due a variety of reasons, including app upgrade to a new version or scaling down (see below). When a microVM is stopped, DBOS Cloud performs the following steps:
+DBOS Cloud may, from time to time, stop your microVMs due to a variety of reasons, including app upgrade or scaling down (see below). When a microVM is stopped, DBOS Cloud performs the following steps:
  1. Stops routing new HTTP traffic to the VM.
  2. Sends SIGTERM to the `dbos` process (launched by your start command) and waits up to 10 seconds for it to exit.
  3. If the process is still running, terminates it forcefully.
  
-Any `PENDING` workflows run by this microVM are then recovered on another VM. See below.
+Any `PENDING` workflows run by the microVM are then recovered on another VM. See below.
 
 ### Workflow Recovery
 
@@ -153,7 +153,9 @@ If any are found, DBOS Cloud recovers them to a microVM of the appropriate appli
 
 ### Automatic and Manual Scaling
 
-Accounts on the free 30-day trial are limited to 1 microVM per app. Apps for Pro accounts are auto-scaled. Auto-scaling occurs based on CPU or queue utilizaiton. For queue-based auto-scaling, the queue must have `worker_concurrency` (or `workerConcurrency`) set. DBOS Cloud computes the current parallel task capacity  - the number of tasks that can be executed simultaneously - using the product of worker_concurrency and the current number of microVMs: `capacity = worker_concurrency * num_microvms`.
+Accounts on the free 30-day trial are limited to 1 microVM per app. Apps for Pro accounts are auto-scaled. Auto-scaling occurs based on CPU or queue utilization.
+
+For the latter, the queue must have `worker_concurrency` (or `workerConcurrency`) set. DBOS Cloud computes the current parallel task capacity  - the number of tasks that can be executed simultaneously - using the product of worker_concurrency and the current number of microVMs: `capacity = worker_concurrency * num_microvms`.
 
 Scaling up occurs when:
 - the average microVM CPU utilization exceeds 85% for several seconds, or
