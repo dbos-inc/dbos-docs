@@ -69,7 +69,6 @@ class CheckoutImpl implements Checkout {
 An endpoint waits for the payment processor to send the notification, then uses `send()` to forward it to the workflow:
 
 ```java
-// Using Javalin for the HTTP endpoint
 app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
     String workflowId = ctx.pathParam("workflow_id");
     String paymentStatus = ctx.pathParam("payment_status");
@@ -137,10 +136,9 @@ class CheckoutImpl implements Checkout {
 }
 ```
 
-The Javalin handler that originally started the workflow uses `getEvent()` to await this payment ID, then returns it:
+The handler that originally started the workflow uses `getEvent()` to await this payment ID, then returns it:
 
 ```java
-// Using Javalin for the HTTP endpoint
 app.post("/checkout/{idempotency_key}", ctx -> {
     String idempotencyKey = ctx.pathParam("idempotency_key");
 
