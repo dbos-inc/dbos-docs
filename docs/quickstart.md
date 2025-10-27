@@ -276,4 +276,89 @@ Next:
 - Learn how to [**add DBOS to your application**](./golang/integrating-dbos.md) to make it reliable with just a few lines of code.
 
 </LargeTabItem>
+
+<LargeTabItem value="java" label="Java">
+
+#### 1. Download an Application
+
+<section className="row list">
+<article className="col col--6">
+
+Download an example application and enter its directory.
+DBOS requires Java 17 or higher.
+</article>
+
+<article className="col col--6">
+
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd dbos-demo-apps/java/dbos-starter
+```
+</article>
+</section>
+
+#### 2. Launch Postgres
+
+<section className="row list">
+<article className="col col--6">
+
+DBOS requires a Postgres database.
+If you already have Postgres, you can set the `DBOS_SYSTEM_JDBC_URL` environment variable to your connection string.
+Otherwise, you can start Postgres in a Docker container and set environment variables with these commands:
+</article>
+
+<article className="col col--6">
+
+```shell
+docker run -d --name dbos-postgres -e POSTGRES_PASSWORD=dbos -p 5432:5432 postgres:17
+export PGUSER=postgres
+export PGPASSWORD=dbos
+export DBOS_SYSTEM_JDBC_URL=jdbc:postgresql://localhost:5432/dbos_java_starter
+```
+</article>
+</section>
+
+#### 3. Start Your App
+
+<section className="row list">
+
+<article className="col col--6">
+Now, start your app!
+</article>
+
+<article className="col col--6">
+```bash
+./gradlew bootRun
+```
+</article>
+
+<article className="col col--6">
+To see that your app is working, visit this URL in your browser: http://localhost:8080/
+
+This app lets you test the reliability of DBOS for yourself.
+Launch a durable workflow and watch it execute its three steps.
+At any point, crash the app.
+Then, restart it with `./gradlew bootRun` and watch it seamlessly recover from where it left off.
+
+
+Congratulations, you've run your first durable workflow with DBOS!
+Next:
+
+- Check out the [**DBOS programming guide**](./java/programming-guide.md) to learn how to build reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./java/integrating-dbos.md) to make it reliable with just a few lines of code.
+
+</article>
+
+<article className="col col--6">
+<BrowserWindow url="http://localhost:8080/">
+<img src={require('@site/static/img/quickstart/java-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+</BrowserWindow>
+</article>
+
+<article className="col col--6">
+</article>
+
+</section>
+</LargeTabItem>
+
 </LargeTabs>
