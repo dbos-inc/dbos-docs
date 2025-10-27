@@ -1,6 +1,7 @@
 ---
 sidebar_position: 50
 title: DBOS Client
+toc_max_heading_level: 3
 ---
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
@@ -45,21 +46,10 @@ var options =
 var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argumentTwo"});
 ```
 
-**Options:**
+#### EnqueueOptions
 
-```java
-public record EnqueueOptions(
-      String workflowName,
-      String queueName,
-      String className,
-      String instanceName,
-      String workflowId,
-      String appVersion,
-      Duration timeout,
-      String deduplicationId,
-      Integer priority
-)
-```
+`EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow`.
+
 
 **Constructors:**
 
@@ -79,8 +69,6 @@ Please see [Managing Application Versions](../../production/self-hosting/workflo
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
-
-
 
 ### send
 
