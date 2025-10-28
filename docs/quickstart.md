@@ -10,7 +10,7 @@ import InstallNode from '/docs/partials/_install_node.mdx';
 DBOS is a library for building reliable programs.
 This guide shows you how to install and run it on your computer.
 
-<LargeTabs groupId="language">
+<LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
 
 <section className="row list">
