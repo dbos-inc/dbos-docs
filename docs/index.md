@@ -18,7 +18,7 @@ import { FaHackerNews } from "react-icons/fa6";
 <section className="row list">
   <IndexCardLink
     label="Run Your First Durable App"
-    href="/quickstart"
+    href="/quickstart?language=python"
     description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -50,7 +50,7 @@ import { FaHackerNews } from "react-icons/fa6";
 <section className="row list">
   <IndexCardLink
     label="Run Your First Durable App"
-    href="/quickstart"
+    href="/quickstart?language=typescript"
     description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -82,7 +82,7 @@ import { FaHackerNews } from "react-icons/fa6";
 <section className="row list">
   <IndexCardLink
     label="Run Your First Durable App"
-    href="/quickstart"
+    href="/quickstart?language=golang"
     description="Install DBOS on your computer and run your first durable app"
     index="1"
     icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
@@ -110,6 +110,38 @@ import { FaHackerNews } from "react-icons/fa6";
   />
 </section>
 </LargeTabItem>
+<LargeTabItem value="java" label="Java">
+<section className="row list">
+  <IndexCardLink
+    label="Run Your First Durable App"
+    href="/quickstart?language=java"
+    description="Install DBOS on your computer and run your first durable app"
+    index="1"
+    icon={<TbHexagonNumber1 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Learn DBOS Java"
+    href="/java/programming-guide"
+    description="Learn how to build reliable applications with DBOS"
+    index="2️"
+    icon={<TbHexagonNumber2 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Add DBOS To Your App"
+    href="/java/integrating-dbos"
+    description="Add a few lines of code to your app to make it resilient to any failure"
+    index="3"
+    icon={<TbHexagonNumber3 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+  <IndexCardLink
+    label="Deploy to Production"
+    href="/production"
+    description="Run your durable application anywhere"
+    index="4"
+    icon={<TbHexagonNumber4 color="var(--ifm-color-primary-lightest)" size={30}/>}
+  />
+</section>
+</LargeTabItem>
 </LargeTabs>
 
 ### Example Applications
@@ -117,6 +149,8 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { VscGraphLine } from "react-icons/vsc";
 
+<LargeTabs groupId="language">
+<LargeTabItem value="python" label="Python">
 <section className="row list">
   <NarrowCardLink
     label="Hacker News Research Agent"
@@ -137,6 +171,50 @@ import { VscGraphLine } from "react-icons/vsc";
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
 </section>
+</LargeTabItem>
+<LargeTabItem value="typescript" label="Typescript">
+<section className="row list">
+  <NarrowCardLink
+    label="Fault-Tolerant Checkout"
+    href="typescript/examples/checkout-tutorial"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+  <NarrowCardLink
+    label="Alert Center"
+    href="typescript/examples/kafka-alert-queue"
+    description="Produce and consume kafka messages exactly once."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+  <NarrowCardLink
+    label="React Task Scheduler"
+    href="typescript/examples/task-scheduler"
+    description="Use DBOS scheduled workflows."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+</section>
+</LargeTabItem>
+
+<LargeTabItem value="golang" label="Go">
+<section className="row list">
+  <NarrowCardLink
+    label="Fault-Tolerant Checkout"
+    href="golang/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+</section>
+</LargeTabItem>
+
+<LargeTabItem value="java" label="Java">
+  <NarrowCardLink
+    label="Fault-Tolerant Checkout"
+    href="java/examples/widget-store"
+    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+  />
+</LargeTabItem>
+</LargeTabs>
 
 
 ### Features
