@@ -5,7 +5,7 @@ title: Fault-Tolerant Checkout
 ---
 
 :::info
-This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial) and [Python](../../python/examples/widget-store.md).
+This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store), and [Python](../../python/examples/widget-store.md).
 :::
 
 In this example, we use DBOS and Gin to build an online storefront that's resilient to any failure.
