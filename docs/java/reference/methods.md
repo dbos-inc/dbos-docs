@@ -1,0 +1,370 @@
+---
+sidebar_position: 30
+title: DBOS Methods & Variables
+toc_max_heading_level: 3
+---
+
+## DBOS Methods
+
+### getEvent
+
+```java
+static Object getEvent(String workflowId, String key, Duration timeout)
+```
+
+Retrieve the latest value of an event published by the workflow identified by `workflowId` to the key `key`.
+If the event does not yet exist, wait for it to be published, an error if the wait times out.
+
+**Parameters:**
+- **workflowId**: The identifier of the workflow whose events to retrieve.
+- **key**: The key of the event to retrieve.
+- **timeout**: A timeout duration. If the wait times out, `null` is returned.
+
+### setEvent
+
+```java
+static void setEvent(String key, Object value)
+```
+Create and associate with this workflow an event with key `key` and value `value`.
+If the event already exists, update its value.
+`setEvent` can only be called from within a workflow.
+
+**Parameters:**
+- **key**: The key of the event.
+- **value**: The value of the event. Must be serializable.
+
+### send
+
+```java
+static void send(String destinationId, Object message, String topic, String idempotencyKey)
+```
+
+Send a message to the workflow identified by `destinationID`.
+Messages can optionally be associated with a topic.
+
+**Parameters:**
+- **destinationId**: The workflow to which to send the message.
+- **message**: The message to send. Must be serializable.
+- **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+
+### recv
+
+```java
+static Object recv(String topic, Duration timeout)
+```
+
+Receive and return a message sent to this workflow.
+Can only be called from within a workflow.
+Messages are dequeued first-in, first-out from a queue associated with the topic.
+Calls to `recv` wait for the next message in the queue, returning null if the wait times out.
+
+**Parameters:**
+- **topic**: A topic queue on which to wait.
+- **timeout**: A timeout duration. If the wait times out, return null.
+
+### sleep
+
+```java
+static void sleep(Duration sleepduration)
+```
+
+Sleep for the given duration.
+If called from within a workflow, this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+If called from outside a workflow, or from within a step, it behaves like a regular sleep.
+
+**Parameters:**
+- **sleepduration**: The duration to sleep.
+
+### retrieveWorkflow
+
+```go
+static WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
+```
+
+Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
+
+**Parameters**:
+- **workflowId**: The ID of the workflow whose handle to retrieve.
+
+## Workflow Management Methods
+
+### listWorkflows
+
+```java
+static List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+```
+
+Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching specified criteria.
+
+#### ListWorkflowsInput
+
+`ListWorkflowsInput` is a with-based configuration record for filtering and customizing workflow queries.  All fields are optional.
+
+**`with` Methods:**
+
+##### withWorkflowId
+```java
+ListWorkflowsInput withWorkflowId(String workflowId)
+```
+Add a workflow ID to filter by.
+
+##### withWorkflowIds
+```java
+ListWorkflowsInput withWorkflowIds(List<String> workflowIDs)
+```
+Add multiple workflow IDs to filter by.
+
+##### withClassName
+```java
+ListWorkflowsInput withClassName(String className)
+```
+Filter workflows by the class name containing the workflow function.
+
+##### withInstanceName
+```java
+ListWorkflowsInput withInstanceName(String instanceName)
+```
+Filter workflows by the instance name of the class.
+
+##### withWorkflowName
+```java
+ListWorkflowsInput withWorkflowName(String workflowName)
+```
+Filter workflows by the workflow function name.
+
+##### withAuthenticatedUser
+```java
+ListWorkflowsInput withAuthenticatedUser(String authenticatedUser)
+```
+Filter workflows run by this authenticated user.
+
+##### withStartTime
+```java
+ListWorkflowsInput withStartTime(OffsetDateTime startTime)
+```
+Retrieve workflows started after this timestamp.
+
+##### withEndTime
+```java
+ListWorkflowsInput withEndTime(OffsetDateTime endTime)
+```
+Retrieve workflows started before this timestamp.
+
+##### withStatus
+```java
+ListWorkflowsInput withStatus(WorkflowState status)
+ListWorkflowsInput withStatus(String status)
+ListWorkflowsInput withStatuses(List<String> status)
+```
+Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+
+##### withApplicationVersion
+```java
+ListWorkflowsInput withApplicationVersion(String applicationVersion)
+```
+Retrieve workflows tagged with this application version.
+
+##### withLimit
+```java
+ListWorkflowsInput withLimit(Integer limit)
+```
+Retrieve up to this many workflows.
+
+##### withOffset
+```java
+ListWorkflowsInput withOffset(Integer offset)
+```
+Skip this many workflows from the results returned (for pagination).
+
+##### withSortDesc
+```java
+ListWorkflowsInput withSortDesc(Boolean sortDesc)
+```
+Sort the results in descending (true) or ascending (false) order by workflow start time.
+
+##### withExecutorId
+```java
+ListWorkflowsInput withExecutorId(String executorId)
+```
+Retrieve workflows that ran on this executor process.
+
+##### withQueueName
+```java
+ListWorkflowsInput withQueueName(String queueName)
+```
+Retrieve workflows that were enqueued on this queue.
+
+##### withWorkflowIdPrefix
+```java
+ListWorkflowsInput withWorkflowIdPrefix(String workflowIdPrefix)
+```
+Filter workflows whose IDs start with the specified prefix.
+
+##### withQueuesOnly
+```java
+ListWorkflowsInput withQueuesOnly(Boolean queuedOnly)
+```
+Select only workflows that were enqueued.
+
+##### withLoadInput
+```java
+ListWorkflowsInput withLoadInput(Boolean value)
+```
+Controls whether to load workflow input data (default: true).
+
+##### withLoadOutput
+```java
+ListWorkflowsInput withLoadOutput(Boolean value)
+```
+Controls whether to load workflow output data (results and errors) (default: true).
+
+
+### listWorkflowSteps
+
+```java
+static List<StepInfo> listWorkflowSteps(String workflowId)
+```
+
+Retrieve the execution steps of a workflow.
+This is a list of `StepInfo` objects, with the following structure:
+
+```java
+StepInfo(
+    // The sequential ID of the step within the workflow
+    int functionId,
+    // The name of the step function
+    String functionName,
+    // The output returned by the step, if any
+    Object output,
+    // The error returned by the step, if any
+    ErrorResult error,
+    // If the step starts or retrieves the result of a workflow, its ID
+    String childWorkflowId
+)
+```
+
+### cancelWorkflow
+
+```java
+static cancelWorkflow(String workflowId)
+```
+
+Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+
+### resumeWorkflow
+
+```java
+static <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+```
+
+Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### forkWorkflow
+
+```java
+static <T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
+      String workflowId, 
+      int startStep, 
+      ForkOptions options
+)
+```
+
+```java
+public record ForkOptions(
+    String forkedWorkflowId, 
+    String applicationVersion, 
+    Duration timeout
+)
+{
+    ForkOptions withForkedWorkflowId(String forkedWorkflowId);
+    ForkOptions withApplicationVersion(String applicationVersion);
+    ForkOptions withTimeout(Duration timeout);
+}
+```
+
+Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to fork
+- **startStep**: The step from which to fork the workflow
+- **options**:
+  - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
+  - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
+  - **timeout**: A timeout for the forked workflow.
+
+### WorkflowStatus
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```java
+public record WorkflowStatus(
+    // The workflow ID
+    String workflowId,
+    // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    String status,
+    // The name of the workflow function
+    String name,
+    // The class of the workflow function
+    String className,
+    // The name given to the class instance, if any
+    String instanceName,
+    // The deserialized workflow input object
+    Object[] input,
+    // The workflow's output, if any
+    Object output,
+    // The error the workflow threw, if any
+    ErrorResult error,
+    // Workflow start time, as a Unix epoch timestamp in ms
+    Long createdAt,
+    // The last time the workflow status was updated, as a Unix epoch timestamp in ms
+    Long updatedAt,
+    // If this workflow was enqueued, on which queue
+    String queueName,
+    // The ID of the executor (process) that most recently executed this workflow
+    String executorId,
+    // The application version on which this workflow was started
+    String appVersion,
+    // The workflow timeout, if any
+    Long workflowTimeoutMs,
+    // The Unix epoch timestamp at which this workflow will time out, if any
+    Long workflowDeadlineEpochMs,
+    // The number of times this workflow has been started
+    Integer recoveryAttempts
+)
+```
+
+## DBOS Variables
+
+### workflowId
+
+```java
+static String workflowId()
+```
+
+Retrieve the ID of the current workflow. Returns `null` if not called from a workflow or step.
+
+### stepId
+
+```java
+static Integer stepId()
+```
+
+Returns the unique ID of the current step within its workflow. Returns `null` if not called from a step.
+
+### inWorkflow
+
+```java
+static boolean inWorkflow();
+```
+
+Return `true` if the current calling context is executing a workflow, or `false` otherwise.
+
+### inStep
+
+```java
+static boolean inStep();
+```
+
+Return `true` if the current calling context is executing a workflow step, or `false` otherwise.
