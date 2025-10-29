@@ -62,7 +62,6 @@ import org.slf4j.LoggerFactory;
 
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
-import dev.dbos.transact.workflow.StepOptions;
 import dev.dbos.transact.workflow.Workflow;
 
 import ch.qos.logback.classic.Level;
@@ -345,6 +344,4 @@ You can see how all ten steps run concurrently&mdash;even though each takes five
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
 Congratulations! You've finished the DBOS Java guide.
-You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/java/dbos-toolbox) template app.
-
 Next, to learn how to build more complex applications, check out the Java tutorials and example apps.
