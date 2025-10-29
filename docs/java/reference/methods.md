@@ -36,7 +36,7 @@ If the event already exists, update its value.
 ### send
 
 ```java
-static void send(String destinationId, Object message, String topic)
+static void send(String destinationId, Object message, String topic, String idempotencyKey)
 ```
 
 Send a message to the workflow identified by `destinationID`.
@@ -46,6 +46,7 @@ Messages can optionally be associated with a topic.
 - **destinationId**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 
 ### recv
 
