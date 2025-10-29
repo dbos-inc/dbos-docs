@@ -8,17 +8,20 @@ This guide shows you how to use DBOS to build Java apps that are **resilient to 
 
 ## 1. Setting Up Your Environment
 
-First, initialize a new project with Gradle:
+First, initialize a new project with Gradle (See [the installation instructions](https://docs.gradle.org/current/userguide/installation.html) if you do not have Gradle set up, or do not have Gradle 8 or later):
 
 ```shell
-gradle init --type java-application --dsl groovy --test-framework junit --package com.example --project-name myapp --no-split-project --java-version 17
+gradle init --type java-application --dsl groovy --test-framework junit --package com.example --project-name myapp --no-split-project --java-version 21
 ```
 
-Then, install DBOS (plus Logback for logging) by adding the following lines to your `build.gradle` dependencies:
+Then, install DBOS (plus Logback for logging) by adding the following lines to your `app/build.gradle` dependencies:
 
-```
-implementation 'dev.dbos:transact:0.5.+'
-implementation 'ch.qos.logback:logback-classic:1.5.18'
+```groovy
+dependencies {
+    implementation 'dev.dbos:transact:0.6+'
+    implementation 'ch.qos.logback:logback-classic:1.5.18'
+    implementation 'org.slf4j:slf4j-api:2.0.17' // Needed for our demo code only
+}
 ```
 
 DBOS requires a Postgres database.
@@ -50,7 +53,7 @@ If your program crashes or is interrupted, DBOS uses this saved state to recover
 Thus, DBOS makes your application **resilient to any failure**.
 
 Let's create a simple DBOS program that runs a workflow of two steps.
-Add the following code to your `App.java` file:
+Add the following code to your `app/src/main/java/com/example/App.java` file:
 
 ```java showLineNumbers title="App.java"
 package com.example;
@@ -106,19 +109,21 @@ public class App {
 Now, build and run this code with:
 
 ```shell
-gradle assemble
-gradle run
+./gradlew assemble
+./gradlew run
 ```
 
 Your program should print output like:
 
 ```shell
+09:20:59.009 [main] INFO dev.dbos.transact.execution.DBOSExecutor -- DBOS started
 Step one completed!
 Step two completed!
+09:20:59.952 [main] INFO dev.dbos.transact.DBOS -- DBOS shut down
 ```
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Javalin.
-Replace the contents of `App.java` with:
+Replace the contents of `app/src/main/java/com/example/App.java` with:
 
 ```java showLineNumbers title="App.java"
 package com.example;
@@ -179,17 +184,17 @@ public class App {
 }
 ```
 
-Now, add the Javalin web server to your dependencies:
+Now, add the Javalin web server to your `app/build.gradle` `dependencies`:
 
 ```
-implementation("io.javalin:javalin:6.7.0")
+implementation "io.javalin:javalin:6.7.0"
 ```
 
 Then, build and run this code with:
 
 ```shell
-gradle assemble
-gradle run
+./gradlew assemble
+./gradlew run
 ```
 
 Next, visit this URL: http://localhost:8080.
@@ -204,7 +209,7 @@ Press Control + C to stop the app...
 Press Control + C to stop the app...
 ```
 
-Now, press CTRL+C stop your app. Then, run `gradle run` to restart it. You should see an output like:
+Now, press CTRL+C stop your app. Then, run `./gradlew run` to restart it. You should see an output like:
 
 ```
 12:45:37.794 [main] INFO io.javalin.Javalin -- Listening on http://localhost:8080/
@@ -315,8 +320,8 @@ This example enqueues ten functions, then waits for them all to finish using `.g
 Now, restart your app with:
 
 ```shell
-gradle assemble
-gradle run
+./gradlew assemble
+./gradlew run
 ```
 
 Then, visit this URL: http://localhost:8080.
