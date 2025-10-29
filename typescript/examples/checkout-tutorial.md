@@ -5,7 +5,7 @@ title: Fault-Tolerant Checkout
 ---
 
 :::info
-This example is also available in [Python](../../python/examples/widget-store) and [Go](../../golang/examples/widget-store.md).
+This example is also available in [Python](../../python/examples/widget-store), [Java](../../java/examples/widget-store), and [Go](../../golang/examples/widget-store.md).
 :::
 
 In this example, we use DBOS and Fastify to deploy an online storefront that's resilient to any failure.
