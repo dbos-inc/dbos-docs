@@ -380,12 +380,14 @@ async for value in DBOS.read_stream_async(workflow_id, example_key):
 def list_workflows(
     *,
     workflow_ids: Optional[List[str]] = None,
-    status: Optional[str | list[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
     app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
     user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
@@ -403,10 +405,13 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows that were enqueued on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs have this prefix.
 
 ### list_queued_workflows
 ```python
@@ -414,6 +419,7 @@ def list_queued_workflows(
     *,
     queue_name: Optional[str] = None,
     status: Optional[str | list[str]] = None,
+    forked_from: Optional[str] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
@@ -428,6 +434,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enque
 **Parameters:**
 - **queue_name**: Retrieve workflows running on this queue.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
+- **forked_from**: Retrieve workflows forked from this workflow ID.
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
@@ -456,6 +463,10 @@ class StepInfo(TypedDict):
     error: Optional[Exception]
     # If the step starts or retrieves the result of a workflow, its ID
     child_workflow_id: Optional[str]
+    # The Unix epoch timestamp at which this step started
+    started_at_epoch_ms: Optional[int]
+    # The Unix epoch timestamp at which this step completed
+    completed_at_epoch_ms: Optional[int]
 ```
 
 ### cancel_workflow
@@ -513,8 +524,6 @@ class WorkflowStatus:
     status: str
     # The name of the workflow function
     name: str
-    # The number of times this workflow has been started
-    recovery_attempts: int
     # The name of the workflow's class, if any
     class_name: Optional[str]
     # The name with which the workflow's class instance was configured, if any
@@ -537,10 +546,22 @@ class WorkflowStatus:
     updated_at: Optional[int]
     # If this workflow was enqueued, on which queue
     queue_name: Optional[str]
-    # The ID of the executor (process) that most recently executed this workflow
+    # The executor to most recently execute this workflow
     executor_id: Optional[str]
     # The application version on which this workflow was started
     app_version: Optional[str]
+    # The start-to-close timeout of the workflow in ms
+    workflow_timeout_ms: Optional[int]
+    # The deadline of a workflow, computed by adding its timeout to its start time.
+    workflow_deadline_epoch_ms: Optional[int]
+    # Unique ID for deduplication on a queue
+    deduplication_id: Optional[str]
+    # Priority of the workflow on the queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+    priority: Optional[int]
+    # If this workflow is enqueued on a partitioned queue, its partition key
+    queue_partition_key: Optional[str]
+    # If this workflow was forked from another, that workflow's ID.
+    forked_from: Optional[str]
 ```
 
 ## Context Variables
