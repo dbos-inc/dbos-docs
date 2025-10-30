@@ -1451,7 +1451,6 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
-````
 
 ## Configuring DBOS
 
@@ -1510,3 +1509,5 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
 - **applicationVersion**: The code version for this application and its workflows.
+
+````

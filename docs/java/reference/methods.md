@@ -78,7 +78,7 @@ If called from outside a workflow, or from within a step, it behaves like a regu
 
 ### retrieveWorkflow
 
-```go
+```java
 static WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
 ```
 
