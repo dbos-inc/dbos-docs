@@ -13,7 +13,10 @@ This application demonstrates how to build reliable human-in-the-loop with durab
 We'll see how to build agents that can wait hours or days for human input to arrive (surviving process restarts).
 We'll also see how to use workflow introspection to monitor active agents and create an "inbox" of workflows that need approval.
 
+All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/agent-inbox).
+
 <img src={require('@site/static/img/examples/agent-inbox.png').default} alt="Agent Inbox" width="800" className="custom-img"/>
+
 
 ## Durable Agents
 
