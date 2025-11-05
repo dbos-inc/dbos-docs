@@ -99,7 +99,7 @@ def start_agent(request: AgentStartRequest):
 
 To build an "agent inbox", we need to be able to see which agents are pending approval.
 We can do this with the DBOS workflow management API.
-We list all active agents with `DBOS.list_workflows`, then retrieve the status of each.
+We list all active agents with [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), then retrieve the status of each.
 We return only agents that currently have the `pending_approval` status.
 
 ```python
