@@ -47,4 +47,4 @@ SELECT * FROM dbos.workflow_status;
 
 You should see the durable checkpoints DBOS makes for your workflows:
 
-<img src={require('@site/static/img/timescaledb/timescaledb-query.png').default} alt="Neon Tables Dashboard" width="1000" className="custom-img"/>
+<img src={require('@site/static/img/timescaledb/timescaledb-query.png').default} alt="TimescaleDB Tables Dashboard" width="1000" className="custom-img"/>
