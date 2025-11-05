@@ -11,7 +11,7 @@ However, because there are real people involved, approval doesn't always happen 
 
 This application demonstrates how to build reliable human-in-the-loop with durable workflows.
 We'll see how to build agents that can wait hours or days for human input to arrive (surviving process restarts).
-We'll also see how to use workflow management tools to monitor active agents and create an "inbox" of workflows that need approval.
+We'll also see how to use workflow introspection to monitor active agents and create an "inbox" of workflows that need approval.
 
 <img src={require('@site/static/img/examples/agent-inbox.png').default} alt="Agent Inbox" width="800" className="custom-img"/>
 
@@ -98,7 +98,7 @@ def start_agent(request: AgentStartRequest):
 ## Building an Agent Inbox
 
 To build an "agent inbox", we need to be able to see which agents are pending approval.
-We can do this with the DBOS workflow management API.
+We can do this with the DBOS workflow introspection API.
 We list all active agents with [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), then retrieve the status of each.
 We return only agents that currently have the `pending_approval` status.
 
