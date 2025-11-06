@@ -9,7 +9,7 @@ title: Why DBOS?
 DBOS provides lightweight durable workflows built on top of Postgres.
 Essentially, it helps you write long-lived, reliable code that can survive crashes, restarts, and failures without losing state or duplicating work.
 
-In practice, DBOS makes it easier to build reliable systems for use cases like AI agents, payments, data pipelines, or anything that takes minutes, days, or weeks to complete. Rather than bolting on ad-hoc retry logic and database checkpoints, DBOS workflows give you one consistent model for ensuring progress without duplicate execution.
+In practice, DBOS makes it easier to build reliable systems for use cases like AI agents, payments, data pipelines, or anything that takes minutes, days, or weeks to complete. Rather than bolting on ad-hoc retry logic and database checkpoints, DBOS workflows give you one consistent model for ensuring your work completes without duplicate execution.
 
 To get started, follow the [quickstart](./quickstart.md) to install the open-source library and connect it to a Postgres database.
 Then, annotate workflows and steps in your program to make it durable!
