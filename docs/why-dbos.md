@@ -130,15 +130,18 @@ def indexing_workflow(urls):
 
 <TabItem value="background" label="Background Tasks">
 <section className="row list">
-<article className="col col--4">
+<article className="col col--5">
 
-Launch any task to run in the background and guarantee it eventually completes.
-Wait for days or weeks, or for a notification, before continuing.
+Launch durable background tasks using workflows and queues.
+
+- Workflows guarantee background tasks eventually complete, despite restarts and failures.
+- Durable sleep and notifications let your tasks wait for days or weeks, or for a notification, before continuing.
+- Durably run background tasks directly on your API servers, or use the DBOS client to enqueue tasks from anywhere for execution on dedicated workers.
 
 [See an example ↗️](./python/examples/scheduled-reminders.md)
 
 </article>
-<article className="col col--8">
+<article className="col col--7">
 
 ```python
 @DBOS.workflow()
@@ -148,7 +151,11 @@ def schedule_reminder(to_email, days_to_wait):
 
 @app.post("/email")
 def email_endpoint(request):
-    DBOS.start_workflow(schedule_reminder, request.email, request.days)
+    DBOS.start_workflow(
+        schedule_reminder, 
+        request.email, 
+        request.days
+)
 ```
 
 </article>
@@ -157,14 +164,17 @@ def email_endpoint(request):
 
 <TabItem value="workflow" label="Business Workflows">
 <section className="row list">
-<article className="col col--4">
+<article className="col col--5">
 
-Write business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
+Add workflows to your business logic to make it resilient to any failure.
+
+- Write business logic in normal code, with branches, loop, subtasks, and retries.
+- Workflows guarantee your critical business processes eventually complete, despite crashes, restarts, and failures.
 
 [See an example ↗️](./python/examples/widget-store.md)
 
 </article>
-<article className="col col--8">
+<article className="col col--7">
 
 ```python
 @DBOS.step()
