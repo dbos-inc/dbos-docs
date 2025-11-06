@@ -7,20 +7,13 @@ title: Why DBOS?
 ### What is DBOS?
 
 DBOS provides lightweight durable workflows built on top of Postgres.
-Instead of managing your own workflow orchestrator or task queue system, you can use DBOS to add durable workflows and queues to your program in just a few lines of code.
+Essentially, it helps you write long-lived, reliable code that can survive crashes, restarts, and failures without losing state or duplicating work.
+
+In practice, DBOS makes it easier to build reliable systems for use cases like AI agents, payments, data synchronization, or anything that takes minutes, days, or weeks to complete. Rather than bolting on ad-hoc retry logic and database checkpoints, DBOS workflows give you one consistent model for ensuring progress without duplicate execution.
 
 To get started, follow the [quickstart](./quickstart.md) to install the open-source library and connect it to a Postgres database.
 Then, annotate workflows and steps in your program to make it durable!
 That's all you need to do&mdash;DBOS is entirely contained in the open-source library, there's no additional infrastructure for you to configure or manage.
-
-## When Should I Use DBOS?
-
-You should consider using DBOS if your application needs to **reliably handle failures**.
-For example, you might be building a payments service that must reliably process transactions even if servers crash mid-operation, or a long-running data pipeline that needs to resume seamlessly from checkpoints rather than restart from the beginning when interrupted.
-
-Handling failures is costly and complicated, requiring complex state management and recovery logic as well as heavyweight tools like external orchestration services.
-DBOS makes it simpler: annotate your code to checkpoint it in Postgres and automatically recover from any failure.
-DBOS also provides powerful Postgres-backed primitives that makes it easier to write and operate reliable code, including durable queues, notifications, scheduling, event processing, and programmatic workflow management.
 
 ## How Does DBOS Work?
 
@@ -62,179 +55,6 @@ If your program is ever interrupted or crashes, DBOS uses this saved state to re
 For example, if your checkout workflow crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
 Thus, DBOS makes your application **resilient to any failure**.
 
-## Use Cases
-
-DBOS helps you write complex programs in remarkably few lines of code. For example:
-
-<Tabs groupId="examples" className="medium-tabs">
-
-<TabItem value="workflow" label="Reliable Workflows">
-<section className="row list">
-<article className="col col--4">
-
-Write business logic in normal code, with branches, loops, subtasks, and retries. DBOS makes it resilient to any failure.
-
-[See an example ↗️](./python/examples/widget-store.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@DBOS.step()
-def validate_payment():
-    ...
-
-@DBOS.workflow()
-def checkout_workflow()
-    validate_payment()
-    check_inventory()
-    ship_order()
-    notify_customer()
-```
-
-</article>
-</section>
-</TabItem>
-
-<TabItem value="background" label="Background Tasks">
-<section className="row list">
-<article className="col col--4">
-
-Launch any task to run in the background and guarantee it eventually completes.
-Wait for days or weeks, or for a notification, before continuing.
-
-[See an example ↗️](./python/examples/scheduled-reminders.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@DBOS.workflow()
-def schedule_reminder(to_email, days_to_wait):
-    DBOS.recv(days_to_seconds(days_to_wait))
-    send_reminder_email(to_email, days_to_wait)
-
-@app.post("/email")
-def email_endpoint(request):
-    DBOS.start_workflow(schedule_reminder, request.email, request.days)
-```
-
-</article>
-</section>
-</TabItem>
-
-<TabItem value="cron" label="Cron Jobs">
-<section className="row list">
-<article className="col col--4">
-
-Schedule functions to run at specific times.
-
-[Get started ↗️](./python/tutorials/scheduled-workflows.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@DBOS.scheduled("0 * * * *") # Run once an hour
-@DBOS.workflow()
-def run_hourly(scheduled_time, actual_time):
-    results = search_hackernews("serverless")
-    for comment, url in results:
-        post_to_slack(comment, url)
-```
-
-</article>
-</section>
-</TabItem>
-
-<TabItem value="pipelines" label="Data Pipelines">
-<section className="row list">
-<article className="col col--4">
-
-Build data pipelines that are reliable and observable by default.
-DBOS durable queues guarantee all your tasks complete.
-
-[See an example ↗️](./python/examples/document-detective.md)
-
-</article>
-<article className="col col--8">
-
-```python
-queue = Queue("indexing_queue")
-
-@DBOS.workflow()
-def indexing_workflow(urls):
-    handles = []
-    for url in urls:
-        handles.append(queue.enqueue(index_step, url))
-    return [h.get_result() for h in handles]
-```
-
-</article>
-</section>
-</TabItem>
-
-
-<TabItem value="kafka" label="Kafka">
-<section className="row list">
-<article className="col col--4">
-
-Consume Kafka messages exactly-once, no need to worry about timeouts or offsets.
-
-[Learn more ↗️](./python/tutorials/kafka-integration.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@DBOS.kafka_consumer(config,["alerts-topic"])
-@DBOS.workflow()
-def process_kafka_alerts(msg):
-    alerts = msg.value.decode()
-    for alert in alerts:
-        respond_to_alert(alert)
-```
-
-</article>
-</section>
-</TabItem>
-
-<TabItem value="agents" label="AI Agents">
-<section className="row list">
-<article className="col col--4">
-
-Use durable workflows to build reliable, fault-tolerant AI agents.
-Integrate with popular frameworks like LangChain and LlamaIndex.
-
-[See an example ↗️](./python/examples/hacker-news-agent.md)
-
-</article>
-<article className="col col--8">
-
-```python
-@DBOS.workflow()
-def agentic_research_workflow(topic, max_iterations):
-  research_results = []
-  for i in range(max_iterations):
-    research_result = research_query(topic)
-    research_results.append(research_result)
-    if not should_continue(research_results):
-      break
-    topic = generate_next_topic(topic, research_results)
-  return synthesize_research_report(research_results)
-
-@DBOS.step()
-def research_query(topic):
-  ...
-```
-
-</article>
-</section>
-</TabItem>
-
-</Tabs>
-
-
 ## DBOS vs. Other Systems
 
 ### DBOS vs. Temporal
@@ -243,11 +63,7 @@ Both DBOS and Temporal provide durable execution, but DBOS is implemented in a l
 
 You can add DBOS to your program by installing the open-source library, connecting it to Postgres, and annotating workflows and steps.
 By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows and steps (activities) to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
-[This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) makes the comparison in more detail.
-
-**When to use DBOS:** You need to add durable workflows to your applications with minimal rearchitecting, or you are using Postgres.
-
-**When to use Temporal:** You don't want to add Postgres to your stack, or you need a language DBOS doesn't support yet.
+[This page](./explanations/comparing-temporal.md) makes the comparison in more detail.
 
 ### DBOS vs. Airflow
 
@@ -256,10 +72,6 @@ Airflow is targeted at data science use cases, providing many out-of-the-box con
 Airflow is designed for batch operations and does not provide good performance for streaming or real-time use cases.
 DBOS is general-purpose, but is often used for data pipelines, allowing developers to write workflows as code and requiring no infrastructure except Postgres.
 
-**When to use DBOS:** You need the flexibility of writing workflows as code, or you need higher performance than Airflow is capable of (particularly for streaming or real-time use cases).
-
-**When to use Airflow:** You need Airflow's ecosystem of connectors.
-
 ### DBOS vs. Celery/BullMQ
 
 DBOS provides a similar queue abstraction to dedicated queueing systems like Celery or BullMQ: you can declare queues, submit tasks to them, and control their flow with concurrency limits, rate limits, timeouts, prioritization, etc.
@@ -267,7 +79,3 @@ However, DBOS queues are **durable and Postgres-backed** and integrate with dura
 For example, in DBOS you can write a durable workflow that enqueues a thousand tasks and waits for their results.
 DBOS checkpoints the workflow and each of its tasks in Postgres, guaranteeing that even if failures or interruptions occur, the tasks will complete and the workflow will collect their results.
 By contrast, Celery/BullMQ are Redis-backed and don't provide workflows, so they provide fewer guarantees but better performance.
-
-**When to use DBOS:** You need the reliability of enqueueing tasks from durable workflows.
-
-**When to use Celery/BullMQ**: You don't need durability, or you need very high throughput beyond what your Postgres server can support.
