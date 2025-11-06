@@ -175,6 +175,12 @@ import { VscGraphLine } from "react-icons/vsc";
 <LargeTabItem value="typescript" label="Typescript">
 <section className="row list">
   <NarrowCardLink
+    label="Hacker News Research Agent"
+    href="typescript/examples/hacker-news-agent"
+    description="Use DBOS to build an AI deep research agent searching Hacker News."
+    icon={<FaHackerNews color="white" size={50} />}
+  />
+  <NarrowCardLink
     label="Fault-Tolerant Checkout"
     href="typescript/examples/checkout-tutorial"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
@@ -184,13 +190,7 @@ import { VscGraphLine } from "react-icons/vsc";
     label="Alert Center"
     href="typescript/examples/kafka-alert-queue"
     description="Produce and consume kafka messages exactly once."
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
-  />
-  <NarrowCardLink
-    label="React Task Scheduler"
-    href="typescript/examples/task-scheduler"
-    description="Use DBOS scheduled workflows."
-    icon={<MdOutlineShoppingCart color="white" size={50}/>}
+    icon={<SiApachekafka color="white" size={50}/>}
   />
 </section>
 </LargeTabItem>
@@ -207,12 +207,14 @@ import { VscGraphLine } from "react-icons/vsc";
 </LargeTabItem>
 
 <LargeTabItem value="java" label="Java">
+<section className="row list">
   <NarrowCardLink
     label="Fault-Tolerant Checkout"
     href="java/examples/widget-store"
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
+</section>
 </LargeTabItem>
 </LargeTabs>
 
