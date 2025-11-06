@@ -64,15 +64,18 @@ DBOS helps you write complex distributed programs in remarkably few lines of cod
 
 <TabItem value="agents" label="AI Agents">
 <section className="row list">
-<article className="col col--4">
+<article className="col col--5">
 
-Use durable workflows to build reliable, fault-tolerant AI agents.
-Integrate with popular frameworks like LangChain and LlamaIndex.
+Use durable workflows to build fault-tolerant and observable AI agents:
+- Pinpoint the root cause of failures from the [workflow dashboard](./python/tutorials/workflow-management.md).
+- Simplify evals by using [fork](./python/tutorials/workflow-management.md#forking-workflows) to restart an agent from a specific step or tool call.
+- Seamlessly add [human-in-the-loop](./python/examples/agent-inbox.md) to your agent.
+- Natively integrate with popular frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/).
 
 [See an example ↗️](./python/examples/hacker-news-agent.md)
 
 </article>
-<article className="col col--8">
+<article className="col col--7">
 
 ```python
 @DBOS.workflow()
@@ -97,15 +100,18 @@ def research_query(topic):
 
 <TabItem value="pipelines" label="Data Pipelines">
 <section className="row list">
-<article className="col col--4">
+<article className="col col--5">
 
-Build data pipelines that are reliable and observable by default.
-DBOS durable queues guarantee all your tasks complete.
+Use durable workflows and queues to build fault-tolerant and observable data pipelines:
+
+- Use [queues](./python/tutorials/queue-tutorial.md) to orchestrate tens of thousands of concurrent tasks.
+- If a failure occurs during a multi-hour pipeline, workflows help you recover from the last completed step instead of restarting from the beginning.
+- Queue flow control helps you manage the resource consumption of your pipelines by controlling how many tasks can run concurrently or how often tasks can start.
 
 [See an example ↗️](./python/examples/document-detective.md)
 
 </article>
-<article className="col col--8">
+<article className="col col--7">
 
 ```python
 queue = Queue("indexing_queue")
