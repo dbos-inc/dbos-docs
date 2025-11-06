@@ -23,7 +23,7 @@ Because of this design, adding Temporal to an application requires rearchitectin
 First, you must move all workflow and step code from application servers to Temporal workers.
 Then, you must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
 Next, you must build infrastructure to operate and scale the worker servers.
-Finally, you must operate and scale the orchestration server and its underlying Cassandra data store.
+Finally, you must operate and scale the orchestration server and its underlying Cassandra data store (Temporal supports other backends, but Cassandra is strongly recommended in production).
 [This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) empirically benchmarks the comparison, showing how adding DBOS to an example data pipeline application requires changing &lt;10 lines of code, while adding Temporal requires a complete rewrite.
 
 <img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
@@ -49,4 +49,12 @@ For example, if a large number of billing workflows failed overnight due to an o
 
 #### Improved Operational Reliability
 
+Because DBOS is just a library, its only point of failure is Postgres.
+If your organization already uses Postgres, DBOS does not add any new infrastructural dependencies or points of failure to your application's architecture.
+
+By contrast, the Temporal architecture has two points of failure: the Temporal server itself and its Cassandra data store.
+Your team is responsible for operating both, and if either has downtime, your application becomes unavailable.
+
 #### Privacy-Preserving Architecture
+
+Because DBOS is just an open-source library and can store data in any Postgres database, it is intrinsically privacy-preserving&mdash;you own your data, you store it in your Postgres, and it is never stored or sent anywhere else. By contrast, to use Temporal, you must send potentially sensitive data (including workflow and step checkpoints) to the Temporal server for storage. In fairness, Temporal has privacy-preserving mitigations, including support for [client-side encryption](https://docs.temporal.io/evaluate/development-production-features/data-encryption) of all data sent to Temporal.
