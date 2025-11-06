@@ -52,7 +52,7 @@ For example, if a large number of billing workflows failed overnight due to an o
 Because DBOS is just a library, its only point of failure is Postgres.
 If your organization already uses Postgres, DBOS does not add any new infrastructural dependencies or points of failure to your application's architecture.
 
-By contrast, the Temporal architecture has two points of failure: the Temporal server itself and its Cassandra data store.
+By contrast, the Temporal architecture adds two new two points of failure: the Temporal server and its Cassandra data store.
 Your team is responsible for operating both, and if either has downtime, your application becomes unavailable.
 
 #### Privacy-Preserving Architecture
