@@ -24,4 +24,4 @@ Then, you must also rewrite all interaction between your application and its wor
 Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying Cassandra data store.
 
-<img src={require('@site/static/img/architecture/external-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
