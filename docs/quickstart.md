@@ -63,7 +63,7 @@ Then initialize an example application.
 <article className="col col--6">
 
 ```shell
-pip install dbos fastapi[standard]
+pip install dbos 'fastapi[standard]'
 dbos init --template dbos-app-starter
 ```
 
