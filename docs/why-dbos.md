@@ -104,7 +104,7 @@ def research_query(topic):
 
 Use durable workflows and queues to build fault-tolerant and observable data pipelines:
 
-- Use [queues](./python/tutorials/queue-tutorial.md) to orchestrate tens of thousands of concurrent tasks.
+- [Queues](./python/tutorials/queue-tutorial.md) simplify orchestrating tens of thousands of concurrent tasks.
 - If a failure occurs during a multi-hour pipeline, workflows help you recover from the last completed step instead of restarting from the beginning.
 - Queue flow control helps you manage the resource consumption of your pipelines by controlling how many tasks can run concurrently or how often tasks can start.
 
@@ -136,7 +136,7 @@ Launch durable background tasks using workflows and queues.
 
 - Workflows guarantee background tasks eventually complete, despite restarts and failures.
 - Durable sleep and notifications let your tasks wait for days or weeks, or for a notification, before continuing.
-- Durably run background tasks directly on your API servers, or use the DBOS client to enqueue tasks from anywhere for execution on dedicated workers.
+- Durably run background tasks directly on your API servers, or use the DBOS client to enqueue tasks from anywhere for execution on dedicated workers or serverless functions.
 
 [See an example ↗️](./python/examples/scheduled-reminders.md)
 
