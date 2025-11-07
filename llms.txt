@@ -4,6 +4,7 @@
 
 - [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
+- [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript, Java, and Python.
