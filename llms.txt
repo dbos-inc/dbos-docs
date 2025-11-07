@@ -30,7 +30,7 @@
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add the open source DBOS Transact library to your existing Nest.js application to durably execute it and make it resilient to any failure.
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
-- [TimescaleDB](https://docs.dbos.dev/integrations/timescaledb.md): Here's how to connect your DBOS application running on your computer or cloud environment to your TimescaleDB database.
+- [Tiger Data](https://docs.dbos.dev/integrations/tigerdata.md): Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/java/examples/widget-store.md): This example is also available in TypeScript, Go, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/java/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are resilient to any failure.
