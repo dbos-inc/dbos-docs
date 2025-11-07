@@ -10,7 +10,7 @@ DBOS provides lightweight durable workflows built on top of Postgres.
 Essentially, it helps you write long-lived, reliable code that can survive failures, crashes, and restarts without losing state or duplicating work.
 
 In practice, DBOS makes it easier to build reliable systems for use cases like AI agents, data pipelines, payments, or anything that takes minutes, days, or weeks to complete.
-Rather than bolting on ad-hoc retry logic and database checkpoints, DBOS workflows give you one consistent model for ensuring your programs can recover from any failure from exactly where they left off.
+Rather than bolting on ad-hoc retry logic and database checkpoints, DBOS workflows give you one consistent model for ensuring your programs can recover from failure from exactly where they left off.
 
 To get started, follow the [quickstart](./quickstart.md) to install the open-source library and connect it to a Postgres database.
 Then, annotate workflows and steps in your program to make it durable!
