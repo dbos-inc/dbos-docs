@@ -68,6 +68,8 @@ DBOS helps you write complex distributed programs in remarkably few lines of cod
 <article className="col col--5">
 
 Use durable workflows to build fault-tolerant and observable AI agents:
+
+- If a failure occurs after many iterations of a multi-turn agent, workflows help you recover from the last completed step instead of restarting from the beginning.
 - Pinpoint the root cause of failures from the [workflow dashboard](./python/tutorials/workflow-management.md).
 - Simplify evals by using [fork](./python/tutorials/workflow-management.md#forking-workflows) to restart an agent from a specific step or tool call.
 - Seamlessly add [human-in-the-loop](./python/examples/agent-inbox.md) to your agent.
