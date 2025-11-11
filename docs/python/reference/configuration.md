@@ -99,7 +99,7 @@ Defaults to:
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 - **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
-- **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for [distributed workflow recovery](../../production/self-hosting/workflow-recovery.md)
+- **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
 
 
