@@ -27,7 +27,7 @@ DBOSClient(
 **Parameters:**
 - `system_database_url`: A connection string to your DBOS system database, with the same format and defaults as in [DBOSConfig](./configuration.md).
 - `application_database_url`: A connection string to your DBOS application database, with the same format and defaults as in [DBOSConfig](./configuration.md).
-Not required unless you use DBOS [transactions](../tutorials/transaction-tutorial.md).
+Not required unless you use DBOS [transactions](../tutorials/step-tutorial.md#transactions).
 - `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - `system_database_engine`: A custom SQLAlchemy engine to use to connect to your system database. If provided, the client will not create an engine but use this instead.
 

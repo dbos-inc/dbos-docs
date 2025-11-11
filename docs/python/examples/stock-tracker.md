@@ -91,7 +91,7 @@ def send_sms_alert(symbol, price, to_phone_number):
 ## Saving stock prices to the database and fetching registered alerts
 
 Let's write two small functions to retrieve registered alerts and save stock prices to the database.
-We annotate these functions with [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) to get access to a pre-configured database client (`DBOS.sql_session`) and to durably call them from the workflow above.
+Because this is a workflow step that accesses the database, we annotate this function with [`@DBOS.transaction`](../tutorials/step-tutorial.md#transactions).
 
 ```python
 @DBOS.transaction()
