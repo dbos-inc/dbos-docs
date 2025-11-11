@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.f6500100.js" defer="defer"></script>
-<script src="/assets/js/main.ddcd0fe6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.1fe67a32.js" defer="defer"></script>
+<script src="/assets/js/main.195dbe57.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -42,7 +42,7 @@ A valid connection string looks like:</li>
 <div class="language-shell codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-shell codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token plain">sqlite:///</span><span class="token punctuation" style="color:#f8f8f2">[</span><span class="token plain">application_name</span><span class="token punctuation" style="color:#f8f8f2">]</span><span class="token plain">.sqlite</span><br></span></code></pre></div></div>
 <ul>
 <li><strong>application_database_url</strong>: A connection string to your application database.
-This is the database in which DBOS executes <a href="/python/tutorials/transaction-tutorial"><code>@DBOS.transaction</code></a> functions.
+This is the database in which DBOS executes <a href="/python/tutorials/step-tutorial#transactions"><code>@DBOS.transaction</code></a> functions.
 This parameter has the same format and default as <code>system_database_url</code>.
 If you are not using <code>@DBOS.transaction</code>, you do not need to supply this parameter.</li>
 <li><strong>db_engine_kwargs</strong>: Additional keyword arguments passed to SQLAlchemy’s <a href="https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine" target="_blank" rel="noopener noreferrer"><code>create_engine()</code></a>.
@@ -62,7 +62,7 @@ Defaults to:</li>
 <li><strong>run_admin_server</strong>: Whether to run an <a href="/production/self-hosting/admin-api">HTTP admin server</a> for workflow management operations. Defaults to True.</li>
 <li><strong>admin_port</strong>: The port on which the admin server runs. Defaults to 3001.</li>
 <li><strong>application_version</strong>: The code version for this application and its workflows. Workflow versioning is documented <a href="/python/tutorials/workflow-tutorial#workflow-versioning-and-recovery">here</a>.</li>
-<li><strong>executor_id</strong>: Executor ID, used to identify the application instance in distributed environments. It is also useful for <a href="/production/self-hosting/workflow-recovery">distributed workflow recovery</a></li>
+<li><strong>executor_id</strong>: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.</li>
 <li><strong>serializer</strong>: A custom serializer for the system database. See the <a href="/python/reference/contexts#custom-serialization">custom serialization reference</a> for details.</li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="dbos-configuration-file">DBOS Configuration File<a href="#dbos-configuration-file" class="hash-link" aria-label="Direct link to DBOS Configuration File" title="Direct link to DBOS Configuration File">​</a></h2>

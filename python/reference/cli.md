@@ -5,7 +5,7 @@ title: DBOS CLI
 
 ## Workflow Management Commands
 
-These commands all require the URL of your DBOS system database (and optionally your application database, if you use DBOS [transactions](../tutorials/transaction-tutorial.md)).
+These commands all require the URL of your DBOS system database (and optionally your application database, if you use DBOS [transactions](../tutorials/step-tutorial.md#transactions)).
 You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ### dbos workflow list
@@ -130,7 +130,7 @@ Use the `-r` flag to grant a role access to that schema.
 **Arguments:**
 
 - `-s, --sys-db-url URL`: A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
-- `-D, --db-url URL`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/transaction-tutorial.md) run. Optional if you are not using transactions.
+- `-D, --db-url URL`: A connection string for your DBOS application database, in which DBOS [transactions](../tutorials/step-tutorial.md#transactions) run. Optional if you are not using transactions.
 - `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your application and system databases.
 
 ### dbos start
