@@ -74,7 +74,7 @@ If no connection string is provided, DBOS uses a SQLite database:
 sqlite:///[application_name].sqlite
 ```
 - **application_database_url**: A connection string to your application database.
-This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/transaction-tutorial.md) functions.
+This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/step-tutorial.md#transactions) functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
