@@ -80,8 +80,7 @@ function CardLayout({
           className={clsx(styles.cardTitle)}
           title={title}
           >
-          {items.length > 1 && <Link href={href}>{title}</Link>}
-          {items.length <= 1 && <div>{title}</div>}
+          {<Link href={href}>{title}</Link>}
           {items.length === 1 && (
             <img src={items[0].iconSrc} alt={`${items[0].lang} logo`} className={styles.cardLogo}/>
           )}
