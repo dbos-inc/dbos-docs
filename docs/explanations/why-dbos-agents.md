@@ -40,8 +40,7 @@ For example, you might hypothesize that the malformed output was caused by an er
 
 ### Adding Human-in-the-Loop
 
-Many agents need a **human in the loop**.
-Some decisions are just too important to trust to an LLM and require human validation.
+Many agents need a **human in the loop** for decisions that are too important to fully trust an LLM.
 However, it's not easy to design an agent that waits for human feedback.
 The key issue is **time**: a human might take hours or days to respond to an agent request, so the agent must be able to reliably wait for a long time (during which the server might be restarted, software might be upgraded, etc.).
 
