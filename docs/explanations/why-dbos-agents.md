@@ -37,3 +37,21 @@ Once you have a fix, you can reproduce the failure with the fix in place to test
 For example, you might hypothesize that the malformed output was caused by an error in the prompt, so you fix the prompt, rerun the failed step, and observe that it completes successfully:
 
 <img src={require('@site/static/img/why-dbos-agents/agent-succeed.png').default} alt="Successful Agent" width="750" className="custom-img"/>
+
+### Adding Human-in-the-Loop
+
+Many agents need a **human in the loop**.
+Some decisions are just too important to trust to an LLM and require human validation.
+However, it's not easy to design an agent that waits for human feedback.
+The key issue is **time**: a human might take hours or days to respond to an agent request, so the agent must be able to reliably wait for a long time (during which the server might be restarted, software might be upgraded, etc.).
+
+Durable workflows help because they provide tools like **durable notifications**.
+For example, you can add a line of code to your agent that tells it to wait hours or days for a notification:
+
+```python
+approval: Optional[HumanResponseRequest] = DBOS.recv(timeout_seconds=TIMEOUT)
+```
+
+Both the deadline and the notification are stored in your database, so anything can happen while your agent is waiting (its server can restart, its code can be upgraded, etc.) and it will recover and keep waiting until the notification arrives or the deadline is reached.
+
+If you're interested in building human-in-the-loop agents, check out the [agent inbox](../python/examples/agent-inbox.md) example, which shows how to use durable notifications to add human-in-the-loop to agents and how to use workflow introspection to monitor and display which agents are waiting for which human inputs.
