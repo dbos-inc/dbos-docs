@@ -19,7 +19,7 @@ For example, an agent might:
 
 - Return a malformed structured output, causing a tool call to fail.
 - Invoke the wrong tool or the right tool with the wrong inputs, causing the tool to fail.
-- Generate an undesirable or inappropriate text output.
+- Generate an undesirable or inappropriate text output, with potentially business-critical consequences.
 
 These behaviors are especially hard to diagnose in a complex or long-running agent&mdash;if an agent runs for two hours then fails unexpectedly, it's difficult to reproduce the exact set of conditions that caused the failure and test a fix.
 
