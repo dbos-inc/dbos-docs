@@ -93,4 +93,4 @@ queue = Queue("indexing_queue", worker_concurrency=10)
 
 Because queues are backed by durable workflows, they can automatically recover from any failure: if a server restarts partway through a multi-hour run of your pipeline on a batch of 10K documents, your pipeline will recover from the last indexed document instead of restarting from the beginning.
 
-If you're interested in building distributed AI agents or data pipelines, check out our [document ingestion example](../python/examples/document-detective.md), which shows best practices for building durable distributed applications.
+If you're interested in building distributed AI agents or data pipelines, check out the [document ingestion example](../python/examples/document-detective.md), which shows best practices for building durable distributed applications.
