@@ -31,6 +31,7 @@ For example, you might see that your agent failed because of a validation error 
 
 Once you've identified the cause of a failure, you can use the **workflow fork** operation to reproduce it.
 Fork restarts a workflow from a completed step, using checkpointed information to deterministically reproduce the state of the workflow up to that step.
+
 Once you can reproduce the failure in a development environment, it becomes much easier to fix.
 You can add additional logging or telemetry to the misbehaving step to identify the root cause.
 Once you have a fix, you can reproduce the failure with the fix in place to test if it works.
