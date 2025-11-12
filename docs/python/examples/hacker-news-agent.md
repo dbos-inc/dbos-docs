@@ -534,6 +534,39 @@ def synthesize_findings_step(
 
 </details>
 
+## API Endpoints
+
+The agent has two API endpoints used by its frontend: one that starts a new agent researching a topic and one that retrieves agent statuses.
+
+This endpoint starts a durable agent in the background:
+
+```python
+@app.post("/agents")
+def start_agent(request: AgentStartRequest):
+    # Start a durable agent in the background
+    DBOS.start_workflow(agentic_research_workflow, request.topic)
+    return {"ok": True}
+```
+
+This endpoint returns the statuses of all agents.
+It lists all agents with [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), then retrieves the status of each using [`DBOS.get_event`](../tutorials/workflow-communication.md#workflow-events).
+
+```python
+@app.get("/agents", response_model=list[AgentStatus])
+async def list_agents():
+    # List all active agents and retrieve their statuses
+    agent_workflows = await DBOS.list_workflows_async(
+        name=agentic_research_workflow.__qualname__,
+        sort_desc=True,
+    )
+    statuses: list[AgentStatus] = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
+    for workflow, status in zip(agent_workflows, statuses):
+        status.status = workflow.status
+    return statuses
+```
+
 
 ## Try it Yourself!
 
