@@ -10,15 +10,17 @@ This example is also available in [TypeScript](../../typescript/examples/hacker-
 
 In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
 
-This example demonstrates how to build **reliable, durable AI agents** with DBOS.
-The agent starts with a research topic, autonomously searches for related information, makes decisions about when to continue research, and synthesizes findings into a comprehensive report.
-Because the agent is implemented as a DBOS durable workflow, it can automatically recover from any failure and continue research from where it left off, ensuring no work is lost.
+This example demonstrates how to build **reliable, durable AI agents** with durable workflows.
+The agent starts with a research topic, iteratively researches related topics, then synthesizes findings into a comprehensive report.
+Because the agent is implemented as a durable workflow, it can recover from any failure and continue research from where it left off, ensuring no work is lost.
 
 This example also demonstrates how easy it is to add DBOS to an existing agentic application.
-Adding DBOS to this agent to make it reliable and observable required changing **&lt;20 lines of code**.
+Adding DBOS to this agent required changing **&lt;20 lines of code**.
 All you have to do is annotate workflows and steps.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hacker-news-agent).
+
+<img src={require('@site/static/img/examples/hn-agent.png').default} alt="Agent Inbox" width="800" className="custom-img"/>
 
 ## Main Research Workflow
 
@@ -27,44 +29,40 @@ It starts with a topic and autonomously explores related queries until it has en
 
 ```python
 @DBOS.workflow()
-def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]:
-    """Main agentic workflow that autonomously researches a topic.
-
-    This demonstrates a complete agentic workflow using DBOS.
-    The agent starts with a research topic then:
+def agentic_research_workflow(topic: str, max_iterations: int = 3):
+    """
+    This agent starts with a research topic then:
     1. Searches Hacker News for information on that topic.
-    2. Iteratively searches related queries, collecting information.
-    3. Makes decisions about when to continue
+    2. Iteratively searches related topics, collecting information.
+    3. Makes decisions about when to continue.
     4. Synthesizes findings into a final report.
-
-    The entire process is durable and can recover from any failure.
     """
 
+    console.print(f"[dim]🎯 Starting agentic research for: {topic}[/dim]")
+
+    # Set and update an agent status the frontend can display
+    agent_status = AgentStatus(
+        created_at=datetime.now().isoformat(),
+        topic=topic,
+        iterations=0,
+        report=None,
+        status="PENDING",
+    )
+    DBOS.set_event(AGENT_STATUS, agent_status)
+
     all_findings = []
-    research_history = []
     current_iteration = 0
-    current_query = topic
+    current_topic = topic
 
     # Main agentic research loop
     while current_iteration < max_iterations:
         current_iteration += 1
+        agent_status.iterations = current_iteration
+        DBOS.set_event(AGENT_STATUS, agent_status)
 
-        # Research the next query in a child workflow
-        iteration_result = research_query(topic, current_query, current_iteration)
-        research_history.append(iteration_result)
-        all_findings.append(iteration_result["evaluation"])
-
-        # Handle cases where no results are found
-        stories_found = iteration_result["stories_found"]
-        if stories_found == 0:
-
-            # Generate alternative queries when hitting dead ends
-            alternative_query = generate_follow_ups_step(
-                topic, all_findings, current_iteration
-            )
-            if alternative_query:
-                current_query = alternative_query
-                continue
+        # Research the next topic in a child workflow
+        evaluation = research_topic(topic, current_topic)
+        all_findings.append(evaluation.model_dump())
 
         # Evaluate whether to continue research
         should_continue = should_continue_step(
@@ -75,34 +73,18 @@ def agentic_research_workflow(topic: str, max_iterations: int) -> Dict[str, Any]
 
         # Generate next research question based on findings
         if current_iteration < max_iterations:
-            follow_up_query = generate_follow_ups_step(
+            follow_up_topic = generate_follow_ups_step(
                 topic, all_findings, current_iteration
             )
-            if follow_up_query:
-                current_query = follow_up_query
+            if follow_up_topic:
+                current_topic = follow_up_topic
+            else:
+                break
 
     # Final step: Synthesize all findings into comprehensive report
     final_report = synthesize_findings_step(topic, all_findings)
-
-    # Return complete research results
-    return {
-        "topic": topic,
-        "total_iterations": current_iteration,
-        "max_iterations": max_iterations,
-        "research_history": research_history,
-        "final_report": final_report,
-        "summary": {
-            "total_stories": sum(r["stories_found"] for r in research_history),
-            "total_comments": sum(r["comments_analyzed"] for r in research_history),
-            "queries_executed": [r["query"] for r in research_history],
-            "avg_relevance": (
-                sum(f.get("relevance_score", 0) for f in all_findings)
-                / len(all_findings)
-                if all_findings
-                else 0
-            ),
-        },
-    }
+    agent_status.report = final_report.report
+    DBOS.set_event(AGENT_STATUS, agent_status)
 ```
 
 ## Research Query Workflow
@@ -111,36 +93,25 @@ Each iteration of the main research workflow calls a child workflow that searche
 
 ```python
 @DBOS.workflow()
-def research_query(topic: str, query: str, iteration: int) -> Dict[str, Any]:
-    """Research a query selected by the main agentic workflow."""
-
+def research_topic(topic: str, query: str) -> EvaluationResult:
+    """Research a topic selected by the main agentic workflow."""
     # Step 1: Search Hacker News for stories about the topic
     stories = search_hackernews_step(query, max_results=30)
 
     # Step 2: Gather comments from all stories found
     comments = []
     if stories:
+
         for i, story in enumerate(stories):
             story_id = story.get("objectID")
             title = story.get("title", "Unknown")[:50]
             num_comments = story.get("num_comments", 0)
-
             if story_id and num_comments > 0:
                 story_comments = get_comments_step(story_id, max_comments=10)
                 comments.extend(story_comments)
 
     # Step 3: Evaluate gathered data and return findings
-    evaluation = evaluate_results_step(topic, query, stories, comments)
-
-    return {
-        "iteration": iteration,
-        "query": query,
-        "stories_found": len(stories),
-        "comments_analyzed": len(comments),
-        "evaluation": evaluation,
-        "stories": stories,
-        "comments": comments,
-    }
+    return evaluate_results_step(topic, query, stories, comments)
 ```
 
 ## Agent Decision-Making Steps
@@ -157,13 +128,8 @@ def evaluate_results_step(
     query: str,
     stories: List[Dict[str, Any]],
     comments: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
+) -> EvaluationResult:
     """Agent evaluates search results and extracts insights."""
-
-    # Prepare content for analysis
-    content_summary = f"Found {len(stories)} stories"
-    if comments:
-        content_summary += f" and {len(comments)} comments"
 
     # Create detailed content digest for LLM
     stories_text = ""
@@ -187,15 +153,15 @@ def evaluate_results_step(
 
         # Store top stories for reference
         top_stories.append(
-            {
-                "title": title,
-                "url": url,
-                "hn_url": hn_url,
-                "points": points,
-                "num_comments": num_comments,
-                "author": author,
-                "objectID": story.get("objectID", ""),
-            }
+            StoryReference(
+                title=title,
+                url=url,
+                hn_url=hn_url,
+                points=points,
+                num_comments=num_comments,
+                author=author,
+                objectID=story.get("objectID", ""),
+            )
         )
 
     comments_text = ""
@@ -218,15 +184,15 @@ def evaluate_results_step(
 
     prompt = f"""
     You are a research agent evaluating search results for: {topic}
-    
+
     Query used: {query}
-    
+
     Stories found:
     {stories_text}
-    
+
     Comments analyzed:
     {comments_text}
-    
+
     Provide a DETAILED analysis with specific insights, not generalizations. Focus on:
     - Specific technical details, metrics, or benchmarks mentioned
     - Concrete tools, libraries, frameworks, or techniques discussed
@@ -234,9 +200,9 @@ def evaluate_results_step(
     - Performance data, comparison results, or quantitative insights
     - Notable opinions, debates, or community perspectives
     - Specific use cases, implementation details, or real-world examples
-    
+
     Return JSON with:
-    - "insights": Array of specific, technical insights with context
+    - "insights": String array of specific, technical insights with context
     - "relevance_score": Number 1-10
     - "summary": Brief summary of findings
     - "key_points": Array of most important points discovered
@@ -252,20 +218,12 @@ def evaluate_results_step(
 
     response = call_llm(messages, max_tokens=2000)
 
-    try:
-        cleaned_response = clean_json_response(response)
-        evaluation = json.loads(cleaned_response)
-        evaluation["query"] = query
-        evaluation["top_stories"] = top_stories
-        return evaluation
-    except json.JSONDecodeError:
-        return {
-            "insights": [f"Found {len(stories)} stories about {topic}"],
-            "relevance_score": 7,
-            "summary": f"Basic search results for {query}",
-            "key_points": [],
-            "query": query,
-        }
+    cleaned_response = clean_json_response(response)
+    evaluation_dict = json.loads(cleaned_response)
+    evaluation_dict["query"] = query
+    evaluation_dict["top_stories"] = top_stories
+
+    return EvaluationResult(**evaluation_dict)
 ```
 
 </details>
@@ -330,12 +288,9 @@ def generate_follow_ups_step(
 
     response = call_llm(messages)
 
-    try:
-        cleaned_response = clean_json_response(response)
-        queries = json.loads(cleaned_response)
-        return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
-    except json.JSONDecodeError:
-        return None
+    cleaned_response = clean_json_response(response)
+    queries = json.loads(cleaned_response)
+    return queries[0] if isinstance(queries, list) and len(queries) > 0 else None
 ```
 
 </details>
@@ -403,14 +358,11 @@ def should_continue_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = call_llm(messages)
-
-    try:
-        cleaned_response = clean_json_response(response)
-        decision = json.loads(cleaned_response)
-        return decision.get("should_continue", True)
-    except json.JSONDecodeError:
-        return True
+    raw_response = call_llm(messages)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    response = ShouldContinueResult(**json_response)
+    return response.should_continue
 ```
 
 </details>
@@ -457,7 +409,7 @@ Finally, after concluding its research, the agentic workflow calls this step to 
 @DBOS.step()
 def synthesize_findings_step(
     topic: str, all_findings: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+) -> ResearchReport:
     """Synthesize all research findings into a comprehensive report."""
     findings_text = ""
     story_links = []
@@ -573,70 +525,56 @@ def synthesize_findings_step(
         {"role": "user", "content": prompt},
     ]
 
-    response = call_llm(messages, max_tokens=3000)
-
-    try:
-        cleaned_response = clean_json_response(response)
-        result = json.loads(cleaned_response)
-        return result
-    except json.JSONDecodeError as e:
-        return {
-            "report": "JSON parsing error, report could not be generated.",
-            "error": f"JSON parsing failed, created basic synthesis. Error: {str(e)}",
-        }
+    raw_response = call_llm(messages, max_tokens=3000)
+    cleaned_response = clean_json_response(raw_response)
+    json_response = json.loads(cleaned_response)
+    return ResearchReport(**json_response)
 ```
 
 </details>
 
+## API Endpoints
+
+The agent has two API endpoints used by its frontend: one that starts a new agent researching a topic and one that retrieves agent statuses.
+
+This endpoint starts a durable agent in the background:
+
+```python
+@app.post("/agents")
+def start_agent(request: AgentStartRequest):
+    # Start a durable agent in the background
+    DBOS.start_workflow(agentic_research_workflow, request.topic)
+    return {"ok": True}
+```
+
+This endpoint returns the statuses of all agents.
+It lists all agents with [`DBOS.list_workflows`](../reference/contexts.md#list_workflows), then retrieves the status of each using [`DBOS.get_event`](../tutorials/workflow-communication.md#workflow-events).
+
+```python
+@app.get("/agents", response_model=list[AgentStatus])
+async def list_agents():
+    # List all active agents and retrieve their statuses
+    agent_workflows = await DBOS.list_workflows_async(
+        name=agentic_research_workflow.__qualname__,
+        sort_desc=True,
+    )
+    statuses: list[AgentStatus] = await asyncio.gather(
+        *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
+    )
+    for workflow, status in zip(agent_workflows, statuses):
+        status.status = workflow.status
+        status.agent_id = workflow.workflow_id
+    return statuses
+```
+
 
 ## Try it Yourself!
 
-### Setting Up OpenAI
-
-To run this agent, you need an OpenAI developer account.
-Obtain an API key [here](https://platform.openai.com/api-keys) and set up a payment method for your account [here](https://platform.openai.com/account/billing/overview).
-This agent uses `gpt-4o-mini` for decision-making.
-
-Set your API key as an environment variable:
-
-```shell
-export OPENAI_API_KEY=<your_openai_key>
-```
-
-### Running Locally
-
-First, clone this repository:
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/hacker-news-agent
 ```
 
-Then use [uv](https://docs.astral.sh/uv/guides/install-python/) to install dependencies and activate your virtual environment:
-
-```shell
-uv sync
-source .venv/bin/activate
-```
-
-Run the agent with any research topic:
-
-```shell
-python -m hacker_news_agent "artificial intelligence"
-```
-
-Or try other topics:
-
-```shell
-python -m hacker_news_agent "rust"
-python -m hacker_news_agent "postgres"
-python -m hacker_news_agent "kubernetes"
-```
-
-The agent will autonomously research your topic, make decisions about what to investigate next, and produce a research report with insights from Hacker News.
-
-If the agent fails at any point during its research, you can restart it using its workflow ID to recover it from where it left off:
-
-```shell
-python -m hacker_news_agent "artificial intelligence" --workflow-id <id>
-```
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hacker-news-agent) to run the app.
