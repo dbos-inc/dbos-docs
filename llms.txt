@@ -6,6 +6,7 @@
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
+- [Why DBOS for Agents](https://docs.dbos.dev/explanations/why-dbos-agents.md): DBOS provides lightweight durable workflows for your AI agents.
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript, Java, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/golang/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
@@ -130,4 +131,4 @@
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Upgrading to TSv3](https://docs.dbos.dev/typescript/upgrading.md): With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.
-- [Why DBOS?](https://docs.dbos.dev/why-dbos.md): What is DBOS?
+- [Why DBOS?](https://docs.dbos.dev/why-dbos.md): If you're building AI agents, also check out Why DBOS for Agents.
