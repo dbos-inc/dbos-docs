@@ -39,7 +39,7 @@ For example, you might hypothesize that the malformed output was caused by an er
 
 <img src={require('@site/static/img/why-dbos-agents/agent-succeed.png').default} alt="Successful Agent" width="750" className="custom-img"/>
 
-### Adding Human-in-the-Loop
+### Reliable Human-in-the-Loop
 
 Many agents need a **human in the loop** for decisions that are too important to fully trust an LLM.
 However, it's not easy to design an agent that waits for human feedback.
