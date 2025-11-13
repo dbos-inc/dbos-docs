@@ -15,7 +15,7 @@ You can see its full code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps
 
 ## Installation and Requirements
 
-Install the [open-source DBOS TypeScript library](github.com/dbos-inc/dbos-transact-ts) with:
+Install the [open-source DBOS TypeScript library](https://github.com/dbos-inc/dbos-transact-ts) with:
 
 ```shell
 npm install @dbos-inc/dbos-sdk
