@@ -3,6 +3,8 @@ sidebar_position: 60
 title: Nest.js
 ---
 
+# DBOS + Nest.js
+
 This guide shows you how to add DBOS durable workflows to your existing [Nest.js](https://nestjs.com/) application to make it resilient to any failure.
 
 :::info
@@ -47,6 +49,7 @@ void bootstrap();
 ```
 
 ## Add Workflows to Services
+
 Next, you can integrate DBOS workflows into your Nest.js services by annotating or registering service methods.
 To register a service instance method as a workflow, its class must extend [`ConfiguredInstance`](../typescript/tutorials/instantiated-objects.md).
 By extending `ConfiguredInstance`, you add your workflow methods to a DBOS internal registry so that if DBOS needs to recover your workflows, it can do so using the appropriate instance of your service.

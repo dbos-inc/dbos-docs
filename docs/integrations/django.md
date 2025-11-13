@@ -3,9 +3,9 @@ sidebar_position: 50
 title: Django
 ---
 
-# Make Your Django App Reliable with DBOS
+# DBOS + Django
 
-This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing [Django](https://www.djangoproject.com/) application to **durably execute** it and make it resilient to any failure.
+This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 
 In summary you'll need to:
 - Start DBOS with your [AppConfig's ready method](https://docs.djangoproject.com/en/5.2/ref/applications/#django.apps.AppConfig.ready)
@@ -14,24 +14,10 @@ In summary you'll need to:
 
 ## Installation and Requirements
 :::info
-The guide is based on the Django [quickstart](https://docs.djangoproject.com/en/5.2/intro/tutorial01/), will show you how to make your application reliable with [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py).
+The guide is bootstrapped from the Django [quickstart](https://docs.djangoproject.com/en/5.2/intro/tutorial01/).
+
+See its source code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-django-starter).
 :::
-
-<details>
-<summary>Setting up the Django quickstart</summary>
-
-This application was created with:
-
-```shell
-python3 -m venv .venv
-source .venv/bin/activate
-pip install django
-django-admin startproject djangodbos .
-python manage.py startapp polls
-```
-
-Then, configure `djangodbos/settings.py` to [use Postgres](https://docs.djangoproject.com/en/5.2/ref/settings/#databases) and run `python manage.py migrate`.
-</details>
 
 Install DBOS Python with:
 ```shell
@@ -40,10 +26,10 @@ pip install dbos
 
 ## Starting DBOS
 
-In your Django application `AppConfig`, start DBOS inside the `ready` method. You can [configure the DBOS instance](https://docs.dbos.dev/python/reference/configuration) before [launching DBOS](https://docs.dbos.dev/python/reference/dbos-class#launch).
+In your Django application `AppConfig`, configure and launch DBOS inside the `ready` method.
 
 
-```python
+```python  title="project/settings.py"
 import os
 from django.apps import AppConfig
 from dbos import DBOS, DBOSConfig
@@ -62,18 +48,20 @@ class PollsConfig(AppConfig):
         return super().ready()
 ```
 
-We recommend you call `python manage.py runserver` with the `--noreload` flag to avoid repeatedly relaunching DBOS during development.
+:::tip
+If you're starting your Django app with `python manage.py runserver`, we recommend setting the `--noreload` flag during development to avoid repeatedly relaunching DBOS.
+:::
 
 ## Making Your Views Reliable
 
-You can make a Django view durable using DBOS [workflows](../python/tutorials/workflow-tutorial.md)
+Once you've configured DBOS, you can add durable workflows to your application.
+They're just ordinary Python functions you can call from your services or views!
 
-In this example, we'll write a `callWorkflow` endpoint that invokes a [workflow](../python/tutorials/workflow-tutorial) of two steps.
+For example, here's a simple `callWorkflow` view that invokes a workflow of two steps:
 
-```python
+```python title="polls/views.py"
 def callWorkflow(request, a, b):
     return JsonResponse(workflow(a, b))
-
 
 @DBOS.step()
 def step_one(a):
@@ -89,5 +77,3 @@ def workflow(a, b):
     step_two(b)
     return {"result": "success"}
 ```
-
-Update `polls/urls.py` and run your app with `python manage.py runserver --noreload` to access the view at `http://localhost:8000/polls/callWorkflow/a/b`.
