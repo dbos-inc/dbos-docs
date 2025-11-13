@@ -12,12 +12,13 @@ In summary you'll need to:
 - Annotate your service methods with DBOS decorators to make them durable
 - Start Django with the `--noreload` flag.
 
-## Installation and Requirements
 :::info
 The guide is bootstrapped from the Django [quickstart](https://docs.djangoproject.com/en/5.2/intro/tutorial01/).
 
 See its source code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/dbos-django-starter).
 :::
+
+## Installation and Requirements
 
 Install DBOS Python with:
 ```shell
