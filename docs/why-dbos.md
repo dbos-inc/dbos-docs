@@ -4,6 +4,12 @@ hide_title: false
 title: Why DBOS?
 ---
 
+:::info
+
+If you're building AI agents, also check out [Why DBOS for Agents](./explanations/why-dbos-agents.md).
+
+:::
+
 ### What is DBOS?
 
 DBOS provides lightweight durable workflows built on top of Postgres.
@@ -75,7 +81,7 @@ Use durable workflows to build fault-tolerant and observable AI agents:
 - Seamlessly add [human-in-the-loop](./python/examples/agent-inbox.md) to your agent.
 - Natively integrate with popular frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/).
 
-[See an example ↗️](./python/examples/hacker-news-agent.md)
+[Learn More↗️](./explanations/why-dbos-agents.md)
 
 </article>
 <article className="col col--7">

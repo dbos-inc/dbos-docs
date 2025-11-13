@@ -1,11 +1,11 @@
 ---
 sidebar_position: 30
-title: Why Durable Workflows for Agents
+title: Why DBOS for Agents
 hide_table_of_contents: false
 ---
 
 DBOS provides lightweight durable workflows for your AI agents.
-Essentially, you install the open-source library and annotate workflows and steps in your agent, either directly or through integrations with agent frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/) or [CrewAI](https://github.com/dbos-inc/dbos-crewai).
+You install the open-source library and annotate workflows and steps in your agent, either [directly](../python/integrating-dbos.md) or through integrations with agent frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/) or [CrewAI](https://github.com/dbos-inc/dbos-crewai).
 This usally requires changing only a couple lines of code.
 Then, when your agent runs, DBOS checkpoints its workflows and steps to a database, creating a durable record of its progress that it can use to automatically recover your agents from any failures.
 
