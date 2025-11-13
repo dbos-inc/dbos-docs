@@ -5,6 +5,12 @@ title: Nest.js
 
 This guide shows you how to add DBOS durable workflows to your existing [Nest.js](https://nestjs.com/) application to make it resilient to any failure.
 
+:::info
+This example was bootstrapped with `nest new`.
+
+You can see its full code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nestjs-starter).
+:::
+
 ## Installation and Requirements
 
 Install the [open-source DBOS TypeScript library](github.com/dbos-inc/dbos-transact-ts) with:
@@ -15,13 +21,7 @@ npm install @dbos-inc/dbos-sdk
 
 ## Bootstrapping DBOS
 
-:::info
-This example was bootstrapped with `nest new`.
-
-You can see its full code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nestjs-starter).
-:::
-
-Modify your bootstrap function to import and launch DBOS:
+First, modify your bootstrap function to configure and launch DBOS:
 
 ```typescript title="src/main.ts"
 import { NestFactory } from '@nestjs/core';
@@ -46,10 +46,10 @@ async function bootstrap() {
 void bootstrap();
 ```
 
-## Register Services With DBOS
-Next, you can integrate DBOS workflows into your Nest.js services by annotating or registering functions.
-To add a workflow to a service, its class must extend [`ConfiguredInstance`](../typescript/tutorials/instantiated-objects.md).
-By extending `ConfiguredInstance`, you add your instance workflow methods to a DBOS internal registry so that if DBOS needs to recover your workflows, it can do so using the appropriate instance of your service.
+## Add Workflows to Services
+Next, you can integrate DBOS workflows into your Nest.js services by annotating or registering service methods.
+To register a service instance method as a workflow, its class must extend [`ConfiguredInstance`](../typescript/tutorials/instantiated-objects.md).
+By extending `ConfiguredInstance`, you add your workflow methods to a DBOS internal registry so that if DBOS needs to recover your workflows, it can do so using the appropriate instance of your service.
 
 Here is an example of a Nest.js service implementing a simple two-step workflow:
 
@@ -86,9 +86,10 @@ export class AppService extends ConfiguredInstance {
 
 ```
 
-## Add Nest.js Providers
+## Configure Service Instantiation
+
 You can then instantiate classes containing DBOS workflows during dependency injection just like any other Nest.js class.
-If you create multiple instances of a class containing DBOS workflows, you should give them distinct names (`dbos-service-instance`) in this case.
+If you create multiple instances of a class containing DBOS workflows, you should give them distinct names (`dbos-service-instance` in this case).
 
 ```typescript title="src/app.modules.ts"
 import { Module, Provider } from '@nestjs/common';
