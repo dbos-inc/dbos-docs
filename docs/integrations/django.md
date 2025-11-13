@@ -7,11 +7,6 @@ title: Django
 
 This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 
-In summary you'll need to:
-- Start DBOS with your [AppConfig's ready method](https://docs.djangoproject.com/en/5.2/ref/applications/#django.apps.AppConfig.ready)
-- Annotate your service methods with DBOS decorators to make them durable
-- Start Django with the `--noreload` flag.
-
 :::info
 The guide is bootstrapped from the Django [quickstart](https://docs.djangoproject.com/en/5.2/intro/tutorial01/).
 
@@ -25,7 +20,7 @@ Install DBOS Python with:
 pip install dbos
 ```
 
-## Starting DBOS
+## Configuring and Launching DBOS
 
 In your Django application `AppConfig`, configure and launch DBOS inside the `ready` method.
 
