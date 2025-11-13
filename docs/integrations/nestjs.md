@@ -91,7 +91,7 @@ export class AppService extends ConfiguredInstance {
 
 ## Configure Service Instantiation
 
-You can then instantiate classes containing DBOS workflows during dependency injection just like any other Nest.js class.
+You can instantiate classes containing DBOS workflows during dependency injection just like any other Nest.js class.
 If you create multiple instances of a class containing DBOS workflows, you should give them distinct names (`dbos-service-instance` in this case).
 
 ```typescript title="src/app.modules.ts"
