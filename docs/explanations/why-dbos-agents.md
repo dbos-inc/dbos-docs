@@ -53,7 +53,7 @@ For example, you can add a line of code to your agent that tells it to wait hour
 approval: Optional[HumanResponseRequest] = DBOS.recv(timeout_seconds=TIMEOUT)
 ```
 
-Because the workflow's progress is checkpointing and both the deadline and notification are stored in your database, this can safely wait for a long time.
+Because the workflow's progress is checkpointed and both the deadline and notification are stored in your database, this can safely wait for a long time.
 Anything can happen while your agent is waiting (its server can restart, its code can be upgraded, etc.) and it will recover and keep waiting until the notification arrives or the deadline is reached.
 
 If you're interested in building human-in-the-loop agents, check out the [agent inbox](../python/examples/agent-inbox.md) example, which shows how to use durable notifications to add human-in-the-loop to agents and how to use workflow introspection to monitor and display which agents are waiting for which human inputs.
