@@ -22,8 +22,7 @@ pip install dbos
 
 ## Configuring and Launching DBOS
 
-In your Django application `AppConfig`, configure and launch DBOS inside the `ready` method.
-
+First, in your Django application `AppConfig`, configure and launch DBOS inside the `ready` method:
 
 ```python  title="project/settings.py"
 import os
