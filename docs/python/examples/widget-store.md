@@ -5,7 +5,7 @@ title: Fault-Tolerant Checkout
 ---
 
 :::info
-This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial) and [Go](../../golang/examples/widget-store.md).
+This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store.md), and [Go](../../golang/examples/widget-store.md).
 :::
 
 In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
@@ -145,7 +145,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 Now, let's implement the checkout workflow's steps.
 Each step performs a database operation, like updating inventory or order status.
-Because these steps access the database, they are implemented as [transactions](../tutorials/transaction-tutorial.md).
+Because these steps access the database, they are implemented as [transactions](../tutorials/step-tutorial.md#transactions).
 
 <details>
 <summary><strong>Database Operations</strong></summary>

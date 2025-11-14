@@ -138,7 +138,7 @@ if __name__ == "__main__":
 Now, install FastAPI with:
 
 ```shell
-pip install fastapi[standard]
+pip install 'fastapi[standard]'
 ```
 
 Then, start your app with `python3 main.py`.

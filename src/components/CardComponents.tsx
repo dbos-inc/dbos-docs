@@ -20,7 +20,7 @@ function CardContainer({
   href: string;
   children: ReactNode;
 }): JSX.Element {
-  if (href != "") {
+  if (href !== "") {
     return (
       <Link
         href={href}
@@ -44,59 +44,90 @@ function CardLayout({
   title,
   language,
   description,
+  hrefByLanguage,
 }: {
   href: string;
   icon: ReactNode;
   title: string;
   language: string | string[];
   description: string;
+  hrefByLanguage?: {[lang:string]: string};
 }): JSX.Element {
   const languages = Array.isArray(language) ? language : [language];
-  const languageIcons = languages.map(lang => {
-    switch (lang) {
-      case 'python':
-        return 'img/python-logo-only.svg';
-      case 'typescript':
-        return 'img/typescript-logo.svg';
-      case 'go':
-        return 'img/go-logo.svg'
-      default:
-        return '';
-    }
-  }).filter(icon => icon !== '');
+
+  const items = languages
+    .map((lang) => {
+      const iconSrc =
+        lang === "python" ? "img/python-logo-only.svg" :
+        lang === "typescript" ? "img/typescript-logo.svg" :
+        lang === "go" ? "img/go-logo.svg" :
+        lang === "java" ? "img/java-logo.svg" : "";
+      if (!iconSrc) return null;
+      return {
+        lang,
+        iconSrc,
+        href: hrefByLanguage?.[lang] ?? href.replace(/^([^/]+)/, lang), // swap language segment if patterned
+      };
+    })
+    .filter(Boolean) as { lang: string; iconSrc: string; href: string }[];
 
   return (
-    <CardContainer href={href}>
-      {icon && <div className={styles.cardIcon}>{icon}</div>}
-      <Heading
-        as="h4"
-        className={clsx(styles.cardTitle)}
-        title={title}>
-        {title}
-        {languageIcons.length === 1 && (
-          <img src={languageIcons[0]} className={styles.cardLogo}/>
+      <CardContainer href={items.length <= 1 ? href : ""}>
+        {icon && items.length <= 1 && <div className={styles.cardIcon}>{icon}</div>}
+        {icon && items.length > 1 && <Link href={href}><div className={styles.cardIcon}>{icon}</div></Link>}
+        <Heading
+          as="h4"
+          className={clsx(styles.cardTitle)}
+          title={title}
+          >
+          {<Link href={href}>{title}</Link>}
+          {items.length === 1 && (
+            <img src={items[0].iconSrc} alt={`${items[0].lang} logo`} className={styles.cardLogo}/>
+          )}
+          {items.length > 1 && (
+            <div className={styles.cardLogos}>
+              {items.map((item, index) => (
+                <Link key={index}
+                  href={item.href || href}
+                >
+                  <img alt={`${item.lang} logo`} src={item.iconSrc}/>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Heading>
+        {description && items.length <= 1 && (
+          <p
+            className={styles.cardDescription}
+            title={description}
+          >
+            {description}
+          </p>
         )}
-        {languageIcons.length > 1 && (
-          <div className={styles.cardLogos}>
-            {languageIcons.map((iconSrc, index) => (
-              <img key={index} src={iconSrc}/>
-            ))}
-          </div>
+        {description && items.length > 1 && (
+          <Link href={href}>
+            <p
+              className={styles.cardDescription}
+              title={description}
+            >
+              {description}
+            </p>
+          </Link>
         )}
-      </Heading>
-      {description && (
-        <p
-          // className={clsx('text--truncate', styles.cardDescription)}
-          className={styles.cardDescription}
-          title={description}>
-          {description}
-        </p>
-      )}
-    </CardContainer>
-  );
+      </CardContainer>
+    );
 }
 
-export function CardLink({label, href, description, index, icon, language}: {label: string, href: string, description: string, index: string, icon: ReactNode, language: string | string[]}): JSX.Element {
+export function CardLink({label, href, description, index, icon, language, hrefByLanguage}: {
+  label: string,
+  href: string,
+  description: string,
+  index: string,
+  icon: ReactNode,
+  language: string | string[],
+  hrefByLanguage?: {[lang:string]: string};
+}): JSX.Element
+{
   return (
     <article key={Number(index)} className="col col--6 margin-bottom--lg">
       <CardLayout
@@ -105,6 +136,7 @@ export function CardLink({label, href, description, index, icon, language}: {lab
         title={label}
         language={language}
         description={description}
+        hrefByLanguage={hrefByLanguage}
       />
     </article>
   );

@@ -60,7 +60,7 @@ def get_earthquake_data(
 Next, let's write a function that records earthquakes in Postgres.
 Because earthquake data is sometimes updated later, this function should try to insert a new earthquake record, but if the earthquake is already in the database, update its record with new data.
 We'll make it return true if we inserted a new earthquake and false if we updated an existing one.
-To get access to a pre-configured database client (`DBOS.sql_session`), we annotate this function with [`@DBOS.transaction`](../tutorials/transaction-tutorial.md).
+Because this is a workflow step that accesses the database, we annotate this function with [`@DBOS.transaction`](../tutorials/step-tutorial.md#transactions).
 
 
 ```python

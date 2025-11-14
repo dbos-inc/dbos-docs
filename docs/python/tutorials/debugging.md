@@ -42,7 +42,7 @@ From here, you can step through your DBOS workflow and inspect variables as you 
 
 :::info Note
 You can only step through workflow code when using the Replay Debugger.
-[Step](./step-tutorial.md) and [transaction](./transaction-tutorial.md) functions are skipped when Replay Debugging.
+Step and transaction functions are skipped when Replay Debugging.
 The results returned from step and transaction functions when the workflow originally ran are retrieved and returned automatically without excecuting the function body.
 :::
 
