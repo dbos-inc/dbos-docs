@@ -3,11 +3,19 @@ sidebar_position: 60
 title: Nest.js
 ---
 
-This guide shows you how to add the open source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-ts) library to your existing [Nest.js](https://nestjs.com/) application to **durably execute** it and make it resilient to any failure.
+# DBOS + Nest.js
+
+This guide shows you how to add DBOS durable workflows to your existing [Nest.js](https://nestjs.com/) application to make it resilient to any failure.
+
+:::info
+This example was bootstrapped with `nest new`.
+
+You can see its full code on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nestjs-starter).
+:::
 
 ## Installation and Requirements
 
-Install DBOS TypeScript with:
+Install the [open-source DBOS TypeScript library](https://github.com/dbos-inc/dbos-transact-ts) with:
 
 ```shell
 npm install @dbos-inc/dbos-sdk
@@ -15,14 +23,9 @@ npm install @dbos-inc/dbos-sdk
 
 ## Bootstrapping DBOS
 
-:::info
-This example was bootstrapped with `nest new nest-starter` and configured to use [NPM](https://www.npmjs.com/).
-:::
+First, modify your bootstrap function to configure and launch DBOS:
 
-Modify your bootstrap function to import and launch DBOS:
-
-```typescript
-// main.ts
+```typescript title="src/main.ts"
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 // highlight-next-line
@@ -33,90 +36,82 @@ async function bootstrap() {
   // highlight-next-line
   DBOS.setConfig({
   // highlight-next-line
-    "name": "my-app",
+    name: 'dbos-nestjs-starter',
   // highlight-next-line
-    "databaseUrl": process.env.DBOS_DATABASE_URL
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   // highlight-next-line
   });
   // highlight-next-line
   await DBOS.launch();
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
 ```
 
-## Register Services With DBOS
-To integrate a Nest.js service with DBOS workflows, your service class [must extend the DBOS `ConfiguredInstance` class](../typescript/tutorials/instantiated-objects.md). By extending `ConfiguredInstance`, you add your instance workflow methods to DBOS Transact's internal registry.  During [workflow recovery](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial#workflow-versioning-and-recovery), this registry enables DBOS to recover workflows using the right class instance.
+## Add Workflows to Services
+
+Next, you can integrate DBOS workflows into your Nest.js services by annotating or registering service methods.
+To register a service instance method as a workflow, its class must extend [`ConfiguredInstance`](../typescript/tutorials/instantiated-objects.md).
+By extending `ConfiguredInstance`, you add your workflow methods to a DBOS internal registry so that if DBOS needs to recover your workflows, it can do so using the appropriate instance of your service.
 
 Here is an example of a Nest.js service implementing a simple two-step workflow:
 
-```typescript
-// app.service.ts
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'nestjs-prisma';
-// highlight-next-line
+```typescript title="src/app.service.ts"
+  // highlight-next-line
 import { ConfiguredInstance, DBOS } from '@dbos-inc/dbos-sdk';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
-// highlight-next-line
+  // highlight-next-line
 export class AppService extends ConfiguredInstance {
-  constructor(
-    name: string, // You must provide a name to uniquely identify this class instance in DBOS's internal registry.
-    private readonly prisma: PrismaService, // An example service dependency
-  ) {
+  constructor(name: string) {
     super(name);
   }
 
-  // Optionally perform some asynchronous setup work
-  override async initialize(): Promise<void> {}
+  async stepOne() {
+    console.log('Step one completed!');
+    return Promise.resolve();
+  }
+
+  async stepTwo() {
+    console.log('Step two completed!');
+    return Promise.resolve();
+  }
 
   // highlight-next-line
   @DBOS.workflow()
-  async businessLogic() {
-    await this.step1();
-    await this.step2();
+  async workflow() {
+    await DBOS.runStep(() => this.stepOne(), { name: 'stepOne' });
+    await DBOS.runStep(() => this.stepTwo(), { name: 'stepTwo' });
+    return 'Hello World!';
   }
-
-  // highlight-next-line
-  @DBOS.step()
-  async step1() {
-    ...
-  }
-
-  // highlight-next-line
-  @DBOS.step()
-  async step2() {
-    ...
-  };
 }
+
 ```
 
-## Add Nest.js Providers
-We also need to write the code that Nest will use to instantiate this service during dependency injection. We'll do this with a [custom Factory Provider](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory). Here is an example:
+## Configure Service Instantiation
 
-```typescript
-// app.modules.ts
-import { Module } from '@nestjs/common';
-import { Provider } from '@nestjs/common/interfaces';
+You can instantiate classes containing DBOS workflows during dependency injection just like any other Nest.js class.
+If you create multiple instances of a class containing DBOS workflows, you should give them distinct names (`dbos-service-instance` in this case).
+
+```typescript title="src/app.modules.ts"
+import { Module, Provider } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService, PrismaModule } from 'nestjs-prisma';
-import { DBOS } from '@dbos-inc/dbos-sdk';
 
-export const dbosProvider: Provider = {
+export const appProvider: Provider = {
   provide: AppService,
-  useFactory: (prisma: PrismaService) => {
-    return new AppService("dbosService", prisma);
+  useFactory: () => {
+    const service = new AppService('dbos-service-instance');
+    return service;
   },
-  inject: [PrismaService],
 };
 
 @Module({
-  imports: [PrismaModule.forRoot()],
+  imports: [],
   controllers: [AppController],
-  providers: [dbosProvider],
+  providers: [appProvider],
 })
 export class AppModule {}
-```
 
-If you need multiple instances of your DBOS class, you must give them distinct names (`dbosService` in this case). You can create a dedicated provider for each or use a single provider for multiple classes, at your convenience.
+```

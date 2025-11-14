@@ -55,7 +55,7 @@ For more information on DBOS configuration, see [the reference](../reference/con
 
 ## Transactions and the Application Database
 
-[Transactions](./transaction-tutorial.md) are a special kind of step used for database accesses.
+[Transactions](./step-tutorial.md#transactions) are an **optional** special kind of step that are optimized for database accesses.
 Transactions need to run in the database in which your application stores data.
 You can specify the database in which transactions run by setting an `application_database_url` when you configure DBOS.
 The application database (the database in which transactions run) does not need to be the same database (or even on the same server) as your system database.

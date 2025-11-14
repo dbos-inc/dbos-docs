@@ -16,7 +16,7 @@ There's no orchestration server and no external dependencies except a Postgres d
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
-To learn more about how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md)).
+To learn more about how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md), [Java](./java/integrating-dbos.md)).
 
 
 ## Using DBOS in a Distributed Setting
@@ -35,7 +35,7 @@ This doesn't require multiple Postgres servers&mdash;a single physical Postgres 
 
 Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
 For example, you might want your API server to enqueue a job on your data processing service.
-You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to programmatically interact with your application from external code.
+You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
 For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
@@ -47,33 +47,12 @@ You can easily scale a DBOS application by adding more servers to it, so the sca
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step's outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).
 
 As these writes are checkpointing workflow inputs and outputs and step outputs, the sizes of the writes are determined by the sizes of your inputs and outputs.
-If your steps return small objects, the write sizes will be negligible, but if they return large files, the write sizes will be large.
+If your steps return small objects, the write sizes are negligible, but if they return large files, the write sizes are large.
 Thus, we recommend architecting steps to avoid large output sizes (for example, store large files in cloud blob storage like S3 and have steps return pointers to those files).
 
 While exact numbers depend on the database you are using, a large Postgres database can typically sustain well over 10K writes per second (for example, [this benchmark shows 12-18K writes/second](https://planetscale.com/benchmarks/aurora); most large-scale Postgres benchmarks have similar results).
 Thus, a DBOS application using a single Postgres database can sustain a throughput of several thousand workflows or steps per second.
 Scaling beyond that is possible by sharding workflows across multiple Postgres databases.
-
-## Comparison to External Workflow Orchestrators
-
-The DBOS architecture is radically simpler than other workflow systems such as Temporal, Airflow or AWS Step Functions.
-These systems implement workflows via **external orchestration**.
-At a high-level, their architectures look like this:
-
-<img src={require('@site/static/img/architecture/external-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
-
-Externally orchestrated systems are made up of an orchestrator and a set of workers. The orchestrator runs workflow code, dispatching steps to workers.
-Workers execute steps, then return their output to the orchestrator, which persists that output to a data store then dispatches the next step.
-Application code can't call workflows directly, but instead sends requests to the orchestrator server to start workflows and fetch their results.
-
-While DBOS can be installed into an existing application as a library, adding an external orchestrator to an application requires substantially rearchitecting it.
-First, you must move all workflow and step code from application servers to workers.
-Then, you must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
-Next, you must build infrastructure to operate and scale the worker servers.
-Finally, you must operate and scale the orchestration server and its underlying data store (for example, Cassandra for Temporal), which are both single points of failure for your application.
-
-DBOS is simpler because it runs entirely **in-process** as a library, so your workflows and steps remain normal functions within your application that you can call from other application code.
-DBOS simply instruments them to checkpoint their state and recover them from failure.
 
 ## How Workflow Recovery Works
 
@@ -135,7 +114,7 @@ Then, use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
-For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md)).
+For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md), [Java](./java/tutorials/queue-tutorial.md)).
 
 ## Self-Hosting DBOS with Conductor
 

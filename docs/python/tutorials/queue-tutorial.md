@@ -97,6 +97,8 @@ from dbos import Queue
 queue = Queue("example_queue", worker_concurrency=5)
 ```
 
+Note that DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](../reference/configuration.md).
+
 #### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.

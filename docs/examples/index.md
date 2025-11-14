@@ -16,6 +16,7 @@ import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { RiCustomerService2Line } from "react-icons/ri";
 import { TbClock2 } from "react-icons/tb";
 import { VscGraphLine } from "react-icons/vsc";
+import { FiInbox } from "react-icons/fi";
 
   <section className="row list">
   <CardLink
@@ -35,7 +36,7 @@ import { VscGraphLine } from "react-icons/vsc";
   <CardLink
     label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
-    description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
+    description="Use DBOS to build an online store that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
     language={["python", "typescript", "go", "java"]}
     hrefByLanguage={{
@@ -44,6 +45,13 @@ import { VscGraphLine } from "react-icons/vsc";
       go: "golang/examples/widget-store",
       java: "java/examples/widget-store",
     }}
+  />
+  <CardLink
+    label="AI Agent Inbox"
+    href="python/examples/agent-inbox"
+    description="Use DBOS to build reliable human-in-the-loop for AI agents."
+    icon={<FiInbox color="white" size={50}/>}
+    language="python"
   />
   <CardLink
     label="Stock Tracker"

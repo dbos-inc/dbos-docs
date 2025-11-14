@@ -30,7 +30,7 @@ class Limiter(TypedDict):
 This concurrency limit is global across all DBOS processes using this queue.
 If not provided, any number of functions may run concurrently.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`. DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](./configuration.md).
 - `priority_enabled`: Enable setting priority for workflows on this queue.
 - `partition_queue`: Enable partitioning for this queue.
 
