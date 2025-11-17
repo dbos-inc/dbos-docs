@@ -242,6 +242,15 @@ These values correspond to the client credentials and endpoints provided by your
 When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
 This approach does not require any additional configuration files or use any secrets, making it ideal for containerized environments using secure environment variable injection.
 
+## Upgrading
+
+You can upgrade Conductor and the DBOS Console by simply upgrading the container versions and restarting the service.
+Because Conductor is entirely out-of-band, this will have no impact on your DBOS applications' availability; your apps will seamlessly reconnect to your new Conductor version.
+
+We recommend regularly upgrading Conductor and the DBOS Console to the latest versions to take advantage of new features. 
+We always guarantee it is safe to upgrade directly from any past version to any future version.
+For the best experience, we recommend upgrading Conductor and the DBOS Console together and not using a version of the DBOS Console more recent than your version of Conductor.
+
 ## Scaling
 
 Architecturally, Conductor is entirely out-of-band and off the critical path of your application.
