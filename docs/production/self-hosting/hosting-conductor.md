@@ -211,7 +211,7 @@ Without these, your server could be accessed by unwanted entities.
 You can integrate Conductor with any OAuth-compatible single-sign on (SSO) experience.
 To do this, set the following environment variables in your Conductor container:
 
-```
+```yml
 DBOS_OAUTH_ENABLED: "true"
 DBOS_OAUTH_JWKS_URL: "https://your-oauth-provider.com/.well-known/jwks.json"
 DBOS_OAUTH_ISSUER: "https://your-oauth-provider.com/"
@@ -220,7 +220,7 @@ DBOS_OAUTH_AUDIENCE: "your-api-audience"
 
 Also set these environment variables in your DBOS Console container:
 
-```
+```yml
 DBOS_OAUTH_ENABLED: 'true'
 DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/oauth2/authorize'
 DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/oauth2/token'
