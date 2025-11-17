@@ -205,6 +205,34 @@ You should also configure [authentication](#security).
 
 ## Security
 
+To securely self-host Conductor in production, you should set up authentication and authorization for all API calls made to it.
+Without these, your server could be accessed by unwanted entities.
+
+You can integrate Conductor with any OAuth-compatible single-sign on (SSO) experience.
+To do this, set the following environment variables in your Conductor container:
+
+```
+DBOS_OAUTH_ENABLED: "true"
+DBOS_OAUTH_JWKS_URL: "https://your-oauth-provider.com/.well-known/jwks.json"
+DBOS_OAUTH_ISSUER: "https://your-oauth-provider.com/"
+DBOS_OAUTH_AUDIENCE: "your-api-audience"
+```
+
+Also set these environment variables in your DBOS Console container:
+
+```
+DBOS_OAUTH_ENABLED: 'true'
+DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/oauth2/authorize'
+DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/oauth2/token'
+DBOS_OAUTH_CLIENT_ID: 'your-client-id'
+DBOS_OAUTH_SCOPE: 'openid profile email'
+DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/oauth2/userinfo'
+DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/oauth2/logout'
+```
+
+These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta). When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
+This approach does not require any additional configuration files or use any secrets, making it ideal for containerized environments using secure environment variable injection.
+
 ## Scaling
 
 Architecturally, Conductor is entirely out-of-band and off the critical path of your application.
