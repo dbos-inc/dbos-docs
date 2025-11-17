@@ -9,7 +9,7 @@ Self-hosting Conductor for commercial or production use requires a [paid license
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
 
-### Getting Started with Docker Compose
+## Getting Started with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
 Here is a sample `docker-compose.yml` file for this purpose:
@@ -125,7 +125,7 @@ volumes:
 Start Conductor and the DBOS Console with `docker compose up`.
 Then, navigate to `http://localhost` to view the self-hosted console.
 
-### Connecting to Self-Hosted Conductor
+## Connecting to Self-Hosted Conductor
 
 To connect your application to self-hosted Conductor, first [follow these steps](./conductor.md#connecting-to-conductor) in your self-hosted DBOS Console to register an application, generate an API key, and set it in your application.
 
@@ -180,6 +180,33 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 </TabItem>
 </Tabs>
 
-### Self-Hosting in Production
+## Self-Hosting in Production
 
-### Security
+You can self-host DBOS Conductor in production by deploying two services: the [Conductor](https://hub.docker.com/r/dbosdev/conductor) service and the [DBOS Console](https://hub.docker.com/r/dbosdev/console).
+
+### Conductor
+
+To deploy the Conductor service to production, it must connect to a Postgres database.
+This database is purely for Conductor internal data (e.g., its registry of applications), it **is not** the database your DBOS applications connect to (Conductor does not need direct access to that database).
+You can configure this database by setting the `DBOS__CONDUCTOR_DB_URL` environment variable in the Conductor container.
+
+When deploying to production, we recommend placing the Conductor service behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
+All traffic should be forwarded to the Conductor service container on port 8090.
+You should also configure [authentication](#security).
+
+### DBOS Console
+
+To deploy the DBOS Console to production, it must connect to your Conductor service.
+You can provide the URL of this service by setting the `DBOS_CONDUCTOR_URL` environment variable in your Console container.
+
+When deploying to production, we recommend placing the Console container behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
+All traffic should be forwarded to the Console service container on port 80.
+You should also configure [authentication](#security).
+
+## Security
+
+## Scaling
+
+Architecturally, Conductor is entirely out-of-band and off the critical path of your application.
+As such, it requires minimal resources to serve large application deployments.
+A single server hosting the Conductor service can serve tens of thousands of application servers processing  millions of workflows per second.
