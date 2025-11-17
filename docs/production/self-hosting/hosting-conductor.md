@@ -209,7 +209,15 @@ To securely self-host Conductor in production, you should set up authentication 
 Without these, your server could be accessed by unwanted entities.
 
 You can integrate Conductor with any OAuth-compatible single-sign on (SSO) experience.
-To do this, set the following environment variables in your Conductor container:
+To do this, first register the DBOS Console as an application and Conductor as an API (audience) with your OAuth provider.
+Configure the following with your provider:
+
+- `https://your-domain/oauth/callback`as a callback URL
+- `https://your-domain` as an allowed web origin
+- Authorization code with PKCE as an allowed grant type
+- `openid profile email` as valid scopes.
+
+Then, set these environment variables in your Conductor container:
 
 ```yml
 DBOS_OAUTH_ENABLED: "true"
@@ -218,7 +226,7 @@ DBOS_OAUTH_ISSUER: "https://your-oauth-provider.com/"
 DBOS_OAUTH_AUDIENCE: "your-api-audience"
 ```
 
-Also set these environment variables in your DBOS Console container:
+And set these environment variables in your DBOS Console container:
 
 ```yml
 DBOS_OAUTH_ENABLED: 'true'
@@ -230,7 +238,8 @@ DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/oauth2/userinfo'
 DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/oauth2/logout'
 ```
 
-These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta). When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
+These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta).
+When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
 This approach does not require any additional configuration files or use any secrets, making it ideal for containerized environments using secure environment variable injection.
 
 ## Scaling
