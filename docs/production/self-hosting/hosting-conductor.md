@@ -9,7 +9,7 @@ Self-hosting Conductor for commercial or production use requires a [paid license
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
 
-### Docker Compose
+### Getting Started with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
 Here is a sample `docker-compose.yml` file for this purpose:
@@ -121,3 +121,52 @@ volumes:
 ```
 
 </details>
+
+Start Conductor and the DBOS Console with `docker compose up`.
+Then, navigate to `http://localhost` to view the self-hosted console.
+
+### Connecting to Self-Hosted Conductor
+
+To connect your application to self-hosted Conductor, first [follow these steps](./conductor.md#connecting-to-conductor) in your self-hosted DBOS Console to register an application, generate an API key, and set it in your application.
+
+Then, provide your application with a websockets URL to your self-hosted Conductor server.
+For example, for the Docker compose setup above, this URL is `ws://localhost:8090/`.
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
+```python
+config: DBOSConfig = {
+    "name": "my-app-name",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
+}
+DBOS(config=config, conductor_url=os.environ.get("DBOS_CONDUCTOR_URL"))
+```
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```javascript
+const conductorKey = process.env.DBOS_CONDUCTOR_KEY;
+const conductorURL = process.env.DBOS_CONDUCTOR_URL;
+await DBOS.launch({conductorKey, conductorURL});
+```
+</TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
+conductorURL := os.Getenv("DBOS_CONDUCTOR_URL")
+dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    AppName:         "dbos-starter",
+    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+	ConductorURL:    conductorURL,
+    ConductorAPIKey: conductorKey,
+})
+```
+</TabItem>
+</Tabs>
+
+## Self-Hosting in Production
+
+## Security
