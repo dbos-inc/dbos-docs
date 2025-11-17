@@ -180,6 +180,6 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 </TabItem>
 </Tabs>
 
-## Self-Hosting in Production
+### Self-Hosting in Production
 
-## Security
+### Security
