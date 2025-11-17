@@ -165,6 +165,19 @@ dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
 })
 ```
 </TabItem>
+
+<TabItem value="java" label="Java">
+
+```java
+String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
+String conductorDomain = System.getenv("DBOS_CONDUCTOR_URL");
+
+DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+    .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+    .withConductorKey(conductorKey)
+    .withConductorDomain(conductorDomain);
+```
+</TabItem>
 </Tabs>
 
 ## Self-Hosting in Production
