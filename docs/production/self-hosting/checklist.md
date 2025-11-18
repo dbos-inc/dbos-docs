@@ -28,6 +28,12 @@ Thus, an application can perform between 1K-10K workflows or steps per second, d
 If your expected load exceeds 1K steps per second, you should perform load tests to verify your Postgres database can handle the load.
 If it exceeds 10K steps per second, we recommend sharding workflows across multiple Postgres servers.
 
+**DBOS Schema Management** - DBOS creates tables for its internal state in its [system database](../../explanations/system-tables.md).
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, the [`dbos migrate`](../../python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](../../golang/reference/cli.md) in Go, or the [`dbos schema`](../../typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables or migrate them to the latest version.
+Then, a DBOS application can run without privilege (requiring only access to the system database).
+
 ## Availability
 
 To maximize availability of your DBOS application, we recommend using a highly available Postgres database.
@@ -44,5 +50,10 @@ All Conductor features (recovery, observability, workflow management) will autom
 
 ## Upgrading the DBOS Library
 
+We recommend regularly upgrading the DBOS Transact library to its latest version to take advantage of new features.
+All implementations of the DBOS library follow strict semantic versioning.
+Minor version upgrades do not introduce breaking changes.
+Major version upgrades may introduce breaking changes, but these are always documented in the release notes.
+New library versions are always announced on GitHub ([Python](https://github.com/dbos-inc/dbos-transact-py/releases), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts/releases), [Go](https://github.com/dbos-inc/dbos-transact-golang/releases), [Java](https://github.com/dbos-inc/dbos-transact-java/releases)) and on our [community Discord](https://discord.com/invite/jsmC6pXGgX).
 
 ## Configuring Self-Hosted Conductor
