@@ -239,8 +239,8 @@ DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/oauth2/logout'
 ```
 
 These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta).
+None of these values are secrets.
 When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
-This approach does not require any additional configuration files or use any secrets, making it ideal for containerized environments using secure environment variable injection.
 
 ## Upgrading
 
