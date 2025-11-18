@@ -57,11 +57,11 @@ All Conductor features (recovery, observability, workflow management) will autom
 
 ## Upgrading the DBOS Library
 
-We recommend regularly upgrading the DBOS Transact library to its latest version to take advantage of new features.
+We recommend regularly upgrading the DBOS library to its latest version to take advantage of new features.
 All implementations of the DBOS library follow strict semantic versioning.
 Minor version upgrades do not introduce breaking changes.
 Major version upgrades may introduce breaking changes, but these are always documented in the release notes.
-New library versions are always announced on GitHub ([Python](https://github.com/dbos-inc/dbos-transact-py/releases), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts/releases), [Go](https://github.com/dbos-inc/dbos-transact-golang/releases), [Java](https://github.com/dbos-inc/dbos-transact-java/releases)) and on our [community Discord](https://discord.com/invite/jsmC6pXGgX).
+New library versions are always announced on GitHub ([Python](https://github.com/dbos-inc/dbos-transact-py/releases), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts/releases), [Go](https://github.com/dbos-inc/dbos-transact-golang/releases), [Java](https://github.com/dbos-inc/dbos-transact-java/releases)) and on the [community Discord](https://discord.com/invite/jsmC6pXGgX).
 
 ## Securing Self-Hosted Conductor
 
