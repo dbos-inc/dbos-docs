@@ -66,7 +66,7 @@ New library versions are always announced on GitHub ([Python](https://github.com
 ## Securing Self-Hosted Conductor
 
 If you are [self-hosting Conductor](./hosting-conductor.md), we recommend taking these additional steps to ensure the security of your deployment.
-If you are using DBOS-managed Conductor, don't worry&mdash;this is taken care of for you.
+If you are using DBOS-managed Conductor, don't worry&mdash;this is done for you.
 
 **Connect using TLS** - You should deploy your self-hosted Conductor and DBOS Console behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
 Otherwise, your traffic to Conductor may be unencrypted and vulnerable to snooping by third parties.
