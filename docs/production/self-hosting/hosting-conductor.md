@@ -207,7 +207,7 @@ You should also configure [authentication](#security).
 ## Security
 
 To securely self-host Conductor in production, you should set up authentication and authorization for all API calls made to it.
-Without these, your server could be accessed by unwanted entities.
+Without these, your Conductor service could be accessed by unwanted entities.
 
 You can integrate Conductor with any OAuth-compatible single-sign on (SSO) experience.
 To do this, first register the DBOS Console as an application and Conductor as an API (audience) with your OAuth provider.
