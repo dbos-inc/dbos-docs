@@ -44,7 +44,7 @@ If it exceeds 10K workflows or steps per second, we recommend sharding workflows
 ## Availability
 
 To maximize availability of your DBOS application, we recommend using a highly available Postgres database.
-Most cloud Postgres providers provide multi-AZ replication with hot standbys, so your database can seamlessly and automatically fail over to a backup if anything goes wrong.
+Most cloud Postgres providers provide multi-AZ replication with automatic failover, so your database can seamlessly fail over to a backup if anything goes wrong.
 Note that there is nothing DBOS-specific about this&mdash;we recommend following industry best practices for maximizing Postgres availability.
 
 If your Postgres database does become unavailable, all DBOS applications connected to it will pause workflow execution until they reconnect.
