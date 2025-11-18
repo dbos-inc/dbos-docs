@@ -139,9 +139,10 @@ For example, for the Docker compose setup above, this URL is `ws://localhost:809
 config: DBOSConfig = {
     "name": "my-app-name",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
+    "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    "conductor_url": os.environ.get("DBOS_CONDUCTOR_URL"),
 }
-DBOS(config=config, conductor_url=os.environ.get("DBOS_CONDUCTOR_URL"))
+DBOS(config=config)
 ```
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
