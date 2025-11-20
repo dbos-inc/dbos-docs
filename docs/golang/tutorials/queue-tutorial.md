@@ -269,4 +269,62 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 }
 ```
 
+### Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax:**
+
+```go
+// Create a partitioned queue with a global concurrency limit of 1
+partitionedQueue := dbos.NewWorkflowQueue(dbosContext, "user-tasks",
+    dbos.WithPartitionQueue(),
+    dbos.WithGlobalConcurrency(1),
+)
+
+type Task struct {
+    TaskID string
+    Data   string
+}
+
+func processTask(ctx dbos.DBOSContext, task Task) (string, error) {
+    // Process the task...
+    return fmt.Sprintf("Processed task %s", task.TaskID), nil
+}
+
+func onUserTaskSubmission(dbosContext dbos.DBOSContext, userID string, task Task) error {
+    // Partition the task queue by user ID. As the queue has a
+    // maximum concurrency of 1, this means that at most one
+    // task can run at once per user (but tasks from different
+    // users can run concurrently).
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task,
+        dbos.WithQueue("user-tasks"),
+        dbos.WithQueuePartitionKey(userID),
+    )
+    if err != nil {
+        return fmt.Errorf("failed to enqueue task: %w", err)
+    }
+
+    result, err := handle.GetResult()
+    if err != nil {
+        return fmt.Errorf("task failed: %w", err)
+    }
+
+    fmt.Printf("Task completed: %s\n", result)
+    return nil
+}
+```
+
+:::info
+- Partition keys are required when enqueueing to a partitioned queue.
+- Partition keys cannot be used with non-partitioned queues.
+- Partition keys and deduplication IDs cannot be used together.
+:::
+
 
