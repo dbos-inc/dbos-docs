@@ -200,7 +200,7 @@ def on_user_task_submission(user_id: str, task: Task):
         queue.enqueue(process_task, task)
 ```
 
-Sometimes, you want to apply global limits to a partitioned queue.
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
 You can do this with **multiple levels of queueing**.
 Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
 Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
