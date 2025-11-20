@@ -161,7 +161,7 @@ Execute a function as a step in a durable workflow.
 
 **Example Syntax:**
 
-Any Go function can be a step as long as it outputs one [gob-encodable](https://pkg.go.dev/encoding/gob) value and an error.
+Any Go function can be a step as long as it outputs one [json-encodable](https://pkg.go.dev/encoding/json) value and an error.
 To pass inputs into a function being called as a step, wrap it in an anonymous function as shown below:
 
 ```go
@@ -225,7 +225,7 @@ WithBaseInterval sets the initial delay between retries. Default value is 100ms.
 
 ```go
 type WorkflowHandle[R any] interface {
-    GetResult() (R, error)
+    GetResult(opts ...GetResultOption) (R, error)
     GetStatus() (WorkflowStatus, error)
     GetWorkflowID() string
 }
@@ -238,10 +238,18 @@ Handles can be used to wait for workflow completion, check status, and retrieve 
 #### WorkflowHandle.GetResult
 
 ```go
-WorkflowHandle.GetResult() (R, error)  
+WorkflowHandle.GetResult(opts ...GetResultOption) (R, error)
 ```
 
 Wait for the workflow to complete and return its result.
+
+##### WithHandleTimeout
+
+```go
+func WithHandleTimeout(timeout time.Duration) GetResultOption
+```
+
+Specify a timeout for obtaining a workflow result.
 
 #### WorkflowHandle.GetStatus
 
