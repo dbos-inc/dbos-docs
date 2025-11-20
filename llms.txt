@@ -35,6 +35,7 @@
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/java/examples/widget-store.md): This example is also available in TypeScript, Go, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/java/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are resilient to any failure.
+- [AI Model Prompting](https://docs.dbos.dev/java/prompting.md): You may want assistance from an AI model in building a DBOS application.
 - [DBOS Client](https://docs.dbos.dev/java/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
 - [DBOS Lifecycle](https://docs.dbos.dev/java/reference/lifecycle.md): The DBOS class is a singleton&mdash;you should configure and launch it exactly once in a program's lifetime.
 - [DBOS Methods & Variables](https://docs.dbos.dev/java/reference/methods.md): DBOS Methods

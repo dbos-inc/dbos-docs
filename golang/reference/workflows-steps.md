@@ -127,8 +127,40 @@ func WithPriority(priority uint) WorkflowOption
 Set a queue priority for the workflow.
 Should be used alongside `WithQueue`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order.
-Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. 
+Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
+#### WithQueuePartitionKey
+
+```go
+func WithQueuePartitionKey(partitionKey string) WorkflowOption
+```
+
+Set a queue partition key for the workflow.
+Use if and only if the queue is partitioned (created with [`WithPartitionQueue`](./queues.md#withpartitionqueue)).
+In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+**Example Syntax:**
+
+```go
+// Create a partitioned queue
+partitionedQueue := dbos.NewWorkflowQueue(ctx, "user-tasks",
+    dbos.WithPartitionQueue(),
+)
+
+// Enqueue workflows with partition keys
+// Each user's tasks run with separate concurrency limits
+handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
+    dbos.WithQueue("user-tasks"),
+    dbos.WithQueuePartitionKey(userID),
+)
+```
+
+:::info
+- Partition keys are required when enqueueing to a partitioned queue.
+- Partition keys cannot be used with non-partitioned queues.
+- Partition keys and deduplication IDs cannot be used together.
+:::
 
 #### WithApplicationVersion
 
@@ -161,7 +193,7 @@ Execute a function as a step in a durable workflow.
 
 **Example Syntax:**
 
-Any Go function can be a step as long as it outputs one [gob-encodable](https://pkg.go.dev/encoding/gob) value and an error.
+Any Go function can be a step as long as it outputs one [json-encodable](https://pkg.go.dev/encoding/json) value and an error.
 To pass inputs into a function being called as a step, wrap it in an anonymous function as shown below:
 
 ```go
@@ -225,7 +257,7 @@ WithBaseInterval sets the initial delay between retries. Default value is 100ms.
 
 ```go
 type WorkflowHandle[R any] interface {
-    GetResult() (R, error)
+    GetResult(opts ...GetResultOption) (R, error)
     GetStatus() (WorkflowStatus, error)
     GetWorkflowID() string
 }
@@ -238,10 +270,18 @@ Handles can be used to wait for workflow completion, check status, and retrieve 
 #### WorkflowHandle.GetResult
 
 ```go
-WorkflowHandle.GetResult() (R, error)  
+WorkflowHandle.GetResult(opts ...GetResultOption) (R, error)
 ```
 
 Wait for the workflow to complete and return its result.
+
+##### WithHandleTimeout
+
+```go
+func WithHandleTimeout(timeout time.Duration) GetResultOption
+```
+
+Specify a timeout for obtaining a workflow result.
 
 #### WorkflowHandle.GetStatus
 
