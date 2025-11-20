@@ -209,10 +209,10 @@ This ensures both queues' flow control limits are enforced on your workflow.
 For example:
 
 ```python
-# By using two levels of queueing, we enforce both a concurrency limit on each partition
-# and a global worker concurrency limit of 5, meaning that no more than 5 tasks across all
-# partitions can run on any single server.
-concurrency_queue = Queue("concurrency-queue", worker_concurrency=5)
+# By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+# and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+# across all partitions (and at most one task per partition).
+concurrency_queue = Queue("concurrency-queue", concurrency=5)
 partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
 
 @app.get("/queue")
