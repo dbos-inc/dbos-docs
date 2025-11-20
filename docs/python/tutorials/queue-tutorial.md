@@ -200,6 +200,41 @@ def on_user_task_submission(user_id: str, task: Task):
         queue.enqueue(process_task, task)
 ```
 
+Sometimes, you want to apply global limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```python
+# By using two levels of queueing, we enforce both a concurrency limit on each partition
+# and a global worker concurrency limit of 5, meaning that no more than 5 tasks can run
+# on any server across all partitions.
+concurrency_queue = Queue("concurrency-queue", worker_concurrency=5)
+partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
+
+@app.get("/queue")
+@DBOS.workflow()
+def on_user_task_submission(user_id: str, task: Task):
+    # First, enqueue a "concurrency manager" workflow to the partitioned
+    # queue to enforce per-partition limits.
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        partitioned_queue.enqueue(process_task, task)
+
+@DBOS.workflow()
+def concurrency_manager(task):
+    # The "concurrency manager" workflow then queues the actual
+    # process_task workflow on the non-partitioned queue to enforce
+    # global worker concurrency limits.
+    return concurrency_queue.enqueue(process_task, task).get_result()
+
+@DBOS.workflow()
+def process_task(task):
+    ...
+```
+
 ## Deduplication
 
 You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
