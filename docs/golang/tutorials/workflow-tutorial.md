@@ -16,7 +16,7 @@ The function's signature must match:
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
-In other words, a workflow must take in a DBOS context and one other input of any serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) type and must return one output of any serializable type and error.
+In other words, a workflow must take in a DBOS context and one other input of any serializable ([json-encodable](https://pkg.go.dev/encoding/json)) type and must return one output of any serializable type and error.
 
 For example:
 
