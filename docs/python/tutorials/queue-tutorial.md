@@ -210,8 +210,8 @@ For example:
 
 ```python
 # By using two levels of queueing, we enforce both a concurrency limit on each partition
-# and a global worker concurrency limit of 5, meaning that no more than 5 tasks can run
-# on any server across all partitions.
+# and a global worker concurrency limit of 5, meaning that no more than 5 tasks across all
+# partitions can run on any single server.
 concurrency_queue = Queue("concurrency-queue", worker_concurrency=5)
 partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
 
