@@ -225,9 +225,9 @@ def on_user_task_submission(user_id: str, task: Task):
 
 @DBOS.workflow()
 def concurrency_manager(task):
-    # The "concurrency manager" workflow then queues the actual
-    # process_task workflow on the non-partitioned queue to enforce
-    # global worker concurrency limits.
+    # The "concurrency manager" workflow enqueues the process_task
+    # workflow on the non-partitioned queue and awaits its results
+    # to enforce global flow control limits.
     return concurrency_queue.enqueue(process_task, task).get_result()
 
 @DBOS.workflow()
