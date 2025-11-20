@@ -88,4 +88,39 @@ type RateLimiter struct {
 
 A limit on the maximum number of functions which may be started in a given period.
 
+####  WithPartitionQueue
+
+```go
+func WithPartitionQueue() queueOption
+```
+
+Enable partitioning for this queue.
+When enabled, workflows can be enqueued with a partition key using [`WithQueuePartitionKey`](./workflows-steps.md#withqueuepartitionkey), and each partition has its own concurrency limits.
+This allows distributing work across dynamically created queue partitions.
+
+In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+For example, if you create a partitioned queue with a global concurrency of 1, then at most one workflow from each partition can run concurrently (but workflows from different partitions can run in parallel).
+
+**Example Syntax:**
+
+```go
+// Create a partitioned queue with a global concurrency limit of 1
+partitionedQueue := dbos.NewWorkflowQueue(ctx, "user-tasks",
+    dbos.WithPartitionQueue(),
+    dbos.WithGlobalConcurrency(1),
+)
+
+// Enqueue workflows with different partition keys
+// At most one workflow per user can run at once, but workflows from different users can run concurrently
+handle1, _ := dbos.RunWorkflow(ctx, ProcessTask, task1,
+    dbos.WithQueue("user-tasks"),
+    dbos.WithQueuePartitionKey("user-123"),
+)
+
+handle2, _ := dbos.RunWorkflow(ctx, ProcessTask, task2,
+    dbos.WithQueue("user-tasks"),
+    dbos.WithQueuePartitionKey("user-456"),
+)
+```
+
 

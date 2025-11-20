@@ -127,8 +127,40 @@ func WithPriority(priority uint) WorkflowOption
 Set a queue priority for the workflow.
 Should be used alongside `WithQueue`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order.
-Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. 
+Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
+#### WithQueuePartitionKey
+
+```go
+func WithQueuePartitionKey(partitionKey string) WorkflowOption
+```
+
+Set a queue partition key for the workflow.
+Use if and only if the queue is partitioned (created with [`WithPartitionQueue`](./queues.md#withpartitionqueue)).
+In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+**Example Syntax:**
+
+```go
+// Create a partitioned queue
+partitionedQueue := dbos.NewWorkflowQueue(ctx, "user-tasks",
+    dbos.WithPartitionQueue(),
+)
+
+// Enqueue workflows with partition keys
+// Each user's tasks run with separate concurrency limits
+handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
+    dbos.WithQueue("user-tasks"),
+    dbos.WithQueuePartitionKey(userID),
+)
+```
+
+:::info
+- Partition keys are required when enqueueing to a partitioned queue.
+- Partition keys cannot be used with non-partitioned queues.
+- Partition keys and deduplication IDs cannot be used together.
+:::
 
 #### WithApplicationVersion
 

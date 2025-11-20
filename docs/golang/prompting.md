@@ -358,7 +358,7 @@ The function's signature must match:
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
-In other words, a workflow must take in a DBOS context and one other input of any serializable (gob-encodable) type and must return one output of any serializable type and error.
+In other words, a workflow must take in a DBOS context and one other input of any serializable (json-encodable) type and must return one output of any serializable type and error.
 
 For example:
 
@@ -1956,7 +1956,7 @@ Handles can be used to wait for workflow completion, check status, and retrieve 
 #### WorkflowHandle.GetResult
 
 ```go
-WorkflowHandle.GetResult() (R, error)  
+WorkflowHandle.GetResult(opts ...GetResultOption) (R, error)
 ```
 
 Wait for the workflow to complete and return its result.
@@ -1997,6 +1997,7 @@ type Client interface {
     CancelWorkflow(workflowID string) error
     ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
+    GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -2186,6 +2187,14 @@ Options are provided via `ListWorkflowsOption` functions. See `ListWorkflows` fo
 :::warning
 The client `ListWorkflows` method does not include workflow inputs and outputs in its results.
 :::
+
+### GetWorkflowSteps
+
+```go
+GetWorkflowSteps(workflowID string) ([]StepInfo, error)
+```
+
+List the steps of a given workflow. Returned entries do not include step outputs.
 
 ### CancelWorkflow
 
