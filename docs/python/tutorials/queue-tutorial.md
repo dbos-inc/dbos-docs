@@ -221,7 +221,7 @@ def on_user_task_submission(user_id: str, task: Task):
     # First, enqueue a "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
     with SetEnqueueOptions(queue_partition_key=user_id):
-        partitioned_queue.enqueue(process_task, task)
+        partitioned_queue.enqueue(concurrency_manager, task)
 
 @DBOS.workflow()
 def concurrency_manager(task):
