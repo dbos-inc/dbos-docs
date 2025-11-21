@@ -13,8 +13,8 @@ DBOS supports two strategies for safely upgrading workflow code: patching and ve
 ## Patching
 
 When using patching, you use `DBOS.patch()` to make a breaking change in a conditional.
-`DBOS.patch()` returns True for new workflows (those which started after or reached the patch point after the breaking change) and False for old workflows (those that started before the breaking change).
-Therefore, if `DBOS.patch()` is true, call the new code, else, call the old code.
+`DBOS.patch()` returns `True` for new workflows (those which started after or reached the patch point after the breaking change) and `False` for old workflows (those that started before the breaking change).
+Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
 For example, let's say our workflow is:
 
@@ -87,3 +87,11 @@ def workflow():
 ```
 
 ### How Patching Works
+
+Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history.
+If it succesfully inserts the patch marker or if the patch marker is already present, then the workflow must be new (it started after the patch, or started before the patch but has not yet reached this point), so `DBOS.patch()` returns `True`.
+If there is already a record present in this point in your workflow history, then the workflow must be old (it started before the patch and has already continued past this point), so `DBOS.patch()` returns `False`.
+
+When you deprecate a patch with `DBOS.deprecate_patch()`, new workflows no longer insert patch markers into their workflow history.
+However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
+Once all workflows with patch markers are complete, you can safely remove the patch entirely.
