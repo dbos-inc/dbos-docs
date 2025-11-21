@@ -8,7 +8,7 @@ One challenge you may encounter when operating long-running durable workflows in
 A breaking change to a workflow is any change in what steps run or the order in which steps run.
 The issue is that if a breaking change was made to a workflow, the checkpoints created by a workflow that started on the previous version of the code may not match the steps called by the workflow in the new version of the code, which makes the workflow difficult to recover.
 
-DBOS supports two strategies for safely upgrading workflow code: patching and versioning.
+DBOS supports two strategies for safely upgrading workflow code: **patching** and **versioning**.
 
 ## Patching
 
@@ -106,3 +106,27 @@ If there is already a record present in this point in your workflow history, the
 When you deprecate a patch with `DBOS.deprecate_patch()`, new workflows no longer insert patch markers into their workflow history.
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, you can safely remove the patch entirely.
+
+## Versioning
+
+When using versioning, DBOS **versions** applications and workflows.
+All workflows are tagged with the application version on which they started.
+By default, application version is automatically computed from a hash of workflow source code.
+However, you can set your own version through configuration.
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "application_version": "1.0.0",
+}
+DBOS(config=config)
+```
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents unsafe recovery of workflows that depend on different code.
+
+When using versioning, we recommend **blue-green** code upgrades.
+When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
+Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
+Then, once all workflows of the old version are complete (you can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to check), you can retire the old code version.
