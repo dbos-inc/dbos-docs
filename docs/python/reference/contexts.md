@@ -373,6 +373,35 @@ async for value in DBOS.read_stream_async(workflow_id, example_key):
 **Yields:**
 - Each value in the stream until the stream is closed
 
+### patch
+
+```python
+DBOS.patch(
+    patch_name: str
+) -> bool
+```
+
+Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted and `False` if there is already a checkpoint present at this point in history.
+Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- `patch_name`: The name to give the patch marker that will be inserted into workflow history.
+
+### deprecate_patch
+
+```python
+DBOS.deprecate_patch(
+    patch_name: str
+) -> bool
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `True`.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+
+**Parameters:**
+- `patch_name`: The name of the patch marker to be bypassed.
+
 ## Workflow Management Methods
 
 ### list_workflows

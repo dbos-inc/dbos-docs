@@ -45,6 +45,8 @@ class DBOSConfig(TypedDict):
     executor_id: Optional[str]
 
     serializer: Optional[Serializer]
+
+    enable_patching: Optional[bool]
 ```
 
 - **name**: Your application's name.
@@ -101,6 +103,7 @@ Defaults to:
 - **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
+- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md) strategy for safely upgrading workflow code.
 
 
 ## DBOS Configuration File
