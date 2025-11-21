@@ -16,6 +16,17 @@ When using patching, you use `DBOS.patch()` to make a breaking change in a condi
 `DBOS.patch()` returns `True` for new workflows (those which started after or reached the patch point after the breaking change) and `False` for old workflows (those that started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
+To use patching, you must enable it in configuration:
+
+```python
+config: DBOSConfig = {
+    "name": "dbos-app",
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "enable_patching": True,
+}
+DBOS(config=config)
+```
+
 For example, let's say our workflow is:
 
 ```python
