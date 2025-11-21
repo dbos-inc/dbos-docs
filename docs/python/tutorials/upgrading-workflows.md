@@ -12,7 +12,7 @@ DBOS supports two strategies for safely upgrading workflow code: patching and ve
 
 ## Patching
 
-When using patching, you use `DBOS.patch()` to make a breaking change in a conditional.
+When using patching, you use [`DBOS.patch()`](../reference/contexts.md#patch) to make a breaking change in a conditional.
 `DBOS.patch()` returns `True` for new workflows (those which started after or reached the patch point after the breaking change) and `False` for old workflows (those that started before the breaking change).
 Therefore, if `DBOS.patch()` is `True`, call the new code, else, call the old code.
 
@@ -56,7 +56,7 @@ Now, new workflows will run `baz()`, while old workflows will safely continue th
 
 Patches don't need to stay in your code forever.
 Once all workflows of the pre-patch code version are complete, you can safely remove patches from your code.
-First, you must deprecate the patch.
+First, you must deprecate the patch with [`DBOS.deprecate_patch()`](../reference/contexts.md#deprecate_patch).
 This safely runs all workflows that contain the patch marker, but does not insert the patch marker into new workflows.
 For example, here's how to deprecate the patch above:
 
