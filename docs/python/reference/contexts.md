@@ -688,7 +688,7 @@ You can use this to set custom attributes in your span.
 DBOS.application_version: str
 ```
 
-Retrieve the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 ## Debouncing
 

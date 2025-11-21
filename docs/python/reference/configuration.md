@@ -100,7 +100,7 @@ Defaults to:
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
 - **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md) strategy for safely upgrading workflow code.
