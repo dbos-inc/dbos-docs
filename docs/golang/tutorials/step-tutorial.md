@@ -7,7 +7,7 @@ When using DBOS workflows, you should call any function that performs complex op
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can use [`RunAsStep`](../reference/workflows-steps#runasstep) to call a function as a step.
-For a function to be used as a step, it should return a serializable ([gob-encodable](https://pkg.go.dev/encoding/gob)) value and an error and have this signature:
+For a function to be used as a step, it should return a serializable ([json-encodable](https://pkg.go.dev/encoding/json)) value and an error and have this signature:
 
 ```go
 type Step[R any] func(ctx context.Context) (R, error)

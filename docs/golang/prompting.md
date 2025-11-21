@@ -48,8 +48,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT start goroutines from workflows or use select in workflows. For any complex parallel execution, you should instead use DBOS.RunWorkflow and DBOS queues to achieve the parallelism.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.sleep, DBOS.setEvent, DBOS.getEvent) from a step.
-- Do NOT call recv or RunWorkflow or RunAsStep form a step
+- Do NOT call any DBOS context method (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsStep, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent) from a step.
 
 ## DBOS Lifecycle Guidelines
 
@@ -59,7 +58,6 @@ DBOS programs MUST have a main file (typically 'main.go') that creates all objec
 
 Any DBOS program MUST create and launch a DBOS context in their main function.
 All workflows must be registered and queues created BEFORE DBOS is launched
-You MUST use this default configuration (changing the name as appropriate) unless otherwise specified.
 
 ```go
 func main() {
@@ -83,7 +81,7 @@ func main() {
 
 Here is an example main function using Gin:
 
-```javascript
+```go
 import (
     "context"
     "fmt"
@@ -360,7 +358,7 @@ The function's signature must match:
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
-In other words, a workflow must take in a DBOS context and one other input of any serializable (gob-encodable) type and must return one output of any serializable type and error.
+In other words, a workflow must take in a DBOS context and one other input of any serializable (json-encodable) type and must return one output of any serializable type and error.
 
 For example:
 
@@ -617,7 +615,7 @@ When using DBOS workflows, you should call any function that performs complex op
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can use `RunAsStep` to call a function as a step.
-For a function to be used as a step, it should return a serializable (gob-encodable) value and an error and have this signature:
+For a function to be used as a step, it should return a serializable (json-encodable) value and an error and have this signature:
 
 ```go
 type Step[R any] func(ctx context.Context) (R, error)
@@ -1958,7 +1956,7 @@ Handles can be used to wait for workflow completion, check status, and retrieve 
 #### WorkflowHandle.GetResult
 
 ```go
-WorkflowHandle.GetResult() (R, error)  
+WorkflowHandle.GetResult(opts ...GetResultOption) (R, error)
 ```
 
 Wait for the workflow to complete and return its result.
@@ -1999,6 +1997,7 @@ type Client interface {
     CancelWorkflow(workflowID string) error
     ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
+    GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -2188,6 +2187,14 @@ Options are provided via `ListWorkflowsOption` functions. See `ListWorkflows` fo
 :::warning
 The client `ListWorkflows` method does not include workflow inputs and outputs in its results.
 :::
+
+### GetWorkflowSteps
+
+```go
+GetWorkflowSteps(workflowID string) ([]StepInfo, error)
+```
+
+List the steps of a given workflow. Returned entries do not include step outputs.
 
 ### CancelWorkflow
 

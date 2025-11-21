@@ -106,3 +106,11 @@ func GetExecutorID() string
 ```
 
 `GetExecutorID` returns the executor ID for this context.
+
+### ListRegisteredWorkflows
+
+```go
+func ListRegisteredWorkflows(ctx DBOSContext, opts ...ListRegisteredWorkflowsOption) ([]WorkflowRegistryEntry, error)
+````
+
+`ListRegisteredWorkflows` Lists the context's workflow registry.

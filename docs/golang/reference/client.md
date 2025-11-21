@@ -22,6 +22,7 @@ type Client interface {
     CancelWorkflow(workflowID string) error
     ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
+    GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -211,6 +212,15 @@ Options are provided via `ListWorkflowsOption` functions. See [`ListWorkflows`](
 :::warning
 The client `ListWorkflows` method does not include workflow inputs and outputs in its results.
 :::
+
+### GetWorkflowSteps
+
+```go
+GetWorkflowSteps(workflowID string) ([]StepInfo, error)
+```
+
+List the steps of a given workflow. Returned entries do not include step outputs.
+
 
 ### CancelWorkflow
 
