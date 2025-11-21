@@ -387,6 +387,16 @@ Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/u
 **Parameters:**
 - `patch_name`: The name to give the patch marker that will be inserted into workflow history.
 
+### patch_async
+
+```python
+DBOS.patch_async(
+    patch_name: str
+) -> Coroutine[Any, Any, bool]
+```
+
+Coroutine version of [`DBOS.patch()`](#patch).
+
 ### deprecate_patch
 
 ```python
@@ -401,6 +411,16 @@ Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgra
 
 **Parameters:**
 - `patch_name`: The name of the patch marker to be bypassed.
+
+### deprecate_patch_async
+
+```python
+DBOS.deprecate_patch_async(
+    patch_name: str
+) -> Coroutine[Any, Any, bool]
+```
+Coroutine version of [`DBOS.deprecate_patch()`](#deprecate_patch)
+
 
 ## Workflow Management Methods
 
