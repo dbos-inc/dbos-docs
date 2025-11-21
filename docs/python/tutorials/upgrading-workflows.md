@@ -72,7 +72,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 If you need to make multiple breaking changes to a workflow over time, you can use multiple patches with different names.
 You can also "stack" patches to make consecutive breaking changes to the same code.
-For example, if we want to call `qux()` instead of `baz()` or `foo()`, we can create another patch:
+For example, if you want to call `qux()` instead of `baz()` or `foo()`, you can create another patch:
 
 ```python
 @DBOS.workflow()
