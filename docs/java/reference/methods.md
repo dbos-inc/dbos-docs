@@ -368,3 +368,92 @@ static boolean inStep();
 ```
 
 Return `true` if the current calling context is executing a workflow step, or `false` otherwise.
+
+## WorkflowOptions
+
+When workflow functions are called directly, they take their options from the current DBOS context.  Setting options into the context can done with a `WorkflowOptions` object and a `setContext()` `try` block on the calling thread:
+
+```java
+    try (var _opts = new WorkflowOptions(wfId).setContext()) {
+        // This workflow is within the `try` and will get `wfId` from the context
+        result = workflowClass.workflowMethod(args);
+    }
+```
+
+Workflow options will be restored to prior values at the end of the `try` block.
+
+:::note
+When using background execution or queues, workflow options should be passed as a `StartWorkflowOptions` argument to `startWorkflow`.
+:::
+
+`WorkflowOptions` is a record with the following fields:
+- **workflowId**: The ID to be assigned to a workflow called within the `try` block
+- **timeout**: The timeout to be assigned to all workflows called within the `try` block
+- **deadline**: The deadline to be assigned to all workflows called within the `try` block
+
+`WorkflowOptions` also supports `with` methods.
+
+### WorkflowOptions.withWorkflowID
+Creates a new WorkflowOptions with the workflow ID set. Other `WorkflowOptions` properties will be taken from the object on which `withWorkflowId` is called.
+
+```java
+    public WorkflowOptions withWorkflowId(String workflowId);
+```
+
+This will set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
+
+Example syntax:
+```java
+    // This is a more explicit version of new WorkflowOptions(wfId)
+    var options = new WorkflowOptions().withWorkflowId(wfId);
+    try (var _o = options.setContext()) {
+      var result = inst.thisWorkflowGetsWfId();
+    }
+```
+
+### WorkflowOptions.withTimeout
+Creates a new WorkflowOptions with the timeout set.  Other `WorkflowOptions` properties will be taken from the object on which `withTimeout` is called.
+
+```java
+  public WorkflowOptions withTimeout(Timeout timeout);
+  public WorkflowOptions withTimeout(Duration timeout);
+  public WorkflowOptions withTimeout(long value, TimeUnit unit);
+```
+
+Set a timeout for all enclosed workflow invocations or enqueues.  When the timeout expires, the workflow **and all its children** are cancelled.
+
+Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
+
+Example syntax:
+
+```java
+    // If the workflow does not complete within 10 seconds, it times out and is cancelled
+    var options = new WorkflowOptions().withTimeout(Duration.ofSeconds(10));
+    try (var _o = options.setContext()) {
+      var result = inst.possiblySlowWorkflow();
+    }
+```
+
+### WorkflowOptions.withDeadline
+Creates a new WorkflowOptions with the deadline set.  Other `WorkflowOptions` properties will be taken from the object on which `withDeadline` is called.
+
+```java
+  public WorkflowOptions withDeadline(Instant deadline);
+```
+
+Set a deadline for all enclosed workflow invocations or enqueues.  At the deadline time, the workflow **and all its children** are cancelled.
+
+Deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
+
+Example syntax:
+
+```java
+    // If the workflow does not complete by 10 seconds from now, it will be cancelled
+    var options = new WorkflowOptions().withDeadline(Instant.ofEpochMilli(System.currentTimeMillis() + 10000));
+    try (var _o = options.setContext()) {
+      var result = inst.possiblySlowWorkflow();
+    }
+```
