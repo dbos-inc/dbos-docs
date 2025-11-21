@@ -17,7 +17,7 @@ Each time you deploy an application, the following steps execute:
 1. **Upload**: An archive of your application folder is created and uploaded to DBOS Cloud. This archive can be up to 500 MB in size.
 2. **Configuration**: Your application's dependencies [are installed](#dependency-management).
 3. **Migration**: If you specify database migrations in your `dbos-config.yaml`, these are run on your cloud database.
-4. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/).
+4. **Deployment**: Your application is deployed to a number of [Firecracker microVMs](https://firecracker-microvm.github.io/) also referred to as "executors."
 By default, these have 1 vCPU and 512MB of RAM.
 The amount of memory allocated to each microVM is [configurable](./cloud-cli.md#dbos-cloud-app-update).
 
@@ -131,9 +131,18 @@ You can redeploy a previous version of your application by passing `--previous-v
 dbos-cloud app deploy --previous-version <version-id>
 ```
 
+### MicroVM Termination
+
+DBOS Cloud may, from time to time, stop your microVMs due to a variety of reasons, including app upgrade or scaling down (see below). When a microVM is stopped, DBOS Cloud performs the following steps:
+ 1. Stops routing new HTTP traffic to the VM.
+ 2. Sends SIGTERM to the `dbos` process (launched by your start command) and waits up to 10 seconds for it to exit.
+ 3. If the process is still running, terminates it forcefully.
+ 
+Any `PENDING` workflows run by the microVM are then recovered on another VM. See below.
+
 ### Workflow Recovery
 
-When a microVM running in DBOS Cloud dies (either due to a process crash or when scaling down), all of its workflows are automatically recovered to another microVM running the same application version. If no other microVM of that application version exists, DBOS Cloud launches a new one and instructs it to recover the workflows.
+When a microVM running in DBOS Cloud stops (either due to a process crash or when scaling down), all of its workflows are automatically recovered to another microVM running the same application version. If no other microVM of that application version exists, DBOS Cloud launches a new one and instructs it to recover the workflows.
 
 When you deploy a new version of your application, DBOS Cloud routes all requests and scheduled workflows to microVMs of the new application version.
 Then, DBOS Cloud attempts to decommission microVMs running the previous application version.
@@ -142,15 +151,29 @@ If there are still `PENDING` or `ENQUEUED` workflows of that code version, DBOS 
 Periodically, DBOS Cloud checks if there are any `PENDING` or `ENQUEUED` workflows not assigned to any microVM.
 If any are found, DBOS Cloud recovers them to a microVM of the appropriate application version (starting one if necessary).
 
+### Automatic and Manual Scaling
+
+Accounts on the free 30-day trial are limited to 1 microVM per app. Apps for Pro accounts are auto-scaled. Auto-scaling occurs based on CPU or queue utilization.
+
+For the latter, the queue must have `worker_concurrency` (or `workerConcurrency`) set. DBOS Cloud computes the current parallel task capacity  - the number of tasks that can be executed simultaneously - using the product of worker_concurrency and the current number of microVMs: `capacity = worker_concurrency * num_microvms`.
+
+Scaling up occurs when:
+- the average microVM CPU utilization exceeds 85% for several seconds, or
+- the number of enqueued tasks exceeds capacity for at least one of the queues.
+
+Inversely, the app scales down when the average CPU utilization drops below 40% and the number of enqueued tasks drops below capacity for all queues.
+
+To alter the auto-scaling behavior, you can manually set `min-executors` and/or `max-executors` using `app update` (see below). 
+
 ### Updating Applications
 
-To update your application metadata, run:
+To change your executor RAM or the default number of microVMs, run:
 
 ```shell
-dbos-cloud app update <app-name>
+dbos-cloud app update <app-name> [options]
 ```
 
-See the [DBOS Cloud CLI reference](./cloud-cli.md#dbos-cloud-app-update) for a list of properties you can update. Note that updating an application metadata does not trigger a redeploy of the code, which you can do with the [`app deploy`](./cloud-cli.md#dbos-cloud-app-deploy) command.
+See the [DBOS Cloud CLI reference](./cloud-cli.md#dbos-cloud-app-update) for a list of properties you can update. Note that `app update` does not trigger a redeploy of the code, which you can do with the [`app deploy`](./cloud-cli.md#dbos-cloud-app-deploy) command.
 
 ### Deleting Applications
 
