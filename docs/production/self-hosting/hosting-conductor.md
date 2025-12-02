@@ -187,7 +187,7 @@ You can use the Conductor container distribution for development, trial, or hobb
 Without a license, usage will be limited.
 To obtain a license, please [contact sales](https://www.dbos.dev/contact).
 
-Once you have a license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
+Once you have a license, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
 
 ## Self-Hosting in Production
 
