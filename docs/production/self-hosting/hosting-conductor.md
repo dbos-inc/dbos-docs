@@ -183,7 +183,7 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 
 ## Licensing
 
-You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting DBOS Conductor in production or for commercial use requires a paid license.
+You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a paid license.
 Without a license, usage will be limited.
 To obtain a license, please [contact sales](https://www.dbos.dev/contact).
 
