@@ -52,6 +52,9 @@ services:
     environment:
       DBOS__CONDUCTOR_DB_URL: postgresql://postgres:${PGPASSWORD:-dbos}@postgres:5432/dbos_conductor?sslmode=disable
 
+      # License Key (required for production or commercial use)
+      # DBOS_CONDUCTOR_LICENSE_KEY:  "my-key"
+
       # OAuth configuration
       # DBOS_OAUTH_ENABLED: "true"
       # DBOS_OAUTH_JWKS_URL: "https://your-oauth-provider.com/.well-known/jwks.json"
