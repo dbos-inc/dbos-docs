@@ -78,7 +78,7 @@ new WorkflowQueue('exampleQueue');
 ```
 
 Then, configure and launch DBOS on worker startup.
-When started, the worker will poll your queues, waiting until all enqueued workflows complete or a timeout is reached.
+When started, the worker will poll your queues and execute your workflows, waiting until all enqueued workflows complete or a timeout is reached.
 If some workflows are still executing when the worker times out, don't worry&mdash;DBOS will automatically recover them when the worker next starts.
 
 ```ts title="app/api/dbos/route.ts"
