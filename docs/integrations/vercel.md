@@ -3,8 +3,15 @@ sidebar_position: 15
 title: Vercel
 ---
 
+#  Use DBOS On Vercel
+
 You can use DBOS to add durable background workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
-Here's how.
+We recommend the following architecture:
+
+1. In your Next.js app, enqueue workflows for execution using the [DBOS Client library](../typescript/reference/client.md).
+2. Create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
+3. Configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically poll your worker for new workflows to execute.
+
 
 :::info
 
@@ -12,10 +19,34 @@ You can check out a working example of this integration [on GitHub](https://gith
 :::
 
 
-## 1. Create a Worker in a Vercel Functions
+## 1. Enqueue Workflows From Server Actions
 
-When using DBOS with Vercel, we recommend serverlessly executing workflows in [Vercel Functions](https://vercel.com/docs/functions).
-First, define and register your workflows, steps, and queues:
+First, enqueue workflows from your Next.js app using the [DBOS client library](../typescript/reference/client.md) in your [server actions](https://nextjs.org/docs/app/getting-started/updating-data).
+
+For example, here's a server action that enqueues a workflow to execute in the background:
+
+```ts title="app/actions.ts"
+'use server';
+
+import { DBOSClient } from '@dbos-inc/dbos-sdk';
+
+export async function enqueueWorkflow() {
+    console.log('Enqueueing DBOS workflow');
+    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+    await client.enqueue({
+        workflowName: 'exampleWorkflow',
+        queueName: 'exampleQueue',
+    });
+    await client.destroy();
+}
+```
+
+You can also use the client to list past workflows or retrieve their results.
+
+## 2. Create a Worker in a Vercel Functions
+
+Next, create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
+In the Vercel Function, define and register your workflows, steps, and queues:
 
 ```ts title="app/api/dbos/route.ts"
 // Define a workflow and steps
@@ -44,7 +75,7 @@ new WorkflowQueue('exampleQueue');
 ```
 
 Then, configure and launch DBOS on worker startup.
-When started, the workflow will poll your queues, waiting until all enqueued workflows complete or a timeout is reached.
+When started, the worker will poll your queues, waiting until all enqueued workflows complete or a timeout is reached.
 If some workflows are still executing when the worker times out, don't worry&mdash;DBOS will automatically recover them when the worker next starts.
 
 ```ts title="app/api/dbos/route.ts"
@@ -82,9 +113,9 @@ export async function GET(request: Request) {
 }
 ```
 
-## 2. Schedule the Worker with Cron
+## 3. Schedule the Worker with Cron
 
-Next, configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically launch your worker to poll for new workflows to execute.
+Finally, configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically poll your worker for new workflows to execute.
 Vercel will automatically scale the worker function to handle your workflows.
 
 For example, you might configure your worker to poll for new workflows once a minute:
@@ -98,47 +129,5 @@ For example, you might configure your worker to poll for new workflows once a mi
       "schedule": "* * * * *"
     }
   ]
-}
-```
-
-## 3. Enqueue Workflows From Server Actions
-
-Now that your worker is ready, you can enqueue workflows directly from your Next.js app using a [DBOS client](../typescript/reference/client.md) from your [server actions](https://nextjs.org/docs/app/getting-started/updating-data).
-
-For example, here's a server action that enqueues a workflow to execute in the background on your worker:
-
-```ts title="app/actions.ts"
-'use server';
-
-import { DBOSClient } from '@dbos-inc/dbos-sdk';
-
-export async function enqueueWorkflow() {
-    console.log('Enqueueing DBOS workflow');
-    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
-    await client.enqueue({
-        workflowName: 'exampleWorkflow',
-        queueName: 'exampleQueue',
-    });
-    await client.destroy();
-}
-```
-
-You can also create server actions to view your workflows or retrive their results.
-For example, here's a server action that lists all workflows from newest to oldest:
-
-```ts title="app/actions.ts"
-'use server';
-
-import { DBOSClient } from '@dbos-inc/dbos-sdk';
-
-export async function listWorkflows() {
-    console.log('Listing DBOS workflows');
-    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
-    const workflows = await client.listWorkflows({
-      workflowName: 'exampleWorkflow',
-      sortDesc: true,
-    });
-    await client.destroy();
-    return workflows;
 }
 ```
