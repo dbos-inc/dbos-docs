@@ -84,12 +84,13 @@ services:
 
       # OAuth configuration (uncomment and configure to enable authentication)
       # DBOS_OAUTH_ENABLED: 'true'
-      # DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/oauth2/authorize'
-      # DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/oauth2/token'
+      # DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/[...]/authorize'
+      # DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/[...]/token'
       # DBOS_OAUTH_CLIENT_ID: 'your-client-id'
       # DBOS_OAUTH_SCOPE: 'openid profile email'
-      # DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/oauth2/userinfo'
-      # DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/oauth2/logout'
+      # DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/[...]/userinfo'
+      # DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/[...]/logout'
+      # DBOS_OAUTH_AUDIENCE: 'your-api-identifier'
     ports:
       # Expose console on port 80 (or override with DBOS_CONSOLE_PORT env var)
       - '${DBOS_CONSOLE_PORT:-80}:80'
@@ -239,12 +240,13 @@ And set these environment variables in your DBOS Console container:
 
 ```yml
 DBOS_OAUTH_ENABLED: 'true'
-DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/oauth2/authorize'
-DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/oauth2/token'
+DBOS_OAUTH_AUTHORIZATION_URL: 'https://your-oauth-provider.com/[...]/authorize'
+DBOS_OAUTH_TOKEN_URL: 'https://your-oauth-provider.com/[...]/token'
 DBOS_OAUTH_CLIENT_ID: 'your-client-id'
 DBOS_OAUTH_SCOPE: 'openid profile email'
-DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/oauth2/userinfo'
-DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/oauth2/logout'
+DBOS_OAUTH_USERINFO_URL: 'https://your-oauth-provider.com/[...]/userinfo'
+DBOS_OAUTH_LOGOUT_URL: 'https://your-oauth-provider.com/[...]/logout'
+DBOS_OAUTH_AUDIENCE: 'your-api-audience'
 ```
 
 These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta).
