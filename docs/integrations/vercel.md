@@ -8,10 +8,13 @@ title: Vercel
 You can use DBOS to add durable background workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
 We recommend the following architecture:
 
-1. In your Next.js app, enqueue workflows for execution using the [DBOS Client library](../typescript/reference/client.md).
+1. In your Next.js app, enqueue workflows for execution using the [DBOS client library](../typescript/reference/client.md).
 2. Create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
 3. Configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically poll your worker for new workflows to execute.
 
+Your DBOS client and worker should both connect to a Postgres database&mdash;for example a Supabase or Neon database configured through [Vercel Postgres](https://vercel.com/docs/postgres).
+
+<img src={require('@site/static/img/vercel/vercel-architecture.png').default} alt="Vercel Architecture" width="800" className="custom-img"/>
 
 :::info
 
