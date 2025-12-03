@@ -53,7 +53,7 @@ def workflow():
 Now, new workflows will run `baz()`, while old workflows will safely continue through `foo()`.
 
 If you are making multiple breaking changes to your code, you can use multiple patches with different names.
-For example, you can also replace the call to `bar()` with a call to `qux()`:
+For example, you might later replace the call to `bar()` with a call to `qux()` in a new patch:
 
 ```python
 @DBOS.workflow()
