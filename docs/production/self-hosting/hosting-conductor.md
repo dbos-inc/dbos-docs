@@ -4,7 +4,7 @@ title: Self-Hosting Conductor
 ---
 
 :::info
-Self-hosting Conductor for commercial or production use requires a [paid license](#licensing).
+Self-hosting Conductor for commercial or production use requires a [license key](#licensing).
 :::
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
@@ -20,7 +20,7 @@ Here is a sample `docker-compose.yml` file for this purpose:
 ```yml title="docker-compose.yml"
 # Docker Compose configuration for self-hosting DBOS Conductor and the DBOS Console.
 # This configuration is for development purposes only.
-# Commercial or production use of DBOS Conductor or the DBOS Console requires a paid license.
+# Commercial or production use of DBOS Conductor or the DBOS Console requires a license key.
 services:
   # ============================================
   # Postgres
@@ -187,7 +187,7 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 
 ## Licensing
 
-You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a paid license.
+You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a license key.
 Without a license, usage will be limited.
 For example, you will not be able to connect more than one executor to a Conductor application.
 To obtain a license, please [contact sales](https://www.dbos.dev/contact).
