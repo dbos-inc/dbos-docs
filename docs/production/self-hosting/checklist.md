@@ -22,7 +22,7 @@ Here are some recommendations for configuring a Postgres database to best work w
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
 In that case, the [`dbos migrate`](../../python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](../../golang/reference/cli.md) in Go, or the [`dbos schema`](../../typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables or migrate them to the latest version.
-Then, a DBOS application can run without privilege (requiring only access to the system database).
+Then, a DBOS application can run with lower privilege (requiring only access to the DBOS tables in the system database).
 
 ## Scalability
 
@@ -35,7 +35,7 @@ You should make sure you have enough connections to support all your DBOS applic
 You can configure the maximum number of connections a DBOS application can make through the `sys_db_pool_size`/`systemDatabasePoolSize` configuration parameter.
 We do not recommend setting this to less than 5.
 
-**Monitor Database Usage** - A DBOS workflow requires two database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome) plus one additional write per step (to checkpoint the step's outcome).
+**Monitor Database Usage** - A DBOS workflow requires two-three database writes (one at the beginning to checkpoint its input, one at the end to checkpoint its outcome, and optionally one to dequeue it if it was enqueued) plus one additional write per step (to checkpoint the step's outcome).
 Depending on size, a Postgres database can perform between 1K-10K writes per second.
 Thus, an application can perform between 1K-10K workflows or steps per second, depending on database size.
 If your expected load exceeds 1K workflows or steps per second, you should perform load tests to verify your Postgres database can handle the load.
@@ -62,14 +62,3 @@ All implementations of the DBOS library follow strict semantic versioning.
 Minor version upgrades do not introduce breaking changes.
 Major version upgrades may introduce breaking changes, but these are always documented in the release notes.
 New library versions are always announced on GitHub ([Python](https://github.com/dbos-inc/dbos-transact-py/releases), [TypeScript](https://github.com/dbos-inc/dbos-transact-ts/releases), [Go](https://github.com/dbos-inc/dbos-transact-golang/releases), [Java](https://github.com/dbos-inc/dbos-transact-java/releases)) and on the [community Discord](https://discord.com/invite/jsmC6pXGgX).
-
-## Securing Self-Hosted Conductor
-
-If you are [self-hosting Conductor](./hosting-conductor.md), we recommend taking these additional steps to ensure the security of your deployment.
-If you are using DBOS-managed Conductor, don't worry&mdash;this is done for you.
-
-**Connect using TLS** - You should deploy your self-hosted Conductor and DBOS Console behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
-Otherwise, your traffic to Conductor may be unencrypted and vulnerable to snooping by third parties.
-
-**Set up authentication** - Set up authentication and authorization for all API calls to self-hosted Conductor by following [this guide](./hosting-conductor.md#security).
-Otherwise, your Conductor service could be accessed by unwanted entities.

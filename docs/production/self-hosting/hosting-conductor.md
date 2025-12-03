@@ -32,8 +32,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${PGPASSWORD:-dbos}
       POSTGRES_DB: dbos_conductor
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -127,7 +125,7 @@ volumes:
 </details>
 
 Start Conductor and the DBOS Console with `docker compose up`.
-Then, navigate to `http://localhost` to view the self-hosted console.
+After all containers have launched, navigate to `http://localhost` to view the self-hosted console.
 
 ## Connecting to Self-Hosted Conductor
 
@@ -138,6 +136,10 @@ For example, for the Docker compose setup above, this URL is `ws://localhost:809
 
 <Tabs groupId="language" queryString="language">
 <TabItem value="python" label="Python">
+
+:::info
+This requires DBOS Python >= 2.6.0
+:::
 
 ```python
 config: DBOSConfig = {
@@ -188,8 +190,7 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 ## Licensing
 
 You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a license key.
-Without a license key, usage will be limited.
-For example, you will not be able to connect more than one executor to a Conductor application.
+Without a license key, usage will be limited&mdash;you will not be able to connect more than one executor to a Conductor application.
 To obtain a license key, please [contact sales](https://www.dbos.dev/contact).
 
 Once you have a license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
