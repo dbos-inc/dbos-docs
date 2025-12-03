@@ -32,6 +32,7 @@
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
 - [Tiger Data](https://docs.dbos.dev/integrations/tigerdata.md): Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
+- [Vercel](https://docs.dbos.dev/integrations/vercel.md): You can use DBOS to add durable workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/java/examples/widget-store.md): This example is also available in TypeScript, Go, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/java/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are resilient to any failure.
@@ -39,6 +40,7 @@
 - [DBOS Client](https://docs.dbos.dev/java/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
 - [DBOS Lifecycle](https://docs.dbos.dev/java/reference/lifecycle.md): The DBOS class is a singleton&mdash;you should configure and launch it exactly once in a program's lifetime.
 - [DBOS Methods & Variables](https://docs.dbos.dev/java/reference/methods.md): DBOS Methods
+- [DBOS Plugin Architecture](https://docs.dbos.dev/java/reference/plugins.md): Unless you intend to extend the DBOS Transact library, you can ignore this topic.
 - [Queues](https://docs.dbos.dev/java/reference/queues.md): Workflow queues ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/java/reference/workflows-steps.md): Annotations
 - [Queues & Concurrency](https://docs.dbos.dev/java/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
