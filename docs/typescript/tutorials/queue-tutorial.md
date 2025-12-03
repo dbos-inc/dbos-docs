@@ -241,10 +241,14 @@ For example:
 const concurrencyQueue = new WorkflowQueue("concurrency-queue", { concurrency: 5 });
 const partitionedQueue = new WorkflowQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
 
-async function processTaskFunc(task: Task) {
-    // ...
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // First, enqueue a "concurrency manager" workflow to the partitioned
+    // queue to enforce per-partition limits.
+    await DBOS.startWorkflow(concurrencyManager, {
+        queueName: partitionedQueue.name,
+        enqueueOptions: { queuePartitionKey: userID }
+    })(task);
 }
-const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
 
 async function concurrencyManagerFunc(task: Task) {
     // The "concurrency manager" workflow enqueues the processTask
@@ -255,14 +259,10 @@ async function concurrencyManagerFunc(task: Task) {
 }
 const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
 
-async function onUserTaskSubmission(userID: string, task: Task) {
-    // Enqueue the "concurrency manager" workflow to the partitioned
-    // queue to enforce per-partition limits.
-    await DBOS.startWorkflow(concurrencyManager, {
-        queueName: partitionedQueue.name,
-        enqueueOptions: { queuePartitionKey: userID }
-    })(task);
+async function processTaskFunc(task: Task) {
+    // ...
 }
+const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
 ```
 
 ### Deduplication
