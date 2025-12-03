@@ -104,11 +104,14 @@ This helps prevent resource exhaustion when workflows consume significant memory
 Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
 This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
+
 ```javascript
 import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
 const queue = new WorkflowQueue("example_queue", { workerConcurrency: 5 });
 ```
+
+Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](../reference/configuration.md).
 
 #### Global Concurrency
 
