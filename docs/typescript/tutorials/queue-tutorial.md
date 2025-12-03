@@ -223,6 +223,45 @@ async function onUserTaskSubmission(userID: string, task: Task) {
 }
 ```
 
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```ts
+// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// across all partitions (and at most one task per partition).
+const concurrencyQueue = new WorkflowQueue("concurrency-queue", { concurrency: 5 });
+const partitionedQueue = new WorkflowQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
+
+async function processTaskFunc(task: Task) {
+    // ...
+}
+const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
+
+async function concurrencyManagerFunc(task: Task) {
+    // The "concurrency manager" workflow enqueues the processTask
+    // workflow on the non-partitioned queue and awaits its results
+    // to enforce global flow control limits.
+    const handle = await DBOS.startWorkflow(processTask, { queueName: concurrencyQueue.name })(task);
+    return await handle.getResult();
+}
+const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
+
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // First, enqueue a "concurrency manager" workflow to the partitioned
+    // queue to enforce per-partition limits.
+    await DBOS.startWorkflow(concurrencyManager, {
+        queueName: partitionedQueue.name,
+        enqueueOptions: { queuePartitionKey: userID }
+    })(task);
+}
+```
+
 ### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
