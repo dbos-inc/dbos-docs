@@ -10,7 +10,7 @@ We recommend the following architecture:
 
 1. In your Next.js app, enqueue workflows for execution using the [DBOS client library](../typescript/reference/client.md).
 2. Create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
-3. Configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically poll your worker for new workflows to execute.
+3. Configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically start your worker to poll for new workflows to execute.
 
 Your DBOS client and worker should both connect to a Postgres database&mdash;for example a Supabase or Neon database configured through [Vercel Postgres](https://vercel.com/docs/postgres).
 
@@ -118,7 +118,7 @@ export async function GET(request: Request) {
 
 ## 3. Schedule the Worker with Cron
 
-Finally, configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically poll your worker for new workflows to execute.
+Finally, configure a [Vercel cron job](https://vercel.com/docs/cron-jobs) to periodically start your worker to poll for new workflows to execute.
 Vercel will automatically scale the worker function to handle your workflows.
 
 For example, you might configure your worker to poll for new workflows once a minute:
