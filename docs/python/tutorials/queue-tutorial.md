@@ -215,8 +215,6 @@ For example:
 concurrency_queue = Queue("concurrency-queue", concurrency=5)
 partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
 
-@app.get("/queue")
-@DBOS.workflow()
 def on_user_task_submission(user_id: str, task: Task):
     # First, enqueue a "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
