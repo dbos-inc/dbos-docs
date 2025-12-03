@@ -253,7 +253,7 @@ async function concurrencyManagerFunc(task: Task) {
 const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
-    // First, enqueue a "concurrency manager" workflow to the partitioned
+    // Enqueue the "concurrency manager" workflow to the partitioned
     // queue to enforce per-partition limits.
     await DBOS.startWorkflow(concurrencyManager, {
         queueName: partitionedQueue.name,
