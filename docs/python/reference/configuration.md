@@ -22,15 +22,18 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+    enable_patching: Optional[bool]
+    application_version: Optional[str]
+    executor_id: Optional[str]
 
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
-    db_engine_kwargs: Optional[Dict[str, Any]]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
 
     conductor_key: Optional[str]
+    conductor_url: Optional[str]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -41,15 +44,19 @@ class DBOSConfig(TypedDict):
     run_admin_server: Optional[bool]
     admin_port: Optional[int]
 
-    application_version: Optional[str]
-    executor_id: Optional[str]
-
     serializer: Optional[Serializer]
-
-    enable_patching: Optional[bool]
 ```
 
+### Application Settings
+
 - **name**: Your application's name.
+- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+- **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
+- **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
+
+
+### Database Connection Settings
+
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state; its schema is documented [here](../../explanations/system-tables.md).
 This may be either Postgres or SQLite, though Postgres is recommended for production.
@@ -79,32 +86,31 @@ sqlite:///[application_name].sqlite
 This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/step-tutorial.md#transactions) functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s [`create_engine()`](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
-Defaults to:
-
-```python
-{
-  "pool_size": 20,
-  "max_overflow": 0,
-  "pool_timeout": 30,
-}
-```
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
-- **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
-- **conductor_key**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+
+### Conductor Settings
+
+- **conductor_key**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
+
+
+### Logging and Tracing Settings
+
 - **enable_otlp**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging-and-tracing.md). Defaults to False.
 - **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
+
+### Admin Server Settings
+
 - **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
-- **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
-- **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
-- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md) strategy for safely upgrading workflow code.
+### Serialization Settings
 
+- **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
 
 ## DBOS Configuration File
 
