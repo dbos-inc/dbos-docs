@@ -4,7 +4,7 @@ title: Upgrading Workflow Code
 toc_max_heading_level: 3
 ---
 
-One challenge you may encounter when operating long-running durable workflows in production is **how to deploy breaking changes to workflow code without disrupting in-progress workflows.**
+One challenge you may encounter when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
 A breaking change to a workflow is any change in what steps run or the order in which steps run.
 The issue is that if a breaking change was made to a workflow, the checkpoints created by a workflow that started on the previous version of the code may not match the steps called by the workflow in the new version of the code, which makes the workflow difficult to recover.
 
@@ -56,6 +56,7 @@ Now, new workflows will run `baz()`, while old workflows will safely continue th
 
 Patches don't need to stay in your code forever.
 Once all workflows that started before you deployed the patch are complete, you can safely remove patches from your code.
+You can use the [list workflows APIs](./workflow-management.md#listing-workflows) to see what workflows are still active.
 First, you must deprecate the patch with [`DBOS.deprecate_patch()`](../reference/contexts.md#deprecate_patch).
 This safely runs all workflows that contain the patch marker, but does not insert the patch marker into new workflows.
 For example, here's how to deprecate the patch above:
@@ -81,7 +82,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 ### How Patching Works
 
-Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history.
+Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
 If it succesfully inserts the patch marker or if the patch marker is already present, then the workflow must be new (it started after the patch, or started before the patch but has not yet reached this point), so `DBOS.patch()` returns `True`.
 If there is already a record present in this point in your workflow history, then the workflow must be old (it started before the patch and has already continued past this point), so `DBOS.patch()` returns `False`.
 
