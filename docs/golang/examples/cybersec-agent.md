@@ -34,7 +34,11 @@ func ScanWorkflow(ctx dbos.DBOSContext, _ string) ([]string, error) {
     scannedRepos := []string{}
     vulnerableCount := 0
 
+    // highlight-start
+    // Process each report in durable steps.
+    // If the workflow crashes, it will resume at the last completed step.
     for _, reportPath := range reportFiles {
+        // highlight-end
         repoName := strings.TrimSuffix(filepath.Base(reportPath), filepath.Ext(reportPath))
 
         // Step 2a: Read the report file
@@ -45,7 +49,10 @@ func ScanWorkflow(ctx dbos.DBOSContext, _ string) ([]string, error) {
             continue
         }
 
+        // highlight-start
         // Step 2b: Use OpenAI to detect vulnerabilities
+        // Expensive LLM calls are never repeated on recovery
+        // highlight-end
         hasVuln, err := dbos.RunAsStep(ctx, func(ctx context.Context) (bool, error) {
             return openAIClient.DetectVulnerability(rawReport)
         }, dbos.WithStepName(fmt.Sprintf("detectVuln-%s", repoName)))
@@ -72,11 +79,6 @@ func ScanWorkflow(ctx dbos.DBOSContext, _ string) ([]string, error) {
     return scannedRepos, nil
 }
 ```
-
-**Key features:**
-- Each report is processed in a separate step with a unique name
-- If the workflow crashes, it resumes from the next unprocessed report
-- AI calls are wrapped in steps, so expensive LLM invocations are never repeated
 
 ## Human-in-the-Loop Issue Workflow
 
@@ -118,13 +120,19 @@ func IssueWorkflow(ctx dbos.DBOSContext, input IssueWorkflowInput) (string, erro
         return "", fmt.Errorf("failed to create issue: %w", err)
     }
 
+    // highlight-start
     // Publish event to notify that issue generation is complete
+    // The UI subscribes to this for real-time updates
+    // highlight-end
     err = dbos.SetEvent(ctx, "ISSUE_GENERATED", fmt.Sprintf("Issue %d generated for %s", issue.ID, report.RepoName))
     if err != nil {
         return "", fmt.Errorf("failed to publish issue generated event: %w", err)
     }
 
-    // Step 2: Wait for approval/rejection (can wait up to 48 hours)
+    // highlight-start
+    // Wait for approval/rejection — can wait up to 48 hours without consuming resources
+    // If the app restarts during the wait, the workflow automatically resumes waiting
+    // highlight-end
     topic := "ISSUE_APPROVAL"
     approvalStatus, err := dbos.Recv[string](ctx, topic, 48*time.Hour)
     if err != nil {
@@ -148,12 +156,6 @@ func IssueWorkflow(ctx dbos.DBOSContext, input IssueWorkflowInput) (string, erro
 }
 ```
 
-**Key features:**
-- `dbos.Recv` pauses the workflow until a message is received on the "ISSUE_APPROVAL" topic
-- The workflow can wait for up to 48 hours without consuming resources
-- If the app restarts during the wait, the workflow automatically resumes waiting
-- `dbos.SetEvent` publishes an event that the UI can subscribe to for real-time updates
-
 ## Workflow Signaling
 
 The terminal UI sends approval or rejection signals to waiting workflows using `dbos.Send`:
@@ -168,27 +170,22 @@ This message is delivered to the workflow's `dbos.Recv` call, allowing it to pro
 ## Workflow Forking for AI Applications
 
 One powerful feature demonstrated in this example is **workflow forking**.
-When an LLM generates unsatisfactory content, you can fork the workflow from a specific step to retry with updated context—without losing any previous work.
+When an LLM generates unsatisfactory content, you can fork the workflow from a specific step to retry with updated context—all steps before the fork point are preserved, so you only re-run the expensive LLM call instead of the entire workflow.
 
 ```go
+// highlight-start
 // Fork from a specific step to retry with different LLM context
+// The forked workflow preserves all completed steps before StartStep
+// highlight-end
 input := dbos.ForkWorkflowInput{
     OriginalWorkflowID: workflowID,
     StartStep:          stepNumber, // Step before the LLM call
 }
-handle, err := dbos.ForkWorkflow[any](ctx, input)
+// highlight-next-line
+handle, err := dbos.ForkWorkflow[any](ctx, input) // Original workflow is unaffected
 ```
 
-**Benefits:**
-- **No lost work**: All steps before the fork point are preserved
-- **Fast iteration**: Only re-run the expensive LLM call, not the entire workflow
-- **Experiment safely**: Try different prompts without affecting the original workflow
-- **Cost efficient**: Don't waste API credits re-running successful steps
-
-This is particularly useful for AI applications where you might want to:
-- Refine prompts after seeing initial results
-- Try different LLM parameters
-- Regenerate content that doesn't meet quality standards
+This is particularly useful for AI applications where you might want to refine prompts after seeing initial results, try different LLM parameters, or regenerate content that doesn't meet quality standards—without wasting API credits re-running successful steps.
 
 ## Try it Yourself!
 
