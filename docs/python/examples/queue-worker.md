@@ -17,7 +17,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ## Worker Service
 
-The worker service implements durable workflows and their steps.
+The worker service implements your durable workflows and their steps.
 Notably, this workflow periodically reports its progress using [`DBOS.set_event`](../tutorials/workflow-communication.md#events-example).
 This lets the web server query the event to monitor each workflow's progress.
 
@@ -33,7 +33,7 @@ def workflow(num_steps: int):
     DBOS.set_event(WF_PROGRESS_KEY, progress)
     for i in range(num_steps):
         step(i)
-        # Update the progress each time a step completes
+        # Update workflow progress each time a step completes
         progress["steps_completed"] = i + 1
         DBOS.set_event(WF_PROGRESS_KEY, progress)
 
@@ -44,13 +44,13 @@ def step(i: int):
     time.sleep(1)
 ```
 
-It also defines a queue on which the web server can submit workflows for execution:
+The worker service also defines a queue on which the web server can submit workflows for execution:
 
 ```python
 Queue("workflow-queue")
 ```
 
-In its main function, it configures and launches DBOS with the registered workflows and queues then waits indefinitely, dequeuing and executing workflows:
+In its main function, the worker service configures and launches DBOS with the registered workflows and queues then waits indefinitely, dequeuing and executing workflows:
 
 ```python
 if __name__ == "__main__":
