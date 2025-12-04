@@ -148,6 +148,7 @@ import { FaHackerNews } from "react-icons/fa6";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { PiFileMagnifyingGlassBold } from "react-icons/pi";
 import { VscGraphLine } from "react-icons/vsc";
+import { SiOpenai } from "react-icons/si";
 
 <LargeTabs groupId="language">
 <LargeTabItem value="python" label="Python">
@@ -197,6 +198,12 @@ import { VscGraphLine } from "react-icons/vsc";
 
 <LargeTabItem value="golang" label="Go">
 <section className="row list">
+  <NarrowCardLink
+    label="AI Security Agent"
+    href="golang/examples/cybersec-agent"
+    description="Use DBOS to build an AI-powered security agent with human-in-the-loop approval and workflow forking."
+    icon={<SiOpenai color="white" size={50}/>}
+  />
   <NarrowCardLink
     label="Fault-Tolerant Checkout"
     href="golang/examples/widget-store"

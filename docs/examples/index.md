@@ -34,6 +34,13 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
   <CardLink
+    label="AI Security Agent"
+    href="golang/examples/cybersec-agent"
+    description="Use DBOS to build an AI-powered security agent with human-in-the-loop approval and workflow forking."
+    icon={<SiOpenai color="white" size={50}/>}
+    language="go"
+  />
+  <CardLink
     label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
     description="Use DBOS to build an online store that's resilient to any failure."
