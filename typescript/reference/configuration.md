@@ -22,9 +22,12 @@ All fields except `name` are optional.
 ```javascript
 export interface DBOSConfig {
   name?: string;
+  applicationVersion?: string;
+  executorID?: string;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
@@ -34,12 +37,17 @@ export interface DBOSConfig {
 
   runAdminServer?: boolean;
   adminPort?: number;
-
-  applicationVersion?: string;
 }
 ```
 
+### Application Settings
+
 - **name**: Your application's name.
+- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
+
+### Database Connection Settings
+
 - **systemDatabaseUrl**: A connection string to a Postgres database in which [DBOS can store internal state](../../explanations/system-tables.md). The supported format is:
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
@@ -52,15 +60,20 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 10.
+- **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
+
+### Logging and Tracing Settings
+
 - **enableOTLP**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging.md). Defaults to False.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
+
+### Admin Server Settings
+
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
-- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
-
 
 ## DBOS Configuration File
 
