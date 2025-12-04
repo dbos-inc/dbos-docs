@@ -233,13 +233,21 @@ DBOS provides [tooling](../reference/methods.md#workflow-management-methods) to 
 
 ## Workflow Versioning and Recovery
 
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the application source code (this can be overridden through [configuration](../reference/lifecycle.md)).
+DBOS **versions** applications and workflows.
 All workflows are tagged with the application version on which they started.
+By default, application version is automatically computed from a hash of workflow source code.
+However, you can set your own version through configuration.
+
+```java
+DBOSConfig config = DBOSConfig.defaults("dbos-app")
+    .withAppVersion("1.0.0");
+DBOS.configure(config);
+```
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use [`forkWorkflow`](../reference/methods.md#forkworkflow) to restart a workflow from a specific step on a specific code version.
 
-For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
+When using versioning, we recommend **blue-green** code upgrades.
+When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
+Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
+Then, once all workflows of the old version are complete (you can use [`DBOS.listWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.

@@ -373,6 +373,55 @@ async for value in DBOS.read_stream_async(workflow_id, example_key):
 **Yields:**
 - Each value in the stream until the stream is closed
 
+### patch
+
+```python
+DBOS.patch(
+    patch_name: str
+) -> bool
+```
+
+Insert a patch marker at the current point in workflow history, returning `True` if it was successfully inserted and `False` if there is already a checkpoint present at this point in history.
+Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- `patch_name`: The name to give the patch marker that will be inserted into workflow history.
+
+### patch_async
+
+```python
+DBOS.patch_async(
+    patch_name: str
+) -> Coroutine[Any, Any, bool]
+```
+
+Coroutine version of [`DBOS.patch()`](#patch).
+
+### deprecate_patch
+
+```python
+DBOS.deprecate_patch(
+    patch_name: str
+) -> bool
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `True`.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+
+**Parameters:**
+- `patch_name`: The name of the patch marker to be bypassed.
+
+### deprecate_patch_async
+
+```python
+DBOS.deprecate_patch_async(
+    patch_name: str
+) -> Coroutine[Any, Any, bool]
+```
+Coroutine version of [`DBOS.deprecate_patch()`](#deprecate_patch)
+
+
 ## Workflow Management Methods
 
 ### list_workflows
@@ -639,7 +688,7 @@ You can use this to set custom attributes in your span.
 DBOS.application_version: str
 ```
 
-Retrieve the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 ## Debouncing
 

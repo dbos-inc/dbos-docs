@@ -22,6 +22,7 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+    enable_patching: Optional[bool]
     application_version: Optional[str]
     executor_id: Optional[str]
 
@@ -49,8 +50,10 @@ class DBOSConfig(TypedDict):
 ### Application Settings
 
 - **name**: Your application's name.
-- **application_version**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
+- **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
+
 
 ### Database Connection Settings
 
@@ -108,7 +111,6 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 ### Serialization Settings
 
 - **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.
-
 
 ## DBOS Configuration File
 

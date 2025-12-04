@@ -29,14 +29,3 @@ When Conductor detects that an executor is unhealthy, it automatically signals a
 When an executor disconnects from Conductor, its status is changed to `DISCONNECTED` while Conductor waits for it to reconnect.
 If it has not reconnected after a grace period, its status is changed to `DEAD` and Conductor signals another executor of a compatible application version to recover its workflows.
 After recovery is confirmed, the executor is deleted.
-
-## Managing Application versions
-
-When self-hosting, it is important to be careful when upgrading your application's code.
-When DBOS is launched, it computes an "application version" from a checksum of the code in your application's workflows (you can override this version through configuration).
-Each workflow is tagged with the version of the application that started it.
-To prevent code compatibility issues, DBOS does not attempt to recover workflows tagged with a different application version.
-
-To safely recover workflows started on an older version of your code, you should start a process running that code version.
-If self-hosting using Conductor, that process will automatically recover all pending workflows of that code version.
-If self-hosting without Conductor, you should use the [workflow recovery endpoint of the admin API](./admin-api.md#workflow-recovery) to instruct that process to recover workflows belonging to executors that ran old code versions.
