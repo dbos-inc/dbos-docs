@@ -6,8 +6,8 @@ pagination_next: null
 
 # Featured Examples
 
-import { FaHackerNews, FaSlack, FaForwardFast } from "react-icons/fa6";
-import { MdOutlineShoppingCart } from "react-icons/md";
+import { FaHackerNews, FaSlack, FaForwardFast, FaPerson } from "react-icons/fa6";
+import { BiAddToQueue } from "react-icons/bi";import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
 import { IoEarth } from "react-icons/io5";
 import { RiCalendarScheduleLine } from "react-icons/ri";
@@ -47,10 +47,17 @@ import { FiInbox } from "react-icons/fi";
     }}
   />
   <CardLink
-    label="AI Agent Inbox"
+    label="Human-in-the-Loop"
     href="python/examples/agent-inbox"
     description="Use DBOS to build reliable human-in-the-loop for AI agents."
-    icon={<FiInbox color="white" size={50}/>}
+    icon={<FaPerson color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Queue Worker"
+    href="python/examples/agent-inbox"
+    description="Learn how to build DBOS workflows in their own service and enqueue and manage them from other services"
+    icon={<BiAddToQueue color="white" size={50}/>}
     language="python"
   />
   <CardLink
