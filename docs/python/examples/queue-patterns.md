@@ -52,3 +52,30 @@ def fair_queue_concurrency_manager():
 ```
 
 You can adapt this pattern to combine any per-tenant limits with any global limits.
+
+## Rate Limiting
+
+Sometimes, you need to **rate limit** a workflow, limiting the number of workflows that can start in a given period.
+This is especially useful when using a rate-limited API, like many LLM APIs.
+You can do this by applying a rate limit to a queue.
+For example, here's a rate-limited queue and workflow:
+
+```python
+rate_limited_queue = Queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
+
+# This workflow is rate-limited: No more than two workflows can start per 10 seconds
+@DBOS.workflow()
+def rate_limited_queue_workflow():
+    time.sleep(5)
+```
+
+If a rate-limit is defined with limit X and period Y, no more than X workflows can start per Y seconds.
+Rate limits are global across all DBOS processes using a queue.
+
+You can enqueue a workflow on a rate-limited queue like with any other queue:
+
+```python
+@api.post("/workflows/rate_limited_queue")
+def submit_rate_limited_queue():
+    rate_limited_queue.enqueue(rate_limited_queue_workflow)
+```
