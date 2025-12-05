@@ -35,6 +35,20 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
   <CardLink
+    label="Queue Worker"
+    href="python/examples/queue-worker"
+    description="Learn how to build DBOS workflows in their own service and enqueue and manage them from other services"
+    icon={<BiAddToQueue color="white" size={50}/>}
+    language={["python", "typescript"]}
+  />
+  <CardLink
+    label="Human-in-the-Loop"
+    href="python/examples/agent-inbox"
+    description="Use DBOS to build reliable human-in-the-loop for AI agents."
+    icon={<FaPerson color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
     description="Use DBOS to build an online store that's resilient to any failure."
@@ -48,27 +62,6 @@ import { FiInbox } from "react-icons/fi";
     }}
   />
   <CardLink
-    label="Human-in-the-Loop"
-    href="python/examples/agent-inbox"
-    description="Use DBOS to build reliable human-in-the-loop for AI agents."
-    icon={<FaPerson color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Queue Worker"
-    href="python/examples/queue-worker"
-    description="Learn how to build DBOS workflows in their own service and enqueue and manage them from other services"
-    icon={<BiAddToQueue color="white" size={50}/>}
-    language={["python", "typescript"]}
-  />
-  <CardLink
-    label="Stock Tracker"
-    href="python/examples/stock-tracker"
-    description="Use DBOS to track stock prices and receive alerts when they cross a certain threshold."
-    icon={<VscGraphLine color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
     label="Reliable Customer Service Agent"
     href="python/examples/customer-service"
     description="Use DBOS and LangGraph to build a reliable AI-powered customer service agent."
@@ -80,41 +73,6 @@ import { FiInbox } from "react-icons/fi";
     href="python/examples/s3mirror"
     description="Use DBOS to quickly and reliably transfer data between S3 Buckets."
     icon={<FaForwardFast color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Scheduled Reminders"
-    href="python/examples/scheduled-reminders"
-    description="Use DBOS to build and deploy an app that schedules reminder emails for any day in the future."
-    icon={<RiCalendarScheduleLine color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Kafka Alert Queue"
-    href="typescript/examples/kafka-alert-queue"
-    description="Use DBOS and Kafka to create an alerts management application that handles each alert exactly once."
-    icon={<SiApachekafka color="white" size={50}/>}
-    language="typescript"
-  />
-  <CardLink
-    label="AI-Powered Slackbot"
-    href="python/examples/rag-slackbot"
-    description="Use DBOS and LlamaIndex to build an AI-powered Slackbot that uses RAG to answer questions about previous Slack conversations."
-    icon={<FaSlack color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Earthquake Tracker"
-    href="python/examples/earthquake-tracker"
-    description="Use DBOS to build a real-time earthquake dashboard by streaming data from the USGS into Postgres, then visualizing it with Streamlit."
-    icon={<IoEarth color="white" size={50}/>}
-    language="python"
-  />
-  <CardLink
-    label="Hacker News Bot"
-    href="python/examples/hacker-news-bot"
-    description="Use DBOS to deploy a scheduled job that regularly searches Hacker News for comments about serverless computing and posts them to Slack."
-    icon={<FaHackerNews color="white" size={50} />}
     language="python"
   />
   </section>
