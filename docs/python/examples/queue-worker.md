@@ -18,7 +18,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ## Worker Service
 
 The worker service implements your durable workflows and their steps.
-Notably, this workflow periodically reports its progress using [`DBOS.set_event`](../tutorials/workflow-communication.md#events-example).
+Notably, this workflow periodically reports its progress using [`DBOS.set_event`](../tutorials/workflow-communication.md).
 This lets the web server query the event to monitor each workflow's progress.
 
 ```python
