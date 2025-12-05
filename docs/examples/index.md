@@ -59,7 +59,7 @@ import { FiInbox } from "react-icons/fi";
     href="python/examples/queue-worker"
     description="Learn how to build DBOS workflows in their own service and enqueue and manage them from other services"
     icon={<BiAddToQueue color="white" size={50}/>}
-    language="python"
+    language={["python", "typescript"]}
   />
   <CardLink
     label="Stock Tracker"

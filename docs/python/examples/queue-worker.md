@@ -4,6 +4,10 @@ sidebar_position: 35
 title: Queue Worker
 ---
 
+:::info
+This example is also available in [TypeScript](../../typescript/examples/queue-worker.md).
+:::
+
 This example demonstrates how to build DBOS workflows in their own "queue worker" service and enqueue and manage them from other services.
 This design pattern lets you separate concerns and separately scale the workers that execute your durable workflows from your other services.
 
