@@ -186,12 +186,6 @@ import { VscGraphLine } from "react-icons/vsc";
     description="Use DBOS durable workflows to build an online storefront that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
   />
-  <NarrowCardLink
-    label="Alert Center"
-    href="typescript/examples/kafka-alert-queue"
-    description="Produce and consume kafka messages exactly once."
-    icon={<SiApachekafka color="white" size={50}/>}
-  />
 </section>
 </LargeTabItem>
 
