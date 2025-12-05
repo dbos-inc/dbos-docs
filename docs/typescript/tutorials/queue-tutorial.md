@@ -94,6 +94,8 @@ await client.enqueue<ProcessTask>(
     task);
 ```
 
+The [queue worker](../examples/queue-worker.md) example shows this design pattern in more detail.
+
 ### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
