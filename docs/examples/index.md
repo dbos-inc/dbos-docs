@@ -7,6 +7,7 @@ pagination_next: null
 # Featured Examples
 
 import { FaHackerNews, FaSlack, FaForwardFast, FaPerson } from "react-icons/fa6";
+import { HiMiniQueueList } from "react-icons/hi2";
 import { BiAddToQueue } from "react-icons/bi";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
@@ -49,17 +50,18 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
   <CardLink
+    label="Queue Patterns"
+    href="python/examples/queue-worker"
+    description="Learn how to implement advanced queue patterns like fair queueing with DBOS."
+    icon={<HiMiniQueueList  color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Fault-Tolerant Checkout"
     href="python/examples/widget-store"
     description="Use DBOS to build an online store that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language={["python", "typescript", "go", "java"]}
-    hrefByLanguage={{
-      python: "python/examples/widget-store",
-      typescript: "typescript/examples/checkout-tutorial",
-      go: "golang/examples/widget-store",
-      java: "java/examples/widget-store",
-    }}
+    language="python"
   />
   <CardLink
     label="Reliable Customer Service Agent"
