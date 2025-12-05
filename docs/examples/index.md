@@ -50,8 +50,8 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
   <CardLink
-    label="Queue Patterns"
-    href="python/examples/queue-worker"
+    label="Advanced Queue Patterns"
+    href="python/examples/queue-patterns"
     description="Learn how to implement advanced queue patterns like fair queueing with DBOS."
     icon={<HiMiniQueueList  color="white" size={50}/>}
     language="python"
