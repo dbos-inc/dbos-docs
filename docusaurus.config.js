@@ -142,6 +142,10 @@ const config = {
             from: '/typescript/tutorials/integrating-dbos',
             to: '/typescript/integrating-dbos',
           },
+          {
+            from: '/python/examples/scheduled-reminders',
+            to: '/why-dbos',
+          },
         ],
         // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
         createRedirects(existingPath) {

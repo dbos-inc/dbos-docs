@@ -289,8 +289,6 @@ Except for the underlying Kafka client library, these packages are similar, and 
   static async inboundAlertWorkflow(_topic: string, _partition: number, message: KafkaMessage) { ... }
 ```
 
-For a detailed example of using DBOS and Kafka together to publish and consume messages, see [Kafka Alert Queue](./examples/kafka-alert-queue.md).
-
 ### AWS SQS Receiver Package
 Similar to the Kafka package changes, the SQS package was changed to include only a message receiver.  This is simpler to work with, as it allows much more flexibility in configuration of the SQS client.  After a client is constructed, SQS message receivers can be added to workflows using decorators:
 
@@ -313,4 +311,4 @@ class SQSEventProcessor {
 The package for working with AWS S3 was replaced with a much simpler one.  While the previous package attempted to configure and instantiate the S3 client and provided step wrappers for some S3 commands, the new package only provides the workflows for keeping the contents of an S3 bucket in sync with a list kept in a database table.  This allows much more flexibility in configuring S3, while demonstrating how DBOS workflows can be used to synchronize multiple external systems.
 
 ### AWS SES (Simple Email Service)
-With the simplified v3 [step](./reference/workflows-steps.md#dbosrunstep) syntax and requirements, it was no longer deemed helpful to provide a step library for interacting with AWS SES.  Configuring SES and sending mail is much more flexible when done directly with the library, as demonstrated in the [example code](./examples/task-scheduler.md#sending-email-with-amazon-ses).
+With the simplified v3 [step](./reference/workflows-steps.md#dbosrunstep) syntax and requirements, it was no longer deemed helpful to provide a step library for interacting with AWS SES.

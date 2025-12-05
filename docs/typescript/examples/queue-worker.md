@@ -8,7 +8,7 @@ title: Queue Worker
 This example is also available in [Python](../../python/examples/queue-worker.md).
 :::
 
-This example demonstrates how to build DBOS workflows in their own "queue worker" service and enqueue and manage them from other services.
+This example demonstrates how to run DBOS workflows in their own "queue worker" service while enqueueing and managing them from other services.
 This design pattern lets you separate concerns and separately scale the workers that execute your durable workflows from your other services.
 
 Architecturally, this example contains two services: a web server and a worker service.
@@ -22,8 +22,8 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ## Worker Service
 
 The worker service implements your durable workflows and their steps.
-Notably, this workflow periodically reports its progress using [`DBOS.set_event`](../tutorials/workflow-communication.md).
-This lets the web server query the event to monitor each workflow's progress.
+Notably, this workflow periodically reports its progress using [`DBOS.setEvent`](../tutorials/workflow-communication.md).
+This lets the web server query the event to monitor workflow progress.
 
 ```ts
 DBOS.registerWorkflow(
@@ -88,7 +88,7 @@ const systemDatabaseUrl =
 const client = await DBOSClient.create({ systemDatabaseUrl });
 ```
 
-It then uses the client in an API route for enqueueing workflows:
+It then enqueues workflows using the client:
 
 ```ts
 app.post('/api/workflows', async (_req: Request, res: Response) => {
@@ -104,8 +104,8 @@ app.post('/api/workflows', async (_req: Request, res: Response) => {
 });
 ```
 
-The web server also uses the client in an API route to display workflow status.
-This function first lists all workflows, then uses [`get_event`](../tutorials/workflow-communication.md) to query the progress of each workflow.
+The web server can also report workflow status.
+This function first lists all workflows, then uses [`getEvent`](../tutorials/workflow-communication.md) to query the progress of each workflow.
 This is a useful pattern for showing workflow progress or status to end users of your application.
 
 ```ts

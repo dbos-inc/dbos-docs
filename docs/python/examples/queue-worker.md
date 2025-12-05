@@ -8,7 +8,7 @@ title: Queue Worker
 This example is also available in [TypeScript](../../typescript/examples/queue-worker.md).
 :::
 
-This example demonstrates how to build DBOS workflows in their own "queue worker" service and enqueue and manage them from other services.
+This example demonstrates how to run DBOS workflows in their own "queue worker" service while enqueueing and managing them from other services.
 This design pattern lets you separate concerns and separately scale the workers that execute your durable workflows from your other services.
 
 Architecturally, this example contains two services: a web server and a worker service.
@@ -23,7 +23,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 The worker service implements your durable workflows and their steps.
 Notably, this workflow periodically reports its progress using [`DBOS.set_event`](../tutorials/workflow-communication.md).
-This lets the web server query the event to monitor each workflow's progress.
+This lets the web server query the event to monitor workflow progress.
 
 ```python
 @DBOS.workflow()
@@ -83,7 +83,7 @@ system_database_url = os.environ.get(
 client = DBOSClient(system_database_url=system_database_url)
 ```
 
-It then uses the client in an API route for enqueueing workflows:
+It then enqueues workflows using the client:
 
 ```python
 @api.post("/workflows")
@@ -97,7 +97,7 @@ def enqueue_workflow():
     return {"status": "enqueued"}
 ```
 
-The web server also uses the client in an API route to display workflow status.
+The web server can also report workflow status.
 This function first lists all workflows, then uses [`get_event`](../tutorials/workflow-communication.md) to query the progress of each workflow.
 This is a useful pattern for showing workflow progress or status to end users of your application.
 
