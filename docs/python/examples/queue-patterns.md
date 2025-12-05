@@ -79,3 +79,39 @@ You can enqueue a workflow on a rate-limited queue like with any other queue:
 def submit_rate_limited_queue():
     rate_limited_queue.enqueue(rate_limited_queue_workflow)
 ```
+
+## Debouncing
+
+Sometimes, you may receive many requests to start a workflow in quick succession, but you only want to start it once.
+For example, if a user is editing an input field, you may want to start a processing workflow only after some time has passed since the last edit.
+
+**Debouncing** delays a workflow's execution until some time has passed since it was last called.
+To debounce a workflow, we define the workflow and queue and create a debouncer for the workflow:
+
+```python
+debouncer_queue = Queue("debouncer-queue")
+
+@DBOS.workflow()
+def debouncer_workflow(tenant_id: str, input: str):
+    print(f"Executing debounced workflow for tenant {tenant_id} with input {input}")
+    time.sleep(5)
+
+debouncer = Debouncer.create(debouncer_workflow, queue=debouncer_queue)
+```
+
+Then, we submit the workflow with the debouncer.
+This delays the workflow until a set time has passed since the last input is submitted for a tenant.
+When the workflow starts, it uses the last input receieved by the debouncer.
+
+```python
+# Each time a new input is submitted for a tenant, debounce debouncer_workflow.
+# The debouncer waits until 5 seconds after input stops being submitted for the tenant,
+# then enqueue the workflow with the last input submitted.
+@api.post("/workflows/debouncer")
+def submit_debounced_workflow(tenant_id: str, input: str):
+    debounce_key = tenant_id
+    debounce_period_sec = 5
+    debouncer.debounce(debounce_key, debounce_period_sec, tenant_id, input)
+```
+
+Learn more about debouncing in the [reference](../reference/contexts.md#debouncing).
