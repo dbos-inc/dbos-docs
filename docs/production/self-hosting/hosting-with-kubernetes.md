@@ -5,9 +5,7 @@ title: Deploying With Kubernetes
 
 # Deploying and Scaling With Kubernetes
 
-This guide shows you how to deploy and scale a DBOS application database using Kubernetes. It uses [KEDA](http://keda.sh/) to scale your application based on the queue load.
-
-Note this example can be adjusted for a variety of situation: we will scale based on the load on one queue, but you could scale based on the busiest queue only or based on the load on all queues.
+This guide shows you how to deploy and scale a DBOS application database using Kubernetes and [KEDA](http://keda.sh/).
 
 ## Setup
 
@@ -123,43 +121,17 @@ kubectl get pods -n keda
 
 You should see KEDA operator and metrics server pods running.
 
-## Scaling based on DBOS queue load
+## Scaling based on DBOS queue utilization
 
-Queues are the prime mechanism to control load in a DBOS application. For example you can set a per-worker concurrency cap on a DBOS queue, controlling how many tasks a single worker can dequeue. You can then estimate how many workers are required at any given time to handle a queue's tasks by dividing the number of tasks in the queue by the worker concurrency limit.
+Queues are the prime mechanism to control load in a DBOS application. For example you can set a per-worker concurrency cap on a DBOS queue, controlling how many tasks a single worker can dequeue.
 
-In this section we'll describe a simple setup where the application exposes the current queue length as a metric which a KEDA scaler will consume to determine the scaling factor.
+You can then estimate how many workers are required to handle a queue's tasks by dividing the number of tasks in the queue by the worker concurrency limit.
 
-### The Metrics endpoint
-
-Here is an example using the DBOS Golang SDK, with an application that has a DBOS queue configured with concurrency limits of 2 tasks per worker.
-
-```go
-func main() {
-    ...
-    queue := dbos.NewWorkflowQueue(dbosContext, "queueName", dbos.WithWorkerConcurrency(2))
-}
-
-type MetricsResponse struct {
-	QueueLength int `json:"queue_length"`
-}
-
-// Return the current size of the specified queue
-// which is the number of `PENDING` and `ENQUEUED` tasks
-r.GET("/metrics/:queueName", func(c *gin.Context) {
-	queueName := c.Param("queueName")
-	workflows, err := dbos.ListWorkflows(dbosContext, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error computing metrics: %v", err)})
-		return
-	}
-
-	c.JSON(http.StatusOK, MetricsResponse{QueueLength: len(workflows)})
-})
-```
+Of course this example can be adjusted for a variety of situation: you can scale based on the busiest queue only, the load on all queues, etc.
 
 ### KEDA scaler
 
-This [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler will periodically poll the application at the specified URL. It will look for the metric under the `valueLocation` field and divide its value by the `targetValue` factor.
+This [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler will periodically poll the application at the specified URL to obtain the utilization of a given DBOS queue. It will look for the metric under the `valueLocation` field and divide its value by the `targetValue` factor.
 
 What this is effectively doing is scaling to a number of worker equal to the queue length divided by the queue's worker concurrency, 2.
 
@@ -177,8 +149,35 @@ spec:
   - type: metrics-api
     metadata:
       url: http://dbos-app.default.svc.cluster.local:8000/metrics/queueName
-      valueLocation: queue_length
+      valueLocation: queue_utilization
       targetValue: "2"
 ```
 
 Check the [KEDA documentation](https://keda.sh/docs/2.18/reference/scaledobject-spec/#overview) to learn how to control the scaler behavior.
+
+### The Metrics endpoint
+
+In this example, using the DBOS Golang SDK, an application has configured a DBOS queue with per-worker concurrency limits of 2 tasks per worker. It exposes the endpoint KEDA polls to obtain, periodically, the queue utilization.
+
+```go
+
+queue := dbos.NewWorkflowQueue(dbosContext, "queueName", dbos.WithWorkerConcurrency(2))
+
+type MetricsResponse struct {
+	QueueLength int `json:"queue_utilization"`
+}
+
+// Return the current size of the specified queue
+// which is the number of `PENDING` and `ENQUEUED` tasks
+r.GET("/metrics/:queueName", func(c *gin.Context) {
+	queueName := c.Param("queueName")
+	workflows, err := dbos.ListWorkflows(dbosContext, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error computing metrics: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, MetricsResponse{QueueLength: len(workflows)})
+})
+```
+
