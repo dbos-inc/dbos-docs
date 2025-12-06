@@ -164,20 +164,20 @@ In this example, using the DBOS Golang SDK, an application has configured a DBOS
 queue := dbos.NewWorkflowQueue(dbosContext, "queueName", dbos.WithWorkerConcurrency(2))
 
 type MetricsResponse struct {
-	QueueLength int `json:"queue_utilization"`
+    QueueLength int `json:"queue_utilization"`
 }
 
 // Return the current size of the specified queue
 // which is the number of `PENDING` and `ENQUEUED` tasks
 r.GET("/metrics/:queueName", func(c *gin.Context) {
-	queueName := c.Param("queueName")
-	workflows, err := dbos.ListWorkflows(dbosContext, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error computing metrics: %v", err)})
-		return
-	}
+    queueName := c.Param("queueName")
+    workflows, err := dbos.ListWorkflows(dbosContext, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error computing metrics: %v", err)})
+        return
+    }
 
-	c.JSON(http.StatusOK, MetricsResponse{QueueLength: len(workflows)})
+    c.JSON(http.StatusOK, MetricsResponse{QueueLength: len(workflows)})
 })
 ```
 
