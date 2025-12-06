@@ -3,66 +3,22 @@ sidebar_position: 70
 title: Deploying With Kubernetes
 ---
 
+# Deploying and Scaling With Kubernetes
 
-# Deploying with Kubernetes
+This guide shows you how to deploy and scale a DBOS application database using Kubernetes. It uses [KEDA](http://keda.sh/) to scale your application based on the queue load.
 
+Note this example can be adjusted for a variety of situation: we will scale based on the load on one queue, but you could scale based on the busiest queue only or based on the load on all queues.
 
-This guide shows you how to setup a DBOS Python application and its Postgres database using Kubernetes.
+## Setup
 
-It assume you have an existing Kubernetes service up and running.
+This guide assumes you already have a Kubernetes cluster deployed and basic knowledge on how to apply manifests. It requires Postgres, any application you can modify to add an endpoint, and KEDA.
 
-You'll need two manifests: one for Postgres and one for the application.
+### Postgres
+You'll need a Postgres instance to backup your application.
 
-## Building the Application Image
+<details>
 
-
-DBOS is just a library for your program to import, so it can run with any Python/Node program. For a reference Dockerfile to build a container an upload it to your registry, see our [Docker guide](./hosting-with-docker.md). Deploy both services with `kubectl apply -f [manifest.yaml]`
-
-
-## Application service
-
-Replace `image URI` by the address of your container.
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dbos-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: dbos-app
-  template:
-    metadata:
-      labels:
-        app: dbos-app
-    spec:
-      containers:
-        - name: dbos-app
-          image: <image URI>
-          env:
-            - name: DBOS_DATABASE_URL
-              value: postgres://postgres:dbos@postgres:5432/dbos_app_starter
-          ports:
-            - containerPort: 8000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: dbos-app
-spec:
-  type: LoadBalancer
-  selector:
-    app: dbos-app
-  ports:
-    - port: 8000
-      targetPort: 8000
-```
-
-
-## Postgres Service
-
+<summary><strong>Sample Postgres manifest</strong></summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -108,24 +64,121 @@ spec:
       targetPort: 5432
 ```
 
+</details>
 
-## Visit the application
+### The application
 
-Check the services are running with `kubectl` or your favorite k8s admin tool.
+DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes.
 
-```shell
-kubectl get pods
-NAME                        READY   STATUS    RESTARTS       AGE
-dbos-app-6d968b9dc6-lsk6w   1/1     Running   0              105m
-postgres-9f65bff75-ztm7w    1/1     Running   0              107m
+<details>
+
+<summary><strong>Sample application manifest</strong></summary>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbos-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbos-app
+  template:
+    metadata:
+      labels:
+        app: dbos-app
+    spec:
+      containers:
+        - name: dbos-app
+          image: <image URI>
+          env:
+            - name: DBOS_DATABASE_URL
+              value: postgres://postgres:dbos@postgres:5432/dbos_app_starter
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dbos-app
+spec:
+  type: LoadBalancer
+  selector:
+    app: dbos-app
+  ports:
+    - port: 8000
+      targetPort: 8000
 ```
 
-Find the public IP of the application with `kubectl`:
-```shell
-kubectl get svc dbos-app
-NAME       TYPE           CLUSTER-IP     EXTERNAL-IP                                                               PORT(S)          AGE
-dbos-app   LoadBalancer   x.x.x.x        x.x.x.x                                                                   8000:30176/TCP   106m
+</details>
+
+### KEDA
+
+[Install KEDA](https://keda.sh/docs/2.18/deploy/). To verify KEDA is running:
+
+```bash
+kubectl get pods -n keda
 ```
 
-You can now visit `http://[EXTERNAL-IP]:8000/` to see the template application live.
-If you press "crash the application", Kubernetes will restart the container immediately and the DBOS workflow will resume durably.
+You should see KEDA operator and metrics server pods running.
+
+## Scaling based on DBOS queue load
+
+Queues are the prime mechanism to control load in a DBOS application. For example you can set a per-worker concurrency cap on a DBOS queue, controlling how many tasks a single worker can dequeue. You can then estimate how many workers are required at any given time to handle a queue's tasks by dividing the number of tasks in the queue by the worker concurrency limit.
+
+In this section we'll describe a simple setup where the application exposes the current queue length as a metric which a KEDA scaler will consume to determine the scaling factor.
+
+### The Metrics endpoint
+
+Here is an example using the DBOS Golang SDK, with an application that has a DBOS queue configured with concurrency limits of 2 tasks per worker.
+
+```go
+func main() {
+    ...
+    queue := dbos.NewWorkflowQueue(dbosContext, "queueName", dbos.WithWorkerConcurrency(2))
+}
+
+type MetricsResponse struct {
+	QueueLength int `json:"queue_length"`
+}
+
+// Return the current size of the specified queue
+// which is the number of `PENDING` and `ENQUEUED` tasks
+r.GET("/metrics/:queueName", func(c *gin.Context) {
+	queueName := c.Param("queueName")
+	workflows, err := dbos.ListWorkflows(dbosContext, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error computing metrics: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusOK, MetricsResponse{QueueLength: len(workflows)})
+})
+```
+
+### KEDA scaler
+
+This [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler will periodically poll the application at the specified URL. It will look for the metric under the `valueLocation` field and divide its value by the `targetValue` factor.
+
+What this is effectively doing is scaling to a number of worker equal to the queue length divided by the queue's worker concurrency, 2.
+
+```yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: dbos-app-scaledobject
+spec:
+  scaleTargetRef:
+    name: dbos-app
+  minReplicaCount: 1
+  maxReplicaCount: 100
+  triggers:
+  - type: metrics-api
+    metadata:
+      url: http://dbos-app.default.svc.cluster.local:8000/metrics/queueName
+      valueLocation: queue_length
+      targetValue: "2"
+```
+
+Check the [KEDA documentation](https://keda.sh/docs/2.18/reference/scaledobject-spec/#overview) to learn how to control the scaler behavior.
