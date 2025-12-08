@@ -313,4 +313,4 @@ if __name__ == "__main__":
     DBOS.launch()
 ```
 
-Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from the CPU worker for execution on the GPU worker.
+Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from the CPU worker for execution on the GPU worker, and vice versa.
