@@ -4,7 +4,7 @@ sidebar_position: 36
 title: Advanced Queue Patterns
 ---
 
-This example demonstrates how to use several advanced queue patterns in DBOS.
+This example demonstrates how to build several advanced queue patterns with DBOS.
 For the full queues documentation, check out the [queues tutorial](../tutorials/queue-tutorial.md).
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/queue-patterns).
