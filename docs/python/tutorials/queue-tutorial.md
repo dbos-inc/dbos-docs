@@ -57,12 +57,12 @@ def process_tasks(tasks):
 
 ### Enqueueing from Another Application
 
-Often, you want to enqueue a workflow from outside your DBOS application.
+Often, you want to enqueue a workflow from another DBOS application or from outside your DBOS application.
 For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application (or from another DBOS application) by connecting directly to your system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
 For example, this code enqueues the `data_pipeline` workflow on the `pipeline_queue` queue with `task` as an argument.

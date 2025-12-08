@@ -3,7 +3,7 @@ sidebar_position: 10
 title: DBOS Client
 ---
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+`DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 `DBOSClient` includes methods similar to [`DBOS`](./contexts.md) that can be used outside of a DBOS application, 
 such as [`enqueue`](./queues.md#enqueue) or [`getEvent`](./contexts.md#get_event).
 
