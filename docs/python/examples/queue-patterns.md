@@ -41,7 +41,7 @@ def submit_fair_queue(tenant_id: str):
         partitioned_queue.enqueue(fair_queue_concurrency_manager)
 ```
 
-Then the "concurrency manager" workflow enqueues the workflow to the non-partitioned queue and awaits its results to enforce global flow control limits:
+The "concurrency manager" bridges the two queues, enqueueing the workflow on the non-partitioned queue and waiting for it to complete.
 
 ```python
 @DBOS.workflow()
