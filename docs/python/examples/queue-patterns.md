@@ -16,7 +16,7 @@ For example, your application can only process 5 items at a time, and you don't 
 
 You can implement fair queueing in DBOS by combining a [**partitioned queue**](../tutorials/queue-tutorial.md#partitioning-queues) with a **regular (non-partitioned) queue**.
 You enforce per-tenant limits on the partitioned queue and global limits on the non-partitioned queue.
-To do that, first let's define our two queues and our workflow:
+To do that, first let's define the two queues and a workflow:
 
 ```python
 concurrency_queue = Queue("concurrency-queue", concurrency=5)
@@ -29,7 +29,7 @@ def fair_queue_workflow():
     time.sleep(5)
 ```
 
-Next, let's create an endpoint to enqueue our workflow.
+Next, let's create an endpoint to enqueue the workflow.
 It does not enqueue the workflow directly, but instead enqueues a "concurrency manager" workflow to the partitioned queue to enforce per-tenant limits:
 
 ```python
@@ -52,6 +52,7 @@ def fair_queue_concurrency_manager():
     return concurrency_queue.enqueue(fair_queue_workflow).get_result()
 ```
 
+Because the "concurrency manager" has the same lifetime as the workflow, this pattern ensures both the partitioned queue's per-tenant limits and the non-partitioned queues global concurrency limits are respected.
 You can adapt this pattern to combine any per-tenant limits with any global limits.
 
 ## Rate Limiting
