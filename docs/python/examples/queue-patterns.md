@@ -107,7 +107,7 @@ When the workflow starts, it uses the last input receieved by the debouncer.
 ```python
 # Each time a new input is submitted for a tenant, debounce debouncer_workflow.
 # The debouncer waits until 5 seconds after input stops being submitted for the tenant,
-# then enqueue the workflow with the last input submitted.
+# then enqueues the workflow with the last input submitted.
 @api.post("/workflows/debouncer")
 def submit_debounced_workflow(tenant_id: str, input: str):
     debounce_key = tenant_id
