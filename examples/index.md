@@ -7,6 +7,7 @@ pagination_next: null
 # Featured Examples
 
 import { FaHackerNews, FaSlack, FaForwardFast, FaPerson } from "react-icons/fa6";
+import { HiMiniQueueList } from "react-icons/hi2";
 import { BiAddToQueue } from "react-icons/bi";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { SiApachekafka, SiOpenai } from "react-icons/si";
@@ -46,6 +47,13 @@ import { FiInbox } from "react-icons/fi";
     href="python/examples/agent-inbox"
     description="Use DBOS to build reliable human-in-the-loop for AI agents."
     icon={<FaPerson color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
+    label="Advanced Queue Patterns"
+    href="python/examples/queue-patterns"
+    description="Learn how to implement advanced queue patterns like fair queueing, rate limiting, and debouncing with DBOS."
+    icon={<HiMiniQueueList  color="white" size={50}/>}
     language="python"
   />
   <CardLink

@@ -73,6 +73,7 @@
 - [Reliable Customer Service Agent](https://docs.dbos.dev/python/examples/customer-service.md): In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and LangGraph and serverlessly deploy it to DBOS Cloud. This example demonstrates how DBOS makes it easy to connect your AI agent to your existing production systems, especially when integrating human decision-making into automated processes.
 - [Document Ingestion Pipeline](https://docs.dbos.dev/python/examples/document-detective.md): In this example, we'll use DBOS to build a reliable and scalable data processing pipeline.
 - [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): This example is also available in TypeScript.
+- [Advanced Queue Patterns](https://docs.dbos.dev/python/examples/queue-patterns.md): This example demonstrates how to build several advanced queue patterns with DBOS.
 - [Queue Worker](https://docs.dbos.dev/python/examples/queue-worker.md): This example is also available in TypeScript.
 - [S3 Mirror](https://docs.dbos.dev/python/examples/s3mirror.md): S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv here.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript, Java, and Go.
