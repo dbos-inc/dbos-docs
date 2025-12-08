@@ -118,3 +118,14 @@ def submit_debounced_workflow(tenant_id: str, input: str):
 ```
 
 Learn more about debouncing in the [reference](../reference/contexts.md#debouncing).
+
+## Try it Yourself!
+
+Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+
+```shell
+git clone https://github.com/dbos-inc/dbos-demo-apps.git
+cd python/queue-patterns
+```
+
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/queue-patterns) to run the example.
