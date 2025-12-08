@@ -12,7 +12,8 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ## Fair Queueing
 
 Often, you have a queue with limited capacity and need to fairly divide that capacity among multiple tenants.
-For example, your application can only process 5 items at a time, and you don't want a single user to consume all that capacity, so you limit each user to only be able to process one item at a time.
+For example, suppose your application can only process 5 workflows at a time and you don't want a single tenant to monopolize all that capacity.
+With fair queueing, you can limit each tenant to 1 workflow at a time while still allowing up to 5 workflows total across all tenants.
 
 You can implement fair queueing in DBOS by combining a [**partitioned queue**](../tutorials/queue-tutorial.md#partitioning-queues) with a **regular (non-partitioned) queue**.
 You enforce per-tenant limits on the partitioned queue and global limits on the non-partitioned queue.
@@ -52,7 +53,7 @@ def fair_queue_concurrency_manager():
     return concurrency_queue.enqueue(fair_queue_workflow).get_result()
 ```
 
-Because the "concurrency manager" has the same lifetime as the workflow, this pattern ensures both the partitioned queue's per-tenant limits and the non-partitioned queues global concurrency limits are respected.
+Because the "concurrency manager" has the same lifetime as the actual workflow, this pattern ensures both the partitioned queue's per-tenant limits and the non-partitioned queue's global concurrency limits are respected.
 You can adapt this pattern to combine any per-tenant limits with any global limits.
 
 ## Rate Limiting
