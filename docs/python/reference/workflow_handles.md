@@ -23,10 +23,16 @@ Retrieve the ID of the workflow.
 #### get_result
 
 ```python
-handle.get_result() -> R
+handle.get_result(
+    *,
+    polling_interval_sec: float = 1.0,
+) -> R
 ```
 
 Wait for the workflow to complete, then return its result.
+
+**Parameters:**
+- **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
 
 #### get_status
 
@@ -52,7 +58,10 @@ Retrieve the ID of the workflow. Behaves identically to the [WorkflowHandle](#wo
 #### get_result
 
 ```python
-handle.get_result() -> Coroutine[Any, Any, R]
+handle.get_result(
+    *,
+    polling_interval_sec: float = 1.0,
+) -> Coroutine[Any, Any, R]
 ```
 
 Asynchronously wait for the workflow to complete, then return its result. Similar to the [WorkflowHandle](#workflowhandle) version, except asynchronous.
