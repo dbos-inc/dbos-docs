@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 24
-title: AI Agent Inbox
+title: Human-in-the-Loop
 ---
 
 This example shows how to use DBOS to add **human-in-the-loop** to your AI agent.

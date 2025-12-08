@@ -147,24 +147,16 @@ Launch durable background tasks using workflows and queues.
 - Durable sleep and notifications let your tasks wait for days or weeks, or for a notification, before continuing.
 - Durably run background tasks directly on your API servers, or use the DBOS client to enqueue tasks from anywhere for execution on dedicated workers or serverless functions.
 
-[See an example ↗️](./python/examples/scheduled-reminders.md)
+[See an example ↗️](./python/examples/queue-worker.md)
 
 </article>
 <article className="col col--7">
 
 ```python
 @DBOS.workflow()
-def schedule_reminder(to_email, days_to_wait):
-    DBOS.recv(days_to_seconds(days_to_wait))
-    send_reminder_email(to_email, days_to_wait)
-
-@app.post("/email")
-def email_endpoint(request):
-    DBOS.start_workflow(
-        schedule_reminder, 
-        request.email, 
-        request.days
-)
+def schedule_task(task, time_to_wait):
+    DBOS.sleep(time_to_wait)
+    run_task(task)
 ```
 
 </article>

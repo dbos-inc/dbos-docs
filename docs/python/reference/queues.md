@@ -17,6 +17,7 @@ Queue(
     worker_concurrency: Optional[int] = None,
     priority_enabled: bool = False,
     partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
 )
 
 class Limiter(TypedDict):
@@ -33,6 +34,7 @@ If not provided, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`. DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](./configuration.md).
 - `priority_enabled`: Enable setting priority for workflows on this queue.
 - `partition_queue`: Enable partitioning for this queue.
+- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
 
 **Example syntax:**
 

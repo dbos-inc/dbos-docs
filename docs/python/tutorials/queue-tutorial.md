@@ -80,6 +80,8 @@ handle = client.enqueue(options, task)
 result = handle.get_result()
 ```
 
+The [queue worker](../examples/queue-worker.md) example shows this design pattern in more detail.
+
 ### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
