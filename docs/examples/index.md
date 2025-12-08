@@ -61,7 +61,13 @@ import { FiInbox } from "react-icons/fi";
     href="python/examples/widget-store"
     description="Use DBOS to build an online store that's resilient to any failure."
     icon={<MdOutlineShoppingCart color="white" size={50}/>}
-    language="python"
+    language={["python", "typescript", "go", "java"]}
+    hrefByLanguage={{
+      python: "python/examples/widget-store",
+      typescript: "typescript/examples/checkout-tutorial",
+      go: "golang/examples/widget-store",
+      java: "java/examples/widget-store",
+    }}
   />
   <CardLink
     label="Reliable Customer Service Agent"
