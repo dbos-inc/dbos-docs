@@ -297,12 +297,12 @@ For example, say you have a mix of CPU workers and GPU workers and you want CPU 
 You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
 
 ```python
-cpu_queue = Queue("queue_one")
-gpu_queue = Queue("queue_two")
+cpu_queue = Queue("cpu_queue")
+gpu_queue = Queue("gpu_queue")
 
 if __name__ == "__main__":
-    config = ...
     worker_type = ... # "cpu' or 'gpu'
+    config: DBOSConfig = ...
     DBOS(config=config)
     if worker_type = "gpu":
         # GPU workers will only dequeue and execute workflows from the GPU queue
