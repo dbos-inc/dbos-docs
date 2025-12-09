@@ -4,6 +4,7 @@ title: Self-Hosting Conductor
 ---
 
 :::info
+Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
 Self-hosting Conductor for commercial or production use requires a [license key](#licensing).
 :::
 
@@ -189,6 +190,7 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 
 ## Licensing
 
+Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
 You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a license key.
 Without a license key, usage will be limited&mdash;you will not be able to connect more than one executor to a Conductor application.
 To obtain a license key, please [contact sales](https://www.dbos.dev/contact).
