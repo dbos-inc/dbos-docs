@@ -63,7 +63,9 @@
 - [Workflow Management](https://docs.dbos.dev/production/dbos-cloud/workflow-management.md): Viewing Workflows
 - [Deploying To Production](https://docs.dbos.dev/production/index.md): Once you've made your application durable with DBOS, there are two ways to take it into production:
 - [Admin API Reference](https://docs.dbos.dev/production/self-hosting/admin-api.md): The DBOS library exposes an admin API to perform operations on durable workflows.
+- [Production Checklist](https://docs.dbos.dev/production/self-hosting/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/self-hosting/conductor.md): The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
+- [Self-Hosting Conductor](https://docs.dbos.dev/production/self-hosting/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Docker](https://docs.dbos.dev/production/self-hosting/hosting-with-docker.md): This guide shows you how to setup a starter DBOS Python application and its Postgres database using Docker.
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/self-hosting/hosting-with-kubernetes.md): This guide shows you how to setup a DBOS Python application and its Postgres database using Kubernetes.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/self-hosting/retention.md): Retention policies require DBOS Python >= 1.5.0 or DBOS TypeScript >= 2.10.24
