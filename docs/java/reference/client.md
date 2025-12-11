@@ -64,7 +64,6 @@ Specify the name and class name of the workflow to enqueue and the name of the q
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. 
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
-Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 - **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.

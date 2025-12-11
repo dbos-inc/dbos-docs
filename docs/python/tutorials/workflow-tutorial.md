@@ -209,16 +209,3 @@ If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS re
 This is because uncaught exceptions are assumed to be nonrecoverable.
 If your workflow performs operations that may transiently fail (for example, sending HTTP requests to unreliable services), those should be performed in [steps with configured retries](./step-tutorial.md#configurable-retries).
 DBOS provides [tooling](./workflow-management.md) to help you identify failed workflows and examine the specific uncaught exceptions.
-
-## Workflow Versioning and Recovery
-
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the [`application_version`](../reference/configuration.md)) configuration parameter.
-All workflows are tagged with the application version on which they started.
-
-When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
-This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use [`DBOS.fork_workflow`](../reference/contexts#fork_workflow) to restart a workflow from a specific step on a specific code version.
-
-For more information on managing workflow recovery when self-hosting production DBOS applications, check out [the guide](../../production/self-hosting/workflow-recovery.md).
