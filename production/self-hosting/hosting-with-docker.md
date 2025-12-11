@@ -59,7 +59,7 @@ services:
     depends_on:
       - db
     environment:
-      DBOS_DATABASE_URL: postgres://postgres:dbos@db:5432/dbos_app_starter
+      DBOS_SYSTEM_DATABASE_URL: postgres://postgres:dbos@db:5432/dbos_app_starter
     restart: unless-stopped
 
 volumes:

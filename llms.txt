@@ -83,7 +83,7 @@
 - [Learn DBOS Python](https://docs.dbos.dev/python/programming-guide.md): This guide shows you how to use DBOS to build Python apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/python/prompting.md): You may want assistance from an AI model in building a DBOS application.
 - [DBOS CLI](https://docs.dbos.dev/python/reference/cli.md): Workflow Management Commands
-- [DBOS Client](https://docs.dbos.dev/python/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
+- [DBOS Client](https://docs.dbos.dev/python/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 - [Configuration](https://docs.dbos.dev/python/reference/configuration.md): Configuring DBOS
 - [DBOS Methods & Variables](https://docs.dbos.dev/python/reference/contexts.md): DBOS provides a number of useful context methods and variables.
 - [DBOS Class](https://docs.dbos.dev/python/reference/dbos-class.md): The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
@@ -100,6 +100,7 @@
 - [Scheduled Workflows](https://docs.dbos.dev/python/tutorials/scheduled-workflows.md): Learn how to run DBOS workflows on a schedule.
 - [Steps](https://docs.dbos.dev/python/tutorials/step-tutorial.md): When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step.
 - [Testing Your App](https://docs.dbos.dev/python/tutorials/testing.md): Testing DBOS Functions
+- [Upgrading Workflow Code](https://docs.dbos.dev/python/tutorials/upgrading-workflows.md): One challenge you may encounter when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
 - [Communicating with Workflows](https://docs.dbos.dev/python/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/python/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/python/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.

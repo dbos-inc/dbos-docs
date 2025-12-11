@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script><link rel="stylesheet" href="/assets/css/styles.8102221d.css">
-<script src="/assets/js/runtime~main.4326ad89.js" defer="defer"></script>
-<script src="/assets/js/main.ddbbd752.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.32632e44.js" defer="defer"></script>
+<script src="/assets/js/main.8d75c2b8.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -50,8 +50,7 @@
 <ul>
 <li><strong><code>withWorkflowId(String workflowId)</code></strong>: Specify the idempotency ID to assign to the enqueued workflow.</li>
 <li><strong><code>withAppVersion(String appVersion)</code></strong>: The version of your application that should process this workflow.
-If left undefined, it will be updated to the current version when the workflow is first dequeued.
-Please see <a href="/production/self-hosting/workflow-recovery#managing-application-versions">Managing Application Versions</a> for more information.</li>
+If left undefined, it will be updated to the current version when the workflow is first dequeued.</li>
 <li><strong><code>withTimeout(Duration timeout)</code></strong>:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.</li>
 <li><strong><code>withDeadline(Instant deadline)</code></strong>:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.</li>
 <li><strong><code>withDeduplicationId(String deduplicationId)</code></strong>: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status <code>ENQUEUED</code> or <code>PENDING</code>), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.</li>

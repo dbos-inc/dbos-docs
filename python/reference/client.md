@@ -3,7 +3,7 @@ sidebar_position: 10
 title: DBOS Client
 ---
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+`DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 `DBOSClient` includes methods similar to [`DBOS`](./contexts.md) that can be used outside of a DBOS application, 
 such as [`enqueue`](./queues.md#enqueue) or [`getEvent`](./contexts.md#get_event).
 
@@ -78,7 +78,6 @@ If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/w
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
 * `app_version`: The version of your application that should process this workflow. 
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
-Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.

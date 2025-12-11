@@ -57,12 +57,12 @@ def process_tasks(tasks):
 
 ### Enqueueing from Another Application
 
-Often, you want to enqueue a workflow from outside your DBOS application.
+Often, you want to enqueue a workflow from another DBOS application or from outside your DBOS application.
 For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application (or from another DBOS application) by connecting directly to your system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
 For example, this code enqueues the `data_pipeline` workflow on the `pipeline_queue` queue with `task` as an argument.
@@ -283,3 +283,34 @@ with SetEnqueueOptions(priority=10):
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
 ```
+
+
+## Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to to a specific list of queues.
+You can use [`DBOS.listen_queues`](../reference/dbos-class.md#listen_queues) to explicitly tell a process running DBOS to only listen to a specific set of queues.
+You must call `DBOS.listen_queues` before DBOS is launched.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```python
+cpu_queue = Queue("cpu_queue")
+gpu_queue = Queue("gpu_queue")
+
+if __name__ == "__main__":
+    worker_type = ... # "cpu' or 'gpu'
+    config: DBOSConfig = ...
+    DBOS(config=config)
+    if worker_type = "gpu":
+        # GPU workers will only dequeue and execute workflows from the GPU queue
+        DBOS.listen_queues([gpu_queue])
+    elif worker_type == "cpu":
+        # CPU workers will only dequeue and execute workflows from the CPU queue
+        DBOS.listen_queues([cpu_queue])
+    DBOS.launch()
+```
+
+Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.

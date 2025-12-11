@@ -93,8 +93,7 @@ Additional but optional metadata includes:
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
 * **appVersion**: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued. 
-Please see [Managing Application Versions](../../production/self-hosting/workflow-recovery#managing-application-versions) for more information.
+If left undefined, it will be updated to the current version when the workflow is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
 * **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.

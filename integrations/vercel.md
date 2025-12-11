@@ -74,7 +74,7 @@ async function exampleFunction() {
 DBOS.registerWorkflow(exampleFunction, {
   name: 'exampleWorkflow',
 });
-new WorkflowQueue('exampleQueue');
+const queue = new WorkflowQueue('exampleQueue');
 ```
 
 Then, configure and launch DBOS on worker startup.
@@ -100,7 +100,7 @@ async function waitForQueuedWorkflowsToComplete(timeoutMs: number): Promise<void
     if (Date.now() - startTime >= timeoutMs) {
       throw new Error(`Timeout reached after ${timeoutMs}ms - queued workflows still exist`);
     }
-    const queuedWorkflows = await DBOS.listQueuedWorkflows({});
+    const queuedWorkflows = await DBOS.listQueuedWorkflows({queueName: queue.name});
     if (queuedWorkflows.length === 0) {
       console.log('All queued workflows completed');
       return;
