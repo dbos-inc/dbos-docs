@@ -3,16 +3,13 @@ sidebar_position: 70
 title: Deploying With Kubernetes
 ---
 
-# Deploying and Scaling With Kubernetes
+This guide offers recommendations when deploying a DBOS-enabled application in Kubernetes.
 
-This guide shows you how to deploy and scale a DBOS application database using Kubernetes and [KEDA](http://keda.sh/).
+## Deployment
 
-## Setup
+DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) for sensitive DBOS environment variables such as `DBOS_SYSTEM_DATABASE_URL` and your [DBOS conductor](./hosting-conductor.md) API key.
 
-This guide assumes you already have a Kubernetes cluster deployed and basic knowledge on how to apply manifests. It requires Postgres, any application you can modify to add an endpoint, and KEDA.
-
-### Postgres
-You'll need a Postgres instance to backup your application.
+Here are sample manifests for Postgres and your application:
 
 <details>
 
@@ -64,10 +61,6 @@ spec:
 
 </details>
 
-### The application
-
-DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes.
-
 <details>
 
 <summary><strong>Sample application manifest</strong></summary>
@@ -91,7 +84,7 @@ spec:
         - name: dbos-app
           image: <image URI>
           env:
-            - name: DBOS_DATABASE_URL
+            - name: DBOS_SYSTEM_DATABASE_URL
               value: postgres://postgres:dbos@postgres:5432/dbos_app_starter
           ports:
             - containerPort: 8000
@@ -111,23 +104,21 @@ spec:
 
 </details>
 
-### KEDA
+## Availability
 
-[Install KEDA](https://keda.sh/docs/2.18/deploy/). To verify KEDA is running:
+In addition to [general tips](./checklist.md) for running a DBOS-enabled app in production, we recommend the following:
+- **Readiness probe**: Have the probe wait until DBOS is launched to ensure all workflows have been registered, before Kubernetes can route traffic to pods.
+- **Resource limits**: DBOS doesn't add significant CPU and memory overheads. However, note that all DBOS SDKs run background tasks, so setting more than 1000m CPU time can significantly improve the performance of a busy application.
 
-```bash
-kubectl get pods -n keda
-```
+We recommend configuring more than one replica in your DBOS Deployment. Each replica will start an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. For specific scaling strategies, see the [Scaling](#scaling) section.
 
-You should see KEDA operator and metrics server pods running.
+## Scaling
 
-## Scaling based on DBOS queue utilization
+Kubernetes offers a native autoscaling mechanism ([HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)) and [KEDA](https://keda.sh) is another popular option. While you can scale your DBOS deployments based on resource consumption alone (e.g., memory), you can also introspect the load on DBOS queues to perform application-aware scaling.
 
-Queues are the prime mechanism to control load in a DBOS application. For example you can set a per-worker concurrency cap on a DBOS queue, controlling how many tasks a single worker can dequeue.
+In this section we'll demonstrate how to attune KEDA to the length of a DBOS queue. The queue is configured with a per-worker concurrency cap, so we can estimate how many workers are required to sustain a queue's load by dividing the number of tasks in the queue by the worker concurrency limit.
 
-You can then estimate how many workers are required to handle a queue's tasks by dividing the number of tasks in the queue by the worker concurrency limit.
-
-Of course this example can be adjusted for a variety of situation: you can scale based on the busiest queue only, the load on all queues, etc.
+This example can be adjusted to scale based on the busiest queue only, the load on all queues, and more advanced setups.
 
 ### KEDA scaler
 
