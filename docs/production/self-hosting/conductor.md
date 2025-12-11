@@ -32,7 +32,9 @@ By default, API keys do not expire, though they may be revoked at any time from 
 
 Finally, supply that API key to your DBOS application to connect it to Conductor.
 This initiates a websocket connection with Conductor:
+
 <Tabs groupId="language" queryString="language">
+
 <TabItem value="python" label="Python">
 
 ```python
@@ -51,6 +53,7 @@ const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
 ```
 </TabItem>
+
 <TabItem value="golang" label="Go">
 
 ```go
@@ -62,6 +65,18 @@ dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
 })
 ```
 </TabItem>
+
+<TabItem value="java" label="Java">
+
+```java
+String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
+
+DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+    .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+    .withConductorKey(conductorKey)
+```
+</TabItem>
+
 </Tabs>
 
 ## Managing Conductor Applications
@@ -115,6 +130,17 @@ dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     ConductorAPIKey: conductorKey,
 })
+```
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+String appName = System.getenv("DBOS_APPLICATION_NAME")
+String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
+
+DBOSConfig config = DBOSConfig.defaults(appName)
+    .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+    .withConductorKey(conductorKey)
 ```
 </TabItem>
 </Tabs>
