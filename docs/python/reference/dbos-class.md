@@ -62,6 +62,21 @@ if __name__ == "__main__":
     dbos_workflow()
 ```
 
+### listen_queues
+
+```python
+DBOS.listen_queues(
+    queues: List[Queue]
+)
+```
+
+Configure this DBOS process to only listen to (dequeue workflows from) specific queues.
+If this is not used, DBOS will listen to all declared queues.
+Must be called before DBOS is launched.
+
+**Parameters:**
+- `queues`: The list of queues to listen to.
+
 ### destroy
 
 ```python
