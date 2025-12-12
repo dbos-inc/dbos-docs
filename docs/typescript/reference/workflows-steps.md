@@ -15,6 +15,7 @@ DBOS.workflow(
 
 ```typescript
 export interface WorkflowConfig {
+  name?: string;
   maxRecoveryAttempts?: number;
 }
 ```
@@ -37,6 +38,7 @@ await Example.exampleWorkflow();
 
 **Parameters:**
 - **config**:
+  - **name**: The name to use for the workflow function.  If not specified, the method name is used.
   - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
@@ -172,6 +174,7 @@ interface StepConfig {
   intervalSeconds?: number;
   maxAttempts?: number;
   backoffRate?: number;
+  name?: string;
 }
 ```
 
@@ -205,6 +208,7 @@ export class Example {
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+  - **name**: Name for the step function.  If not specified, the method name is used.
 
 ### DBOS.registerStep
 
@@ -288,6 +292,35 @@ async function exampleWorkflow() {
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
+## Class Names
+
+Workflows are uniquely identified by a class name + function name pair.
+
+If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overriden with the `DBOS.className` decorator.
+
+This allows:
+  - reusing the same `class` identifier across multiple files, or
+  - renaming/refactoring class names in code without breaking existing workflow registrations.
+
+### DBOS.className
+
+```typescript
+DBOS.className(
+    className: string
+)
+```
+
+**Example:**
+```typescript
+@DBOS.className('RegisteredClassName')
+export class Example {
+  @DBOS.workflow({name: 'RegisteredWorkflowName'})
+  static async exampleWorkflow() {
+    // This workflow will be registered as 'RegisteredClassName/RegisteredWorkflowName'
+    //    for recovery and observability purposes
+  }
+}
+```
 
 ## Instance Method Workflows
 
