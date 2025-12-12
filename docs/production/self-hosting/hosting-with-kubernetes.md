@@ -7,9 +7,7 @@ This guide offers recommendations when deploying a DBOS-enabled application in K
 
 ## Deployment
 
-DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) for sensitive DBOS environment variables such as `DBOS_SYSTEM_DATABASE_URL` and your [DBOS conductor](./hosting-conductor.md) API key.
-
-Here are sample manifests for Postgres and your application:
+DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes. In this guide we will assume you are deployment in a regular [Kubernetes Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/). Here are sample manifests for deploying a service and its Postgres database:
 
 <details>
 
@@ -104,13 +102,19 @@ spec:
 
 </details>
 
+## Configuration
+
+Some of DBOS configuration options contain sensitive information, like the DBOS [system database URL](./../../explanations/system-tables.md) and your [DBOS conductor](./hosting-conductor.md) API key. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to share them with your application containers.
+
 ## Availability
 
-In addition to [general tips](./checklist.md) for running a DBOS-enabled app in production, we recommend the following:
-- **Readiness probe**: Have the probe wait until DBOS is launched to ensure all workflows have been registered, before Kubernetes can route traffic to pods.
-- **Resource limits**: DBOS doesn't add significant CPU and memory overheads. However, note that all DBOS SDKs run background tasks, so setting more than 1000m CPU time can significantly improve the performance of a busy application.
+In addition to [general tips](./checklist.md) for running a DBOS-enabled app in production:
 
-We recommend configuring more than one replica in your DBOS Deployment. Each replica will start an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. For specific scaling strategies, see the [Scaling](#scaling) section.
+**Readiness probe**: Have the probe wait until DBOS is launched to ensure all workflows have been registered, before Kubernetes can route traffic to pods.
+
+**Resource limits**: DBOS doesn't add significant CPU and memory overheads. However, note that all DBOS SDKs run background tasks, so setting more than 1000m CPU time can significantly improve the performance of a busy application.
+
+We recommend configuring more than one replica in your DBOS Deployment. Each replica will start an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues.
 
 ## Scaling
 
@@ -172,3 +176,20 @@ r.GET("/metrics/:queueName", func(c *gin.Context) {
 })
 ```
 
+## Long lived workflows
+
+DBOS workflows can run for weeks or even years, all the while their implementation evolves. DBOS supports two primitives to support upgrading your workflows' code while maintaining resources for earlier workflow invocations: application versioning and workflow patching.
+
+### Application versionning
+
+DBOS Transact SDKs support an application-wide version number, stored alongside workflow records in the DBOS system database. You can override the default version number logic to provide a number of your choice (for example, an image name).
+
+Using this version number, you can implement logic to maintain enough resources available for workflows across all versions. For instance, if your DBOS application is a regular deployment, you can maintain one deployment per application version. You can automate the logic either with a custom controller or from tools like [Flagger](https://flagger.app/) and [Argo rollout](https://argoproj.github.io/argo-rollouts/concepts/#blue-green).
+
+### Workflow patching
+
+In [patch mode](../../python/tutorials/upgrading-workflows.md), you can keep a single deployment which pods will process (and recover) any workflow. You are responsible for maintaining _patches_ in the code, which determine the execution branch a certain workflow should take.
+
+## Workflow Recovery
+
+We recommend using [DBOS Conductor](./conductor.md) to manage workflow recovery in production. While you can configure DBOS to have every worker recover every pending workflow at startup, efficient recovery relies on keeping track of the ID of DBOS processes for which workflows must be recovered, which DBOS Conductor does for you.
