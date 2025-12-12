@@ -357,6 +357,11 @@ const config = {
         jsLoader: 'matomo.js',
       },
     }),
+    scripts: [
+      {
+        src: '/scripts/reo.js',
+      },
+    ]
 };
 
 module.exports = config;
