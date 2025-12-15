@@ -43,7 +43,7 @@ export DBOS_COCKROACHDB_URL="<your connection string>"
 
 ### 4. Configure Your DBOS Application
 
-Now, configure your DBOS application to CockroachDB as follows:
+Now, configure your DBOS application to connect to CockroachDB as follows:
 
 ```python
 from sqlalchemy import create_engine
