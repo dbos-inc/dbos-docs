@@ -118,17 +118,16 @@ We recommend configuring more than one replica in your DBOS Deployment. Each rep
 
 ## Scaling
 
-Kubernetes offers a native autoscaling mechanism ([HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)) and [KEDA](https://keda.sh) is another popular option. While you can scale your DBOS deployments based on resource consumption alone (e.g., memory), you can also introspect the load on DBOS queues to perform application-aware scaling.
+Kubernetes offers a native autoscaling mechanism ([HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)) and [KEDA](https://keda.sh) is another popular option. While you can scale your DBOS deployments based on resource consumption alone (e.g., memory), you can also introspect the load on DBOS queues to perform application-aware scaling, that is, scale the number of pods in your deployments based on how many DBOS workflows are currently enqueued.
 
-In this section we'll demonstrate how to attune KEDA to the length of a DBOS queue. The queue is configured with a per-worker concurrency cap, so we can estimate how many workers are required to sustain a queue's load by dividing the number of tasks in the queue by the worker concurrency limit.
-
-This example can be adjusted to scale based on the busiest queue only, the load on all queues, and more advanced setups.
+In this section we'll demonstrate how to attune KEDA to the length of a DBOS queue. The queue is configured with a per-worker concurrency cap, so we can estimate how many workers are required to sustain a queue's load by dividing the number of tasks in the queue by the worker concurrency limit. For instance, if we configure a queue with a per-worker concurrency limit of 5 tasks and there are 20 workflows in the queue, we can scale to `20 / 5 = 4` workers to accommodate the load.
 
 ### KEDA scaler
 
-This [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler will periodically poll the application at the specified URL to obtain the utilization of a given DBOS queue. It will look for the metric under the `valueLocation` field and divide its value by the `targetValue` factor.
+We'll use a [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler to operate the scaling. A metrics API scaler works by polling a specified endpoint to obtain a metric value, used for computing the target number of pods in the deployment.
 
-What this is effectively doing is scaling to a number of worker equal to the queue length divided by the queue's worker concurrency, 2.
+In the KEDA manifest below, we expect the endpoint to return the length of a DBOS queue named `queueName`. 
+KEDA will calculate the desired replica count as: `queue_length / targetValue`. So if your queue has 20 pending tasks and `targetValue` is 2 (matching your per-worker concurrency limit), KEDA scales to 10 replicas.
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -144,22 +143,22 @@ spec:
   - type: metrics-api
     metadata:
       url: http://dbos-app.default.svc.cluster.local:8000/metrics/queueName
-      valueLocation: queue_utilization
+      valueLocation: queue_length
       targetValue: "2"
 ```
 
-Check the [KEDA documentation](https://keda.sh/docs/2.18/reference/scaledobject-spec/#overview) to learn how to control the scaler behavior.
+Check the [KEDA documentation](https://keda.sh/docs/2.18/reference/scaledobject-spec/#overview) to learn more about scalers.
 
 ### The Metrics endpoint
 
-In this example, using the DBOS Golang SDK, an application has configured a DBOS queue with per-worker concurrency limits of 2 tasks per worker. It exposes the endpoint KEDA polls to obtain, periodically, the queue utilization.
+In this example, using the DBOS Golang SDK, an application has configured a DBOS queue with per-worker concurrency limits of 2 tasks per worker. It exposes the endpoint KEDA polls to obtain, periodically, the queue length.
 
 ```go
 
 queue := dbos.NewWorkflowQueue(dbosContext, "queueName", dbos.WithWorkerConcurrency(2))
 
 type MetricsResponse struct {
-    QueueLength int `json:"queue_utilization"`
+    QueueLength int `json:"queue_length"`
 }
 
 // Return the current size of the specified queue
