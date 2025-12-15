@@ -126,7 +126,7 @@ In this section we'll demonstrate how to attune KEDA to the length of a DBOS que
 
 We'll use a [metrics-api](https://keda.sh/docs/2.18/scalers/metrics-api/) scaler to operate the scaling. A metrics API scaler works by polling a specified endpoint to obtain a metric value, used for computing the target number of pods in the deployment.
 
-In the KEDA manifest below, we expect the endpoint to return the length of a DBOS queue named `queueName`. 
+In the KEDA manifest below, we expect the endpoint to return the length of a DBOS queue named `queueName`.
 KEDA will calculate the desired replica count as: `queue_length / targetValue`. So if your queue has 20 pending tasks and `targetValue` is 2 (matching your per-worker concurrency limit), KEDA scales to 10 replicas.
 
 ```yaml
@@ -151,7 +151,7 @@ Check the [KEDA documentation](https://keda.sh/docs/2.18/reference/scaledobject-
 
 ### The Metrics endpoint
 
-In this example, using the DBOS Golang SDK, an application has configured a DBOS queue with per-worker concurrency limits of 2 tasks per worker. It exposes the endpoint KEDA polls to obtain, periodically, the queue length.
+In this example, using the DBOS Golang SDK, an application has configured a DBOS queue with per-worker concurrency limits of 2 tasks per worker. It exposes the endpoint KEDA polls to obtain, periodically, the queue length, using the DBOS list workflows API.
 
 ```go
 
