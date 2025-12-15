@@ -36,13 +36,6 @@ Should be called after all decorators run.
 import os
 from dbos import DBOS, DBOSConfig
 
-# Configure and initialize DBOS
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
-
 @DBOS.step()
 def step_one():
     print("Step one completed!")
@@ -56,8 +49,13 @@ def dbos_workflow():
     step_one()
     step_two()
 
-# Launch DBOS, then run a workflow.
+# Configure and launch DBOS, then run a workflow.
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     dbos_workflow()
 ```
