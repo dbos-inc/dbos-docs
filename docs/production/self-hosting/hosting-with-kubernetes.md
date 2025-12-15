@@ -7,7 +7,7 @@ This guide offers recommendations when deploying a DBOS-enabled application in K
 
 ## Deployment
 
-DBOS is just a library for your program to import and has no additional configuration requirements with respect to Kubernetes. In this guide we will assume you are deployment in a regular [Kubernetes Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/). Here are sample manifests for deploying a service and its Postgres database:
+As DBOS is an open-source library that does depend on any external services except Postgres, it does not require any special Kubernetes configuration. In this guide we assume you are deploying a standard [Kubernetes Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/). Here are sample manifests for deploying a service and its Postgres database:
 
 <details>
 
@@ -104,13 +104,13 @@ spec:
 
 ## Configuration
 
-Some of DBOS configuration options contain sensitive information, like the DBOS [system database URL](./../../explanations/system-tables.md) and your [DBOS conductor](./hosting-conductor.md) API key. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to share them with your application containers.
+Some DBOS configuration options contain sensitive information, like the DBOS [system database URL](./../../explanations/system-tables.md) and your [DBOS conductor](./hosting-conductor.md) API key. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to share them with your application containers.
 
 ## Availability
 
 In addition to [general tips](./checklist.md) for running a DBOS-enabled app in production:
 
-**Readiness probe**: Have the probe wait until DBOS is launched to ensure all workflows have been registered, before Kubernetes can route traffic to pods.
+**Readiness probe**: Have the probe wait until DBOS is launched before Kubernetes can route traffic to pods.
 
 **Resource limits**: DBOS doesn't add significant CPU and memory overheads. However, note that all DBOS SDKs run background tasks, so setting more than 1000m CPU time can significantly improve the performance of a busy application.
 
