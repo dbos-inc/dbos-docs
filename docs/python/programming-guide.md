@@ -63,12 +63,6 @@ Create `main.py` and add this code to it:
 import os
 from dbos import DBOS, DBOSConfig
 
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
-
 @DBOS.step()
 def step_one():
     print("Step one completed!")
@@ -83,6 +77,11 @@ def dbos_workflow():
     step_two()
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     dbos_workflow()
 ```
@@ -107,11 +106,6 @@ from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -131,6 +125,11 @@ def dbos_workflow():
     step_two()
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
@@ -182,11 +181,6 @@ from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
 
 queue = Queue("example-queue")
 
@@ -207,6 +201,11 @@ def dbos_workflow():
     print(f"Successfully completed {len(results)} steps")
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```

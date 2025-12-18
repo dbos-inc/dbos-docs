@@ -15,6 +15,7 @@ DBOS.workflow(
 
 ```typescript
 export interface WorkflowConfig {
+  name?: string;
   maxRecoveryAttempts?: number;
 }
 ```
@@ -37,6 +38,7 @@ await Example.exampleWorkflow();
 
 **Parameters:**
 - **config**:
+  - **name**: The name to use for the workflow function.  If not specified, the method name is used.
   - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
@@ -172,6 +174,7 @@ interface StepConfig {
   intervalSeconds?: number;
   maxAttempts?: number;
   backoffRate?: number;
+  name?: string;
 }
 ```
 
@@ -205,6 +208,7 @@ export class Example {
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+  - **name**: Name for the step function.  If not specified, the method name is used.
 
 ### DBOS.registerStep
 
@@ -288,6 +292,35 @@ async function exampleWorkflow() {
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
 
+## Class Names
+
+Workflows are uniquely identified by a class name + function name pair.
+
+If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overriden with the `DBOS.className` decorator.
+
+This allows:
+  - reusing the same `class` identifier across multiple files, or
+  - renaming/refactoring class names in code without breaking existing workflow registrations.
+
+### DBOS.className
+
+```typescript
+DBOS.className(
+    className: string
+)
+```
+
+**Example:**
+```typescript
+@DBOS.className('RegisteredClassName')
+export class Example {
+  @DBOS.workflow({name: 'RegisteredWorkflowName'})
+  static async exampleWorkflow() {
+    // This workflow will be registered as 'RegisteredClassName/RegisteredWorkflowName'
+    //    for recovery and observability purposes
+  }
+}
+```
 
 ## Instance Method Workflows
 
@@ -322,3 +355,35 @@ const myClassInstance = new MyClass('instanceA');
 ```
 
 The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+
+## Patching
+
+### patch
+
+```typescript
+DBOS.patch(
+    patchName: string
+): Promise<boolean>
+```
+
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- `patchName`: The name to give the patch marker that will be inserted into workflow history.
+
+### deprecatePatch
+
+```typescript
+DBOS.deprecatePatch(
+    patchName: string
+): Promise<boolean>
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `true`.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+
+**Parameters:**
+- `patchName`: The name of the patch marker to be bypassed.
+
