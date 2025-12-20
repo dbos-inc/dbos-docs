@@ -37,6 +37,8 @@ export interface DBOSConfig {
 
   runAdminServer?: boolean;
   adminPort?: number;
+
+  listenQueues?: WorkflowQueue[];
 }
 ```
 
@@ -74,6 +76,10 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
+
+### Queue Settings
+
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
 
 ## DBOS Configuration File
 
