@@ -111,6 +111,35 @@ func GetExecutorID() string
 
 ```go
 func ListRegisteredWorkflows(ctx DBOSContext, opts ...ListRegisteredWorkflowsOption) ([]WorkflowRegistryEntry, error)
-````
+```
+
+```go
+type WorkflowRegistryEntry struct {
+	MaxRetries      int
+	Name            string
+	FQN             string // Fully qualified name of the workflow function
+	CronSchedule    string // Empty string for non-scheduled workflows
+}
+```
 
 `ListRegisteredWorkflows` Lists the context's workflow registry.
+
+### ListRegisteredQueues
+
+```go
+func ListRegisteredQueues(ctx DBOSContext) ([]WorkflowQueue, error)
+```
+
+`ListRegisteredQueues` returns a list of all queues registered in the DBOSContext.
+
+```go
+type WorkflowQueue struct {
+	Name                 string
+	WorkerConcurrency    *int
+	GlobalConcurrency    *int
+	PriorityEnabled      bool
+	RateLimit            *RateLimiter
+	MaxTasksPerIteration int
+	PartitionQueue       bool
+}
+```
