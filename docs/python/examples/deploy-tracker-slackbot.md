@@ -8,7 +8,7 @@ In this example, we use DBOS and [Bolt](https://slack.dev/bolt-python) to build 
 
 This app demonstrates how DBOS enables:
 
-* **Asynchronous background workflows** for each deployment. Slack requires you to respond to events within [3 seconds](https://api.slack.com/apis/events-api#retries), but deployment workflows often take much longer.
+* **Asynchronous background workflows** for each deployment. The Slackbot can't synchronously run an entire deployment pipeline (Slackbots have a [3 second](https://api.slack.com/apis/events-api#retries) time limit), so it instead durably enqueues the pipeline to run in the background.
 * **Concurrency control using queues**. In this example, the deployment pipeline utilizes a queue with a concurrency limit of 1, so only one deployment can run at a time.
 * **Real-time status updates** via DBOS events, allowing you to monitor the progress of your deployment pipelines.
 * **Durable execution** making sure a deployment resumes from where it left off even if the Slackbot crashes or restarts.
