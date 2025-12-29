@@ -76,6 +76,13 @@ import { FiInbox } from "react-icons/fi";
     icon={<RiCustomerService2Line color="white" size={50}/>}
     language="python"
   />
+    <CardLink
+    label="CI/CD Slackbot"
+    href="python/examples/deploy-tracker-slackbot"
+    description="Use DBOS to build a reliable Slackbot that manages CI/CD pipelines and tracks their progress."
+    icon={<FaSlack color="white" size={50}/>}
+    language="python"
+  />
   <CardLink
     label="S3Mirror"
     href="python/examples/s3mirror"

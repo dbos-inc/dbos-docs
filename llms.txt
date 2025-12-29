@@ -67,12 +67,13 @@
 - [DBOS Conductor](https://docs.dbos.dev/production/self-hosting/conductor.md): The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
 - [Self-Hosting Conductor](https://docs.dbos.dev/production/self-hosting/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Docker](https://docs.dbos.dev/production/self-hosting/hosting-with-docker.md): This guide shows you how to setup a starter DBOS Python application and its Postgres database using Docker.
-- [Deploying With Kubernetes](https://docs.dbos.dev/production/self-hosting/hosting-with-kubernetes.md): This guide shows you how to setup a DBOS Python application and its Postgres database using Kubernetes.
+- [Deploying With Kubernetes](https://docs.dbos.dev/production/self-hosting/hosting-with-kubernetes.md): This guide offers recommendations when deploying a DBOS-enabled application in Kubernetes.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/self-hosting/retention.md): Retention policies require DBOS Python >= 1.5.0 or DBOS TypeScript >= 2.10.24
 - [Workflow Management](https://docs.dbos.dev/production/self-hosting/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
 - [Workflow Recovery](https://docs.dbos.dev/production/self-hosting/workflow-recovery.md): When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
 - [Human-in-the-Loop](https://docs.dbos.dev/python/examples/agent-inbox.md): This example shows how to use DBOS to add human-in-the-loop to your AI agent.
 - [Reliable Customer Service Agent](https://docs.dbos.dev/python/examples/customer-service.md): In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and LangGraph and serverlessly deploy it to DBOS Cloud. This example demonstrates how DBOS makes it easy to connect your AI agent to your existing production systems, especially when integrating human decision-making into automated processes.
+- [CI/CD Slackbot](https://docs.dbos.dev/python/examples/deploy-tracker-slackbot.md): In this example, we use DBOS and Bolt to build a CI/CD Slackbot that helps you trigger application deployments and track deployment pipeline progress directly from Slack. It listens to commands such as /deploy and /check_status in a Slack channel and posts status updates back to the channel.
 - [Document Ingestion Pipeline](https://docs.dbos.dev/python/examples/document-detective.md): In this example, we'll use DBOS to build a reliable and scalable data processing pipeline.
 - [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): This example is also available in TypeScript.
 - [Advanced Queue Patterns](https://docs.dbos.dev/python/examples/queue-patterns.md): This example demonstrates how to build several advanced queue patterns with DBOS.
@@ -129,6 +130,7 @@
 - [Steps](https://docs.dbos.dev/typescript/tutorials/step-tutorial.md): Learn how to communicate with external APIs and services
 - [Testing & Mocking](https://docs.dbos.dev/typescript/tutorials/testing.md): You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like Jest or Vitest.
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations
+- [Upgrading Workflow Code](https://docs.dbos.dev/typescript/tutorials/upgrading-workflows.md): A challenge encountered when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
 - [Communicating with Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud), programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.

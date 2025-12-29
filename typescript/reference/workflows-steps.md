@@ -355,3 +355,35 @@ const myClassInstance = new MyClass('instanceA');
 ```
 
 The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+
+## Patching
+
+### patch
+
+```typescript
+DBOS.patch(
+    patchName: string
+): Promise<boolean>
+```
+
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- `patchName`: The name to give the patch marker that will be inserted into workflow history.
+
+### deprecatePatch
+
+```typescript
+DBOS.deprecatePatch(
+    patchName: string
+): Promise<boolean>
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `true`.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+
+**Parameters:**
+- `patchName`: The name of the patch marker to be bypassed.
+
