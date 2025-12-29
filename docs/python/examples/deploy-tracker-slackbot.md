@@ -20,7 +20,7 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 ## Main Deployment Workflow
 
 The core of this Slackbot is the main deployment workflow.
-It contains three steps: build, test, and deploy. When the workflow starts, it notifies the Slack channel and updates the status to "started". Then, after each step finishes, it updates its status using `DBOS.set_event` so users can query deployment progress.
+It contains three steps: build, test, and deploy. When the workflow starts, it notifies the Slack channel and updates the status to "started". Then, after each step finishes, it sends a Slack message to notify users about its progress. It also uses `DBOS.set_event` to set a custom status object that users can query.
 After all steps are complete, it sends a final Slack message to the channel.
 
 ```python
@@ -33,13 +33,25 @@ def deploy_tracker_workflow(user_id: str, channel_id: str):
     DBOS.set_event("deploy_status", "started")
 
     # Additional steps for deployment can be added here
-    build_step(channel_id)
+    duration = build_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Build 🚧* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "build_completed")
 
-    test_step(channel_id)
+    duration = test_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Test 🧪* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "tests_completed")
 
-    deploy_step(channel_id)
+    duration = deploy_step()
+    post_slack_message(
+        message=f"[Workflow {DBOS.workflow_id}] Step *Deploy 🚀* completed in {duration:.2f} seconds.",
+        channel=channel_id,
+    )
     DBOS.set_event("deploy_status", "deployed")
 
     post_slack_message(
@@ -48,75 +60,6 @@ def deploy_tracker_workflow(user_id: str, channel_id: str):
     )
 ```
 
-## Deployment Steps
-
-Each step in the workflow performs a task and posts a Slack message to the channel to update progress.
-
-**Post Slack Message**
-
-```python
-@DBOS.step()
-def post_slack_message(message: str, channel: str, thread_ts: Optional[str] = None):
-    app.client.chat_postMessage(channel=channel, text=message, thread_ts=thread_ts)
-```
-
-
-<details>
-<summary><strong>Build</strong></summary>
-
-```python
-@DBOS.step()
-def build_step(channel_id: str):
-    step_name = "Build 🚧"
-    duration = random.uniform(5, 20)
-    sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
-```
-</details>
-
-<details>
-<summary><strong>Test</strong></summary>
-
-This step may randomly fail, but we can configure it to automatically retry on failures.
-
-```python
-@DBOS.step(retries_allowed=True, max_attempts=3)
-def test_step(channel_id: str):
-    step_name = "Test 🧪"
-    # Simulate a random failure for demonstration purposes; it should be automatically retried
-    dice_roll = random.randint(1, 6)
-    if dice_roll <= 1:  # 1 in 6 chance of failure
-        raise Exception(
-            f"Deployment step '{step_name}' failed due to unlucky dice roll ({dice_roll})!"
-        )
-
-    duration = random.uniform(10, 20)
-    sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
-```
-</details>
-
-<details>
-<summary><strong>Deploy</strong></summary>
-
-```python
-@DBOS.step()
-def deploy_step(channel_id: str):
-    step_name = "Deploy 🚀"
-    duration = random.uniform(5, 15)
-    sleep(duration)  # Simulate time taken for the deployment step
-    post_slack_message(
-        message=f"[Workflow {DBOS.workflow_id}] Step *{step_name}* completed in {duration:.2f} seconds.",
-        channel=channel_id,
-    )
-```
-</details>
 
 ## Concurrency-Limited Queue
 

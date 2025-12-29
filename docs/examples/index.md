@@ -77,9 +77,9 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
     <CardLink
-    label="Deployment Tracking Slackbot"
+    label="CI/CD Slackbot"
     href="python/examples/deploy-tracker-slackbot"
-    description="Use DBOS to build a reliable Slackbot that manages deployment workflows and tracks their progress."
+    description="Use DBOS to build a reliable Slackbot that manages CI/CD pipelines and tracks their progress."
     icon={<FaSlack color="white" size={50}/>}
     language="python"
   />
