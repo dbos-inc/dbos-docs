@@ -1,7 +1,7 @@
 ---
 displayed_sidebar: examplesSidebar
 sidebar_position: 40
-title: Deployment Tracking Slackbot
+title: CI/CD Slackbot
 ---
 
 In this example, we use DBOS and [Bolt](https://slack.dev/bolt-python) to build a CI/CD Slackbot that helps you trigger application deployments and track deployment pipeline progress directly from Slack. It listens to commands such as `/deploy` and `/check_status` in a Slack channel and posts status updates back to the channel.
