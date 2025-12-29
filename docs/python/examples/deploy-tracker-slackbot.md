@@ -10,7 +10,7 @@ This app demonstrates how DBOS enables:
 
 * **Asynchronous background workflows** for each deployment. Slack requires you to respond to events within [3 seconds](https://api.slack.com/apis/events-api#retries), but deployment workflows often take much longer.
 * **Concurrency control using queues** configured with a concurrency limit of 1, so only one deployment runs at a time. This is critical when working with limited resources or rate-limited APIs.
-* **Real-time status updates** via DBOS events, showing custom progress as each step finishes.
+* **Real-time status updates** via DBOS events, allowing you to monitor the progress of your deployment pipelines.
 * **Durable execution** making sure a deployment resumes from where it left off even if the Slackbot crashes or restarts.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/deploy-tracker-slackbot).
