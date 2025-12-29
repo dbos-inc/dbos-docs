@@ -164,7 +164,7 @@ def handle_deploy_command(ack, say, command, logger):
 ### Handle `/check_status`
 
 This endpoint queries the workflow status as well as the custom "deploy_status" event set by the deployment workflow.
-Users can query the status asynchronously as the workflow is running or completed.
+Users can query the status of their deployment pipelines anytime.
 
 ```python
 @app.command("/check_status")
