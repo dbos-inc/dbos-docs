@@ -39,6 +39,8 @@ queue := dbos.NewWorkflowQueue(ctx, "email-queue",
 handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
 ```
 
+See [ListRegisteredQueues](./dbos-context.md#listregisteredqueues) for obtaining a list of all registered queues.
+
 #### WithWorkerConcurrency
 
 ```go
@@ -123,4 +125,30 @@ handle2, _ := dbos.RunWorkflow(ctx, ProcessTask, task2,
 )
 ```
 
+####  WithQueueBasePollingInterval
 
+```go
+func WithQueueBasePollingInterval(interval time.Duration) QueueOption
+```
+
+Set the base polling interval for this queue. This also acts as the minimum (fastest) interval. Polling intervals are subject to base 2 exponential backoff.
+
+**Example Syntax:**
+
+```go
+queue := dbos.NewWorkflowQueue(ctx, "email-queue", dbos.WithQueueBasePollingInterval(100*time.Millisecond))
+```
+
+#### WithQueueMaxPollingInterval
+
+```go
+func WithQueueMaxPollingInterval(interval time.Duration) QueueOption
+```
+
+Set the maximum (slowest) polling interval for this queue. Polling intervals are subject to base 2 exponential backoff.
+
+**Example Syntax:**
+
+```go
+queue := dbos.NewWorkflowQueue(ctx, "email-queue", dbos.WithQueueMaxPollingInterval(10*time.Second))
+```
