@@ -133,10 +133,10 @@ Each `dbos-config.yaml` file has the following fields and sections:
 - **name**: Your application's name. Must match the name supplied to the DBOS constructor.
 - **language**: The application language. Must be set to `python` for Python applications.
 - **system_database_url**: The connection string to your DBOS system database.
-This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
+This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `system_database_url` you pass to the DBOS constructor.
 - **database_url**: The connection string to your application database.
-This connection string is used by the DBOS [CLI](cli.md) and [debugger](../tutorials/debugging.md).
+This connection string is used by the DBOS [CLI](cli.md).
 It has the same format as the `application_database_url` you pass to the DBOS constructor.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`dbos start`](../reference/cli.md#dbos-start), which is used to start your app in DBOS Cloud.
