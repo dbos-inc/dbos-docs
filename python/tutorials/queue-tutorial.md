@@ -55,6 +55,40 @@ def process_tasks(tasks):
   return [handle.get_result() for handle in task_handles]
 ```
 
+Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
+You can do this using [`DBOS.send` and `DBOS.recv`](./workflow-communication.md#workflow-messaging-and-notifications).
+Each enqueued workflow sends a message to the main workflow when it's done processing its task.
+The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
+
+
+```python
+@DBOS.workflow()
+def process_task(parent_workflow_id: str, task_id: int, task: Task):
+    result = ...  # Process the task
+    # Notify the main workflow this task is complete
+    DBOS.send(parent_workflow_id, task_id)
+    return result
+
+@DBOS.workflow()
+def process_tasks(tasks: List[Task]):
+    handles: List[WorkflowHandle] = []
+    for (i, task) in enumerate(tasks):
+        completed_task_handle = queue.enqueue(process_task, DBOS.workflow_id, i, task)
+        handles.append(completed_task_handle)
+    results = []
+    while len(results) < len(tasks):
+        # Wait for a notification that a task is complete
+        completed_task_id: int | None = DBOS.recv()
+        if completed_task_id is None:
+            ... # Handle a timeout
+        # Retrieve result of the completed task
+        completed_task_handle = handles[completed_task_id]
+        result = completed_task_handle.get_result()
+        print(f"Task {completed_task_id} completed. Result: {result}")
+        results.append(result)
+    return results
+```
+
 ### Enqueueing from Another Application
 
 Often, you want to enqueue a workflow from another DBOS application or from outside your DBOS application.
