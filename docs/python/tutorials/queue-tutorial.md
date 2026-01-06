@@ -64,7 +64,7 @@ The main workflow awaits those messages, retrieving the result of each task as s
 ```python
 @DBOS.workflow()
 def process_task(parent_workflow_id: str, task_id: int, task: Task):
-    result = # ...
+    result = ...  # process the task
     # Notify the main workflow this task is complete
     DBOS.send(parent_workflow_id, task_id)
     return result
