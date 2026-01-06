@@ -78,8 +78,9 @@ def process_tasks(tasks: List[Task]):
     results = []
     while len(results) < len(tasks):
         # Wait for a notification that a task is complete
-        # Note that in a real application, you should handle timeouts
-        completed_task_id: int = DBOS.recv()
+        completed_task_id: int | None = DBOS.recv()
+        if completed_task_id is None:
+            ... # Handle a timeout
         # Retrieve result of the completed task
         completed_task_handle = handles[completed_task_id]
         result = completed_task_handle.get_result()

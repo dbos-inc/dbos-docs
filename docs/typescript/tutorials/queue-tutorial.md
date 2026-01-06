@@ -93,10 +93,12 @@ async function processTasksFunction(tasks: Task[]) {
     const results = [];
     while (results.length < tasks.length) {
         // Wait for a notification that a task is complete
-        // Note that in a real application, you should handle timeouts
         const completedTaskID = await DBOS.recv<number>();
+        if (completedTaskID === null) {
+            ... // Handle a timeout
+        }
         // Retrieve result of the completed task
-        const completedTaskHandle = handles[completedTaskID!];
+        const completedTaskHandle = handles[completedTaskID];
         const result = await completedTaskHandle.getResult();
         console.log(`Task ${completedTaskID} completed. Result: ${result}`);
         results.push(result);
