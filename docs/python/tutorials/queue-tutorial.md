@@ -58,7 +58,7 @@ def process_tasks(tasks):
 Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
 You can do this using [`DBOS.send` and `DBOS.recv`](./workflow-communication.md#workflow-messaging-and-notifications).
 Each enqueued workflow sends a message to the main workflow when it's done processing its task.
-The main workflow uses `DBOS.recv` to await those messages, retrieving the result of each task as soon as the task completes.
+The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
 
 
 ```python
@@ -78,10 +78,9 @@ def process_tasks(tasks: List[Task]):
     results = []
     while len(results) < len(tasks):
         # Wait for a notification that a task is complete
-        # Note that in a real application, you would have to handle
-        # DBOS.recv timing out.
+        # Note that in a real application, you should handle timeouts
         completed_task_id: int = DBOS.recv()
-        # Retrieve result of the completed task.
+        # Retrieve result of the completed task
         completed_task_handle = handles[completed_task_id]
         result = completed_task_handle.get_result()
         print(f"Task {completed_task_id} completed. Result: {result}")
