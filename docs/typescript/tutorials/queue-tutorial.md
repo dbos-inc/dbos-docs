@@ -362,3 +362,38 @@ async function main() {
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
 }
 ```
+
+## Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to a specific list of queues.
+You can configure `listenQueues` in your [DBOS configuration](../reference/configuration.md) to explicitly tell a process running DBOS to only listen to a specific set of queues.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const cpuQueue = new WorkflowQueue("cpu_queue");
+const gpuQueue = new WorkflowQueue("gpu_queue");
+
+async function main() {
+  const workerType = process.env.WORKER_TYPE; // "cpu" or "gpu"
+  const config = // ...
+
+  if (workerType === "gpu") {
+    // GPU workers will only dequeue and execute workflows from the GPU queue
+    config.listenQueues = [gpuQueue];
+  } else if (workerType === "cpu") {
+    // CPU workers will only dequeue and execute workflows from the CPU queue
+    config.listenQueues = [cpuQueue];
+  }
+
+  DBOS.setConfig(config);
+  await DBOS.launch();
+}
+```
+
+Note that `listenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.

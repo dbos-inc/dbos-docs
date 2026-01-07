@@ -437,6 +437,7 @@ def list_workflows(
     forked_from: Optional[str] = None,
     user: Optional[str] = None,
     queue_name: Optional[str] = None,
+    executor_id: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
@@ -457,6 +458,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
 - **queue_name**: Retrieve workflows that were enqueued on this queue.
+- **executor_id**: Retrieve workflows with this executor ID.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
@@ -471,6 +473,7 @@ def list_queued_workflows(
     forked_from: Optional[str] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    executor_id: Optional[str] = None,
     name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
@@ -486,6 +489,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enque
 - **forked_from**: Retrieve workflows forked from this workflow ID.
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **executor_id**: Retrieve workflows with this executor ID.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
@@ -689,6 +693,14 @@ DBOS.application_version: str
 ```
 
 Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
+
+### executor_id
+
+```python
+DBOS.executor_id: str
+```
+
+Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
 ## Debouncing
 

@@ -28,7 +28,7 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl}: {systemDatabaseUrl?: string}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
@@ -56,9 +56,12 @@ class DBOSClient {
 
 You construct a `DBOSClient` with the static `create` function.
 
-The `systemDatabaseUrl` parameter is a connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
+**Parameters:**
+- **systemDatabaseUrl**: A connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
+- **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations.
+- **serializer**: An optional custom serializer. If your DBOS application uses [custom serialization](./configuration.md#custom-serialization), you must provide the same serializer to the client to correctly deserialize workflow results and events.
 
-Example: 
+Example:
 
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";

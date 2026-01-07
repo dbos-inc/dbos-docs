@@ -37,6 +37,10 @@ export interface DBOSConfig {
 
   runAdminServer?: boolean;
   adminPort?: number;
+
+  listenQueues?: WorkflowQueue[];
+
+  serializer?: DBOSSerializer;
 }
 ```
 
@@ -74,6 +78,50 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 - **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
+
+### Queue Settings
+
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+
+### Serialization Settings
+
+- **serializer**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
+
+## Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
+By default, data is serialized with JSON, but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must match this interface:
+
+```typescript
+interface DBOSSerializer {
+  stringify: (obj: unknown) => string;
+  parse: (text: string | null | undefined) => unknown;
+}
+```
+For example, here is how to configure DBOS to use a Base64-encoded JSON serializer:
+
+```javascript
+import { DBOS, DBOSSerializer } from "@dbos-inc/dbos-sdk";
+
+const base64Serializer: DBOSSerializer = {
+  parse: (text) => {
+    // Parsers must always return null when receiving null or undefined
+    if (text === null || text === undefined) return null;
+    return JSON.parse(Buffer.from(text, 'base64').toString());
+  },
+  stringify: (obj) => {
+    // JSON.stringify doesn't handle undefined, so convert it to null instead
+    if (obj === undefined) obj = null;
+    return Buffer.from(JSON.stringify(obj)).toString('base64');
+  },
+};
+
+const config = // ...
+config.serializer = base64Serializer;
+DBOS.setConfig(config);
+await DBOS.launch();
+```
 
 ## DBOS Configuration File
 
