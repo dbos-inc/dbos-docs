@@ -47,7 +47,7 @@ export interface DBOSConfig {
 ### Application Settings
 
 - **name**: Your application's name.
-- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
 ### Database Connection Settings
