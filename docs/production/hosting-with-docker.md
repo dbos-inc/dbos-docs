@@ -29,7 +29,7 @@ EXPOSE 8000
 CMD ["/bin/bash", "-c", ". .venv/bin/activate && dbos start"]
 ```
 
-## Docker compose
+## Docker Compose
 
 Next, we'll use Docker compose to start two containers: one for Postgres and one for the DBOS Python app.
 Note we set `restart` to `unless-stopped` so the container automatically restarts if the application crashes.
