@@ -76,7 +76,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ### Admin Server Settings
 
-- **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
+- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
 
 ### Queue Settings

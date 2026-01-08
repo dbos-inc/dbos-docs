@@ -64,7 +64,7 @@ Workflow recovery occurs in three steps:
 
 1. First, DBOS detects interrupted workflows.
 In single-node deployments, this happens automatically at startup when DBOS scans for incomplete (PENDING) workflows.
-In a distributed deployment, some coordination is required, either automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [manually](./production/workflow-recovery.md).
+In a distributed deployment, some coordination is required, either automatically through services like [DBOS Conductor](#operating-dbos-in-production-with-conductor) or [manually](./production/workflow-recovery.md).
 
 2. Next, DBOS restarts each interrupted workflow by calling it with its checkpointed inputs.
 As the workflow re-executes, it checks before each step if that step's output is checkpointed in Postgres.

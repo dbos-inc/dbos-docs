@@ -9,7 +9,7 @@ You can view and manage your durable workflow executions via the [DBOS Console](
 
 You can list your application's workflows programmatically via [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) or from the command line with [`npx dbos workflow list`](../reference/cli.md#npx-dbos-workflow-list).
 
-You can also view a searchable and expandable list of your application's workflows from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
+You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../production/workflow-management.md).
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
