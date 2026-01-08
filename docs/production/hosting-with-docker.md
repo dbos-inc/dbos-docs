@@ -6,13 +6,14 @@ title: Deploying With Docker
 
 # Deploying with Docker
 
-This guide shows you how to setup a starter DBOS Python application and its Postgres database using Docker.
+This guide shows you how to setup an example DBOS application and its Postgres database using Docker.
 
 ## Dockerfile
 
+In this example, we'll use a DBOS Python application.
 First, we'll setup a Dockerfile to configure a Debian Python image.
 
-There's nothing unique about this Dockerfile&mdash;DBOS is just a library for your program to import, so it can run in any Docker container that has the appropriate language runtime (Node or Python) installed.
+There's nothing unique about this Dockerfile&mdash;DBOS is just a library for your program to import, so it can run in any Docker container.
 The container initializes a DBOS starter template then starts the application.
 
 ```bash
