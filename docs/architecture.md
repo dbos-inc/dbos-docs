@@ -64,7 +64,7 @@ Workflow recovery occurs in three steps:
 
 1. First, DBOS detects interrupted workflows.
 In single-node deployments, this happens automatically at startup when DBOS scans for incomplete (PENDING) workflows.
-In a distributed deployment, some coordination is required, either automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [DBOS Cloud](#host-applications-on-dbos-cloud), or manually using the admin API (detailed [here](./production/self-hosting/workflow-recovery.md)).
+In a distributed deployment, some coordination is required, either automatically through services like [DBOS Conductor](#self-hosting-dbos-with-conductor) or [manually](./production/workflow-recovery.md).
 
 2. Next, DBOS restarts each interrupted workflow by calling it with its checkpointed inputs.
 As the workflow re-executes, it checks before each step if that step's output is checkpointed in Postgres.
@@ -92,8 +92,8 @@ All workflows are tagged with the application version on which they started.
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
 To safely recover workflows started on an older version of your code, you should start a process running that code version.
-Alternatively, you can use the [workflow fork](./production/self-hosting/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
-For more information, see the [workflow recovery documentation](./production/self-hosting/workflow-recovery.md).
+Alternatively, you can use the [workflow fork](./production/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
+For more information, see the [workflow recovery documentation](./production/workflow-recovery.md).
 
 ## Durable Queues
 
@@ -121,10 +121,10 @@ For more information on queues, see the docs ([Python](./python/tutorials/queue-
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is a management service that provides:
 
-- [**Distributed workflow recovery**](./production/self-hosting/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./production/self-hosting/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
-- [**Workflow and queue management**](./production/self-hosting/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
-- [**Managed Retention Policies**](./production/self-hosting/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
+- [**Distributed workflow recovery**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
+- [**Workflow and queue observability**](./production/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue management**](./production/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Managed Retention Policies**](./production/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 
 Architecturally, Conductor looks like this:
 
@@ -140,4 +140,4 @@ This architecture has two useful implications:
 2. Conductor is **out of band** and **off your critical path**. Conductor is **only** used for observability and recovery and is never involved in workflow execution (unlike the external orchestrators of other workflow systems).
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
-For more information on Conductor, see [its docs](./production/self-hosting/conductor.md).
+For more information on Conductor, see [its docs](./production/conductor.md).

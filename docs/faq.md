@@ -17,14 +17,14 @@ You can use `postgres` as your system database, or you can use a different syste
 
 ### Why is my queue stuck?
 
-If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the DBOS Console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)).
+If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./production/workflow-management.md)
 If you need to, you can cancel tasks to remove them from the queue.
 
 ### Why is my workflow not finishing?
 
-When self-hosted workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/self-hosting/workflow-management.md#workflow-management) to resume them on a new app version.
+When self-hosted workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/workflow-management.md#workflow-management) to resume them on a new app version.
 
-A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for DBOS Cloud or Conductor to begin workflow recovery.
+A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for Conductor to begin workflow recovery.
 
 Workflows may also get "stuck" due to their logic: infinite loops, indefinitely waiting for an event or improper use of async.
 
@@ -59,7 +59,7 @@ To make a workflow deterministic, make sure all non-deterministic operations (su
 
 Yes, you can call (or start, or enqueue) a workflow from inside another workflow.
 That workflow becomes a **child** of its caller and is by default assigned a workflow ID derived from its parent's.
-If you view a workflow's call graph from the DBOS console ([self-hosted](./production/self-hosting/workflow-management.md), [DBOS Cloud](./production/dbos-cloud/workflow-management.md)), it will include the workflow's children.
+If you view a workflow's call graph from the [DBOS console](./production/workflow-management.md), it will include the workflow's children.
 
 ### Can I call a step from a step?
 
