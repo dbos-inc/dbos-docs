@@ -121,6 +121,74 @@ public class App {
 }
 ```
 
+Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
+You can do this using [`send` and `recv`](./workflow-communication.md#workflow-messaging-and-notifications).
+Each enqueued workflow sends a message to the main workflow when it's done processing its task.
+The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
+
+```java
+interface Example {
+    public void setProxy(Example proxy);
+    public String processTask(String parentWorkflowId, int taskId, String task);
+    public List<String> processTasks(String[] tasks) throws Exception;
+}
+
+class ExampleImpl implements Example {
+    private static final String TASK_COMPLETE_TOPIC = "task_complete";
+
+    private final Queue queue;
+    private Example proxy;
+
+    public ExampleImpl(Queue queue) {
+        this.queue = queue;
+    }
+
+    public void setProxy(Example proxy) {
+        this.proxy = proxy;
+    }
+
+    @Workflow(name = "processTask")
+    public String processTask(String parentWorkflowId, int taskId, String task) {
+        String result = "Processed: " + task; // Process the task
+
+        // Notify the main workflow this task is complete
+        DBOS.send(parentWorkflowId, taskId, TASK_COMPLETE_TOPIC);
+        return result;
+    }
+
+    @Workflow(name = "processTasks")
+    public List<String> processTasks(String[] tasks) throws Exception {
+        String parentWorkflowId = DBOS.workflowId();
+
+        List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
+        for (int i = 0; i < tasks.length; i++) {
+            final int taskId = i;
+            final String task = tasks[i];
+            WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+                () -> proxy.processTask(parentWorkflowId, taskId, task),
+                new StartWorkflowOptions().withQueue(queue)
+            );
+            handles.add(handle);
+        }
+
+        List<String> results = new ArrayList<>();
+        while (results.size() < tasks.length) {
+            // Wait for a notification that a task is complete
+            Integer completedTaskId = (Integer) DBOS.recv(TASK_COMPLETE_TOPIC, Duration.ofMinutes(5));
+            if (completedTaskId == null) {
+                throw new RuntimeException("Timeout waiting for task completion");
+            }
+            // Retrieve result of the completed task
+            WorkflowHandle<String, Exception> completedTaskHandle = handles.get(completedTaskId);
+            String result = completedTaskHandle.getResult();
+            System.out.println("Task " + completedTaskId + " completed. Result: " + result);
+            results.add(result);
+        }
+        return results;
+    }
+}
+```
+
 ## Enqueueing from Another Application
 
 Often, you want to enqueue a workflow from outside your DBOS application.
