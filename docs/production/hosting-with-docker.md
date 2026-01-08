@@ -3,10 +3,7 @@ sidebar_position: 69
 title: Deploying With Docker
 ---
 
-
-# Deploying with Docker
-
-This guide shows you how to setup an example DBOS application and its Postgres database using Docker.
+This guide shows you how to setup a DBOS application and its Postgres database using Docker.
 
 ## Dockerfile
 
