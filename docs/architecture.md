@@ -116,22 +116,22 @@ You can customize the rate and concurrency at which workflows are dequeued and e
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
 For more information on queues, see the docs ([Python](./python/tutorials/queue-tutorial.md), [TypeScript](./typescript/tutorials/queue-tutorial.md), [Go](./golang/tutorials/queue-tutorial.md), [Java](./java/tutorials/queue-tutorial.md)).
 
-## Self-Hosting DBOS with Conductor
+## Operating DBOS in Production with Conductor
 
-The simplest way to operate DBOS durable workflows in production is to connect your application to Conductor.
-Conductor is an optional management service that helps you self-host DBOS applications.
-It provides:
+When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
+Conductor is a management service that provides:
 
 - [**Distributed workflow recovery**](./production/self-hosting//workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./production/self-hosting/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
-- [**Workflow and queue management**](./production/self-hosting/workflow-management.md): From the Conductor dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue observability**](./production/self-hosting/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue management**](./production/self-hosting/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Managed Retention Policies**](./production/self-hosting/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 
 Architecturally, Conductor looks like this:
 
 <img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 Each of your application servers opens a secure websocket connection to Conductor.
-All of Conductor's features are powered by these websocket connections.
+All of Conductor's capabilities are powered by these websocket connections.
 When you open a Conductor dashboard in your browser, your request is sent over websocket to one of your application servers, which serves the request (for example, retrieving a list of recent workflows) and sends the result back through the websocket.
 If one of your application servers fails, Conductor detects the failure through the closed websocket connection and, after a grace period, directs another server to recover its workflows.
 This architecture has two useful implications:
