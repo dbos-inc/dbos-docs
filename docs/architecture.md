@@ -141,17 +141,3 @@ This architecture has two useful implications:
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
 For more information on Conductor, see [its docs](./production/self-hosting/conductor.md).
-
-## Host Applications on DBOS Cloud
-
-You can deploy DBOS applications to DBOS Cloud.
-DBOS Cloud is a serverless platform for durably executed applications.
-It provides:
-
-- [**Application hosting and autoscaling**](./production/dbos-cloud/application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
-- [**Automatic workflow version management**](./production/dbos-cloud/application-management.md): DBOS Cloud seamlessly manages code version upgrades, launching new workflows on new code versions while completing old workflows on old code versions.
-- [**Managed workflow recovery**](./production/dbos-cloud/application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
-- [**Workflow and queue observability**](./production//dbos-cloud/workflow-management.md): Dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
-- [**Workflow and queue management**](./production/dbos-cloud/workflow-management.md): From an online dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
-
-See [**Deploying to DBOS Cloud**](./production/dbos-cloud/deploying-to-cloud.md) to learn more.
