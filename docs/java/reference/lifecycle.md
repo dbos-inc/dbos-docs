@@ -43,13 +43,13 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withConnectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection created by DBOS.
 
-- **`withAdminServer(boolean enable)`**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to false.
+- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management operations. Defaults to false.
 
 - **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
 
-- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
 

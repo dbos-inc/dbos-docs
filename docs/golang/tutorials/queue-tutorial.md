@@ -95,6 +95,69 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
 }
 ```
 
+Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
+You can do this using [`Send` and `Recv`](./workflow-communication.md#workflow-messaging-and-notifications).
+Each enqueued workflow sends a message to the main workflow when it's done processing its task.
+The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
+
+```go
+const TaskCompleteTopic = "task_complete"
+
+type TaskInput struct {
+    ParentWorkflowID string
+    TaskID           int
+    Task             string
+}
+
+func processTask(ctx dbos.DBOSContext, input TaskInput) (string, error) {
+    result := ... // Process the task
+
+    // Notify the main workflow this task is complete
+    err := dbos.Send(ctx, input.ParentWorkflowID, input.TaskID, TaskCompleteTopic)
+    if err != nil {
+        return "", fmt.Errorf("failed to send completion notification: %w", err)
+    }
+    return result, nil
+}
+
+func processTasks(ctx dbos.DBOSContext, tasks []string) ([]string, error) {
+    parentWorkflowID, err := dbos.GetWorkflowID(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get workflow ID: %w", err)
+    }
+
+    var handles []dbos.WorkflowHandle[string]
+    for i, task := range tasks {
+        handle, err := dbos.RunWorkflow(ctx, processTask,
+            TaskInput{ParentWorkflowID: parentWorkflowID, TaskID: i, Task: task},
+            dbos.WithQueue(queue.Name),
+        )
+        if err != nil {
+            return nil, fmt.Errorf("failed to enqueue task %d: %w", i, err)
+        }
+        handles = append(handles, handle)
+    }
+
+    var results []string
+    for len(results) < len(tasks) {
+        // Wait for a notification that a task is complete
+        completedTaskID, err := dbos.Recv[int](ctx, TaskCompleteTopic, 5*time.Minute)
+        if err != nil {
+            return nil, fmt.Errorf("timeout waiting for task completion: %w", err)
+        }
+        // Retrieve result of the completed task
+        completedTaskHandle := handles[completedTaskID]
+        result, err := completedTaskHandle.GetResult()
+        if err != nil {
+            return nil, fmt.Errorf("task %d failed: %w", completedTaskID, err)
+        }
+        fmt.Printf("Task %d completed. Result: %s\n", completedTaskID, result)
+        results = append(results, result)
+    }
+    return results, nil
+}
+```
+
 ### Enqueueing from Another Application
 
 Often, you want to enqueue a workflow from outside your DBOS application.
