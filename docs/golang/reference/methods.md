@@ -60,7 +60,7 @@ func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning an error if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning an empty string if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
