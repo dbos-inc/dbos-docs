@@ -270,6 +270,7 @@ interface GetWorkflowsInput {
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
   applicationVersion?: string; // Retrieve workflows started on this application version.
+  executorId?: string; // Retrieve workflows run by this executor ID.
   workflow_id_prefix?: string; // Retrieve workflows whose ID have this prefix
   queueName?: string; // If this workflow is enqueued, on which queue
   queuesOnly?: boolean; // Return only workflows that are actively enqueued
@@ -568,7 +569,15 @@ You can use this to set custom attributes in your span.
 DBOS.applicationVersion: string
 ```
 
-Return the current application version, as documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+Return the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
+
+### DBOS.executorID
+
+```typescript
+DBOS.executorID: string
+```
+
+Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
 ## Workflow Handles
 

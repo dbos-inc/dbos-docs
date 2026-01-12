@@ -3,19 +3,19 @@ sidebar_position: 50
 title: Workflow Management
 ---
 
-You can view and manage your durable workflow executions via a web UI ([self-hosted](../../production/self-hosting/workflow-management.md), [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)) or programmatically.
+You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md) or programmatically.
 
 ## Listing Workflows
 
 You can list your application's workflows programmatically via [`ListWorkflows`](../reference/methods#listworkflows).
 
-You can also view a searchable and expandable list of your application's workflows from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
+You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../production/workflow-management.md).
 
 <img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
 ## Visualizing Workflow Execution
 
-You can also visualize a workflow's execution graph (including the workflow, its steps, and its child workflows and their steps) from its page on the DBOS Console (either [self-hosted](../../production/self-hosting/workflow-management.md) or on [DBOS Cloud](../../production/dbos-cloud/workflow-management.md)).
+You can also visualize a workflow's execution graph (including the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
 For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
