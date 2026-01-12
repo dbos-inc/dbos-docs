@@ -3,22 +3,21 @@ sidebar_position: 10
 title: DBOS Conductor
 ---
 
-The simplest way to operate DBOS durable workflows in production is to connect your application to DBOS Conductor.
-Conductor is a managed service that helps you operate DBOS applications.
-It provides:
+When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
+Conductor is a management service that provides:
 
 - [**Distributed workflow recovery**](./workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
-- [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks, including their status, inputs, outputs, and steps.
-- [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, cancel, resume, or restart any workflow execution and manage the tasks in your distributed queues.
+- [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
+- [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
+- [**Managed Retention Policies**](./retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
 
-
-## Connecting To Conductor
-
-:::tip
-Conductor is not part of your application's critical path.
+Architecturally, Conductor is not part of your application's critical path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
 Recovery, observability, and workflow management will automatically resume once connectivity is restored.
-:::
+
+<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
+
+## Connecting To Conductor
 
 To connect your application to Conductor, first register your application on the [DBOS console](https://console.dbos.dev).
 **The name you register must match the name you give your application in its configuration.**

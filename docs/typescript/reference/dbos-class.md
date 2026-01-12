@@ -58,7 +58,7 @@ main().catch(console.log);
 ```
 
 **Parameters:**
-- **conductorKey**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **conductorKey**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductorURL**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 
 ### DBOS.shutdown

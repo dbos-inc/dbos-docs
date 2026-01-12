@@ -47,7 +47,7 @@ export interface DBOSConfig {
 ### Application Settings
 
 - **name**: Your application's name.
-- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
 ### Database Connection Settings
@@ -76,7 +76,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ### Admin Server Settings
 
-- **runAdminServer**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
+- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
 
 ### Queue Settings

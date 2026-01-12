@@ -94,7 +94,7 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 
 ### Conductor Settings
 
-- **conductor_key**: An API key for [DBOS Conductor](../../production/self-hosting/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
+- **conductor_key**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 
 
@@ -108,7 +108,7 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 
 ### Admin Server Settings
 
-- **run_admin_server**: Whether to run an [HTTP admin server](../../production/self-hosting/admin-api.md) for workflow management operations. Defaults to True.
+- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 ### Serialization Settings
 

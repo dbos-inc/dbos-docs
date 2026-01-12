@@ -197,7 +197,7 @@ To obtain a license key, please [contact sales](https://www.dbos.dev/contact).
 
 Once you have a license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
 
-## Self-Hosting in Production
+## Hosting Conductor in Production
 
 You can self-host DBOS Conductor in production by deploying two services: the [Conductor](https://hub.docker.com/r/dbosdev/conductor) service and the [DBOS Console](https://hub.docker.com/r/dbosdev/console).
 

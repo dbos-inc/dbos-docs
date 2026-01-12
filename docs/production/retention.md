@@ -3,12 +3,8 @@ sidebar_position: 95
 title: Workflow Retention Policies
 ---
 
-:::info
-Retention policies require DBOS Python >= 1.5.0 or DBOS TypeScript >= 2.10.24
-:::
-
 If you are using [Conductor](./conductor.md), you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
-These settings let you configure how long workflow history is retained in your application's [system database](../../explanations/system-tables.md).
+These settings let you configure how long workflow history is retained in your application's [system database](../explanations/system-tables.md).
 This is useful for managing the database disk usage of workflow history.
 
 <img src={require('@site/static/img/retention/retention-conductor.png').default} alt="Retention Page" width="1000" className="custom-img" />

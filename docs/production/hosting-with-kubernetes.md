@@ -104,7 +104,7 @@ spec:
 
 ## Configuration
 
-Some DBOS configuration options contain sensitive information, like the DBOS [system database URL](./../../explanations/system-tables.md) and your [DBOS conductor](./hosting-conductor.md) API key. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to share them with your application containers.
+Some DBOS configuration options contain sensitive information, like the DBOS [system database URL](./../explanations/system-tables.md) and your [DBOS conductor](./hosting-conductor.md) API key. We recommend you use [Kubernetes secrets](https://kubernetes.io/docs/concepts/configuration/secret/) to share them with your application containers.
 
 ## Availability
 
@@ -187,7 +187,7 @@ Using this version number, you can implement logic to maintain enough resources 
 
 ### Workflow patching
 
-In [patch mode](../../python/tutorials/upgrading-workflows.md), you can keep a single deployment which pods will process (and recover) any workflow. You are responsible for maintaining _patches_ in the code, which determine the execution branch a certain workflow should take.
+In [patch mode](../python/tutorials/upgrading-workflows.md), you can keep a single deployment which pods will process (and recover) any workflow. You are responsible for maintaining _patches_ in the code, which determine the execution branch a certain workflow should take.
 
 ## Workflow Recovery
 
