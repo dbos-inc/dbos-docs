@@ -108,7 +108,7 @@ func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time
 ```
 
 You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning an empty string if the wait times out.
 
 #### Events Example
 
