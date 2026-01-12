@@ -71,6 +71,27 @@ async def example_step():
             return await response.text()
 ```
 
+### Running Steps In-Line With `run_step`
+
+If a function is not decorated with `@DBOS.step` and you would prefer not to wrap it, you can call the code as a step using [`DBOS.run_step`](../reference/contexts.md#run_step) (or `DBOS.run_step_async`).
+
+For example, if your code said:
+```python
+res = send_email(user, msg)
+```
+
+It could be quickly changed to a checkpointed step:
+
+```python
+res = DBOS.run_step(None, send_email, user, msg)
+```
+
+Or:
+```python
+res = DBOS.run_step({"name": "send_email_to_user"}, lambda: send_email(user, msg))
+```
+
+
 ### Transactions
 
 Transactions are an **optional** type of [step](./step-tutorial.md) that are optimized for database accesses.
