@@ -31,6 +31,7 @@ class DBOSConfig(TypedDict):
     sys_db_pool_size: Optional[int]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
+    use_listen_notify: Optional[bool]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -89,6 +90,7 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
+- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
 
 ### Conductor Settings
 

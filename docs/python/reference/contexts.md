@@ -233,6 +233,57 @@ DBOS.sleep_async(
 
 Coroutine version of [`sleep`](#sleep)
 
+### run_step
+
+```python
+DBOS.run_step(
+    dbos_step_options: Optional[StepOptions],
+    func: Callable[P, R],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> R:
+```
+
+Runs the provided `func` function (or lambda) as a checkpointed DBOS [step](../tutorials/step-tutorial.md).  `args` and `kwargs` will be passed to `func`.
+
+The `StepOptions` object has the following fields.  All fields are optional.
+
+```python
+class StepOptions(TypedDict, total=False):
+    """
+    Configuration options for steps.
+
+    Attributes:
+        name:
+            Optional name for the step.
+            If not provided, the function's name will be used.
+
+        retries_allowed:
+            Whether the step should be retried on failure.
+
+        interval_seconds:
+            Initial delay (in seconds) between retry attempts.
+
+        max_attempts:
+            Maximum number of attempts before the step is
+            considered failed.
+
+        backoff_rate:
+            Multiplier applied to `interval_seconds` after
+            each failed attempt (e.g. 2.0 = exponential backoff).
+    """
+
+    name: Optional[str]
+    retries_allowed: bool
+    interval_seconds: float
+    max_attempts: int
+    backoff_rate: float
+```
+
+### run_step_async
+
+Version of [`run_step`](#run_step) to be called from `async` contexts.
+
 ### retrieve_workflow
 
 ```python
