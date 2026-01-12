@@ -283,6 +283,15 @@ func WithHandleTimeout(timeout time.Duration) GetResultOption
 
 Specify a timeout for obtaining a workflow result.
 
+##### WithHandlePollingInterval
+
+```go
+func WithHandlePollingInterval(interval time.Duration) GetResultOption
+```
+
+Set the polling interval for checking workflow completion status in the database.
+Only positive interval values will be considered.
+
 #### WorkflowHandle.GetStatus
 
 ```go
