@@ -13,13 +13,13 @@ func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, an error if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an empty string if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **targetWorkflowID**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeout**: A timeout. If the wait times out, return an error.
+- **timeout**: A timeout. If the wait times out, return an empty string.
 
 
 ### SetEvent

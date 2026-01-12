@@ -183,16 +183,16 @@ GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an empty string if the wait times out.
 Similar to [`GetEvent`](../tutorials/workflow-communication.md#getevent).
 
 **Parameters:**
 - `targetWorkflowID`: The identifier of the workflow whose events to retrieve
 - `key`: The key of the event to retrieve
-- `timeout`: A timeout duration. If the wait times out, return an error
+- `timeout`: A timeout duration. If the wait times out, return an empty string
 
 **Returns:**
-- The value of the event published by `targetWorkflowID` with name `key`, or an error if the wait times out
+- The value of the event published by `targetWorkflowID` with name `key`, or an empty string if the wait times out
 
 ## Workflow Management Methods
 
