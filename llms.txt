@@ -25,6 +25,7 @@
 - [Workflow Management](https://docs.dbos.dev/golang/tutorials/workflow-management.md): You can view and manage your durable workflow executions via a web UI (self-hosted, DBOS Cloud) or programmatically.
 - [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
+- [CockroachDB](https://docs.dbos.dev/integrations/cockroachdb.md): Currently, CockroachDB is only compatible with DBOS Python and requires version >=2.8.0.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 - [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
 - [Neon](https://docs.dbos.dev/integrations/neon.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.

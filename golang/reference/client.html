@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reo.js"></script><link rel="stylesheet" href="/assets/css/styles.292b392a.css">
-<script src="/assets/js/runtime~main.62c7894d.js" defer="defer"></script>
-<script src="/assets/js/main.9264c5ad.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.d33db848.js" defer="defer"></script>
+<script src="/assets/js/main.68c3bcc5.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -99,17 +99,17 @@ Similar to <a class="" href="/golang/reference/methods#retrieveworkflow"><code>R
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="getevent">GetEvent<a href="#getevent" class="hash-link" aria-label="Direct link to GetEvent" title="Direct link to GetEvent" translate="no">​</a></h3>
 <div class="language-go codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-go codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token function" style="color:#e6db74">GetEvent</span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token plain">targetWorkflowID</span><span class="token punctuation" style="color:#f8f8f2">,</span><span class="token plain"> key </span><span class="token builtin" style="color:#e6db74">string</span><span class="token punctuation" style="color:#f8f8f2">,</span><span class="token plain"> timeout time</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token plain">Duration</span><span class="token punctuation" style="color:#f8f8f2">)</span><span class="token plain"> </span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token plain">any</span><span class="token punctuation" style="color:#f8f8f2">,</span><span class="token plain"> </span><span class="token builtin" style="color:#e6db74">error</span><span class="token punctuation" style="color:#f8f8f2">)</span><br></span></code></pre></div></div>
 <p>Retrieve the latest value of an event published by the workflow identified by <code>targetWorkflowID</code> to the key <code>key</code>.
-If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an empty string if the wait times out.
 Similar to <a class="" href="/golang/tutorials/workflow-communication#getevent"><code>GetEvent</code></a>.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li class=""><code>targetWorkflowID</code>: The identifier of the workflow whose events to retrieve</li>
 <li class=""><code>key</code>: The key of the event to retrieve</li>
-<li class=""><code>timeout</code>: A timeout duration. If the wait times out, return an error</li>
+<li class=""><code>timeout</code>: A timeout duration. If the wait times out, return an empty string</li>
 </ul>
 <p><strong>Returns:</strong></p>
 <ul>
-<li class="">The value of the event published by <code>targetWorkflowID</code> with name <code>key</code>, or an error if the wait times out</li>
+<li class="">The value of the event published by <code>targetWorkflowID</code> with name <code>key</code>, or an empty string if the wait times out</li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="workflow-management-methods">Workflow Management Methods<a href="#workflow-management-methods" class="hash-link" aria-label="Direct link to Workflow Management Methods" title="Direct link to Workflow Management Methods" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="listworkflows">ListWorkflows<a href="#listworkflows" class="hash-link" aria-label="Direct link to ListWorkflows" title="Direct link to ListWorkflows" translate="no">​</a></h3>
