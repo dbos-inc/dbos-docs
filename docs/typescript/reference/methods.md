@@ -95,14 +95,14 @@ Messages can optionally be associated with a topic.
 ```typescript
 recv<T>(
   topic?: string,
-  timeoutSeconds?: number
+  timeoutSeconds?: number // Default: 60 seconds
 ): Promise<T | null>
 ```
 
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning `null` if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning `null` if the wait times out.  If `timeoutSeconds` is not specified, a 60-second timeout is used.
 If no topic is specified, `recv` can only access messages sent without a topic.
 
 **Parameters:**
@@ -135,12 +135,12 @@ Can only be called from within a workflow.
 DBOS.getEvent<T>(
   workflowID: string,
   key: string,
-  timeoutSeconds?: number
+  timeoutSeconds?: number // Default: 60 seconds
 ): Promise<T | null>
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning `null` if the wait times out.
+If the event does not yet exist, wait for it to be published, returning `null` if the wait times out.  If `timeoutSeconds` is not specified, a 60-second timeout is used.
 
 **Parameters:**
 - **workflowID**: The identifier of the workflow whose events to retrieve.
