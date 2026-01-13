@@ -99,7 +99,7 @@ fastify.post<{
   // Idempotently start the checkout workflow in the background.
   const handle = await DBOS.startWorkflow(checkoutWorkflow, { workflowID: key })();
   // Wait for the checkout workflow to send a payment ID, then return it.
-  const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT);
+  const paymentID = await DBOS.getEvent<string | null>(handle.workflowID, PAYMENT_ID_EVENT, 300);
   if (paymentID === null) {
     DBOS.logger.error('checkout failed');
     return reply.code(500).send('Error starting checkout');
@@ -120,7 +120,7 @@ fastify.post<{
   // Send the payment status to the checkout workflow.
   await DBOS.send(key, status, PAYMENT_TOPIC);
   // Wait for the checkout workflow to send an order ID, then return it.
-  const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT);
+  const orderID = await DBOS.getEvent<string>(key, ORDER_ID_EVENT, 300);
   if (orderID === null) {
     DBOS.logger.error('retrieving order ID failed');
     return reply.code(500).send('Error retrieving order ID');
