@@ -90,7 +90,7 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 ### How Patching Works
 
 Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
-If it succesfully inserts the patch marker or if the patch marker is already present, then the workflow should take the patch codepath.
+If it successfully inserts the patch marker or if the patch marker is already present, then the workflow should take the patch codepath.
 If there is already a record present in this point in your workflow history and it is not a patch marker, then the workflow must be old (it already continued past this point with old code), and `DBOS.patch()` returns `false`.
 
 When you deprecate a patch with `DBOS.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
