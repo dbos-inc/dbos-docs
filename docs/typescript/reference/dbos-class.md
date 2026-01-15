@@ -65,12 +65,13 @@ main().catch(console.log);
 
 ```typescript
 DBOS.shutdown(
+  options?: { deregister?: boolean }
 ): Promise<void>
 ```
 
 Shut down DBOS, terminating all active workflows and closing database disconnections.
-After this completes, DBOS can be re-configured and re-launched.
-Useful for testing.
+
+In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.  If `options.deregister` is set, all current function, queue, instance, data source, event receiver, and any other registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`.
 
 ### DBOS.logRegisteredEndpoints
 
