@@ -66,13 +66,13 @@ class ExampleImpl implements Example {
         this.proxy = proxy;
     }
 
-    @Workflow(name = "taskWorkflow")
+    @Workflow
     public String taskWorkflow(String task) {
         // Process the task...
         return "Processed: " + task;
     }
 
-    @Workflow(name = "queueWorkflow")
+    @Workflow
     public List<String> queueWorkflow(String[] tasks) throws Exception {
         // Enqueue each task so all tasks are processed concurrently
         List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
@@ -268,7 +268,7 @@ Rate limits are especially useful when working with a rate-limited API.
 
 ## Setting Timeouts
 
-You can set a timeout for an enqueued workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+You can set a timeout for an enqueued workflow via the `withTimeout` function on `WorkflowOptions` and `StartWorkflowOptions`.
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
@@ -277,19 +277,83 @@ Also, timeouts are **durable**: they are stored in the database and persist acro
 
 Example syntax:
 
-```javascript
-const queue = new WorkflowQueue("example_queue");
+```java
+Queue queue = new Queue("example-queue");
+DBOS.registerQueue(queue);
 
-async function taskFunction(task) {
-    // ...
-}
-const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
+// use StartWorkflowOptions.withTimeout with DBOS.startWorkflow
+var options = new StartWorklowOptions(queue).withTimeout(Duration.ofSeconds(10))
+var handle = DBOS.startWorkflow(() -> proxy.workflow(), options);
+```
 
-async function main() {
-  const task = ...
-  const timeout = ... // Timeout in milliseconds
-  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+### Partitioning Queues
+
+You can **partition** queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
+Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
+
+For example, suppose you want your users to each be able to run at most one task at a time.
+You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+
+**Example Syntax**
+
+```java
+Queue queue = new Queue("example-queue").withConcurrency(1).withPartitionedEnabled(true);
+DBOS.registerQueue(queue);
+
+void onUserTaskSubmission(String userID, Task task) {
+    // Partition the task queue by user ID. As the queue has a
+    // maximum concurrency of 1, this means that at most one
+    // task can run at once per user (but tasks from different
+    // users can run concurrently).
+    var options = new StartWorkflowOptions(queue).withQueuePartitionKey(userID);
+    DBOS.startWorkflow(() -> taskWorkflow(task), options);
 }
+```
+
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```java
+// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// across all partitions (and at most one task per partition).
+var partitionedQueue = new Queue("partitioned-queue").withConcurrency(1).withPartitionedEnabled(true);
+var concurrencyQueue = new Queue("concurrency-queue").withConcurrency(5);
+
+class UserTasksImpl implements UserTasks {
+
+    // proxy object gets injected to implementation object to enable intra-workflow invocation  
+    UserTasks proxy;
+
+    @Workflow
+    void onUserTaskSubmission(String userID, Task task) {
+        // First, enqueue a "concurrency manager" workflow to the partitioned
+        // queue to enforce per-partition limits.
+        var options = new StartWorkflowOptions(partitionedQueue).withQueuePartitionKey(userID);
+        DBOS.startWorkflow(() -> proxy.concurrencyManager(task), options);
+    }
+
+    @Workflow
+    String concurrencyManager(Task task) {
+        // The "concurrency manager" workflow enqueues the processTask
+        // workflow on the non-partitioned queue and awaits its results
+        // to enforce global flow control limits.
+        var options = new StartWorkflowOptions(concurrencyQueue);
+        const handle = await DBOS.startWorkflow(() -> proxy.processTask(task), options);
+        return handle.getResult();
+    }
+
+    @Workflow
+    String processTask(Task task) {
+        // task processing code
+    }
 ```
 
 ## Deduplication
@@ -358,3 +422,38 @@ public void example(Example proxy, String task, int priority) throws Exception {
     System.out.println("Workflow completed: " + result);
 }
 ```
+
+## Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to a specific list of queues.
+You use the `withListenQueues` method on [DBOSConfig](../reference/lifecycle.md#dbosconfigure) to explicitly tell a process running DBOS to only listen to a specific set of queues.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```java
+public class DBOSLifecycle implements SmartLifecycle {
+
+    @Override
+    public void start() {
+
+        var cpuQueue = new Queue("cpuQueue");
+        DBOS.registerQueue(cpuQueue);
+        var gpuQueue = new Queue("gpuQueue");
+        DBOS.registerQueue(gpuQueue);
+
+        var workerType = System.getenv("WORKER_TYPE"); // "cpu or "gpu"
+        var config = DBOSConfig.defaults("my-dbos-app");
+        if (workerType.equals("gpu")) {
+            config = config.withListenQueues(gpuQueue);
+        } else if (workerType.equals("cpu")) {
+            config = config.withListenQueues(cpuQueue);
+        }
+        DBOS.configure(config);
+        DBOS.launch();
+    }
+```
+
+Note that `withListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
