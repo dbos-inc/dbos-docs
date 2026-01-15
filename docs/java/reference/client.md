@@ -10,6 +10,9 @@ toc_max_heading_level: 3
 
 ```java
 DBOSClient(String url, String user, String password)
+DBOSClient(String url, String user, String password, String schema)
+DBOSClient(DataSource dataSource)
+DBOSClient(DataSource dataSource, String schema)
 ```
 
 Construct the DBOSClient.
@@ -18,6 +21,8 @@ Construct the DBOSClient.
 - **url**: The JDBC URL for your system database.
 - **user**: Your Postgres username or role.
 - **password**: The password for your Postgres user or role.
+- **schema**: The schema the DBOS System Database tables are stored in. Defaults to `dbos` if not provided.
+- **dataSource**: System Database data source. A `HikariDataSource` is created if not provided.
 
 ## Workflow Interaction Methods
 
@@ -61,14 +66,26 @@ Specify the name and class name of the workflow to enqueue and the name of the q
 
 **Methods:**
 
+- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
 - **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
 - **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. 
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
 - **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - **`withDeadline(Instant deadline)`**:  Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
+
+:::info
+Timeout and deadline cannot both be set
+:::
+
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-- **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
+- **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+:::info
+- Partition keys are required when enqueueing to a partitioned queue.
+- Partition keys cannot be used with non-partitioned queues.
+- Partition keys and deduplication IDs cannot be used together.
+:::
 
 ### send
 

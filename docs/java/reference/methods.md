@@ -457,3 +457,7 @@ Example syntax:
       var result = inst.possiblySlowWorkflow();
     }
 ```
+
+:::info
+An explicit timeout and deadline cannot both be set.
+:::
