@@ -444,7 +444,7 @@ public class DBOSLifecycle implements SmartLifecycle {
         var gpuQueue = new Queue("gpuQueue");
         DBOS.registerQueue(gpuQueue);
 
-        var workerType = System.getenv("WORKER_TYPE"); // "cpu or "gpu"
+        var workerType = System.getenv("WORKER_TYPE"); // "cpu" or "gpu"
         var config = DBOSConfig.defaults("my-dbos-app");
         if (workerType.equals("gpu")) {
             config = config.withListenQueues(gpuQueue);
