@@ -282,7 +282,7 @@ Queue queue = new Queue("example-queue");
 DBOS.registerQueue(queue);
 
 // use StartWorkflowOptions.withTimeout with DBOS.startWorkflow
-var options = new StartWorklowOptions(queue).withTimeout(Duration.ofSeconds(10))
+var options = new StartWorkflowOptions(queue).withTimeout(Duration.ofSeconds(10))
 var handle = DBOS.startWorkflow(() -> proxy.workflow(), options);
 ```
 
