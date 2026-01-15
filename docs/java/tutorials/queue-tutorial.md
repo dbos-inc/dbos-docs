@@ -8,7 +8,7 @@ You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 To create a queue, instantiate and register a [`Queue`](../reference/queues.md#queue) object.
-All queues should be created and registered before DBOS is launched.
+All queues must be created and registered before DBOS is launched.
 
 ```java
 Queue queue = new Queue("example-queue");
@@ -21,7 +21,7 @@ Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```java
 class ExampleImpl implements Example {
-    @Workflow(name = "processTask")
+    @Workflow
     public String processTask(String task) {
         // Process the task...
         return "Processed: " + task;
@@ -265,6 +265,32 @@ DBOS.registerQueue(queue);
 ```
 
 Rate limits are especially useful when working with a rate-limited API.
+
+## Setting Timeouts
+
+You can set a timeout for an enqueued workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
+When the timeout expires, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+Timeouts are **start-to-completion**: a workflow's timeout does not begin until the workflow is dequeued and starts execution.
+Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
+
+async function main() {
+  const task = ...
+  const timeout = ... // Timeout in milliseconds
+  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+}
+```
 
 ## Deduplication
 
