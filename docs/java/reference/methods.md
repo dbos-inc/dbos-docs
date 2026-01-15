@@ -87,6 +87,26 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 **Parameters**:
 - **workflowId**: The ID of the workflow whose handle to retrieve.
 
+### patch
+
+```java
+static boolean patch(String patchName)
+```
+
+Insert a patch marker at the current point in workflow history.
+Returns `true` if it was successfully inserted or `false` if there is already a checkpoint present at this point in history. 
+Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md) for more detail.
+
+### deprecatePatch
+
+```java
+static boolean deprecatePatch(String patchName)
+```
+Safely bypass a patch marker at the current point in workflow history if present. 
+Always returns `true`.
+Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md) for more detail.
+
+
 ## Workflow Management Methods
 
 ### listWorkflows
@@ -457,3 +477,7 @@ Example syntax:
       var result = inst.possiblySlowWorkflow();
     }
 ```
+
+:::info
+An explicit timeout and deadline cannot both be set.
+:::
