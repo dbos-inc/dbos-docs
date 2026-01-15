@@ -307,3 +307,40 @@ WorkflowHandle.GetWorkflowID() string
 ```
 
 Retrieve the ID of the workflow.
+
+### Patching
+
+#### Patch
+
+```go
+func Patch(ctx DBOSContext, patchName string) (bool, error)
+```
+
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Used to safely upgrade workflow code; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **patchName**: The name to give the patch marker that will be inserted into workflow history.
+
+:::info
+Patching must be enabled in your configuration by setting `EnablePatching: true`.
+:::
+
+#### DeprecatePatch
+
+```go
+func DeprecatePatch(ctx DBOSContext, patchName string) (bool, error)
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `true`.
+Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **patchName**: The name of the patch marker to be bypassed.
+
+:::info
+Patching must be enabled in your configuration by setting `EnablePatching: true`.
+:::
