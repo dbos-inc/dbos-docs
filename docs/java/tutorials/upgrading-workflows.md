@@ -18,20 +18,17 @@ Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new 
 
 To use patching, you must enable it in the configuration:
 
-```typescript
-config: DBOSConfig = {
-  // ...
-  enablePatching: true,
-};
+```java
+var config = DBOSConfig.defaults("my-app-name").withEnablePatching();
 ```
 
 For example, let's say our original workflow is:
 
-```typescript
-@DBOS.workflow()
-static async workflow() {
-  await foo();
-  await bar();
+```java
+@Workflow
+public int workflow() {
+  DBOS.runStep(() -> foo(), "foo");
+  DBOS.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -39,16 +36,16 @@ We want to replace the call to `foo()` with a call to `baz()`.
 This is a breaking change because it changes what steps run.
 We can make this breaking change safely using a patch:
 
-```typescript
-@DBOS.workflow()
-static async workflow() {
-  if (await DBOS.patch('use-baz')) {
-    await baz();
+```java
+@Workflow
+public int workflow() {
+  if (DBOS.patch("use-baz")) {
+    DBOS.runStep(() -> baz(), "baz");
+  } else {
+    DBOS.runStep(() -> foo(), "foo");
   }
-  else {
-    await foo();
-  }
-  await bar();
+  
+  DBOS.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -61,28 +58,30 @@ Once all workflows that started before you deployed the patch are complete, you 
 :::tip
 You can use the [list workflows APIs](./workflow-management.md#listing-workflows) to see what workflows are still active.
 :::
-First, you must deprecate the patch with [`DBOS.deprecatePatch()`](../reference/workflows-steps.md#deprecatepatch).
+First, you must deprecate the patch with [`DBOS.deprecatePatch()`](../reference/methods.md#deprecatepatch)
 `DBOS.deprecatePatch` must be used for a transition period prior to fully removing the patch, as it allows coexistence with any ongoing workflows that used `DBOS.patch()`.
 
 For example, here's how to deprecate the patch above:
 
-```typescript
-@DBOS.workflow()
-static async workflow(){
-  if (await DBOS.deprecate_patch("use-baz")) { // always true
-    await baz();
+
+```java
+@Workflow
+public int workflow() {
+  if (DBOS.deprecatePatch("use-baz")) {
+    DBOS.runStep(() -> baz(), "baz");
   }
-  await bar();
+  
+  DBOS.runStep(() -> bar(), "bar");
 }
 ```
 
 Then, when all workflows that started before you deprecated the patch are complete, you can remove the patch entirely:
 
-```typescript
-@DBOS.workflow()
-static async workflow() {
-  await baz()
-  await bar()
+```java
+@Workflow
+public int workflow() {
+  DBOS.runStep(() -> baz(), "baz");
+  DBOS.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -105,11 +104,8 @@ All workflows are tagged with the application version on which they started.
 By default, application version is automatically computed from a hash of workflow source code.
 However, you can set your own version through configuration.
 
-```typescript
-config: DBOSConfig = {
-  // ...
-  applicationVersion: '1.0.0',
-}
+```java
+var config = DBOSConfig.defaults("my-app-name").withAppVersion("1.0.0");
 ```
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
