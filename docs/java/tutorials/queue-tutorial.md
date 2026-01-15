@@ -346,7 +346,7 @@ class UserTasksImpl implements UserTasks {
         // workflow on the non-partitioned queue and awaits its results
         // to enforce global flow control limits.
         var options = new StartWorkflowOptions(concurrencyQueue);
-        const handle = await DBOS.startWorkflow(() -> proxy.processTask(task), options);
+        var handle = DBOS.startWorkflow(() -> proxy.processTask(task), options);
         return handle.getResult();
     }
 
