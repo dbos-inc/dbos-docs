@@ -10,9 +10,19 @@ To use the server, your application should be connected to [Conductor](./conduct
 
 You may want to use the MCP server alongside a DBOS prompt ([Python](../python/prompting.md), [TypeScript](../typescript/prompting.md), [Go](../golang/prompting.md), [Java](../java/prompting.md)) so your model has the most up-to-date information on DBOS.
 
-## Setup With Claude Code
+## Setup
 
-First, install the MCP server:
+### Install `uv`
+
+Before using this MCP server, you must install `uv`, as `uv` is used to run the MCP server.
+
+For installation instructions, see the [`uv` installation docs](https://docs.astral.sh/uv/getting-started/installation/).
+
+If you already have an older version of `uv` installed, you might need to update it with `uv self update`.
+
+### Setup with Claude Code
+
+To use this MCP server with Claude Code, first install it:
 
 ```bash
 claude mcp add dbos-conductor -- uvx dbos-mcp
