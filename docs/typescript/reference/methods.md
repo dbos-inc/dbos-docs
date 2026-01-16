@@ -555,7 +555,7 @@ Returns true if called from within a step.
 ### DBOS.stepID
 
 ```typescript
-DBOS.stepID: string | undefined;
+DBOS.stepID: number | undefined;
 ```
 
 Return the unique ID of the current step within a workflow.
