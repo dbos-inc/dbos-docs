@@ -547,6 +547,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **executor_id**: Retrieve workflows with this executor ID.
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 
+### list_workflows_async
+
+Coroutine version of [`list_workflows`](#list_workflows).
+
 ### list_queued_workflows
 ```python
 def list_queued_workflows(
@@ -590,6 +594,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
 
+### list_queued_workflows_async
+
+Coroutine version of [`list_queued_workflows`](#list_queued_workflows).
+
 ### list_workflow_steps
 ```python
 def list_workflow_steps(
@@ -618,6 +626,10 @@ class StepInfo(TypedDict):
     completed_at_epoch_ms: Optional[int]
 ```
 
+### list_workflow_steps_async
+
+Coroutine version of [`list_workflow_steps`](#list_workflow_steps).
+
 ### cancel_workflow
 
 ```python
@@ -628,6 +640,10 @@ DBOS.cancel_workflow(
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### cancel_workflow_async
+
+Coroutine version of [`cancel_workflow`](#cancel_workflow).
 
 ### resume_workflow
 
@@ -641,6 +657,10 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### resume_workflow_async
+
+Coroutine version of [`resume_workflow`](#resume_workflow).
 
 ### fork_workflow
 
@@ -659,6 +679,10 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+### fork_workflow_async
+
+Coroutine version of [`fork_workflow`](#fork_workflow).
 
 ### delete_workflow
 
