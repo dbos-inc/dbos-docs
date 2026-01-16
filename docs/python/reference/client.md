@@ -38,6 +38,14 @@ This DBOS client connects to the system database specified in the `DBOS_SYSTEM_D
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
 
+### destroy
+
+```python
+client.destroy() -> None
+```
+
+Clean up database connections and release resources. Call this method when you are done using the client.
+
 ## Workflow Interaction Methods 
 
 ### enqueue
