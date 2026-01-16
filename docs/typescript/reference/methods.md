@@ -251,6 +251,20 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 **Parameters**:
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 
+### DBOS.getWorkflowStatus
+
+```typescript
+DBOS.getWorkflowStatus(
+  workflowID: string
+): Promise<WorkflowStatus | null>
+```
+
+Retrieve the status of a workflow given its ID.
+Returns `null` if no workflow with the given ID exists.
+
+**Parameters**:
+- **workflowID**: The ID of the workflow whose status to retrieve.
+
 ## Workflow Management Methods
 
 ### DBOS.listWorkflows
@@ -346,6 +360,24 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### DBOS.deleteWorkflow
+
+```typescript
+DBOS.deleteWorkflow(
+  workflowID: string,
+  deleteChildren?: boolean
+): Promise<void>
+```
+
+Delete a workflow and optionally all its child workflows.
+This permanently removes the workflow from the system database.
+
+**Warning:** This operation is irreversible.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to delete.
+- **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
 
 ### DBOS.forkWorkflow
 
