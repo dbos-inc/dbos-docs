@@ -284,6 +284,33 @@ class StepOptions(TypedDict, total=False):
 
 Version of [`run_step`](#run_step) to be called from `async` contexts.
 
+### get_workflow_status
+
+```python
+DBOS.get_workflow_status(
+    workflow_id: str,
+) -> Optional[WorkflowStatus]
+```
+
+Retrieve the status of a workflow by its ID.
+Returns `None` if no workflow with the given ID exists.
+
+**Parameters:**
+- `workflow_id`: The identifier of the workflow whose status to retrieve.
+
+**Returns:**
+- The [`WorkflowStatus`](#workflow-status) of the workflow, or `None` if not found.
+
+### get_workflow_status_async
+
+```python
+DBOS.get_workflow_status_async(
+    workflow_id: str,
+) -> Coroutine[Any, Any, Optional[WorkflowStatus]]
+```
+
+Coroutine version of [`get_workflow_status`](#get_workflow_status).
+
 ### retrieve_workflow
 
 ```python
