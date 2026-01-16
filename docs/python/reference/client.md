@@ -607,7 +607,7 @@ def on_user_input_submit(user_id, user_input):
 ### debounce_async
 
 ```python
-debouncerClient.debounce(
+debouncerClient.debounce_async(
     debounce_key: str,
     debounce_period_sec: float,
     *args: Any,

@@ -143,7 +143,7 @@ The `set_event` function should not be used in [coroutine workflows](../tutorial
 ### set_event_async
 
 ```python
-DBOS.set_event(
+DBOS.set_event_async(
     key: str,
     value: Any,
 ) -> Coroutine[Any, Any, None]
