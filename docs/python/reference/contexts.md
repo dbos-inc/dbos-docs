@@ -615,6 +615,38 @@ The specified `start_step` is the step from which the new workflow will start, s
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
+### delete_workflow
+
+```python
+DBOS.delete_workflow(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete a workflow and all its associated data (inputs, outputs, step results, etc.) from the system database.
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to delete.
+- **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+
+:::warning
+This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
+:::
+
+### delete_workflow_async
+
+```python
+DBOS.delete_workflow_async(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`delete_workflow`](#delete_workflow).
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
