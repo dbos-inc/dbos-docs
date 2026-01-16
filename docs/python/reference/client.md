@@ -17,19 +17,18 @@ external applications use `DBOSClient` instead.
 
 ```python
 DBOSClient(
-    *, 
+    *,
     system_database_url: Optional[str] = None,
-    application_database_url: Optional[str] = None,
-    dbos_system_schema: Optional[str] = "dbos",
     system_database_engine: Optional[sa.Engine] = None,
+    dbos_system_schema: Optional[str] = "dbos",
+    serializer: Serializer = DefaultSerializer(),
 )
 ```
 **Parameters:**
 - `system_database_url`: A connection string to your DBOS system database, with the same format and defaults as in [DBOSConfig](./configuration.md).
-- `application_database_url`: A connection string to your DBOS application database, with the same format and defaults as in [DBOSConfig](./configuration.md).
-Not required unless you use DBOS [transactions](../tutorials/step-tutorial.md#transactions).
-- `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - `system_database_engine`: A custom SQLAlchemy engine to use to connect to your system database. If provided, the client will not create an engine but use this instead.
+- `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
 
 **Example syntax:**
 
@@ -38,6 +37,14 @@ This DBOS client connects to the system database specified in the `DBOS_SYSTEM_D
 ```python
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
+
+### destroy
+
+```python
+client.destroy() -> None
+```
+
+Clean up database connections and release resources. Call this method when you are done using the client.
 
 ## Workflow Interaction Methods 
 
@@ -52,6 +59,10 @@ class EnqueueOptions(TypedDict):
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
     priority: NotRequired[int]
+    max_recovery_attempts: NotRequired[int]
+    queue_partition_key: NotRequired[str]
+    authenticated_user: NotRequired[str]
+    authenticated_roles: NotRequired[list[str]]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -81,6 +92,10 @@ If left undefined, it will be updated to the current version when the workflow i
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.
+- `queue_partition_key`: A partition key for [partitioned queues](../tutorials/queue-tutorial.md#partitioning-queues). Workflows with the same partition key are processed sequentially.
+- `authenticated_user`: An authenticated user to associate with the workflow.
+- `authenticated_roles`: Authenticated roles to associate with the workflow.
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -305,16 +320,22 @@ async for value in client.read_stream_async(workflow_id, "results"):
 client.list_workflows(
     *,
     workflow_ids: Optional[List[str]] = None,
-    status: Optional[str | list[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
     app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
     user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
     workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
+    queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -323,16 +344,22 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows that were enqueued on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 
 ### list_workflows_async
 
@@ -340,16 +367,22 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 client.list_workflows_async(
     *,
     workflow_ids: Optional[List[str]] = None,
-    status: Optional[str | list[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
     app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
     user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
     workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
+    queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -360,42 +393,67 @@ Asynchronous version of [`DBOSClient.list_workflows`](#list_workflows).
 ```python
 client.list_queued_workflows(
     *,
-    queue_name: Optional[str] = None,
-    status: Optional[str | list[str]] = None,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
+    user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](./contexts#workflow-status) of all **queued** workflows (status `ENQUEUED` or `PENDING`) matching specified criteria.
 Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 
 **Parameters:**
-- **queue_name**: Retrieve workflows running on this queue.
+- **workflow_ids**: Retrieve workflows with these IDs.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
+- **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows running on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
 
 ### list_queued_workflows_async
 
 ```python
 client.list_queued_workflows_async(
     *,
-    queue_name: Optional[str] = None,
-    status: Optional[str | list[str]] = None,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
+    user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -549,7 +607,7 @@ def on_user_input_submit(user_id, user_input):
 ### debounce_async
 
 ```python
-debouncerClient.debounce(
+debouncerClient.debounce_async(
     debounce_key: str,
     debounce_period_sec: float,
     *args: Any,

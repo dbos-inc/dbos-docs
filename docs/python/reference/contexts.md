@@ -143,7 +143,7 @@ The `set_event` function should not be used in [coroutine workflows](../tutorial
 ### set_event_async
 
 ```python
-DBOS.set_event(
+DBOS.set_event_async(
     key: str,
     value: Any,
 ) -> Coroutine[Any, Any, None]
@@ -283,6 +283,33 @@ class StepOptions(TypedDict, total=False):
 ### run_step_async
 
 Version of [`run_step`](#run_step) to be called from `async` contexts.
+
+### get_workflow_status
+
+```python
+DBOS.get_workflow_status(
+    workflow_id: str,
+) -> Optional[WorkflowStatus]
+```
+
+Retrieve the status of a workflow by its ID.
+Returns `None` if no workflow with the given ID exists.
+
+**Parameters:**
+- `workflow_id`: The identifier of the workflow whose status to retrieve.
+
+**Returns:**
+- The [`WorkflowStatus`](#workflow-status) of the workflow, or `None` if not found.
+
+### get_workflow_status_async
+
+```python
+DBOS.get_workflow_status_async(
+    workflow_id: str,
+) -> Coroutine[Any, Any, Optional[WorkflowStatus]]
+```
+
+Coroutine version of [`get_workflow_status`](#get_workflow_status).
 
 ### retrieve_workflow
 
@@ -488,11 +515,14 @@ def list_workflows(
     forked_from: Optional[str] = None,
     user: Optional[str] = None,
     queue_name: Optional[str] = None,
-    executor_id: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
     workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
+    queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -500,7 +530,6 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
@@ -509,41 +538,65 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
 - **queue_name**: Retrieve workflows that were enqueued on this queue.
-- **executor_id**: Retrieve workflows with this executor ID.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
-- **workflow_id_prefix**: Retrieve workflows whose IDs have this prefix.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+
+### list_workflows_async
+
+Coroutine version of [`list_workflows`](#list_workflows).
 
 ### list_queued_workflows
 ```python
 def list_queued_workflows(
     *,
-    queue_name: Optional[str] = None,
-    status: Optional[str | list[str]] = None,
-    forked_from: Optional[str] = None,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
-    executor_id: Optional[str] = None,
     name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
+    user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** workflows matching specified criteria.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workflows (status `ENQUEUED` or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
-- **queue_name**: Retrieve workflows running on this queue.
+- **workflow_ids**: Retrieve workflows with these IDs.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
-- **forked_from**: Retrieve workflows forked from this workflow ID.
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
-- **executor_id**: Retrieve workflows with this executor ID.
 - **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
+- **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows running on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
+
+### list_queued_workflows_async
+
+Coroutine version of [`list_queued_workflows`](#list_queued_workflows).
 
 ### list_workflow_steps
 ```python
@@ -573,6 +626,10 @@ class StepInfo(TypedDict):
     completed_at_epoch_ms: Optional[int]
 ```
 
+### list_workflow_steps_async
+
+Coroutine version of [`list_workflow_steps`](#list_workflow_steps).
+
 ### cancel_workflow
 
 ```python
@@ -583,6 +640,10 @@ DBOS.cancel_workflow(
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+### cancel_workflow_async
+
+Coroutine version of [`cancel_workflow`](#cancel_workflow).
 
 ### resume_workflow
 
@@ -596,6 +657,10 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### resume_workflow_async
+
+Coroutine version of [`resume_workflow`](#resume_workflow).
 
 ### fork_workflow
 
@@ -614,6 +679,42 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+### fork_workflow_async
+
+Coroutine version of [`fork_workflow`](#fork_workflow).
+
+### delete_workflow
+
+```python
+DBOS.delete_workflow(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete a workflow and all its associated data (inputs, outputs, step results, etc.) from the system database.
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to delete.
+- **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+
+:::warning
+This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
+:::
+
+### delete_workflow_async
+
+```python
+DBOS.delete_workflow_async(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`delete_workflow`](#delete_workflow).
 
 ### Workflow Status
 

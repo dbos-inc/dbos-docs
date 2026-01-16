@@ -12,7 +12,7 @@ DBOS supports two strategies for safely upgrading workflow code: **patching** an
 
 ## Patching
 
-In patching, the result of a call to [`DBOS.patch()`](../reference/workflows-steps.md#patch) is used to conditionally execute the new code.
+In patching, the result of a call to [`DBOS.patch()`](../reference/methods.md#patch) is used to conditionally execute the new code.
 `DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
 Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
@@ -114,4 +114,4 @@ This prevents recovery of workflows that depend on different code.
 When using versioning, we recommend **blue-green** code upgrades:
  - When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
  - Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
- - Then, once all workflows of the old version are complete (you can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to check), you can retire the old code version.
+ - Then, once all workflows of the old version are complete (you can use [`DBOS.listWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
