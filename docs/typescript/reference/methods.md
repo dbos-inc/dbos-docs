@@ -640,7 +640,7 @@ Wait for the workflow to complete, then return its result.
 ### handle.getStatus
 
 ```typescript
-handle.getStatus(): Promise<WorkflowStatus>;
+handle.getStatus(): Promise<WorkflowStatus | null>;
 ```
 
-Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow.
+Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow, or `null` if not found.

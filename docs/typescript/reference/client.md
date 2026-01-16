@@ -18,14 +18,15 @@ external applications use the `DBOSClient` class instead.
 ```ts
 interface EnqueueOptions {
     workflowName: string;
-    workflowClassName: string;
-    workflowConfigName: string;
+    workflowClassName?: string;
+    workflowConfigName?: string;
     queueName: string;
     workflowID?: string;
     appVersion?: string;
     workflowTimeoutMS?: number;
     deduplicationID?: string;
     priority?: number;
+    queuePartitionKey?: string;
 }
 
 class DBOSClient {
@@ -43,7 +44,7 @@ class DBOSClient {
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
-    listQueuedWorkflows(input: GetQueuedWorkflowsInput): Promise<WorkflowStatus[]>;
+    listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
 
     cancelWorkflow(workflowID: string): Promise<void>;
@@ -218,9 +219,9 @@ for await (const value of client.readStream(workflowID, "example_key")) {
 
 #### `getWorkflow`
 
-Retrieves the status of a single workflow, given its workflow ID. 
+Retrieves the status of a single workflow, given its workflow ID.
 If the specified workflow ID does not exist, getWorkflow returns undefined.
-Please see [`DBOS.getWorkflowStatus`](./methods.md#handlegetstatus) for more for more information.
+Please see [`DBOS.getWorkflowStatus`](./methods.md#dbosgetworkflowstatus) for more information.
 
 #### `listWorkflows`
 
