@@ -313,11 +313,11 @@ The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this m
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string)
-: Promise<StepInfo[]>
+  workflowID: string
+): Promise<StepInfo[] | undefined>
 ```
 
-Retrieve the steps of a workflow.
+Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
