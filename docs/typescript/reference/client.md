@@ -49,7 +49,7 @@ class DBOSClient {
     cancelWorkflow(workflowID: string): Promise<void>;
     resumeWorkflow(workflowID: string): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
 }
 ```
 
