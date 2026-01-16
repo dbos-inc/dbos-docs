@@ -17,19 +17,18 @@ external applications use `DBOSClient` instead.
 
 ```python
 DBOSClient(
-    *, 
+    *,
     system_database_url: Optional[str] = None,
-    application_database_url: Optional[str] = None,
-    dbos_system_schema: Optional[str] = "dbos",
     system_database_engine: Optional[sa.Engine] = None,
+    dbos_system_schema: Optional[str] = "dbos",
+    serializer: Serializer = DefaultSerializer(),
 )
 ```
 **Parameters:**
 - `system_database_url`: A connection string to your DBOS system database, with the same format and defaults as in [DBOSConfig](./configuration.md).
-- `application_database_url`: A connection string to your DBOS application database, with the same format and defaults as in [DBOSConfig](./configuration.md).
-Not required unless you use DBOS [transactions](../tutorials/step-tutorial.md#transactions).
-- `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - `system_database_engine`: A custom SQLAlchemy engine to use to connect to your system database. If provided, the client will not create an engine but use this instead.
+- `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
+- `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
 
 **Example syntax:**
 
