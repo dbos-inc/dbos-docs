@@ -14,11 +14,8 @@ You may want to use the MCP server alongside a DBOS prompt ([Python](../python/p
 
 ### Install `uv`
 
-Before using this MCP server, you must install `uv`, as `uv` is used to run the MCP server.
-
+Before using this MCP server, you must install `uv`.
 For installation instructions, see the [`uv` installation docs](https://docs.astral.sh/uv/getting-started/installation/).
-
-If you already have an older version of `uv` installed, you might need to update it with `uv self update`.
 
 ### Setup with Claude Code
 
