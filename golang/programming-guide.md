@@ -343,7 +343,8 @@ Successfully completed 10 tasks
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
-Congratulations! You've finished the DBOS Golang guide.
-You can find the code from this guide in the [DBOS Toolbox](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/dbos-toolbox) template app.
-
-Next, to learn how to build more complex applications, check out the Go tutorials and [example apps](../examples/index.md).
+Congratulations!  You've finished the DBOS Go guide.
+Next, you should:
+- Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../production/mcp.md).
+- Check out some [**example applications**](../examples/index.md).

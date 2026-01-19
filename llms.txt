@@ -68,6 +68,7 @@
 - [Self-Hosting Conductor](https://docs.dbos.dev/production/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Docker](https://docs.dbos.dev/production/hosting-with-docker.md): This guide shows you how to setup a DBOS application and its Postgres database using Docker.
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide offers recommendations when deploying a DBOS-enabled application in Kubernetes.
+- [DBOS MCP Server](https://docs.dbos.dev/production/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/retention.md): If you are using Conductor, you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 - [Workflow Management](https://docs.dbos.dev/production/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
 - [Workflow Recovery](https://docs.dbos.dev/production/workflow-recovery.md): When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.

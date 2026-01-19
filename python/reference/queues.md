@@ -12,7 +12,7 @@ Queues are useful for controlling the number of functions run in parallel, or th
 Queue(
     name: str = None,
     concurrency: Optional[int] = None,
-    limiter: Optional[Limiter] = None
+    limiter: Optional[QueueRateLimit] = None,
     *,
     worker_concurrency: Optional[int] = None,
     priority_enabled: bool = False,
@@ -20,9 +20,9 @@ Queue(
     polling_interval_sec: float = 1.0,
 )
 
-class Limiter(TypedDict):
+class QueueRateLimit(TypedDict):
     limit: int
-    period: float # In seconds
+    period: float  # In seconds
 ```
 
 **Parameters:**

@@ -251,6 +251,20 @@ Retrieve the [handle](#workflow-handles) of a workflow.
 **Parameters**:
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 
+### DBOS.getWorkflowStatus
+
+```typescript
+DBOS.getWorkflowStatus(
+  workflowID: string
+): Promise<WorkflowStatus | null>
+```
+
+Retrieve the status of a workflow given its ID.
+Returns `null` if no workflow with the given ID exists.
+
+**Parameters**:
+- **workflowID**: The ID of the workflow whose status to retrieve.
+
 ## Workflow Management Methods
 
 ### DBOS.listWorkflows
@@ -278,6 +292,8 @@ interface GetWorkflowsInput {
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
+  loadInput?: boolean; // Load the input of the workflow (default true).
+  loadOutput?: boolean; // Load the output of the workflow (default true).
 }
 ```
 
@@ -297,11 +313,11 @@ The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this m
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string)
-: Promise<StepInfo[]>
+  workflowID: string
+): Promise<StepInfo[] | undefined>
 ```
 
-Retrieve the steps of a workflow.
+Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
@@ -346,6 +362,24 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### DBOS.deleteWorkflow
+
+```typescript
+DBOS.deleteWorkflow(
+  workflowID: string,
+  deleteChildren?: boolean
+): Promise<void>
+```
+
+Delete a workflow and optionally all its child workflows.
+This permanently removes the workflow from the system database.
+
+**Warning:** This operation is irreversible.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow to delete.
+- **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
 
 ### DBOS.forkWorkflow
 
@@ -521,7 +555,7 @@ Returns true if called from within a step.
 ### DBOS.stepID
 
 ```typescript
-DBOS.stepID: string | undefined;
+DBOS.stepID: number | undefined;
 ```
 
 Return the unique ID of the current step within a workflow.
@@ -606,7 +640,7 @@ Wait for the workflow to complete, then return its result.
 ### handle.getStatus
 
 ```typescript
-handle.getStatus(): Promise<WorkflowStatus>;
+handle.getStatus(): Promise<WorkflowStatus | null>;
 ```
 
-Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow.
+Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow, or `null` if not found.
