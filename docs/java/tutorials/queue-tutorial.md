@@ -286,7 +286,7 @@ var options = new StartWorkflowOptions(queue).withTimeout(Duration.ofSeconds(10)
 var handle = DBOS.startWorkflow(() -> proxy.workflow(), options);
 ```
 
-### Partitioning Queues
+## Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
