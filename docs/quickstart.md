@@ -99,7 +99,7 @@ Next:
 
 - Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./python/prompting.md).
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./python/prompting.md) or [**DBOS MCP server**](./production/mcp.md).
 
 </article>
 
@@ -196,7 +196,7 @@ Next:
 
 - Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./typescript/prompting.md).
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./typescript/prompting.md) or [**DBOS MCP server**](./production/mcp.md).
 </article>
 
 <article className="col col--6">
@@ -274,6 +274,8 @@ Next:
 
 - Check out the [**DBOS programming guide**](./golang/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./golang/integrating-dbos.md) to make it reliable with just a few lines of code.
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./golang/prompting.md) or [**DBOS MCP server**](./production/mcp.md).
+
 
 </LargeTabItem>
 
@@ -346,6 +348,8 @@ Next:
 
 - Check out the [**DBOS programming guide**](./java/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./java/integrating-dbos.md) to make it reliable with just a few lines of code.
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./java/prompting.md) or [**DBOS MCP server**](./production/mcp.md).
+
 
 </article>
 
