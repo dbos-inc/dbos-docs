@@ -62,7 +62,7 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
-- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/workflow-tutorial.md#workflow-versioning-and-recovery).
+- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 - **`withExecutorId(String executorId)`**:
 

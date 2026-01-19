@@ -18,14 +18,15 @@ external applications use the `DBOSClient` class instead.
 ```ts
 interface EnqueueOptions {
     workflowName: string;
-    workflowClassName: string;
-    workflowConfigName: string;
+    workflowClassName?: string;
+    workflowConfigName?: string;
     queueName: string;
     workflowID?: string;
     appVersion?: string;
     workflowTimeoutMS?: number;
     deduplicationID?: string;
     priority?: number;
+    queuePartitionKey?: string;
 }
 
 class DBOSClient {
@@ -43,13 +44,13 @@ class DBOSClient {
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
-    listQueuedWorkflows(input: GetQueuedWorkflowsInput): Promise<WorkflowStatus[]>;
+    listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
 
     cancelWorkflow(workflowID: string): Promise<void>;
     resumeWorkflow(workflowID: string): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
 }
 ```
 
@@ -93,15 +94,13 @@ Required metadata includes:
 Additional but optional metadata includes:
 
 * **workflowClassName**: The name of the class the workflow method is a member of, if any.
-* **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows)
-***`workflowID**: The unique ID for the enqueued workflow. 
-If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
-Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
-* **appVersion**: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued.
+* **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows).
+* **workflowID**: The unique ID for the enqueued workflow. If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.
+* **appVersion**: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued.
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
 * **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
@@ -218,9 +217,9 @@ for await (const value of client.readStream(workflowID, "example_key")) {
 
 #### `getWorkflow`
 
-Retrieves the status of a single workflow, given its workflow ID. 
+Retrieves the status of a single workflow, given its workflow ID.
 If the specified workflow ID does not exist, getWorkflow returns undefined.
-Please see [`DBOS.getWorkflowStatus`](./methods.md#handlegetstatus) for more for more information.
+Please see [`DBOS.getWorkflowStatus`](./methods.md#dbosgetworkflowstatus) for more information.
 
 #### `listWorkflows`
 
