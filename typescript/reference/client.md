@@ -19,6 +19,7 @@ external applications use the `DBOSClient` class instead.
 interface EnqueueOptions {
     workflowName: string;
     workflowClassName: string;
+    workflowConfigName: string;
     queueName: string;
     workflowID?: string;
     appVersion?: string;
@@ -92,6 +93,7 @@ Required metadata includes:
 Additional but optional metadata includes:
 
 * **workflowClassName**: The name of the class the workflow method is a member of, if any.
+* **workflowConfigName**: If the workflow is an instance method (of class `workflowClassName`), the name of the [instance](./workflows-steps.md#instance-method-workflows)
 ***`workflowID**: The unique ID for the enqueued workflow. 
 If left undefined, DBOS Client will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
 Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflow-ids-and-idempotency) for more information.

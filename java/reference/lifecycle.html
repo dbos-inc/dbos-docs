@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reo.js"></script><link rel="stylesheet" href="/assets/css/styles.292b392a.css">
-<script src="/assets/js/runtime~main.ee746e24.js" defer="defer"></script>
-<script src="/assets/js/main.c3f801ba.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.e9fff186.js" defer="defer"></script>
+<script src="/assets/js/main.d2eeb31c.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -29,29 +29,37 @@ Here, we document configuration and lifecycle methods.</p>
 <p><strong>DBOSConfig</strong></p>
 <p><code>DBOSConfig</code> is a with-based configuration record for configuring DBOS.
 The application name, database URL, database user, and database password are required.</p>
-<p><strong>Constructor:</strong></p>
-<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-java codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token class-name" style="color:#e6db74">DBOSConfig</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token function" style="color:#e6db74">defaults</span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token class-name" style="color:#e6db74">String</span><span class="token plain"> appName</span><span class="token punctuation" style="color:#f8f8f2">)</span><br></span></code></pre></div></div>
-<p>Create a DBOSConfig object.  This configuration can be adjusted by using <code>with</code> methods that produce new configurations.</p>
+<p><strong>Constructors:</strong></p>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#f8f8f2;--prism-background-color:#272822"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-java codeBlock_bY9V thin-scrollbar" style="color:#f8f8f2;background-color:#272822"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#f8f8f2"><span class="token class-name" style="color:#e6db74">DBOSConfig</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token function" style="color:#e6db74">defaults</span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token class-name" style="color:#e6db74">String</span><span class="token plain"> appName</span><span class="token punctuation" style="color:#f8f8f2">)</span><span class="token plain"></span><br></span><span class="token-line" style="color:#f8f8f2"><span class="token plain"></span><span class="token class-name" style="color:#e6db74">DBOSConfig</span><span class="token punctuation" style="color:#f8f8f2">.</span><span class="token function" style="color:#e6db74">defaultsFromEnv</span><span class="token punctuation" style="color:#f8f8f2">(</span><span class="token class-name" style="color:#e6db74">String</span><span class="token plain"> appName</span><span class="token punctuation" style="color:#f8f8f2">)</span><br></span></code></pre></div></div>
+<p>Create a DBOSConfig object.
+The <code>defaults</code> static method only sets the application name and sets all other config fields to their default values.
+The <code>defaultsFromEnv</code> static method reads database connection information from environment variables.</p>
+<ul>
+<li class=""><strong><code>DBOS_SYSTEM_JDBC_URL</code></strong>: the JDBC URL for your system database</li>
+<li class=""><strong><code>PGUSER</code></strong>: the Postgres username or role. Defaults to <code>postgres</code> if <code>PGUSER</code> environment variable is missing or empty.</li>
+<li class=""><strong><code>PGPASSWORD</code></strong>: The password for your Postgres user or role.</li>
+</ul>
+<p>This configuration can be adjusted by using <code>with</code> methods that produce new configurations.</p>
 <p><strong>With Methods:</strong></p>
 <ul>
 <li class="">
 <p><strong><code>withAppName(String appName)</code></strong>: Your application&#x27;s name. Required.</p>
 </li>
 <li class="">
-<p><strong><code>withDatabaseUrl(String databaseUrl)</code></strong>: The JDBC URL for your system database. Required. A valid JDBC URL is of the form <code>jdbc:postgresql://host:port/database</code></p>
+<p><strong><code>withDatabaseUrl(String databaseUrl)</code></strong>: The JDBC URL for your system database. A valid JDBC URL is of the form <code>jdbc:postgresql://host:port/database</code>. Required unless valid DataSource is provided.</p>
 </li>
 <li class="">
-<p><strong><code>withDbUser(String dbUser)</code></strong>: Your Postgres username or role. Required.</p>
+<p><strong><code>withDbUser(String dbUser)</code></strong>: Your Postgres username or role. Required unless valid DataSource is provided.</p>
 </li>
 <li class="">
-<p><strong><code>withDbPassword(String dbPassword)</code></strong>: The password for your Postgres user or role. Required.</p>
+<p><strong><code>withDbPassword(String dbPassword)</code></strong>: The password for your Postgres user or role. Required unless valid DataSource is provided.</p>
 </li>
 <li class="">
-<p><strong><code>withMaximumPoolSize(int maximumPoolSize)</code></strong>: The maximum size for the system database connection pool created by DBOS.</p>
+<p><strong><code>withDataSource(DataSource v)</code></strong>: Instead of providing DBOS with the JDBC URL, username and password, you can provide a configured DataSource for DBOS to use. DBOS uses <code>HikariDataSource</code> if a data source is not provided.</p>
 </li>
-<li class="">
-<p><strong><code>withConnectionTimeout(int connectionTimeout)</code></strong>: The connection timeout for the system database connection created by DBOS.</p>
-</li>
+</ul>
+<div class="theme-admonition theme-admonition-warning admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>warning</div><div class="admonitionContent_BuS1"><p>Using a data source that doesn&#x27;t support connection pooling like <code>PGSimpleDataSource</code> is not recommended.</p></div></div>
+<ul>
 <li class="">
 <p><strong><code>withAdminServer(boolean enable)</code></strong>: Whether to run an HTTP admin server for workflow management operations. Defaults to false.</p>
 </li>
@@ -66,6 +74,21 @@ The application name, database URL, database user, and database password are req
 </li>
 <li class="">
 <p><strong><code>withAppVersion(String appVersion)</code></strong>: The code version for this application and its workflows. Workflow versioning is documented <a class="" href="/java/tutorials/workflow-tutorial#workflow-versioning-and-recovery">here</a>.</p>
+</li>
+<li class="">
+<p><strong><code>withExecutorId(String executorId)</code></strong>:</p>
+</li>
+<li class="">
+<p><strong><code>withDatabaseSchema(String schema)</code></strong>: Postgres database schema for system database tables. Defaults to <code>dbos</code>.</p>
+</li>
+<li class="">
+<p><strong><code>withEnablePatching(boolean patchEnabled)</code></strong>: Enable workflow patching. Defaults to false.</p>
+</li>
+<li class="">
+<p><strong><code>withListenQueues(Queue... queues)</code></strong>: Specify the queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.</p>
+</li>
+<li class="">
+<p><strong><code>withListenQueues(String... queues)</code></strong>: Specify the queues by name this DBOS process should dequeue and execute workflows from.</p>
 </li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dboslaunch">DBOS.launch<a href="#dboslaunch" class="hash-link" aria-label="Direct link to DBOS.launch" title="Direct link to DBOS.launch" translate="no">​</a></h3>

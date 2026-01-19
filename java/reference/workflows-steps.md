@@ -18,17 +18,47 @@ public @interface Workflow {
 
 An annotation that can be applied to a class method to mark it as a durable workflow.
 
+:::info
+Workflow methods must be invoked via the proxy object returned by [`registerWorkflow`](#registerworkflows) in order to be durable.
+:::
+
 **Parameters:**
-- **name**: The workflow name. Must be unique.
+- **name**: The workflow name. Must be unique within the class. Defaults to method name if not provided.
 - **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+
+### @Step
+```java
+public @interface Step {
+  String name();
+  boolean retriesAllowed();
+  int maxAttempts();
+  double intervalSeconds();
+  double backOffRate();
+}
+```
+
+An annotation that can be applied to a class method to mark it as a step in a durable workflow.
+
+:::info
+Reminder, step methods must be invoked via the proxy object returned by [`registerWorkflow`](#registerworkflows) in order to be durable.
+:::
+
+**Parameters:**
+- **name**: The step name. Must be unique within the class. Defaults to method name if not provided.
+- **retriesAllowed**: Optionally configure the step to retry on failure. Defaults to false.
+- **maxAttempts**: Maximum number of times this step is retried on failure (if retries are enabled). Defaults to three.
+- **intervalSeconds**: Initial delay between retries in seconds. Defaults to one second.
+- **backOffRate**: Exponential backoff multiplier between retries. Defaults to two.
 
 ### @Scheduled
 
 ```java
 public @interface Scheduled {
   String cron();
+  String queue();
+  boolean ignoreMissed();
 }
 ```
 
@@ -36,6 +66,8 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 
 **Parameters:**
 - **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
+- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified
+- **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to false to enable this behavior. Defaults to true.
 
 ## Methods
 
@@ -114,6 +146,16 @@ new StartWorkflowOptions()
 ```
 Create workflow options with all fields set to their defaults.
 
+```java
+new StartWorkflowOptions(String workflowId)
+```
+Shortcut for `new StartWorkflowOptions().withWorkflowId(workflowId)`
+
+```java
+new StartWorkflowOptions(Queue queue)
+```
+Shortcut for `new StartWorkflowOptions().withQueue(queue)`
+
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
@@ -131,9 +173,21 @@ Create workflow options with all fields set to their defaults.
 
   Deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's deadline, you can start it with a different explicit deadline.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+:::info
+An explicit timeout and deadline cannot both be set.
+:::
 
 - **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+
+- **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+:::info
+- Partition keys are required when enqueueing to a partitioned queue.
+- Partition keys cannot be used with non-partitioned queues.
+- Partition keys and deduplication IDs cannot be used together.
+:::
 
 ### runStep
 

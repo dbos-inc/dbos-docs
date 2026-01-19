@@ -35,7 +35,7 @@ DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.  A timeout is recommended even for operations that "should eventually complete"; the timeout should exceed the longest normal execution time and serve as a safeguard to detect and report unexpected behavior rather than waiting forever.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
@@ -96,7 +96,7 @@ DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Prom
 ```
 
 You can call [`DBOS.getEvent`](../reference/methods.md#dbosgetevent) to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.  The default timeout is 60 seconds.  A timeout is recommended even for operations that "should eventually complete"; the timeout should exceed the longest normal execution time and serve as a safeguard to detect and report unexpected behavior rather than waiting forever.
 
 You can also call [`getEvent`](../reference/client.md#getevent) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
@@ -123,7 +123,7 @@ The HTTP handler that originally started the workflow uses `getEvent()` to await
 ```javascript
 static async webCheckout(...): Promise<void> {
   const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
-  const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL);
+  const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL, 300);
   if (url === null) {
     DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
   } else {

@@ -596,7 +596,7 @@ DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.  The default timeout is 60 seconds.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 ### Messages Example
@@ -657,7 +657,7 @@ DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Prom
 ```
 
 You can call `DBOS.getEvent` to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.  Default timeout is 60 seconds.
 
 You can also call `getEvent` from outside of your DBOS application with DBOS Client.
 

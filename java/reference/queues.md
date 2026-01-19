@@ -20,6 +20,7 @@ public record Queue(
     Integer concurrency,
     Integer workerConcurrency,
     boolean priorityEnabled,
+    boolean partitionedEnabled,
     RateLimit rateLimit
 ) { 
     public Queue withName(String name);
@@ -28,6 +29,7 @@ public record Queue(
     public Queue withRateLimit(RateLimit rateLimit) {
     public Queue withRateLimit(int limit, double period);
     public Queue withPriorityEnabled(boolean priorityEnabled);
+    public Queue withPartitionedEnabled(boolean partitionedEnabled);
 }
 ```
 
@@ -41,6 +43,7 @@ You can enqueue a workflow using the `withQueue` parameter of [`startWorkflow`](
 - **concurrency**: The maximum number of workflows from this queue that may run concurrently. This concurrency limit is global across all DBOS processes using this queue.
 - **rateLimit**: A limit on the maximum number of functions (`limit`) that may be started in a given period (`period`).
 - **priorityEnabled**: Enable setting priority for workflows on this queue.
+- **partitionedEnabled**: Enable partitioning on this queue.
 
 **Example Syntax:**
 
