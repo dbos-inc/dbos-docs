@@ -6,6 +6,8 @@ title: AI Model Prompting
 You may want assistance from an AI model in building a DBOS application.
 To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
 
+You may also want to use the [DBOS MCP server](../production/mcp.md) so your model can directly access your application's workflows and steps.
+
 ## How To Use
 
 First, use the click-to-copy button in the top right of the code block to copy the full prompt to your clipboard.
