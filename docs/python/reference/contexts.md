@@ -284,6 +284,32 @@ class StepOptions(TypedDict, total=False):
 
 Version of [`run_step`](#run_step) to be called from `async` contexts.
 
+### get_result
+
+```python
+DBOS.get_result(
+    workflow_id: str,
+) -> Optional[Any]
+```
+
+Wait for the workflow identified by `workflow_id` to complete, and return its result.  This is similar to calling [`get_result`](./workflow_handles.md#get_result) on a [WorkflowHandle](./workflow_handles.md), but is a single step that does not require a handle.
+
+**Parameters:**
+- `workflow_id`: The identifier of the workflow whose result to return.
+
+**Returns:**
+- The result of the workflow, or throws an exception if the workflow threw an exception.
+
+### get_result_async
+
+```python
+DBOS.get_result_async(
+    workflow_id: str,
+) -> Coroutine[Any, Any, Optional[Any]]
+```
+
+Coroutine version of [`get_result`](#get_result).
+
 ### get_workflow_status
 
 ```python
