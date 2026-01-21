@@ -117,7 +117,7 @@ If you need to perform a non-deterministic operation like accessing the database
 Instead, you should do all database operations in non-deterministic operations in [steps](./step-tutorial.md).
 
 :::warning
-Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps.
+Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps, or use the durable [`Go`](#concurrent-steps) and [`Select`](#selecting-the-first-result) functions instead.
 :::
 
 For example, **don't do this**:
@@ -252,6 +252,116 @@ func main() {
     }
 }
 ```
+
+## Concurrent Steps
+
+Golang offers two building blocks to execute work concurrently: `go` and `select`. `go` starts a new goroutine and `select` allows to poll from a list of channels.
+Unfortunately these primitive are non-deterministic: the Golang scheduler does not guarantee the order in which goroutines are scheduled, nor does it guarantee that the same channel will, out of a set of ready channels, will be selected, when the same code runs multiple time.
+This is a challenge for durable execution frameworks that require code to be deterministic.
+
+To make these building blocks available to your workflows, DBOS provides durable [`Go`](../reference/workflows-steps.md#go) and [`Select`](../reference/workflows-steps.md#select) functions to run multiple steps concurrently within a workflow while preserving durability guarantees.
+
+- **`Go`** launches a step asynchronously and returns a channel for retrieving the result later.
+- **`Select`** waits for the first result from multiple concurrent steps.
+
+### Running Concurrent Steps with Go
+
+Use [`Go`](../reference/workflows-steps.md#go) to launch a step that runs in the background while your workflow continues.
+The function returns immediately with a channel that will receive the step's result when it completes.
+
+```go
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    // Launch a step asynchronously
+    resultChan, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        // Perform some work...
+        return "step completed", nil
+    })
+    if err != nil {
+        return "", err
+    }
+
+    // Do other work while the step runs...
+
+    // Wait for the result
+    outcome := <-resultChan
+    if outcome.Err != nil {
+        return "", outcome.Err
+    }
+    return outcome.Result, nil
+}
+```
+
+You can launch multiple steps concurrently:
+
+```go
+func workflow(ctx dbos.DBOSContext, urls []string) ([]string, error) {
+    // Launch multiple steps concurrently
+    var channels []<-chan dbos.StepOutcome[string]
+    for _, url := range urls {
+        url := url // Capture loop variable
+        ch, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+            return fetchURL(ctx, url)
+        })
+        if err != nil {
+            return nil, err
+        }
+        channels = append(channels, ch)
+    }
+
+    // Collect all results
+    var results []string
+    for _, ch := range channels {
+        outcome := <-ch
+        if outcome.Err != nil {
+            return nil, outcome.Err
+        }
+        results = append(results, outcome.Result)
+    }
+    return results, nil
+}
+```
+
+### Selecting the First Result
+
+Use [`Select`](../reference/workflows-steps.md#select) to wait for the first result from multiple concurrent steps.
+This is useful for racing multiple operations or implementing timeout patterns.
+
+```go
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    // Launch two concurrent steps
+    ch1, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        // Query primary database
+        return queryPrimaryDB(ctx)
+    })
+    if err != nil {
+        return "", err
+    }
+
+    ch2, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        // Query replica database
+        return queryReplicaDB(ctx)
+    })
+    if err != nil {
+        return "", err
+    }
+
+    // Wait for the first result
+    result, err := dbos.Select(ctx, []<-chan dbos.StepOutcome[string]{ch1, ch2})
+    if err != nil {
+        return "", err
+    }
+    return result, nil
+}
+```
+
+### Determinism and Recovery
+
+`Go` and `Select` maintain workflow determinism by checkpointing:
+- Each `Go` call is assigned a deterministic step ID, ensuring steps execute in the same order during recovery.
+- `Select` checkpoints which channel was selected and its value, so replays return the same result regardless of actual execution timing.
+
+This means you can safely use `Go` and `Select` for concurrent operations without worrying about non-deterministic behavior during workflow recovery.
+
 ## Workflow Guarantees
 
 Workflows provide the following reliability guarantees.

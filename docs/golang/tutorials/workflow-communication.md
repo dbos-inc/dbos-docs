@@ -32,7 +32,7 @@ func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an empty string if the wait times out.
+Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
@@ -108,7 +108,7 @@ func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time
 ```
 
 You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning an empty string if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
 #### Events Example
 
