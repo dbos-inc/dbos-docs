@@ -196,6 +196,60 @@ async def example_workflow(friend: str):
     return result
 ```
 
+### Running Async Steps In Parallel
+
+Initiating several concurrent steps in an `async` workflow, followed by awaiting them with
+`asyncio.gather(..., return_exceptions=True)`, is valid as long as the steps are started
+in a **deterministic order**. For example, the following is allowed:
+
+```python
+    # Start steps in a deterministic order (step1, step2, step3, step4),
+    # then await them all together.
+    tasks = [
+        asyncio.create_task(step1("arg1")),
+        asyncio.create_task(step2("arg2")),
+        asyncio.create_task(step3("arg3")),
+        asyncio.create_task(step4("arg4")),
+    ]
+
+    # Collects exceptions instead of raising immediately
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+This is allowed because each step is started in a well-defined sequence before awaiting.
+
+By contrast, the following is not allowed:
+```python
+    async def seq_a():
+        await step1("arg1")
+        await step2("arg3")
+
+    async def seq_b():
+        await step3("arg2")
+        await step4("arg4")
+
+    tasks = [
+        asyncio.create_task(seq_a()),
+        asyncio.create_task(seq_b()),
+    ]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+Here, `step2` and `step4` may be started in either order since their execution depends on
+the relative time taken by `step1` and `step3`.
+
+If you need to run sequences of operations concurrently, start child workflows and await
+their results, rather than interleaving step execution inside a single workflow.
+
+For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
+Without `return_exceptions=True`, `gather` will raise any exception immediately
+and stop awaiting the rest of the tasks. If one of the remaining tasks later fails, its
+exception may go unobserved. Instead, prefer `asyncio.gather(..., return_exceptions=True)`,
+which safely waits for all tasks to complete and reports their outcomes.
+
 ## Workflow Guarantees
 
 Workflows provide the following guarantees.
