@@ -758,7 +758,7 @@ func RecvR any (R, error)
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an empty string if the wait times out.
+Each call to `Recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning an error if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 ### Messages Example
@@ -834,7 +834,7 @@ func GetEventR any (R, error)
 ```
 
 You can call `GetEvent` to retrieve the value published by a particular workflow ID for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning an empty string if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning an error if the wait times out.
 
 ### Events Example
 
@@ -1319,7 +1319,7 @@ func RecvR any (R, error)
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning an empty string if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning an error if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
@@ -2161,7 +2161,7 @@ GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning an empty string if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
 Similar to `GetEvent`.
 
 **Parameters:**

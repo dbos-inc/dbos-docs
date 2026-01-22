@@ -13,13 +13,13 @@ func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning an empty string if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **targetWorkflowID**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeout**: A timeout. If the wait times out, return an empty string.
+- **timeout**: A timeout. If the wait times out, return an error.
 
 
 ### SetEvent
@@ -60,7 +60,7 @@ func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning an empty string if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning an error if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
