@@ -271,7 +271,7 @@ Can only be called from within a workflow.
 - **opts**: Functional options for step execution (same options as [`RunAsStep`](#runasstep)).
 
 **Returns:**
-- A receive-only channel of [`StepOutcome[R]`](#stepoutcome) that will receive exactly one value when the step completes, then close.
+- A receive-only channel of `StepOutcome[R]` that will receive exactly one value when the step completes, then close.
 - An error if the step could not be launched (e.g., if called outside a workflow).
 
 ```go
