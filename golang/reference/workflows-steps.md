@@ -251,7 +251,102 @@ WithBackoffFactor sets the exponential backoff multiplier between retries. Defau
 func WithBaseInterval(interval time.Duration) StepOption
 ```
 
-WithBaseInterval sets the initial delay between retries. Default value is 100ms. 
+WithBaseInterval sets the initial delay between retries. Default value is 100ms.
+
+### Concurrent steps.
+
+#### Go
+
+```go
+func Go[R any](ctx DBOSContext, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
+```
+
+Launch a step asynchronously and return a channel that will receive the result when the step completes.
+This is a durable alternative to Go's native goroutines that checkpoints results to the database for deterministic replay.
+Can only be called from within a workflow.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **fn**: The step function to execute asynchronously.
+- **opts**: Functional options for step execution (same options as [`RunAsStep`](#runasstep)).
+
+**Returns:**
+- A receive-only channel of `StepOutcome[R]` that will receive exactly one value when the step completes, then close.
+- An error if the step could not be launched (e.g., if called outside a workflow).
+
+```go
+type StepOutcome[R any] struct {
+    Result R
+    Err    error
+}
+```
+
+**Example Syntax:**
+
+```go
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    // Launch step asynchronously
+    resultChan, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        return performWork(ctx)
+    })
+    if err != nil {
+        return "", err
+    }
+
+    // Do other work...
+
+    // Wait for result
+    outcome := <-resultChan
+    if outcome.Err != nil {
+        return "", outcome.Err
+    }
+    return outcome.Result, nil
+}
+```
+
+#### Select
+
+```go
+func Select[R any](ctx DBOSContext, channels []<-chan StepOutcome[R]) (R, error)
+```
+
+Wait for and return the first result from multiple channels obtained from [`Go`](#go).
+This is a durable alternative to Go's native `select` statement that checkpoints the selected result for deterministic replay.
+Can only be called from within a workflow.
+All channels must be of the same type `R`.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **channels**: A slice of receive-only channels from [`Go`](#go) calls.
+
+**Returns:**
+- The result value from the first channel to produce a value.
+- An error if the selected step returned an error, if the context was cancelled, or if a channel was closed unexpectedly.
+
+**Behavior:**
+- If `channels` is empty, returns the zero value of type `R` with no error.
+- If the context is cancelled while waiting, returns the context error.
+- The selected channel index and value are checkpointed, so workflow recovery returns the same result.
+
+**Example Syntax:**
+
+```go
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    ch1, _ := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        return queryServiceA(ctx)
+    })
+    ch2, _ := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        return queryServiceB(ctx)
+    })
+
+    // Wait for the first result
+    result, err := dbos.Select(ctx, []<-chan dbos.StepOutcome[string]{ch1, ch2})
+    if err != nil {
+        return "", err
+    }
+    return result, nil
+}
+```
 
 ### WorkflowHandle
 
@@ -307,3 +402,40 @@ WorkflowHandle.GetWorkflowID() string
 ```
 
 Retrieve the ID of the workflow.
+
+### Patching
+
+#### Patch
+
+```go
+func Patch(ctx DBOSContext, patchName string) (bool, error)
+```
+
+Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
+Used to safely upgrade workflow code; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **patchName**: The name to give the patch marker that will be inserted into workflow history.
+
+:::info
+Patching must be enabled in your configuration by setting `EnablePatching: true`.
+:::
+
+#### DeprecatePatch
+
+```go
+func DeprecatePatch(ctx DBOSContext, patchName string) (bool, error)
+```
+
+Safely bypass a patch marker at the current point in workflow history if present.
+Always returns `true`.
+Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+
+**Parameters:**
+- **ctx**: The DBOSContext.
+- **patchName**: The name of the patch marker to be bypassed.
+
+:::info
+Patching must be enabled in your configuration by setting `EnablePatching: true`.
+:::

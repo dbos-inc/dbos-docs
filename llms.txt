@@ -21,6 +21,7 @@
 - [Queues & Concurrency](https://docs.dbos.dev/golang/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Steps](https://docs.dbos.dev/golang/tutorials/step-tutorial.md): When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a step.
 - [Testing & Mocking](https://docs.dbos.dev/golang/tutorials/testing.md): DBOSContext is a fully mockable interface, which you manually mock, or can generate mocks using tools like mockery.
+- [Upgrading Workflow Code](https://docs.dbos.dev/golang/tutorials/upgrading-workflows.md): A challenge encountered when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
 - [Communicating with Workflows](https://docs.dbos.dev/golang/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/golang/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console or programmatically.
 - [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
