@@ -13,14 +13,14 @@ Here's how to connect your DBOS application running on your computer or cloud en
 If you haven't already, follow the [quickstart](../quickstart.md) to set up a DBOS application locally.
 The rest of this guide will assume you have a local application.
 
-### 2. Create a Postgres Role
+### 2. Connect to Lakebase
+
+<LargeTabs groupId="auth"  queryString="auth">
+<LargeTabItem value="password" label="Native Postgres Password Authentication">
 
 From the "Roles & Databases" tab of your Lakebase console, create a Postgres role that you will use to access your Lakebase database from your DBOS application.
 
 <img src={require('@site/static/img/lakebase/create-role.png').default} alt="Create Role" width="800" className="custom-img"/>
-
-
-### 3. Connect to Your Lakebase Database
 
 Next, click "Connect" on your Lakebase console to retrieve connection information for your Lakebase database.
 You should see a screen that looks like this:
@@ -39,7 +39,14 @@ When you are ready, copy the connection string (including the password) from the
 export DBOS_SYSTEM_DATABASE_URL="<your connection string>"
 ```
 
-### 4. Launch Your Application
+</LargeTabItem>
+<LargeTabItem value="oauth" label="OAuth Token Authentication">
+
+
+</LargeTabItem>
+</LargeTabs>
+
+### 3. Launch Your Application
 
 Now, launch your DBOS application.
 It should successfully connect to your Lakebase database, printing your masked Lakebase database URL on startup.
