@@ -59,6 +59,10 @@ Then, add this code to your application to configure DBOS to retrieve and use a 
 <summary><strong>Databricks OAuth Authentication</strong></summary>
 
 ```python
+from databricks.sdk import WorkspaceClient
+import psycopg
+import sqlalchemy as sa
+
 def create_databricks_oauth_engine(database_url: str, lakebase_endpoint: str) -> sa.Engine:
     """
     Create a SQLAlchemy engine that uses Databricks OAuth tokens for authentication.
