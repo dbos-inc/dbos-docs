@@ -552,17 +552,6 @@ async function onUserInputSubmit(userId: string, userInput: string) {
 }
 ```
 
-## Workflow Versioning and Recovery
-
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `applicationVersion`) configuration parameter.
-All workflows are tagged with the application version on which they started.
-
-When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
-This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
-
 
 ## Workflow Communication
 
@@ -969,6 +958,8 @@ import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 const queue = new WorkflowQueue("example_queue", { workerConcurrency: 5 });
 ```
 
+Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
+
 #### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
@@ -1082,6 +1073,45 @@ async function onUserTaskSubmission(userID: string, task: Task) {
 }
 ```
 
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```ts
+// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// across all partitions (and at most one task per partition).
+const concurrencyQueue = new WorkflowQueue("concurrency-queue", { concurrency: 5 });
+const partitionedQueue = new WorkflowQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
+
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // First, enqueue a "concurrency manager" workflow to the partitioned
+    // queue to enforce per-partition limits.
+    await DBOS.startWorkflow(concurrencyManager, {
+        queueName: partitionedQueue.name,
+        enqueueOptions: { queuePartitionKey: userID }
+    })(task);
+}
+
+async function concurrencyManagerFunc(task: Task) {
+    // The "concurrency manager" workflow enqueues the processTask
+    // workflow on the non-partitioned queue and awaits its results
+    // to enforce global flow control limits.
+    const handle = await DBOS.startWorkflow(processTask, { queueName: concurrencyQueue.name })(task);
+    return await handle.getResult();
+}
+const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
+
+async function processTaskFunc(task: Task) {
+    // ...
+}
+const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
+```
+
 ### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
@@ -1137,6 +1167,41 @@ async function main() {
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
 }
 ```
+
+### Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to a specific list of queues.
+You can configure `listenQueues` in your DBOS configuration to explicitly tell a process running DBOS to only listen to a specific set of queues.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const cpuQueue = new WorkflowQueue("cpu_queue");
+const gpuQueue = new WorkflowQueue("gpu_queue");
+
+async function main() {
+  const workerType = process.env.WORKER_TYPE; // "cpu" or "gpu"
+  const config = // ...
+
+  if (workerType === "gpu") {
+    // GPU workers will only dequeue and execute workflows from the GPU queue
+    config.listenQueues = [gpuQueue];
+  } else if (workerType === "cpu") {
+    // CPU workers will only dequeue and execute workflows from the CPU queue
+    config.listenQueues = [cpuQueue];
+  }
+
+  DBOS.setConfig(config);
+  await DBOS.launch();
+}
+```
+
+Note that `listenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
 
 ## Classes
 
