@@ -28,7 +28,6 @@ You may also specify an application to receive the alert&mdash;this does not nee
 
 You can register an alert handler in your application to programmatically receive alerts from Conductor.
 You can then log the alerts or forward them to another system, such as Slack or PagerDuty.
-This lets you forward alerts to external monitoring services, trigger automated responses, or implement custom notification logic.
 
 Only one alert handler may be registered per application, and it must be registered before launching DBOS.
 If no handler is registered, alerts are logged automatically.
