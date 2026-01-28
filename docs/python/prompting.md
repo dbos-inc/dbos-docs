@@ -1,28 +1,39 @@
 ---
 sidebar_position: 30
-title: AI Model Prompting
+title: AI-Assisted Development
 ---
 
-You may want assistance from an AI model in building a DBOS application.
-To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
+If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
+
+1. [Installing DBOS skills.](#dbos-agent-skills)
+2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
 
 You may also want to use the [DBOS MCP server](../production/mcp.md) so your model can directly access your application's workflows and steps.
 
-## How To Use
+## DBOS Agent Skills
 
-First, use the click-to-copy button in the top right of the code block to copy the full prompt to your clipboard.
-Then, paste into your AI tool of choice (for example OpenAI's ChatGPT or Anthropic's Claude).
-This adds the prompt to your AI model's context, giving it up-to-date instructions on how to build an application with DBOS.
+[Agent Skills](https://agentskills.io/home) help developers use AI agents to add DBOS durable workflows to their applications.
+DBOS provides open-source skills you can check out [here](https://github.com/dbos-inc/agent-skills).
 
-If you are using an AI-powered IDE, you can add this prompt to your project's context.
-For example:
+To install them into your coding agent, run:
+
+```
+npx skills add dbos-inc/agent-skills
+```
+
+The [Skills CLI](https://skills.sh/) is compatible with most coding agents, including Claude Code, Codex, Antigravity, and Cursor.
+
+## DBOS Prompt
+
+You can use this prompt to add rich information about DBOS to your AI coding agent's context.
+You can copy and paste it directly into your context, or follow these directions to add it to your AI-powered IDE or coding agent of choice:
 
 - Claude Code: Add the prompt, or a link to it, to your CLAUDE.md file.
 - Cursor: Add the prompt to [your project rules](https://docs.cursor.com/context/rules-for-ai).
-- Zed: Copy the prompt to a file in your project, then use the [`/file`](https://zed.dev/docs/assistant/commands?highlight=%2Ffile#file) command to add the file to your context.
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
-## Prompt
+<details>
+<summary><strong>DBOS Python Prompt</strong></summary>
 
 ````markdown
 # Build Reliable Applications With DBOS
@@ -1741,3 +1752,5 @@ def example_select(name: str) -> Optional[str]:
 NEVER async def a transaction.
 
 ````
+
+</details>
