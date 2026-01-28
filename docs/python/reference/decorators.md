@@ -1,11 +1,7 @@
 ---
 sidebar_position: 2
-title: Decorators
-description: API reference for DBOS decorators.
+title: Workflows & Steps
 ---
-
-
-In DBOS, you annotate functions with decorators to give them properties. 
 
 ## Function Decorators
 
