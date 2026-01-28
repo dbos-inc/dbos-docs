@@ -1226,10 +1226,10 @@ Wait for the workflow to complete, then return its result.
 ### handle.getStatus
 
 ```typescript
-handle.getStatus(): Promise<WorkflowStatus>;
+handle.getStatus(): Promise<WorkflowStatus | null>;
 ```
 
-Retrieve the WorkflowStatus of the workflow:
+Retrieve the WorkflowStatus of the workflow, or `null` if not found:
 
 ### Workflow Status
 
@@ -1240,36 +1240,47 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
-  // The name of the workflow's class, if any
-  readonly workflowClassName: string; // The class name holding the workflow function.
+  // The name of the workflow's class, if any.
+  readonly workflowClassName: string;
   // The name with which the workflow's class instance was configured, if any.
   readonly workflowConfigName?: string;
   // If the workflow was enqueued, the name of the queue.
   readonly queueName?: string;
-  // The workflow's output, if any.
+
+  // The deserialized workflow inputs.
+  readonly input?: unknown[];
+  // The workflow's deserialized output, if any.
   readonly output?: unknown;
   // The error thrown by the workflow, if any.
   readonly error?: unknown;
-  // The deserialized workflow inputs.
-  readonly input?: unknown[];
+
   // The ID of the executor (process) that most recently executed this workflow.
   readonly executorId?: string;
   // The application version on which this workflow started.
   readonly applicationVersion?: string;
-  // The number of times this workflow has been started.
-  readonly recoveryAttempts?: number;
+
   // Workflow start time, as a UNIX epoch timestamp in milliseconds
   readonly createdAt: number;
   // Last time the workflow status was updated, as a UNIX epoch timestamp in milliseconds. For a completed workflow, this is the workflow completion timestamp.
   readonly updatedAt?: number;
+
   // The timeout specified for this workflow, if any. Timeouts are start-to-close.
-  readonly timeoutMS?: number | null;
+  readonly timeoutMS?: number;
   // The deadline at which this workflow times out, if any. Not set until the workflow begins execution.
   readonly deadlineEpochMS?: number;
+  // Unique queue deduplication ID, if any. Deduplication IDs are unset when the workflow completes.
+  readonly deduplicationID?: string;
+  // Priority of the workflow on a queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+  readonly priority: number;
+  // If this workflow is enqueued on a partitioned queue, its partition key
+  readonly queuePartitionKey?: string;
+
+  // If this workflow was forked from another, that workflow's ID.
+  readonly forkedFrom?: string;
 }
 ```
 
@@ -1286,7 +1297,7 @@ Return the ID of the current workflow, if in a workflow.
 ### DBOS.stepID
 
 ```typescript
-DBOS.stepID: string | undefined;
+DBOS.stepID: number | undefined;
 ```
 
 Return the unique ID of the current step within a workflow.
@@ -1324,74 +1335,47 @@ DBOS.listWorkflows(
 
 ```typescript
 interface GetWorkflowsInput {
-  workflowIDs?: string[];
-  workflowName?: string;
-  status?: string;
-  startTime?: string;
-  endTime?: string;
-  applicationVersion?: string;
-  authenticatedUser?: string;
-  limit?: number;
-  offset?: number;
-  sortDesc?: boolean;
+  workflowIDs?: string[]; // Retrieve workflows with these IDs.
+  workflowName?: string; // Retrieve workflows with this name.
+  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+  startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+  endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+  authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
+  applicationVersion?: string; // Retrieve workflows started on this application version.
+  executorId?: string; // Retrieve workflows run by this executor ID.
+  workflow_id_prefix?: string; // Retrieve workflows whose ID have this prefix
+  queueName?: string; // If this workflow is enqueued, on which queue
+  queuesOnly?: boolean; // Return only workflows that are actively enqueued
+  forkedFrom?: string; // Get workflows forked from this workflow ID.
+  limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
+  offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
+  sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
+  loadInput?: boolean; // Load the input of the workflow (default true).
+  loadOutput?: boolean; // Load the output of the workflow (default true).
 }
 ```
 
 Retrieve a list of WorkflowStatus of all workflows matching specified criteria.
 
-**Parameters:**
-- **workflowIDs**: Retrieve workflows with these IDs.
-- **workflowName**: Retrieve workflows with this name.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
-- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
-- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **applicationVersion**: Retrieve workflows tagged with this application version.
-- **authenticatedUser**: Retrieve workflows run by this authenticated user.
-- **limit**: Retrieve up to this many workflows.
-- **offset**: Skip this many workflows from the results returned (for pagination).
-- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
-
 ### DBOS.listQueuedWorkflows
 
 ```typescript
 DBOS.listQueuedWorkflows(
-  input: GetQueuedWorkflowsInput
+  input: GetWorkflowsInput
 ): Promise<WorkflowStatus[]>
 ```
 
-```typescript
-interface GetQueuedWorkflowsInput {
-  workflowName?: string;
-  status?: string;
-  queueName?: number;
-  startTime?: string;
-  endTime?: string;
-  limit?: number;
-  offset?: number;
-  sortDesc?: boolean;
-}
-```
-
-Retrieve a list of WorkflowStatus of all **currently enqueued** workflows matching specified criteria.
-
-**Parameters:**
-- **workflowName**: Retrieve workflows with this name.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
-- **queueName**: Retrieve workflows running on this queue.
-- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
-- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **limit**: Retrieve up to this many workflows.
-- **offset**: Skip this many workflows from the results returned (for pagination).
-- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING` or `ENQUEUED`) workflows matching specified criteria.
+The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set.
 
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string)
-: Promise<StepInfo[]>
+  workflowID: string
+): Promise<StepInfo[] | undefined>
 ```
 
-Retrieve the steps of a workflow.
+Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
@@ -1406,6 +1390,10 @@ interface StepInfo {
   readonly error: Error | null;
   // If the step starts or retrieves the result of a workflow, its ID
   readonly childWorkflowID: string | null;
+  // The Unix epoch timestamp at which this step started
+  readonly startedAtEpochMs?: number;
+  // The Unix epoch timestamp at which this step completed
+  readonly completedAtEpochMs?: number;
 }
 ```
 
