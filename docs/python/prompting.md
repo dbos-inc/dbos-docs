@@ -765,7 +765,37 @@ def example_step():
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, specify its name:
+To create a queue, specify its name and optional flow control parameters:
+
+```python
+from dbos import Queue
+
+Queue(
+    name: str = None,
+    concurrency: Optional[int] = None,
+    limiter: Optional[QueueRateLimit] = None,
+    *,
+    worker_concurrency: Optional[int] = None,
+    priority_enabled: bool = False,
+    partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
+)
+
+class QueueRateLimit(TypedDict):
+    limit: int
+    period: float  # In seconds
+```
+
+**Parameters:**
+- `name`: The name of the queue. Must be unique among all queues in the application.
+- `concurrency`: The maximum number of functions from this queue that may run concurrently. This concurrency limit is global across all DBOS processes using this queue. If not provided, any number of functions may run concurrently.
+- `limiter`: A limit on the maximum number of functions which may be started in a given period.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`.
+- `priority_enabled`: Enable setting priority for workflows on this queue.
+- `partition_queue`: Enable partitioning for this queue.
+- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+
+**Example syntax:**
 
 ```python
 from dbos import Queue
@@ -1017,7 +1047,7 @@ For example:
 class URLFetcher(DBOSConfiguredInstance):
     def __init__(self, url: str):
         self.url = url
-        super().__init__(config_name=url)
+        super().__init__(instance_name=url)
 
     @DBOS.workflow()
     def fetch_workflow(self):
@@ -1031,14 +1061,14 @@ example_fetcher = URLFetcher("https://example.com")
 print(example_fetcher.fetch_workflow())
 ```
 
-When you create a new instance of a DBOS class,  `DBOSConfiguredInstance` must be instantiated with a `config_name`.
-This `config_name` should be a unique identifier of the instance.
+When you create a new instance of a DBOS class,  `DBOSConfiguredInstance` must be instantiated with an `instance_name`.
+This `instance_name` should be a unique identifier of the instance.
 Additionally, all DBOS-decorated classes must be instantiated before `DBOS.launch()` is called.
 
 The reason for these requirements is to enable workflow recovery.
-When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `config_name`.
-When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `config_name` so it can run the workflow using the right instance of its class.
-If `config_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
+When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `instance_name`.
+When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `instance_name` so it can run the workflow using the right instance of its class.
+If `instance_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
 
 
 ### Testing DBOS Functions
@@ -1075,10 +1105,16 @@ Retrieve the ID of the workflow.
 #### get_result
 
 ```python
-handle.get_result() -> R
+handle.get_result(
+    *,
+    polling_interval_sec: float = 1.0,
+) -> R
 ```
 
 Wait for the workflow to complete, then return its result.
+
+**Parameters:**
+- **polling_interval_sec**: The interval at which DBOS polls the database for the workflow's result. Only used for enqueued workflows or retrieved handles.
 
 #### get_status
 
@@ -1093,16 +1129,22 @@ handle.get_status() -> WorkflowStatus
 def list_workflows(
     *,
     workflow_ids: Optional[List[str]] = None,
-    status: Optional[str | list[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
     app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
     user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
     workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
+    queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -1110,42 +1152,65 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
 - **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
 - **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows that were enqueued on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
+- **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null).
 
 ### list_queued_workflows
 ```python
 def list_queued_workflows(
     *,
-    queue_name: Optional[str] = None,
-    status: Optional[str | list[str]] = None,
+    workflow_ids: Optional[List[str]] = None,
+    status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     name: Optional[str] = None,
+    app_version: Optional[str] = None,
+    forked_from: Optional[str] = None,
+    user: Optional[str] = None,
+    queue_name: Optional[str] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
+    workflow_id_prefix: Optional[str] = None,
+    load_input: bool = True,
+    load_output: bool = True,
+    executor_id: Optional[str] = None,
 ) -> List[WorkflowStatus]:
 ```
 
-Retrieve a list of `WorkflowStatus` of all **currently enqueued** workflows matching specified criteria.
+Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `ENQUEUED` or `PENDING` and `queue_name` not null) matching specified criteria.
 
 **Parameters:**
-- **queue_name**: Retrieve workflows running on this queue.
+- **workflow_ids**: Retrieve workflows with these IDs.
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
+- **app_version**: Retrieve workflows tagged with this application version.
+- **forked_from**: Retrieve workflows forked from this workflow ID.
+- **user**: Retrieve workflows run by this authenticated user.
+- **queue_name**: Retrieve workflows running on this queue.
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
+- **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
+- **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
+- **executor_id**: Retrieve workflows with this executor ID.
 
 ### list_workflow_steps
 ```python
@@ -1169,6 +1234,10 @@ class StepInfo(TypedDict):
     error: Optional[Exception]
     # If the step starts or retrieves the result of a workflow, its ID
     child_workflow_id: Optional[str]
+    # The Unix epoch timestamp at which this step started
+    started_at_epoch_ms: Optional[int]
+    # The Unix epoch timestamp at which this step completed
+    completed_at_epoch_ms: Optional[int]
 ```
 
 ### cancel_workflow
@@ -1226,8 +1295,6 @@ class WorkflowStatus:
     status: str
     # The name of the workflow function
     name: str
-    # The number of times this workflow has been started
-    recovery_attempts: int
     # The name of the workflow's class, if any
     class_name: Optional[str]
     # The name with which the workflow's class instance was configured, if any
@@ -1250,10 +1317,22 @@ class WorkflowStatus:
     updated_at: Optional[int]
     # If this workflow was enqueued, on which queue
     queue_name: Optional[str]
-    # The ID of the executor (process) that most recently executed this workflow
+    # The executor to most recently execute this workflow
     executor_id: Optional[str]
     # The application version on which this workflow was started
     app_version: Optional[str]
+    # The start-to-close timeout of the workflow in ms
+    workflow_timeout_ms: Optional[int]
+    # The deadline of a workflow, computed by adding its timeout to its start time.
+    workflow_deadline_epoch_ms: Optional[int]
+    # Unique ID for deduplication on a queue
+    deduplication_id: Optional[str]
+    # Priority of the workflow on the queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+    priority: Optional[int]
+    # If this workflow is enqueued on a partitioned queue, its partition key
+    queue_partition_key: Optional[str]
+    # If this workflow was forked from another, that workflow's ID.
+    forked_from: Optional[str]
 ```
 
 Retrieve the workflow status:
@@ -1278,15 +1357,19 @@ All fields except `name` are optional.
 ```python
 class DBOSConfig(TypedDict):
     name: str
+    enable_patching: Optional[bool]
+    application_version: Optional[str]
+    executor_id: Optional[str]
 
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
-    db_engine_kwargs: Optional[Dict[str, Any]]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
+    use_listen_notify: Optional[bool]
 
     conductor_key: Optional[str]
+    conductor_url: Optional[str]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -1297,13 +1380,13 @@ class DBOSConfig(TypedDict):
     run_admin_server: Optional[bool]
     admin_port: Optional[int]
 
-    application_version: Optional[str]
-    executor_id: Optional[str]
-
     serializer: Optional[Serializer]
 ```
 
 - **name**: Your application's name.
+- **enable_patching** Enable the patching strategy for safely upgrading workflow code.
+- **application_version**: If using the versioning strategy for safely upgrading workflow code, the code version for this application and its workflows.
+- **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 - **system_database_url**: A connection string to your system database.
 This is the database in which DBOS stores workflow and step state.
 This may be either Postgres or SQLite, though Postgres is recommended for production.
@@ -1333,20 +1416,12 @@ sqlite:///[application_name].sqlite
 This is the database in which DBOS executes `@DBOS.transaction` functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
-- **db_engine_kwargs**: Additional keyword arguments passed to SQLAlchemy’s `create_engine()`.
-Defaults to:
-
-```python
-{
-  "pool_size": 20,
-  "max_overflow": 0,
-  "pool_timeout": 30,
-}
-```
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
+- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
 - **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
+- **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **otlp_traces_endpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
@@ -1354,8 +1429,6 @@ Defaults to:
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
-- **application_version**: The code version for this application and its workflows. Workflow versioning is documented here.
-- **executor_id**: Executor ID, used to identify the application instance in distributed environments. It is also useful for distributed workflow recovery
 - **serializer**: A custom serializer for the system database.
 
 #### Custom Serialization
