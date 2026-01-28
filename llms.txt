@@ -85,7 +85,7 @@
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/python/examples/widget-store.md): This example is also available in TypeScript, Java, and Go.
 - [Add DBOS To Your App](https://docs.dbos.dev/python/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Python](https://docs.dbos.dev/python/programming-guide.md): This guide shows you how to use DBOS to build Python apps that are resilient to any failure.
-- [AI Model Prompting](https://docs.dbos.dev/python/prompting.md): You may want assistance from an AI model in building a DBOS application.
+- [AI-Assisted Development](https://docs.dbos.dev/python/prompting.md): If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
 - [DBOS CLI](https://docs.dbos.dev/python/reference/cli.md): Workflow Management Commands
 - [DBOS Client](https://docs.dbos.dev/python/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
 - [Configuration](https://docs.dbos.dev/python/reference/configuration.md): Configuring DBOS
@@ -113,7 +113,7 @@
 - [Queue Worker](https://docs.dbos.dev/typescript/examples/queue-worker.md): This example is also available in Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/typescript/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS TypeScript](https://docs.dbos.dev/typescript/programming-guide.md): This guide shows you how to use DBOS to build TypeScript apps that are resilient to any failure.
-- [AI Model Prompting](https://docs.dbos.dev/typescript/prompting.md): You may want assistance from an AI model in building a DBOS application.
+- [AI-Assisted Development](https://docs.dbos.dev/typescript/prompting.md): If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
 - [DBOS CLI](https://docs.dbos.dev/typescript/reference/cli.md): Workflow Management Commands
 - [DBOS Client](https://docs.dbos.dev/typescript/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
 - [Configuration](https://docs.dbos.dev/typescript/reference/configuration.md): Configuring DBOS

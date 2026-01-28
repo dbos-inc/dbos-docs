@@ -1,28 +1,39 @@
 ---
 sidebar_position: 30
-title: AI Model Prompting
+title: AI-Assisted Development
 ---
 
-You may want assistance from an AI model in building a DBOS application.
-To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
+If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
+
+1. [Installing DBOS skills.](#dbos-agent-skills)
+2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
 
 You may also want to use the [DBOS MCP server](../production/mcp.md) so your model can directly access your application's workflows and steps.
 
-## How To Use
+## DBOS Agent Skills
 
-First, use the click-to-copy button in the top right of the code block to copy the full prompt to your clipboard.
-Then, paste into your AI tool of choice (for example OpenAI's ChatGPT or Anthropic's Claude).
-This adds the prompt to your AI model's context, giving it up-to-date instructions on how to build an application with DBOS.
+[Agent Skills](https://agentskills.io/home) help developers use AI agents to add DBOS durable workflows to their applications.
+DBOS provides open-source skills you can check out [here](https://github.com/dbos-inc/agent-skills).
 
-If you are using an AI-powered IDE, you can add this prompt to your project's context.
-For example:
+To install them into your coding agent, run:
+
+```
+npx skills add dbos-inc/agent-skills
+```
+
+The [Skills CLI](https://skills.sh/) is compatible with most coding agents, including Claude Code, Codex, Antigravity, and Cursor.
+
+## DBOS Prompt
+
+You can use this prompt to add rich information about DBOS to your AI coding agent's context.
+You can copy and paste it directly into your context, or follow these directions to add it to your AI-powered IDE or coding agent of choice:
 
 - Claude Code: Add the prompt, or a link to it, to your CLAUDE.md file.
 - Cursor: Add the prompt to [your project rules](https://docs.cursor.com/context/rules-for-ai).
-- Zed: Copy the prompt to a file in your project, then use the [`/file`](https://zed.dev/docs/assistant/commands?highlight=%2Ffile#file) command to add the file to your context.
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
-## Prompt
+<details>
+<summary><strong>DBOS TypeScript Prompt</strong></summary>
 
 ````markdown
 # Build Reliable Applications With DBOS
@@ -374,46 +385,32 @@ Instead, you should do all database operations in transactions and all other non
 For example, **don't do this**:
 
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await fetch("https://example.com").then(r => r.text()); 
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = Math.random() > 0.5 ? 1 : 0;
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
-Instead, do this:
+Do this instead:
+
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await DBOS.runStep(
-          async ()=>{return await fetch("https://example.com").then(r => r.text())},
-          {name: "fetchBody"}
-        );
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = await DBOS.runStep(
+        () => Promise.resolve(Math.random() > 0.5 ? 1 : 0),
+        { name: "generateChoice" }
+    );
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
-```
-
-Or this:
-```javascript
-class Example {
-    @DBOS.step()
-    static async fetchBody() {
-      // Instead, make HTTP requests in steps
-      return await fetch("https://example.com").then(r => r.text());
-    }
-
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        const body = await Example.fetchBody();
-        await Example.exampleTransaction(body);
-    }
-}
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
 ### Running Steps In Parallel
@@ -551,17 +548,6 @@ async function onUserInputSubmit(userId: string, userInput: string) {
   await debouncer.debounce(debounceKey, debouncePeriodMs, userInput);
 }
 ```
-
-## Workflow Versioning and Recovery
-
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `applicationVersion`) configuration parameter.
-All workflows are tagged with the application version on which they started.
-
-When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
-This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
 
 
 ## Workflow Communication
@@ -810,6 +796,10 @@ export class Example {
 }
 ```
 
+You **cannot** call, start, or enqueue workflows from within steps.
+These operations should be performed from workflow functions.
+You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
@@ -861,6 +851,10 @@ static async exampleStep() {
   return await fetch("https://example.com").then(r => r.text());
 }
 ```
+
+If a step exhausts all `maxAttempts` retries, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
+If that exception is not caught, the workflow terminates.
+
 ## Queues
 
 You can use queues to run many workflows at once with managed concurrency.
@@ -968,6 +962,8 @@ import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
 
 const queue = new WorkflowQueue("example_queue", { workerConcurrency: 5 });
 ```
+
+Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
 
 #### Global Concurrency
 
@@ -1082,6 +1078,45 @@ async function onUserTaskSubmission(userID: string, task: Task) {
 }
 ```
 
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```ts
+// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// across all partitions (and at most one task per partition).
+const concurrencyQueue = new WorkflowQueue("concurrency-queue", { concurrency: 5 });
+const partitionedQueue = new WorkflowQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
+
+async function onUserTaskSubmission(userID: string, task: Task) {
+    // First, enqueue a "concurrency manager" workflow to the partitioned
+    // queue to enforce per-partition limits.
+    await DBOS.startWorkflow(concurrencyManager, {
+        queueName: partitionedQueue.name,
+        enqueueOptions: { queuePartitionKey: userID }
+    })(task);
+}
+
+async function concurrencyManagerFunc(task: Task) {
+    // The "concurrency manager" workflow enqueues the processTask
+    // workflow on the non-partitioned queue and awaits its results
+    // to enforce global flow control limits.
+    const handle = await DBOS.startWorkflow(processTask, { queueName: concurrencyQueue.name })(task);
+    return await handle.getResult();
+}
+const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
+
+async function processTaskFunc(task: Task) {
+    // ...
+}
+const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
+```
+
 ### Deduplication
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
@@ -1138,6 +1173,41 @@ async function main() {
 }
 ```
 
+### Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to a specific list of queues.
+You can configure `listenQueues` in your DBOS configuration to explicitly tell a process running DBOS to only listen to a specific set of queues.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```javascript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const cpuQueue = new WorkflowQueue("cpu_queue");
+const gpuQueue = new WorkflowQueue("gpu_queue");
+
+async function main() {
+  const workerType = process.env.WORKER_TYPE; // "cpu" or "gpu"
+  const config = // ...
+
+  if (workerType === "gpu") {
+    // GPU workers will only dequeue and execute workflows from the GPU queue
+    config.listenQueues = [gpuQueue];
+  } else if (workerType === "cpu") {
+    // CPU workers will only dequeue and execute workflows from the CPU queue
+    config.listenQueues = [cpuQueue];
+  }
+
+  DBOS.setConfig(config);
+  await DBOS.launch();
+}
+```
+
+Note that `listenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
+
 ## Classes
 
 You can use class instance methods as workflows and steps.
@@ -1177,17 +1247,61 @@ You should AVOID using ConfiguredInstance if at all possible and instead use reg
 ### Testing DBOS Functions
 
 Unless otherwise specified, recommend testing DBOS applications with jest.
+There are two approaches to testing workflows:
 
-You MUST use this beforeAll to reset DBOS between tests:
+1. **Unit testing.** Test workflow logic in isolation by mocking the DBOS interface. Does not require Postgres.
+2. **Integration testing.** Test workflows with real DBOS infrastructure. Requires a Postgres test database.
 
-```javascript
-  beforeAll(async () => {
-    DBOS.setConfig({
-      name: 'my-app',
-      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
-    });
+#### Unit Testing
+
+You can unit test workflows by mocking the DBOS interface with `jest.mock`.
+It's important to mock `DBOS.registerWorkflow` to directly return the workflow function instead of wrapping it with durable workflow code:
+
+```ts
+// Mock DBOS
+jest.mock('@dbos-inc/dbos-sdk', () => ({
+  DBOS: {
+    // IMPORTANT: Mock DBOS.registerWorkflow to return the workflow function
+    registerWorkflow: jest.fn((fn) => fn),
+    setEvent: jest.fn(),
+    recv: jest.fn(),
+    startWorkflow: jest.fn(),
+    workflowID: 'test-workflow-id-123',
+  },
+}));
+```
+
+Then call the workflow function directly in your tests and assert on the mocked calls.
+
+#### Integration Testing
+
+Integration tests require a Postgres database. You should reset DBOS and its system database between tests:
+
+```ts
+describe('example integration tests', () => {
+  beforeEach(async () => {
+    const databaseUrl = process.env.DBOS_TEST_DATABASE_URL;
+
+    // Shut down DBOS (in case a previous test launched it) and reset the database.
+    await DBOS.shutdown();
+
+    // Configure and launch DBOS
+    const dbosTestConfig: DBOSConfig = {
+      name: "my-integration-test",
+      systemDatabaseUrl: databaseUrl,
+    };
+    DBOS.setConfig(dbosTestConfig);
     await DBOS.launch();
+  }, 10000);
+
+  afterEach(async () => {
+    await DBOS.shutdown();
   });
+
+  it('my integration test', async () => {
+    // test goes here
+  });
+});
 ```
 
 
@@ -1226,10 +1340,10 @@ Wait for the workflow to complete, then return its result.
 ### handle.getStatus
 
 ```typescript
-handle.getStatus(): Promise<WorkflowStatus>;
+handle.getStatus(): Promise<WorkflowStatus | null>;
 ```
 
-Retrieve the WorkflowStatus of the workflow:
+Retrieve the WorkflowStatus of the workflow, or `null` if not found:
 
 ### Workflow Status
 
@@ -1240,36 +1354,47 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or RETRIES_EXCEEDED
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
-  // The name of the workflow's class, if any
-  readonly workflowClassName: string; // The class name holding the workflow function.
+  // The name of the workflow's class, if any.
+  readonly workflowClassName: string;
   // The name with which the workflow's class instance was configured, if any.
   readonly workflowConfigName?: string;
   // If the workflow was enqueued, the name of the queue.
   readonly queueName?: string;
-  // The workflow's output, if any.
+
+  // The deserialized workflow inputs.
+  readonly input?: unknown[];
+  // The workflow's deserialized output, if any.
   readonly output?: unknown;
   // The error thrown by the workflow, if any.
   readonly error?: unknown;
-  // The deserialized workflow inputs.
-  readonly input?: unknown[];
+
   // The ID of the executor (process) that most recently executed this workflow.
   readonly executorId?: string;
   // The application version on which this workflow started.
   readonly applicationVersion?: string;
-  // The number of times this workflow has been started.
-  readonly recoveryAttempts?: number;
+
   // Workflow start time, as a UNIX epoch timestamp in milliseconds
   readonly createdAt: number;
   // Last time the workflow status was updated, as a UNIX epoch timestamp in milliseconds. For a completed workflow, this is the workflow completion timestamp.
   readonly updatedAt?: number;
+
   // The timeout specified for this workflow, if any. Timeouts are start-to-close.
-  readonly timeoutMS?: number | null;
+  readonly timeoutMS?: number;
   // The deadline at which this workflow times out, if any. Not set until the workflow begins execution.
   readonly deadlineEpochMS?: number;
+  // Unique queue deduplication ID, if any. Deduplication IDs are unset when the workflow completes.
+  readonly deduplicationID?: string;
+  // Priority of the workflow on a queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+  readonly priority: number;
+  // If this workflow is enqueued on a partitioned queue, its partition key
+  readonly queuePartitionKey?: string;
+
+  // If this workflow was forked from another, that workflow's ID.
+  readonly forkedFrom?: string;
 }
 ```
 
@@ -1286,7 +1411,7 @@ Return the ID of the current workflow, if in a workflow.
 ### DBOS.stepID
 
 ```typescript
-DBOS.stepID: string | undefined;
+DBOS.stepID: number | undefined;
 ```
 
 Return the unique ID of the current step within a workflow.
@@ -1311,6 +1436,21 @@ interface StepStatus {
 }
 ```
 
+### DBOS.applicationVersion
+
+```typescript
+DBOS.applicationVersion: string
+```
+
+Return the current application version.
+
+### DBOS.executorID
+
+```typescript
+DBOS.executorID: string
+```
+
+Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
 ## Workflow Management Methods
 
@@ -1324,74 +1464,47 @@ DBOS.listWorkflows(
 
 ```typescript
 interface GetWorkflowsInput {
-  workflowIDs?: string[];
-  workflowName?: string;
-  status?: string;
-  startTime?: string;
-  endTime?: string;
-  applicationVersion?: string;
-  authenticatedUser?: string;
-  limit?: number;
-  offset?: number;
-  sortDesc?: boolean;
+  workflowIDs?: string[]; // Retrieve workflows with these IDs.
+  workflowName?: string; // Retrieve workflows with this name.
+  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+  startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
+  endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+  authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
+  applicationVersion?: string; // Retrieve workflows started on this application version.
+  executorId?: string; // Retrieve workflows run by this executor ID.
+  workflow_id_prefix?: string; // Retrieve workflows whose ID have this prefix
+  queueName?: string; // If this workflow is enqueued, on which queue
+  queuesOnly?: boolean; // Return only workflows that are actively enqueued
+  forkedFrom?: string; // Get workflows forked from this workflow ID.
+  limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
+  offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
+  sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
+  loadInput?: boolean; // Load the input of the workflow (default true).
+  loadOutput?: boolean; // Load the output of the workflow (default true).
 }
 ```
 
 Retrieve a list of WorkflowStatus of all workflows matching specified criteria.
 
-**Parameters:**
-- **workflowIDs**: Retrieve workflows with these IDs.
-- **workflowName**: Retrieve workflows with this name.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
-- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
-- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **applicationVersion**: Retrieve workflows tagged with this application version.
-- **authenticatedUser**: Retrieve workflows run by this authenticated user.
-- **limit**: Retrieve up to this many workflows.
-- **offset**: Skip this many workflows from the results returned (for pagination).
-- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
-
 ### DBOS.listQueuedWorkflows
 
 ```typescript
 DBOS.listQueuedWorkflows(
-  input: GetQueuedWorkflowsInput
+  input: GetWorkflowsInput
 ): Promise<WorkflowStatus[]>
 ```
 
-```typescript
-interface GetQueuedWorkflowsInput {
-  workflowName?: string;
-  status?: string;
-  queueName?: number;
-  startTime?: string;
-  endTime?: string;
-  limit?: number;
-  offset?: number;
-  sortDesc?: boolean;
-}
-```
-
-Retrieve a list of WorkflowStatus of all **currently enqueued** workflows matching specified criteria.
-
-**Parameters:**
-- **workflowName**: Retrieve workflows with this name.
-- **status**: Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
-- **queueName**: Retrieve workflows running on this queue.
-- **startTime**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
-- **endTime**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **limit**: Retrieve up to this many workflows.
-- **offset**: Skip this many workflows from the results returned (for pagination).
-- **sortDesc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
+Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING` or `ENQUEUED`) workflows matching specified criteria.
+The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set.
 
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string)
-: Promise<StepInfo[]>
+  workflowID: string
+): Promise<StepInfo[] | undefined>
 ```
 
-Retrieve the steps of a workflow.
+Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
@@ -1406,6 +1519,10 @@ interface StepInfo {
   readonly error: Error | null;
   // If the step starts or retrieves the result of a workflow, its ID
   readonly childWorkflowID: string | null;
+  // The Unix epoch timestamp at which this step started
+  readonly startedAtEpochMs?: number;
+  // The Unix epoch timestamp at which this step completed
+  readonly completedAtEpochMs?: number;
 }
 ```
 
@@ -1454,6 +1571,119 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 
+## Upgrading Workflow Code
+
+A challenge encountered when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
+A breaking change to a workflow is one that changes which steps are run, or the order in which the steps are run.
+If a breaking change was made to a workflow and that workflow is replayed by the recovery system, the checkpoints created by the previous version of the code may not match the steps called by the workflow in the new version of the code, causing recovery to fail.
+
+DBOS supports two strategies for safely upgrading workflow code: **patching** and **versioning**.
+
+### Patching
+
+In patching, the result of a call to `DBOS.patch()` is used to conditionally execute the new code.
+`DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
+Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
+
+```typescript
+DBOS.patch(
+    patchName: string
+): Promise<boolean>
+```
+
+**Parameters:**
+- `patchName`: The name to give the patch marker that will be inserted into workflow history.
+
+For example, let's say our original workflow is:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  await foo();
+  await bar();
+}
+```
+
+We want to replace the call to `foo()` with a call to `baz()`.
+This is a breaking change because it changes what steps run.
+We can make this breaking change safely using a patch:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  if (await DBOS.patch('use-baz')) {
+    await baz();
+  }
+  else {
+    await foo();
+  }
+  await bar();
+}
+```
+
+Now, new workflows will run `baz()`, while old workflows will reexecute `foo()`.
+
+### Deprecating and Removing Patches
+
+Patches add complexity and runtime overhead; fortunately they don't need to stay in your code forever.
+Once all workflows that started before you deployed the patch are complete, you can safely remove patches from your code.
+
+First, you must deprecate the patch with `DBOS.deprecatePatch()`.
+`DBOS.deprecatePatch` must be used for a transition period prior to fully removing the patch, as it allows coexistence with any ongoing workflows that used `DBOS.patch()`.
+
+```typescript
+DBOS.deprecatePatch(
+    patchName: string
+): Promise<boolean>
+```
+
+Always returns `true`. Safely bypasses a patch marker at the current point in workflow history if present.
+
+**Parameters:**
+- `patchName`: The name of the patch marker to be bypassed.
+
+For example, here's how to deprecate the patch above:
+
+```typescript
+@DBOS.workflow()
+static async workflow(){
+  if (await DBOS.deprecatePatch("use-baz")) { // always true
+    await baz();
+  }
+  await bar();
+}
+```
+
+Then, when all workflows that started before you deprecated the patch are complete, you can remove the patch entirely:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  await baz()
+  await bar()
+}
+```
+
+If any mistakes happen during the process (a breaking change is not patched, or a patch is deprecated or removed prematurely), the workflow will throw a `DBOSUnexpectedStepError` pointing to the step where the problem occurred.
+
+### Versioning
+
+When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
+All workflows are tagged with the application version on which they started.
+By default, application version is automatically computed from a hash of workflow source code.
+However, you can set your own version through configuration.
+
+```typescript
+config: DBOSConfig = {
+  // ...
+  applicationVersion: '1.0.0',
+}
+```
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents recovery of workflows that depend on different code.
+You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+
 ## Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
@@ -1473,9 +1703,12 @@ All fields except `name` are optional.
 ```javascript
 export interface DBOSConfig {
   name?: string;
+  applicationVersion?: string;
+  executorID?: string;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
@@ -1486,11 +1719,15 @@ export interface DBOSConfig {
   runAdminServer?: boolean;
   adminPort?: number;
 
-  applicationVersion?: string;
+  listenQueues?: WorkflowQueue[];
+
+  serializer?: DBOSSerializer;
 }
 ```
 
 - **name**: Your application's name.
+- **applicationVersion**: The code version for this application and its workflows.
+- **executorID**: A unique process ID used to identify the application instance in distributed environments.
 - **systemDatabaseUrl**: A connection string to a Postgres database in which DBOS can store internal state. The supported format is:
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
@@ -1503,6 +1740,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the DBOS system database. Defaults to 10.
+- **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
@@ -1510,6 +1748,9 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
-- **applicationVersion**: The code version for this application and its workflows.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+- **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
 
 ````
+
+</details>
