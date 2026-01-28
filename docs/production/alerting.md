@@ -8,7 +8,7 @@ If you are using [Conductor](./alerting.md), you can configure automatic alerts 
 
 :::info
 
-Alerts require at least a [Teams](https://www.dbos.dev/dbos-pricing) plan for Conductor.
+Alerts require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 :::
 
 ### Creating Alerts
