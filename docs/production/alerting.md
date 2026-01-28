@@ -21,8 +21,10 @@ Currently, you can create alerts for the following failure conditions:
 
 - If a certain number of workflows (parameterizable by workflow type) fail in a set period of time.
 - If a workflow remains enqueued for more than a certain period of time (parameterizable by queue name), indicating the queue is overwhelmed or stuck.
+- If an application is unreponsive (no connected executors, or connected but unresponsive executors).
 
 You may also specify an application to receive the alert&mdash;this does not need to be the same as the application that generated the alert.
+For some failure conditions (e.g., unresponsive application), the application receiving the alert is required to be different from the one generating it.
 
 ### Receiving Alerts
 
