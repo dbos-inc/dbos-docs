@@ -885,6 +885,8 @@ from dbos import Queue
 queue = Queue("example_queue", worker_concurrency=5)
 ```
 
+Note that DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
+
 #### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
@@ -986,6 +988,39 @@ def on_user_task_submission(user_id: str, task: Task):
         queue.enqueue(process_task, task)
 ```
 
+Sometimes, you want to apply global or per-worker limits to a partitioned queue.
+You can do this with **multiple levels of queueing**.
+Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
+Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
+to the non-partitioned queue and awaits its result.
+This ensures both queues' flow control limits are enforced on your workflow.
+For example:
+
+```python
+# By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
+# and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+# across all partitions (and at most one task per partition).
+concurrency_queue = Queue("concurrency-queue", concurrency=5)
+partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
+
+def on_user_task_submission(user_id: str, task: Task):
+    # First, enqueue a "concurrency manager" workflow to the partitioned
+    # queue to enforce per-partition limits.
+    with SetEnqueueOptions(queue_partition_key=user_id):
+        partitioned_queue.enqueue(concurrency_manager, task)
+
+@DBOS.workflow()
+def concurrency_manager(task):
+    # The "concurrency manager" workflow enqueues the process_task
+    # workflow on the non-partitioned queue and awaits its results
+    # to enforce global flow control limits.
+    return concurrency_queue.enqueue(process_task, task).get_result()
+
+@DBOS.workflow()
+def process_task(task):
+    ...
+```
+
 ## Deduplication
 
 You can set a deduplication ID for an enqueued workflow with `SetEnqueueOptions`.
@@ -1034,6 +1069,36 @@ with SetEnqueueOptions(priority=10):
 with SetEnqueueOptions(priority=1):
     queue.enqueue(first_workflow)
 ```
+
+## Explicit Queue Listening
+
+By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+However, sometimes you only want a process to listen to to a specific list of queues.
+You can use `DBOS.listen_queues` to explicitly tell a process running DBOS to only listen to a specific set of queues.
+You must call `DBOS.listen_queues` before DBOS is launched.
+
+This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
+For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
+You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+
+```python
+cpu_queue = Queue("cpu_queue")
+gpu_queue = Queue("gpu_queue")
+
+if __name__ == "__main__":
+    worker_type = ... # "cpu' or 'gpu'
+    config: DBOSConfig = ...
+    DBOS(config=config)
+    if worker_type = "gpu":
+        # GPU workers will only dequeue and execute workflows from the GPU queue
+        DBOS.listen_queues([gpu_queue])
+    elif worker_type == "cpu":
+        # CPU workers will only dequeue and execute workflows from the CPU queue
+        DBOS.listen_queues([cpu_queue])
+    DBOS.launch()
+```
+
+Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
 
 
 ## Python Classes
