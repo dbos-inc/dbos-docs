@@ -57,24 +57,15 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 
 ## DBOS Lifecycle Guidelines
 
-Any DBOS program MUST configure the DBOS constructor at the top and MUST call DBOS.launch() in its main function.
-DBOS must always be configured like so, unless otherwise specified:
-
-```python
-import os
-from dbos import DBOS, DBOSConfig
-
-config: DBOSConfig = {
-    "name": "my-app",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
-```
-
-And DBOS.launch() should always be called in the main function like so:
+A DBOS application MUST always be configured like so, unless otherwise specified, configuring and launching DBOS in its main function:
 
 ```python
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "my-app",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
 ```
 
@@ -82,6 +73,11 @@ In a FastAPI application, the server should ALWAYS be started explicitly after a
 
 ```python
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "my-app",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
@@ -90,6 +86,11 @@ If an app contains scheduled workflows and NOTHING ELSE (no HTTP server), then t
 
 ```python
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "my-app",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     threading.Event().wait()
 ```
@@ -100,13 +101,11 @@ Or if using asyncio:
 import asyncio
 from dbos import DBOS, DBOSConfig
 
-config: DBOSConfig = {
-    "name": "dbos-app"
-}
-DBOS(config=config)
-
-
 async def main():
+    config: DBOSConfig = {
+        "name": "dbos-app"
+    }
+    DBOS(config=config)
     DBOS.launch()
     await asyncio.Event().wait()
 
@@ -124,12 +123,6 @@ Simple example:
 import os
 from dbos import DBOS, DBOSConfig
 
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
-
 @DBOS.step()
 def step_one():
     print("Step one completed!")
@@ -144,6 +137,11 @@ def dbos_workflow():
     step_two()
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     dbos_workflow()
 ```
@@ -157,11 +155,6 @@ from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
 
 @DBOS.step()
 def step_one():
@@ -178,6 +171,11 @@ def dbos_workflow():
     step_two()
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
@@ -192,11 +190,6 @@ from dbos import DBOS, DBOSConfig, Queue
 from fastapi import FastAPI
 
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "dbos-starter",
-    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
-}
-DBOS(config=config)
 
 queue = Queue("example-queue")
 
@@ -217,6 +210,11 @@ def dbos_workflow():
     print(f"Successfully completed {len(results)} steps")
 
 if __name__ == "__main__":
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
