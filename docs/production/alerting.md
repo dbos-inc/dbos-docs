@@ -83,7 +83,7 @@ def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
         "payload": {
             "summary": f"{name}: {message}",
             "severity": "error",
-            "source": "dbos-toolbox",
+            "source": "my-app",
             "custom_details": metadata,
         },
     }
@@ -104,13 +104,59 @@ See the [Python reference](../python/reference/contexts.md#alert_handler) for mo
 </TabItem>
 <TabItem value="typescript" label="Typescript">
 
-```typescript
-import { DBOS } from "@dbos-inc/dbos-sdk";
+Example logging alerts:
 
+```typescript
 DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
   DBOS.logger.warn(`Alert received: ${name} - ${message}`);
   for (const [key, value] of Object.entries(metadata)) {
     DBOS.logger.warn(`  ${key}: ${value}`);
+  }
+});
+```
+
+Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+
+```typescript
+DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL!;
+  const slackText = `*Alert: ${name}*\n${message}\n` +
+    Object.entries(metadata).map(([k, v]) => `• ${k}: ${v}`).join("\n");
+
+  const resp = await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: slackText }),
+  });
+  if (!resp.ok) {
+    DBOS.logger.error(`Failed to send Slack alert: ${resp.status}`);
+  }
+});
+```
+
+Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
+
+```typescript
+DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
+  const routingKey = process.env.PAGERDUTY_ROUTING_KEY!;
+  const payload = {
+    routing_key: routingKey,
+    event_action: "trigger",
+    payload: {
+      summary: `${name}: ${message}`,
+      severity: "error",
+      source: "my-app",
+      custom_details: metadata,
+    },
+  };
+
+  const resp = await fetch("https://events.pagerduty.com/v2/enqueue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    DBOS.logger.error(`Failed to send PagerDuty alert: ${resp.status}`);
   }
 });
 ```
