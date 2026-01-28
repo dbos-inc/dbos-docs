@@ -507,16 +507,59 @@ async def example_workflow(friend: str):
     return result
 ```
 
-## Workflow Versioning and Recovery
+### Running Async Steps In Parallel
 
-Because DBOS recovers workflows by re-executing them using information saved in the database, a workflow cannot safely be recovered if its code has changed since the workflow was started.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of its workflows (this can be overridden through the `application_version`) configuration parameter.
-All workflows are tagged with the application version on which they started.
+Initiating several concurrent steps in an `async` workflow, followed by awaiting them with
+`asyncio.gather(..., return_exceptions=True)`, is valid as long as the steps are started
+in a **deterministic order**. For example, the following is allowed:
 
-When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
-This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use `DBOS.fork_workflow` to restart a workflow from a specific step on a specific code version.
+```python
+    # Start steps in a deterministic order (step1, step2, step3, step4),
+    # then await them all together.
+    tasks = [
+        asyncio.create_task(step1("arg1")),
+        asyncio.create_task(step2("arg2")),
+        asyncio.create_task(step3("arg3")),
+        asyncio.create_task(step4("arg4")),
+    ]
+
+    # Collects exceptions instead of raising immediately
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+This is allowed because each step is started in a well-defined sequence before awaiting.
+
+By contrast, the following is not allowed:
+```python
+    async def seq_a():
+        await step1("arg1")
+        await step2("arg3")
+
+    async def seq_b():
+        await step3("arg2")
+        await step4("arg4")
+
+    tasks = [
+        asyncio.create_task(seq_a()),
+        asyncio.create_task(seq_b()),
+    ]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+```
+
+Here, `step2` and `step4` may be started in either order since their execution depends on
+the relative time taken by `step1` and `step3`.
+
+If you need to run sequences of operations concurrently, start child workflows and await
+their results, rather than interleaving step execution inside a single workflow.
+
+For proper error handling, when using `asyncio.gather()`, specify `return_exceptions=True`.
+Without `return_exceptions=True`, `gather` will raise any exception immediately
+and stop awaiting the rest of the tasks. If one of the remaining tasks later fails, its
+exception may go unobserved. Instead, prefer `asyncio.gather(..., return_exceptions=True)`,
+which safely waits for all tasks to complete and reports their outcomes.
 
 ## Communicating with Workflows
 
