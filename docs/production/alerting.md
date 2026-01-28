@@ -70,6 +70,35 @@ def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
         DBOS.logger.error(f"Failed to send Slack alert: {e}")
 ```
 
+Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
+
+```python
+@DBOS.alert_handler
+def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
+    routing_key = os.environ.get("PAGERDUTY_ROUTING_KEY")
+
+    payload = {
+        "routing_key": routing_key,
+        "event_action": "trigger",
+        "payload": {
+            "summary": f"{name}: {message}",
+            "severity": "error",
+            "source": "dbos-toolbox",
+            "custom_details": metadata,
+        },
+    }
+
+    try:
+        resp = requests.post(
+            "https://events.pagerduty.com/v2/enqueue",
+            json=payload,
+            timeout=10,
+        )
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        DBOS.logger.error(f"Failed to send PagerDuty alert: {e}")
+```
+
 See the [Python reference](../python/reference/contexts.md#alert_handler) for more details.
 
 </TabItem>
