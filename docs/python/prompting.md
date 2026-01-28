@@ -31,7 +31,7 @@ You can copy and paste it directly into your context, or follow these directions
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
 <details>
-<summary><strong>DBOS Prompt</strong></summary>
+<summary><strong>DBOS Python Prompt</strong></summary>
 
 ````markdown
 # Build Reliable Applications With DBOS
