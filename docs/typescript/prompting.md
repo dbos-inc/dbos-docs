@@ -1522,6 +1522,119 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 
+## Upgrading Workflow Code
+
+A challenge encountered when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
+A breaking change to a workflow is one that changes which steps are run, or the order in which the steps are run.
+If a breaking change was made to a workflow and that workflow is replayed by the recovery system, the checkpoints created by the previous version of the code may not match the steps called by the workflow in the new version of the code, causing recovery to fail.
+
+DBOS supports two strategies for safely upgrading workflow code: **patching** and **versioning**.
+
+### Patching
+
+In patching, the result of a call to `DBOS.patch()` is used to conditionally execute the new code.
+`DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
+Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
+
+```typescript
+DBOS.patch(
+    patchName: string
+): Promise<boolean>
+```
+
+**Parameters:**
+- `patchName`: The name to give the patch marker that will be inserted into workflow history.
+
+For example, let's say our original workflow is:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  await foo();
+  await bar();
+}
+```
+
+We want to replace the call to `foo()` with a call to `baz()`.
+This is a breaking change because it changes what steps run.
+We can make this breaking change safely using a patch:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  if (await DBOS.patch('use-baz')) {
+    await baz();
+  }
+  else {
+    await foo();
+  }
+  await bar();
+}
+```
+
+Now, new workflows will run `baz()`, while old workflows will reexecute `foo()`.
+
+### Deprecating and Removing Patches
+
+Patches add complexity and runtime overhead; fortunately they don't need to stay in your code forever.
+Once all workflows that started before you deployed the patch are complete, you can safely remove patches from your code.
+
+First, you must deprecate the patch with `DBOS.deprecatePatch()`.
+`DBOS.deprecatePatch` must be used for a transition period prior to fully removing the patch, as it allows coexistence with any ongoing workflows that used `DBOS.patch()`.
+
+```typescript
+DBOS.deprecatePatch(
+    patchName: string
+): Promise<boolean>
+```
+
+Always returns `true`. Safely bypasses a patch marker at the current point in workflow history if present.
+
+**Parameters:**
+- `patchName`: The name of the patch marker to be bypassed.
+
+For example, here's how to deprecate the patch above:
+
+```typescript
+@DBOS.workflow()
+static async workflow(){
+  if (await DBOS.deprecatePatch("use-baz")) { // always true
+    await baz();
+  }
+  await bar();
+}
+```
+
+Then, when all workflows that started before you deprecated the patch are complete, you can remove the patch entirely:
+
+```typescript
+@DBOS.workflow()
+static async workflow() {
+  await baz()
+  await bar()
+}
+```
+
+If any mistakes happen during the process (a breaking change is not patched, or a patch is deprecated or removed prematurely), the workflow will throw a `DBOSUnexpectedStepError` pointing to the step where the problem occurred.
+
+### Versioning
+
+When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
+All workflows are tagged with the application version on which they started.
+By default, application version is automatically computed from a hash of workflow source code.
+However, you can set your own version through configuration.
+
+```typescript
+config: DBOSConfig = {
+  // ...
+  applicationVersion: '1.0.0',
+}
+```
+
+When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
+This prevents recovery of workflows that depend on different code.
+You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+
 ## Configuring DBOS
 
 To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
