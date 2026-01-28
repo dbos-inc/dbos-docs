@@ -1322,6 +1322,21 @@ interface StepStatus {
 }
 ```
 
+### DBOS.applicationVersion
+
+```typescript
+DBOS.applicationVersion: string
+```
+
+Return the current application version.
+
+### DBOS.executorID
+
+```typescript
+DBOS.executorID: string
+```
+
+Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
 ## Workflow Management Methods
 
@@ -1461,9 +1476,12 @@ All fields except `name` are optional.
 ```javascript
 export interface DBOSConfig {
   name?: string;
+  applicationVersion?: string;
+  executorID?: string;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
@@ -1474,11 +1492,15 @@ export interface DBOSConfig {
   runAdminServer?: boolean;
   adminPort?: number;
 
-  applicationVersion?: string;
+  listenQueues?: WorkflowQueue[];
+
+  serializer?: DBOSSerializer;
 }
 ```
 
 - **name**: Your application's name.
+- **applicationVersion**: The code version for this application and its workflows.
+- **executorID**: A unique process ID used to identify the application instance in distributed environments.
 - **systemDatabaseUrl**: A connection string to a Postgres database in which DBOS can store internal state. The supported format is:
 ```
 postgresql://[username]:[password]@[hostname]:[port]/[database name]
@@ -1491,6 +1513,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the DBOS system database. Defaults to 10.
+- **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
@@ -1498,6 +1521,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
-- **applicationVersion**: The code version for this application and its workflows.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+- **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
 
 ````
