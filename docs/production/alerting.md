@@ -42,6 +42,8 @@ The handler receives three arguments:
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
 
+Example logging alerts:
+
 ```python
 from dbos import DBOS
 
@@ -50,6 +52,22 @@ def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
     DBOS.logger.warning(f"Alert received: {name} - {message}")
     for key, value in metadata.items():
         DBOS.logger.warning(f"  {key}: {value}")
+```
+
+Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+
+```python
+@DBOS.alert_handler
+def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+
+    slack_text = f"*Alert: {name}*\n{message}\n" + "\n".join(f"• {k}: {v}" for k, v in metadata.items())
+
+    try:
+        resp = requests.post(webhook_url, json={"text": slack_text}, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        DBOS.logger.error(f"Failed to send Slack alert: {e}")
 ```
 
 See the [Python reference](../python/reference/contexts.md#alert_handler) for more details.
