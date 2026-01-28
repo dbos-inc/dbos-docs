@@ -3,8 +3,10 @@ sidebar_position: 30
 title: AI-Assisted Development
 ---
 
-You may want assistance from an AI coding agent in building a DBOS application.
-To make sure your model has the latest information on how to use DBOS, you have two options install DBOS skills or provide it with a DBOS prompt.
+If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
+
+1. [Installing DBOS skills.](#dbos-agent-skills)
+2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
 
 You may also want to use the [DBOS MCP server](../production/mcp.md) so your model can directly access your application's workflows and steps.
 
