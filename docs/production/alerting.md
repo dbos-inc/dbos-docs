@@ -43,11 +43,10 @@ The handler receives three arguments:
 <TabItem value="python" label="Python">
 
 ```python
-from typing import Dict
 from dbos import DBOS
 
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: Dict[str, str]) -> None:
+def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
     DBOS.logger.warning(f"Alert received: {name} - {message}")
     for key, value in metadata.items():
         DBOS.logger.warning(f"  {key}: {value}")

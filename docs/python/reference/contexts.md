@@ -1114,10 +1114,8 @@ If no handler is registered, alerts are logged to the DBOS logger.
 **Example syntax:**
 
 ```python
-from typing import Dict
-
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: Dict[str, str]) -> None:
+def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
     DBOS.logger.warning(f"Alert received: {name} - {message}")
     for key, value in metadata.items():
         DBOS.logger.warning(f"  {key}: {value}")
