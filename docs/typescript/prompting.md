@@ -799,6 +799,10 @@ export class Example {
 }
 ```
 
+You **cannot** call, start, or enqueue workflows from within steps.
+These operations should be performed from workflow functions.
+You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
@@ -850,6 +854,10 @@ static async exampleStep() {
   return await fetch("https://example.com").then(r => r.text());
 }
 ```
+
+If a step exhausts all `maxAttempts` retries, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
+If that exception is not caught, the workflow terminates.
+
 ## Queues
 
 You can use queues to run many workflows at once with managed concurrency.
@@ -1242,17 +1250,61 @@ You should AVOID using ConfiguredInstance if at all possible and instead use reg
 ### Testing DBOS Functions
 
 Unless otherwise specified, recommend testing DBOS applications with jest.
+There are two approaches to testing workflows:
 
-You MUST use this beforeAll to reset DBOS between tests:
+1. **Unit testing.** Test workflow logic in isolation by mocking the DBOS interface. Does not require Postgres.
+2. **Integration testing.** Test workflows with real DBOS infrastructure. Requires a Postgres test database.
 
-```javascript
-  beforeAll(async () => {
-    DBOS.setConfig({
-      name: 'my-app',
-      databaseUrl: process.env.DBOS_TESTING_DATABASE_URL,
-    });
+#### Unit Testing
+
+You can unit test workflows by mocking the DBOS interface with `jest.mock`.
+It's important to mock `DBOS.registerWorkflow` to directly return the workflow function instead of wrapping it with durable workflow code:
+
+```ts
+// Mock DBOS
+jest.mock('@dbos-inc/dbos-sdk', () => ({
+  DBOS: {
+    // IMPORTANT: Mock DBOS.registerWorkflow to return the workflow function
+    registerWorkflow: jest.fn((fn) => fn),
+    setEvent: jest.fn(),
+    recv: jest.fn(),
+    startWorkflow: jest.fn(),
+    workflowID: 'test-workflow-id-123',
+  },
+}));
+```
+
+Then call the workflow function directly in your tests and assert on the mocked calls.
+
+#### Integration Testing
+
+Integration tests require a Postgres database. You should reset DBOS and its system database between tests:
+
+```ts
+describe('example integration tests', () => {
+  beforeEach(async () => {
+    const databaseUrl = process.env.DBOS_TEST_DATABASE_URL;
+
+    // Shut down DBOS (in case a previous test launched it) and reset the database.
+    await DBOS.shutdown();
+
+    // Configure and launch DBOS
+    const dbosTestConfig: DBOSConfig = {
+      name: "my-integration-test",
+      systemDatabaseUrl: databaseUrl,
+    };
+    DBOS.setConfig(dbosTestConfig);
     await DBOS.launch();
+  }, 10000);
+
+  afterEach(async () => {
+    await DBOS.shutdown();
   });
+
+  it('my integration test', async () => {
+    // test goes here
+  });
+});
 ```
 
 
