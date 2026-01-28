@@ -119,51 +119,37 @@ Workflows are in most respects normal TypeScript functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in [transactions](./transaction-tutorial) and all other non-deterministic operations in [steps](./step-tutorial.md).
+Instead, you should do all non-deterministic operations in [steps](./step-tutorial.md).
 
 For example, **don't do this**:
 
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await fetch("https://example.com").then(r => r.text()); 
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = Math.random() > 0.5 ? 1 : 0;
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
-Instead, do this:
+Do this instead:
+
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await DBOS.runStep(
-          async ()=>{return await fetch("https://example.com").then(r => r.text())},
-          {name: "fetchBody"}
-        );
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = await DBOS.runStep(
+        () => Promise.resolve(Math.random() > 0.5 ? 1 : 0),
+        { name: "generateChoice" }
+    );
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
-```
-
-Or this:
-```javascript
-class Example {
-    @DBOS.step()
-    static async fetchBody() {
-      // Instead, make HTTP requests in steps
-      return await fetch("https://example.com").then(r => r.text());
-    }
-
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        const body = await Example.fetchBody();
-        await Example.exampleTransaction(body);
-    }
-}
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
 ### Running Steps In Parallel

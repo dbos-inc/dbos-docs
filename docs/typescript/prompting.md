@@ -374,46 +374,32 @@ Instead, you should do all database operations in transactions and all other non
 For example, **don't do this**:
 
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await fetch("https://example.com").then(r => r.text()); 
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = Math.random() > 0.5 ? 1 : 0;
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
-Instead, do this:
+Do this instead:
+
 ```javascript
-class Example {
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        // Don't make an HTTP request in a workflow function
-        const body = await DBOS.runStep(
-          async ()=>{return await fetch("https://example.com").then(r => r.text())},
-          {name: "fetchBody"}
-        );
-        await Example.exampleTransaction(body);
+async function exampleWorkflowFunction() {
+    const choice = await DBOS.runStep(
+        () => Promise.resolve(Math.random() > 0.5 ? 1 : 0),
+        { name: "generateChoice" }
+    );
+    if (choice === 0) {
+        await stepOne();
+    } else {
+        await stepTwo();
     }
 }
-```
-
-Or this:
-```javascript
-class Example {
-    @DBOS.step()
-    static async fetchBody() {
-      // Instead, make HTTP requests in steps
-      return await fetch("https://example.com").then(r => r.text());
-    }
-
-    @DBOS.workflow()
-    static async exampleWorkflow() {
-        const body = await Example.fetchBody();
-        await Example.exampleTransaction(body);
-    }
-}
+const exampleWorkflow = DBOS.registerWorkflow(exampleWorkflowFunction);
 ```
 
 ### Running Steps In Parallel
