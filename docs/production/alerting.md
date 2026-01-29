@@ -42,7 +42,7 @@ The handler receives three arguments:
 
   **`WorkflowFailure`**:
   - `workflow_name`: The workflow name filter, or `*` for all workflows.
-  - `failed_workflow_count`: The number of failed workflows detected.
+  - `failed_workflow_count`: The number of failed workflows detected in the time window.
   - `threshold`: The configured failure count threshold.
   - `period_secs`: The time window in seconds.
 
