@@ -1097,14 +1097,14 @@ DBOSContextSetAuth(user: Optional[str], roles: Optional[List[str]])
 
 ```python
 @DBOS.alert_handler
-def my_handler(name: str, message: str, metadata: Dict[str, str]) -> None:
+def my_handler(rule_type: str, message: str, metadata: Dict[str, str]) -> None:
     ...
 ```
 
 Register a function to handle [alerts](../../production/alerting.md) received from Conductor.
 The handler function is called with three arguments:
 
-- **name**: The alert name.
+- **rule_type**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
 - **message**: The alert message.
 - **metadata**: A dictionary of string key-value pairs with additional alert information.
 
@@ -1115,8 +1115,8 @@ If no handler is registered, alerts are logged to the DBOS logger.
 
 ```python
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
-    DBOS.logger.warning(f"Alert received: {name} - {message}")
+def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
+    DBOS.logger.warning(f"Alert received: {rule_type} - {message}")
     for key, value in metadata.items():
         DBOS.logger.warning(f"  {key}: {value}")
 ```

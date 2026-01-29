@@ -36,7 +36,7 @@ If no handler is registered, alerts are logged automatically.
 
 The handler receives three arguments:
 
-- **name**: The alert name.
+- **rule_type**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
 - **message**: The alert message.
 - **metadata**: Additional key-value string metadata about the alert.
 
@@ -49,8 +49,8 @@ Example logging alerts:
 from dbos import DBOS
 
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
-    DBOS.logger.warning(f"Alert received: {name} - {message}")
+def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
+    DBOS.logger.warning(f"Alert received: {rule_type} - {message}")
     for key, value in metadata.items():
         DBOS.logger.warning(f"  {key}: {value}")
 ```
@@ -59,10 +59,10 @@ Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.
 
 ```python
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
+def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
 
-    slack_text = f"*Alert: {name}*\n{message}\n" + "\n".join(f"• {k}: {v}" for k, v in metadata.items())
+    slack_text = f"*Alert: {rule_type}*\n{message}\n" + "\n".join(f"• {k}: {v}" for k, v in metadata.items())
 
     try:
         resp = requests.post(webhook_url, json={"text": slack_text}, timeout=10)
@@ -75,14 +75,14 @@ Example forwarding alerts to PagerDuty using the [Events API](https://developer.
 
 ```python
 @DBOS.alert_handler
-def handle_alert(name: str, message: str, metadata: dict[str, str]) -> None:
+def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
     routing_key = os.environ.get("PAGERDUTY_ROUTING_KEY")
 
     payload = {
         "routing_key": routing_key,
         "event_action": "trigger",
         "payload": {
-            "summary": f"{name}: {message}",
+            "summary": f"{rule_type}: {message}",
             "severity": "error",
             "source": "my-app",
             "custom_details": metadata,
@@ -108,8 +108,8 @@ See the [Python reference](../python/reference/contexts.md#alert_handler) for mo
 Example logging alerts:
 
 ```typescript
-DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
-  DBOS.logger.warn(`Alert received: ${name} - ${message}`);
+DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<string, string>) => {
+  DBOS.logger.warn(`Alert received: ${ruleType} - ${message}`);
   for (const [key, value] of Object.entries(metadata)) {
     DBOS.logger.warn(`  ${key}: ${value}`);
   }
@@ -119,9 +119,9 @@ DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<stri
 Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
 
 ```typescript
-DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
+DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<string, string>) => {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL!;
-  const slackText = `*Alert: ${name}*\n${message}\n` +
+  const slackText = `*Alert: ${ruleType}*\n${message}\n` +
     Object.entries(metadata).map(([k, v]) => `• ${k}: ${v}`).join("\n");
 
   const resp = await fetch(webhookUrl, {
@@ -138,13 +138,13 @@ DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<stri
 Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
 
 ```typescript
-DBOS.setAlertHandler(async (name: string, message: string, metadata: Record<string, string>) => {
+DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<string, string>) => {
   const routingKey = process.env.PAGERDUTY_ROUTING_KEY!;
   const payload = {
     routing_key: routingKey,
     event_action: "trigger",
     payload: {
-      summary: `${name}: ${message}`,
+      summary: `${ruleType}: ${message}`,
       severity: "error",
       source: "my-app",
       custom_details: metadata,
