@@ -53,6 +53,7 @@
 - [Communicating with Workflows](https://docs.dbos.dev/java/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/java/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console or programmatically.
 - [Workflows](https://docs.dbos.dev/java/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
+- [Alerting](https://docs.dbos.dev/production/alerting.md): If you are using Conductor, you can configure automatic alerts when certain failure conditions are met.
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 - [Account Management](https://docs.dbos.dev/production/dbos-cloud/account-management.md): Learn how to manage DBOS Cloud users
@@ -91,7 +92,7 @@
 - [Configuration](https://docs.dbos.dev/python/reference/configuration.md): Configuring DBOS
 - [DBOS Methods & Variables](https://docs.dbos.dev/python/reference/contexts.md): DBOS provides a number of useful context methods and variables.
 - [DBOS Class](https://docs.dbos.dev/python/reference/dbos-class.md): The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
-- [Decorators](https://docs.dbos.dev/python/reference/decorators.md): API reference for DBOS decorators.
+- [Workflows & Steps](https://docs.dbos.dev/python/reference/decorators.md): Function Decorators
 - [Queues](https://docs.dbos.dev/python/reference/queues.md): Queues allow you to ensure that functions will be run, without starting them immediately.
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS

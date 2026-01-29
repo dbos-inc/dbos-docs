@@ -644,3 +644,34 @@ handle.getStatus(): Promise<WorkflowStatus | null>;
 ```
 
 Retrieve the [`WorkflowStatus`](#workflow-status) of the workflow, or `null` if not found.
+
+## Alerting
+
+### DBOS.setAlertHandler
+
+```typescript
+DBOS.setAlertHandler(
+  handler: (ruleType: string, message: string, metadata: Record<string, string>) => Promise<void>
+): void
+```
+
+Register a handler to receive [alerts](../../production/alerting.md) from Conductor.
+The handler function is called with three arguments:
+
+- **ruleType**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
+- **message**: The alert message.
+- **metadata**: A record of string key-value pairs with additional alert information.
+
+Only one alert handler may be registered per application, and it must be registered before `DBOS.launch()` is called.
+If no handler is registered, alerts are logged with a warning.
+
+**Example syntax:**
+
+```typescript
+DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<string, string>) => {
+  DBOS.logger.warn(`Alert received: ${ruleType} - ${message}`);
+  for (const [key, value] of Object.entries(metadata)) {
+    DBOS.logger.warn(`  ${key}: ${value}`);
+  }
+});
+```
