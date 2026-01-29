@@ -4,7 +4,7 @@ title: Alerting
 toc_max_heading_level: 3
 ---
 
-If you are using [Conductor](./alerting.md), you can configure automatic alerts when certain failure conditions are met.
+If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
 
 :::info
 
