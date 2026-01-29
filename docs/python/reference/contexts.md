@@ -1091,6 +1091,36 @@ DBOSContextSetAuth(user: Optional[str], roles: Optional[List[str]])
 
 `DBOSContextSetAuth` is generally not used by applications directly, but used by event dispatchers, HTTP server middleware, etc., to set up the DBOS context prior to entry into function calls.
 
+## Alerting
+
+### alert_handler
+
+```python
+@DBOS.alert_handler
+def my_handler(rule_type: str, message: str, metadata: Dict[str, str]) -> None:
+    ...
+```
+
+Register a function to handle [alerts](../../production/alerting.md) received from Conductor.
+The handler function is called with three arguments:
+
+- **rule_type**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
+- **message**: The alert message.
+- **metadata**: A dictionary of string key-value pairs with additional alert information.
+
+Only one alert handler may be registered per application, and it must be defined before `DBOS.launch()` is called.
+If no handler is registered, alerts are logged to the DBOS logger.
+
+**Example syntax:**
+
+```python
+@DBOS.alert_handler
+def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None:
+    DBOS.logger.warning(f"Alert received: {rule_type} - {message}")
+    for key, value in metadata.items():
+        DBOS.logger.warning(f"  {key}: {value}")
+```
+
 ## Custom Serialization
 
 DBOS must serialize data such as workflow inputs and outputs and step outputs to store it in the system database.
