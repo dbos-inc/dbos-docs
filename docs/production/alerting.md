@@ -38,7 +38,22 @@ The handler receives three arguments:
 
 - **rule_type**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
 - **message**: The alert message.
-- **metadata**: Additional key-value string metadata about the alert.
+- **metadata**: Additional key-value string metadata about the alert. The metadata keys depend on the rule type:
+
+  **`WorkflowFailure`**:
+  - `workflow_name`: The workflow name filter, or `*` for all workflows.
+  - `failed_workflow_count`: The number of failed workflows detected.
+  - `threshold`: The configured failure count threshold.
+  - `period_secs`: The time window in seconds.
+
+  **`SlowQueue`**:
+  - `queue_name`: The queue name filter, or `*` for all queues.
+  - `stuck_workflow_count`: The number of workflows that have been in the queue for longer than the time threshold.
+  - `threshold_secs`: The enqueue time threshold in seconds.
+
+  **`UnresponsiveApplication`**:
+  - `application_name`: The application name.
+  - `connected_executor_count`: The number of executors currently connected to this application.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
