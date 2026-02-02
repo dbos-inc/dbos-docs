@@ -21,7 +21,7 @@ To wrap your OpenAI agents for durable execution, [install and configure DBOS](.
 
 1. Use `DBOSRunner.run` and `DBOSRunner.run_sync` as drop-in replacements for [`Runner.run`](https://openai.github.io/openai-agents-python/ref/run/#agents.run.Runner.run) and [`Runner.run_sync`](https://openai.github.io/openai-agents-python/ref/run/#agents.run.Runner.run_sync).
 2. Annotate the function calling `DBOSRunner.run` or `DBOSRunner.run_sync` with `@DBOS.workflow` to run your agent as a durably executed workflow.
-3. Annotate your agent's tool call functions and guardrail functions with `@DBOS.step` to mark them as steps in your durably executed workflow.
+3. Annotate your agent's tool call functions and guardrail functions with `@DBOS.step` or `@DBOS.workflow()` to mark them as steps or sub-workflows of your durably executed agentic workflow.
 
 Here is a simple but complete example of wrapping an agent for durable execution.
 With just 10 lines of code (highlighted below), you can add DBOS into an existing OpenAI Agents application.
