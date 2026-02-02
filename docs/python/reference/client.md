@@ -323,18 +323,19 @@ client.list_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
-    name: Optional[str] = None,
-    app_version: Optional[str] = None,
-    forked_from: Optional[str] = None,
-    user: Optional[str] = None,
-    queue_name: Optional[str] = None,
+    name: Optional[Union[str, List[str]]] = None,
+    app_version: Optional[Union[str, List[str]]] = None,
+    forked_from: Optional[Union[str, List[str]]] = None,
+    parent_workflow_id: Optional[Union[str, List[str]]] = None,
+    user: Optional[Union[str, List[str]]] = None,
+    queue_name: Optional[Union[str, List[str]]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
-    workflow_id_prefix: Optional[str] = None,
+    workflow_id_prefix: Optional[Union[str, List[str]]] = None,
     load_input: bool = True,
     load_output: bool = True,
-    executor_id: Optional[str] = None,
+    executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
@@ -347,18 +348,19 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name.
-- **app_version**: Retrieve workflows tagged with this application version.
-- **forked_from**: Retrieve workflows forked from this workflow ID.
-- **user**: Retrieve workflows run by this authenticated user.
-- **queue_name**: Retrieve workflows that were enqueued on this queue.
+- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
+- **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
+- **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
+- **user**: Retrieve workflows run by this authenticated user (or one of these users).
+- **queue_name**: Retrieve workflows that were enqueued on this queue (or one of these queues).
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
-- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string (or one of these strings).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
-- **executor_id**: Retrieve workflows with this executor ID.
+- **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 
 ### list_workflows_async
@@ -370,18 +372,19 @@ client.list_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
-    name: Optional[str] = None,
-    app_version: Optional[str] = None,
-    forked_from: Optional[str] = None,
-    user: Optional[str] = None,
-    queue_name: Optional[str] = None,
+    name: Optional[Union[str, List[str]]] = None,
+    app_version: Optional[Union[str, List[str]]] = None,
+    forked_from: Optional[Union[str, List[str]]] = None,
+    parent_workflow_id: Optional[Union[str, List[str]]] = None,
+    user: Optional[Union[str, List[str]]] = None,
+    queue_name: Optional[Union[str, List[str]]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
-    workflow_id_prefix: Optional[str] = None,
+    workflow_id_prefix: Optional[Union[str, List[str]]] = None,
     load_input: bool = True,
     load_output: bool = True,
-    executor_id: Optional[str] = None,
+    executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
 ) -> List[WorkflowStatus]:
 ```
@@ -397,18 +400,19 @@ client.list_queued_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
-    name: Optional[str] = None,
-    app_version: Optional[str] = None,
-    forked_from: Optional[str] = None,
-    user: Optional[str] = None,
-    queue_name: Optional[str] = None,
+    name: Optional[Union[str, List[str]]] = None,
+    app_version: Optional[Union[str, List[str]]] = None,
+    forked_from: Optional[Union[str, List[str]]] = None,
+    parent_workflow_id: Optional[Union[str, List[str]]] = None,
+    user: Optional[Union[str, List[str]]] = None,
+    queue_name: Optional[Union[str, List[str]]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
-    workflow_id_prefix: Optional[str] = None,
+    workflow_id_prefix: Optional[Union[str, List[str]]] = None,
     load_input: bool = True,
     load_output: bool = True,
-    executor_id: Optional[str] = None,
+    executor_id: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -420,18 +424,19 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
-- **name**: Retrieve workflows with this fully-qualified name.
-- **app_version**: Retrieve workflows tagged with this application version.
-- **forked_from**: Retrieve workflows forked from this workflow ID.
-- **user**: Retrieve workflows run by this authenticated user.
-- **queue_name**: Retrieve workflows running on this queue.
+- **name**: Retrieve workflows with this fully-qualified name (or one of these names).
+- **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
+- **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
+- **parent_workflow_id**: Retrieve workflows that were started as children of this workflow (or one of these workflows).
+- **user**: Retrieve workflows run by this authenticated user (or one of these users).
+- **queue_name**: Retrieve workflows running on this queue (or one of these queues).
 - **limit**: Retrieve up to this many workflows.
 - **offset**: Skip this many workflows from the results returned (for pagination).
 - **sort_desc**: Whether to sort the results in descending (`True`) or ascending (`False`) order by workflow start time.
-- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string.
+- **workflow_id_prefix**: Retrieve workflows whose IDs start with the specified string (or one of these strings).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
-- **executor_id**: Retrieve workflows with this executor ID.
+- **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 
 ### list_queued_workflows_async
 
@@ -442,18 +447,19 @@ client.list_queued_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
-    name: Optional[str] = None,
-    app_version: Optional[str] = None,
-    forked_from: Optional[str] = None,
-    user: Optional[str] = None,
-    queue_name: Optional[str] = None,
+    name: Optional[Union[str, List[str]]] = None,
+    app_version: Optional[Union[str, List[str]]] = None,
+    forked_from: Optional[Union[str, List[str]]] = None,
+    parent_workflow_id: Optional[Union[str, List[str]]] = None,
+    user: Optional[Union[str, List[str]]] = None,
+    queue_name: Optional[Union[str, List[str]]] = None,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
     sort_desc: bool = False,
-    workflow_id_prefix: Optional[str] = None,
+    workflow_id_prefix: Optional[Union[str, List[str]]] = None,
     load_input: bool = True,
     load_output: bool = True,
-    executor_id: Optional[str] = None,
+    executor_id: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
