@@ -37,6 +37,9 @@ Each row represents a different workflow execution.
 - **started_at_epoch_ms**: If this workflow was enqueued, the time at which it was dequeued and began excution.
 - **deduplication_id**: The deduplication key for this workflow, if any.
 - **priority**: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
+- **queue_partition_key**: The key associated with the workflow, if on a partitioned queue.
+- **forked_from**: The ID of the workflow that this was forked from, if applibcable.
+- **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -50,6 +53,8 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - **output**: The serialized step output, if any.
 - **error**: The serialized error thrown by the step, if any.
 - **child_workflow_id**: If the step starts a new child workflow, its ID.
+- **started_at_epoch_ms**: The epoch timestamp of when this step started execution.
+- **completed_at_epoch_ms**: The epoch timestamp of when this step completed.
 
 ### dbos.notifications
 This table stores workflow messages/notifications.
@@ -71,6 +76,16 @@ Each entry represents a different event.
 - **key**: The serialized key of the event.
 - **value**: The serialized value of the event.
 
+### dbos.workflow_events_history
+This table stores historic changes to workflow events over time.
+Each entry represents a distinct value of a workflow event during the workflow lifetime.
+
+**Columns:**
+- **workflow_uuid**: The ID of the workflow that published this event.
+- **function_id**: The monotonically increasing ID of the step that set this value.
+- **key**: The serialized key of the event.
+- **value**: The serialized value of the event.
+
 ### dbos.streams
 This table stores workflow streams.
 Each entry represents a different message in a stream.
@@ -80,3 +95,4 @@ Each entry represents a different message in a stream.
 - **key**: The serialized key of the stream.
 - **value**: The serialized value of the message.
 - **offset**: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
+- **function_id**: The monotonically increasing step ID responsible for emitting this stream.
