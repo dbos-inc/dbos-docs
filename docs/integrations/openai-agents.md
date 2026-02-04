@@ -9,15 +9,15 @@ With durable execution, you can build reliable agents that preserve progress acr
 
 ## Installation
 
-To get started, install DBOS and the [durable OpenAI agents integration](https://github.com/dbos-inc/dbos-openai-agents).
+To get started, install the [DBOS OpenAI agents integration](https://github.com/dbos-inc/dbos-openai-agents).
 
 ```
-pip install dbos dbos-openai-agents
+pip install dbos-openai-agents
 ```
 
 ## Building Reliable Agents
 
-To wrap your OpenAI agents for durable execution, [install and configure DBOS](../python/integrating-dbos.md) then follow these three guidelines:
+To wrap your OpenAI agents for durable execution, [configure DBOS](../python/integrating-dbos.md) then follow these three guidelines:
 
 1. Use `DBOSRunner.run` and `DBOSRunner.run_sync` as drop-in replacements for [`Runner.run`](https://openai.github.io/openai-agents-python/ref/run/#agents.run.Runner.run) and [`Runner.run_sync`](https://openai.github.io/openai-agents-python/ref/run/#agents.run.Runner.run_sync).
 2. Annotate the function calling `DBOSRunner.run` or `DBOSRunner.run_sync` with `@DBOS.workflow` to run your agent as a durably executed workflow.
