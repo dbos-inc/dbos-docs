@@ -29,6 +29,7 @@ class DBOSConfig(TypedDict):
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
+    db_engine_kwargs: Optional[Dict[str, Any]]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
@@ -41,9 +42,12 @@ class DBOSConfig(TypedDict):
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
     log_level: Optional[str]
+    otlp_log_level: Optional[str]
+    console_log_level: Optional[str]
 
     run_admin_server: Optional[bool]
     admin_port: Optional[int]
+    max_executor_threads: Optional[int]
 
     serializer: Optional[Serializer]
 ```
@@ -88,6 +92,7 @@ This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/s
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **db_engine_kwargs**: A dictionary of additional keyword arguments passed to the SQLAlchemy [create_engine](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine) call. Can be used to customize connection pool settings, timeouts, and other engine parameters.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
@@ -105,11 +110,15 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
+- **otlp_log_level**: Log level specifically for OTLP logging (if enabled). Must be no less severe than `log_level`. Defaults to the value of `log_level`.
+- **console_log_level**: Log level specifically for console logging. Must be no less severe than `log_level`. Defaults to the value of `log_level`.
 
 ### Admin Server Settings
 
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
+- **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions.
+
 ### Serialization Settings
 
 - **serializer**: A custom serializer for the system database. See the [custom serialization reference](./contexts.md#custom-serialization) for details.

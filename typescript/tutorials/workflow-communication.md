@@ -41,7 +41,7 @@ If the topic is not specified, this method only receives messages sent without a
 #### Messages Example
 
 Messages are especially useful for sending notifications to a workflow.
-For example, in the [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
+For example, in the [e-commerce demo](../examples/checkout-tutorial.md), the checkout workflow, after redirecting customers to a secure payments service, must wait for a notification from that service that the payment has finished processing.
 
 To wait for this notification, the payments workflow uses `recv()`, executing failure-handling code if the notification doesn't arrive in time:
 
@@ -103,7 +103,7 @@ You can also call [`getEvent`](../reference/client.md#getevent) from outside of 
 #### Events Example
 
 Events are especially useful for writing interactive workflows that communicate information to their caller.
-For example, in the [e-commerce demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/e-commerce), the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
+For example, in the [e-commerce demo](../examples/checkout-tutorial.md), the checkout workflow, after validating an order, directs the customer to a secure payments service to handle credit card processing.
 To communicate the payments URL to the customer, it uses events.
 
 The checkout workflow emits the payments URL using `setEvent()`:

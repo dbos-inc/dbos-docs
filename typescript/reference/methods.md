@@ -278,17 +278,18 @@ DBOS.listWorkflows(
 ```typescript
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
-  workflowName?: string; // Retrieve workflows with this name.
-  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+  workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
+  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
-  authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
-  applicationVersion?: string; // Retrieve workflows started on this application version.
-  executorId?: string; // Retrieve workflows run by this executor ID.
-  workflow_id_prefix?: string; // Retrieve workflows whose ID have this prefix
-  queueName?: string; // If this workflow is enqueued, on which queue
-  queuesOnly?: boolean; // Return only workflows that are actively enqueued
-  forkedFrom?: string; // Get workflows forked from this workflow ID.
+  authenticatedUser?: string | string[]; // Retrieve workflows run by this authenticated user (or any of these users).
+  applicationVersion?: string | string[]; // Retrieve workflows started on this application version (or any of these versions).
+  executorId?: string | string[]; // Retrieve workflows run by this executor ID (or any of these executor IDs).
+  workflow_id_prefix?: string | string[]; // Retrieve workflows whose ID have this prefix (or any of these prefixes).
+  queueName?: string | string[]; // If this workflow is enqueued, on which queue (or any of these queues).
+  queuesOnly?: boolean; // Return only workflows that are actively enqueued.
+  forkedFrom?: string | string[]; // Get workflows forked from this workflow ID (or any of these workflow IDs).
+  parentWorkflowID?: string | string[]; // Get workflows started by this parent workflow ID (or any of these parent workflow IDs).
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -422,6 +423,13 @@ export interface WorkflowStatus {
   // If the workflow was enqueued, the name of the queue.
   readonly queueName?: string;
 
+  // The user who ran the workflow, if set.
+  readonly authenticatedUser?: string;
+  // The role used to run the workflow, if set.
+  readonly assumedRole?: string;
+  // All roles the authenticated user has, if set.
+  readonly authenticatedRoles?: string[];
+
   // The deserialized workflow inputs.
   readonly input?: unknown[];
   // The workflow's deserialized output, if any.
@@ -449,9 +457,13 @@ export interface WorkflowStatus {
   readonly priority: number;
   // If this workflow is enqueued on a partitioned queue, its partition key
   readonly queuePartitionKey?: string;
+  // If this workflow was enqueued, the time it was dequeued (started execution), as a UNIX epoch timestamp in milliseconds.
+  readonly dequeuedAt?: number;
 
   // If this workflow was forked from another, that workflow's ID.
   readonly forkedFrom?: string;
+  // If this workflow was started by another workflow, that workflow's ID.
+  readonly parentWorkflowID?: string;
 }
 ```
 
