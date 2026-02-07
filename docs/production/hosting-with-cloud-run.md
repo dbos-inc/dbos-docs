@@ -324,3 +324,40 @@ curl -X GET https://my-app-XXXXXXXXXX.us-central1.run.app/last_step/1
 The response will be `1`, `2`, or `3` depending on how many steps have completed.
 
 </details>
+
+## 4. Choosing a Cloud Run Execution Mode
+
+Cloud Run offers three execution modes. Each maps differently to DBOS workloads.
+
+### Service (recommended)
+
+A [Cloud Run service](https://cloud.google.com/run/docs/overview/what-is-cloud-run#services) runs a container that listens for HTTP requests and scales automatically based on traffic. This is the most common mode and what this guide uses.
+
+For DBOS applications, a service is the natural fit: your app exposes HTTP endpoints that start or interact with durable workflows, and Cloud Run manages scaling for you. However, DBOS relies on background workers to process queues, run scheduled workflows, and recover interrupted workflows. These workers need a running instance to operate, so **you should set `--min-instances=1`** to keep at least one instance alive at all times:
+
+```bash
+gcloud run services update my-app \
+  --region us-central1 \
+  --min-instances=1
+```
+
+:::caution Scale-to-zero behavior
+If your service scales to zero, all DBOS background workers stop. Queued workflows will not be dequeued, scheduled workflows will not fire, and any workflows that were in progress when the last instance shut down will not be recovered until a new request spins up an instance. Setting `--min-instances=1` avoids this at a small cost for the always-on instance.
+:::
+
+
+:::caution database connection exhaustion
+We recommend using a connection pooler like [PgBouncer](https://www.pgbouncer.org/) in front of your Cloud SQL instance. Cloud Run can scale up to hundreds of instances under load, and without a connection pooler, you may exhaust the maximum connections allowed by your database.
+:::
+
+### Job
+
+A [Cloud Run job](https://cloud.google.com/run/docs/overview/what-is-cloud-run#jobs) runs a container to completion and then exits. Jobs do not listen for HTTP requests.
+
+Jobs are **not a typical fit for DBOS** because DBOS applications are long-running servers. However, a job can be useful in a hybrid architecture: use the [DBOS client](../go/tutorials/workflow-client.md) inside a job to enqueue work, while a separate always-on Cloud Run *service* (even one that scales to zero for cost savings) dequeues and executes the workflows when traffic arrives. For example, a scheduled Cloud Run job could enqueue a batch of workflows every hour.
+
+### Worker (rare)
+
+A [Cloud Run worker](https://cloud.google.com/run/docs/overview/what-is-cloud-run#workers) runs a container continuously without listening for HTTP requests. Workers don't scale based on traffic&mdash;you configure a fixed instance count.
+
+This mode is only relevant if your DBOS application **never receives HTTP requests** but does background processing exclusively&mdash;for example, consuming from Kafka topics, running purely scheduled workflows, or processing queues that are populated by an external system. In most cases, a service with `--min-instances=1` is simpler and more flexible.
