@@ -354,7 +354,7 @@ We recommend using a connection pooler like [PgBouncer](https://www.pgbouncer.or
 
 A [Cloud Run job](https://cloud.google.com/run/docs/overview/what-is-cloud-run#jobs) runs a container to completion and then exits. Jobs do not listen for HTTP requests.
 
-Jobs are **not a typical fit for DBOS** because DBOS applications are long-running servers. However, a job can be useful in a hybrid architecture: use the [DBOS client](../go/tutorials/workflow-client.md) inside a job to enqueue work, while a separate always-on Cloud Run *service* (even one that scales to zero for cost savings) dequeues and executes the workflows when traffic arrives. For example, a scheduled Cloud Run job could enqueue a batch of workflows every hour.
+Jobs are **not a typical fit for DBOS** because DBOS applications are long-running servers. However, a job can be useful in a hybrid architecture: use the [DBOS client](../golang/reference/client.md) inside a job to enqueue work, while a separate always-on Cloud Run *service* (even one that scales to zero for cost savings) dequeues and executes the workflows when traffic arrives. For example, a scheduled Cloud Run job could enqueue a batch of workflows every hour.
 
 ### Worker (rare)
 
