@@ -128,6 +128,8 @@ gcloud services vpc-peerings connect \
   --network=main-vpc
 ```
 
+---
+
 **Cloud SQL PostgreSQL instance**
 
 Create a private-IP-only PostgreSQL instance and an application database:
@@ -162,6 +164,8 @@ echo -n "[YOUR_CONDUCTOR_API_KEY]" | gcloud secrets create conductor-api-key \
   --replication-policy="automatic"
 ```
 
+---
+
 **IAM service account and permissions**
 
 Create a service account for Cloud Run and grant it access to the secrets and Cloud SQL:
@@ -185,14 +189,21 @@ gcloud secrets add-iam-policy-binding conductor-api-key \
 gcloud projects add-iam-policy-binding [YOUR_PROJECT_ID] \
   --member="serviceAccount:run-identity@[YOUR_PROJECT_ID].iam.gserviceaccount.com" \
   --role="roles/cloudsql.client"
+```
 
-# Grant Cloud Build permissions (needed for --source deployments)
+When deploying with `--source`, Cloud Build runs under the project's default Compute Engine service account, not `run-identity`. This account needs the `cloudbuild.builds.builder` role to build and push container images:
+
+```bash
+# [YOUR_PROJECT_NUMBER] is the numeric project number (not the project ID)
+# Find it in the Google Cloud Console under project settings
 gcloud projects add-iam-policy-binding [YOUR_PROJECT_ID] \
   --member="serviceAccount:[YOUR_PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
   --role="roles/cloudbuild.builds.builder"
 ```
 
-Replace `[YOUR_PROJECT_NUMBER]` with your numeric project number from the Google Cloud Console.
+:::note
+For production, consider creating a dedicated database user instead of using the `postgres` superuser. Grant it only the permissions your application needs.
+:::
 
 </details>
 
