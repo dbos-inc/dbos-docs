@@ -622,3 +622,133 @@ debouncerClient.debounce_async(
 ```
 
 Similar to [`Debouncer.debounce_async`](./contexts.md#debounce_async).
+
+## Workflow Schedules
+
+`DBOSClient` provides methods to manage [workflow schedules](./contexts.md#workflow-schedules) from outside a DBOS application.
+Unlike the `DBOS` class methods which accept workflow functions directly, client schedule methods accept workflow names as strings.
+
+### create_schedule
+
+```python
+client.create_schedule(
+    *,
+    schedule_name: str,
+    workflow_name: str,
+    schedule: str,
+) -> None
+```
+
+Create a cron schedule that periodically invokes a workflow.
+Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a `workflow_name` string instead of a workflow function.
+
+**Parameters:**
+- **schedule_name**: Unique name identifying this schedule.
+- **workflow_name**: Fully-qualified name of the workflow function to invoke.
+- **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+
+### create_schedule_async
+
+Coroutine version of [`create_schedule`](#create_schedule-1).
+
+### list_schedules
+
+```python
+client.list_schedules(
+    *,
+    status: Optional[Union[str, List[str]]] = None,
+    workflow_name: Optional[Union[str, List[str]]] = None,
+    schedule_name_prefix: Optional[Union[str, List[str]]] = None,
+) -> List[WorkflowSchedule]
+```
+
+Return all registered workflow schedules, optionally filtered. Returns a list of [`WorkflowSchedule`](./contexts.md#workflowschedule).
+Similar to [`DBOS.list_schedules`](./contexts.md#list_schedules).
+
+**Parameters:**
+- **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
+- **workflow_name**: Filter by workflow name or a list of names.
+- **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
+
+### list_schedules_async
+
+Coroutine version of [`list_schedules`](#list_schedules-1).
+
+### get_schedule
+
+```python
+client.get_schedule(name: str) -> Optional[WorkflowSchedule]
+```
+
+Return the [`WorkflowSchedule`](./contexts.md#workflowschedule) with the given name, or `None` if it does not exist.
+Similar to [`DBOS.get_schedule`](./contexts.md#get_schedule).
+
+### get_schedule_async
+
+Coroutine version of [`get_schedule`](#get_schedule-1).
+
+### delete_schedule
+
+```python
+client.delete_schedule(name: str) -> None
+```
+
+Delete the schedule with the given name. No-op if it does not exist.
+Similar to [`DBOS.delete_schedule`](./contexts.md#delete_schedule).
+
+### delete_schedule_async
+
+Coroutine version of [`delete_schedule`](#delete_schedule-1).
+
+### pause_schedule
+
+```python
+client.pause_schedule(name: str) -> None
+```
+
+Pause the schedule with the given name. A paused schedule does not fire.
+Similar to [`DBOS.pause_schedule`](./contexts.md#pause_schedule).
+
+### resume_schedule
+
+```python
+client.resume_schedule(name: str) -> None
+```
+
+Resume a paused schedule so it begins firing again.
+Similar to [`DBOS.resume_schedule`](./contexts.md#resume_schedule).
+
+### apply_schedules
+
+```python
+client.apply_schedules(
+    schedules: Dict[str, Optional[Tuple[str, str]]],
+) -> None
+```
+
+Atomically apply a set of schedules.
+Each entry maps a schedule name to either a `(workflow_name, cron)` tuple to create or update a schedule, or `None` to delete a schedule of that name if it exists.
+Similar to [`DBOS.apply_schedules`](./contexts.md#apply_schedules), but takes workflow name strings instead of workflow functions.
+
+### backfill_schedule
+
+```python
+client.backfill_schedule(
+    schedule_name: str,
+    start: datetime,
+    end: datetime,
+) -> List[WorkflowHandle[None]]
+```
+
+Enqueue all executions of a schedule that would have run between `start` and `end`.
+Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
+Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
+
+### trigger_schedule
+
+```python
+client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
+```
+
+Immediately enqueue the scheduled workflow at the current time.
+Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
