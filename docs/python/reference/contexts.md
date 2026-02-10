@@ -748,11 +748,6 @@ Coroutine version of [`delete_workflow`](#delete_workflow).
 
 ## Workflow Schedules
 
-You can create, manage, and delete cron schedules at runtime using the DBOS schedule management API.
-Schedules are stored in the database and can be created, paused, resumed, or deleted while the application is running.
-
-Scheduled workflow functions take two arguments: a `datetime` (the scheduled execution time) and a context object.
-
 ### create_schedule
 
 ```python
@@ -766,7 +761,6 @@ DBOS.create_schedule(
 ```
 
 Create a cron schedule that periodically invokes a workflow function.
-If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **schedule_name**: Unique name identifying this schedule.
@@ -797,13 +791,14 @@ from dbos import DBOS
 
 @DBOS.workflow()
 def my_periodic_task(scheduled_time: datetime, context: Any):
-    DBOS.logger.info(f"Running task scheduled for {scheduled_time}")
+    DBOS.logger.info(f"Running task scheduled for {scheduled_time} with context {context}")
 
 # Create a schedule that runs every 5 minutes
 DBOS.create_schedule(
-    schedule_name="my-task-schedule",
+    schedule_name="my-task-schedule", # The schedule name is a unique identifier of the schedule
     workflow_fn=my_periodic_task,
-    schedule="*/5 * * * *",
+    schedule="*/5 * * * *",  # Every 5 minutes
+    context="my context", # The context is passed into every iteration of the workflow
 )
 ```
 
