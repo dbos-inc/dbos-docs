@@ -459,7 +459,7 @@ Return the ID of the current workflow, if in a workflow. Returns an error if not
 ### GetStepID
 
 ```go
-func GetStepID(ctx DBOSContext) (string, error)
+func GetStepID(ctx DBOSContext) (int, error)
 ```
 
 Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.
