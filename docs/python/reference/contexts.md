@@ -929,7 +929,7 @@ class WorkflowSchedule(TypedDict):
     workflow_name: str
     schedule: str
     status: str  # "ACTIVE" or "PAUSED"
-    context: str
+    context: Any
 ```
 
 ### Workflow Status
