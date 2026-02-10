@@ -390,4 +390,79 @@ func onUserTaskSubmission(dbosContext dbos.DBOSContext, userID string, task Task
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+### Debouncing
 
+**Debouncing** delays a workflow's execution until some time has passed since it was last called.
+This is useful when rapid successive triggers should be coalesced into a single workflow execution.
+For example, if a user is editing a text field, you may want to start a processing workflow only after the user stops typing.
+
+To debounce a workflow, define the workflow and queue, then create a [`Debouncer`](../reference/queues.md#debouncer) for it:
+
+```go
+func processInput(ctx dbos.DBOSContext, input string) (string, error) {
+    fmt.Printf("Processing input: %s\n", input)
+    return "processed", nil
+}
+
+func main() {
+    dbosContext, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
+        AppName:     "debounce-example",
+        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    })
+
+    dbos.RegisterWorkflow(dbosContext, processInput)
+
+    // Create a debouncer with a maximum timeout of 30 seconds
+    debouncer := dbos.NewDebouncer(dbosContext, processInput,
+        dbos.WithDebouncerTimeout(30*time.Second))
+
+    dbos.Launch(dbosContext)
+    defer dbos.Shutdown(dbosContext, 5*time.Second)
+
+    // Each call to Debounce pushes back the workflow start time by the delay.
+    // The workflow runs with the most recent input once the delay expires.
+    handle, err := debouncer.Debounce(dbosContext, "user-123", 5*time.Second, "first input")
+    if err != nil {
+        log.Fatal(err)
+    }
+    // If this call arrives within 5 seconds, the delay resets and the input updates
+    handle, err = debouncer.Debounce(dbosContext, "user-123", 5*time.Second, "updated input")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    result, err := handle.GetResult()
+    fmt.Println("Result:", result) // Processed with "updated input"
+}
+```
+
+Key behaviors:
+- Each call to `Debounce` with the same key pushes back the workflow start time by the specified delay.
+- When the delay expires without another call, the workflow executes with the most recent input.
+- The optional [`WithDebouncerTimeout`](../reference/queues.md#withdebouncertimeout) caps the maximum wait time from the first call. If the timeout is zero (the default), the delay can be pushed back indefinitely.
+- Different keys debounce independently, so you can debounce per-user, per-tenant, or per-resource.
+- You can create multiple debouncer per workflow, with different timeouts.
+- Debouncers must be created before `Launch()`.
+
+#### Debouncing from an External Application
+
+You can also debounce workflows from outside your DBOS application using a [`DebouncerClient`](../reference/client.md#newdebouncerclient):
+
+```go
+config := dbos.ClientConfig{
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+}
+client, err := dbos.NewClient(context.Background(), config)
+if err != nil {
+    log.Fatal(err)
+}
+defer client.Shutdown(5 * time.Second)
+
+dc := dbos.NewDebouncerClient[string, string]("processInput", client,
+    dbos.WithDebouncerTimeout(30*time.Second))
+
+handle, err := dc.Debounce("user-123", 5*time.Second, "some input")
+if err != nil {
+    log.Fatal(err)
+}
+```

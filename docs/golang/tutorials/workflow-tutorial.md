@@ -397,3 +397,36 @@ When using versioning, we recommend **blue-green** code upgrades.
 When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
 Then, once all workflows of the old version are complete (you can use [`ListWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
+
+## Workflow Attempts and Recovery
+
+The `Attempts` field in [`WorkflowStatus`](../reference/methods.md#workflow-status) tracks how many times a workflow has been executed.
+
+- On first execution, `Attempts` is set to `1`.
+- If the workflow is enqueued but not yet dequeued, `Attempts` is `0`.
+- Each time the workflow is recovered (e.g., after a crash) or dequeued for execution, `Attempts` is incremented by `1`.
+
+You can limit the number of attempts using [`WithMaxRetries`](../reference/workflows-steps.md#withmaxretries) when registering a workflow.
+If `WithMaxRetries(n)` is set, the workflow may be attempted at most `n + 1` times (one initial execution plus `n` retries).
+If this limit is exceeded, the workflow's status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it will no longer be recovered automatically.
+
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue), preventing a buggy workflow that crashes its application from doing so infinitely.
+You can use [`ResumeWorkflow`](../reference/methods.md#resumeworkflow) to manually resume a workflow that has exceeded its maximum attempts after fixing the underlying issue.
+
+:::tip
+The number of attempts will be increased one last time before the workflow is placed in the DLQ.
+For example a workflow with max retries of 1 that has been moved to the DQL will show 3 attempts.
+:::
+
+```go
+// Register a workflow that can be attempted at most 4 times (1 initial + 3 retries)
+dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRetries(3))
+```
+
+You can inspect the current attempt count of a workflow via its status:
+
+```go
+handle, _ := dbos.RunWorkflow(dbosContext, myWorkflow, input)
+status, _ := handle.GetStatus()
+fmt.Printf("Attempt #%d\n", status.Attempts)
+```
