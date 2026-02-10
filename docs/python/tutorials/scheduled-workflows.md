@@ -6,15 +6,16 @@ title: Scheduling Workflows
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
 Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
 
-To schedule a workflow, first define a workflow that takes a single `datetime` argument (the scheduled execution time):
+To schedule a workflow, first define a workflow that takes two arguments: a `datetime` (the scheduled execution time) and a context object:
 
 ```python
 from datetime import datetime
+from typing import Any
 from dbos import DBOS
 
 @DBOS.workflow()
-def my_periodic_task(scheduled_time: datetime):
-    DBOS.logger.info(f"Running task scheduled for {scheduled_time}")
+def my_periodic_task(scheduled_time: datetime, context: Any):
+    DBOS.logger.info(f"Running task scheduled for {scheduled_time} with context {context}")
 ```
 
 Then, create a schedule for it using [`DBOS.create_schedule`](../reference/contexts.md#create_schedule) with a [crontab](https://en.wikipedia.org/wiki/Cron) expression:
@@ -24,6 +25,7 @@ DBOS.create_schedule(
     schedule_name="my-task-schedule", # The schedule name is a unique identifier of the schedule
     workflow_fn=my_periodic_task,
     schedule="*/5 * * * *",  # Every 5 minutes
+    context="my context", # The context is passed into every iteration of the workflow
 )
 ```
 
@@ -43,16 +45,36 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
+You can dynamically create many schedules for the same workflow.
+For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
+
+```python
+from datetime import datetime
+from dbos import DBOS
+
+@DBOS.workflow()
+def customer_workflow(scheduled_time: datetime, customer_id: str):
+    # ...
+
+def on_customer_registration(customer_id: str):
+    DBOS.create_schedule(
+        schedule_name=f"customer-{customer_id}-sync",
+        workflow_fn=customer_workflow,
+        schedule="0 * * * *",  # Every hour
+        context=customer_id,
+    )
+```
+
 ### Atomically Updating Schedules
 
 If you need to create, update, or delete multiple schedules at once, use [`DBOS.apply_schedules`](../reference/contexts.md#apply_schedules).
 This is useful for declaratively defining all your static schedules in one place:
 
 ```python
-DBOS.apply_schedules({
-    "schedule-a": (workflow_a, "*/10 * * * *"),  # Run Workflow A every 10 minutes
-    "schedule-b": (workflow_b, "0 0 * * *"),     # Run Workflow B every day at midnight
-})
+DBOS.apply_schedules([
+    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *"},  # Every 10 minutes
+    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *"},     # Every day at midnight
+])
 ```
 
 ### Managing Schedules
@@ -115,6 +137,7 @@ client.create_schedule(
     schedule_name="my-task-schedule",
     workflow_name="my_periodic_task",
     schedule="*/5 * * * *",
+    context="my context",
 )
 ```
 

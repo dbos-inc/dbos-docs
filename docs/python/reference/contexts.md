@@ -751,7 +751,7 @@ Coroutine version of [`delete_workflow`](#delete_workflow).
 You can create, manage, and delete cron schedules at runtime using the DBOS schedule management API.
 Schedules are stored in the database and can be created, paused, resumed, or deleted while the application is running.
 
-Scheduled workflow functions take a **single `datetime` argument**: the scheduled execution time.
+Scheduled workflow functions take two arguments: a `datetime` (the scheduled execution time) and a context object.
 
 ### create_schedule
 
@@ -759,8 +759,9 @@ Scheduled workflow functions take a **single `datetime` argument**: the schedule
 DBOS.create_schedule(
     *,
     schedule_name: str,
-    workflow_fn: Callable[[datetime], None],
+    workflow_fn: Callable[[datetime, Any], None],
     schedule: str,
+    context: Any = None,
 ) -> None
 ```
 
@@ -769,8 +770,9 @@ If called from within a workflow, the operation is recorded as a step.
 
 **Parameters:**
 - **schedule_name**: Unique name identifying this schedule.
-- **workflow_fn**: The workflow function to invoke. Must take a single `datetime` argument (the scheduled execution time).
+- **workflow_fn**: The workflow function to invoke. Must take two arguments: a `datetime` (the scheduled execution time) and a context object.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+- **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -794,7 +796,7 @@ from datetime import datetime
 from dbos import DBOS
 
 @DBOS.workflow()
-def my_periodic_task(scheduled_time: datetime):
+def my_periodic_task(scheduled_time: datetime, context: Any):
     DBOS.logger.info(f"Running task scheduled for {scheduled_time}")
 
 # Create a schedule that runs every 5 minutes
@@ -875,21 +877,27 @@ Resume a paused schedule so it begins firing again.
 
 ```python
 DBOS.apply_schedules(
-    schedules: Dict[str, Optional[Tuple[Callable[[datetime], None], str]]],
+    schedules: List[ScheduleInput],
 ) -> None
+
+class ScheduleInput(TypedDict):
+    schedule_name: str
+    workflow_fn: Callable[[datetime, Any], None]
+    schedule: str
+    context: Any
 ```
 
 Atomically apply a set of schedules.
-Each entry maps a schedule name to either a `(workflow_fn, cron)` tuple to create or update a schedule, or `None` to delete a schedule of that name if it exists.
+Useful for declaratively defining all your static schedules in one place.
 May not be called from within a workflow.
 
 **Example:**
 
 ```python
-DBOS.apply_schedules({
-    "schedule-a": (workflow_a, "*/10 * * * *"), # Run Workflow A every 10 minutes
-    "schedule-b": (workflow_b, "0 0 * * *"), # Run Workflow B every day at midnight
-})
+DBOS.apply_schedules([
+    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *"},  # Every 10 minutes
+    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *"},     # Every day at midnight
+])
 ```
 
 ### backfill_schedule
@@ -926,6 +934,7 @@ class WorkflowSchedule(TypedDict):
     workflow_name: str
     schedule: str
     status: str  # "ACTIVE" or "PAUSED"
+    context: str
 ```
 
 ### Workflow Status

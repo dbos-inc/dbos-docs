@@ -636,6 +636,7 @@ client.create_schedule(
     schedule_name: str,
     workflow_name: str,
     schedule: str,
+    context: Any = None,
 ) -> None
 ```
 
@@ -646,6 +647,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **schedule_name**: Unique name identifying this schedule.
 - **workflow_name**: Fully-qualified name of the workflow function to invoke.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+- **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 
 ### create_schedule_async
 
@@ -722,13 +724,18 @@ Similar to [`DBOS.resume_schedule`](./contexts.md#resume_schedule).
 
 ```python
 client.apply_schedules(
-    schedules: Dict[str, Optional[Tuple[str, str]]],
+    schedules: List[ClientScheduleInput],
 ) -> None
+
+class ClientScheduleInput(TypedDict):
+    schedule_name: str
+    workflow_name: str
+    schedule: str
+    context: Any
 ```
 
 Atomically apply a set of schedules.
-Each entry maps a schedule name to either a `(workflow_name, cron)` tuple to create or update a schedule, or `None` to delete a schedule of that name if it exists.
-Similar to [`DBOS.apply_schedules`](./contexts.md#apply_schedules), but takes workflow name strings instead of workflow functions.
+Useful for declaratively defining all your static schedules in one place.
 
 ### backfill_schedule
 

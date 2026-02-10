@@ -234,14 +234,15 @@ if __name__ == "__main__":
 
 You can schedule DBOS workflows to run on a cron schedule. Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
 
-A scheduled workflow MUST take a single `datetime` argument (the scheduled execution time):
+A scheduled workflow MUST take two arguments: a `datetime` (the scheduled execution time) and a context object:
 
 ```python
 from datetime import datetime
+from typing import Any
 from dbos import DBOS
 
 @DBOS.workflow()
-def my_periodic_task(scheduled_time: datetime):
+def my_periodic_task(scheduled_time: datetime, context: Any):
     DBOS.logger.info(f"Running task scheduled for {scheduled_time}")
 
 DBOS.create_schedule(
