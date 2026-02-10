@@ -772,6 +772,21 @@ If called from within a workflow, the operation is recorded as a step.
 - **workflow_fn**: The workflow function to invoke. Must take a single `datetime` argument (the scheduled execution time).
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 
+DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
+Valid cron schedules contain 5 or 6 items, separated by spaces:
+
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
+
 **Example:**
 
 ```python
