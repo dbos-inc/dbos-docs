@@ -253,7 +253,9 @@ ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 
 Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
 
-### NewDebouncerClient
+### Debouncer
+
+#### NewDebouncerClient
 
 ```go
 func NewDebouncerClient[P any, R any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[P, R]
@@ -276,7 +278,7 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
 
-### DebouncerClient.Debounce
+#### DebouncerClient.Debounce
 
 ```go
 func (dc *DebouncerClient[P, R]) Debounce(key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
@@ -313,18 +315,6 @@ Similar to [`ReadStream`](./methods.md#readstream).
 - Whether the stream is closed.
 - Any error that occurred.
 
-**Example syntax:**
-
-```go
-values, closed, err := dbos.ClientReadStream[string](client, workflowID, "progress")
-if err != nil {
-    log.Fatal(err)
-}
-for _, value := range values {
-    fmt.Printf("Received: %s\n", value)
-}
-```
-
 ### ClientReadStreamAsync
 
 ```go
@@ -344,22 +334,3 @@ Similar to [`ReadStreamAsync`](./methods.md#readstreamasync).
 **Returns:**
 - A receive-only channel of [`StreamValue[R]`](./methods.md#streamvalue).
 - Any error that occurred during setup.
-
-**Example syntax:**
-
-```go
-ch, err := dbos.ClientReadStreamAsync[string](client, workflowID, "progress")
-if err != nil {
-    log.Fatal(err)
-}
-for streamValue := range ch {
-    if streamValue.Err != nil {
-        log.Printf("Error: %v", streamValue.Err)
-        break
-    }
-    if streamValue.Closed {
-        break
-    }
-    fmt.Printf("Received: %s\n", streamValue.Value)
-}
-```
