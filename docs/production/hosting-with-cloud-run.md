@@ -202,7 +202,7 @@ By default, DBOS creates its [system tables](../explanations/system-tables.md) o
 
 ### The application
 
-The example app uses the [DBOS Golang SDK](../golang/programming-guide.md) (source code: **LINK**). It serves HTTP requests (Service mode) and runs a scheduled workflow that enqueues work periodically (Worker Pool mode).
+The example app uses the [DBOS Golang SDK](../golang/programming-guide.md) and is available on [Github](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun). It serves HTTP requests (Service mode) and runs a scheduled workflow that enqueues work periodically (Worker Pool mode).
 
 #### Database connection
 The connection string uses `key=value` format. `DB_PASSWORD` is injected from Secret Manager during deployment; the remaining parameters are plain environment variables. The app assembles the DSN at startup:
@@ -412,7 +412,7 @@ Returns `1`, `2`, or `3` depending on how many steps have completed.
 
 Worker pools don't auto-scale, but you can build an **external scaler** inside the pool using a DBOS [scheduled workflow](../golang/tutorials/workflow-tutorial.md#scheduled-workflows). DBOS guarantees only one instance runs a scheduled function at a time&mdash;even across a multi-instance pool&mdash;preventing a thundering herd of conflicting resize requests.
 
-The complete implementation is in the [cloud-run demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloud-run) TODO:LINK.
+The complete implementation is in the [cloud-run demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun).
 
 :::tip IAM permissions
 The worker pool's service account needs permission to manage Cloud Run resources and to act as itself when creating new revisions.
