@@ -67,7 +67,7 @@ def on_customer_registration(customer_id: str):
 
 ### Atomically Updating Schedules
 
-If you need to create, update, or delete multiple schedules at once, use [`DBOS.apply_schedules`](../reference/contexts.md#apply_schedules).
+If you need to create or update multiple schedules at once, use [`DBOS.apply_schedules`](../reference/contexts.md#apply_schedules).
 This is useful for declaratively defining all your static schedules in one place:
 
 ```python
