@@ -56,7 +56,7 @@ By default, DBOS creates its [system tables](../explanations/system-tables.md) o
 
 <details>
 
-<summary><strong>Walkthrough: deploying a DBOS Go app</strong></summary>
+<summary><strong>Walkthrough: deploying a DBOS app</strong></summary>
 
 This walkthrough deploys a sample DBOS Go application ([source code](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun)) to Cloud Run with a Cloud SQL PostgreSQL database. It covers project setup, infrastructure, and deployment in both **Service** and **Worker Pool** modes.
 
@@ -385,32 +385,52 @@ gcloud iam service-accounts add-iam-policy-binding \
 </details>
 :::
 
-### Scaling logic
+The scheduled workflow periodically checks the queue depth and resizes the pool to match by calling the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools). It authenticates with a short-lived access token from the [GCE metadata server](https://cloud.google.com/compute/docs/metadata/overview), reads the current instance count with a `GET`, and updates it with a `PATCH`.
 
-The scheduled workflow periodically estimates the required pool size by dividing queue length by worker concurrency:
+Here's an example in Go (the same approach works in any DBOS-supported language):
 
-1. **Read queue length** using the [`ListWorkflows`](../golang/reference/methods.md#listworkflows) API.
-2. **Get current instance count** from the Cloud Run API (see [next section](#cloud-run-admin-api)).
-3. **Compute and apply desired instances.** Calculate `ceil(queue_depth / worker_concurrency)`. If it differs from the current count, `PATCH` the worker pool.
+<details>
 
-### Cloud Run Admin API
+<summary><strong>Scaling workflow snippet</strong></summary>
 
-The scaling workflow calls the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools) to read and update the instance count.
+```go title="main.go"
+func ScalingWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
+    // 1. Read queue length by listing all enqueued/pending workflows
+    workflows, err := dbos.ListWorkflows(ctx, dbos.WithQueuesOnly(), dbos.WithQueueName(taskQueue.Name))
+    if err != nil {
+        return "", fmt.Errorf("failed to list workflows: %w", err)
+    }
+    qlen := len(workflows)
 
-**Endpoint:**
+    // 2. Get current instance count from the Cloud Run Admin API
+    currentInstances, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (int, error) {
+        return getWorkerPoolInstances(stepCtx)
+    })
+    if err != nil {
+        return "", fmt.Errorf("failed to get current instances: %w", err)
+    }
 
-```
-https://run.googleapis.com/v2/projects/{PROJECT_ID}/locations/{REGION}/workerPools/{NAME}
-```
+    // 3. Compute desired instances: ceil(queue_depth / worker_concurrency)
+    desiredInstances := int(math.Ceil(float64(qlen) / float64(WORKER_CONCURRENCY)))
+    if desiredInstances < 1 {
+        desiredInstances = 1
+    }
 
-The workflow authenticates with a short-lived access token from the [GCE metadata server](https://cloud.google.com/compute/docs/metadata/overview). A `GET` returns the current count from `scaling.manualInstanceCount`. To resize, send a `PATCH` with `updateMask=scaling,launchStage`:
+    // 4. Resize the pool if needed
+    if desiredInstances != currentInstances {
+        _, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+            return setWorkerPoolInstances(stepCtx, desiredInstances)
+        })
+        if err != nil {
+            return "", fmt.Errorf("failed to set instances: %w", err)
+        }
+    }
 
-```json
-{
-  "scaling": { "manualInstanceCount": <desired> },
-  "launchStage": "BETA"
+    return fmt.Sprintf("qlen=%d, instances=%d", qlen, desiredInstances), nil
 }
 ```
+
+</details>
 
 ## Upgrading Workflow Code
 
