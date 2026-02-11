@@ -46,43 +46,36 @@ Because DBOS has a [built-in scheduler](../golang/tutorials/workflow-tutorial.md
 
 ## Deploying to Cloud Run
 
-This section walks through deploying a DBOS Go application on Cloud Run, covering infrastructure setup and deployment in **Service** and **Worker Pool** modes.
+Deploying a DBOS application to Cloud Run is no different from deploying any other containerized application. You need a Dockerfile, a database, and the standard Cloud Run deployment commands.
 
-### Prerequisites and infrastructure
+The one DBOS-specific detail is the **database connection string**: it must be provided in `key=value` format (e.g., `user=postgres password=secret database=myappdb host=/cloudsql/...`). On Cloud Run, use the `--add-cloudsql-instances` flag to mount the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket, then pass the socket path as the `host` parameter. This gives your app a private, encrypted path to the database with no public IP.
 
-Your deployment needs a Google Cloud project, a VPC for private connectivity, a Cloud SQL PostgreSQL instance, and IAM bindings so Cloud Run can reach the database and its secrets. The database password and [DBOS Conductor](./conductor.md) API key are stored in Secret Manager.
+:::tip Schema migration
+By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbos migrate`](../golang/reference/cli.md) with a privileged user before deploying.
+:::
 
 <details>
 
-<summary><strong>Google Cloud project setup (click to expand)</strong></summary>
+<summary><strong>Walkthrough: deploying a DBOS Go app (click to expand)</strong></summary>
+
+This walkthrough deploys a sample DBOS Go application ([source code](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun)) to Cloud Run with a Cloud SQL PostgreSQL database. It covers project setup, infrastructure, and deployment in both **Service** and **Worker Pool** modes.
+
+---
+
+**Google Cloud project setup**
 
 You need a Google Cloud project with billing enabled and the required APIs turned on.
 
-**Install and authenticate the gcloud CLI**
-
-Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install-sdk), then authenticate:
+Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install-sdk), then:
 
 ```bash
 gcloud auth login
-```
-
-**Create and configure a project**
-
-```bash
 gcloud projects create [YOUR_PROJECT_ID]
 gcloud config set project [YOUR_PROJECT_ID]
-```
 
-**Enable billing**
-
-```bash
 gcloud beta billing projects link [YOUR_PROJECT_ID] \
   --billing-account=[YOUR_BILLING_ACCOUNT_ID]
-```
 
-**Enable required APIs**
-
-```bash
 gcloud services enable \
   run.googleapis.com \
   sqladmin.googleapis.com \
@@ -93,11 +86,7 @@ gcloud services enable \
   cloudbuild.googleapis.com
 ```
 
-</details>
-
-<details>
-
-<summary><strong>VPC, Cloud SQL, IAM, and secrets (click to expand)</strong></summary>
+---
 
 **VPC networking for Cloud SQL**
 
@@ -164,6 +153,10 @@ echo -n "[YOUR_CONDUCTOR_API_KEY]" | gcloud secrets create conductor-api-key \
   --replication-policy="automatic"
 ```
 
+:::note
+For production, consider creating a dedicated database user instead of using the `postgres` superuser. Grant it only the permissions your application needs.
+:::
+
 ---
 
 **IAM service account and permissions**
@@ -201,61 +194,9 @@ gcloud projects add-iam-policy-binding [YOUR_PROJECT_ID] \
   --role="roles/cloudbuild.builds.builder"
 ```
 
-:::note
-For production, consider creating a dedicated database user instead of using the `postgres` superuser. Grant it only the permissions your application needs.
-:::
+---
 
-</details>
-
-:::tip Schema migration
-By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbos migrate`](../golang/reference/cli.md) with a privileged user before deploying.
-:::
-
-### The application
-
-The example app uses the [DBOS Golang SDK](../golang/programming-guide.md) and is available on [Github](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun). It serves HTTP requests (Service mode) and runs a scheduled workflow that enqueues work periodically (Worker Pool mode).
-
-#### Database connection
-The connection string uses `key=value` format. `DB_PASSWORD` is injected from Secret Manager during deployment; the remaining parameters are plain environment variables. The app assembles the DSN at startup:
-
-```go title="main.go"
-func main() {
-    // 1. Get the raw password from the env var injected by Cloud Run
-    dbPassword := os.Getenv("DB_PASSWORD")
-    if dbPassword == "" {
-        panic(fmt.Errorf("DB_PASSWORD environment variable is required"))
-    }
-
-    // 2. Construct the DSN (Data Source Name)
-    dsn := fmt.Sprintf("user=%s password=%s database=%s host=%s",
-        os.Getenv("DB_USER"),
-        dbPassword,
-        os.Getenv("DB_NAME"),
-        os.Getenv("INSTANCE_UNIX_SOCKET"),
-    )
-
-    // 3. Initialize DBOS with the constructed DSN
-    dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        DatabaseURL:        dsn,
-        AppName:            "dbos-toolbox",
-    })
-    if err != nil {
-        panic(err)
-    }
-
-    // Register workflows, launch DBOS, start the HTTP server...
-}
-```
-
-On Cloud Run, `INSTANCE_UNIX_SOCKET` points to the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`), providing a private, encrypted path to the database with no public IP.
-
-### Deploy
-
-Deploy from source&mdash;Cloud Build automatically builds your container and pushes it to Artifact Registry.
-
-<details>
-
-<summary><strong>Sample Dockerfile</strong></summary>
+**Sample Dockerfile**
 
 Multi-stage build with a distroless runtime image:
 
@@ -294,7 +235,11 @@ docker run --rm -p 8080:8080 \
 
 Then hit `http://localhost:8080/workflow/1` to start a DBOS workflow.
 
-</details>
+---
+
+**Deploy**
+
+Deploy from source&mdash;Cloud Build automatically builds your container and pushes it to Artifact Registry.
 
 <Tabs groupId="cloud-run-mode">
 <TabItem value="service" label="Service">
@@ -348,11 +293,7 @@ Key flags:
 </TabItem>
 </Tabs>
 
-Your application is deployed! You can now observe it in DBOS Conductor.
-
-<details>
-
-<summary><strong>Post-deployment: logs, service URL, and testing</strong></summary>
+---
 
 **Build logs**
 
