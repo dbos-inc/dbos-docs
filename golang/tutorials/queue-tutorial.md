@@ -390,4 +390,22 @@ func onUserTaskSubmission(dbosContext dbos.DBOSContext, userID string, task Task
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+### Listening to Specific Queues
 
+By default, every DBOS process listens to all registered queues.
+You can use [`ListenQueues`](../reference/queues.md#listenqueues) to configure a process to listen to only a subset of queues.
+This is useful when you have multiple DBOS processes and want each one to handle different types of work.
+
+```go
+emailQueue := dbos.NewWorkflowQueue(dbosContext, "email-queue")
+dataQueue := dbos.NewWorkflowQueue(dbosContext, "data-queue")
+
+// This process will only dequeue workflows from the email queue
+dbos.ListenQueues(dbosContext, emailQueue)
+
+dbos.Launch(dbosContext)
+```
+
+:::warning
+`ListenQueues` must be called before `Launch()`.
+:::

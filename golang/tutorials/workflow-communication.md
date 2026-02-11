@@ -8,6 +8,7 @@ You can:
 
 - [Send messages to workflows](#workflow-messaging-and-notifications)
 - [Publish events from workflows for clients to read](#workflow-events)
+- [Stream values from workflows to clients](#workflow-streaming)
 
 
 ## Workflow Messaging and Notifications
@@ -160,3 +161,112 @@ func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `GetEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
+
+## Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call, or for monitoring and progress reporting.
+
+<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Streams" width="750" className="custom-img"/>
+
+#### Writing to Streams
+
+```go
+func WriteStream[P any](ctx DBOSContext, key string, value P) error
+```
+
+You can write values to a stream from a workflow or its steps using [`WriteStream`](../reference/methods.md#writestream).
+A workflow may have any number of streams, each identified by a unique key.
+
+When you are done writing to a stream, you should close it with [`CloseStream`](../reference/methods.md#closestream).
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```go
+func CloseStream(ctx DBOSContext, key string) error
+```
+
+DBOS streams are immutable and append-only.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+Readers will see all values written to the stream from all tries of the step in the order in which they were written.
+
+**Example syntax:**
+
+```go
+func producerWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    err := dbos.WriteStream(ctx, "progress", "step 1 complete")
+    if err != nil {
+        return "", err
+    }
+    err = dbos.WriteStream(ctx, "progress", "step 2 complete")
+    if err != nil {
+        return "", err
+    }
+    err = dbos.CloseStream(ctx, "progress")
+    if err != nil {
+        return "", err
+    }
+    return "done", nil
+}
+```
+
+#### Reading from Streams
+
+```go
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+```
+
+You can read values from a stream from anywhere using [`ReadStream`](../reference/methods.md#readstream).
+This function reads all values from a stream identified by a workflow ID and key.
+It blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+It returns the values, whether the stream is closed, and any error.
+
+You can also read from a stream asynchronously using [`ReadStreamAsync`](../reference/methods.md#readstreamasync), which returns a channel:
+
+```go
+func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+```go
+type StreamValue[R any] struct {
+    Value  R     // The stream value (zero value if error/closed)
+    Err    error // Error if one occurred (nil otherwise)
+    Closed bool  // Whether the stream is closed
+}
+```
+
+You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/client.md#stream-methods).
+
+**Example syntax:**
+
+```go
+// Blocking read: wait for all values, then process
+values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress")
+if err != nil {
+    return err
+}
+for _, value := range values {
+    fmt.Printf("Received: %s\n", value)
+}
+
+// Async read: process values as they arrive
+ch, err := dbos.ReadStreamAsync[string](ctx, workflowID, "progress")
+if err != nil {
+    return err
+}
+for streamValue := range ch {
+    if streamValue.Err != nil {
+        return streamValue.Err
+    }
+    if streamValue.Closed {
+        break
+    }
+    fmt.Printf("Received: %s\n", streamValue.Value)
+}
+```
+
+#### Stream Reliability Guarantees
+
+All stream values are persisted to the database, so streams are durable and survive restarts.
+If `WriteStream` is called from a workflow, the write is exactly-once.
+If called from a step, the write is at-least-once (the step may be retried on failure).

@@ -15,7 +15,7 @@
 - [DBOS CLI](https://docs.dbos.dev/golang/reference/cli.md): Click here to view the DBOS CLI documentation →
 - [DBOS Client](https://docs.dbos.dev/golang/reference/client.md): Client provides a programmatic way to interact with your DBOS application from external code.
 - [DBOS Context](https://docs.dbos.dev/golang/reference/dbos-context.md): A DBOS Context is at the center of a DBOS-enabled application. Use it to register workflows, queues and perform workflow management tasks.
-- [DBOS Methods & Variables](https://docs.dbos.dev/golang/reference/methods.md): DBOS Methods
+- [DBOS Methods & Variables](https://docs.dbos.dev/golang/reference/methods.md): Workflow Communication
 - [Queues](https://docs.dbos.dev/golang/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/golang/reference/workflows-steps.md): RegisterWorkflow
 - [Queues & Concurrency](https://docs.dbos.dev/golang/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
@@ -26,7 +26,7 @@
 - [Workflow Management](https://docs.dbos.dev/golang/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console or programmatically.
 - [Workflows](https://docs.dbos.dev/golang/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Welcome to DBOS!](https://docs.dbos.dev/index.md): DBOS is a library for building reliable programs.
-- [CockroachDB](https://docs.dbos.dev/integrations/cockroachdb.md): Currently, CockroachDB is only compatible with DBOS Python and requires version >=2.8.0.
+- [CockroachDB](https://docs.dbos.dev/integrations/cockroachdb.md): Here's how to connect your DBOS application running on your computer or cloud environment to your CockroachDB database.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 - [Lakebase](https://docs.dbos.dev/integrations/lakebase.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Databricks Lakebase Postgres database.
 - [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
