@@ -177,7 +177,7 @@ A debouncer delays workflow execution until a configurable delay has elapsed sin
 Each subsequent call pushes back the start time by the delay amount.
 This is useful when you want to coalesce rapid successive triggers (e.g., text field edits, sensor data) into a single workflow execution.
 
-See the [debouncing tutorial](../tutorials/queue-tutorial.md#debouncing) for usage examples.
+See the [debouncing tutorial](../tutorials/workflow-tutorial.md#debouncing) for usage examples.
 
 #### NewDebouncer
 
