@@ -249,10 +249,6 @@ func main() {
 
 On Cloud Run, `INSTANCE_UNIX_SOCKET` points to the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket (e.g., `/cloudsql/PROJECT:REGION:INSTANCE`), providing a private, encrypted path to the database with no public IP.
 
-#### Executor ID
-
-DBOS uses an executor ID to uniquely identify each instance. On Cloud Run, derive it from the [GCE metadata server](https://cloud.google.com/compute/docs/metadata/overview), which exposes a unique instance ID at `/computeMetadata/v1/instance/id`. Fetch it at startup and pass it to the [DBOS configuration](../golang/reference/dbos-context#initialization).
-
 ### Deploy
 
 Deploy from source&mdash;Cloud Build automatically builds your container and pushes it to Artifact Registry.
