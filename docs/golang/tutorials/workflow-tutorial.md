@@ -415,7 +415,7 @@ You can use [`ResumeWorkflow`](../reference/methods.md#resumeworkflow) to manual
 
 :::tip
 The number of attempts will be increased one last time before the workflow is placed in the DLQ.
-For example a workflow with max retries of 1 that has been moved to the DQL will show 3 attempts.
+For example a workflow with max retries of 1 that has been moved to the DLQ will show 3 attempts.
 :::
 
 ```go
