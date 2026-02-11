@@ -4,7 +4,7 @@ title: DBOS Methods & Variables
 toc_max_heading_level: 3
 ---
 
-## DBOS Methods
+## Workflow Communication
 
 ### GetEvent
 
@@ -67,6 +67,95 @@ Calls to `recv` wait for the next message in the queue, returning an error if th
 - **topic**: A topic queue on which to wait.
 - **timeoutSeconds**: A timeout in seconds. If the wait times out, return an error.
 
+## Streams
+
+Workflows can stream data to clients in real time.
+Streams are durable, append-only, and ordered by offset.
+See the [streaming tutorial](../tutorials/workflow-communication.md#workflow-streaming) for usage examples.
+
+### WriteStream
+
+```go
+func WriteStream[P any](ctx DBOSContext, key string, value P) error
+```
+
+Write a value to a durable stream.
+May only be called from within a workflow or step.
+Writes from a workflow are exactly-once; writes from a step are at-least-once.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **key**: The stream key. A workflow can have multiple streams, each identified by a unique key.
+- **value**: The value to write. Must be serializable (json-encodable).
+
+### CloseStream
+
+```go
+func CloseStream(ctx DBOSContext, key string) error
+```
+
+Close a durable stream.
+May only be called from within a workflow or step.
+After closing, no more values can be written to the stream.
+Streams are also automatically closed when the workflow terminates.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **key**: The stream key to close.
+
+### ReadStream
+
+```go
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+```
+
+Read all values from a durable stream.
+Blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow whose stream to read.
+- **key**: The stream key to read.
+
+**Returns:**
+- The values read from the stream.
+- Whether the stream is closed.
+- Any error that occurred.
+
+### ReadStreamAsync
+
+```go
+func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+Read values from a durable stream asynchronously.
+Returns immediately with a channel that receives values as they are written to the stream.
+The channel is closed when the stream is closed or an error occurs.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow whose stream to read.
+- **key**: The stream key to read.
+
+**Returns:**
+- A receive-only channel of [`StreamValue[R]`](#streamvalue).
+- Any error that occurred during setup.
+
+### StreamValue
+
+```go
+type StreamValue[R any] struct {
+    Value  R     // The stream value (zero value if error/closed)
+    Err    error // Error if one occurred (nil otherwise)
+    Closed bool  // Whether the stream is closed
+}
+```
+
+`StreamValue` holds a value, error, or closed status from an async stream read operation.
+When reading from the channel returned by `ReadStreamAsync`, check `Err` and `Closed` before using `Value`.
+
+## Sleep
+
 ### Sleep
 
 ```go
@@ -81,6 +170,8 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 - **ctx**: The DBOS context.
 - **duration**: The duration to sleep.
 
+## Workflow Management Methods
+
 ### RetrieveWorkflow
 
 ```go
@@ -92,8 +183,6 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 **Parameters**:
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow whose handle to retrieve.
-
-## Workflow Management Methods
 
 ### ListWorkflows
 
@@ -164,7 +253,7 @@ WithLoadInput controls whether to load workflow input data (default: true).
 func WithLoadOutput(loadOutput bool) ListWorkflowsOption
 ```
 
-WithLoadOutput controls whether to load workflow output data (default: true). 
+WithLoadOutput controls whether to load workflow output data (default: true).
 
 #### WithName
 
@@ -370,7 +459,7 @@ Return the ID of the current workflow, if in a workflow. Returns an error if not
 ### GetStepID
 
 ```go
-func GetStepID(ctx DBOSContext) (string, error)
+func GetStepID(ctx DBOSContext) (int, error)
 ```
 
 Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.

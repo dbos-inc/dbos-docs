@@ -30,6 +30,7 @@ type Config struct {
     ConductorAPIKey    string        // DBOS conductor API key (optional)
     ApplicationVersion string        // Application version (optional)
     ExecutorID         string        // Executor ID (optional)
+    EnablePatching     bool          // Enable the patching system for Patch/DeprecatePatch (default: false)
 }
 ```
 

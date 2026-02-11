@@ -48,7 +48,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
-- Do NOT start goroutines from workflows or use select in workflows. For any complex parallel execution, you should instead use DBOS.RunWorkflow and DBOS queues to achieve the parallelism.
+- Do NOT start goroutines from workflows or use select in workflows. Instead, use DBOS's durable `dbos.Go` and `dbos.Select` functions which provide deterministic replay. For more complex parallel execution, use DBOS.RunWorkflow and DBOS queues.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsStep, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent) from a step.
 
@@ -115,12 +115,17 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, workflow, "")
+        handle, err := dbos.RunWorkflow(dbosContext, workflow, "")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
         }
-        c.Status(http.StatusOK)
+        result, err := handle.GetResult()
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"result": result})
     })
 
     r.Run(":8080")
@@ -256,12 +261,17 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, workflow, "")
+        handle, err := dbos.RunWorkflow(dbosContext, workflow, "")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
         }
-        c.Status(http.StatusOK)
+        result, err := handle.GetResult()
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"result": result})
     })
 
     r.Run(":8080")
@@ -334,12 +344,17 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
+        handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
         }
-        c.Status(http.StatusOK)
+        result, err := handle.GetResult()
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"result": result})
     })
 
     r.Run(":8080")
@@ -437,7 +452,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
     return "success", nil
 }
 
-func example(dbosContext dbos.DBOSContext, input string) error {    
+func example(dbosContext dbos.DBOSContext, input string) error {
     myID := "unique-workflow-id-123"
     handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input, dbos.WithWorkflowID(myID))
     if err != nil {
@@ -458,10 +473,10 @@ Workflows are in most respects normal Go functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in non-deterministic operations in steps.
+Instead, you should do all non-deterministic operations in steps.
 
 :::warning
-Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps.
+Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps, or use the durable `dbos.Go` and `dbos.Select` functions instead.
 :::
 
 For example, **don't do this**:
@@ -509,7 +524,7 @@ Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout doe
 func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {}
 
 timeoutCtx, cancelFunc := dbos.WithTimeout(dbosCtx, 12*time.Hour)
-handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
+handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 ```
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling CancelWorkflow).
@@ -524,11 +539,6 @@ Sleeping is useful for scheduling a workflow to run in the future (even days, we
 For example:
 
 ```go
-func runTask(ctx dbos.DBOSContext, task string) (string, error) {
-	// Execute the task...
-	return "task completed", nil
-}
-
 func exampleWorkflow(ctx dbos.DBOSContext, input struct {
 	TimeToSleep time.Duration
 	Task        string
@@ -543,7 +553,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input struct {
 	result, err := dbos.RunAsStep(
 		ctx,
 		func(stepCtx context.Context) (string, error) {
-			return runTask(ctx, input.Task)
+			return fmt.Sprintf("Completed: %s", input.Task), nil
 		},
 	)
 	if err != nil {
@@ -553,6 +563,40 @@ func exampleWorkflow(ctx dbos.DBOSContext, input struct {
 	return result, nil
 }
 
+```
+
+### Concurrent Steps
+
+DBOS provides durable `Go` and `Select` functions to run multiple steps concurrently within a workflow while preserving durability guarantees.
+These are durable alternatives to Go's native goroutines and `select` statement.
+
+`Go` launches a step asynchronously and returns a channel that will receive the result when the step completes.
+`Select` waits for the first result from multiple concurrent steps.
+
+```go
+func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    // Launch two concurrent steps
+    ch1, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        return queryServiceA(ctx)
+    })
+    if err != nil {
+        return "", err
+    }
+
+    ch2, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
+        return queryServiceB(ctx)
+    })
+    if err != nil {
+        return "", err
+    }
+
+    // Wait for the first result
+    result, err := dbos.Select(ctx, []<-chan dbos.StepOutcome[string]{ch1, ch2})
+    if err != nil {
+        return "", err
+    }
+    return result, nil
+}
 ```
 
 ### Scheduled Workflows
@@ -582,13 +626,13 @@ func main() {
     dbosContext := ... // Initialize DBOS
 
     // Register a workflow to run daily at 2:00 AM
-    dbos.RegisterWorkflow(dbosContext, dailyBackup, 
+    dbos.RegisterWorkflow(dbosContext, dailyBackup,
         dbos.WithSchedule("0 0 2 * * *")) // Cron: daily at 2:00 AM
-    
+
     // Register a workflow to run every 15 minutes
     dbos.RegisterWorkflow(dbosContext, frequentTask,
         dbos.WithSchedule("0 */15 * * * * ")) // Cron: every 15 minutes
-    
+
     // Launch DBOS - scheduled workflows will start automatically
     err := dbos.Launch(dbosContext)
     if err != nil {
@@ -609,6 +653,24 @@ This prevents unsafe recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `ForkWorkflow` to restart a workflow from a specific step on a specific code version.
 
 For more information on managing workflow recovery when self-hosting production DBOS applications, check out the guide.
+
+### Workflow Attempts and Recovery
+
+The `Attempts` field in `WorkflowStatus` tracks how many times a workflow has been executed.
+
+- On first execution, `Attempts` is set to `1`.
+- If the workflow is enqueued but not yet dequeued, `Attempts` is `0`.
+- Each time the workflow is recovered (e.g., after a crash) or dequeued for execution, `Attempts` is incremented by `1`.
+
+You can limit the number of attempts using `WithMaxRetries` when registering a workflow.
+If `WithMaxRetries(n)` is set, the workflow may be attempted at most `n + 1` times (one initial execution plus `n` retries).
+If this limit is exceeded, the workflow's status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it will no longer be recovered automatically.
+You can use `ResumeWorkflow` to manually resume a workflow that has exceeded its maximum attempts after fixing the underlying issue.
+
+```go
+// Register a workflow that can be attempted at most 4 times (1 initial + 3 retries)
+dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRetries(3))
+```
 
 
 ## Steps
@@ -656,7 +718,7 @@ func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
         func(stepCtx context.Context) (int, error) {
             return generateRandomNumber(stepCtx, n)
         },
-        dbos.WithStepName("generateRandomNumber")
+        dbos.WithStepName("generateRandomNumber"),
     )
     if err != nil {
         return 0, err
@@ -734,6 +796,7 @@ You can:
 
 - Send messages to workflows
 - Publish events from workflows for clients to read
+- Stream values from workflows to clients
 
 
 ### Workflow Messaging and Notifications
@@ -745,7 +808,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 ### Send
 
 ```go
-func SendP any error
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
 ```
 
 You can call `Send()` to send a message to a workflow.
@@ -754,7 +817,7 @@ Messages can optionally be associated with a topic and are queued on the receive
 ### Recv
 
 ```go
-func RecvR any (R, error)
+func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error)
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
@@ -775,7 +838,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error)
     // Process initial checkout steps...
 
     // Wait for payment notification with a 5-minute timeout
-    notification, err := dbos.RecvPaymentNotification
+    notification, err := dbos.Recv[PaymentNotification](ctx, PaymentStatusTopic, 5*time.Minute)
     if err != nil {
         ... // Handle timeout or other errors
     }
@@ -822,7 +885,7 @@ They are useful for publishing information about the status of a workflow or to 
 ### SetEvent
 
 ```go
-func SetEventP any error
+func SetEvent[P any](ctx DBOSContext, key string, message P) error
 ```
 
 Any workflow can call `SetEvent` to publish a key-value pair, or update its value if has already been published.
@@ -830,7 +893,7 @@ Any workflow can call `SetEvent` to publish a key-value pair, or update its valu
 ### GetEvent
 
 ```go
-func GetEventR any (R, error)
+func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 You can call `GetEvent` to retrieve the value published by a particular workflow ID for a particular key.
@@ -873,7 +936,7 @@ func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *
     }
 
     // Wait up to 30 seconds for the payment URL event
-    url, err := dbos.GetEventstring, PaymentURLKey, 30*time.Second)
+    url, err := dbos.GetEvent[string](dbosContext, handle.GetWorkflowID(), PaymentURLKey, 30*time.Second)
     if err != nil {
         // Handle a timeout
     }
@@ -886,6 +949,96 @@ func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `GetEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
+
+### Workflow Streaming
+
+Workflows can stream data in real time to clients.
+This is useful for streaming results from a long-running workflow or LLM call, or for monitoring and progress reporting.
+
+#### Writing to Streams
+
+```go
+func WriteStream[P any](ctx DBOSContext, key string, value P) error
+```
+
+You can write values to a stream from a workflow or its steps.
+A workflow may have any number of streams, each identified by a unique key.
+
+When you are done writing to a stream, you should close it with `CloseStream`.
+Otherwise, streams are automatically closed when the workflow terminates.
+
+```go
+func CloseStream(ctx DBOSContext, key string) error
+```
+
+DBOS streams are immutable and append-only.
+Writes to a stream from a workflow happen exactly-once.
+Writes to a stream from a step happen at-least-once; if a step fails and is retried, it may write to the stream multiple times.
+
+#### Reading from Streams
+
+```go
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+```
+
+You can read values from a stream from anywhere.
+This function reads all values from a stream identified by a workflow ID and key.
+It blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+It returns the values, whether the stream is closed, and any error.
+
+You can also read from a stream asynchronously, which returns a channel:
+
+```go
+func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+```go
+type StreamValue[R any] struct {
+    Value  R     // The stream value (zero value if error/closed)
+    Err    error // Error if one occurred (nil otherwise)
+    Closed bool  // Whether the stream is closed
+}
+```
+
+#### Streaming Example
+
+```go
+func producerWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    err := dbos.WriteStream(ctx, "progress", "step 1 complete")
+    if err != nil {
+        return "", err
+    }
+    err = dbos.WriteStream(ctx, "progress", "step 2 complete")
+    if err != nil {
+        return "", err
+    }
+    err = dbos.CloseStream(ctx, "progress")
+    if err != nil {
+        return "", err
+    }
+    return "done", nil
+}
+
+// Blocking read
+values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress")
+
+// Async read: process values as they arrive
+ch, err := dbos.ReadStreamAsync[string](ctx, workflowID, "progress")
+if err != nil {
+    return err
+}
+for streamValue := range ch {
+    if streamValue.Err != nil {
+        return streamValue.Err
+    }
+    if streamValue.Closed {
+        break
+    }
+    fmt.Printf("Received: %s\n", streamValue.Value)
+}
+```
+
+You can also read from a stream from outside a DBOS application with a DBOS Client using `ClientReadStream` or `ClientReadStreamAsync`.
 
 
 ## Queues
@@ -917,7 +1070,7 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     if err != nil {
         return err
     }
-    
+
     // Get the result
     result, err := handle.GetResult()
     if err != nil {
@@ -1015,7 +1168,7 @@ if err != nil {
 defer client.Shutdown(5 * time.Second)
 
 handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
-    client, 
+    client,
     "pipelineQueue",
     "dataPipeline",
     ProcessInput{TaskID: "task-123", Data: "data"},
@@ -1062,10 +1215,10 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", 
+queue := dbos.NewWorkflowQueue(dbosContext, "example_queue",
     dbos.WithRateLimiter(&dbos.RateLimiter{
         Limit:  100,
-        Period: 60.0, // 60 seconds
+        Period: 60 * time.Second, // 60 seconds
     }))
 ```
 
@@ -1091,7 +1244,7 @@ func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
-    
+
     handle, err := dbos.RunWorkflow(
         dbosContext, taskWorkflow, task,
         dbos.WithQueue(queue.Name),
@@ -1100,12 +1253,12 @@ func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
         // Handle deduplication error or other failures
         return fmt.Errorf("failed to enqueue workflow: %w", err)
     }
-    
+
     result, err := handle.GetResult()
     if err != nil {
         return fmt.Errorf("workflow failed: %w", err)
     }
-    
+
     fmt.Printf("Workflow completed: %s\n", result)
     return nil
 }
@@ -1138,23 +1291,106 @@ func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
 func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
     task := "example_task"
     priority := uint(10) // Lower number = higher priority
-    
+
     handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
         dbos.WithQueue(queue.Name),
         dbos.WithPriority(priority))
     if err != nil {
         return err
     }
-    
+
     result, err := handle.GetResult()
     if err != nil {
         return fmt.Errorf("workflow failed: %w", err)
     }
-    
+
     fmt.Printf("Workflow completed: %s\n", result)
     return nil
 }
 ```
+
+### Partitioned Queues
+
+You can partition queues to distribute work across dynamically created queue partitions.
+When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
+In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+For example, to allow each user to run at most one task at a time:
+
+```go
+partitionedQueue := dbos.NewWorkflowQueue(dbosContext, "user-tasks",
+    dbos.WithPartitionQueue(),
+    dbos.WithGlobalConcurrency(1),
+)
+
+// Enqueue workflows with partition keys
+// Each user's tasks run with separate concurrency limits
+handle, err := dbos.RunWorkflow(dbosContext, processTask, taskData,
+    dbos.WithQueue("user-tasks"),
+    dbos.WithQueuePartitionKey(userID),
+)
+```
+
+### Debouncing
+
+Debouncing delays a workflow's execution until some time has passed since it was last called.
+This is useful when rapid successive triggers should be coalesced into a single workflow execution.
+
+```go
+func processInput(ctx dbos.DBOSContext, input string) (string, error) {
+    fmt.Printf("Processing input: %s\n", input)
+    return "processed", nil
+}
+
+func main() {
+    dbosContext, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
+        AppName:     "debounce-example",
+        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    })
+
+    dbos.RegisterWorkflow(dbosContext, processInput)
+
+    // Create a debouncer with a maximum timeout of 30 seconds
+    debouncer := dbos.NewDebouncer(dbosContext, processInput,
+        dbos.WithDebouncerTimeout(30*time.Second))
+
+    dbos.Launch(dbosContext)
+    defer dbos.Shutdown(dbosContext, 5*time.Second)
+
+    // Each call to Debounce pushes back the workflow start time by the delay.
+    // The workflow runs with the most recent input once the delay expires.
+    handle, err := debouncer.Debounce(dbosContext, "user-123", 5*time.Second, "first input")
+    if err != nil {
+        log.Fatal(err)
+    }
+    // If this call arrives within 5 seconds, the delay resets and the input updates
+    handle, err = debouncer.Debounce(dbosContext, "user-123", 5*time.Second, "updated input")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    result, err := handle.GetResult()
+    fmt.Println("Result:", result) // Processed with "updated input"
+}
+```
+
+### ListenQueues
+
+You can configure which queues the current DBOS process should listen to for workflow execution using `ListenQueues`.
+By default, all registered queues are listened to. This allows multiple DBOS processes to share the same queue registry but listen to different subsets of queues.
+
+```go
+queue1 := dbos.NewWorkflowQueue(ctx, "queue-1")
+queue2 := dbos.NewWorkflowQueue(ctx, "queue-2")
+queue3 := dbos.NewWorkflowQueue(ctx, "queue-3")
+
+// This process only listens to queue1 and queue2.
+dbos.ListenQueues(ctx, queue1, queue2)
+
+dbos.Launch(ctx)
+```
+
+`ListenQueues` must be called before `Launch()`.
 
 
 # Reference
@@ -1185,6 +1421,7 @@ type Config struct {
     ConductorAPIKey    string        // DBOS conductor API key (optional)
     ApplicationVersion string        // Application version (optional)
     ExecutorID         string        // Executor ID (optional)
+    EnablePatching     bool          // Enable the patching system for Patch/DeprecatePatch (default: false)
 }
 ```
 
@@ -1263,16 +1500,16 @@ func GetExecutorID() string
 `GetExecutorID` returns the executor ID for this context.
 
 
-## DBOS Methods
+## Workflow Communication
 
 ### GetEvent
 
 ```go
-func GetEventR any (R, error)
+func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, an error if the wait times out.
+If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
@@ -1284,7 +1521,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 ### SetEvent
 
 ```go
-func SetEventP any error
+func SetEvent[P any](ctx DBOSContext, key string, message P) error
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -1299,7 +1536,7 @@ Can only be called from within a workflow.
 ### Send
 
 ```go
-func SendP any error
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
 ```
 Send a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
@@ -1313,18 +1550,58 @@ Messages can optionally be associated with a topic.
 ### Recv
 
 ```go
-func RecvR any (R, error)
+func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error)
 ```
 
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning an error if the wait times out.
+Calls to `Recv` wait for the next message in the queue, returning an error if the wait times out.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return an error.
+- **timeout**: A timeout duration. If the wait times out, return an error.
+
+## Streams
+
+### WriteStream
+
+```go
+func WriteStream[P any](ctx DBOSContext, key string, value P) error
+```
+
+Write a value to a durable stream.
+May only be called from within a workflow or step.
+Writes from a workflow are exactly-once; writes from a step are at-least-once.
+
+### CloseStream
+
+```go
+func CloseStream(ctx DBOSContext, key string) error
+```
+
+Close a durable stream.
+After closing, no more values can be written to the stream.
+Streams are also automatically closed when the workflow terminates.
+
+### ReadStream
+
+```go
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+```
+
+Read all values from a durable stream.
+Blocks until the stream is closed or the workflow becomes inactive.
+
+### ReadStreamAsync
+
+```go
+func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+Read values from a durable stream asynchronously.
+Returns immediately with a channel that receives values as they are written to the stream.
 
 ### Sleep
 
@@ -1343,7 +1620,7 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 ### RetrieveWorkflow
 
 ```go
-func RetrieveWorkflowR any (*workflowPollingHandle[R], error)
+func RetrieveWorkflow[R any](ctx DBOSContext, workflowID string) (*workflowPollingHandle[R], error)
 ```
 
 Retrieve the handle of a workflow.
@@ -1423,7 +1700,7 @@ WithLoadInput controls whether to load workflow input data (default: true).
 func WithLoadOutput(loadOutput bool) ListWorkflowsOption
 ```
 
-WithLoadOutput controls whether to load workflow output data (default: true). 
+WithLoadOutput controls whether to load workflow output data (default: true).
 
 #### WithName
 
@@ -1518,7 +1795,7 @@ type StepInfo struct {
 
 **Parameters:**
 - **ctx**: The DBOS context.
-- **workflowID**: The ID of the workflow to cancel.
+- **workflowID**: The ID of the workflow whose steps to retrieve.
 
 ### CancelWorkflow
 
@@ -1535,7 +1812,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### ResumeWorkflow
 
 ```go
-func ResumeWorkflowR any (*WorkflowHandle[R], error)
+func ResumeWorkflow[R any](ctx DBOSContext, workflowID string) (*WorkflowHandle[R], error)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -1547,7 +1824,7 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 ### ForkWorkflow
 
 ```go
-func ForkWorkflowR any (WorkflowHandle[R], error)
+func ForkWorkflow[R any](ctx DBOSContext, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
 Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
@@ -1629,7 +1906,7 @@ Return the ID of the current workflow, if in a workflow. Returns an error if not
 ### GetStepID
 
 ```go
-func GetStepID(ctx DBOSContext) (string, error)
+func GetStepID(ctx DBOSContext) (int, error)
 ```
 
 Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.
@@ -1723,10 +2000,19 @@ type RateLimiter struct {
 
 A limit on the maximum number of functions which may be started in a given period.
 
+####  WithPartitionQueue
+
+```go
+func WithPartitionQueue() queueOption
+```
+
+Enable partitioning for this queue.
+When enabled, workflows can be enqueued with a partition key using `WithQueuePartitionKey`, and each partition has its own concurrency limits.
+
 ### RegisterWorkflow
 
 ```go
-func RegisterWorkflowP any, R any
+func RegisterWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], opts ...WorkflowRegistrationOption)
 ```
 
 Register a function as a DBOS workflow.
@@ -1761,7 +2047,7 @@ func WithSchedule(schedule string) WorkflowRegistrationOption
 
 Registers the workflow as a scheduled workflow using cron syntax.
 The schedule string follows standard cron format with second precision.
-Scheduled workflows automatically receive a `time.Time` input parameter. 
+Scheduled workflows automatically receive a `time.Time` input parameter.
 
 #### WithWorkflowName
 
@@ -1775,7 +2061,7 @@ If not provided, the name of the workflow function is used.
 ### RunWorkflow
 
 ```go
-func RunWorkflowP any, R any (WorkflowHandle[R], error)
+func RunWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Execute a workflow function.
@@ -1792,7 +2078,7 @@ Returns a WorkflowHandle that can be used to check the workflow's status or wait
 
 ```go
 func workflow(ctx dbos.DBOSContext, input string) (string, error) {
-    return "success", err
+    return "success", nil
 }
 
 func example(input string) error {
@@ -1836,7 +2122,6 @@ func WithDeduplicationID(id string) WorkflowOption
 Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 
 #### WithPriority
 
@@ -1847,8 +2132,17 @@ func WithPriority(priority uint) WorkflowOption
 Set a queue priority for the workflow.
 Should be used alongside `WithQueue`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order.
-Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. 
+Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
+#### WithQueuePartitionKey
+
+```go
+func WithQueuePartitionKey(partitionKey string) WorkflowOption
+```
+
+Set a queue partition key for the workflow.
+Use if and only if the queue is partitioned (created with `WithPartitionQueue`).
 
 #### WithApplicationVersion
 
@@ -1869,7 +2163,7 @@ Associate the workflow execution with a user name. Useful to define workflow ide
 ### RunAsStep
 
 ```go
-func RunAsStepR any (R, error)
+func RunAsStep[R any](ctx DBOSContext, fn Step[R], opts ...StepOption) (R, error)
 ```
 
 Execute a function as a step in a durable workflow.
@@ -1881,7 +2175,7 @@ Execute a function as a step in a durable workflow.
 
 **Example Syntax:**
 
-Any Go function can be a step as long as it outputs one gob-encodable value and an error.
+Any Go function can be a step as long as it outputs one json-encodable value and an error.
 To pass inputs into a function being called as a step, wrap it in an anonymous function as shown below:
 
 ```go
@@ -1892,7 +2186,7 @@ func step(ctx context.Context, input string) (string, error) {
 
 func workflow(ctx dbos.DBOSContext, input string) (string, error) {
     output, err := dbos.RunAsStep(
-        ctx, 
+        ctx,
         func(stepCtx context.Context) (string, error) {
             return step(stepCtx, input)
         }
@@ -1931,7 +2225,7 @@ WithMaxInterval sets the maximum delay between retries. Default value is 5s.
 func WithBackoffFactor(factor float64) StepOption
 ```
 
-WithBackoffFactor sets the exponential backoff multiplier between retries. Default value is 2.0. 
+WithBackoffFactor sets the exponential backoff multiplier between retries. Default value is 2.0.
 
 #### WithBaseInterval
 
@@ -1939,13 +2233,38 @@ WithBackoffFactor sets the exponential backoff multiplier between retries. Defau
 func WithBaseInterval(interval time.Duration) StepOption
 ```
 
-WithBaseInterval sets the initial delay between retries. Default value is 100ms. 
+WithBaseInterval sets the initial delay between retries. Default value is 100ms.
+
+### Go
+
+```go
+func Go[R any](ctx DBOSContext, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
+```
+
+Launch a step asynchronously and return a channel that will receive the result when the step completes.
+This is a durable alternative to Go's native goroutines. Can only be called from within a workflow.
+
+```go
+type StepOutcome[R any] struct {
+    Result R
+    Err    error
+}
+```
+
+### Select
+
+```go
+func Select[R any](ctx DBOSContext, channels []<-chan StepOutcome[R]) (R, error)
+```
+
+Wait for and return the first result from multiple channels obtained from `Go`.
+This is a durable alternative to Go's native `select` statement. Can only be called from within a workflow.
 
 ### WorkflowHandle
 
 ```go
 type WorkflowHandle[R any] interface {
-    GetResult() (R, error)
+    GetResult(opts ...GetResultOption) (R, error)
     GetStatus() (WorkflowStatus, error)
     GetWorkflowID() string
 }
@@ -1953,7 +2272,7 @@ type WorkflowHandle[R any] interface {
 
 WorkflowHandle provides methods to interact with a running or completed workflow.
 The type parameter `R` represents the expected return type of the workflow.
-Handles can be used to wait for workflow completion, check status, and retrieve results. 
+Handles can be used to wait for workflow completion, check status, and retrieve results.
 
 #### WorkflowHandle.GetResult
 
@@ -1983,7 +2302,7 @@ Retrieve the ID of the workflow.
 `Client` provides a programmatic way to interact with your DBOS application from external code.
 `Client` includes methods similar to `DBOSContext` that can be used outside of a DBOS application.
 
-:::note 
+:::note
 `Client` is included in the `dbos` package, the same package that is used by DBOS applications.
 Where DBOS applications use the `DBOSContext` methods,
 external applications use `Client` methods instead.
@@ -2000,6 +2319,8 @@ type Client interface {
     ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
+    ClientReadStream(workflowID string, key string) ([]any, bool, error)
+    ClientReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -2061,10 +2382,10 @@ Gracefully shuts down the client and releases the system database connection poo
 
 ```go
 func Enqueue[P any, R any](
-    c Client, 
+    c Client,
     queueName string,
-    workflowName string, 
-    input P, 
+    workflowName string,
+    input P,
     opts ...EnqueueOption
 ) (WorkflowHandle[R], error)
 ```
@@ -2083,12 +2404,11 @@ Required parameters:
 
 Optional configuration via `EnqueueOption`:
 
-* `WithEnqueueWorkflowID(id string)`: The unique ID for the enqueued workflow. 
-If left undefined, DBOS Client will generate a UUID. 
+* `WithEnqueueWorkflowID(id string)`: The unique ID for the enqueued workflow.
+If left undefined, DBOS Client will generate a UUID.
 Please see Workflow IDs and Idempotency for more information.
-* `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow. 
+* `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow.
 If left undefined, it will use the current application version.
-Please see Managing Application Versions for more information.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -2107,7 +2427,7 @@ type ProcessOutput struct {
 }
 
 handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
-    client, 
+    client,
     "process_queue",
     "ProcessWorkflow",
     ProcessInput{TaskID: "task-123", Data: "data"},
@@ -2227,3 +2547,33 @@ ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 ```
 
 Similar to `ForkWorkflow`.
+
+### NewDebouncerClient
+
+```go
+func NewDebouncerClient[P any, R any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[P, R]
+```
+
+Create a new debouncer client for use from outside a DBOS application.
+Similar to `NewDebouncer` but uses a Client instead of a DBOSContext and takes a workflow name string instead of a function reference.
+
+### ClientReadStream
+
+```go
+func ClientReadStream[R any](c Client, workflowID string, key string) ([]R, bool, error)
+```
+
+Read all values from a durable stream produced by a workflow.
+Blocks until the stream is closed or the workflow becomes inactive.
+Similar to `ReadStream`.
+
+### ClientReadStreamAsync
+
+```go
+func ClientReadStreamAsync[R any](c Client, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+Read values from a durable stream asynchronously.
+Returns immediately with a channel that receives values as they are written to the stream.
+Similar to `ReadStreamAsync`.
+````
