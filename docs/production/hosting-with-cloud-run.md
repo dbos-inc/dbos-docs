@@ -56,7 +56,7 @@ By default, DBOS creates its [system tables](../explanations/system-tables.md) o
 
 <details>
 
-<summary><strong>Walkthrough: deploying a DBOS Go app (click to expand)</strong></summary>
+<summary><strong>Walkthrough: deploying a DBOS Go app</strong></summary>
 
 This walkthrough deploys a sample DBOS Go application ([source code](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun)) to Cloud Run with a Cloud SQL PostgreSQL database. It covers project setup, infrastructure, and deployment in both **Service** and **Worker Pool** modes.
 
