@@ -11,17 +11,15 @@ This guide covers deploying a DBOS application to [Google Cloud Run](https://clo
 
 Cloud Run offers three execution modes, each mapping differently to DBOS workloads:
 
-- **Service** handles HTTP requests and auto-scales based on traffic. Best for synchronous workflows; requires `--min-instances=1` for long-lived or asynchronous work.
+- **Service** handles HTTP requests and auto-scales based on traffic and CPU usage. Best for synchronous workflows.
 - **Worker Pool** runs always-on instances with no HTTP listener. Best for queue-heavy applications that need all DBOS background services online at all times.
 - **Job** runs a container to completion and exits. Useful for periodic batch work with no always-on requirement.
 
 ### Service
 
-A [Cloud Run service](https://cloud.google.com/run/docs/overview/what-is-cloud-run#services) listens for HTTP requests and scales automatically based on traffic.
+A [Cloud Run service](https://cloud.google.com/run/docs/overview/what-is-cloud-run#services) listens for HTTP requests and scales automatically based on traffic and CPU usage.
 
-Cloud Run keeps a container alive while it processes a request, making services a great fit for **short-lived, synchronous workflows** that complete before the response is sent, or for workflow management via the [DBOS client](../golang/reference/client.md).
-
-For **long-lived or asynchronous workflows**, a service works but requires at least one instance running at all times. DBOS runs background services&mdash;the scheduler, queue runner, recovery service, and Conductor connection&mdash;that operate independently of HTTP requests. If the service scales to zero, these stop. Set `--min-instances=1` to keep them active.
+DBOS runs background services&mdash;the scheduler, queue runner, recovery service, and Conductor connection&mdash;that operate independently of HTTP requests. These require CPU at all times, so you should use [instance-based billing](https://docs.cloud.google.com/run/docs/configuring/billing-settings) and set `--min-instances=1` to keep one instance always on. This is similar to the requirements for using [sidecars on Cloud Run](https://docs.cloud.google.com/run/docs/deploying#sidecars).
 
 :::caution Database connection exhaustion
 In Service mode, use a connection pooler like [PgBouncer](https://www.pgbouncer.org/) in front of your Cloud SQL instance. Cloud Run can scale to hundreds of instances under load, which may exhaust your database's maximum connections. PgBouncer must run in **session mode**&mdash;DBOS uses LISTEN/NOTIFY, which is [incompatible with transaction mode](https://www.pgbouncer.org/features.html).
