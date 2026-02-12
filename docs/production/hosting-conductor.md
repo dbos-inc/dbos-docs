@@ -5,7 +5,7 @@ title: Self-Hosting Conductor
 
 :::info
 Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-Self-hosting Conductor for commercial or production use requires a [license key](#licensing).
+Self-hosting Conductor for commercial or production use requires a paid [license key](#licensing).
 :::
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
