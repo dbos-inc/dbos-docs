@@ -21,7 +21,7 @@ You should export this license key as an environment variable:
 export DBOS_CONDUCTOR_LICENSE_KEY=<my-key>
 ```
 
-Here is a sample `docker-compose.yml`:
+You can trial self-hosted Conductor with this `docker-compose.yml`:
 
 <details>
 <summary><strong>docker-compose.yml</strong></summary>
