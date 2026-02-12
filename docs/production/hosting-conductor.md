@@ -134,7 +134,7 @@ volumes:
 </details>
 
 Start Conductor and the DBOS Console with `docker compose up`.
-After all containers have launched, navigate to `http://localhost` to view the self-hosted console.
+After all containers have launched, navigate to http://localhost to view the self-hosted console.
 
 ## Connecting to Self-Hosted Conductor
 
