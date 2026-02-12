@@ -13,7 +13,7 @@ There are many ways to self-host Conductor and the DBOS Console on your own infr
 ## Getting Started with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
-To do this, you need a development license key, which can be freely obtained from the [DBOS Console](https://console.dbos.dev/settings/license-key).
+To do this, you need a development license key, which can be freely obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key).
 See [licensing](#licensing) for more information.
 You should export this license key as an environment variable:
 
