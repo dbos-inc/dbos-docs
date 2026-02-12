@@ -5,7 +5,7 @@ title: Deploying With Google Cloud Run
 
 # Deploying a DBOS App on Google Cloud Run
 
-This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database and [DBOS Conductor](./conductor.md). It includes best practices for security, availability, and scalability.
+This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database. It includes best practices for security, availability, and scalability. This guide assumes [DBOS Conductor](./conductor.md) is hosted separately.
 
 ## Choosing a Cloud Run Execution Mode
 
