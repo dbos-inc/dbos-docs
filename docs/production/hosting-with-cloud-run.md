@@ -246,6 +246,8 @@ Deploy from source&mdash;Cloud Build automatically builds your container and pus
 gcloud run deploy my-app \
   --source . \
   --region us-central1 \
+  --no-cpu-throttling \
+  --min-instances=1 \
   --service-account run-identity@[YOUR_PROJECT_ID].iam.gserviceaccount.com \
   --network main-vpc \
   --subnet run-subnet \
@@ -258,6 +260,8 @@ gcloud run deploy my-app \
 
 Key flags:
 
+- **`--no-cpu-throttling`** Enables [instance-based billing](https://docs.cloud.google.com/run/docs/configuring/billing-settings) so DBOS background services keep running between requests.
+- **`--min-instances=1`** Keeps one instance always on so background services never stop.
 - **`--set-secrets`** Injects secrets from Secret Manager as environment variables.
 - **`--add-cloudsql-instances`** Mounts the Cloud SQL Auth Proxy socket, letting the app connect via `INSTANCE_UNIX_SOCKET`.
 - **`--source .`** Builds your Dockerfile remotely via [Cloud Build](http://cloud.google.com/build).
