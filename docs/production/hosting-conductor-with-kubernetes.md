@@ -1,5 +1,5 @@
 ---
-sidebar_position: 16
+sidebar_position: 70
 title: Deploying With Kubernetes
 ---
 
@@ -19,13 +19,18 @@ The Kubernetes manifests are portable to any conformant cluster.
 
 ## Deployments
 
-**Database** Conductor needs a PostgreSQL database, which we recommend configuring with a dedicated database role.
+**Database** — Conductor needs a PostgreSQL database, which we recommend configuring with a dedicated database role.
 
-**Conductor** is a single-container Deployment, listening on port 8090, which we recommend exposing as a ClusterIP Service.
-It takes two required environment variables: `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database) and `DBOS_CONDUCTOR_LICENSE_KEY`.
+**Conductor** — A stateless, single-container Deployment listening on port 8090 (health: `/healthz`).
+All state lives in PostgreSQL, so a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) (not [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)) is the right workload type — pods are interchangeable and need no stable identity or persistent volumes.
+Required environment variables: `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database) and `DBOS_CONDUCTOR_LICENSE_KEY`.
 
-**Console** is a single-container Deployment, listening on port 80, which we recommend exposing as a ClusterIP Service.
+**Console** — A stateless, single-container Deployment listening on port 80 (health: `/health`).
 It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`.
+
+**High availability** — A single Conductor instance can serve tens of thousands of application servers.
+For High Availability, we recommend setting `replicas: 2+` with pod anti-affinity to spread across nodes, and a PodDisruptionBudget to ensure at least one replica survives voluntary disruptions (node drains, cluster upgrades).
+DBOS SDKs handle reconnection automatically, so a pod restart or failure is transparent to applications.
 
 :::info Updating Conductor
 
@@ -34,29 +39,22 @@ To upgrade, update the container image tag in `conductor.yaml` and `console.yaml
 Applications seamlessly reconnect to the new Conductor version with no impact on availability.
 :::
 
-:::info
+:::info Register applications
 After deploying Conductor and Console, [register your application, and generate an API key](./conductor.md#connecting-to-conductor).
 The application connects to Conductor via WebSocket using this API key and the Conductor URL.
 :::
 
 ## Authentication
 
-Conductor supports OAuth 2.0 for authentication. When enabled:
+Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authentication setup guide](./hosting-conductor.md#security).
 
-- **Conductor** validates JWTs on every API request using the provider's JWKS endpoint. Configure it with `DBOS_OAUTH_ENABLED`, `DBOS_OAUTH_JWKS_URL`, `DBOS_OAUTH_ISSUER`, and `DBOS_OAUTH_AUDIENCE`.
-- **Console** runs the PKCE authorization code flow in the browser (public client, no client secret). Configure it with `DBOS_OAUTH_ENABLED`, `DBOS_OAUTH_AUTHORIZATION_URL`, `DBOS_OAUTH_TOKEN_URL`, `DBOS_OAUTH_CLIENT_ID`, `DBOS_OAUTH_SCOPE`, `DBOS_OAUTH_USERINFO_URL`, and `DBOS_OAUTH_AUDIENCE`.
+## Ingress
 
-Any OIDC-compliant provider works (Auth0, Okta, Google, Keycloak, Dex, etc.).
+We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**.
 
-:::note
-The Console's PKCE flow requires HTTPS (or localhost). If you access the Console over plain HTTP on a non-localhost hostname, OAuth login will fail.
-:::
+The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) must have their idle timeouts raised well above the default 60 seconds — otherwise they'll drop the connection during quiet periods. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. A value of 300 seconds (5 minutes) is a good starting point.
 
-## Ingress and WebSockets
-
-We recommend setting up a reverse proxy (e.g., Nginx) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**.
-
-The DBOS SDK maintains a long-lived WebSocket to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) must have their idle timeouts raised well above the default 60 seconds — otherwise they'll drop the connection during quiet periods. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. A value of 300 seconds (5 minutes) is a good starting point.
+You must configure your dbos applications to point at your load balancer/ reverse proxy URL, which should redirect to Conductor.
 
 ## Security Best Practices
 
@@ -64,17 +62,21 @@ The DBOS SDK maintains a long-lived WebSocket to Conductor, so both the reverse 
 Store these as Kubernetes Secrets and inject them via `secretKeyRef`.
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager (AWS Secrets Manager, [Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/vso), etc.).
 
-**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod (e.g., Ingress → Console/Conductor/your app, Console → Conductor)
+**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. Depending on whether DBOS Conductor, DBOS Console, and your applications are hosted in the same cluster, you'll need different rules. The console and DBOS applications communicate with DBOS Conductor.
+
+**Secure Web sockets** — If your applications and Conductor are in different clusters, use TLS to protect the WebSocket connection and set the Conductor URL in your application to the `wss://` endpoint.
 
 **Database privilege separation** — Run [`dbos migrate`](../explanations/system-tables.md) with an admin role that can create schema and grant permissions, and run the application with a restricted role that can only read/write data.
 `dbos migrate` works well as a Kubernetes Job that you compose into your CI/CD pipeline.
+
+**RBAC** — Restrict which ServiceAccounts can read Secrets in the namespace. Conductor credentials (database URLs, license key, API key) should only be accessible to the pods that need them.
 
 ## Upgrading Workflow Code
 
 DBOS workflows can run for weeks or years while the underlying code evolves.
 Two patterns support this:
 
-1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. Maintain one Deployment per active version so older workflows continue on their original code. Automate with tools like [Flagger](https://flagger.app/) or [Argo Rollouts](https://argoproj.github.io/argo-rollouts/).
+1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. In Kubernetes, create a separate Deployment per active version (e.g., `dbos-app-v1`, `dbos-app-v2`). Point the Service selector at the latest version only — new HTTP requests (and new workflows) go exclusively to the new Deployment. Old Deployments stay alive: their pods keep their Conductor WebSocket connections and continue executing in-flight workflows. Conductor routes recovery by `ApplicationVersion`, so each version's workflows are processed by the matching executors. Once all workflows for an old version complete, delete its Deployment. Tools like [Flagger](https://flagger.app/) or [Argo Rollouts](https://argoproj.github.io/argo-rollouts/) can automate this lifecycle.
 2. **Workflow patching** — Keep a single Deployment. Add conditional logic (patches) that detect which code path a recovering workflow should take. See the [workflow patching guide](../python/tutorials/upgrading-workflows.md) for details.
 
 ## Scaling with KEDA
@@ -86,32 +88,32 @@ A simple pattern you can use to scale based on DBOS queue depth:
 2. KEDA's `metrics-api` trigger polls this endpoint on an interval.
 3. KEDA computes `desiredReplicas = ceil(queue_length / targetValue)`, where `targetValue` matches the queue's per-worker concurrency.
 
+Since the `metrics-api` trigger polls the application itself, `minReplicaCount` must be at least 1 — KEDA needs a running pod to scrape. For scale-to-zero, use a push-based trigger (e.g., PostgreSQL) or an external metrics endpoint.
+
 ---
 
-## Walkthrough (AWS / EKS)
+## Walkthrough
 
-<!-- TODO: Add architecture diagram -->
+<Tabs groupId="cloud-provider">
+<TabItem value="eks" label="EKS (AWS)">
+
+![EKS Conductor Architecture](/img/architecture/eks-conductor-architecture.svg)
+
+In addition to DBOS Conductor, the DBOS Console and the DBOS application, the infrastructure includes the following components:
 
 | Component | Role |
 |-----------|------|
-| **PostgreSQL** | Database for Conductor internal data and application system tables |
-| **DBOS Conductor** | Orchestrates workflow recovery, manages application registry |
-| **DBOS Console** | Web UI for managing applications and monitoring workflows |
+| **RDS** | Database for Conductor internal data and application system tables |
 | **Reverse Proxy (Nginx Ingress)** | TLS termination, path-based routing, WebSocket support |
 | **OIDC Provider (Dex)** | Issues JWTs for authentication |
 | **Sealed Secrets** | Encrypts secrets at rest; decrypts them in-cluster |
 | **KEDA** | Autoscales application pods based on queue depth |
 
-Traffic flow:
-- Users access the **Console** and the **Application** through the **Ingress**
-- The **Application** connects to **Conductor** via WebSocket (internally, or through Ingress for cross-VPC setups)
-- **Conductor** and the **Application** each connect to **PostgreSQL** (separate databases)
-- The **OIDC provider** issues JWTs that **Conductor** validates via JWKS
-- **KEDA** polls the application's metrics endpoint to drive scaling decisions
+### Infrastructure
 
-### Prerequisites
+<details>
 
-Install the following CLI tools on your workstation:
+<summary><strong>CLI tools required on your workstation</strong></summary>
 
 | Tool | Purpose | Install |
 |------|---------|---------|
@@ -120,7 +122,10 @@ Install the following CLI tools on your workstation:
 | **kubectl** | Interact with Kubernetes | Included with eksctl, or [install separately](https://kubernetes.io/docs/tasks/tools/) |
 | **Helm** | Install cluster add-ons (Ingress, KEDA, Sealed Secrets) | `brew install helm` or [install guide](https://helm.sh/docs/intro/install/) |
 | **kubeseal** | Encrypt Kubernetes secrets | `brew install kubeseal` or [install guide](https://github.com/bitnami-labs/sealed-secrets#kubeseal) |
+| **Go** | Build the DBOS application | [Install guide](https://go.dev/doc/install) |
 | **Docker** | Build application container images | [Install guide](https://docs.docker.com/get-docker/) |
+| **openssl** | Generate self-signed TLS certificate | Pre-installed on macOS/Linux |
+| **htpasswd** | Generate bcrypt password hash for Dex | `brew install httpd` (macOS) or `apt install apache2-utils` (Debian) |
 
 Verify your AWS credentials are configured:
 
@@ -128,12 +133,14 @@ Verify your AWS credentials are configured:
 aws sts get-caller-identity
 ```
 
-#### DBOS Conductor License Key
+</details>
 
-Obtain a license key by [contacting DBOS sales](https://www.dbos.dev/contact).
+**DBOS Conductor License Key**
+
+Obtain a development (one executor) license key from the [DBOS Console](https://console.dbos.dev/settings/license-key) or [contacting DBOS sales](https://www.dbos.dev/contact).
 You can also follow this guide without a license key for evaluation, but you will be limited to one executor per application.
 
-#### Create an EKS Cluster
+**Create an EKS Cluster**
 
 Create a managed EKS cluster with two nodes. This takes approximately 15 minutes.
 
@@ -173,7 +180,7 @@ ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.31.x
 
 </details>
 
-#### Create a Namespace
+**Create a Namespace**
 
 All resources in this guide are deployed to a dedicated `dbos` namespace:
 
@@ -181,7 +188,9 @@ All resources in this guide are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
-#### Provision an RDS PostgreSQL Instance
+<a id="provision-an-rds-postgresql-instance"></a>
+
+**Provision an RDS PostgreSQL Instance**
 
 Conductor needs a PostgreSQL database for its internal state, and your DBOS application needs one for its [system tables](../explanations/system-tables.md).
 We use a single RDS instance with two databases for simplicity.
@@ -308,11 +317,13 @@ This creates:
 - `dbos_conductor` — Conductor's internal database (application registry, metadata)
 - `dbos_app` — your DBOS application's system database
 - `dbos_conductor_role` — a dedicated role for Conductor's database access
-- `dbos_app_role` — a restricted role the application uses at runtime (see [Database Migrations](#database-migrations))
+- `dbos_app_role` — a restricted role the application uses at runtime
 
 </details>
 
-#### Install Cluster Add-ons
+<a id="install-cluster-add-ons"></a>
+
+**Install Cluster Add-ons**
 
 We install three Helm charts that the later sections depend on.
 
@@ -362,7 +373,7 @@ kubectl get pods -n keda
 
 </details>
 
-#### Create ECR Repositories
+**Create ECR Repositories**
 
 We push two container images to Amazon ECR — one for the application and one for the migration job:
 
@@ -374,7 +385,7 @@ aws ecr create-repository --repository-name dbos-migrate --region us-west-2
 Note the repository URIs from the output (e.g., `123456789012.dkr.ecr.us-west-2.amazonaws.com/dbos-app`).
 Replace the ECR URIs in the commands below with your own account ID.
 
----
+<a id="secrets"></a>
 
 ### Secrets
 
@@ -383,7 +394,7 @@ We use [Bitnami Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets):
 The controller decrypts it in-cluster into a standard Kubernetes Secret that pods can reference.
 The encrypted form is safe to commit to Git.
 
-#### Secrets Inventory
+**Secrets Inventory**
 
 | Secret | Keys | Used by |
 |--------|------|---------|
@@ -393,20 +404,11 @@ The encrypted form is safe to commit to Git.
 | `dbos-app-db` | `database-url` | DBOS Application — restricted access to `dbos_app` database |
 | `conductor-api-key` | `api-key` | DBOS Application — authenticates with Conductor |
 
-#### Create and Seal Secrets
+**Create and Seal Secrets**
 
 <details>
 
 <summary><strong>kubeseal commands for all 5 secrets</strong></summary>
-
-Set the RDS endpoint (from the [provisioning step](#provision-an-rds-postgresql-instance)):
-
-```bash
-RDS_ENDPOINT=$(aws rds describe-db-instances \
-  --db-instance-identifier dbos-conductor-pg \
-  --query "DBInstances[0].Endpoint.Address" \
-  --output text --region us-west-2)
-```
 
 Create each secret, pipe it through `kubeseal`, and save the encrypted form:
 
@@ -455,7 +457,7 @@ kubectl create secret generic conductor-api-key \
 
 </details>
 
-#### Apply and Verify
+**Apply and Verify**
 
 ```bash
 kubectl apply -f sealed-postgres-admin.yaml
@@ -487,713 +489,46 @@ The `conductor-api-key` secret contains a placeholder value.
 After deploying Conductor and registering your application in the Console ([next section](#conductor-and-console)), you'll regenerate this secret with the real API key.
 :::
 
----
+### Ingress
 
-### Conductor and Console
+With the Nginx Ingress Controller installed, you have a load balancer in front of the cluster.
+This section creates a TLS certificate and an Ingress resource so that all services are reachable over HTTPS.
 
-#### Conductor
+This walkthrough uses **path-based routing** with a self-signed certificate on the load balancer's hostname.
+For production, switch to host-based routing with [cert-manager](https://cert-manager.io/) and a real domain.
 
-Conductor is the core service that manages workflow recovery and the application registry.
-It connects to the `dbos_conductor` database using the `dbos_conductor_role` credentials.
-
-<details>
-
-<summary><strong>conductor.yaml</strong></summary>
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: conductor
-  namespace: dbos
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: conductor
-  template:
-    metadata:
-      labels:
-        app: conductor
-    spec:
-      containers:
-        - name: conductor
-          image: dbosdev/conductor
-          env:
-            - name: DBOS__CONDUCTOR_DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: conductor-db
-                  key: database-url
-            - name: DBOS_CONDUCTOR_LICENSE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: conductor-license
-                  key: license-key
-            # OAuth (uncomment after configuring authentication)
-            # - name: DBOS_OAUTH_ENABLED
-            #   value: "true"
-            # - name: DBOS_OAUTH_JWKS_URL
-            #   value: "http://dex.dbos.svc.cluster.local:5556/dex/keys"
-            # - name: DBOS_OAUTH_ISSUER
-            #   value: "https://dex.example.com/dex"
-            # - name: DBOS_OAUTH_AUDIENCE
-            #   value: "dbos-conductor"
-          ports:
-            - containerPort: 8090
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8090
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8090
-            initialDelaySeconds: 15
-            periodSeconds: 30
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: "1"
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: conductor
-  namespace: dbos
-spec:
-  selector:
-    app: conductor
-  ports:
-    - port: 8090
-      targetPort: 8090
-```
-
-Both sensitive values (`DBOS__CONDUCTOR_DB_URL` and `DBOS_CONDUCTOR_LICENSE_KEY`) are pulled from the Sealed Secrets created in the [Secrets](#secrets) section.
-
-</details>
-
-#### Console
-
-The Console is the web UI for managing applications, monitoring workflows, and generating API keys.
-It connects to Conductor via internal cluster DNS.
-
-<details>
-
-<summary><strong>console.yaml</strong></summary>
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: console
-  namespace: dbos
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: console
-  template:
-    metadata:
-      labels:
-        app: console
-    spec:
-      containers:
-        - name: console
-          image: dbosdev/console
-          env:
-            - name: DBOS_CONDUCTOR_URL
-              value: "conductor.dbos.svc.cluster.local:8090"
-            # OAuth (uncomment after configuring authentication)
-            # - name: DBOS_OAUTH_ENABLED
-            #   value: "true"
-            # - name: DBOS_OAUTH_AUTHORIZATION_URL
-            #   value: "https://dex.example.com/dex/auth"
-            # - name: DBOS_OAUTH_TOKEN_URL
-            #   value: "https://dex.example.com/dex/token"
-            # - name: DBOS_OAUTH_CLIENT_ID
-            #   value: "dbos-conductor"
-            # - name: DBOS_OAUTH_SCOPE
-            #   value: "openid profile email"
-            # - name: DBOS_OAUTH_USERINFO_URL
-            #   value: "https://dex.example.com/dex/userinfo"
-            # - name: DBOS_OAUTH_AUDIENCE
-            #   value: "dbos-conductor"
-          ports:
-            - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 30
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 256Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: console
-  namespace: dbos
-spec:
-  selector:
-    app: console
-  ports:
-    - port: 80
-      targetPort: 80
-```
-
-</details>
-
-#### Deploy
-
-```bash
-kubectl apply -f conductor.yaml
-kubectl apply -f console.yaml
-```
-
-Verify both pods are running:
-
-```bash
-kubectl get pods -n dbos
-```
-
-```
-NAME                         READY   STATUS    RESTARTS   AGE
-conductor-xxxxxxxxx-xxxxx    1/1     Running   0          2m
-console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
-```
-
-#### Access the Console and Generate an API Key
-
-Before configuring Ingress, you can access the Console via port-forwarding:
-
-```bash
-kubectl port-forward -n dbos svc/console 8080:80
-```
-
-Open http://localhost:8080 in your browser, then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
-
-1. Register your application
-2. Generate an API key
-
-Once you have the API key, update the `conductor-api-key` sealed secret:
-
-```bash
-kubectl create secret generic conductor-api-key \
-  --namespace dbos \
-  --from-literal=api-key='<your-api-key>' \
-  --dry-run=client -o yaml | \
-  kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
-  > sealed-conductor-api-key.yaml
-
-kubectl apply -f sealed-conductor-api-key.yaml
-```
-
----
-
-### DBOS Application
-
-This section walks through building a sample DBOS Go application and deploying it to the cluster.
-The application demonstrates workflows, steps, events, and a queue-based scaling endpoint for KEDA.
-
-#### Application Code
-
-Initialize the Go module and install dependencies:
-
-```bash
-mkdir -p app && cd app
-go mod init dbos-conductor-app
-go get github.com/dbos-inc/dbos-transact-golang/dbos@latest
-go get github.com/gin-gonic/gin@latest
-```
-
-<details>
-
-<summary><strong>app/main.go</strong></summary>
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"strconv"
-	"time"
-
-	"github.com/dbos-inc/dbos-transact-golang/dbos"
-	"github.com/gin-gonic/gin"
-)
-
-const STEPS_EVENT = "steps_event"
-
-// ExampleWorkflow runs three sequential steps, reporting progress via events.
-func ExampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
-	for i, step := range []func(context.Context) (string, error){stepOne, stepTwo, stepThree} {
-		_, err := dbos.RunAsStep(ctx, step)
-		if err != nil {
-			return "", err
-		}
-		if err := dbos.SetEvent(ctx, STEPS_EVENT, i+1); err != nil {
-			return "", err
-		}
-	}
-	return "Workflow completed", nil
-}
-
-func stepOne(ctx context.Context) (string, error) {
-	time.Sleep(5 * time.Second)
-	fmt.Println("Step one completed!")
-	return "Step 1 completed", nil
-}
-
-func stepTwo(ctx context.Context) (string, error) {
-	time.Sleep(5 * time.Second)
-	fmt.Println("Step two completed!")
-	return "Step 2 completed", nil
-}
-
-func stepThree(ctx context.Context) (string, error) {
-	time.Sleep(5 * time.Second)
-	fmt.Println("Step three completed!")
-	return "Step 3 completed", nil
-}
-
-// SleepWorkflow is a queue-friendly workflow for KEDA scaling demos.
-func SleepWorkflow(ctx dbos.DBOSContext, durationSeconds int) (string, error) {
-	dbos.Sleep(ctx, time.Duration(durationSeconds)*time.Second)
-	return fmt.Sprintf("Slept for %d seconds", durationSeconds), nil
-}
-
-func main() {
-	dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-		AppName:            "dbos-app",
-		DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-		ConductorURL:       os.Getenv("DBOS_CONDUCTOR_URL"),
-		ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
-		ApplicationVersion: "0.1.0",
-	})
-	if err != nil {
-		panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
-	}
-
-	queue := dbos.NewWorkflowQueue(dbosCtx, "taskQueue", dbos.WithWorkerConcurrency(2))
-
-	dbos.RegisterWorkflow(dbosCtx, ExampleWorkflow)
-	dbos.RegisterWorkflow(dbosCtx, SleepWorkflow)
-
-	if err := dbos.Launch(dbosCtx); err != nil {
-		panic(fmt.Sprintf("Launching DBOS failed: %v", err))
-	}
-	defer dbos.Shutdown(dbosCtx, 10*time.Second)
-
-	r := gin.Default()
-
-	// Health check
-	r.GET("/healthz", func(c *gin.Context) {
-		c.String(http.StatusOK, "ok")
-	})
-
-	// Run the three-step example workflow
-	r.GET("/workflow/:taskid", func(c *gin.Context) {
-		taskID := c.Param("taskid")
-		_, err := dbos.RunWorkflow(dbosCtx, ExampleWorkflow, "", dbos.WithWorkflowID(taskID))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"workflow_id": taskID, "status": "started"})
-	})
-
-	// Get the last completed step for a workflow
-	r.GET("/last_step/:taskid", func(c *gin.Context) {
-		taskID := c.Param("taskid")
-		step, err := dbos.GetEvent[int](dbosCtx, taskID, STEPS_EVENT, 0)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"last_step": step})
-	})
-
-	// Enqueue a sleep workflow (for KEDA scaling demos)
-	r.GET("/enqueue/:duration", func(c *gin.Context) {
-		duration, err := strconv.Atoi(c.Param("duration"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid duration"})
-			return
-		}
-		handle, err := dbos.RunWorkflow(dbosCtx, SleepWorkflow, duration, dbos.WithQueue(queue.Name))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"workflow_id": handle.GetWorkflowID(), "duration": duration})
-	})
-
-	// Metrics endpoint for KEDA — returns current queue length
-	r.GET("/metrics/:queueName", func(c *gin.Context) {
-		queueName := c.Param("queueName")
-		workflows, err := dbos.ListWorkflows(dbosCtx, dbos.WithQueuesOnly(), dbos.WithQueueName(queueName))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"queue_length": len(workflows)})
-	})
-
-	fmt.Println("Server starting on :8080")
-	r.Run(":8080")
-}
-```
-
-Key points:
-- **Conductor connection**: The app reads `DBOS_CONDUCTOR_URL` and `DBOS_CONDUCTOR_KEY` from environment variables and connects to Conductor via WebSocket.
-- **Queue**: `taskQueue` with concurrency 2 — used by the `/enqueue/:duration` endpoint and KEDA scaling.
-- **Metrics**: The `/metrics/:queueName` endpoint returns the current queue depth, which KEDA polls for autoscaling decisions.
-
-</details>
-
-#### Dockerfile
-
-<details>
-
-<summary><strong>app/Dockerfile</strong></summary>
-
-```dockerfile
-FROM golang:1.25-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o dbos-app .
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /app
-COPY --from=builder /app/dbos-app .
-EXPOSE 8080
-CMD ["./dbos-app"]
-```
-
-</details>
-
-#### Build and Push to ECR
-
-<details>
-
-<summary><strong>Docker build and push commands</strong></summary>
-
-```bash
-# Set your ECR repository URI
-ECR_REPO=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app
-
-# Authenticate Docker with ECR
-aws ecr get-login-password --region us-west-2 | \
-  docker login --username AWS --password-stdin \
-  <your-account-id>.dkr.ecr.us-west-2.amazonaws.com
-
-# Build for linux/amd64 (EKS nodes run Linux)
-docker build --platform linux/amd64 -t $ECR_REPO:latest app/
-
-# Push to ECR
-docker push $ECR_REPO:latest
-```
-
-</details>
-
-#### Kubernetes Manifest
-
-<details>
-
-<summary><strong>manifests/dbos-app.yaml</strong></summary>
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dbos-app
-  namespace: dbos
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: dbos-app
-  template:
-    metadata:
-      labels:
-        app: dbos-app
-    spec:
-      containers:
-        - name: dbos-app
-          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
-          env:
-            - name: DBOS_SYSTEM_DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: dbos-app-db
-                  key: database-url
-            - name: DBOS_CONDUCTOR_URL
-              value: "ws://conductor.dbos.svc.cluster.local:8090/"
-            - name: DBOS_CONDUCTOR_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: conductor-api-key
-                  key: api-key
-          ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 30
-          resources:
-            requests:
-              cpu: 500m
-              memory: 256Mi
-            limits:
-              cpu: "2"
-              memory: 512Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: dbos-app
-  namespace: dbos
-spec:
-  selector:
-    app: dbos-app
-  ports:
-    - port: 8080
-      targetPort: 8080
-```
-
-The `DBOS_CONDUCTOR_URL` uses the in-cluster DNS name (`conductor.dbos.svc.cluster.local`) with the WebSocket scheme (`ws://`).
-The database URL and API key are pulled from the Sealed Secrets created in the [Secrets](#secrets) section.
-
-</details>
-
-:::important
-Before deploying the application, you **must** run the database migration job ([next section](#database-migrations)).
-The application uses a restricted database role (`dbos_app_role`) that cannot create the DBOS system tables on its own.
+:::caution
+I would like this guide to use host based routing. Path based routing is a hack.
 :::
-
-#### Deploy
-
-Run the migration job first (see [Database Migrations](#database-migrations)), then deploy the application:
-
-```bash
-kubectl apply -f dbos-app.yaml
-```
-
-Verify the pod is running and connected to Conductor:
-
-```bash
-kubectl get pods -n dbos -l app=dbos-app
-kubectl logs -n dbos -l app=dbos-app --tail=20
-```
-
-You should see Conductor connection messages in the logs. You can also verify the connection in the Console UI.
-
-#### Smoke Test
-
-Port-forward to the application and test the workflow endpoints:
-
-```bash
-kubectl port-forward -n dbos svc/dbos-app 8080:8080
-```
-
-```bash
-# Start a workflow
-curl http://localhost:8080/workflow/test-1
-
-# Check progress
-curl http://localhost:8080/last_step/test-1
-
-# Enqueue a sleep workflow
-curl http://localhost:8080/enqueue/30
-
-# Check queue depth
-curl http://localhost:8080/metrics/taskQueue
-```
-
----
-
-### Database Migrations
-
-DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
-These tables must be created before the application can start.
-We use a separate Kubernetes Job that runs `dbos migrate` with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
-
-This separation follows the principle of least privilege: the application never holds the keys to alter its own schema.
-
-#### Migration Image
-
-The migration image contains only the `dbos` CLI — it doesn't include your application code.
-
-<details>
-
-<summary><strong>app/Dockerfile.migrate</strong></summary>
-
-```dockerfile
-FROM golang:1.25-alpine AS builder
-RUN CGO_ENABLED=0 GOOS=linux go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/bin/dbos /usr/local/bin/dbos
-ENTRYPOINT ["dbos"]
-```
-
-</details>
-
-#### Build and Push
-
-```bash
-# Set your ECR repository URI
-ECR_MIGRATE=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate
-
-# Build for linux/amd64
-docker build --platform linux/amd64 \
-  -t $ECR_MIGRATE:latest \
-  -f app/Dockerfile.migrate app/
-
-# Push to ECR
-docker push $ECR_MIGRATE:latest
-```
-
-#### Migration Job Manifest
-
-The Job runs `dbos migrate --app-role dbos_app_role`, which:
-1. Creates the DBOS system tables in the `dbos_app` database (if they don't exist)
-2. Applies any pending schema migrations
-3. Grants the necessary permissions to `dbos_app_role` so the application can read and write workflow state
-
-<details>
-
-<summary><strong>manifests/migrate-job.yaml</strong></summary>
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: dbos-migrate
-  namespace: dbos
-spec:
-  backoffLimit: 3
-  template:
-    spec:
-      restartPolicy: OnFailure
-      containers:
-        - name: migrate
-          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
-          args:
-            - "migrate"
-            - "--app-role"
-            - "dbos_app_role"
-          env:
-            - name: DBOS_SYSTEM_DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-admin
-                  key: database-url
-```
-
-The `postgres-admin` secret contains the admin connection string, which has the privileges needed to create tables and grant permissions.
-The `--app-role` flag tells `dbos migrate` to grant the specified role access to the system tables.
-
-</details>
-
-#### Run the Migration
-
-```bash
-kubectl apply -f migrate-job.yaml
-```
-
-Wait for the job to complete:
-
-```bash
-kubectl get jobs -n dbos
-```
-
-```
-NAME           STATUS     COMPLETIONS   DURATION   AGE
-dbos-migrate   Complete   1/1           8s         30s
-```
-
-Check the logs to confirm the migration succeeded:
-
-```bash
-kubectl logs -n dbos job/dbos-migrate
-```
-
-#### Re-running Migrations
-
-When you deploy a new version of the DBOS Go SDK that includes schema changes, re-run the migration job.
-Since Kubernetes Job names must be unique, delete the old job first:
-
-```bash
-kubectl delete job dbos-migrate -n dbos
-kubectl apply -f migrate-job.yaml
-```
-
-In a CI/CD pipeline, you would typically give each migration job a unique name (e.g., `dbos-migrate-v2`) or use a Helm hook with `hook-delete-policy: before-hook-creation`.
-
-#### Privilege Separation Summary
-
-| Role | Used by | Privileges |
-|------|---------|-----------|
-| `postgres` | Migration Job | Superuser — creates schema, grants permissions |
-| `dbos_app_role` | Application | Read/write on DBOS system tables only |
-| `dbos_conductor_role` | Conductor | Full access to `dbos_conductor` database |
-
-This ensures the application can never accidentally (or maliciously) alter its own schema at runtime.
-
----
-
-### Networking
-
-#### Ingress
-
-With Conductor and Console running behind ClusterIP services, they're only reachable via `kubectl port-forward`.
-An Ingress resource exposes them through the Nginx load balancer.
-
-This section uses **path-based routing** on the load balancer's hostname, which works without a custom domain or TLS certificates.
-For production, switch to [host-based routing with TLS](#production-ingress-with-tls).
 
 Get the load balancer hostname:
 
 ```bash
-kubectl get svc -n ingress-nginx ingress-nginx-controller \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+ELB_HOSTNAME=$(kubectl get svc -n ingress-nginx ingress-nginx-controller \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+echo $ELB_HOSTNAME
 ```
 
-Save this value — you'll need it below. It looks like `xxxxxxxx.us-west-2.elb.amazonaws.com`.
+Save this value — you'll need it throughout the rest of the guide. It looks like `xxxxxxxx.us-west-2.elb.amazonaws.com`.
+
+Create a self-signed TLS certificate and store it as a Kubernetes secret:
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout tls.key -out tls.crt \
+  -subj "/CN=dbos-conductor" \
+  -addext "subjectAltName=DNS:${ELB_HOSTNAME}"
+
+kubectl create secret tls dbos-tls \
+  --cert=tls.crt --key=tls.key \
+  --namespace dbos
+```
+
+:::note
+The CN is kept short because OpenSSL's CN field has a 64-character limit — the actual hostname is covered by the SAN extension.
+Your browser will show a certificate warning for the self-signed cert — accept it to proceed.
+For production, use [cert-manager](https://cert-manager.io/) with a real domain.
+:::
 
 <details>
 
@@ -1215,8 +550,13 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - <elb-hostname>
+      secretName: dbos-tls
   rules:
-    - http:
+    - host: <elb-hostname>
+      http:
         paths:
           - path: /conductor(/|$)(.*)
             pathType: ImplementationSpecific
@@ -1241,6 +581,8 @@ spec:
                   number: 80
 ```
 
+The `host` in both `tls` and `rules` must match — without it, Nginx serves its default fake certificate instead of `dbos-tls`.
+
 How routing works:
 
 | Request path | Matches | Rewritten to | Backend |
@@ -1258,12 +600,18 @@ Key annotations:
 
 </details>
 
-##### WebSocket Configuration
+**Apply the Ingress**
+
+```bash
+kubectl apply -f manifests/ingress.yaml
+```
+
+**WebSocket Configuration**
 
 The application connects to Conductor via a long-lived WebSocket.
 Three layers must be configured to prevent idle connections from being dropped:
 
-| Layer | Setting | Default | Required | Why |
+| Layer | Setting | Default | Suggested | Why |
 |-------|---------|---------|----------|-----|
 | **Nginx Ingress** | `proxy-read-timeout` | 60s | 3600s | Prevents Nginx from closing an idle WebSocket |
 | **Nginx Ingress** | `proxy-send-timeout` | 60s | 3600s | Same, for the send direction |
@@ -1284,174 +632,242 @@ The DBOS SDK sends periodic ping frames that keep the connection active under no
 Increasing the ELB idle timeout is a safety net — without it, a network hiccup that delays pings past 60 seconds would cause the load balancer to drop the connection.
 :::
 
-##### Route the Application Through the Ingress
-
-Update `DBOS_CONDUCTOR_URL` in `manifests/dbos-app.yaml` to connect through the Ingress instead of the cluster-internal Service address.
-Replace `<elb-hostname>` with your load balancer hostname:
-
-```yaml
-- name: DBOS_CONDUCTOR_URL
-  value: "ws://<elb-hostname>/conductor/"
-```
-
-This routes the application's WebSocket connection through Nginx, which validates that the Ingress correctly handles long-lived WebSocket upgrades.
-
 :::tip
-In production, if the application and Conductor are co-located in the same cluster, you can use the internal address `ws://conductor.dbos.svc.cluster.local:8090/` for lower latency.
-Routing through the Ingress is useful when the application runs in a separate VPC or cluster.
+With a CA-signed certificate (e.g., from [cert-manager](https://cert-manager.io/)), the init container in the app manifest is not needed — the system CA bundle already trusts it. You can remove the init container, volumes, and `SSL_CERT_FILE`.
 :::
 
-##### Apply and Verify
+### Authentication
 
-```bash
-kubectl apply -f manifests/ingress.yaml
-kubectl apply -f manifests/dbos-app.yaml
-```
+This section adds OAuth 2.0 authentication to Conductor and Console using [Dex](https://dexidp.io/), a lightweight OIDC identity provider.
+With OAuth enabled, users must log in before accessing the Console, and Conductor validates JWTs on every API request.
 
-Check that the Ingress has an address:
-
-```bash
-kubectl get ingress -n dbos
-```
-
-```
-NAME           CLASS   HOSTS   ADDRESS                                    PORTS   AGE
-dbos-ingress   nginx   *       xxxxxxxx.us-west-2.elb.amazonaws.com       80      30s
-```
-
-Test the endpoints (replace `<elb-hostname>`):
-
-```bash
-# Console
-curl http://<elb-hostname>/health
-
-# Application
-curl http://<elb-hostname>/app/healthz
-
-# Conductor API
-curl http://<elb-hostname>/conductor/
-```
-
-Verify the application reconnected to Conductor through the Ingress:
-
-```bash
-kubectl logs -n dbos deploy/dbos-app --tail=20
-```
-
-You should see a successful WebSocket connection to `ws://<elb-hostname>/conductor/`.
-
-##### Production: Ingress with TLS {#production-ingress-with-tls}
-
-For production, switch to **host-based routing** with TLS certificates.
-This requires a domain you control (e.g., from Route 53 or any registrar).
+**Deploy Dex**
 
 <details>
 
-<summary><strong>cert-manager + host-based Ingress</strong></summary>
-
-**1. Install cert-manager:**
-
-```bash
-helm repo add jetstack https://charts.jetstack.io --force-update
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager --create-namespace \
-  --set crds.enabled=true
-```
-
-**2. Create a ClusterIssuer** for Let's Encrypt:
+<summary><strong>dex.yaml (ConfigMap + Deployment + Service)</strong></summary>
 
 ```yaml
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your-email>
-    privateKeySecretRef:
-      name: letsencrypt-prod-account-key
-    solvers:
-      - http01:
-          ingress:
-            ingressClassName: nginx
-```
-
-**3. Create DNS records** — three CNAMEs pointing to the load balancer hostname:
-
-| Record | Type | Value |
-|--------|------|-------|
-| `console.<your-domain>` | CNAME | `<elb-hostname>` |
-| `conductor.<your-domain>` | CNAME | `<elb-hostname>` |
-| `app.<your-domain>` | CNAME | `<elb-hostname>` |
-
-**4. Replace the Ingress** with a host-based version:
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: dbos-ingress
+  name: dex-config
   namespace: dbos
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+data:
+  config.yaml: |
+    issuer: https://<elb-hostname>/dex
+
+    storage:
+      type: memory
+
+    web:
+      http: 0.0.0.0:5556
+
+    oauth2:
+      skipApprovalScreen: true
+      responseTypes:
+        - code
+
+    staticClients:
+      - id: dbos-console
+        name: DBOS Console
+        redirectURIs:
+          - "https://<elb-hostname>/oauth/callback"
+        public: true
+
+    enablePasswordDB: true
+    staticPasswords:
+      - email: "admin@example.com"
+        hash: "<bcrypt-hash>"
+        username: admin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  namespace: dbos
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - console.<your-domain>
-        - conductor.<your-domain>
-        - app.<your-domain>
-      secretName: dbos-tls
-  rules:
-    - host: console.<your-domain>
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: console
-                port:
-                  number: 80
-    - host: conductor.<your-domain>
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: conductor
-                port:
-                  number: 8090
-    - host: app.<your-domain>
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: dbos-app
-                port:
-                  number: 8080
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dex
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      containers:
+        - name: dex
+          image: dexidp/dex:v2.41.1
+          args:
+            - dex
+            - serve
+            - /etc/dex/config.yaml
+          ports:
+            - containerPort: 5556
+          volumeMounts:
+            - name: config
+              mountPath: /etc/dex
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /dex/healthz
+              port: 5556
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /dex/healthz
+              port: 5556
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      volumes:
+        - name: config
+          configMap:
+            name: dex-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: dbos
+spec:
+  selector:
+    app: dex
+  ports:
+    - port: 5556
+      targetPort: 5556
 ```
 
-With host-based routing, no path rewriting is needed — each subdomain maps directly to a backend.
-Update the application's Conductor URL to use TLS:
-
-```yaml
-- name: DBOS_CONDUCTOR_URL
-  value: "wss://conductor.<your-domain>/"
-```
-
-cert-manager automatically provisions and renews the TLS certificate.
-Verify it's ready with `kubectl get certificate -n dbos`.
+Key configuration notes:
+- **`issuer`** — must match the URL users access Dex through (the external Ingress URL). Conductor validates the `iss` claim in JWTs against this value.
+- **`storage: memory`** — suitable for this tutorial. For production, use a persistent storage backend or an upstream IdP connector.
+- **`public: true`** — marks `dbos-console` as a public OAuth client (PKCE, no client secret).
+- **`redirectURIs`** — Console's callback URL. Replace `<elb-hostname>` with your load balancer hostname.
 
 </details>
 
-#### Network Policies
+**Generate a Password Hash**
+
+Dex requires a bcrypt-hashed password for static users. Generate one with:
+
+```bash
+htpasswd -bnBC 10 "" 'your-password' | tr -d ':'
+```
+
+Replace `<bcrypt-hash>` in the ConfigMap with the output.
+
+**Add Dex to the Ingress**
+
+Dex needs to receive requests with its `/dex` path prefix intact.
+The main Ingress uses `rewrite-target: /$2` to strip path prefixes, so you need a capture-group pattern that preserves the `/dex` prefix through the rewrite.
+
+Add the Dex rule **before** the catch-all `/()(.*) → console` rule, so that `/dex/...` requests match first:
+
+```yaml
+          - path: /()(dex/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: dex
+                port:
+                  number: 5556
+```
+
+With this pattern, `$2` captures `dex/...` and the rewrite target `/$2` produces `/dex/...` — passing the full path to Dex.
+
+**Enable OAuth on Conductor and Console**
+
+<details>
+
+<summary><strong>Conductor OAuth env vars</strong></summary>
+
+```yaml title="conductor.yaml (env section)"
+            # OAuth
+            - name: DBOS_OAUTH_ENABLED
+              value: "true"
+            - name: DBOS_OAUTH_JWKS_URL
+              value: "http://dex.dbos.svc.cluster.local:5556/dex/keys"
+            - name: DBOS_OAUTH_ISSUER
+              value: "https://<elb-hostname>/dex"
+            - name: DBOS_OAUTH_AUDIENCE
+              value: "dbos-console"
+```
+
+</details>
+
+<details>
+
+<summary><strong>Console OAuth env vars</strong></summary>
+
+```yaml title="console.yaml (env section)"
+            # OAuth
+            - name: DBOS_OAUTH_ENABLED
+              value: "true"
+            - name: DBOS_OAUTH_AUTHORIZATION_URL
+              value: "https://<elb-hostname>/dex/auth"
+            - name: DBOS_OAUTH_TOKEN_URL
+              value: "https://<elb-hostname>/dex/token"
+            - name: DBOS_OAUTH_CLIENT_ID
+              value: "dbos-console"
+            - name: DBOS_OAUTH_SCOPE
+              value: "openid profile email"
+            - name: DBOS_OAUTH_USERINFO_URL
+              value: "https://<elb-hostname>/dex/userinfo"
+            - name: DBOS_OAUTH_AUDIENCE
+              value: "dbos-console"
+```
+
+Console does **not** have a `DBOS_OAUTH_CLIENT_SECRET` variable — it uses PKCE (Proof Key for Code Exchange) instead.
+
+</details>
+
+**Apply and Verify**
+
+Deploy Dex and update the Ingress, Conductor, and Console:
+
+```bash
+kubectl apply -f dex.yaml
+kubectl apply -f ingress.yaml
+kubectl apply -f conductor.yaml
+kubectl apply -f console.yaml
+kubectl rollout restart deploy/conductor deploy/console -n dbos
+```
+
+Wait for all pods to be ready:
+
+```bash
+kubectl get pods -n dbos
+```
+
+```
+NAME                         READY   STATUS    RESTARTS   AGE
+conductor-xxxxxxxxx-xxxxx    1/1     Running   0          30s
+console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
+dex-xxxxxxxxx-xxxxx          1/1     Running   0          45s
+```
+
+Verify the OIDC discovery endpoint:
+
+```bash
+curl -k https://<elb-hostname>/dex/.well-known/openid-configuration
+```
+
+You should see a JSON response with the issuer, authorization endpoint, token endpoint, and JWKS URI.
+
+Open `https://<elb-hostname>/` in your browser (accept the self-signed cert warning). The Console should redirect you to the Dex login page.
+Log in with the static user credentials (e.g., `admin@example.com` and the password you chose), and you'll be redirected back to the Console.
+
+### Network Policies
+
+<a id="network-policies"></a>
 
 By default, every pod in a Kubernetes namespace can reach every other pod — across all namespaces.
 Network policies restrict ingress (incoming) traffic so each pod only accepts connections from known sources.
@@ -1470,8 +886,7 @@ Our strategy is **default-deny ingress** with explicit allow rules:
 | `keda` namespace | `dbos-app` | 8080 | Metrics scraping for autoscaling |
 
 Egress (outgoing) traffic is left unrestricted.
-All pods need to reach RDS over the network, and RDS endpoints resolve to IPs that can change — making CIDR-based egress rules fragile.
-AWS Security Groups already restrict RDS access to the EKS cluster, so egress filtering provides limited additional value here.
+AWS Security Groups restricts RDS access to the EKS cluster.
 
 :::note
 Network policies require a CNI that supports enforcement.
@@ -1488,7 +903,7 @@ Wait for the add-on status to return to `ACTIVE` before continuing.
 On other providers, verify that your CNI enforces NetworkPolicy (e.g. Calico, Cilium).
 :::
 
-##### Namespace Labels
+**Namespace Labels**
 
 `namespaceSelector` rules match on namespace labels.
 Ensure the `ingress-nginx` and `keda` namespaces are labeled:
@@ -1619,7 +1034,7 @@ spec:
 
 </details>
 
-##### Apply and Verify
+**Apply and Verify**
 
 ```bash
 kubectl apply -f manifests/network-policies.yaml
@@ -1640,11 +1055,6 @@ allow-dex-ingress          app=dex        10s
 allow-dbos-app-ingress     app=dbos-app   10s
 ```
 
-Verify that existing traffic still works:
-- Console loads at `https://<elb-hostname>/` (ingress-nginx → console)
-- OAuth login succeeds (ingress-nginx → dex, conductor → dex JWKS)
-- Application appears connected in Console (dbos-app → conductor WebSocket)
-
 To confirm the deny rule is effective, run a temporary pod and attempt to reach conductor:
 
 ```bash
@@ -1653,297 +1063,184 @@ kubectl run nettest --rm -it --image=busybox -n dbos -- wget -qO- --timeout=3 ht
 
 This should time out, because the `nettest` pod doesn't match any allow rule.
 
-##### Production Notes
+### Deployments
 
-- **Egress policies**: For additional hardening, you can add egress network policies to restrict outbound traffic. You'll need to allow DNS (UDP 53 to `kube-dns`), RDS (TCP 5432 to the RDS CIDR), and any external APIs your application calls. Be aware that RDS endpoint IPs can change, so consider using an [ExternalName Service](https://kubernetes.io/docs/concepts/services-networking/service/#externalname) or a broader CIDR range.
-- **Monitoring denied traffic**: Enable VPC Flow Logs or use a CNI with built-in policy logging (e.g. Calico) to monitor dropped connections. This helps catch legitimate traffic that was accidentally blocked.
-- **Calico/Cilium**: If you need more expressive policies (e.g. DNS-based egress rules, application-layer filtering), consider Calico or Cilium as your CNI.
+<a id="conductor-and-console"></a>
 
----
-
-### Authentication with Dex
-
-This section adds OAuth 2.0 authentication to Conductor and Console using [Dex](https://dexidp.io/), a lightweight OIDC identity provider.
-With OAuth enabled, users must log in before accessing the Console, and Conductor validates JWTs on every API request.
-
-**How the flow works:**
-
-1. A user opens the Console. The browser redirects to Dex's authorization endpoint.
-2. The user enters credentials on the Dex login page.
-3. Dex issues an authorization code and redirects back to the Console.
-4. The Console exchanges the code for an ID token (using PKCE — no client secret in the browser).
-5. The Console sends the ID token to Conductor on every request. Conductor validates it against Dex's JWKS endpoint.
-
-Console is configured as a **public client** (Authorization Code + PKCE) because it runs entirely in the browser and cannot securely store a client secret.
-
-#### Deploy Dex
+Conductor is the core service that manages workflow recovery and the application registry.
+It connects to the `dbos_conductor` database using the `dbos_conductor_role` credentials.
 
 <details>
 
-<summary><strong>dex.yaml (ConfigMap + Deployment + Service)</strong></summary>
+<summary><strong>conductor.yaml</strong></summary>
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: dex-config
-  namespace: dbos
-data:
-  config.yaml: |
-    issuer: http://<elb-hostname>/dex
-
-    storage:
-      type: memory
-
-    web:
-      http: 0.0.0.0:5556
-
-    oauth2:
-      skipApprovalScreen: true
-      responseTypes:
-        - code
-
-    staticClients:
-      - id: dbos-console
-        name: DBOS Console
-        redirectURIs:
-          - "http://<elb-hostname>/oauth/callback"
-        public: true
-
-    enablePasswordDB: true
-    staticPasswords:
-      - email: "admin@example.com"
-        hash: "<bcrypt-hash>"
-        username: admin
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dex
+  name: conductor
   namespace: dbos
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dex
+      app: conductor
   template:
     metadata:
       labels:
-        app: dex
+        app: conductor
     spec:
       containers:
-        - name: dex
-          image: dexidp/dex:v2.41.1
-          args:
-            - dex
-            - serve
-            - /etc/dex/config.yaml
+        - name: conductor
+          image: dbosdev/conductor
+          env:
+            - name: DBOS__CONDUCTOR_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-db
+                  key: database-url
+            - name: DBOS_CONDUCTOR_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-license
+                  key: license-key
+            # OAuth (uncomment after configuring authentication)
+            # - name: DBOS_OAUTH_ENABLED
+            #   value: "true"
+            # - name: DBOS_OAUTH_JWKS_URL
+            #   value: "http://dex.dbos.svc.cluster.local:5556/dex/keys"
+            # - name: DBOS_OAUTH_ISSUER
+            #   value: "https://dex.example.com/dex"
+            # - name: DBOS_OAUTH_AUDIENCE
+            #   value: "dbos-conductor"
           ports:
-            - containerPort: 5556
-          volumeMounts:
-            - name: config
-              mountPath: /etc/dex
-              readOnly: true
+            - containerPort: 8090
           readinessProbe:
             httpGet:
-              path: /dex/healthz
-              port: 5556
+              path: /healthz
+              port: 8090
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /dex/healthz
-              port: 5556
-            initialDelaySeconds: 10
+              path: /healthz
+              port: 8090
+            initialDelaySeconds: 15
             periodSeconds: 30
           resources:
             requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
               cpu: 250m
-              memory: 128Mi
-      volumes:
-        - name: config
-          configMap:
-            name: dex-config
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: dex
+  name: conductor
   namespace: dbos
 spec:
   selector:
-    app: dex
+    app: conductor
   ports:
-    - port: 5556
-      targetPort: 5556
+    - port: 8090
+      targetPort: 8090
 ```
 
-Key configuration notes:
-- **`issuer`** — must match the URL users access Dex through (the external Ingress URL). Conductor validates the `iss` claim in JWTs against this value.
-- **`storage: memory`** — suitable for this tutorial. For production, use a persistent storage backend or an upstream IdP connector.
-- **`public: true`** — marks `dbos-console` as a public OAuth client (PKCE, no client secret).
-- **`redirectURIs`** — Console's callback URL. Replace `<elb-hostname>` with your load balancer hostname.
+Both sensitive values (`DBOS__CONDUCTOR_DB_URL` and `DBOS_CONDUCTOR_LICENSE_KEY`) are pulled from the Sealed Secrets created in the [Secrets](#secrets) section.
 
 </details>
 
-#### Generate a Password Hash
-
-Dex requires a bcrypt-hashed password for static users. Generate one with:
-
-```bash
-htpasswd -bnBC 10 "" 'your-password' | tr -d ':'
-```
-
-Replace `<bcrypt-hash>` in the ConfigMap with the output.
-
-#### Add Dex to the Ingress
-
-Dex needs to receive requests with its `/dex` path prefix intact.
-The main Ingress uses `rewrite-target: /$2` to strip path prefixes, so you need a capture-group pattern that preserves the `/dex` prefix through the rewrite.
+The Console is the web UI for managing applications, monitoring workflows, and generating API keys.
+In this example, it connects to Conductor via internal cluster DNS.
 
 <details>
 
-<summary><strong>Updated ingress.yaml with Dex route</strong></summary>
-
-Add the Dex rule **before** the catch-all `/()(.*) → console` rule, so that `/dex/...` requests match first:
+<summary><strong>console.yaml</strong></summary>
 
 ```yaml
-          - path: /()(dex/.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: dex
-                port:
-                  number: 5556
-```
-
-With this pattern, `$2` captures `dex/...` and the rewrite target `/$2` produces `/dex/...` — passing the full path to Dex.
-
-The full updated Ingress:
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: dbos-ingress
+  name: console
   namespace: dbos
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
-  ingressClassName: nginx
-  rules:
-    - http:
-        paths:
-          - path: /conductor(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: conductor
-                port:
-                  number: 8090
-          - path: /app(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: dbos-app
-                port:
-                  number: 8080
-          - path: /()(dex/.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: dex
-                port:
-                  number: 5556
-          - path: /()(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: console
-                port:
-                  number: 80
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console
+  template:
+    metadata:
+      labels:
+        app: console
+    spec:
+      containers:
+        - name: console
+          image: dbosdev/console
+          env:
+            - name: DBOS_CONDUCTOR_URL
+              value: "conductor.dbos.svc.cluster.local:8090"
+            # OAuth (uncomment after configuring authentication)
+            # - name: DBOS_OAUTH_ENABLED
+            #   value: "true"
+            # - name: DBOS_OAUTH_AUTHORIZATION_URL
+            #   value: "https://dex.example.com/dex/auth"
+            # - name: DBOS_OAUTH_TOKEN_URL
+            #   value: "https://dex.example.com/dex/token"
+            # - name: DBOS_OAUTH_CLIENT_ID
+            #   value: "dbos-conductor"
+            # - name: DBOS_OAUTH_SCOPE
+            #   value: "openid profile email"
+            # - name: DBOS_OAUTH_USERINFO_URL
+            #   value: "https://dex.example.com/dex/userinfo"
+            # - name: DBOS_OAUTH_AUDIENCE
+            #   value: "dbos-conductor"
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: console
+  namespace: dbos
+spec:
+  selector:
+    app: console
+  ports:
+    - port: 80
+      targetPort: 80
 ```
 
 </details>
 
-#### Enable OAuth on Conductor
-
-Add these environment variables to the Conductor Deployment:
-
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `DBOS_OAUTH_ENABLED` | `"true"` | Enables JWT validation on all API requests |
-| `DBOS_OAUTH_JWKS_URL` | `http://dex.dbos.svc.cluster.local:5556/dex/keys` | Internal URL to fetch Dex's signing keys (no Ingress round-trip) |
-| `DBOS_OAUTH_ISSUER` | `http://<elb-hostname>/dex` | Expected `iss` claim — must match Dex's configured issuer |
-| `DBOS_OAUTH_AUDIENCE` | `dbos-console` | Expected `aud` claim — must match the static client ID in Dex |
-
-```yaml title="conductor.yaml (env section)"
-            # OAuth
-            - name: DBOS_OAUTH_ENABLED
-              value: "true"
-            - name: DBOS_OAUTH_JWKS_URL
-              value: "http://dex.dbos.svc.cluster.local:5556/dex/keys"
-            - name: DBOS_OAUTH_ISSUER
-              value: "http://<elb-hostname>/dex"
-            - name: DBOS_OAUTH_AUDIENCE
-              value: "dbos-console"
-```
-
-#### Enable OAuth on Console
-
-Add these environment variables to the Console Deployment:
-
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `DBOS_OAUTH_ENABLED` | `"true"` | Enables OAuth login flow in the UI |
-| `DBOS_OAUTH_AUTHORIZATION_URL` | `http://<elb-hostname>/dex/auth` | Dex's authorization endpoint (external, user's browser) |
-| `DBOS_OAUTH_TOKEN_URL` | `http://<elb-hostname>/dex/token` | Dex's token endpoint (external, browser exchanges code for token) |
-| `DBOS_OAUTH_CLIENT_ID` | `dbos-console` | Must match the static client ID in the Dex config |
-| `DBOS_OAUTH_SCOPE` | `openid profile email` | OIDC scopes to request |
-| `DBOS_OAUTH_USERINFO_URL` | `http://<elb-hostname>/dex/userinfo` | Dex's userinfo endpoint |
-| `DBOS_OAUTH_AUDIENCE` | `dbos-console` | Audience claim included in token requests |
-
-```yaml title="console.yaml (env section)"
-            # OAuth
-            - name: DBOS_OAUTH_ENABLED
-              value: "true"
-            - name: DBOS_OAUTH_AUTHORIZATION_URL
-              value: "http://<elb-hostname>/dex/auth"
-            - name: DBOS_OAUTH_TOKEN_URL
-              value: "http://<elb-hostname>/dex/token"
-            - name: DBOS_OAUTH_CLIENT_ID
-              value: "dbos-console"
-            - name: DBOS_OAUTH_SCOPE
-              value: "openid profile email"
-            - name: DBOS_OAUTH_USERINFO_URL
-              value: "http://<elb-hostname>/dex/userinfo"
-            - name: DBOS_OAUTH_AUDIENCE
-              value: "dbos-console"
-```
-
-:::note
-Console does **not** have a `DBOS_OAUTH_CLIENT_SECRET` variable — it uses PKCE (Proof Key for Code Exchange) instead.
-:::
-
-#### Apply and Verify
-
-Deploy Dex and update the Ingress, Conductor, and Console:
+Deploy both with:
 
 ```bash
-kubectl apply -f dex.yaml
-kubectl apply -f ingress.yaml
 kubectl apply -f conductor.yaml
 kubectl apply -f console.yaml
-kubectl rollout restart deploy/conductor deploy/console -n dbos
 ```
 
-Wait for all pods to be ready:
+Verify both pods are running:
 
 ```bash
 kubectl get pods -n dbos
@@ -1951,48 +1248,318 @@ kubectl get pods -n dbos
 
 ```
 NAME                         READY   STATUS    RESTARTS   AGE
-conductor-xxxxxxxxx-xxxxx    1/1     Running   0          30s
+conductor-xxxxxxxxx-xxxxx    1/1     Running   0          2m
 console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
-dbos-app-xxxxxxxxx-xxxxx     1/1     Running   0          10m
-dex-xxxxxxxxx-xxxxx          1/1     Running   0          45s
 ```
 
-Verify the OIDC discovery endpoint:
+**Access the Console and Generate an API Key**
+
+Open `https://<elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+
+1. Register your application
+2. Generate an API key
+
+Once you have the API key, update the `conductor-api-key` sealed secret:
 
 ```bash
-curl http://<elb-hostname>/dex/.well-known/openid-configuration
+kubectl create secret generic conductor-api-key \
+  --namespace dbos \
+  --from-literal=api-key='<your-api-key>' \
+  --dry-run=client -o yaml | \
+  kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
+  > sealed-conductor-api-key.yaml
+
+kubectl apply -f sealed-conductor-api-key.yaml
 ```
 
-You should see a JSON response with the issuer, authorization endpoint, token endpoint, and JWKS URI.
+<a id="dbos-application"></a>
 
-Open `http://<elb-hostname>/` in your browser. The Console should redirect you to the Dex login page.
-Log in with the static user credentials (e.g., `admin@example.com` and the password you chose), and you'll be redirected back to the Console.
+We are now ready to deploy a sample DBOS Go application.
+You can find the source code at **[TODO]**.
+Build it and deploy it to ECR.
 
-#### Limitations
+<details>
 
-- **No logout endpoint** — Dex does not implement an OIDC logout endpoint. Users can clear their browser session, but there is no server-side session revocation. The Console's `DBOS_OAUTH_LOGOUT_URL` variable is omitted for this reason.
-- **Static users** — the configuration above uses Dex's built-in password database with a single static user. This is sufficient for demonstration but not for production.
-- **In-memory storage** — Dex's signing keys are regenerated on every pod restart. Existing JWTs remain valid until they expire, but new tokens use the new keys.
+<summary><strong>Dockerfile and ECR push</strong></summary>
 
-#### Production Notes
+```dockerfile title="app/Dockerfile"
+FROM golang:1.25-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o dbos-app .
 
-For production deployments:
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=builder /app/dbos-app .
+EXPOSE 8080
+CMD ["./dbos-app"]
+```
 
-- **Use an upstream IdP connector** — Dex supports [LDAP](https://dexidp.io/docs/connectors/ldap/), [SAML](https://dexidp.io/docs/connectors/saml/), [GitHub](https://dexidp.io/docs/connectors/github/), [OIDC](https://dexidp.io/docs/connectors/oidc/), and other connectors. Replace the static password database with your organization's identity provider.
-- **Use TLS** — Set `issuer` to `https://auth.<your-domain>/dex` and add a Dex host rule to the TLS Ingress (from the [TLS section](#production-ingress-with-tls)). All OAuth URLs in Conductor and Console must also use `https://`.
-- **Persistent storage** — configure Dex to use a database backend (PostgreSQL, SQLite, etcd) so signing keys survive pod restarts.
-- **Multiple replicas** — with persistent storage, you can run multiple Dex replicas behind the Service for availability.
+```bash
+# Set your ECR repository URI
+ECR_REPO=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app
 
+# Authenticate Docker with ECR
+aws ecr get-login-password --region us-west-2 | \
+  docker login --username AWS --password-stdin \
+  <your-account-id>.dkr.ecr.us-west-2.amazonaws.com
+
+# Build for linux/amd64 (EKS nodes run Linux)
+docker build --platform linux/amd64 -t $ECR_REPO:latest app/
+
+# Push to ECR
+docker push $ECR_REPO:latest
+```
+
+</details>
+
+<a id="database-migrations"></a>
+
+**Database Migrations**
+
+DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
+These tables must be created before the application can start.
+We use a separate Kubernetes Job that runs `dbos migrate` with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
+
+This separation follows the principle of least privilege: the application never holds the keys to alter its own schema.
+
+<details>
+
+<summary><strong>Migration image, build, and Job manifest</strong></summary>
+
+The migration image contains only the DBOS CLI — it doesn't include your application code.
+
+```dockerfile title="app/Dockerfile.migrate"
+FROM golang:1.25-alpine AS builder
+RUN CGO_ENABLED=0 GOOS=linux go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /go/bin/dbos /usr/local/bin/dbos
+ENTRYPOINT ["dbos"]
+```
+
+```bash
+# Set your ECR repository URI
+ECR_MIGRATE=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate
+
+# Build for linux/amd64
+docker build --platform linux/amd64 \
+  -t $ECR_MIGRATE:latest \
+  -f app/Dockerfile.migrate app/
+
+# Push to ECR
+docker push $ECR_MIGRATE:latest
+```
+
+The Job runs `dbos migrate --app-role dbos_app_role`, which:
+1. Creates the DBOS system tables in the `dbos_app` database (if they don't exist)
+2. Applies any pending schema migrations
+3. Grants the necessary permissions to `dbos_app_role` so the application can read and write workflow state
+
+```yaml title="manifests/migrate-job.yaml"
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dbos-migrate
+  namespace: dbos
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
+          args:
+            - "migrate"
+            - "--app-role"
+            - "dbos_app_role"
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-admin
+                  key: database-url
+```
+
+The `postgres-admin` secret contains the admin connection string, which has the privileges needed to create tables and grant permissions.
+The `--app-role` flag tells `dbos migrate` to grant the specified role access to the system tables.
+
+</details>
+
+**Run the Migration**
+
+```bash
+kubectl apply -f migrate-job.yaml
+```
+
+Wait for the job to complete:
+
+```bash
+kubectl get jobs -n dbos
+```
+
+```
+NAME           STATUS     COMPLETIONS   DURATION   AGE
+dbos-migrate   Complete   1/1           8s         30s
+```
+
+Check the logs to confirm the migration succeeded:
+
+```bash
+kubectl logs -n dbos job/dbos-migrate
+```
+
+**Re-running Migrations**
+
+When you deploy a new version of the DBOS Go SDK that includes schema changes, re-run the migration job.
+Since Kubernetes Job names must be unique, delete the old job first:
+
+```bash
+kubectl delete job dbos-migrate -n dbos
+kubectl apply -f migrate-job.yaml
+```
+
+In a CI/CD pipeline, you would typically give each migration job a unique name (e.g., `dbos-migrate-v2`) or use a Helm hook with `hook-delete-policy: before-hook-creation`.
+
+**Application Kubernetes Manifest**
+
+<details>
+
+<summary><strong>manifests/dbos-app.yaml</strong></summary>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbos-app
+  namespace: dbos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbos-app
+  template:
+    metadata:
+      labels:
+        app: dbos-app
+    spec:
+      initContainers:
+        - name: setup-certs
+          image: alpine:latest
+          command:
+            - sh
+            - -c
+            - |
+              cp /etc/ssl/certs/ca-certificates.crt /certs/ca-certificates.crt
+              cat /tls/tls.crt >> /certs/ca-certificates.crt
+          volumeMounts:
+            - name: tls-cert
+              mountPath: /tls
+              readOnly: true
+            - name: ca-certs
+              mountPath: /certs
+      containers:
+        - name: dbos-app
+          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
+          env:
+            - name: DBOS_SYSTEM_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dbos-app-db
+                  key: database-url
+            - name: DBOS_CONDUCTOR_URL
+              value: "wss://<elb-hostname>/conductor/"
+            - name: DBOS_CONDUCTOR_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: conductor-api-key
+                  key: api-key
+            - name: SSL_CERT_FILE
+              value: "/certs/ca-certificates.crt"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 512Mi
+          volumeMounts:
+            - name: ca-certs
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: tls-cert
+          secret:
+            secretName: dbos-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+        - name: ca-certs
+          emptyDir: {}
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dbos-app
+  namespace: dbos
+spec:
+  selector:
+    app: dbos-app
+  ports:
+    - port: 8080
+      targetPort: 8080
+```
 
-### KEDA Autoscaling
+The `DBOS_CONDUCTOR_URL` connects to Conductor through the Ingress over `wss://`. Replace `<elb-hostname>` with your load balancer hostname.
+Because we use a self-signed certificate, an init container appends the cert to the system CA bundle and exposes it via `SSL_CERT_FILE`.
+The database URL and API key are pulled from the Sealed Secrets created in the [Secrets](#secrets) section.
+
+</details>
+
+Now run the migration job and deploy the application:
+
+```bash
+kubectl apply -f migrate-job.yaml
+kubectl apply -f dbos-app.yaml
+```
+
+Verify the migration completed and the pod is running:
+
+```bash
+kubectl get jobs -n dbos
+kubectl get pods -n dbos -l app=dbos-app
+kubectl logs -n dbos -l app=dbos-app --tail=20
+```
+
+You should see Conductor connection messages in the logs. You can also verify the connection in the Console UI.
+
+### Scaling With KEDA
 
 [KEDA](https://keda.sh/) (Kubernetes Event-Driven Autoscaling) scales your application pods based on external metrics.
-In this section, KEDA polls the application's queue-depth endpoint and adjusts the replica count so that each pod processes a fixed number of queued workflows.
+In this section, KEDA polls the application's queue-depth endpoint and adjusts the replica count so that your application deployment has enough capacity to absorb load.
 
 KEDA was installed in the [Prerequisites](#install-cluster-add-ons) step, and the network policy from [Networking](#network-policies) already allows KEDA to reach the application's metrics port.
 
-#### How the Metrics Endpoint Works
+**How the Metrics Endpoint Works**
 
 The application exposes `GET /metrics/:queueName`, which returns the number of workflows currently waiting on a queue:
 
@@ -2001,9 +1568,7 @@ curl http://dbos-app.dbos.svc.cluster.local:8080/metrics/taskQueue
 # {"queue_length": 7}
 ```
 
-This endpoint was defined in the [DBOS Application](#dbos-application) section — no application changes are needed.
-
-#### Scaling Formula
+**Scaling Formula**
 
 KEDA uses the `metrics-api` trigger to poll the JSON endpoint and extract `queue_length`.
 It computes the desired replica count as:
@@ -2014,8 +1579,9 @@ desiredReplicas = ceil(queue_length / targetValue)
 
 With `targetValue: "2"` (matching the queue's `WithWorkerConcurrency(2)`), each pod handles two concurrent workflows.
 For example, if 7 workflows are queued, KEDA scales to `ceil(7 / 2) = 4` pods.
+Adjust the targetValue based on your queue's worker concurrency limit.
 
-#### ScaledObject Manifest
+**ScaledObject Manifest**
 
 <details>
 
@@ -2056,7 +1622,7 @@ spec:
 
 </details>
 
-#### Apply and Verify
+**Apply and Verify**
 
 ```bash
 kubectl apply -f manifests/keda-scaledobject.yaml
@@ -2084,7 +1650,7 @@ NAME                               REFERENCE             TARGETS       MINPODS  
 keda-hpa-dbos-app-scaledobject     Deployment/dbos-app   0/2 (avg)     1         10        1          10s
 ```
 
-#### Test Autoscaling
+**Test Autoscaling**
 
 Enqueue several long-running workflows to build up queue depth.
 Each call enqueues a workflow that sleeps for 60 seconds:
@@ -2121,16 +1687,6 @@ curl -sk https://<elb-hostname>/app/metrics/taskQueue
 As workflows complete and the queue drains, the metric drops.
 After the `cooldownPeriod` (60 seconds of no trigger activation), KEDA scales back down to `minReplicaCount` (1).
 
-#### Production Notes
-
-- **`pollingInterval`** — The default (30s) is fine for most workloads. Lower values increase responsiveness but add more HTTP requests to the app.
-- **`cooldownPeriod`** — The default (300s) prevents flapping in production. The 60s value here is tuned for demo visibility.
-- **`minReplicaCount`** — Must be ≥1 for the `metrics-api` trigger, since KEDA needs a running pod to scrape. If you want scale-to-zero, use a push-based trigger (e.g., PostgreSQL) or an external metrics endpoint that doesn't depend on the app.
-- **`targetValue`** — Should match your queue's worker concurrency. If you increase `WithWorkerConcurrency(N)`, update `targetValue` to `"N"` so each pod is saturated before a new one is added.
-- **`maxReplicaCount`** — Size this based on your node capacity and resource limits. Each `dbos-app` pod requests 500m CPU and 256Mi memory (from `dbos-app.yaml`), so 10 replicas need ~5 CPU and 2.5Gi — feasible on 2x t3.medium (4 vCPU, 8Gi total).
-
----
-
 ### Cleanup
 
 To tear down all AWS resources when done:
@@ -2147,15 +1703,16 @@ aws rds delete-db-instance --db-instance-identifier dbos-conductor-pg \
 aws ecr delete-repository --repository-name dbos-app --force --region us-west-2
 aws ecr delete-repository --repository-name dbos-migrate --force --region us-west-2
 
+# Delete the RDS security group
+RDS_SG=$(aws ec2 describe-security-groups \
+  --filters "Name=group-name,Values=dbos-conductor-rds" \
+  --query "SecurityGroups[0].GroupId" --output text --region us-west-2)
+aws ec2 delete-security-group --group-id $RDS_SG --region us-west-2
+
 # Delete the DB subnet group
 aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region us-west-2
 ```
 
----
+</TabItem>
+</Tabs>
 
-## Next Steps
-
-- [Self-Hosting Conductor](./hosting-conductor.md) — Docker Compose setup for development
-- [Deploying With Kubernetes](./hosting-with-kubernetes.md) — General DBOS Kubernetes guidance
-- [Production Checklist](./checklist.md) — Pre-production verification
-- [Upgrading Conductor](./hosting-conductor.md#upgrading) — How to upgrade Conductor and the Console
