@@ -30,8 +30,19 @@ func WithMaxRetries(maxRetries int) WorkflowRegistrationOption
 ```
 
 Configure the maximum number of times execution of a workflow may be attempted.
-This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+If `WithMaxRetries(n)` is set, the workflow may be attempted at most `n + 1` times (one initial execution plus `n` retries).
+If this limit is exceeded, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it will no longer be recovered automatically.
+This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue), preventing a buggy workflow that crashes its application from doing so infinitely.
+Use [`ResumeWorkflow`](./methods.md#resumeworkflow) to manually resume a workflow that has exceeded its limit after fixing the underlying issue.
+
+```go
+// Register a workflow that can be attempted at most 4 times (1 initial + 3 retries)
+dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRetries(3))
+```
+
+:::info Workflow Attempts
+The `Attempts` field in [`WorkflowStatus`](./methods.md#workflow-status) tracks how many times a workflow has been executed: `1` on first execution, `0` if enqueued but not yet dequeued, and incremented by `1` on each recovery or dequeue. The attempt count is incremented one last time before a workflow is placed in the DLQ&mdash;for example, a workflow with max retries of 1 that has been moved to the DLQ will show 3 attempts.
+:::
 
 #### WithSchedule
 

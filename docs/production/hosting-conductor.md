@@ -5,7 +5,7 @@ title: Self-Hosting Conductor
 
 :::info
 Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-Self-hosting Conductor for commercial or production use requires a [license key](#licensing).
+Self-hosting Conductor for commercial or production use requires a paid [license key](#licensing).
 :::
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
@@ -13,7 +13,15 @@ There are many ways to self-host Conductor and the DBOS Console on your own infr
 ## Getting Started with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
-Here is a sample `docker-compose.yml` file for this purpose:
+To do this, you need a development license key, which can be freely obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key).
+See [licensing](#licensing) for more information.
+You should export this license key as an environment variable:
+
+```shell
+export DBOS_CONDUCTOR_LICENSE_KEY=<my-key>
+```
+
+You can trial self-hosted Conductor with this `docker-compose.yml`:
 
 <details>
 <summary><strong>docker-compose.yml</strong></summary>
@@ -21,7 +29,7 @@ Here is a sample `docker-compose.yml` file for this purpose:
 ```yml title="docker-compose.yml"
 # Docker Compose configuration for self-hosting DBOS Conductor and the DBOS Console.
 # This configuration is for development purposes only.
-# Commercial or production use of DBOS Conductor or the DBOS Console requires a license key.
+# Commercial or production use of DBOS Conductor or the DBOS Console requires a paid license key.
 services:
   # ============================================
   # Postgres
@@ -51,8 +59,8 @@ services:
     environment:
       DBOS__CONDUCTOR_DB_URL: postgresql://postgres:${PGPASSWORD:-dbos}@postgres:5432/dbos_conductor?sslmode=disable
 
-      # License Key (required for production or commercial use)
-      # DBOS_CONDUCTOR_LICENSE_KEY:  "my-key"
+      # License Key (required)
+      DBOS_CONDUCTOR_LICENSE_KEY:  ${DBOS_CONDUCTOR_LICENSE_KEY}
 
       # OAuth configuration
       # DBOS_OAUTH_ENABLED: "true"
@@ -126,7 +134,7 @@ volumes:
 </details>
 
 Start Conductor and the DBOS Console with `docker compose up`.
-After all containers have launched, navigate to `http://localhost` to view the self-hosted console.
+After all containers have launched, navigate to http://localhost to view the self-hosted console.
 
 ## Connecting to Self-Hosted Conductor
 
@@ -191,11 +199,11 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 ## Licensing
 
 Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-You can use the Conductor container distribution for development, trial, or hobby projects, but self-hosting Conductor in production or for commercial use requires a license key.
-Without a license key, usage will be limited&mdash;you will not be able to connect more than one executor to a Conductor application.
-To obtain a license key, please [contact sales](https://www.dbos.dev/contact).
+You can use the Conductor container distribution with a free license key for development, trial, or hobby projects (a free license key can be obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key)), but self-hosting Conductor in production or for commercial use requires a paid license.
+Using a free license key, usage is limited&mdash;you will not be able to connect more than one executor to a Conductor application.
+To obtain a paid license key, please [contact sales](https://www.dbos.dev/contact).
 
-Once you have a license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
+Once you have a paid license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
 
 ## Hosting Conductor in Production
 

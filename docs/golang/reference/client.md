@@ -23,6 +23,8 @@ type Client interface {
     ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
+    ClientReadStream(workflowID string, key string) ([]any, bool, error)
+    ClientReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -250,3 +252,85 @@ ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 ```
 
 Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
+
+### Debouncer
+
+#### NewDebouncerClient
+
+```go
+func NewDebouncerClient[P any, R any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[P, R]
+```
+
+Create a new debouncer client for use from outside a DBOS application.
+Similar to [`NewDebouncer`](./queues.md#newdebouncer) but uses a [Client](#constructor) instead of a DBOSContext and takes a workflow name string instead of a function reference.
+
+**Parameters:**
+- `workflowName`: The name of the workflow to debounce.
+- `client`: The DBOS client to use for operations.
+- `opts`: Optional configuration, documented below.
+
+#### WithDebouncerTimeout
+
+```go
+func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
+```
+
+Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
+If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
+
+#### DebouncerClient.Debounce
+
+```go
+func (dc *DebouncerClient[P, R]) Debounce(key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+```
+
+Debounce a workflow invocation from outside a DBOS application.
+Behaves the same as [`Debouncer.Debounce`](./queues.md#debouncerdebounce) but does not require a DBOSContext.
+
+**Parameters:**
+- `key`: A unique key to group debounce calls.
+- `delay`: Time by which to delay workflow execution.
+- `input`: Input parameters to pass to the workflow.
+- `opts`: Optional workflow options.
+
+## Stream Methods
+
+### ClientReadStream
+
+```go
+func ClientReadStream[R any](c Client, workflowID string, key string) ([]R, bool, error)
+```
+
+Read all values from a durable [stream](../tutorials/workflow-communication.md#workflow-streaming) produced by a workflow.
+Blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+Similar to [`ReadStream`](./methods.md#readstream).
+
+**Parameters:**
+- `c`: The DBOS client instance.
+- `workflowID`: The ID of the workflow whose stream to read.
+- `key`: The stream key to read.
+
+**Returns:**
+- The typed values read from the stream.
+- Whether the stream is closed.
+- Any error that occurred.
+
+### ClientReadStreamAsync
+
+```go
+func ClientReadStreamAsync[R any](c Client, workflowID string, key string) (<-chan StreamValue[R], error)
+```
+
+Read values from a durable [stream](../tutorials/workflow-communication.md#workflow-streaming) asynchronously.
+Returns immediately with a channel that receives values as they are written to the stream.
+The channel is closed when the stream is closed or an error occurs.
+Similar to [`ReadStreamAsync`](./methods.md#readstreamasync).
+
+**Parameters:**
+- `c`: The DBOS client instance.
+- `workflowID`: The ID of the workflow whose stream to read.
+- `key`: The stream key to read.
+
+**Returns:**
+- A receive-only channel of [`StreamValue[R]`](./methods.md#streamvalue).
+- Any error that occurred during setup.
