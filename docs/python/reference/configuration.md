@@ -33,6 +33,7 @@ class DBOSConfig(TypedDict):
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
+    notification_listener_polling_interval_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -48,6 +49,8 @@ class DBOSConfig(TypedDict):
     run_admin_server: Optional[bool]
     admin_port: Optional[int]
     max_executor_threads: Optional[int]
+
+    scheduler_polling_interval_sec: Optional[float]
 
     serializer: Optional[Serializer]
 ```
@@ -95,7 +98,8 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **db_engine_kwargs**: A dictionary of additional keyword arguments passed to the SQLAlchemy [create_engine](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine) call. Can be used to customize connection pool settings, timeouts, and other engine parameters.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
-- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
+- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be `False` in SQLite.
+- **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`. Only used when `use_listen_notify` is `False`.
 
 ### Conductor Settings
 
@@ -118,6 +122,10 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **admin_port**: The port on which the admin server runs. Defaults to 3001.
 - **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions.
+
+### Scheduler Settings
+
+- **scheduler_polling_interval_sec**: Polling interval in seconds for the scheduler thread to detect new [workflow schedules](./contexts.md#workflow-schedules). Defaults to `30.0`.
 
 ### Serialization Settings
 

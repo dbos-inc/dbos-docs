@@ -230,19 +230,35 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-### Scheduled Workflow
+### Scheduled Workflows
 
-You can schedule DBOS workflows to run exactly once per time interval. To do this, annotate the workflow with the @DBOS.scheduled decorator and specify the schedule in crontab syntax. For example:
+You can schedule DBOS workflows to run on a cron schedule. Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
+
+A scheduled workflow MUST take two arguments: a `datetime` (the scheduled execution time) and a context object:
 
 ```python
-@DBOS.scheduled("* * * * *")
+from datetime import datetime
+from typing import Any
+from dbos import DBOS
+
 @DBOS.workflow()
-def run_every_minute(scheduled_time, actual_time):
-    print(f"I am a scheduled workflow. It is currently {scheduled_time}.")
+def my_periodic_task(scheduled_time: datetime, context: Any):
+    DBOS.logger.info(f"Running task scheduled for {scheduled_time}")
+
+DBOS.create_schedule(
+    schedule_name="my-task-schedule",
+    workflow_fn=my_periodic_task,
+    schedule="*/5 * * * *",  # Every 5 minutes
+)
 ```
 
-- A scheduled workflow MUST specify a crontab schedule.
-- It MUST take in two arguments, scheduled and actual time. Both are datetime.datetimes of when the workflow started.
+- Use `DBOS.create_schedule` to create a schedule with a crontab expression.
+- Use `DBOS.pause_schedule` and `DBOS.resume_schedule` to pause and resume schedules.
+- Use `DBOS.delete_schedule` to delete a schedule.
+- Use `DBOS.apply_schedules` to atomically create, update, or delete multiple schedules at once.
+- Use `DBOS.list_schedules` and `DBOS.get_schedule` to inspect schedules.
+- Use `DBOS.backfill_schedule` to enqueue missed executions for a time range.
+- Use `DBOS.trigger_schedule` to immediately trigger a schedule.
 
 
 ## Workflow Documentation:
