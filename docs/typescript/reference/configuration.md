@@ -97,6 +97,7 @@ A custom serializer must match this interface:
 interface DBOSSerializer {
   stringify: (obj: unknown) => string;
   parse: (text: string | null | undefined) => unknown;
+  name: () => string; // `name` is stored with the resulting string to ensure the correct deserializer is used.
 }
 ```
 For example, here is how to configure DBOS to use a Base64-encoded JSON serializer:
@@ -115,6 +116,7 @@ const base64Serializer: DBOSSerializer = {
     if (obj === undefined) obj = null;
     return Buffer.from(JSON.stringify(obj)).toString('base64');
   },
+  name: () => "simple_json";
 };
 
 const config = // ...
