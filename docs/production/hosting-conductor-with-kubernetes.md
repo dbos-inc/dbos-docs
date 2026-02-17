@@ -50,11 +50,10 @@ Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authenti
 
 ## Ingress
 
-We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**.
+We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**. You must configure your dbos applications to point at your load balancer/ reverse proxy URL, which should redirect to Conductor.
 
-The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) must have their idle timeouts raised well above the default 60 seconds — otherwise they'll drop the connection during quiet periods. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. A value of 300 seconds (5 minutes) is a good starting point.
+The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (e.g., 300s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
 
-You must configure your dbos applications to point at your load balancer/ reverse proxy URL, which should redirect to Conductor.
 
 ## Security Best Practices
 
