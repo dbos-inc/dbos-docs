@@ -30,7 +30,7 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
@@ -72,6 +72,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabaseUrl**: A connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
 - **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations.
 - **serializer**: An optional custom serializer. If your DBOS application uses [custom serialization](./configuration.md#custom-serialization), you must provide the same serializer to the client to correctly deserialize workflow results and events.
+- **systemDatabaseSchemaName**: An optional Postgres schema name for DBOS system tables. Defaults to `dbos`. If your DBOS application uses a [custom schema name](./configuration.md#database-connection-settings), you must provide the same schema name to the client.
 
 Example:
 
