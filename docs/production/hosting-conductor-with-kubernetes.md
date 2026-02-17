@@ -159,6 +159,28 @@ All resources in this guide are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
+<details>
+
+<summary><strong>Set environment variables</strong></summary>
+
+Set these variables before proceeding — replace the placeholder values with your own:
+
+```bash
+# Your AWS account ID (12-digit number)
+AWS_ACCOUNT_ID=123456789012
+
+# PostgreSQL admin password (used for the RDS master user)
+POSTGRES_PASSWORD='choose-a-secure-password'
+
+# Password for the Conductor database role
+CONDUCTOR_ROLE_PASSWORD='choose-another-secure-password'
+
+# Conductor license key (from DBOS Console or sales)
+CONDUCTOR_LICENSE_KEY='your-license-key'
+```
+
+</details>
+
 <a id="provision-an-rds-postgresql-instance"></a>
 
 **Provision an RDS PostgreSQL Instance**
@@ -230,7 +252,7 @@ aws rds create-db-instance \
   --engine postgres \
   --engine-version 16 \
   --master-username postgres \
-  --master-user-password '<your-postgres-password>' \
+  --master-user-password "$POSTGRES_PASSWORD" \
   --allocated-storage 20 \
   --db-subnet-group-name dbos-conductor-db \
   --vpc-security-group-ids $RDS_SG \
@@ -268,10 +290,10 @@ Create the databases and roles from a pod inside the cluster (since the RDS inst
 kubectl run pg-setup --restart=Never \
   --namespace dbos \
   --image=postgres:16 \
-  --env="PGPASSWORD=<your-postgres-password>" \
+  --env="PGPASSWORD=$POSTGRES_PASSWORD" \
   --command -- bash -c "
     psql -h $RDS_ENDPOINT -U postgres -c 'CREATE DATABASE dbos_conductor;'
-    psql -h $RDS_ENDPOINT -U postgres -c \"CREATE ROLE dbos_conductor_role WITH LOGIN PASSWORD '<conductor-role-password>';\"
+    psql -h $RDS_ENDPOINT -U postgres -c \"CREATE ROLE dbos_conductor_role WITH LOGIN PASSWORD '$CONDUCTOR_ROLE_PASSWORD';\"
     psql -h $RDS_ENDPOINT -U postgres -c 'GRANT ALL PRIVILEGES ON DATABASE dbos_conductor TO dbos_conductor_role;'
     psql -h $RDS_ENDPOINT -U postgres -d dbos_conductor -c 'GRANT ALL ON SCHEMA public TO dbos_conductor_role;'
   "
@@ -337,14 +359,14 @@ aws ecr create-repository --repository-name dbos-migrate --region us-west-2
 ```
 
 Note the repository URIs from the output (e.g., `123456789012.dkr.ecr.us-west-2.amazonaws.com/dbos-app`).
-Replace the ECR URIs in the commands below with your own account ID.
+The commands below use `$AWS_ACCOUNT_ID`, which you set earlier.
 
 Authenticate Docker with ECR (tokens expire after 12 hours):
 
 ```bash
 aws ecr get-login-password --region us-west-2 | \
   docker login --username AWS --password-stdin \
-  <your-account-id>.dkr.ecr.us-west-2.amazonaws.com
+  ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com
 ```
 
 <a id="secrets"></a>
@@ -375,7 +397,7 @@ Create each secret, pipe it through `kubeseal`, and save the encrypted form:
 # 1. Conductor database credentials (dedicated role)
 kubectl create secret generic conductor-db \
   --namespace dbos \
-  --from-literal=database-url="postgresql://dbos_conductor_role:<conductor-role-password>@${RDS_ENDPOINT}:5432/dbos_conductor?sslmode=require" \
+  --from-literal=database-url="postgresql://dbos_conductor_role:${CONDUCTOR_ROLE_PASSWORD}@${RDS_ENDPOINT}:5432/dbos_conductor?sslmode=require" \
   --dry-run=client -o yaml | \
   kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
   > sealed-conductor-db.yaml
@@ -383,7 +405,7 @@ kubectl create secret generic conductor-db \
 # 2. Conductor license key
 kubectl create secret generic conductor-license \
   --namespace dbos \
-  --from-literal=license-key='<your-license-key>' \
+  --from-literal=license-key="$CONDUCTOR_LICENSE_KEY" \
   --dry-run=client -o yaml | \
   kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
   > sealed-conductor-license.yaml
@@ -469,10 +491,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - <elb-hostname>
+        - ${ELB_HOSTNAME}
       secretName: dbos-tls
   rules:
-    - host: <elb-hostname>
+    - host: ${ELB_HOSTNAME}
       http:
         paths:
           - path: /conductor(/|$)(.*)
@@ -706,11 +728,11 @@ conductor-xxxxxxxxx-xxxxx    1/1     Running   0          2m
 console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
 ```
 
-Open `https://<elb-hostname>/` in your browser (accept the self-signed cert warning). If OAuth is configured, the Console redirects you to your OIDC provider's login page.
+Open `https://${ELB_HOSTNAME}/` in your browser (accept the self-signed cert warning). If OAuth is configured, the Console redirects you to your OIDC provider's login page.
 
 **Access the Console and Generate an API Key**
 
-Open `https://<elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+Open `https://${ELB_HOSTNAME}/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
 
 1. Register your application
 2. Generate an API key

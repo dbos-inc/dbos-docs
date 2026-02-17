@@ -152,6 +152,34 @@ All resources in this walkthrough are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
+<details>
+
+<summary><strong>Set environment variables</strong></summary>
+
+Set these variables before proceeding — replace the placeholder values with your own:
+
+```bash
+# Your AWS account ID (12-digit number)
+AWS_ACCOUNT_ID=123456789012
+
+# PostgreSQL admin password (used for the RDS master user)
+POSTGRES_PASSWORD='choose-a-secure-password'
+
+# Password for the restricted application database role
+APP_ROLE_PASSWORD='choose-another-secure-password'
+
+# Conductor API key (from the Console after registering your app)
+CONDUCTOR_API_KEY='your-api-key'
+
+# Conductor URL
+# DBOS Cloud: wss://conductor.dbos.dev/
+# Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
+# Self-hosted (external): wss://your-conductor-hostname/conductor/
+CONDUCTOR_URL='wss://conductor.dbos.dev/'
+```
+
+</details>
+
 **Provision an RDS PostgreSQL Instance**
 
 Your DBOS application needs a PostgreSQL database for its [system tables](../explanations/system-tables.md).
@@ -223,7 +251,7 @@ aws rds create-db-instance \
   --engine postgres \
   --engine-version 16 \
   --master-username postgres \
-  --master-user-password '<your-postgres-password>' \
+  --master-user-password "$POSTGRES_PASSWORD" \
   --allocated-storage 20 \
   --db-subnet-group-name dbos-app-db \
   --vpc-security-group-ids $RDS_SG \
@@ -261,10 +289,10 @@ Create the database and application role from a pod inside the cluster (since th
 kubectl run pg-setup --restart=Never \
   --namespace dbos \
   --image=postgres:16 \
-  --env="PGPASSWORD=<your-postgres-password>" \
+  --env="PGPASSWORD=$POSTGRES_PASSWORD" \
   --command -- bash -c "
     psql -h $RDS_ENDPOINT -U postgres -c 'CREATE DATABASE dbos_app;'
-    psql -h $RDS_ENDPOINT -U postgres -c \"CREATE ROLE dbos_app_role WITH LOGIN PASSWORD '<app-role-password>';\"
+    psql -h $RDS_ENDPOINT -U postgres -c \"CREATE ROLE dbos_app_role WITH LOGIN PASSWORD '$APP_ROLE_PASSWORD';\"
   "
 # Wait for the pod to finish, then clean up
 sleep 15 && kubectl logs pg-setup -n dbos && kubectl delete pod pg-setup -n dbos
@@ -321,14 +349,14 @@ aws ecr create-repository --repository-name dbos-migrate --region us-west-2
 ```
 
 Note the repository URIs from the output (e.g., `123456789012.dkr.ecr.us-west-2.amazonaws.com/dbos-app`).
-Replace the ECR URIs in the commands below with your own account ID.
+The commands below use `$AWS_ACCOUNT_ID`, which you set earlier.
 
 Authenticate Docker with ECR (tokens expire after 12 hours):
 
 ```bash
 aws ecr get-login-password --region us-west-2 | \
   docker login --username AWS --password-stdin \
-  <your-account-id>.dkr.ecr.us-west-2.amazonaws.com
+  ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com
 ```
 
 ### Secrets
@@ -358,8 +386,8 @@ Create each secret, pipe it through `kubeseal`, and save the encrypted form:
 # 1. PostgreSQL admin credentials (used by the migration Job)
 kubectl create secret generic postgres-admin \
   --namespace dbos \
-  --from-literal=password='<your-postgres-password>' \
-  --from-literal=database-url="postgresql://postgres:<your-postgres-password>@${RDS_ENDPOINT}:5432/dbos_app?sslmode=require" \
+  --from-literal=password="$POSTGRES_PASSWORD" \
+  --from-literal=database-url="postgresql://postgres:${POSTGRES_PASSWORD}@${RDS_ENDPOINT}:5432/dbos_app?sslmode=require" \
   --dry-run=client -o yaml | \
   kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
   > sealed-postgres-admin.yaml
@@ -367,7 +395,7 @@ kubectl create secret generic postgres-admin \
 # 2. DBOS application database credentials (restricted role)
 kubectl create secret generic dbos-app-db \
   --namespace dbos \
-  --from-literal=database-url="postgresql://dbos_app_role:<app-role-password>@${RDS_ENDPOINT}:5432/dbos_app?sslmode=require" \
+  --from-literal=database-url="postgresql://dbos_app_role:${APP_ROLE_PASSWORD}@${RDS_ENDPOINT}:5432/dbos_app?sslmode=require" \
   --dry-run=client -o yaml | \
   kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
   > sealed-dbos-app-db.yaml
@@ -375,7 +403,7 @@ kubectl create secret generic dbos-app-db \
 # 3. Conductor API key
 kubectl create secret generic conductor-api-key \
   --namespace dbos \
-  --from-literal=api-key='<your-api-key>' \
+  --from-literal=api-key="$CONDUCTOR_API_KEY" \
   --dry-run=client -o yaml | \
   kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --format yaml \
   > sealed-conductor-api-key.yaml
@@ -432,7 +460,7 @@ ENTRYPOINT ["dbos"]
 
 ```bash
 # Set your ECR repository URI
-ECR_MIGRATE=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate
+ECR_MIGRATE=${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate
 
 # Build for linux/amd64
 docker build --platform linux/amd64 \
@@ -467,7 +495,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
           args:
             - "migrate"
             - "--app-role"
@@ -546,7 +574,7 @@ CMD ["./dbos-app"]
 
 ```bash
 # Set your ECR repository URI
-ECR_REPO=<your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app
+ECR_REPO=${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-app
 
 # Build for linux/amd64 (EKS nodes run Linux)
 docker build --platform linux/amd64 -t ${ECR_REPO}:latest .
@@ -573,7 +601,7 @@ spec:
     spec:
       containers:
         - name: dbos-app
-          image: <your-account-id>.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
           env:
             - name: DBOS_SYSTEM_DATABASE_URL
               valueFrom:
@@ -581,7 +609,7 @@ spec:
                   name: dbos-app-db
                   key: database-url
             - name: DBOS_CONDUCTOR_URL
-              value: "<your-conductor-url>"
+              value: "${CONDUCTOR_URL}"
             - name: DBOS_CONDUCTOR_KEY
               valueFrom:
                 secretKeyRef:
@@ -622,7 +650,7 @@ spec:
       targetPort: 8080
 ```
 
-Replace `<your-conductor-url>` with:
+Replace `${CONDUCTOR_URL}` with the value you set earlier:
 - **DBOS Cloud**: `wss://conductor.dbos.dev/`
 - **Self-hosted (same cluster)**: `ws://conductor.dbos.svc.cluster.local:8090`
 - **Self-hosted (external)**: `wss://<your-conductor-hostname>/conductor/`
