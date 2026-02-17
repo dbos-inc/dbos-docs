@@ -98,7 +98,7 @@ DBOS.recv(
 ```
 
 Receive and return a message sent to this workflow.
-Can only be called from within a workflow or step.
+Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
