@@ -65,6 +65,8 @@ def on_customer_registration(customer_id: str):
     )
 ```
 
+Note that scheduling is not supported for workflows that are methods on [configured instances](./classes.md). Scheduled workflows should be plain functions or `@staticmethod` class members.
+
 ### Atomically Updating Schedules
 
 If you need to create or update multiple schedules at once, use [`DBOS.apply_schedules`](../reference/contexts.md#apply_schedules).
@@ -72,8 +74,8 @@ This is useful for declaratively defining all your static schedules in one place
 
 ```python
 DBOS.apply_schedules([
-    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *"},  # Every 10 minutes
-    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *"},     # Every day at midnight
+    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *", "context": None},  # Every 10 minutes
+    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
 ])
 ```
 

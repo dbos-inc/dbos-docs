@@ -637,6 +637,7 @@ client.create_schedule(
     workflow_name: str,
     schedule: str,
     context: Any = None,
+    workflow_class_name: Optional[str] = None,
 ) -> None
 ```
 
@@ -648,6 +649,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **workflow_name**: Fully-qualified name of the workflow function to invoke.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+- **workflow_class_name**: The class name if the workflow is a static method on a [DBOS class](../tutorials/classes.md).
 
 ### create_schedule_async
 
@@ -732,6 +734,7 @@ class ClientScheduleInput(TypedDict):
     workflow_name: str
     schedule: str
     context: Any
+    workflow_class_name: Optional[str]
 ```
 
 Atomically apply a set of schedules.

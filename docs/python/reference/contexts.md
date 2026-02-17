@@ -890,8 +890,8 @@ May not be called from within a workflow.
 
 ```python
 DBOS.apply_schedules([
-    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *"},  # Every 10 minutes
-    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *"},     # Every day at midnight
+    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *", "context": None},  # Every 10 minutes
+    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
 ])
 ```
 
@@ -927,6 +927,7 @@ class WorkflowSchedule(TypedDict):
     schedule_id: str
     schedule_name: str
     workflow_name: str
+    workflow_class_name: Optional[str]
     schedule: str
     status: str  # "ACTIVE" or "PAUSED"
     context: Any
