@@ -471,10 +471,11 @@ For production, use [cert-manager](https://cert-manager.io/) with a real domain.
 
 <details>
 
-<summary><strong>manifests/ingress.yaml</strong></summary>
+<summary><strong>ingress.yaml</strong></summary>
 
 The Ingress routes `/conductor/...` to the Conductor service and everything else to the Console.
 A regex rewrite strips the `/conductor` prefix so Conductor sees requests at `/`.
+Replace `<your-elb-hostname>` with the `$ELB_HOSTNAME` value you retrieved above.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -491,10 +492,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - ${ELB_HOSTNAME}
+        - <your-elb-hostname>
       secretName: dbos-tls
   rules:
-    - host: ${ELB_HOSTNAME}
+    - host: <your-elb-hostname>
       http:
         paths:
           - path: /conductor(/|$)(.*)
@@ -530,7 +531,7 @@ The `host` in both `tls` and `rules` must match — without it, Nginx serves its
 **Apply the Ingress**
 
 ```bash
-kubectl apply -f manifests/ingress.yaml
+kubectl apply -f ingress.yaml
 ```
 
 **WebSocket Configuration**
@@ -557,10 +558,6 @@ kubectl patch svc ingress-nginx-controller -n ingress-nginx -p \
 :::note
 The DBOS SDK sends periodic ping frames that keep the connection active under normal conditions.
 Increasing the ELB idle timeout is a safety net — without it, a network hiccup that delays pings past 60 seconds would cause the load balancer to drop the connection.
-:::
-
-:::tip
-With a CA-signed certificate (e.g., from [cert-manager](https://cert-manager.io/)), the init container in the app manifest is not needed — the system CA bundle already trusts it. You can remove the init container, volumes, and `SSL_CERT_FILE`.
 :::
 
 ### Deployments
@@ -728,11 +725,11 @@ conductor-xxxxxxxxx-xxxxx    1/1     Running   0          2m
 console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
 ```
 
-Open `https://${ELB_HOSTNAME}/` in your browser (accept the self-signed cert warning). If OAuth is configured, the Console redirects you to your OIDC provider's login page.
+Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning). If OAuth is configured, the Console redirects you to your OIDC provider's login page.
 
 **Access the Console and Generate an API Key**
 
-Open `https://${ELB_HOSTNAME}/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
 
 1. Register your application
 2. Generate an API key
