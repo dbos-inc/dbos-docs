@@ -653,7 +653,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 
 ### create_schedule_async
 
-Coroutine version of [`create_schedule`](#create_schedule-1).
+Coroutine version of [`create_schedule`](#create_schedule).
 
 ### list_schedules
 
@@ -750,7 +750,7 @@ client.backfill_schedule(
 ) -> List[WorkflowHandle[None]]
 ```
 
-Enqueue all executions of a schedule that would have run between `start` and `end`.
+Enqueue (on an internal queue) all executions of a schedule that would have run between `start` and `end`.
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
 
@@ -760,5 +760,5 @@ Similar to [`DBOS.backfill_schedule`](./contexts.md#backfill_schedule).
 client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 ```
 
-Immediately enqueue the scheduled workflow at the current time.
+Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).

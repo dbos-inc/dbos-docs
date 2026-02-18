@@ -905,7 +905,7 @@ DBOS.backfill_schedule(
 ) -> List[WorkflowHandle[None]]
 ```
 
-Enqueue all executions of a schedule that would have run between `start` and `end`.
+Enqueue (on an internal queue) all executions of a schedule that would have run between `start` and `end`.
 Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
 May not be called from within a workflow.
 
@@ -915,7 +915,7 @@ May not be called from within a workflow.
 DBOS.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 ```
 
-Immediately enqueue the scheduled workflow at the current time.
+Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
 May not be called from within a workflow.
 
 ### WorkflowSchedule
