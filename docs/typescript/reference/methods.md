@@ -74,10 +74,11 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 ```typescript
 DBOS.send<T>(
-  destinationID: string, 
-  message: T, 
-  topic?: string, 
-  idempotencyKey?: string
+  destinationID: string,
+  message: T,
+  topic?: string,
+  idempotencyKey?: string,
+  options?: SendOptions
 ): Promise<void>
 ```
 
@@ -89,6 +90,7 @@ Messages can optionally be associated with a topic.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this message.
 
 ### DBOS.recv
 
@@ -117,7 +119,8 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 ```typescript
 DBOS.setEvent<T>(
   key: string,
-  value: T
+  value: T,
+  options?: SetEventOptions
 ): Promise<void>
 ```
 
@@ -128,6 +131,7 @@ Can only be called from within a workflow.
 **Parameters:**
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this event.
 
 ### DBOS.getEvent
 
@@ -182,8 +186,9 @@ Returns a random UUID, in the manner of `node:crypto`, checkpointed as a step.
 
 ```typescript
 DBOS.writeStream<T>(
-  key: string, 
-  value: T
+  key: string,
+  value: T,
+  options?: WriteStreamOptions
 ): Promise<void>
 ```
 
@@ -194,6 +199,7 @@ Can only be called from within a workflow or step.
 **Parameters:**
 - **key**: The stream key/name within the workflow.
 - **value**: A serializable value to write to the stream.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this value.
 
 ### DBOS.closeStream
 
@@ -687,3 +693,18 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
   }
 });
 ```
+
+## Serialization Strategy
+
+Several DBOS methods accept an optional `serializationType` parameter that controls how data is serialized.
+This is useful for cross-language interoperability&mdash;for example, if a Python or Java DBOS application needs to read events or messages set by a TypeScript application.
+
+```typescript
+import { WorkflowSerializationFormat } from "@dbos-inc/dbos-sdk";
+```
+
+The available values are:
+
+- **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to JSON).
+- **`'portable'`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
+- **`'native'`**: Explicitly uses the native TypeScript serializer.

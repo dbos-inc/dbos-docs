@@ -116,7 +116,7 @@ const base64Serializer: DBOSSerializer = {
     if (obj === undefined) obj = null;
     return Buffer.from(JSON.stringify(obj)).toString('base64');
   },
-  name: () => "simple_json";
+  name: () => "simple_json",
 };
 
 const config = // ...
