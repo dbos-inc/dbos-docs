@@ -66,7 +66,7 @@ For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-l
 
 ---
 
-## Walkthrough
+## Walkthrough (AWS EKS)
 
 <Tabs groupId="cloud-provider">
 <TabItem value="eks" label="EKS (AWS)">

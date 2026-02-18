@@ -69,7 +69,7 @@ Since the `metrics-api` trigger polls the application itself, `minReplicaCount` 
 
 ---
 
-## Walkthrough
+## Walkthrough (AWS EKS)
 
 <Tabs groupId="cloud-provider">
 <TabItem value="eks" label="EKS (AWS)">
