@@ -34,12 +34,14 @@ Each row represents a different workflow execution.
 - **executor_id**: The ID of the executor that ran this workflow.
 - **workflow_timeout_ms**: The timeout of the workflow, if specified.
 - **workflow_deadline_epoch_ms**: The deadline at which the workflow times out, if the workflow has a timeout. Derived when the workflow starts by adding the timeout to the workflow start time (which may be different than the creation time for enqueued workflows).
-- **started_at_epoch_ms**: If this workflow was enqueued, the time at which it was dequeued and began excution.
+- **started_at_epoch_ms**: If this workflow was enqueued, the time at which it was dequeued and began execution.
 - **deduplication_id**: The deduplication key for this workflow, if any.
 - **priority**: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
 - **queue_partition_key**: The key associated with the workflow, if on a partitioned queue.
-- **forked_from**: The ID of the workflow that this was forked from, if applibcable.
+- **forked_from**: The ID of the workflow that this was forked from, if applicable.
+- **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
+- **application_id**: Deprecated field, no longer used.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -96,3 +98,16 @@ Each entry represents a different message in a stream.
 - **value**: The serialized value of the message.
 - **offset**: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
+
+### dbos.workflow_schedules
+This table stores scheduled workflow definitions.
+Each entry represents a different scheduled workflow.
+
+**Columns:**
+- **schedule_id**: The unique identifier of the schedule.
+- **schedule_name**: The human-readable name of the schedule. Must be unique.
+- **workflow_name**: The name of the workflow function to execute on schedule.
+- **workflow_class_name**: The class name of the workflow function, if it is a class method.
+- **schedule**: The cron expression or schedule definition.
+- **status**: The status of the schedule. One of `ACTIVE` or `PAUSED`. Defaults to `ACTIVE`.
+- **context**: The serialized schedule context.
