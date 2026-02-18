@@ -12,7 +12,6 @@ Self-hosting Conductor for commercial or production use requires a [license key]
 
 This guide covers deploying DBOS Conductor on Kubernetes so your applications get durable workflow execution, automatic workflow recovery, workflow management and observability — all running on infrastructure you control.
 
-It walks through setting up the core infrastructure, connecting a DBOS application, securing the deployment with authentication and network policies, and configuring autoscaling.
 The Kubernetes manifests are portable to any conformant cluster.
 
 ---
@@ -22,8 +21,10 @@ The Kubernetes manifests are portable to any conformant cluster.
 **Database** — Conductor needs a PostgreSQL database, which we recommend configuring with a dedicated database role.
 
 **Conductor** — A stateless, single-container Deployment listening on port 8090.
-All state lives in PostgreSQL, so a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) (not [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)) is the right workload type.
-Required environment variables: `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database) and `DBOS_CONDUCTOR_LICENSE_KEY`.
+All state lives in PostgreSQL: use a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) and not a [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/).
+Required environment variables:
+- `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database)
+- `DBOS_CONDUCTOR_LICENSE_KEY` ([obtain a license key](./hosting-conductor.md#licensing))
 
 Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
 
@@ -34,7 +35,7 @@ It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`.
 
 Conductor is architecturally **out-of-band** — it is not on the critical path of your application.
 To upgrade, update the container image tag in `conductor.yaml` and `console.yaml`, (`latest` by default) then `kubectl rollout restart`. Prefer updating both Conductor and the console together.
-Applications seamlessly reconnect to the new Conductor version with no impact on availability.
+Applications seamlessly reconnect to the new Conductor version with no impact on their availability.
 :::
 
 :::info Register applications
@@ -70,13 +71,38 @@ For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-l
 <Tabs groupId="cloud-provider">
 <TabItem value="eks" label="EKS (AWS)">
 
-In addition to DBOS Conductor, the DBOS Console and the DBOS application, the infrastructure includes the following components:
+In addition to DBOS Conductor and the DBOS Console, the infrastructure includes the following components:
 
 | Component | Role |
 |-----------|------|
-| **RDS** | Database for Conductor internal data and application system tables |
+| **RDS** | Database for Conductor operating state |
 | **Reverse Proxy (Nginx Ingress)** | TLS termination, path-based routing, WebSocket support |
 | **Sealed Secrets** | Encrypts secrets at rest; decrypts them in-cluster |
+
+<details>
+
+<summary><strong>Set environment variables</strong></summary>
+
+Set these variables before proceeding — replace the placeholder values with your own:
+
+```bash
+# Your AWS account ID (12-digit number)
+AWS_ACCOUNT_ID=123456789012
+
+# AWS region for all resources
+AWS_REGION=us-west-2
+
+# PostgreSQL admin password (used for the RDS master user)
+POSTGRES_PASSWORD='choose-a-secure-password'
+
+# Password for the Conductor database role
+CONDUCTOR_ROLE_PASSWORD='choose-another-secure-password'
+
+# Conductor license key (from DBOS Console or sales)
+CONDUCTOR_LICENSE_KEY='your-license-key'
+```
+
+</details>
 
 ### Infrastructure
 
@@ -89,12 +115,9 @@ In addition to DBOS Conductor, the DBOS Console and the DBOS application, the in
 | **AWS CLI** | AWS account access | [Install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
 | **eksctl** | Create and manage EKS clusters | [Install guide](https://eksctl.io/installation/) |
 | **kubectl** | Interact with Kubernetes | Included with eksctl, or [install separately](https://kubernetes.io/docs/tasks/tools/) |
-| **Helm** | Install cluster add-ons (Ingress, KEDA, Sealed Secrets) | `brew install helm` or [install guide](https://helm.sh/docs/intro/install/) |
-| **kubeseal** | Encrypt Kubernetes secrets | `brew install kubeseal` or [install guide](https://github.com/bitnami-labs/sealed-secrets#kubeseal) |
-| **Go** | Build the DBOS application | [Install guide](https://go.dev/doc/install) |
-| **Docker** | Build application container images | [Install guide](https://docs.docker.com/get-docker/) |
+| **Helm** | Install cluster add-ons (Ingress, Sealed Secrets) | `brew install helm` or [Install guide](https://helm.sh/docs/intro/install/) |
+| **kubeseal** | Encrypt Kubernetes secrets | `brew install kubeseal` or [Install guide](https://github.com/bitnami-labs/sealed-secrets#kubeseal) |
 | **openssl** | Generate self-signed TLS certificate | Pre-installed on macOS/Linux |
-| **htpasswd** | Generate bcrypt password hash for Dex | `brew install httpd` (macOS) or `apt install apache2-utils` (Debian) |
 
 Verify your AWS credentials are configured:
 
@@ -107,7 +130,7 @@ aws sts get-caller-identity
 **DBOS Conductor License Key**
 
 Obtain a development license key from the [DBOS Console](https://console.dbos.dev/settings/license-key) or [contact DBOS sales](https://www.dbos.dev/contact) for a pro license key.
-You can follow this guide without a development license key for evaluation, but you will be limited to one executor per application.
+You can follow this guide with a development license key for evaluation, but you will be limited to one executor per application.
 
 **Create an EKS Cluster**
 
@@ -120,7 +143,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 ```bash
 eksctl create cluster \
   --name dbos-conductor \
-  --region us-west-2 \
+  --region $AWS_REGION \
   --version 1.31 \
   --nodegroup-name default \
   --node-type t3.medium \
@@ -157,28 +180,6 @@ All resources in this guide are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
-<details>
-
-<summary><strong>Set environment variables</strong></summary>
-
-Set these variables before proceeding — replace the placeholder values with your own:
-
-```bash
-# Your AWS account ID (12-digit number)
-AWS_ACCOUNT_ID=123456789012
-
-# PostgreSQL admin password (used for the RDS master user)
-POSTGRES_PASSWORD='choose-a-secure-password'
-
-# Password for the Conductor database role
-CONDUCTOR_ROLE_PASSWORD='choose-another-secure-password'
-
-# Conductor license key (from DBOS Console or sales)
-CONDUCTOR_LICENSE_KEY='your-license-key'
-```
-
-</details>
-
 <a id="provision-an-rds-postgresql-instance"></a>
 
 **Provision an RDS PostgreSQL Instance**
@@ -193,14 +194,14 @@ Find the VPC and private subnets that `eksctl` created:
 # Get the VPC ID
 VPC_ID=$(aws ec2 describe-vpcs \
   --filters "Name=tag:alpha.eksctl.io/cluster-name,Values=dbos-conductor" \
-  --query "Vpcs[0].VpcId" --output text --region us-west-2)
+  --query "Vpcs[0].VpcId" --output text --region $AWS_REGION)
 echo "VPC: $VPC_ID"
 
-# Get the private subnets (array for bash/zsh compatibility)
+# Get the private subnets
 PRIVATE_SUBNETS=($(aws ec2 describe-subnets \
   --filters "Name=vpc-id,Values=$VPC_ID" \
              "Name=tag:aws:cloudformation:logical-id,Values=SubnetPrivate*" \
-  --query "Subnets[*].SubnetId" --output text --region us-west-2))
+  --query "Subnets[*].SubnetId" --output text --region $AWS_REGION))
 echo "Private subnets: ${PRIVATE_SUBNETS[@]}"
 ```
 
@@ -211,7 +212,7 @@ aws rds create-db-subnet-group \
   --db-subnet-group-name dbos-conductor-db \
   --db-subnet-group-description "DBOS Conductor RDS subnets" \
   --subnet-ids "${PRIVATE_SUBNETS[@]}" \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Create a security group that allows PostgreSQL access from the EKS nodes:
@@ -222,7 +223,7 @@ EKS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=vpc-id,Values=$VPC_ID" \
             "Name=tag:aws:eks:cluster-name,Values=dbos-conductor" \
   --query "SecurityGroups[0].GroupId" \
-  --output text --region us-west-2)
+  --output text --region $AWS_REGION)
 echo "EKS SG: $EKS_SG"
 
 # Create a security group for RDS
@@ -230,7 +231,7 @@ RDS_SG=$(aws ec2 create-security-group \
   --group-name dbos-conductor-rds \
   --description "Allow PostgreSQL from EKS nodes" \
   --vpc-id $VPC_ID \
-  --query "GroupId" --output text --region us-west-2)
+  --query "GroupId" --output text --region $AWS_REGION)
 echo "RDS SG: $RDS_SG"
 
 # Allow inbound PostgreSQL from EKS nodes
@@ -238,7 +239,7 @@ aws ec2 authorize-security-group-ingress \
   --group-id $RDS_SG \
   --protocol tcp --port 5432 \
   --source-group $EKS_SG \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Create the RDS instance:
@@ -255,7 +256,7 @@ aws rds create-db-instance \
   --db-subnet-group-name dbos-conductor-db \
   --vpc-security-group-ids $RDS_SG \
   --no-publicly-accessible \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Wait for the instance to become available (this takes a few minutes):
@@ -263,7 +264,7 @@ Wait for the instance to become available (this takes a few minutes):
 ```bash
 aws rds wait db-instance-available \
   --db-instance-identifier dbos-conductor-pg \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Get the RDS endpoint:
@@ -272,7 +273,7 @@ Get the RDS endpoint:
 RDS_ENDPOINT=$(aws rds describe-db-instances \
   --db-instance-identifier dbos-conductor-pg \
   --query "DBInstances[0].Endpoint.Address" \
-  --output text --region us-west-2)
+  --output text --region $AWS_REGION)
 echo "RDS endpoint: $RDS_ENDPOINT"
 ```
 
@@ -301,9 +302,7 @@ sleep 15 && kubectl logs pg-setup -n dbos && kubectl delete pod pg-setup -n dbos
 
 This creates:
 - `dbos_conductor` — Conductor's internal database (application registry, metadata)
-- `dbos_app` — your DBOS application's system database
 - `dbos_conductor_role` — a dedicated role for Conductor's database access
-- `dbos_app_role` — a restricted role the application uses at runtime
 
 </details>
 
@@ -311,7 +310,7 @@ This creates:
 
 **Install Cluster Add-ons**
 
-We install three Helm charts that the later sections depend on.
+We install two Helm charts that the later sections depend on.
 
 <details>
 
@@ -346,26 +345,6 @@ kubectl get pods -n kube-system -l app.kubernetes.io/name=sealed-secrets
 ```
 
 </details>
-
-**Create ECR Repositories**
-
-We push two container images to Amazon ECR — one for the application and one for the migration job:
-
-```bash
-aws ecr create-repository --repository-name dbos-app --region us-west-2
-aws ecr create-repository --repository-name dbos-migrate --region us-west-2
-```
-
-Note the repository URIs from the output (e.g., `123456789012.dkr.ecr.us-west-2.amazonaws.com/dbos-app`).
-The commands below use `$AWS_ACCOUNT_ID`, which you set earlier.
-
-Authenticate Docker with ECR (tokens expire after 12 hours):
-
-```bash
-aws ecr get-login-password --region us-west-2 | \
-  docker login --username AWS --password-stdin \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com
-```
 
 <a id="secrets"></a>
 
@@ -448,7 +427,9 @@ echo $ELB_HOSTNAME
 
 Save this value — you'll need it throughout the rest of the guide. It looks like `xxxxxxxx.us-west-2.elb.amazonaws.com`.
 
-Create a self-signed TLS certificate and store it as a Kubernetes secret:
+<details>
+
+<summary><strong>Create a self-signed TLS certificate</strong></summary>
 
 ```bash
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -466,6 +447,8 @@ The CN is kept short because OpenSSL's CN field has a 64-character limit — the
 Your browser will show a certificate warning for the self-signed cert — accept it to proceed.
 For production, use [cert-manager](https://cert-manager.io/) with a real domain.
 :::
+
+</details>
 
 <details>
 
@@ -555,7 +538,7 @@ kubectl patch svc ingress-nginx-controller -n ingress-nginx -p \
 
 :::note
 The DBOS SDK sends periodic ping frames that keep the connection active under normal conditions.
-Increasing the ELB idle timeout is a safety net — without it, a network hiccup that delays pings past 60 seconds would cause the load balancer to drop the connection.
+Albeit the SDK will reconnect automatically, increasing the ELB idle timeout will prevent network hiccups to drop the connection.
 :::
 
 ### Deployments
@@ -723,11 +706,9 @@ conductor-xxxxxxxxx-xxxxx    1/1     Running   0          2m
 console-xxxxxxxxx-xxxxx      1/1     Running   0          30s
 ```
 
-Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning). If OAuth is configured, the Console redirects you to your OIDC provider's login page.
-
 **Access the Console and Generate an API Key**
 
-At this point, your self-hosted Conductor deployment is fully operational! Follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+At this point, your self-hosted Conductor deployment is fully operational! Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
 
 1. Register your application
 2. Generate an API key
@@ -738,24 +719,20 @@ To tear down all AWS resources when done:
 
 ```bash
 # Delete the EKS cluster (includes VPC, security groups, and node group)
-eksctl delete cluster --name dbos-conductor --region us-west-2
+eksctl delete cluster --name dbos-conductor --region $AWS_REGION
 
 # Delete the RDS instance
 aws rds delete-db-instance --db-instance-identifier dbos-conductor-pg \
-  --skip-final-snapshot --region us-west-2
-
-# Delete ECR repositories
-aws ecr delete-repository --repository-name dbos-app --force --region us-west-2
-aws ecr delete-repository --repository-name dbos-migrate --force --region us-west-2
+  --skip-final-snapshot --region $AWS_REGION
 
 # Delete the RDS security group
 RDS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=group-name,Values=dbos-conductor-rds" \
-  --query "SecurityGroups[0].GroupId" --output text --region us-west-2)
-aws ec2 delete-security-group --group-id $RDS_SG --region us-west-2
+  --query "SecurityGroups[0].GroupId" --output text --region $AWS_REGION)
+aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 
 # Delete the DB subnet group
-aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region us-west-2
+aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region $AWS_REGION
 ```
 
 </TabItem>
