@@ -13,7 +13,7 @@ The Kubernetes manifests are portable to any conformant cluster.
 ## Deployment
 
 DBOS is a library — it does not require any sidecar, operator, or external service besides PostgreSQL.
-A standard [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) is the right workload type: pods are stateless and interchangeable.
+Pods are stateless and interchangeable and should use a standard [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/).
 
 ## Configuration
 
@@ -21,13 +21,19 @@ DBOS configuration contains sensitive values: the [system database URL](../expla
 Store these as [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/) and inject them via [`secretKeyRef`](https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables).
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager.
 
+:::info Connecting to DBOS Conductor
+If you use [DBOS managed Conductor](https://console.dbos.dev/), no `DBOS_CONDUCTOR_URL` is needed. The SDK connects automatically.
+If you [self-host Conductor](./hosting-conductor.md), set `DBOS_CONDUCTOR_URL` in your application's environment.
+
+When Conductor is in a different cluster, use `wss://` so the WebSocket connection is encrypted. In the same cluster, use `ws://`, as Conductor requires TLS termination at the ingress layer.
+:::
+
 ## Database Privilege Separation
 
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run [`dbos migrate`](../python/reference/cli.md#dbos-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data.
-The `--app-role` flag grants minimum schema permissions to the restricted role.
+Run [`dbos migrate`](../python/reference/cli.md#dbos-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag with `dbos migrate` to grant the necessary schema permissions to the restricted role.
 
 `dbos migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline.
 
@@ -39,14 +45,15 @@ In addition to [general tips](./checklist.md) for running a DBOS-enabled app in 
 
 **Resource limits** — DBOS doesn't add significant CPU or memory overhead, but all DBOS SDKs run background tasks; setting more than 1000m CPU can significantly improve the performance of a busy application.
 
-**Replicas** — configure more than one replica. Each replica starts an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. Each replica should have a unique executor ID (which is automatically assigned when using [DBOS Conductor](./conductor.md).)
+**Replicas** — configure more than one replica. Each replica starts an independent DBOS worker that can process scheduled workflows and handle tasks from DBOS queues. Each replica should have a unique executor ID (which is automatically assigned when using [DBOS Conductor](./conductor.md))
 
 ## Upgrading Workflow Code
 
 DBOS workflows can run for weeks or years while the underlying code evolves.
 Two patterns support this:
 
-1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. In Kubernetes, create a separate Deployment per active version (e.g., `dbos-app-v1`, `dbos-app-v2`). Point the Service selector at the latest version only — new HTTP requests (and new workflows) go exclusively to the new Deployment. Old Deployments stay alive: their pods keep their Conductor WebSocket connections and continue executing in-flight workflows. Conductor routes recovery by `ApplicationVersion`, so each version's workflows are processed by the matching executors. Once all workflows for an old version complete, delete its Deployment. Tools like [Flagger](https://flagger.app/) or [Argo Rollouts](https://argoproj.github.io/argo-rollouts/) can automate this lifecycle.
+1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. You should create a separate Deployment per active version. Point the Service selector at the latest version only, such that new HTTP requests creating DBOS workflows go exclusively to the new Deployment. Old deployments will stay alive and keep executing pending workflows. Once workflows for an old version complete, delete its Deployment. Tools like [Flagger](https://flagger.app/) or [Argo Rollouts](https://argoproj.github.io/argo-rollouts/) can automate this lifecycle.
+
 2. **Workflow patching** — Keep a single Deployment. Add conditional logic (patches) that detect which code path a recovering workflow should take. See the [workflow patching guide](../python/tutorials/upgrading-workflows.md) for details.
 
 ## Scaling with KEDA
@@ -60,17 +67,6 @@ A simple pattern for scaling based on DBOS queue depth:
 
 Since the `metrics-api` trigger polls the application itself, `minReplicaCount` must be at least 1 — KEDA needs a running pod to scrape. For scale-to-zero, use a push-based trigger (e.g., PostgreSQL) or an external metrics endpoint.
 
-## Workflow Recovery
-
-We recommend using [DBOS Conductor](./conductor.md) to manage workflow recovery in production. While you can configure DBOS to have every worker recover every pending workflow at startup, efficient recovery relies on keeping track of the ID of DBOS processes for which workflows must be recovered, which DBOS Conductor does for you.
-
-## Connecting to Conductor
-
-If you use [DBOS managed Conductor](https://console.dbos.dev/), no `DBOS_CONDUCTOR_URL` is needed. The SDK connects automatically.
-If you [self-host Conductor](./hosting-conductor-with-kubernetes.md), set `DBOS_CONDUCTOR_URL` in your application's environment.
-
-When Conductor is in a different cluster, use `wss://` so the WebSocket connection is encrypted. In the same cluster, use `ws://`, as Conductor requires TLS termination at the ingress layer.
-
 ---
 
 ## Walkthrough
@@ -79,6 +75,37 @@ When Conductor is in a different cluster, use `wss://` so the WebSocket connecti
 <TabItem value="eks" label="EKS (AWS)">
 
 This walkthrough deploys a sample DBOS Go application on EKS with RDS PostgreSQL, Sealed Secrets, database migrations, and KEDA autoscaling.
+
+<details>
+
+<summary><strong>Set environment variables</strong></summary>
+
+Set these variables before proceeding — replace the placeholder values with your own:
+
+```bash
+# Your AWS account ID (12-digit number)
+AWS_ACCOUNT_ID=123456789012
+
+# AWS region for all resources
+AWS_REGION=us-west-2
+
+# PostgreSQL admin password (used for the RDS master user)
+POSTGRES_PASSWORD='choose-a-secure-password'
+
+# Password for the restricted application database role
+APP_ROLE_PASSWORD='choose-another-secure-password'
+
+# Conductor API key (from the Console after registering your app)
+CONDUCTOR_API_KEY='your-api-key'
+
+# Conductor URL
+# DBOS Cloud: wss://conductor.dbos.dev/
+# Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
+# Self-hosted (external): wss://your-conductor-hostname/conductor/
+CONDUCTOR_URL='wss://conductor.dbos.dev/'
+```
+
+</details>
 
 ### Infrastructure
 
@@ -91,8 +118,8 @@ This walkthrough deploys a sample DBOS Go application on EKS with RDS PostgreSQL
 | **AWS CLI** | AWS account access | [Install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) |
 | **eksctl** | Create and manage EKS clusters | [Install guide](https://eksctl.io/installation/) |
 | **kubectl** | Interact with Kubernetes | Included with eksctl, or [install separately](https://kubernetes.io/docs/tasks/tools/) |
-| **Helm** | Install cluster add-ons (KEDA, Sealed Secrets) | [install guide](https://helm.sh/docs/intro/install/) |
-| **kubeseal** | Encrypt Kubernetes secrets | [install guide](https://github.com/bitnami-labs/sealed-secrets#kubeseal) |
+| **Helm** | Install cluster add-ons (KEDA, Sealed Secrets) | [Install guide](https://helm.sh/docs/intro/install/) |
+| **kubeseal** | Encrypt Kubernetes secrets | [Install guide](https://github.com/bitnami-labs/sealed-secrets#kubeseal) |
 | **Go** | Build the DBOS application | [Install guide](https://go.dev/doc/install) |
 | **Docker** | Build application container images | [Install guide](https://docs.docker.com/get-docker/) |
 
@@ -121,7 +148,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 ```bash
 eksctl create cluster \
   --name dbos-app-cluster \
-  --region us-west-2 \
+  --region $AWS_REGION \
   --version 1.31 \
   --nodegroup-name default \
   --node-type t3.medium \
@@ -152,34 +179,6 @@ All resources in this walkthrough are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
-<details>
-
-<summary><strong>Set environment variables</strong></summary>
-
-Set these variables before proceeding — replace the placeholder values with your own:
-
-```bash
-# Your AWS account ID (12-digit number)
-AWS_ACCOUNT_ID=123456789012
-
-# PostgreSQL admin password (used for the RDS master user)
-POSTGRES_PASSWORD='choose-a-secure-password'
-
-# Password for the restricted application database role
-APP_ROLE_PASSWORD='choose-another-secure-password'
-
-# Conductor API key (from the Console after registering your app)
-CONDUCTOR_API_KEY='your-api-key'
-
-# Conductor URL
-# DBOS Cloud: wss://conductor.dbos.dev/
-# Self-hosted (same cluster): ws://conductor.dbos.svc.cluster.local:8090
-# Self-hosted (external): wss://your-conductor-hostname/conductor/
-CONDUCTOR_URL='wss://conductor.dbos.dev/'
-```
-
-</details>
-
 **Provision an RDS PostgreSQL Instance**
 
 Your DBOS application needs a PostgreSQL database for its [system tables](../explanations/system-tables.md).
@@ -194,14 +193,14 @@ Find the VPC and private subnets that `eksctl` created:
 # Get the VPC ID
 VPC_ID=$(aws ec2 describe-vpcs \
   --filters "Name=tag:alpha.eksctl.io/cluster-name,Values=dbos-app-cluster" \
-  --query "Vpcs[0].VpcId" --output text --region us-west-2)
+  --query "Vpcs[0].VpcId" --output text --region $AWS_REGION)
 echo "VPC: $VPC_ID"
 
 # Get the private subnets (array for bash/zsh compatibility)
 PRIVATE_SUBNETS=($(aws ec2 describe-subnets \
   --filters "Name=vpc-id,Values=$VPC_ID" \
              "Name=tag:aws:cloudformation:logical-id,Values=SubnetPrivate*" \
-  --query "Subnets[*].SubnetId" --output text --region us-west-2))
+  --query "Subnets[*].SubnetId" --output text --region $AWS_REGION))
 echo "Private subnets: ${PRIVATE_SUBNETS[@]}"
 ```
 
@@ -212,7 +211,7 @@ aws rds create-db-subnet-group \
   --db-subnet-group-name dbos-app-db \
   --db-subnet-group-description "DBOS application RDS subnets" \
   --subnet-ids "${PRIVATE_SUBNETS[@]}" \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Create a security group that allows PostgreSQL access from the EKS nodes:
@@ -223,7 +222,7 @@ EKS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=vpc-id,Values=$VPC_ID" \
             "Name=tag:aws:eks:cluster-name,Values=dbos-app-cluster" \
   --query "SecurityGroups[0].GroupId" \
-  --output text --region us-west-2)
+  --output text --region $AWS_REGION)
 echo "EKS SG: $EKS_SG"
 
 # Create a security group for RDS
@@ -231,7 +230,7 @@ RDS_SG=$(aws ec2 create-security-group \
   --group-name dbos-app-rds \
   --description "Allow PostgreSQL from EKS nodes" \
   --vpc-id $VPC_ID \
-  --query "GroupId" --output text --region us-west-2)
+  --query "GroupId" --output text --region $AWS_REGION)
 echo "RDS SG: $RDS_SG"
 
 # Allow inbound PostgreSQL from EKS nodes
@@ -239,7 +238,7 @@ aws ec2 authorize-security-group-ingress \
   --group-id $RDS_SG \
   --protocol tcp --port 5432 \
   --source-group $EKS_SG \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Create the RDS instance:
@@ -256,7 +255,7 @@ aws rds create-db-instance \
   --db-subnet-group-name dbos-app-db \
   --vpc-security-group-ids $RDS_SG \
   --no-publicly-accessible \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Wait for the instance to become available (this takes a few minutes):
@@ -264,7 +263,7 @@ Wait for the instance to become available (this takes a few minutes):
 ```bash
 aws rds wait db-instance-available \
   --db-instance-identifier dbos-app-pg \
-  --region us-west-2
+  --region $AWS_REGION
 ```
 
 Get the RDS endpoint:
@@ -273,7 +272,7 @@ Get the RDS endpoint:
 RDS_ENDPOINT=$(aws rds describe-db-instances \
   --db-instance-identifier dbos-app-pg \
   --query "DBInstances[0].Endpoint.Address" \
-  --output text --region us-west-2)
+  --output text --region $AWS_REGION)
 echo "RDS endpoint: $RDS_ENDPOINT"
 ```
 
@@ -344,19 +343,19 @@ kubectl get pods -n keda
 We push two container images to Amazon ECR — one for the application and one for the migration job:
 
 ```bash
-aws ecr create-repository --repository-name dbos-app --region us-west-2
-aws ecr create-repository --repository-name dbos-migrate --region us-west-2
+aws ecr create-repository --repository-name dbos-app --region $AWS_REGION
+aws ecr create-repository --repository-name dbos-migrate --region $AWS_REGION
 ```
 
-Note the repository URIs from the output (e.g., `123456789012.dkr.ecr.us-west-2.amazonaws.com/dbos-app`).
-The commands below use `$AWS_ACCOUNT_ID`, which you set earlier.
+Note the repository URIs from the output (e.g., `${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-app`).
+The commands below use `$AWS_ACCOUNT_ID` and `$AWS_REGION`, which you set earlier.
 
 Authenticate Docker with ECR (tokens expire after 12 hours):
 
 ```bash
-aws ecr get-login-password --region us-west-2 | \
+aws ecr get-login-password --region $AWS_REGION | \
   docker login --username AWS --password-stdin \
-  ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com
+  ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 ```
 
 ### Secrets
@@ -460,7 +459,7 @@ ENTRYPOINT ["dbos"]
 
 ```bash
 # Set your ECR repository URI
-ECR_MIGRATE=${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate
+ECR_MIGRATE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-migrate
 
 # Build for linux/amd64
 docker build --platform linux/amd64 \
@@ -495,7 +494,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-migrate:latest
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-migrate:latest
           args:
             - "migrate"
             - "--app-role"
@@ -574,7 +573,7 @@ CMD ["./dbos-app"]
 
 ```bash
 # Set your ECR repository URI
-ECR_REPO=${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-app
+ECR_REPO=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-app
 
 # Build for linux/amd64 (EKS nodes run Linux)
 docker build --platform linux/amd64 -t ${ECR_REPO}:latest .
@@ -601,7 +600,7 @@ spec:
     spec:
       containers:
         - name: dbos-app
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/dbos-app:latest
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-app:latest
           env:
             - name: DBOS_SYSTEM_DATABASE_URL
               valueFrom:
@@ -867,24 +866,24 @@ To tear down all AWS resources when done:
 
 ```bash
 # Delete the EKS cluster (includes VPC, security groups, and node group)
-eksctl delete cluster --name dbos-app-cluster --region us-west-2
+eksctl delete cluster --name dbos-app-cluster --region $AWS_REGION
 
 # Delete the RDS instance
 aws rds delete-db-instance --db-instance-identifier dbos-app-pg \
-  --skip-final-snapshot --region us-west-2
+  --skip-final-snapshot --region $AWS_REGION
 
 # Delete ECR repositories
-aws ecr delete-repository --repository-name dbos-app --force --region us-west-2
-aws ecr delete-repository --repository-name dbos-migrate --force --region us-west-2
+aws ecr delete-repository --repository-name dbos-app --force --region $AWS_REGION
+aws ecr delete-repository --repository-name dbos-migrate --force --region $AWS_REGION
 
 # Delete the RDS security group
 RDS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=group-name,Values=dbos-app-rds" \
-  --query "SecurityGroups[0].GroupId" --output text --region us-west-2)
-aws ec2 delete-security-group --group-id $RDS_SG --region us-west-2
+  --query "SecurityGroups[0].GroupId" --output text --region $AWS_REGION)
+aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 
 # Delete the DB subnet group
-aws rds delete-db-subnet-group --db-subnet-group-name dbos-app-db --region us-west-2
+aws rds delete-db-subnet-group --db-subnet-group-name dbos-app-db --region $AWS_REGION
 ```
 
 </TabItem>
