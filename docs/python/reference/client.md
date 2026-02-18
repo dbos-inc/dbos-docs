@@ -676,7 +676,7 @@ Similar to [`DBOS.list_schedules`](./contexts.md#list_schedules).
 
 ### list_schedules_async
 
-Coroutine version of [`list_schedules`](#list_schedules-1).
+Coroutine version of [`list_schedules`](#list_schedules).
 
 ### get_schedule
 
@@ -689,7 +689,7 @@ Similar to [`DBOS.get_schedule`](./contexts.md#get_schedule).
 
 ### get_schedule_async
 
-Coroutine version of [`get_schedule`](#get_schedule-1).
+Coroutine version of [`get_schedule`](#get_schedule).
 
 ### delete_schedule
 
@@ -702,7 +702,7 @@ Similar to [`DBOS.delete_schedule`](./contexts.md#delete_schedule).
 
 ### delete_schedule_async
 
-Coroutine version of [`delete_schedule`](#delete_schedule-1).
+Coroutine version of [`delete_schedule`](#delete_schedule).
 
 ### pause_schedule
 
