@@ -26,7 +26,7 @@ For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-l
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run [`dbos migrate`](../explanations/system-tables.md) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data.
+Run [`dbos migrate`](../python/reference/cli.md#dbos-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data.
 The `--app-role` flag grants minimum schema permissions to the restricted role.
 
 `dbos migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline.

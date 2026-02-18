@@ -1,6 +1,6 @@
 ---
 sidebar_position: 70
-title: Deploying Conductor With Kubernetes
+title: Self-Hosting Conductor With Kubernetes
 ---
 
 :::info
@@ -25,12 +25,10 @@ The Kubernetes manifests are portable to any conformant cluster.
 All state lives in PostgreSQL, so a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) (not [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)) is the right workload type.
 Required environment variables: `DBOS__CONDUCTOR_DB_URL` (connection string to the `dbos_conductor` database) and `DBOS_CONDUCTOR_LICENSE_KEY`.
 
+Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
+
 **Console** — A stateless, single-container Deployment listening on port 80.
 It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`.
-
-**High availability** — A single Conductor instance can serve tens of thousands of application servers.
-For High Availability, we recommend setting `replicas: 2+` with pod anti-affinity to spread across nodes, and a PodDisruptionBudget to ensure at least one replica survives voluntary disruptions (node drains, cluster upgrades).
-DBOS SDKs handle reconnection automatically, so a pod restart or failure is transparent to applications.
 
 :::info Updating Conductor
 
@@ -50,7 +48,7 @@ Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authenti
 
 ## Ingress
 
-We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**. You must configure your dbos applications to point at your load balancer/ reverse proxy URL, which should redirect to Conductor.
+We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**. You must configure your DBOS applications to point at your load balancer or reverse proxy URL, which should redirect to Conductor.
 
 The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (e.g., 300s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
 
@@ -729,7 +727,7 @@ Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert
 
 **Access the Console and Generate an API Key**
 
-Open `https://<your-elb-hostname>/` in your browser (accept the self-signed cert warning), then follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
+At this point, your self-hosted Conductor deployment is fully operational! Follow the [Conductor setup instructions](./conductor.md#connecting-to-conductor) to:
 
 1. Register your application
 2. Generate an API key
