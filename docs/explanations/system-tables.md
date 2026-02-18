@@ -38,8 +38,9 @@ Each row represents a different workflow execution.
 - **deduplication_id**: The deduplication key for this workflow, if any.
 - **priority**: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
 - **queue_partition_key**: The key associated with the workflow, if on a partitioned queue.
-- **forked_from**: The ID of the workflow that this was forked from, if applibcable.
+- **forked_from**: The ID of the workflow that this was forked from, if applicable.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
+- **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -55,6 +56,7 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - **child_workflow_id**: If the step starts a new child workflow, its ID.
 - **started_at_epoch_ms**: The epoch timestamp of when this step started execution.
 - **completed_at_epoch_ms**: The epoch timestamp of when this step completed.
+- **serialization**: The name of the serialization format used for this step's output and error. Null if the workflow's default serializer was used.
 
 ### dbos.notifications
 This table stores workflow messages/notifications.
@@ -66,6 +68,7 @@ Each entry represents a different message.
 - **message**: The serialized contents of the message.
 - **created_at_epoch_ms**: The epoch timestamp when this message was created.
 - **message_uuid**: The unique ID of the message.
+- **serialization**: The name of the serialization format used for the message. Null if the default serializer was used.
 
 ### dbos.workflow_events
 This table stores workflow events.
@@ -75,6 +78,7 @@ Each entry represents a different event.
 - **workflow_uuid**: The ID of the workflow that published this event.
 - **key**: The serialized key of the event.
 - **value**: The serialized value of the event.
+- **serialization**: The name of the serialization format used for the event value. Null if the default serializer was used.
 
 ### dbos.workflow_events_history
 This table stores historic changes to workflow events over time.
@@ -85,6 +89,7 @@ Each entry represents a distinct value of a workflow event during the workflow l
 - **function_id**: The monotonically increasing ID of the step that set this value.
 - **key**: The serialized key of the event.
 - **value**: The serialized value of the event.
+- **serialization**: The name of the serialization format used for the event value. Null if the default serializer was used.
 
 ### dbos.streams
 This table stores workflow streams.
@@ -96,3 +101,4 @@ Each entry represents a different message in a stream.
 - **value**: The serialized value of the message.
 - **offset**: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
+- **serialization**: The name of the serialization format used for the stream value. Null if the default serializer was used.
