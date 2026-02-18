@@ -33,7 +33,7 @@ When Conductor is in a different cluster, use `wss://` so the WebSocket connecti
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run [`dbos migrate`](../python/reference/cli.md#dbos-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag with `dbos migrate` to grant the necessary schema permissions to the restricted role.
+Run `dbos migrate` ([Python](../python/reference/cli.md#dbos-migrate), [Go](../golang/reference/cli.md)) or `dbos schema` ([TypeScript](../typescript/reference/cli.md#npx-dbos-schema)) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
 
 `dbos migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline.
 
