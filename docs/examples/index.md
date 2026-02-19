@@ -50,6 +50,13 @@ import { FiInbox } from "react-icons/fi";
     language="python"
   />
   <CardLink
+    label="Transactional Outbox"
+    href="python/examples/outbox"
+    description="Use workflows to atomically update multiple systems."
+    icon={<FiInbox color="white" size={50}/>}
+    language="python"
+  />
+  <CardLink
     label="Advanced Queue Patterns"
     href="python/examples/queue-patterns"
     description="Learn how to implement advanced queue patterns like fair queueing, rate limiting, and debouncing with DBOS."
