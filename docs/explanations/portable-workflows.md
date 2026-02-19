@@ -11,7 +11,8 @@ The **portable JSON** serialization format solves this by providing a common dat
 
 ## Default Serialization Is Language-Specific
 
-By default, each DBOS SDK serializes data using its language's default format.  These default formats are chosen for their fidelity to the wide range of data structures and objects available in each language:
+By default, each DBOS SDK serializes data using its language's default format.
+These default formats are chosen for their fidelity to the wide range of data structures and objects available in each language:
 
 | Language   | Default Format  | Format Name     |
 |------------|-----------------|-----------------|
@@ -30,10 +31,11 @@ While a smaller subset of language constructs can be serialized, any DBOS applic
 **Supported types:**
 - JSON primitives: `null`, booleans, numbers, and strings
 - JSON arrays (ordered lists of JSON values)
-- JSON objects (Maps with strings as keys and JSON values)
+- JSON objects (maps with strings as keys and JSON values)
 
 **Type conversions:**
-Some language built-in and library types are mapped to equivalent JSON constructs.  When these values are decoded, the recipient must restore them to the appropriate language equivalent.
+Some language built-in and library types are mapped to equivalent JSON constructs.
+When these values are decoded, the recipient must restore them to the appropriate language equivalent.
 
 - Date/time values are converted to [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) UTC strings (e.g., `"2025-06-15T14:30:00.000Z"`)
 
@@ -50,11 +52,18 @@ Some language built-in and library types are mapped to equivalent JSON construct
 
 ## Using Portable Serialization
 
-You can opt in to portable serialization at the workflow or operation level.  Workflows started with portable serialization will return their results or execeptions in portable format.  Workflows started with portable serialization will also write their events and streams in portable JSON by default, but this can be overridden for each operation.
+You can opt in to portable serialization at the workflow or operation level.
+Workflows started with portable serialization return their results or exceptions in portable format.
+Workflows started with portable serialization also write their events and streams in portable JSON by default, but this can be overridden for each operation.
+
+:::info
+Step outputs always use the native serializer regardless of the workflow's serialization strategy.
+Steps are internal to a workflow and are not read by other languages, so the native serializer's greater flexibility is preferred.
+:::
 
 ### Per-Workflow (Enqueue)
 
-When enqueuing or starting a workflow that will be processed by another language, set the serialization format in the enqueue options.
+When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
 This ensures the workflow's arguments are serialized in portable format that can be read by the target language.
 
 <Tabs groupId="language">
@@ -111,7 +120,53 @@ var handle = client.enqueue(options, "order-123");
 
 ### Per-Workflow (via Annotation or Decorator)
 
-In Java, you can set the serialization strategy directly on the `@Workflow` annotation so that the workflow uses portable serialization by default when started:
+You can set the serialization strategy directly on the workflow annotation or decorator so that the workflow uses portable serialization by default when started:
+
+<Tabs groupId="language">
+<TabItem value="python" label="Python">
+
+```python
+from dbos import DBOS, WorkflowSerializationFormat
+
+@DBOS.workflow(serialization_type=WorkflowSerializationFormat.PORTABLE)
+def process_order(order_id: str):
+    # All inputs, outputs, events, and streams for this workflow
+    # use portable JSON serialization by default
+    return f"processed: {order_id}"
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+Using a decorator:
+
+```typescript
+import { DBOS } from "@dbos-inc/dbos-sdk";
+
+export class Orders {
+  @DBOS.workflow({ serializationType: "portable" })
+  static async processOrder(orderId: string): Promise<string> {
+    // All inputs, outputs, events, and streams for this workflow
+    // use portable JSON serialization by default
+    return `processed: ${orderId}`;
+  }
+}
+```
+
+Or using `registerWorkflow`:
+
+```typescript
+async function processOrder(orderId: string): Promise<string> {
+  return `processed: ${orderId}`;
+}
+const processOrderWorkflow = DBOS.registerWorkflow(processOrder, {
+  name: "processOrder",
+  serializationType: "portable",
+});
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
 
 ```java
 import dev.dbos.transact.workflow.SerializationStrategy;
@@ -119,17 +174,23 @@ import dev.dbos.transact.workflow.Workflow;
 
 @Workflow(serializationStrategy = SerializationStrategy.PORTABLE)
 public String processOrder(String orderId) {
-    // All inputs, outputs, events, and messages for this workflow
+    // All inputs, outputs, events, and streams for this workflow
     // use portable JSON serialization by default
     return "processed: " + orderId;
 }
 ```
 
+</TabItem>
+</Tabs>
+
 ### Per-Operation
 
-The most common approach is to set the serialization format at the workflow level, which affects the default serialization format for `setEvent`, and `writeStream`.  However, within a typical workflow it may be desired to record events in a portable format, or workflows running with portable serialization may need to record events with the greater flexibility afforded by the native serializer, so each language's `setEvent`, and `writeStream` methods accept a serialization parameter.
+Setting the serialization format at the workflow level affects the default for `setEvent` and `writeStream`.
+However, individual operations can override this&mdash;for example, a workflow running with native serialization may want to publish a specific event in portable format for cross-language consumption, or a portable workflow may need to record an event with the greater flexibility afforded by the native serializer.
+Each language's `setEvent` and `writeStream` methods accept a serialization parameter for this purpose.
 
-Note that, as the serialization format for `send` would be tailored to the receiving workflow, its default is not affected by the current workflow's serialization strategy.
+Note that `send` is not affected by the current workflow's serialization strategy, because messages target a different workflow and the sender does not know what serialization that workflow expects.
+You should always set the serialization format explicitly on `send` when communicating cross-language.
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
@@ -239,7 +300,7 @@ For example, a Java `DBOSClient` can enqueue a Python workflow that expects both
 DBOSClient client = new DBOSClient(dbUrl, dbUser, dbPassword);
 var options = new EnqueueOptions("", "process_order", "orders")
     .withSerialization(SerializationStrategy.PORTABLE);
-// Arguments are serialized as: {"positionalArgs": ["order-123"], "namedArgs": {"priority": "high"}}
+// Arguments are serialized as: {"positionalArgs": ["order-123"], "namedArgs": {}}
 var handle = client.enqueue(options, "order-123");
 ```
 
@@ -328,6 +389,29 @@ throw new PortableWorkflowException(
 When a workflow that used portable serialization fails, other languages receive the error as a `PortableWorkflowError` (Python/TS) or `PortableWorkflowException` (Java) with the `name`, `message`, `code`, and `data` fields populated.
 
 If a workflow fails with a non-portable exception while using portable serialization, DBOS automatically converts it to the portable error format on a best-effort basis, extracting the error type name, message, and any common error code attributes.
+
+## Direct Database Access
+
+Because `portable_json` data is stored as plain JSON in the [system tables](./system-tables.md), you can read and write it directly with SQL&mdash;no DBOS SDK required.
+The [`serialization` column](./system-tables.md) in each table indicates the format used; rows with `serialization = 'portable_json'` contain standard JSON that any SQL client can query.
+
+For example, to read events set by a workflow:
+
+```sql
+SELECT key, value::jsonb
+FROM dbos.workflow_events
+WHERE workflow_uuid = 'my-workflow-id'
+  AND serialization = 'portable_json';
+```
+
+Or to send a message to a workflow by inserting directly into the notifications table:
+
+```sql
+INSERT INTO dbos.notifications (destination_uuid, topic, message, serialization)
+VALUES ('target-workflow-id', 'updates', '{"status": "complete"}', 'portable_json');
+```
+
+This makes it straightforward to integrate DBOS workflows with external systems, dashboards, or languages that don't have a DBOS SDK.
 
 ## Further Reading
 
