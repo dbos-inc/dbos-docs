@@ -395,20 +395,34 @@ If a workflow fails with a non-portable exception while using portable serializa
 Because `portable_json` data is stored as plain JSON in the [system tables](./system-tables.md), you can read and write it directly with SQL&mdash;no DBOS SDK required.
 The [`serialization` column](./system-tables.md) in each table indicates the format used; rows with `serialization = 'portable_json'` contain standard JSON that any SQL client can query.
 
-For example, to read events set by a workflow:
+For example, to start a workflow by inserting directly into `dbos.workflow_status`:
 
 ```sql
-SELECT key, value
-FROM dbos.workflow_events
+INSERT INTO dbos.workflow_status (
+    workflow_uuid, status, name, queue_name,
+    inputs, serialization, created_at, updated_at
+)
+VALUES (
+    'my-workflow-id',
+    'ENQUEUED',
+    'process_order',
+    'orders',
+    '{"positionalArgs":["order-123"],"namedArgs":{}}',
+    'portable_json',
+    EXTRACT(EPOCH FROM now()) * 1000,
+    EXTRACT(EPOCH FROM now()) * 1000
+);
+```
+
+And to poll for the workflow's result:
+
+```sql
+SELECT status, output, error
+FROM dbos.workflow_status
 WHERE workflow_uuid = 'my-workflow-id';
 ```
 
-Or to send a message to a workflow by inserting directly into the notifications table:
-
-```sql
-INSERT INTO dbos.notifications (destination_uuid, topic, message, serialization)
-VALUES ('target-workflow-id', 'updates', '{"status": "complete"}', 'portable_json');
-```
+When the workflow completes, `status` will be `SUCCESS` (with `output` populated) or `ERROR` (with `error` populated), and both values will be plain JSON.
 
 This makes it straightforward to integrate DBOS workflows with external systems, dashboards, or languages such as PL/pgSQL that don't have a DBOS SDK.
 
