@@ -91,34 +91,14 @@ export DBOS_COCKROACHDB_URL="<your connection string>"
 Now, configure your DBOS application to connect to CockroachDB as follows:
 
 ```typescript
-async function main() {
-  DBOS.setConfig({
+DBOS.setConfig({
     name: 'my-application',
     // Your CockroachDB connection string.
     systemDatabaseUrl: process.env.DBOS_COCKROACHDB_URL,
     // CockroachDB does not support LISTEN/NOTIFY
     useListenNotify: false,
-  });
-  await DBOS.launch();
-}
-```
-
-```python
-from sqlalchemy import create_engine
-from dbos import DBOS, DBOSConfig
-
-database_url = os.environ.get("DBOS_COCKROACHDB_URL")
-engine = create_engine(database_url)
-config: DBOSConfig = {
-    "name": "dbos-app",
-    "system_database_url": database_url,
-    # Create a custom SQLAlchemy engine to utilize the CockroachDB drivers
-    "system_database_engine": engine,
-    # CockroachDB does not support LISTEN/NOTIFY
-    "use_listen_notify": False,
-}
-DBOS(config=config)
-DBOS.launch()
+});
+await DBOS.launch();
 ```
 
 When you launch your application, it should connect to your CockroachDB database!
