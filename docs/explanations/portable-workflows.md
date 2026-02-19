@@ -56,11 +56,6 @@ You can opt in to portable serialization at the workflow or operation level.
 Workflows started with portable serialization return their results or exceptions in portable format.
 Workflows started with portable serialization also write their events and streams in portable JSON by default, but this can be overridden for each operation.
 
-:::info
-Step outputs always use the native serializer regardless of the workflow's serialization strategy.
-Steps are internal to a workflow and are not read by other languages, so the native serializer's greater flexibility is preferred.
-:::
-
 ### Per-Workflow (Enqueue)
 
 When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
@@ -191,6 +186,11 @@ Each language's `setEvent` and `writeStream` methods accept a serialization para
 
 Note that `send` is not affected by the current workflow's serialization strategy, because messages target a different workflow and the sender does not know what serialization that workflow expects.
 You should always set the serialization format explicitly on `send` when communicating cross-language.
+
+:::info
+Step outputs always use the native serializer regardless of the workflow's serialization strategy.
+Steps are internal to a workflow and are not read by other languages, so the native serializer's greater flexibility is preferred.
+:::
 
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
@@ -398,10 +398,9 @@ The [`serialization` column](./system-tables.md) in each table indicates the for
 For example, to read events set by a workflow:
 
 ```sql
-SELECT key, value::jsonb
+SELECT key, value
 FROM dbos.workflow_events
-WHERE workflow_uuid = 'my-workflow-id'
-  AND serialization = 'portable_json';
+WHERE workflow_uuid = 'my-workflow-id';
 ```
 
 Or to send a message to a workflow by inserting directly into the notifications table:
@@ -411,7 +410,7 @@ INSERT INTO dbos.notifications (destination_uuid, topic, message, serialization)
 VALUES ('target-workflow-id', 'updates', '{"status": "complete"}', 'portable_json');
 ```
 
-This makes it straightforward to integrate DBOS workflows with external systems, dashboards, or languages that don't have a DBOS SDK.
+This makes it straightforward to integrate DBOS workflows with external systems, dashboards, or languages such as PL/pgSQL that don't have a DBOS SDK.
 
 ## Further Reading
 
