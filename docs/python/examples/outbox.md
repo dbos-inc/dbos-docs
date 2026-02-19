@@ -20,7 +20,7 @@ Performing the database record update and writing the message to the "outbox" ta
 
 ### Implementing the Outbox Pattern in DBOS
 
-In DBOS, we can use **durable workflows** instead of an explicit outbox table and transaction to atomically perform multiple operations, such as updating a database record and sending a message to another system.
+In DBOS, we can use **durable workflows** instead of an explicit outbox table to atomically perform multiple operations, such as updating a database record and sending a message to another system.
 To do this, we simply perform each operation as a separate step in a durable workflow.
 For example:
 
