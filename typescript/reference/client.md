@@ -30,7 +30,7 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
@@ -51,6 +51,16 @@ class DBOSClient {
     resumeWorkflow(workflowID: string): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
+
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }): Promise<void>;
+    listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
+    getSchedule(name: string): Promise<WorkflowSchedule | null>;
+    deleteSchedule(name: string): Promise<void>;
+    pauseSchedule(name: string): Promise<void>;
+    resumeSchedule(name: string): Promise<void>;
+    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }>): Promise<void>;
+    backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
+    triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
 }
 ```
 
@@ -62,6 +72,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabaseUrl**: A connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
 - **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations.
 - **serializer**: An optional custom serializer. If your DBOS application uses [custom serialization](./configuration.md#custom-serialization), you must provide the same serializer to the client to correctly deserialize workflow results and events.
+- **systemDatabaseSchemaName**: An optional Postgres schema name for DBOS system tables. Defaults to `dbos`. If your DBOS application uses a [custom schema name](./configuration.md#database-connection-settings), you must provide the same schema name to the client.
 
 Example:
 
@@ -253,6 +264,128 @@ Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for
 
 Start a new execution of a workflow from a specific step. 
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
+
+## Workflow Schedules
+
+`DBOSClient` provides methods to manage [workflow schedules](./methods.md#workflow-schedules) from outside a DBOS application.
+Unlike the `DBOS` class methods which accept workflow functions directly, client schedule methods accept workflow names as strings.
+
+#### `createSchedule`
+
+```typescript
+client.createSchedule(options: {
+  scheduleName: string;
+  workflowName: string;
+  workflowClassName?: string;
+  schedule: string;
+  context?: unknown;
+}): Promise<void>
+```
+
+Create a cron schedule that periodically invokes a workflow.
+Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a `workflowName` string instead of a workflow function.
+
+**Parameters:**
+- **scheduleName**: Unique name identifying this schedule.
+- **workflowName**: Fully-qualified name of the workflow function to invoke.
+- **workflowClassName**: The class name if the workflow is a static method on a class.
+- **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+- **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+
+#### `listSchedules`
+
+```typescript
+client.listSchedules(filters?: {
+  status?: string | string[];
+  workflowName?: string | string[];
+  scheduleNamePrefix?: string | string[];
+}): Promise<WorkflowSchedule[]>
+```
+
+Return all registered workflow schedules, optionally filtered. Returns a list of [`WorkflowSchedule`](./methods.md#workflowschedule).
+Similar to [`DBOS.listSchedules`](./methods.md#dboslistschedules).
+
+**Parameters:**
+- **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
+- **workflowName**: Filter by workflow name or a list of names.
+- **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
+
+#### `getSchedule`
+
+```typescript
+client.getSchedule(name: string): Promise<WorkflowSchedule | null>
+```
+
+Return the [`WorkflowSchedule`](./methods.md#workflowschedule) with the given name, or `null` if it does not exist.
+Similar to [`DBOS.getSchedule`](./methods.md#dbosgetschedule).
+
+#### `deleteSchedule`
+
+```typescript
+client.deleteSchedule(name: string): Promise<void>
+```
+
+Delete the schedule with the given name. No-op if it does not exist.
+Similar to [`DBOS.deleteSchedule`](./methods.md#dbosdeleteschedule).
+
+#### `pauseSchedule`
+
+```typescript
+client.pauseSchedule(name: string): Promise<void>
+```
+
+Pause the schedule with the given name. A paused schedule does not fire.
+Similar to [`DBOS.pauseSchedule`](./methods.md#dbospauseschedule).
+
+#### `resumeSchedule`
+
+```typescript
+client.resumeSchedule(name: string): Promise<void>
+```
+
+Resume a paused schedule so it begins firing again.
+Similar to [`DBOS.resumeSchedule`](./methods.md#dbosresumeschedule).
+
+#### `applySchedules`
+
+```typescript
+client.applySchedules(
+  schedules: Array<{
+    scheduleName: string;
+    workflowName: string;
+    workflowClassName?: string;
+    schedule: string;
+    context?: unknown;
+  }>,
+): Promise<void>
+```
+
+Atomically apply a set of schedules.
+Creates or updates each schedule in the list, and deletes any existing schedules not included in the list.
+Similar to [`DBOS.applySchedules`](./methods.md#dbosapplyschedules), but takes workflow name strings instead of workflow functions.
+
+#### `backfillSchedule`
+
+```typescript
+client.backfillSchedule(
+  name: string,
+  start: Date,
+  end: Date,
+): Promise<WorkflowHandle<unknown>[]>
+```
+
+Enqueue all executions of a schedule that would have run between `start` and `end`.
+Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
+Similar to [`DBOS.backfillSchedule`](./methods.md#dbosbackfillschedule).
+
+#### `triggerSchedule`
+
+```typescript
+client.triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>
+```
+
+Immediately enqueue the scheduled workflow at the current time.
+Similar to [`DBOS.triggerSchedule`](./methods.md#dbostriggerschedule).
 
 ## Debouncing
 

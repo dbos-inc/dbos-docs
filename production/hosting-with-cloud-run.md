@@ -289,7 +289,7 @@ Key flags:
 - **`--set-secrets`** Injects secrets from Secret Manager as environment variables.
 - **`--add-cloudsql-instances`** Mounts the Cloud SQL Auth Proxy socket, letting the app connect via `INSTANCE_UNIX_SOCKET`.
 - **`--source .`** Builds your Dockerfile remotely via [Cloud Build](https://cloud.google.com/build).
-- **`--instances=1`** Initial always-on instance count. The [scaling workflow](#scaling-a-worker-pool-1) adjusts this based on queue depth.
+- **`--instances=1`** Initial always-on instance count. The [scaling workflow](#scaling-a-worker-pool) adjusts this based on queue depth.
 - **`GCP_PROJECT_ID`**, **`GCP_REGION`**, **`WORKER_POOL_NAME`** Used by the scaling workflow to call the Cloud Run API.
 
 </TabItem>

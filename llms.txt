@@ -70,9 +70,9 @@
 - [Secrets and Environment Variables](https://docs.dbos.dev/production/dbos-cloud/secrets.md): We recommend using secrets to securely manage your application's secrets and environment variables in DBOS Cloud.
 - [Workflow Management](https://docs.dbos.dev/production/dbos-cloud/workflow-management.md): Viewing Workflows
 - [Self-Hosting Conductor](https://docs.dbos.dev/production/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license.
+- [Self-Hosting Conductor With Kubernetes](https://docs.dbos.dev/production/hosting-conductor-with-kubernetes.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Google Cloud Run](https://docs.dbos.dev/production/hosting-with-cloud-run.md): This guide covers deploying a DBOS application to Google Cloud Run with a Cloud SQL for PostgreSQL database. It includes best practices for security, availability, and scalability. This guide assumes DBOS Conductor is hosted separately.
-- [Deploying With Docker](https://docs.dbos.dev/production/hosting-with-docker.md): This guide shows you how to setup a DBOS application and its Postgres database using Docker.
-- [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide offers recommendations when deploying a DBOS-enabled application in Kubernetes.
+- [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide covers deploying a DBOS application on Kubernetes.
 - [DBOS MCP Server](https://docs.dbos.dev/production/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/retention.md): If you are using Conductor, you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 - [Workflow Management](https://docs.dbos.dev/production/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
@@ -103,7 +103,7 @@
 - [Integrating with Kafka](https://docs.dbos.dev/python/tutorials/kafka-integration.md): Overview of using DBOS with Kafka
 - [Logging & Tracing](https://docs.dbos.dev/python/tutorials/logging-and-tracing.md): Logging
 - [Queues & Concurrency](https://docs.dbos.dev/python/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
-- [Scheduled Workflows](https://docs.dbos.dev/python/tutorials/scheduled-workflows.md): Learn how to run DBOS workflows on a schedule.
+- [Scheduling Workflows](https://docs.dbos.dev/python/tutorials/scheduled-workflows.md): You can schedule DBOS workflows to run on a cron schedule.
 - [Steps](https://docs.dbos.dev/python/tutorials/step-tutorial.md): When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a step.
 - [Testing Your App](https://docs.dbos.dev/python/tutorials/testing.md): Testing DBOS Functions
 - [Upgrading Workflow Code](https://docs.dbos.dev/python/tutorials/upgrading-workflows.md): One challenge you may encounter when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
@@ -130,7 +130,7 @@
 - [Using Typescript Objects](https://docs.dbos.dev/typescript/tutorials/instantiated-objects.md): You can use class instance methods as workflows and steps.
 - [Logging & Tracing](https://docs.dbos.dev/typescript/tutorials/logging.md): Logging
 - [Queues & Concurrency](https://docs.dbos.dev/typescript/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
-- [Scheduled Workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows.md): You can schedule DBOS workflows to run exactly once per time interval.
+- [Scheduling Workflows](https://docs.dbos.dev/typescript/tutorials/scheduled-workflows.md): You can schedule DBOS workflows to run on a cron schedule.
 - [Steps](https://docs.dbos.dev/typescript/tutorials/step-tutorial.md): Learn how to communicate with external APIs and services
 - [Testing & Mocking](https://docs.dbos.dev/typescript/tutorials/testing.md): You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like Jest or Vitest.
 - [Transactions & Datasources](https://docs.dbos.dev/typescript/tutorials/transaction-tutorial.md): Learn how to perform database operations
