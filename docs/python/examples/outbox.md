@@ -25,14 +25,52 @@ To do this, we simply perform each operation as a separate step in a durable wor
 For example:
 
 ```python
+@DBOS.transaction()
+def insert_order(customer: str, item: str, quantity: int) -> int:
+    """Insert an order and return its ID.
 
+    In the classic outbox pattern you would also INSERT an outbox row here.
+    With DBOS the workflow itself provides that guarantee, so no outbox table
+    is needed.
+    """
+    result = DBOS.sql_session.execute(
+        orders.insert().values(customer=customer, item=item, quantity=quantity)
+    )
+    order_id: int = result.inserted_primary_key[0]
+    DBOS.logger.info(f"Inserted order {order_id}: {quantity}x {item} for {customer}")
+    return order_id
+
+@DBOS.step()
+def send_order_notification(order_id: int, customer: str, item: str) -> None:
+    """Simulate sending an order confirmation (e.g. email, Kafka, webhook).
+
+    In the classic pattern a background poller would read the outbox and call
+    this.  With DBOS the workflow calls it directly and guarantees it will
+    be retried until it succeeds.
+    """
+    DBOS.logger.info(
+        f"Sending notification for order {order_id}: {item} for {customer}"
+    )
+    time.sleep(3)  # simulate network latency
+    DBOS.logger.info(f"Notification sent for order {order_id}: {item} for {customer}")
+
+@DBOS.workflow()
+def place_order_workflow(customer: str, item: str, quantity: int) -> int:
+    """Place an order and send a notification, atomically.
+
+    If this process crashes after insert_order but before
+    send_order_notification, DBOS will automatically recover and complete
+    the notification on restart.
+    """
+    order_id = insert_order(customer, item, quantity)
+    send_order_notification(order_id, customer, item)
 ```
 
 This works because **durable workflows are atomic**.
 If a failure occurs after writing to the database but before sending the message to the external system, the workflow will recover from its last completed step (writing to the database) and retry the next step (sending the message) until the message is successfully sent.
 This is the same guarantee a conventional transactional outbox provides: assuming the message is eventually delievered after enough retries, either both operations occur or neither do.
 
-Full source code for this example, demoing how this pattern can recover from failure, is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox)
+Full source code for this example, demoing how this pattern can recover from any failure, is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox)
 
 ### Try it Yourself!
 
