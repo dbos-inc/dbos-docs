@@ -40,7 +40,7 @@ Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps)
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
-cd python/agent-inbox
+cd python/transactional-outbox
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/agent-inbox) to run the app.
