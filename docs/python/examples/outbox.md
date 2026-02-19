@@ -81,4 +81,4 @@ git clone https://github.com/dbos-inc/dbos-demo-apps.git
 cd python/transactional-outbox
 ```
 
-Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/agent-inbox) to run the app.
+Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox) to run the app.
