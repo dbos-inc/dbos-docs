@@ -41,7 +41,7 @@ Each row represents a different workflow execution.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
-- **application_id**: Deprecated field, no longer used.
+- **application_id**: Internal field used only in DBOS Cloud.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
