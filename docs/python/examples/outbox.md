@@ -18,7 +18,7 @@ A separate background process then polls the outbox table and sends the messages
 
 Performing the database record update and writing the message to the "outbox" table in one transaction guarantees atomicity: either both records are updated and neither are, and once the message is written to the outbox, it will asynchronously be consumed and sent by the background process even if failures occur later.
 
-### Implementing the Outbox Pattern in DBOS
+### Performing Multiple Operations Atomically With DBOS
 
 In DBOS, we can use **durable workflows** instead of an explicit outbox table to atomically perform multiple operations, such as updating a database record and sending a message to another system.
 To do this, we simply perform each operation as a separate step in a durable workflow.
