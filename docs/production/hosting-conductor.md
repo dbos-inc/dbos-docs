@@ -209,6 +209,8 @@ Once you have a paid license key, you can provide it to Conductor by setting the
 
 You can self-host DBOS Conductor in production by deploying two services: the [Conductor](https://hub.docker.com/r/dbosdev/conductor) service and the [DBOS Console](https://hub.docker.com/r/dbosdev/console).
 
+For a complete Kubernetes walkthrough covering infrastructure, secrets, ingress, and deployment, see [Self-Hosting Conductor with Kubernetes](./hosting-conductor-with-kubernetes.md).
+
 ### Conductor
 
 To deploy the Conductor service to production, it must connect to a Postgres database.
