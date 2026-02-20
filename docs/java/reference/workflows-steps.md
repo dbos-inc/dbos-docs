@@ -13,6 +13,8 @@ public @interface Workflow {
   String name();
 
   int maxRecoveryAttempts();
+
+  SerializationStrategy serializationStrategy();
 }
 ```
 
@@ -27,6 +29,11 @@ Workflow methods must be invoked via the proxy object returned by [`registerWork
 - **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+- **serializationStrategy**: The default [serialization strategy](../reference/methods.md#serialization-strategy) to use for local invocations of this workflow. Set to `SerializationStrategy.PORTABLE` to test [cross-language interoperability](../../explanations/portable-workflows.md). Defaults to `SerializationStrategy.DEFAULT`.
+
+:::tip
+When a workflow uses portable serialization, Java automatically coerces JSON arguments to match the method's parameter types. For example, JSON integers are widened to `long`, and ISO-8601 date strings are parsed to `Instant` or `OffsetDateTime`. See [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion) for details.
+:::
 
 ### @Step
 ```java

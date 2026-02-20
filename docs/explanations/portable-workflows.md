@@ -178,6 +178,11 @@ public String processOrder(String orderId) {
 </TabItem>
 </Tabs>
 
+:::note
+The default serialization strategy only affects invocations that are aware of the annotation / decorator.  This makes the default useful for unit testing, but the actual serialization strategy used will depend on how the workflow is enqueued by the client.
+:::
+
+
 ### Per-Operation
 
 Setting the serialization format at the workflow level affects the default for `setEvent` and `writeStream`.
@@ -389,6 +394,149 @@ throw new PortableWorkflowException(
 When a workflow that used portable serialization fails, other languages receive the error as a `PortableWorkflowError` (Python/TS) or `PortableWorkflowException` (Java) with the `name`, `message`, `code`, and `data` fields populated.
 
 If a workflow fails with a non-portable exception while using portable serialization, DBOS automatically converts it to the portable error format on a best-effort basis, extracting the error type name, message, and any common error code attributes.
+
+## Input Validation and Coercion
+
+When a workflow is started via portable JSON&mdash;whether from another language, a `DBOSClient`, or a direct database insert&mdash;the arguments arrive as plain JSON values.
+JSON has a limited type system: numbers are untyped (no distinction between `int`, `long`, `double`, or other language-specific offerings), there is no native date type (dates arrive as strings), and collection types may not match the target language's expectations (e.g., a JSON array becomes a generic `ArrayList` in Java, not a typed list or object array).
+
+Each SDK provides a way to validate and coerce these arguments so that the workflow function receives the types it expects.
+
+Note that while workflow argument validation is possible, return values, messages, and events are not automatically coerced, as the expected types are not known at runtime.  These must be validated and coerced manually.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+### Java — Automatic Coercion
+
+Java automatically coerces portable JSON arguments to match the workflow method's parameter types.
+No opt-in is required&mdash;this happens transparently for all portable workflows.
+
+Common coercions include:
+
+| JSON Type | Java Method Parameter | Coercion |
+|-----------|----------------------|----------|
+| Integer (`30000`) | `long` | Integer &rarr; long |
+| Double (`1.01`) | `double` | Double &rarr; double |
+| String (`"2025-06-15T10:30:00Z"`) | `Instant` | ISO-8601 parsing |
+| String (`"2025-06-15T10:30:00+02:00"`) | `OffsetDateTime` | ISO-8601 parsing |
+| JSON array | `ArrayList<T>` | Element-wise coercion |
+| JSON object | `Map<String, Object>` | LinkedHashMap &rarr; Map |
+
+If coercion fails (for example, a JSON object where a `String` is expected), the workflow is marked as `ERROR` with a descriptive message.
+
+```java
+// This workflow expects (String, long), but portable JSON delivers (String, Integer).
+// Java coerces the Integer to long automatically.
+@Workflow(name = "processOrder")
+public String processOrder(String orderId, long quantity) {
+    return "order:" + orderId + " qty:" + quantity;
+}
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+### TypeScript — Input Schema (Zod)
+
+TypeScript workflows can specify an `inputSchema` that validates and optionally transforms arguments before the workflow function runs.
+The schema must have a `.parse()` method&mdash;making it compatible with [Zod](https://zod.dev/), [AJV](https://ajv.js.org/) wrappers, or any custom validator.
+
+The schema receives the arguments as a tuple (array) and should return the validated/transformed tuple.
+It runs on every invocation: direct calls, queue dispatch, and recovery.
+
+```typescript
+import { DBOS } from "@dbos-inc/dbos-sdk";
+import { z } from "zod";
+
+// Validation only — reject bad inputs with a clear Zod error
+const validatedWorkflow = DBOS.registerWorkflow(
+  async (name: string, count: number) => {
+    return `${name}:${count}`;
+  },
+  {
+    name: "validatedWorkflow",
+    serialization: "portable",
+    inputSchema: z.tuple([z.string(), z.number()]),
+  },
+);
+
+// Validation + coercion — convert ISO date strings to Date objects
+const dateWorkflow = DBOS.registerWorkflow(
+  async (due: Date) => {
+    return `due:${due.toISOString()}`;
+  },
+  {
+    name: "dateWorkflow",
+    serialization: "portable",
+    inputSchema: z.tuple([z.coerce.date()]),
+  },
+);
+```
+
+Or using decorators:
+
+```typescript
+export class Orders {
+  @DBOS.workflow({
+    serialization: "portable",
+    inputSchema: z.tuple([z.string(), z.coerce.date()]),
+  })
+  static async processOrder(orderId: string, due: Date): Promise<string> {
+    return `${orderId} due ${due.toISOString()}`;
+  }
+}
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+### Python — Argument Validator (Pydantic)
+
+Python workflows can specify a `validate_args` parameter on `@DBOS.workflow()`.
+The built-in `pydantic_args_validator` sentinel builds a [Pydantic](https://docs.pydantic.dev/) validator from the function's type hints at decoration time.
+This validates argument types and coerces compatible values (for example, ISO date strings to `datetime` objects).
+
+```python
+from datetime import datetime
+from typing import Dict, Any, List
+from dbos import DBOS, WorkflowSerializationFormat, pydantic_args_validator
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=pydantic_args_validator,
+)
+def process_order(name: str, count: int, tags: List[str]) -> str:
+    # Pydantic validates types — "not_a_number" for count raises ValueError
+    return f"{name}:{count}:{','.join(tags)}"
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=pydantic_args_validator,
+)
+def schedule_task(name: str, due: datetime, tags: List[str]) -> str:
+    # Pydantic coerces the ISO string "2025-06-15T10:30:00" to a datetime object
+    return f"{name}@{due.isoformat()}#{','.join(tags)}"
+```
+
+You can also provide a custom validator function.
+It must accept `(positional_args_tuple, keyword_args_dict)` and return a validated `(positional_args_tuple, keyword_args_dict)`:
+
+```python
+def my_validator(args, kwargs):
+    # Custom validation or coercion logic
+    return args, kwargs
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=my_validator,
+)
+def my_workflow(x: int) -> str:
+    return str(x)
+```
+
+</TabItem>
+</Tabs>
 
 ## Direct Database Access
 

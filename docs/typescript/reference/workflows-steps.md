@@ -17,6 +17,12 @@ DBOS.workflow(
 export interface WorkflowConfig {
   name?: string;
   maxRecoveryAttempts?: number;
+  serialization?: "portable" | "native";
+  inputSchema?: InputSchema;
+}
+
+export interface InputSchema {
+  parse(input: unknown): unknown;
 }
 ```
 
@@ -39,9 +45,11 @@ await Example.exampleWorkflow();
 **Parameters:**
 - **config**:
   - **name**: The name to use for the workflow function.  If not specified, the method name is used.
-  - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+  - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
+  - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion) for details and examples.
 
 ### DBOS.registerWorkflow
 
@@ -77,11 +85,13 @@ await workflow();
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
 - **name**: A name to give the workflow.
-- **config**:
+- **config**: Accepts all fields from [`WorkflowConfig`](#dbosworkflow) plus:
   - **name**: The name with which to register the workflow. Defaults to the function name.
-  - **max_recovery_attempts**: The maximum number of times the workflow may be attempted.
+  - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+  - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
+  - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
 
 ### DBOS.scheduled
 

@@ -11,7 +11,9 @@ title: Workflows & Steps
 DBOS.workflow(
   *,
   name: Optional[str] = None,
-  max_recovery_attempts: Optional[int] = 100
+  max_recovery_attempts: Optional[int] = 100,
+  serialization_type: Optional[WorkflowSerializationFormat] = None,
+  validate_args: Optional[ValidateArgsCallable] = None,
 )
 ```
 
@@ -32,6 +34,8 @@ This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_que
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
 A workflow in this state may be [resumed](../tutorials/workflow-management.md#resuming-workflows), which will resume execution and reset the count of execution attempts.
 If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
+- `serialization_type`: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `WorkflowSerializationFormat.PORTABLE` to test [cross-language interoperability](../../explanations/portable-workflows.md).
+- `validate_args`: An optional callable that validates and optionally coerces workflow arguments before execution. Pass the built-in `pydantic_args_validator` to automatically validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/). See [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion) for details and examples.
 
 ### step
 
