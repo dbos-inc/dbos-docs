@@ -63,6 +63,7 @@ class EnqueueOptions(TypedDict):
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
+    serialization_type: NotRequired[WorkflowSerializationFormat]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -96,6 +97,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `queue_partition_key`: A partition key for [partitioned queues](../tutorials/queue-tutorial.md#partitioning-queues). Workflows with the same partition key are processed sequentially.
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -178,6 +180,8 @@ client.send(
     message: Any,
     topic: Optional[str] = None,
     idempotency_key: Optional[str] = None,
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -188,6 +192,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -203,6 +208,8 @@ client.send_async(
     message: Any,
     topic: Optional[str] = None,
     idempotency_key: Optional[str] = None,
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -213,6 +220,7 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 
 ### get_event
 
