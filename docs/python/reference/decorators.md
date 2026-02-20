@@ -35,7 +35,7 @@ If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EX
 A workflow in this state may be [resumed](../tutorials/workflow-management.md#resuming-workflows), which will resume execution and reset the count of execution attempts.
 If this behavior is not desired, it may be disabled by setting `max_recovery_attempts=None`.
 - `serialization_type`: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `WorkflowSerializationFormat.PORTABLE` to test [cross-language interoperability](../../explanations/portable-workflows.md).
-- `validate_args`: An optional callable that validates and optionally coerces workflow arguments before execution. Pass the built-in `pydantic_args_validator` to automatically validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/). See [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion) for details and examples.
+- `validate_args`: An optional callable that validates and optionally coerces workflow arguments before execution. Pass the built-in `pydantic_args_validator` to automatically validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
 
 ### step
 
@@ -190,6 +190,52 @@ def test_kafka_workflow(msg: KafkaMessage):
     DBOS.logger.info(f"Message received: {msg.value.decode()}")
 ```
 
+
+## Input Validation and Coercion
+
+Python workflows can specify a `validate_args` parameter on `@DBOS.workflow()`.
+The built-in `pydantic_args_validator` sentinel builds a [Pydantic](https://docs.pydantic.dev/) validator from the function's type hints at decoration time.
+This validates argument types and coerces compatible values (for example, ISO date strings to `datetime` objects).
+
+```python
+from datetime import datetime
+from typing import Dict, Any, List
+from dbos import DBOS, WorkflowSerializationFormat, pydantic_args_validator
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=pydantic_args_validator,
+)
+def process_order(name: str, count: int, tags: List[str]) -> str:
+    # Pydantic validates types — "not_a_number" for count raises ValueError
+    return f"{name}:{count}:{','.join(tags)}"
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=pydantic_args_validator,
+)
+def schedule_task(name: str, due: datetime, tags: List[str]) -> str:
+    # Pydantic coerces the ISO string "2025-06-15T10:30:00" to a datetime object
+    return f"{name}@{due.isoformat()}#{','.join(tags)}"
+```
+
+You can also provide a custom validator function.
+It must accept `(positional_args_tuple, keyword_args_dict)` and return a validated `(positional_args_tuple, keyword_args_dict)`:
+
+```python
+def my_validator(args, kwargs):
+    # Custom validation or coercion logic
+    return args, kwargs
+
+@DBOS.workflow(
+    serialization_type=WorkflowSerializationFormat.PORTABLE,
+    validate_args=my_validator,
+)
+def my_workflow(x: int) -> str:
+    return str(x)
+```
+
+For more context on why input validation matters for cross-language workflows, see [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion).
 
 ## Classes and Decorators
 
