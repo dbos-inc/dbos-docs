@@ -70,6 +70,10 @@ This works because **durable workflows are atomic**.
 If a failure occurs after writing to the database but before sending the message to the external system, the workflow will recover from its last completed step (writing to the database) and retry the next step (sending the message) until the message is successfully sent.
 This is the same guarantee a conventional transactional outbox provides: assuming the message is eventually delievered after enough retries, either both operations occur or neither do.
 
+One noteworthy detail is that we perform the initial database write in a [transactional step](../tutorials/step-tutorial.md#transactions), which performs the workflow checkpoint in the same database transaction as the step logic.
+This way, the database write is guaranteed to execute exactly-once no matter what failures occur during workflow execution.
+Other operations may execute at-least-once, and so should be idempotent (the same is true in a conventional transactional outbox pattern, where messages are sent from the outbox with at-least-once semantics).
+
 Full source code for this example, demoing how this pattern can recover from any failure, is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox).
 
 ### Try it Yourself!
