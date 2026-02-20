@@ -40,6 +40,8 @@ export interface DBOSConfig {
 
   listenQueues?: WorkflowQueue[];
 
+  schedulerPollingIntervalMs?: number;
+
   serializer?: DBOSSerializer;
 }
 ```
@@ -82,6 +84,10 @@ If the Postgres database referenced by this connection string does not exist, DB
 ### Queue Settings
 
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+
+### Scheduler Settings
+
+- **schedulerPollingIntervalMs**: How frequently (in milliseconds) the scheduler polls the database for schedule changes. Defaults to 30000 (30 seconds).
 
 ### Serialization Settings
 

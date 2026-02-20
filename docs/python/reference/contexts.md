@@ -103,7 +103,7 @@ DBOS.recv(
 ```
 
 Receive and return a message sent to this workflow.
-Can only be called from within a workflow or step.
+Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
 Calls to `recv` wait for the next message in the queue, returning `None` if the wait times out.
 If no topic is specified, `recv` can only access messages sent without a topic.
@@ -760,6 +760,193 @@ DBOS.delete_workflow_async(
 ```
 
 Coroutine version of [`delete_workflow`](#delete_workflow).
+
+## Workflow Schedules
+
+### create_schedule
+
+```python
+DBOS.create_schedule(
+    *,
+    schedule_name: str,
+    workflow_fn: Callable[[datetime, Any], None],
+    schedule: str,
+    context: Any = None,
+) -> None
+```
+
+Create a cron schedule that periodically invokes a workflow function.
+
+**Parameters:**
+- **schedule_name**: Unique name identifying this schedule.
+- **workflow_fn**: The workflow function to invoke. Must take two arguments: a `datetime` (the scheduled execution time) and a context object.
+- **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+- **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+
+DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
+Valid cron schedules contain 5 or 6 items, separated by spaces:
+
+```
+ ┌────────────── second (optional)
+ │ ┌──────────── minute
+ │ │ ┌────────── hour
+ │ │ │ ┌──────── day of month
+ │ │ │ │ ┌────── month
+ │ │ │ │ │ ┌──── day of week
+ │ │ │ │ │ │
+ │ │ │ │ │ │
+ * * * * * *
+```
+
+**Example:**
+
+```python
+from datetime import datetime
+from dbos import DBOS
+
+@DBOS.workflow()
+def my_periodic_task(scheduled_time: datetime, context: Any):
+    DBOS.logger.info(f"Running task scheduled for {scheduled_time} with context {context}")
+
+# Create a schedule that runs every 5 minutes
+DBOS.create_schedule(
+    schedule_name="my-task-schedule", # The schedule name is a unique identifier of the schedule
+    workflow_fn=my_periodic_task,
+    schedule="*/5 * * * *",  # Every 5 minutes
+    context="my context", # The context is passed into every iteration of the workflow
+)
+```
+
+### create_schedule_async
+
+Coroutine version of [`create_schedule`](#create_schedule).
+
+### list_schedules
+
+```python
+DBOS.list_schedules(
+    *,
+    status: Optional[Union[str, List[str]]] = None,
+    workflow_name: Optional[Union[str, List[str]]] = None,
+    schedule_name_prefix: Optional[Union[str, List[str]]] = None,
+) -> List[WorkflowSchedule]
+```
+
+Return all registered workflow schedules, optionally filtered. Returns a list of [`WorkflowSchedule`](#workflowschedule).
+
+**Parameters:**
+- **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
+- **workflow_name**: Filter by workflow name or a list of names.
+- **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
+
+### list_schedules_async
+
+Coroutine version of [`list_schedules`](#list_schedules).
+
+### get_schedule
+
+```python
+DBOS.get_schedule(name: str) -> Optional[WorkflowSchedule]
+```
+
+Return the [`WorkflowSchedule`](#workflowschedule) with the given name, or `None` if it does not exist.
+
+### get_schedule_async
+
+Coroutine version of [`get_schedule`](#get_schedule).
+
+### delete_schedule
+
+```python
+DBOS.delete_schedule(name: str) -> None
+```
+
+Delete the schedule with the given name. No-op if it does not exist.
+
+### delete_schedule_async
+
+Coroutine version of [`delete_schedule`](#delete_schedule).
+
+### pause_schedule
+
+```python
+DBOS.pause_schedule(name: str) -> None
+```
+
+Pause the schedule with the given name. A paused schedule does not fire.
+
+### resume_schedule
+
+```python
+DBOS.resume_schedule(name: str) -> None
+```
+
+Resume a paused schedule so it begins firing again.
+
+### apply_schedules
+
+```python
+DBOS.apply_schedules(
+    schedules: List[ScheduleInput],
+) -> None
+
+class ScheduleInput(TypedDict):
+    schedule_name: str
+    workflow_fn: Callable[[datetime, Any], None]
+    schedule: str
+    context: Any
+```
+
+Atomically apply a set of schedules.
+Useful for declaratively defining all your static schedules in one place.
+May not be called from within a workflow.
+
+**Example:**
+
+```python
+DBOS.apply_schedules([
+    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *", "context": None},  # Every 10 minutes
+    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
+])
+```
+
+### backfill_schedule
+
+```python
+DBOS.backfill_schedule(
+    schedule_name: str,
+    start: datetime,
+    end: datetime,
+) -> List[WorkflowHandle[None]]
+```
+
+Enqueue (on an internal queue) all executions of a schedule that would have run between `start` and `end`.
+Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
+May not be called from within a workflow.
+
+### trigger_schedule
+
+```python
+DBOS.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
+```
+
+Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
+May not be called from within a workflow.
+
+### WorkflowSchedule
+
+Some schedule management methods return the `WorkflowSchedule` type:
+
+```python
+class WorkflowSchedule(TypedDict):
+    schedule_id: str
+    schedule_name: str
+    workflow_name: str
+    workflow_class_name: Optional[str]
+    schedule: str
+    status: str  # "ACTIVE" or "PAUSED"
+    context: Any
+```
 
 ### Workflow Status
 

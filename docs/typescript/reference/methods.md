@@ -473,6 +473,162 @@ export interface WorkflowStatus {
 }
 ```
 
+## Workflow Schedules
+
+You can create, manage, and delete cron schedules at runtime using the DBOS schedule management API.
+Schedules are stored in the database and can be created, paused, resumed, or deleted while the application is running.
+
+Scheduled workflow functions take two arguments: a `Date` (the scheduled execution time) and a context object.
+
+### DBOS.createSchedule
+
+```typescript
+DBOS.createSchedule(options: {
+  scheduleName: string;
+  workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
+  schedule: string;
+  context?: unknown;
+}): Promise<void>
+```
+
+Create a cron schedule that periodically invokes a workflow function.
+If called from within a workflow, the operation is recorded as a step.
+
+**Parameters:**
+- **scheduleName**: Unique name identifying this schedule.
+- **workflowFn**: The workflow function to invoke. Must take two arguments: a `Date` (the scheduled execution time) and a context object.
+- **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
+- **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+
+**Example:**
+
+```typescript
+async function myPeriodicTask(scheduledTime: Date, context: unknown) {
+    DBOS.logger.info(`Running task scheduled for ${scheduledTime}`);
+}
+const myPeriodicTaskWorkflow = DBOS.registerWorkflow(myPeriodicTask);
+
+await DBOS.createSchedule({
+    scheduleName: "my-task-schedule",
+    workflowFn: myPeriodicTaskWorkflow,
+    schedule: "*/5 * * * *",
+});
+```
+
+### DBOS.listSchedules
+
+```typescript
+DBOS.listSchedules(filters?: {
+  status?: string | string[];
+  workflowName?: string | string[];
+  scheduleNamePrefix?: string | string[];
+}): Promise<WorkflowSchedule[]>
+```
+
+Return all registered workflow schedules, optionally filtered. Returns a list of [`WorkflowSchedule`](#workflowschedule).
+
+**Parameters:**
+- **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
+- **workflowName**: Filter by workflow name or a list of names.
+- **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
+
+### DBOS.getSchedule
+
+```typescript
+DBOS.getSchedule(name: string): Promise<WorkflowSchedule | null>
+```
+
+Return the [`WorkflowSchedule`](#workflowschedule) with the given name, or `null` if it does not exist.
+
+### DBOS.deleteSchedule
+
+```typescript
+DBOS.deleteSchedule(name: string): Promise<void>
+```
+
+Delete the schedule with the given name. No-op if it does not exist.
+
+### DBOS.pauseSchedule
+
+```typescript
+DBOS.pauseSchedule(name: string): Promise<void>
+```
+
+Pause the schedule with the given name. A paused schedule does not fire.
+
+### DBOS.resumeSchedule
+
+```typescript
+DBOS.resumeSchedule(name: string): Promise<void>
+```
+
+Resume a paused schedule so it begins firing again.
+
+### DBOS.applySchedules
+
+```typescript
+DBOS.applySchedules(
+  schedules: Array<{
+    scheduleName: string;
+    workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
+    schedule: string;
+    context?: unknown;
+  }>,
+): Promise<void>
+```
+
+Atomically apply a set of schedules.
+Creates or updates each schedule in the list, and deletes any existing schedules not included in the list.
+May not be called from within a workflow.
+
+**Example:**
+
+```typescript
+await DBOS.applySchedules([
+    { scheduleName: "schedule-a", workflowFn: workflowA, schedule: "*/10 * * * *" },  // Every 10 minutes
+    { scheduleName: "schedule-b", workflowFn: workflowB, schedule: "0 0 * * *" },     // Every day at midnight
+]);
+```
+
+### DBOS.backfillSchedule
+
+```typescript
+DBOS.backfillSchedule(
+  name: string,
+  start: Date,
+  end: Date,
+): Promise<WorkflowHandle<unknown>[]>
+```
+
+Enqueue all executions of a schedule that would have run between `start` and `end`.
+Each execution uses the same deterministic workflow ID as the live scheduler, so already-executed times are skipped.
+May not be called from within a workflow.
+
+### DBOS.triggerSchedule
+
+```typescript
+DBOS.triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>
+```
+
+Immediately enqueue the scheduled workflow at the current time.
+May not be called from within a workflow.
+
+### WorkflowSchedule
+
+Some schedule management methods return the `WorkflowSchedule` type:
+
+```typescript
+interface WorkflowSchedule {
+    scheduleId: string;
+    scheduleName: string;
+    workflowName: string;
+    workflowClassName: string;
+    schedule: string;
+    status: string;  // "ACTIVE" or "PAUSED"
+    context: unknown;
+}
+```
+
 ## Debouncing
 
 You can create a `Debouncer` to debounce your workflows.
