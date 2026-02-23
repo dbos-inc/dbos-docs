@@ -38,13 +38,13 @@ DBOS.apply_schedules([
         "schedule_name": "schedule-a",
         "workflow_fn": workflow_a,
         "schedule": "*/10 * * * *",  # Every 10 minutes
-        "context": None,
+        "context": "context-a",
     },
     {
         "schedule_name": "schedule-b",
         "workflow_fn": workflow_b,
         "schedule": "0 0 * * *",  # Every day at midnight
-        "context": None,
+        "context": "context-b",
     },
 ])
 ```
