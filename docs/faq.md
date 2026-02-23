@@ -103,3 +103,16 @@ Then, a DBOS application can run without privilege (requiring only access to the
 ### How does DBOS scale?
 
 The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
+
+### Why is my application not connecting to Conductor?
+
+The most common reason an application fails to connect to Conductor is that the name the application is registered with in its DBOS configuration does not match the name it was registered with in Conductor.
+Additionally, if you are [self-hosting Conductor](./production/hosting-conductor.md) with a free license, you may connect at most one executor per application to Conductor, so additional executors may see their connections rejected.
+To connect multiple executors, upgrade to a paid license.
+
+### Why is my Conductor dashboard flickering?
+
+The most common cause of flickering is that you have connected multiple executors using different system databases to the same Conductor application (for example, both an executor from your dev environment and one from your prod environment), causing Conductor to receieve inconsistent data.
+For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
+For example, you may want to have separate dev, staging, and prod Conductor apps.
+See [the docs](./production/conductor.md#managing-conductor-applications) for more information.
