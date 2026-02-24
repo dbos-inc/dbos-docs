@@ -32,6 +32,10 @@ By default, API keys do not expire, though they may be revoked at any time from 
 Finally, supply that API key to your DBOS application to connect it to Conductor.
 This initiates a websocket connection with Conductor:
 
+:::tip
+The application name in your DBOS configuration must match the name with which you registered your app in Conductor.
+:::
+
 <Tabs groupId="language" queryString="language">
 
 <TabItem value="python" label="Python">
