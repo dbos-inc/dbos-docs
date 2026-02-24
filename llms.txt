@@ -30,6 +30,7 @@
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 - [Lakebase](https://docs.dbos.dev/integrations/lakebase.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Databricks Lakebase Postgres database.
 - [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
+- [DBOS MCP Server](https://docs.dbos.dev/integrations/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Neon](https://docs.dbos.dev/integrations/neon.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add DBOS durable workflows to your existing Nest.js application to make it resilient to any failure.
 - [OpenAI Agents SDK](https://docs.dbos.dev/integrations/openai-agents.md): You can use DBOS to add durable execution to an agent built with the OpenAI Agents SDK.
@@ -73,7 +74,6 @@
 - [Self-Hosting Conductor With Kubernetes](https://docs.dbos.dev/production/hosting-conductor-with-kubernetes.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Google Cloud Run](https://docs.dbos.dev/production/hosting-with-cloud-run.md): This guide covers deploying a DBOS application to Google Cloud Run with a Cloud SQL for PostgreSQL database. It includes best practices for security, availability, and scalability. This guide assumes DBOS Conductor is hosted separately.
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide covers deploying a DBOS application on Kubernetes.
-- [DBOS MCP Server](https://docs.dbos.dev/production/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/retention.md): If you are using Conductor, you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 - [Workflow Management](https://docs.dbos.dev/production/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
 - [Workflow Recovery](https://docs.dbos.dev/production/workflow-recovery.md): When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.

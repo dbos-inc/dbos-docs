@@ -240,5 +240,5 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 Congratulations!  You've finished the DBOS Python guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../production/mcp.md).
+- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../integrations/mcp.md).
 - Check out some [**example applications**](../examples/index.md).
