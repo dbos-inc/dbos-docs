@@ -29,6 +29,26 @@ DBOS.create_schedule(
 )
 ```
 
+Note that `DBOS.create_schedule` will fail if the schedule already exists.
+If you're defining a set of static schedules to be created on program start, you can instead use `DBOS.apply_schedules` to create them atomically, updating them if they already exist:
+
+```python
+DBOS.apply_schedules([
+    {
+        "schedule_name": "schedule-a",
+        "workflow_fn": workflow_a,
+        "schedule": "*/10 * * * *",  # Every 10 minutes
+        "context": "context-a",
+    },
+    {
+        "schedule_name": "schedule-b",
+        "workflow_fn": workflow_b,
+        "schedule": "0 0 * * *",  # Every day at midnight
+        "context": "context-b",
+    },
+])
+```
+
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -66,18 +86,6 @@ def on_customer_registration(customer_id: str):
 ```
 
 Note that scheduling is not supported for workflows that are methods on [configured instances](./classes.md). Scheduled workflows should be plain functions or `@staticmethod` class members.
-
-### Atomically Updating Schedules
-
-If you need to create or update multiple schedules at once, use [`DBOS.apply_schedules`](../reference/contexts.md#apply_schedules).
-This is useful for declaratively defining all your static schedules in one place:
-
-```python
-DBOS.apply_schedules([
-    {"schedule_name": "schedule-a", "workflow_fn": workflow_a, "schedule": "*/10 * * * *", "context": None},  # Every 10 minutes
-    {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
-])
-```
 
 ### Managing Schedules
 
