@@ -112,7 +112,7 @@ To connect multiple executors, upgrade to a paid license.
 
 ### Why is my Conductor dashboard flickering?
 
-The most common cause of flickering is that you have connected multiple executors using different system databases to the same Conductor application (for example, both an executor from your dev environment and one from your prod environment), causing Conductor to receieve inconsistent data.
+The most common cause of flickering is that you have connected multiple executors using different system databases to the same Conductor application (for example, both an executor from your dev environment and one from your prod environment), causing Conductor to receive inconsistent data.
 For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
 For example, you may want to have separate dev, staging, and prod Conductor apps.
 See [the docs](./production/conductor.md#managing-conductor-applications) for more information.
