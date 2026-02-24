@@ -85,7 +85,7 @@ handle = client.enqueue(
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = new DBOSClient(dbUrl);
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
 const handle = await client.enqueue(
     {
         workflowName: "process_order",
