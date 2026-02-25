@@ -74,31 +74,7 @@ This is useful when you have multiple concurrent workflows and want to process r
 - **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
 - **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
 
-**Example syntax:**
-
-```python
-from dbos import DBOS, Queue
-
-queue = Queue("example_queue", concurrency=5)
-
-@DBOS.workflow()
-def process_task(task_id: int) -> str:
-    ...
-
-@DBOS.workflow()
-def process_all_tasks(tasks: list[int]) -> list[str]:
-    # Enqueue all tasks
-    handles = [queue.enqueue(process_task, task_id) for task_id in tasks]
-
-    # Process results as they complete
-    results = []
-    remaining = list(handles)
-    while remaining:
-        completed = DBOS.wait_first(remaining)
-        results.append(completed.get_result())
-        remaining = [h for h in remaining if h.workflow_id != completed.workflow_id]
-    return results
-```
+See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
 ### wait_first_async
 
