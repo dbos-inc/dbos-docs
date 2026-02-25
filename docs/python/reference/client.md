@@ -170,6 +170,35 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 **Returns:**
 - The [WorkflowHandleAsync](./workflow_handles.md#workflowhandleasync) of the workflow whose ID is `workflow_id`.
 
+### wait_first
+
+```python
+client.wait_first(
+    handles: List[WorkflowHandle[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> WorkflowHandle[Any]
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+Similar to [`DBOS.wait_first`](contexts.md#wait_first).
+
+**Parameters:**
+- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
+- **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
+
+### wait_first_async
+
+```python
+client.wait_first_async(
+    handles: List[WorkflowHandleAsync[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> WorkflowHandleAsync[Any]
+```
+
+Asynchronous version of [`wait_first`](#wait_first).
+
 ### send
 
 ```python
