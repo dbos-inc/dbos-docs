@@ -202,7 +202,7 @@ const pageCount = await handle.getResult();
 #### `waitFirst`
 
 ```typescript
-waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>
+waitFirst(handles: WorkflowHandle<unknown>[]): Promise<WorkflowHandle<unknown>>
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.

@@ -74,8 +74,8 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 ```typescript
 static async waitFirst(
-  handles: WorkflowHandle<any>[]
-): Promise<WorkflowHandle<any>>
+  handles: WorkflowHandle<unknown>[]
+): Promise<WorkflowHandle<unknown>>
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.
