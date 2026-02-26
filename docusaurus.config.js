@@ -151,6 +151,10 @@ const config = {
             from: '/python/examples/scheduled-reminders',
             to: '/why-dbos',
           },
+          {
+            from: '/production/mcp',
+            to: '/integrations/mcp',
+          },
         ],
         // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
         createRedirects(existingPath) {
