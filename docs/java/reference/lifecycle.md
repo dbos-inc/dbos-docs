@@ -74,6 +74,8 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withListenQueues(String... queues)`**: Specify the queues by name this DBOS process should dequeue and execute workflows from.
 
+- **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
+
 ### DBOS.launch
 
 ```java
@@ -93,3 +95,89 @@ static void shutdown()
 Destroy the DBOS singleton.
 After DBOS is shut down, a new singleton can be configured and launched.
 This may be useful for testing DBOS applications.
+
+## Custom Serialization
+
+DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
+By default, data is serialized with Jackson (format name `java_jackson`), but you can optionally supply a custom serializer through DBOS configuration.
+A custom serializer must implement the `DBOSSerializer` interface:
+
+```java
+import dev.dbos.transact.json.DBOSSerializer;
+
+public interface DBOSSerializer {
+  /**
+   * Return a name for the serialization format.
+   * This name is stored in the database to identify how data was serialized.
+   */
+  String name();
+
+  /** Serialize a value to a string. */
+  String stringify(Object value, boolean noHistoricalWrapper);
+
+  /** Deserialize a string back to a value, or return null if the input is null. */
+  Object parse(String text, boolean noHistoricalWrapper);
+
+  /** Serialize a Throwable to a string. */
+  String stringifyThrowable(Throwable throwable);
+
+  /** Deserialize a string back to a Throwable, or return null if the input is null. */
+  Throwable parseThrowable(String text);
+}
+```
+
+The `name()` method must return a unique identifier for the serialization format.
+This name is stored alongside serialized values in the database so that the correct deserializer is used when reading data back.
+
+The `noHistoricalWrapper` parameter indicates whether the value is wrapped in an enclosing array.
+When `noHistoricalWrapper` is `true`, the value is a raw `Object[]` array and should be serialized directly.
+When it is `false`, the value is a single object.
+
+For example, here is a skeleton custom serializer:
+
+```java
+import dev.dbos.transact.json.DBOSSerializer;
+
+public class MyCustomSerializer implements DBOSSerializer {
+    @Override
+    public String name() { return "my_custom"; }
+
+    @Override
+    public String stringify(Object value, boolean noHistoricalWrapper) {
+        // Serialize value to a string
+    }
+
+    @Override
+    public Object parse(String text, boolean noHistoricalWrapper) {
+        if (text == null) return null;
+        // Deserialize string back to a value
+    }
+
+    @Override
+    public String stringifyThrowable(Throwable throwable) {
+        if (throwable == null) return null;
+        // Serialize throwable to a string
+    }
+
+    @Override
+    public Throwable parseThrowable(String text) {
+        if (text == null) return null;
+        // Deserialize string back to a Throwable
+    }
+}
+```
+
+Configure DBOS to use a custom serializer:
+
+```java
+DBOSConfig config = DBOSConfig.defaultsFromEnv("myApp")
+    .withSerializer(new MyCustomSerializer());
+DBOS.configure(config);
+DBOS.launch();
+```
+
+If you use a custom serializer in your DBOS application, you must provide the same serializer to any [`DBOSClient`](./client.md) that interacts with the application:
+
+```java
+var client = new DBOSClient(dbUrl, dbUser, dbPassword, null, new MyCustomSerializer());
+```

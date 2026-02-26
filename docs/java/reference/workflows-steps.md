@@ -13,6 +13,8 @@ public @interface Workflow {
   String name();
 
   int maxRecoveryAttempts();
+
+  SerializationStrategy serializationStrategy();
 }
 ```
 
@@ -27,6 +29,11 @@ Workflow methods must be invoked via the proxy object returned by [`registerWork
 - **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+- **serializationStrategy**: The default [serialization strategy](../reference/methods.md#serialization-strategy) to use for local invocations of this workflow. Set to `SerializationStrategy.PORTABLE` to test [cross-language interoperability](../../explanations/portable-workflows.md). Defaults to `SerializationStrategy.DEFAULT`.
+
+:::tip
+When a workflow uses portable serialization, Java automatically coerces JSON arguments to match the method's parameter types. For example, JSON integers are widened to `long`, and ISO-8601 date strings are parsed to `Instant` or `OffsetDateTime`. See [Input Validation and Coercion](#input-validation-and-coercion) below for details.
+:::
 
 ### @Step
 ```java
@@ -68,6 +75,35 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 - **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
 - **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified
 - **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to false to enable this behavior. Defaults to true.
+
+## Input Validation and Coercion
+
+Java automatically coerces portable JSON arguments to match the workflow method's parameter types.
+No opt-in is required&mdash;this happens transparently for all portable workflows.
+
+Common coercions include:
+
+| JSON Type | Java Method Parameter | Coercion |
+|-----------|----------------------|----------|
+| Integer (`30000`) | `long` | Integer &rarr; long |
+| Double (`1.01`) | `double` | Double &rarr; double |
+| String (`"2025-06-15T10:30:00Z"`) | `Instant` | ISO-8601 parsing |
+| String (`"2025-06-15T10:30:00+02:00"`) | `OffsetDateTime` | ISO-8601 parsing |
+| JSON array | `ArrayList<T>` | Element-wise coercion |
+| JSON object | `Map<String, Object>` | LinkedHashMap &rarr; Map |
+
+If coercion fails (for example, a JSON object where a `String` is expected), the workflow is marked as `ERROR` with a descriptive message.
+
+```java
+// This workflow expects (String, long), but portable JSON delivers (String, Integer).
+// Java coerces the Integer to long automatically.
+@Workflow(name = "processOrder")
+public String processOrder(String orderId, long quantity) {
+    return "order:" + orderId + " qty:" + quantity;
+}
+```
+
+For more context on why input coercion matters for cross-language workflows, see [Input Validation and Coercion](../../explanations/portable-workflows.md#input-validation-and-coercion).
 
 ## Methods
 
