@@ -95,7 +95,9 @@ Wait for any one of the given async workflow handles to complete and return the 
 DBOS.send(
     destination_id: str,
     message: Any,
-    topic: Optional[str] = None
+    topic: Optional[str] = None,
+    *,
+    idempotency_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -107,6 +109,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- `idempotency_key`: If `DBOS.send` is called multiple times with the same idempotency key, only the first message is sent. Can only be used outside a workflow (workflow durability guarantees exactly-once semantics for `DBOS.send` calls inside a workflow).
 
 ### send_async
 
@@ -115,6 +118,8 @@ DBOS.send_async(
     destination_id: str,
     message: Any,
     topic: Optional[str] = None
+    *,
+    idempotency_key: Optional[str] = None,
 ) -> Coroutine[Any, Any, None]
 ```
 
