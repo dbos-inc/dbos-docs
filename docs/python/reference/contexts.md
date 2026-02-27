@@ -109,7 +109,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: If `DBOS.send` is called multiple times with the same idempotency key, only the first message is sent. Can only be used outside a workflow (workflow durability guarantees exactly-once semantics for `DBOS.send` calls inside a workflow).
+- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 
 ### send_async
 
