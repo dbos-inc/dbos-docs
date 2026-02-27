@@ -105,8 +105,8 @@ Each time DBOS launches, it records the current application version.
 The latest version is determined by the highest timestamp.
 
 **Columns:**
-- **version_id**: A unique ID for this version record.
-- **version_name**: The name of the version. Must be unique.
+- **version_id**: A unique ID for this version.
+- **version_name**: The unique name of this version.
 - **version_timestamp**: The epoch timestamp (in milliseconds) of this version.
 
 ### dbos.workflow_schedules

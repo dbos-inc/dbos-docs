@@ -1059,14 +1059,6 @@ DBOS.span: opentelemetry.trace.Span
 Retrieve the OpenTelemetry span associated with the curent request.
 You can use this to set custom attributes in your span.
 
-### application_version
-
-```python
-DBOS.application_version: str
-```
-
-Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
-
 ### executor_id
 
 ```python
@@ -1077,18 +1069,19 @@ Retrieve the current executor ID, a unique process ID used to identify the appli
 
 ## Version Management
 
-### VersionInfo
+### application_version
 
 ```python
+DBOS.application_version: str
 ```
 
-A dictionary describing a registered application version.
+Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 
-### list_versions
+### list_application_versions
 
 ```python
-DBOS.list_versions() -> List[VersionInfo]
+DBOS.list_application_versions() -> List[VersionInfo]
 
 class VersionInfo(TypedDict):
     # A unique ID for this version
@@ -1101,35 +1094,35 @@ class VersionInfo(TypedDict):
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 
-### list_versions_async
+### list_application_versions_async
 
 ```python
-await DBOS.list_versions_async() -> List[VersionInfo]
+await DBOS.list_application_versions_async() -> List[VersionInfo]
 ```
 
-Coroutine version of [`list_versions`](#list_versions).
+Coroutine version of [`list_application_versions`](#list_application_versions).
 
-### get_latest_version
+### get_latest_application_version
 
 ```python
-DBOS.get_latest_version() -> VersionInfo
+DBOS.get_latest_application_version() -> VersionInfo
 ```
 
 Return the latest application version (the one with the highest timestamp).
 Raises `DBOSException` if no versions are registered.
 
-### get_latest_version_async
+### get_latest_application_version_async
 
 ```python
-await DBOS.get_latest_version_async() -> VersionInfo
+await DBOS.get_latest_application_version_async() -> VersionInfo
 ```
 
-Coroutine version of [`get_latest_version`](#get_latest_version).
+Coroutine version of [`get_latest_application_version`](#get_latest_application_version).
 
-### set_latest_version
+### set_latest_application_version
 
 ```python
-DBOS.set_latest_version(version_name: str) -> None
+DBOS.set_latest_application_version(version_name: str) -> None
 ```
 
 Promote a version to latest by updating its timestamp to the current time.
@@ -1138,13 +1131,13 @@ This is useful when rolling back to a previous application version.
 **Parameters:**
 - `version_name`: The name of the version to promote.
 
-### set_latest_version_async
+### set_latest_application_version_async
 
 ```python
-await DBOS.set_latest_version_async(version_name: str) -> None
+await DBOS.set_latest_application_version_async(version_name: str) -> None
 ```
 
-Coroutine version of [`set_latest_version`](#set_latest_version).
+Coroutine version of [`set_latest_application_version`](#set_latest_application_version).
 
 ## Debouncing
 
