@@ -112,4 +112,48 @@ This prevents unsafe recovery of workflows that depend on different code.
 When using versioning, we recommend **blue-green** code upgrades.
 When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
-Then, once all workflows of the old version are complete (you can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to check), you can retire the old code version.
+To direct enqueued workflows to processes running the latest version of your code, use [`DBOS.get_latest_application_version`](../reference/contexts.md#get_latest_application_version) to look up the latest version:
+
+```python
+from dbos import DBOS, Queue, SetEnqueueOptions
+
+queue = Queue("my_queue")
+
+latest_version = DBOS.get_latest_application_version()
+with SetEnqueueOptions(app_version=latest_version["version_name"]):
+    queue.enqueue(my_workflow, arg1, arg2)
+```
+
+Or using [`DBOSClient`](../reference/client.md#version-management):
+
+```python
+from dbos import DBOSClient, EnqueueOptions
+
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+latest_version = client.get_latest_application_version()
+options: EnqueueOptions = {
+    "workflow_name": "my_workflow",
+    "queue_name": "my_queue",
+    "app_version": latest_version["version_name"],
+}
+handle = client.enqueue(options, arg1, arg2)
+```
+
+Then, once all workflows of the old version are complete, you can retire the old code version.
+You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to check if any workflows are still active for a given version:
+
+```python
+active = DBOS.list_workflows(
+    app_version="1.0.0",
+    status=["ENQUEUED", "PENDING"],
+)
+if not active:
+    print("Safe to retire version 1.0.0")
+```
+
+If you need to roll back to a previous version of your code, use [`DBOS.set_latest_application_version`](../reference/contexts.md#set_latest_application_version) to promote that version to latest so new enqueued workflows are directed to it:
+
+```python
+DBOS.set_latest_application_version("1.0.0")
+```
