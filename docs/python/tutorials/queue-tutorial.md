@@ -56,36 +56,27 @@ def process_tasks(tasks):
 ```
 
 Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
-You can do this using [`DBOS.send` and `DBOS.recv`](./workflow-communication.md#workflow-messaging-and-notifications).
-Each enqueued workflow sends a message to the main workflow when it's done processing its task.
-The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
-
+You can do this using [`DBOS.wait_first`](../reference/contexts.md#wait_first), which waits for any one of a list of workflow handles to complete and returns the first completed handle.
 
 ```python
 @DBOS.workflow()
-def process_task(parent_workflow_id: str, task_id: int, task: Task):
+def process_task(task: Task):
     result = ...  # Process the task
-    # Notify the main workflow this task is complete
-    DBOS.send(parent_workflow_id, task_id)
     return result
 
 @DBOS.workflow()
 def process_tasks(tasks: List[Task]):
-    handles: List[WorkflowHandle] = []
-    for (i, task) in enumerate(tasks):
-        completed_task_handle = queue.enqueue(process_task, DBOS.workflow_id, i, task)
-        handles.append(completed_task_handle)
+    handles = [queue.enqueue(process_task, task) for task in tasks]
     results = []
-    while len(results) < len(tasks):
-        # Wait for a notification that a task is complete
-        completed_task_id: int | None = DBOS.recv()
-        if completed_task_id is None:
-            ... # Handle a timeout
-        # Retrieve result of the completed task
-        completed_task_handle = handles[completed_task_id]
-        result = completed_task_handle.get_result()
-        print(f"Task {completed_task_id} completed. Result: {result}")
+    remaining = list(handles)
+    while remaining:
+        # Wait for any task to complete
+        completed = DBOS.wait_first(remaining)
+        result = completed.get_result()
+        print(f"Task completed. Result: {result}")
         results.append(result)
+        # Remove the completed handle
+        remaining = [h for h in remaining if h.workflow_id != completed.workflow_id]
     return results
 ```
 

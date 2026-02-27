@@ -40,6 +40,7 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+    waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
@@ -197,6 +198,18 @@ Example:
 const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
 ```
+
+#### `waitFirst`
+
+```typescript
+waitFirst(handles: WorkflowHandle<unknown>[]): Promise<WorkflowHandle<unknown>>
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst).
+
+**Parameters:**
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
 
 #### `readStream`
 

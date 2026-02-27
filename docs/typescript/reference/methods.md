@@ -70,13 +70,29 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 
+### DBOS.waitFirst
+
+```typescript
+static async waitFirst(
+  handles: WorkflowHandle<unknown>[]
+): Promise<WorkflowHandle<unknown>>
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+This is useful when you have multiple concurrent workflows and want to process results as they complete.
+
+**Parameters:**
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+
+See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
+
 ### DBOS.send
 
 ```typescript
 DBOS.send<T>(
-  destinationID: string, 
-  message: T, 
-  topic?: string, 
+  destinationID: string,
+  message: T,
+  topic?: string,
   idempotencyKey?: string
 ): Promise<void>
 ```
@@ -88,7 +104,7 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **idempotencyKey**: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 
 ### DBOS.recv
 

@@ -57,13 +57,47 @@ async def example_workflow(var1: str, var2: str):
 handle: WorkflowHandleAsync = await DBOS.start_workflow_async(example_workflow, "var1", "var2")
 ```
 
+### wait_first
+
+```python
+DBOS.wait_first(
+    handles: List[WorkflowHandle[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> WorkflowHandle[Any]
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+This is useful when you have multiple concurrent workflows and want to process results as they complete.
+
+**Parameters:**
+- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
+- **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
+
+See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
+
+### wait_first_async
+
+```python
+DBOS.wait_first_async(
+    handles: List[WorkflowHandleAsync[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> Coroutine[Any, Any, WorkflowHandleAsync[Any]]
+```
+
+Async version of [`wait_first`](#wait_first).
+Wait for any one of the given async workflow handles to complete and return the first completed handle.
+
 ### send
 
 ```python
 DBOS.send(
     destination_id: str,
     message: Any,
-    topic: Optional[str] = None
+    topic: Optional[str] = None,
+    *,
+    idempotency_key: Optional[str] = None,
 ) -> None
 ```
 
@@ -75,6 +109,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 
 ### send_async
 
@@ -83,6 +118,8 @@ DBOS.send_async(
     destination_id: str,
     message: Any,
     topic: Optional[str] = None
+    *,
+    idempotency_key: Optional[str] = None,
 ) -> Coroutine[Any, Any, None]
 ```
 
