@@ -1075,6 +1075,77 @@ DBOS.executor_id: str
 
 Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
+## Version Management
+
+### VersionInfo
+
+```python
+```
+
+A dictionary describing a registered application version.
+
+
+### list_versions
+
+```python
+DBOS.list_versions() -> List[VersionInfo]
+
+class VersionInfo(TypedDict):
+    # A unique ID for this version
+    version_id: str
+    # The unique name of this version
+    version_name: str
+    # The epoch timestamp (in milliseconds) of this version.
+    version_timestamp: int
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+
+### list_versions_async
+
+```python
+await DBOS.list_versions_async() -> List[VersionInfo]
+```
+
+Coroutine version of [`list_versions`](#list_versions).
+
+### get_latest_version
+
+```python
+DBOS.get_latest_version() -> VersionInfo
+```
+
+Return the latest application version (the one with the highest timestamp).
+Raises `DBOSException` if no versions are registered.
+
+### get_latest_version_async
+
+```python
+await DBOS.get_latest_version_async() -> VersionInfo
+```
+
+Coroutine version of [`get_latest_version`](#get_latest_version).
+
+### set_latest_version
+
+```python
+DBOS.set_latest_version(version_name: str) -> None
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+
+**Parameters:**
+- `version_name`: The name of the version to promote.
+
+### set_latest_version_async
+
+```python
+await DBOS.set_latest_version_async(version_name: str) -> None
+```
+
+Coroutine version of [`set_latest_version`](#set_latest_version).
+
 ## Debouncing
 
 You can create a `Debouncer` to debounce your workflows.
