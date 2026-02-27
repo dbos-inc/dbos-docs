@@ -1075,8 +1075,7 @@ Retrieve the current executor ID, a unique process ID used to identify the appli
 DBOS.application_version: str
 ```
 
-Retrieve the current application version, as documented [here](../tutorials/upgrading-workflows.md#versioning).
-
+Retrieve the application version of this process.
 
 ### list_application_versions
 
