@@ -166,4 +166,5 @@ DBOS(config=config)
 At this time, DBOS does not support coroutine transactions. 
 Decorating an `async def` function with `@DBOS.transaction` will raise an error at runtime.
 
+When calling transactions from an async context (such as a coroutine workflow), **always** call them with [`asyncio.to_thread`](https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread) to avoid blocking the event loop.
 :::
