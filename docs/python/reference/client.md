@@ -762,3 +762,61 @@ client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 
 Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
+
+## Version Management
+
+### list_application_versions
+
+```python
+client.list_application_versions() -> List[VersionInfo]
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+Similar to [`DBOS.list_application_versions`](./contexts.md#list_application_versions).
+
+### list_application_versions_async
+
+```python
+await client.list_application_versions_async() -> List[VersionInfo]
+```
+
+Coroutine version of [`list_application_versions`](#list_application_versions).
+
+### get_latest_application_version
+
+```python
+client.get_latest_application_version() -> VersionInfo
+```
+
+Return the latest application version (the one with the highest timestamp).
+Raises `DBOSException` if no versions are registered.
+Similar to [`DBOS.get_latest_application_version`](./contexts.md#get_latest_application_version).
+
+### get_latest_application_version_async
+
+```python
+await client.get_latest_application_version_async() -> VersionInfo
+```
+
+Coroutine version of [`get_latest_application_version`](#get_latest_application_version).
+
+### set_latest_application_version
+
+```python
+client.set_latest_application_version(version_name: str) -> None
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+Similar to [`DBOS.set_latest_application_version`](./contexts.md#set_latest_application_version).
+
+**Parameters:**
+- `version_name`: The name of the version to promote.
+
+### set_latest_application_version_async
+
+```python
+await client.set_latest_application_version_async(version_name: str) -> None
+```
+
+Coroutine version of [`set_latest_application_version`](#set_latest_application_version).

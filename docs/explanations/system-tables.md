@@ -99,6 +99,16 @@ Each entry represents a different message in a stream.
 - **offset**: The offset of the message in the stream (the first message written has offset 0, the second offset 1, and so on).
 - **function_id**: The monotonically increasing step ID responsible for emitting this stream.
 
+### dbos.application_versions
+This table stores registered application versions.
+Each time DBOS launches, it records the current application version.
+The latest version is determined by the highest timestamp.
+
+**Columns:**
+- **version_id**: A unique ID for this version.
+- **version_name**: The unique name of this version.
+- **version_timestamp**: The epoch timestamp (in milliseconds) of this version.
+
 ### dbos.workflow_schedules
 This table stores scheduled workflow definitions.
 Each entry represents a different scheduled workflow.
