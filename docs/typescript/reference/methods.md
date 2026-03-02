@@ -783,6 +783,52 @@ DBOS.executorID: string
 
 Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
+## Version Management
+
+DBOS automatically tracks application versions.
+Each time DBOS launches, it registers the current application version in the system database.
+You can use these methods to list all registered versions, find the latest version, or promote a version to latest.
+
+### DBOS.listApplicationVersions
+
+```typescript
+static async DBOS.listApplicationVersions(): Promise<VersionInfo[]>
+
+interface VersionInfo {
+  // A unique ID for this version
+  versionId: string;
+  // The unique name of this version
+  versionName: string;
+  // The epoch timestamp (in milliseconds) of this version. Used to determine the latest version.
+  versionTimestamp: number;
+  // The epoch timestamp (in milliseconds) when this version was first registered.
+  createdAt: number;
+}
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+
+### DBOS.getLatestApplicationVersion
+
+```typescript
+static async DBOS.getLatestApplicationVersion(): Promise<VersionInfo>
+```
+
+Return the latest application version (the one with the highest timestamp).
+Throws if no versions are registered.
+
+### DBOS.setLatestApplicationVersion
+
+```typescript
+static async DBOS.setLatestApplicationVersion(versionName: string): Promise<void>
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+
+**Parameters:**
+- `versionName`: The name of the version to promote.
+
 ## Workflow Handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
