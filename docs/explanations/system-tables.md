@@ -107,7 +107,8 @@ The latest version is determined by the highest timestamp.
 **Columns:**
 - **version_id**: A unique ID for this version.
 - **version_name**: The unique name of this version.
-- **version_timestamp**: The epoch timestamp (in milliseconds) of this version.
+- **version_timestamp**: The epoch timestamp (in milliseconds) of this version. Used to determine the latest version.
+- **created_at**: The epoch timestamp (in milliseconds) when this version was first registered.
 
 ### dbos.workflow_schedules
 This table stores scheduled workflow definitions.

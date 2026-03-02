@@ -1087,8 +1087,10 @@ class VersionInfo(TypedDict):
     version_id: str
     # The unique name of this version
     version_name: str
-    # The epoch timestamp (in milliseconds) of this version.
+    # The epoch timestamp (in milliseconds) of this version. This is used to determine the latest version.
     version_timestamp: int
+    # The epoch timestamp (in milliseconds) when this version was first registered.
+    created_at: int
 ```
 
 Return all registered application versions, ordered by timestamp descending (newest first).
