@@ -62,6 +62,10 @@ class DBOSClient {
     applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
+
+    listApplicationVersions(): Promise<VersionInfo[]>;
+    getLatestApplicationVersion(): Promise<VersionInfo>;
+    setLatestApplicationVersion(versionName: string): Promise<void>;
 }
 ```
 
@@ -410,6 +414,40 @@ client.triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>
 
 Immediately enqueue the scheduled workflow at the current time.
 Similar to [`DBOS.triggerSchedule`](./methods.md#dbostriggerschedule).
+
+## Version Management
+
+### listApplicationVersions
+
+```typescript
+client.listApplicationVersions(): Promise<VersionInfo[]>
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+Similar to [`DBOS.listApplicationVersions`](./methods.md#dboslistapplicationversions).
+
+### getLatestApplicationVersion
+
+```typescript
+client.getLatestApplicationVersion(): Promise<VersionInfo>
+```
+
+Return the latest application version (the one with the highest timestamp).
+Throws if no versions are registered.
+Similar to [`DBOS.getLatestApplicationVersion`](./methods.md#dbosgetlatestapplicationversion).
+
+### setLatestApplicationVersion
+
+```typescript
+client.setLatestApplicationVersion(versionName: string): Promise<void>
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+Similar to [`DBOS.setLatestApplicationVersion`](./methods.md#dbossetlatestapplicationversion).
+
+**Parameters:**
+- `versionName`: The name of the version to promote.
 
 ## Debouncing
 
