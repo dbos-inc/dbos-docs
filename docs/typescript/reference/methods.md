@@ -578,7 +578,7 @@ DBOS.applySchedules(
 ```
 
 Atomically apply a set of schedules.
-Creates or updates each schedule in the list, and deletes any existing schedules not included in the list.
+Creates or updates each schedule in the list.
 May not be called from within a workflow.
 
 **Example:**

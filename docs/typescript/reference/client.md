@@ -372,7 +372,7 @@ client.applySchedules(
 ```
 
 Atomically apply a set of schedules.
-Creates or updates each schedule in the list, and deletes any existing schedules not included in the list.
+Creates or updates each schedule in the list.
 Similar to [`DBOS.applySchedules`](./methods.md#dbosapplyschedules), but takes workflow name strings instead of workflow functions.
 
 #### `backfillSchedule`
