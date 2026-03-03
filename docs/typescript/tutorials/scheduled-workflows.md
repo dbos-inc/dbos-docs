@@ -26,6 +26,26 @@ await DBOS.createSchedule({
 });
 ```
 
+Note that `DBOS.createSchedule` will fail if the schedule already exists.
+If you're defining a set of static schedules to be created on program start, you can instead use `DBOS.applySchedules` to create them atomically, updating them if they already exist:
+
+```typescript
+await DBOS.applySchedules([
+    {
+        scheduleName: "schedule-a",
+        workflowFn: workflowA,
+        schedule: "*/10 * * * *",  // Every 10 minutes
+        context: "context-a",
+    },
+    {
+        scheduleName: "schedule-b",
+        workflowFn: workflowB,
+        schedule: "0 0 * * *",  // Every day at midnight
+        context: "context-b",
+    },
+]);
+```
+
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
 
@@ -61,18 +81,6 @@ async function onCustomerRegistration(customerId: string) {
 ```
 
 Note that scheduling is not supported for workflows that are methods on [instantiated objects](./instantiated-objects.md). Scheduled workflows should be free functions or static class methods.
-
-### Atomically Updating Schedules
-
-If you need to create or update multiple schedules at once, use [`DBOS.applySchedules`](../reference/methods.md#dbosapplyschedules).
-This is useful for declaratively defining all your static schedules in one place:
-
-```typescript
-await DBOS.applySchedules([
-    { scheduleName: "schedule-a", workflowFn: workflowA, schedule: "*/10 * * * *" },  // Every 10 minutes
-    { scheduleName: "schedule-b", workflowFn: workflowB, schedule: "0 0 * * *" },     // Every day at midnight
-]);
-```
 
 ### Managing Schedules
 

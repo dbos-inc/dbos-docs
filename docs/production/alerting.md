@@ -1,5 +1,5 @@
 ---
-sidebar_position: 52
+sidebar_position: 25
 title: Alerting
 toc_max_heading_level: 3
 ---

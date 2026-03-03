@@ -8,7 +8,7 @@ If you're using an AI coding agent to build a DBOS application, make sure it has
 1. [Installing DBOS skills.](#dbos-agent-skills)
 2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
 
-You may also want to use the [DBOS MCP server](../production/mcp.md) so your model can directly access your application's workflows and steps.
+You may also want to use the [DBOS MCP server](../integrations/mcp.md) so your model can directly access your application's workflows and steps.
 
 ## DBOS Agent Skills
 
