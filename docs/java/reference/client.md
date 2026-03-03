@@ -11,8 +11,10 @@ toc_max_heading_level: 3
 ```java
 DBOSClient(String url, String user, String password)
 DBOSClient(String url, String user, String password, String schema)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer)
 DBOSClient(DataSource dataSource)
 DBOSClient(DataSource dataSource, String schema)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer)
 ```
 
 Construct the DBOSClient.
@@ -23,6 +25,7 @@ Construct the DBOSClient.
 - **password**: The password for your Postgres user or role.
 - **schema**: The schema the DBOS System Database tables are stored in. Defaults to `dbos` if not provided.
 - **dataSource**: System Database data source. A `HikariDataSource` is created if not provided.
+- **serializer**: A custom [serializer](./lifecycle.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
 
 ## Workflow Interaction Methods
 
@@ -79,6 +82,7 @@ Timeout and deadline cannot both be set
 
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withSerialization(SerializationStrategy serialization)`**: Specify the [serialization strategy](./lifecycle.md#custom-serialization) for the workflow arguments. Options are `SerializationStrategy.DEFAULT`, `SerializationStrategy.PORTABLE`, or `SerializationStrategy.NATIVE`.
 - **`withQueuePartitionKey(String partitionKey)`**: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 
 :::info
@@ -90,10 +94,15 @@ Timeout and deadline cannot both be set
 ### send
 
 ```java
-send(String destinationId, Object message, String topic, String idempotencyKey) 
+send(String destinationId, Object message, String topic, String idempotencyKey)
+send(String destinationId, Object message, String topic, String idempotencyKey, SendOptions options)
 ```
 
 Similar to [`DBOS.send`](./methods.md#send).
+
+The optional `SendOptions` parameter controls serialization:
+- **`SendOptions.defaults()`**: Uses the default serialization strategy.
+- **`SendOptions.portable()`**: Uses portable JSON serialization for cross-language interoperability.
 
 ### getEvent
 

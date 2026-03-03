@@ -72,14 +72,31 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
 
+### DBOS.waitFirst
+
+```typescript
+static async waitFirst(
+  handles: WorkflowHandle<unknown>[]
+): Promise<WorkflowHandle<unknown>>
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+This is useful when you have multiple concurrent workflows and want to process results as they complete.
+
+**Parameters:**
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+
+See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
+
 ### DBOS.send
 
 ```typescript
 DBOS.send<T>(
-  destinationID: string, 
-  message: T, 
-  topic?: string, 
-  idempotencyKey?: string
+  destinationID: string,
+  message: T,
+  topic?: string,
+  idempotencyKey?: string,
+  options?: SendOptions
 ): Promise<void>
 ```
 
@@ -90,7 +107,8 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **idempotencyKey**: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this message.
 
 ### DBOS.recv
 
@@ -119,7 +137,8 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 ```typescript
 DBOS.setEvent<T>(
   key: string,
-  value: T
+  value: T,
+  options?: SetEventOptions
 ): Promise<void>
 ```
 
@@ -130,6 +149,7 @@ Can only be called from within a workflow.
 **Parameters:**
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this event.
 
 ### DBOS.getEvent
 
@@ -184,8 +204,9 @@ Returns a random UUID, in the manner of `node:crypto`, checkpointed as a step.
 
 ```typescript
 DBOS.writeStream<T>(
-  key: string, 
-  value: T
+  key: string,
+  value: T,
+  options?: WriteStreamOptions
 ): Promise<void>
 ```
 
@@ -196,6 +217,7 @@ Can only be called from within a workflow or step.
 **Parameters:**
 - **key**: The stream key/name within the workflow.
 - **value**: A serializable value to write to the stream.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this value.
 
 ### DBOS.closeStream
 
@@ -574,7 +596,7 @@ DBOS.applySchedules(
 ```
 
 Atomically apply a set of schedules.
-Creates or updates each schedule in the list, and deletes any existing schedules not included in the list.
+Creates or updates each schedule in the list.
 May not be called from within a workflow.
 
 **Example:**
@@ -891,3 +913,18 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
   }
 });
 ```
+
+## Serialization Strategy
+
+Several DBOS methods accept an optional `serializationType` parameter that controls how data is serialized.
+This is useful for cross-language interoperability&mdash;for example, if a Python or Java DBOS application needs to read events or messages set by a TypeScript application.
+
+```typescript
+import { WorkflowSerializationFormat } from "@dbos-inc/dbos-sdk";
+```
+
+The available values are:
+
+- **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to JSON).
+- **`'portable'`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
+- **`'native'`**: Explicitly uses the native TypeScript serializer.

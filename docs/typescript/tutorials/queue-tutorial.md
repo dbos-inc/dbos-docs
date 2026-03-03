@@ -69,39 +69,31 @@ const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkfl
 ```
 
 Sometimes, you may wish to receive the result of each task as soon as it's ready instead of waiting for all tasks to complete.
-You can do this using [`DBOS.send` and `DBOS.recv`](./workflow-communication.md#workflow-messaging-and-notifications).
-Each enqueued workflow sends a message to the main workflow when it's done processing its task.
-The main workflow awaits those messages, retrieving the result of each task as soon as the task completes.
+You can do this using [`DBOS.waitFirst`](../reference/methods.md#dboswaitfirst), which waits for any one of a list of workflow handles to complete and returns the first completed handle.
 
 ```javascript
-async function processTaskFunction(parentWorkflowID: string, taskID: number, task: Task) {
+async function processTaskFunction(task: Task): Promise<string> {
     const result = ... // process the task
-    // Notify the main workflow this task is complete
-    await DBOS.send(parentWorkflowID, taskID);
     return result;
 }
 const processTask = DBOS.registerWorkflow(processTaskFunction, { name: "processTask" });
 
 async function processTasksFunction(tasks: Task[]) {
-    const handles: WorkflowHandle<typeof processTaskFunction>[] = [];
-    for (let i = 0; i < tasks.length; i++) {
-        const handle = await DBOS.startWorkflow(processTask, { queueName: queue.name })(
-            DBOS.workflowID, i, tasks[i]
-        );
+    const handles: WorkflowHandle<string>[] = [];
+    for (const task of tasks) {
+        const handle = await DBOS.startWorkflow(processTask, { queueName: queue.name })(task);
         handles.push(handle);
     }
-    const results = [];
-    while (results.length < tasks.length) {
-        // Wait for a notification that a task is complete
-        const completedTaskID = await DBOS.recv<number>();
-        if (completedTaskID === null) {
-            ... // Handle a timeout
-        }
-        // Retrieve result of the completed task
-        const completedTaskHandle = handles[completedTaskID];
-        const result = await completedTaskHandle.getResult();
-        console.log(`Task ${completedTaskID} completed. Result: ${result}`);
+    const results: string[] = [];
+    let remaining = [...handles];
+    while (remaining.length > 0) {
+        // Wait for any task to complete
+        const completed = await DBOS.waitFirst(remaining);
+        const result = await completed.getResult() as string;
+        console.log(`Task completed. Result: ${result}`);
         results.push(result);
+        // Remove the completed handle
+        remaining = remaining.filter(h => h.workflowID !== completed.workflowID);
     }
     return results;
 }
