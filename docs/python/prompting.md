@@ -255,7 +255,7 @@ DBOS.create_schedule(
 - Use `DBOS.create_schedule` to create a schedule with a crontab expression.
 - Use `DBOS.pause_schedule` and `DBOS.resume_schedule` to pause and resume schedules.
 - Use `DBOS.delete_schedule` to delete a schedule.
-- Use `DBOS.apply_schedules` to atomically create, update, or delete multiple schedules at once.
+- Use `DBOS.apply_schedules` to atomically create or update multiple schedules at once.
 - Use `DBOS.list_schedules` and `DBOS.get_schedule` to inspect schedules.
 - Use `DBOS.backfill_schedule` to enqueue missed executions for a time range.
 - Use `DBOS.trigger_schedule` to immediately trigger a schedule.
@@ -1680,7 +1680,11 @@ class Serializer(ABC):
         pass
 
     @abstractmethod
-    def deserialize(cls, serialized_data: str) -> Any:
+    def deserialize(self, serialized_data: str) -> Any:
+        pass
+
+    @abstractmethod
+    def name(self) -> str:
         pass
 ```
 
@@ -1693,8 +1697,11 @@ class JsonSerializer(Serializer):
     def serialize(self, data: Any) -> str:
         return json.dumps(data)
 
-    def deserialize(cls, serialized_data: str) -> Any:
+    def deserialize(self, serialized_data: str) -> Any:
         return json.loads(serialized_data)
+
+    def name(self) -> str:
+        return "basic_json"
 
 serializer = JsonSerializer()
 config: DBOSConfig = {
@@ -1705,6 +1712,8 @@ config: DBOSConfig = {
 DBOS(config=config)
 DBOS.launch()
 ```
+
+The serializer's `name` is stored with serialized values and used to ensure that the correct deserializer is used.
 
 ### Transactions
 
