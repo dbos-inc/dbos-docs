@@ -9,6 +9,10 @@ A client in one language can connect to the [system database](./system-tables.md
 However, each language has a native serialization format that the other languages can't read.
 The **portable JSON** serialization format solves this by providing a common data representation that all SDKs can read and write, and can even be read and written from the database without any DBOS code at all.
 
+:::info
+Cross-language interoperability is currently supported in Python, TypeScript, and Java.
+:::
+
 ## Default Serialization Is Language-Specific
 
 By default, each DBOS SDK serializes data using its language's default format.
@@ -183,7 +187,7 @@ The default serialization strategy only affects invocations that are aware of th
 :::
 
 
-### Per-Operation
+### For Workflow Communication
 
 Setting the serialization format at the workflow level affects the default for `setEvent` and `writeStream`.
 However, individual operations can override this&mdash;for example, a workflow running with native serialization may want to publish a specific event in portable format for cross-language consumption, or a portable workflow may need to record an event with the greater flexibility afforded by the native serializer.
@@ -409,42 +413,6 @@ Each SDK's approach is documented in its language-specific reference:
 - **[Java — Automatic Coercion](../java/reference/workflows-steps.md#input-validation-and-coercion)**: Java automatically coerces portable JSON arguments to match the workflow method's parameter types (e.g., `Integer` &rarr; `long`, ISO-8601 strings &rarr; `Instant`). No opt-in required.
 - **[TypeScript — Input Schema (Zod)](../typescript/reference/workflows-steps.md#input-validation-and-coercion)**: TypeScript workflows can specify an `inputSchema` (compatible with [Zod](https://zod.dev/)) that validates and optionally transforms arguments before the workflow runs.
 - **[Python — Argument Validator (Pydantic)](../python/reference/decorators.md#input-validation-and-coercion)**: Python workflows can specify `validate_args=pydantic_args_validator` to validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/).
-
-## Direct Database Access
-
-Because `portable_json` data is stored as plain JSON in the [system tables](./system-tables.md), you can read and write it directly with SQL&mdash;no DBOS SDK required.
-The [`serialization` column](./system-tables.md) in each table indicates the format used; rows with `serialization = 'portable_json'` contain standard JSON that any SQL client can query.
-
-For example, to start a workflow by inserting directly into `dbos.workflow_status`:
-
-```sql
-INSERT INTO dbos.workflow_status (
-    workflow_uuid, status, name, queue_name,
-    inputs, serialization, created_at, updated_at
-)
-VALUES (
-    'my-workflow-id',
-    'ENQUEUED',
-    'process_order',
-    'orders',
-    '{"positionalArgs":["order-123"],"namedArgs":{}}',
-    'portable_json',
-    EXTRACT(EPOCH FROM now()) * 1000,
-    EXTRACT(EPOCH FROM now()) * 1000
-);
-```
-
-And to poll for the workflow's result:
-
-```sql
-SELECT status, output, error
-FROM dbos.workflow_status
-WHERE workflow_uuid = 'my-workflow-id';
-```
-
-When the workflow completes, `status` will be `SUCCESS` (with `output` populated) or `ERROR` (with `error` populated), and both values will be plain JSON.
-
-This makes it straightforward to integrate DBOS workflows with external systems, dashboards, or languages such as PL/pgSQL that don't have a DBOS SDK.
 
 ## Further Reading
 
