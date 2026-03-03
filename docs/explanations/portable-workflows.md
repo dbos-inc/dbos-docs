@@ -366,8 +366,7 @@ If a workflow fails with a non-portable exception while using portable serializa
 When a workflow is started via portable JSON&mdash;whether from another language, a `DBOSClient`, or a direct database insert&mdash;the arguments arrive as plain JSON values.
 JSON has a limited type system: numbers are untyped (no distinction between `int`, `long`, `double`, or other language-specific offerings), there is no native date type (dates arrive as strings), and collection types may not match the target language's expectations (e.g., a JSON array becomes a generic `ArrayList` in Java, not a typed list or object array).
 
-Each SDK provides a way to validate and coerce these arguments so that the workflow function receives the types it expects.
-
+Each SDK provides a way to validate these arguments so that the workflow function receives the types it expects.
 Note that while workflow argument validation is possible, return values, messages, and events are not automatically coerced, as the expected types are not known at runtime.  These must be validated and coerced manually.
 
 Each SDK's approach is documented in its language-specific reference:
