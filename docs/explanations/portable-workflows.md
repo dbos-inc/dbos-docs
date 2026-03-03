@@ -5,7 +5,7 @@ description: DBOS applications and clients in different languages can interopera
 ---
 
 DBOS supports multiple languages&mdash;Python, TypeScript, Go, and Java&mdash;each with its own SDK.
-When applications in different languages share the same [system database](./system-tables.md), they can exchange data through workflows, messages, events, and streams.
+A client in one language can connect to the [system database](./system-tables.md) of an application written in another language to exchange data through workflows, messages, events, and streams.
 However, each language has a native serialization format that the other languages can't read.
 The **portable JSON** serialization format solves this by providing a common data representation that all SDKs can read and write, and can even be read and written from the database without any DBOS code at all.
 
