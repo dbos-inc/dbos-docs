@@ -143,6 +143,8 @@ const handle = await client.enqueue({
 }, arg1, arg2);
 ```
 
+Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to your latest application version.
+
 Then, once all workflows of the old version are complete, you can retire the old code version.
 You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to check if any workflows are still active for a given version:
 

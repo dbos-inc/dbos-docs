@@ -140,6 +140,8 @@ options: EnqueueOptions = {
 handle = client.enqueue(options, arg1, arg2)
 ```
 
+Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to your latest application version.
+
 Then, once all workflows of the old version are complete, you can retire the old code version.
 You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to check if any workflows are still active for a given version:
 
