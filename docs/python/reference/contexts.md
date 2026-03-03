@@ -98,6 +98,7 @@ DBOS.send(
     topic: Optional[str] = None,
     *,
     idempotency_key: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -110,6 +111,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- `serialization_type`: The [serialization format](#serialization-strategy) to use for this message. Defaults to `WorkflowSerializationFormat.DEFAULT`.
 
 ### send_async
 
@@ -117,9 +119,10 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 DBOS.send_async(
     destination_id: str,
     message: Any,
-    topic: Optional[str] = None
+    topic: Optional[str] = None,
     *,
     idempotency_key: Optional[str] = None,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -165,6 +168,8 @@ Coroutine version of [`recv`](#recv)
 DBOS.set_event(
     key: str,
     value: Any,
+    *,
+    serialization_type: WorkflowSerializationFormat = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -176,6 +181,7 @@ The `set_event` function should not be used in [coroutine workflows](../tutorial
 **Parameters:**
 - `key`: The key of the event.
 - `value`: The value of the event. Must be serializable.
+- `serialization_type`: The [serialization format](#serialization-strategy) to use for this event. Defaults to `WorkflowSerializationFormat.DEFAULT`.
 
 ### set_event_async
 
@@ -183,6 +189,8 @@ The `set_event` function should not be used in [coroutine workflows](../tutorial
 DBOS.set_event_async(
     key: str,
     value: Any,
+    *,
+    serialization_type: WorkflowSerializationFormat = WorkflowSerializationFormat.DEFAULT,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -409,7 +417,9 @@ Coroutine version of [`DBOS.retrieve_workflow`](#retrieve_workflow), retrieving 
 ```python
 DBOS.write_stream(
     key: str,
-    value: Any
+    value: Any,
+    *,
+    serialization_type: WorkflowSerializationFormat = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -420,13 +430,16 @@ The `write_stream` function should not be used in [coroutine workflows](../tutor
 **Parameters:**
 - `key`: The stream key / name within the workflow
 - `value`: A serializable value to write to the stream
+- `serialization_type`: The [serialization format](#serialization-strategy) to use for this value. Defaults to `WorkflowSerializationFormat.DEFAULT`.
 
 ### write_stream_async
 
 ```python
 DBOS.write_stream_async(
     key: str,
-    value: Any
+    value: Any,
+    *,
+    serialization_type: WorkflowSerializationFormat = WorkflowSerializationFormat.DEFAULT,
 ) -> Coroutine[Any, Any, None]
 ```
 
@@ -1367,7 +1380,12 @@ class Serializer(ABC):
         pass
 
     @abstractmethod
-    def deserialize(cls, serialized_data: str) -> Any:
+    def deserialize(self, serialized_data: str) -> Any:
+        pass
+
+    @abstractmethod
+    def name(self) -> str:
+        """The serializer's `name` is stored with serialized values and used to ensure that the correct deserializer is used."""
         pass
 ```
 
@@ -1380,8 +1398,11 @@ class JsonSerializer(Serializer):
     def serialize(self, data: Any) -> str:
         return json.dumps(data)
 
-    def deserialize(cls, serialized_data: str) -> Any:
+    def deserialize(self, serialized_data: str) -> Any:
         return json.loads(serialized_data)
+
+    def name(self) -> str:
+        return "basic_json"
 
 serializer = JsonSerializer()
 config: DBOSConfig = {
@@ -1392,3 +1413,18 @@ config: DBOSConfig = {
 DBOS(config=config)
 DBOS.launch()
 ```
+
+## Serialization Strategy
+
+Several DBOS methods accept an optional `serialization_type` parameter that controls how data is serialized.
+This is useful for cross-language interoperability&mdash;for example, if a TypeScript or Java DBOS application needs to read events or messages set by a Python application.
+
+```python
+from dbos import WorkflowSerializationFormat
+```
+
+The available strategies are:
+
+- **`WorkflowSerializationFormat.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./configuration.md) (defaults to pickle).
+- **`WorkflowSerializationFormat.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
+- **`WorkflowSerializationFormat.NATIVE`**: Explicitly uses the native Python pickle serializer (`py_pickle`).

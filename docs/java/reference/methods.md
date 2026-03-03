@@ -24,6 +24,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 
 ```java
 static void setEvent(String key, Object value)
+static void setEvent(String key, Object value, SerializationStrategy serialization)
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -32,11 +33,13 @@ If the event already exists, update its value.
 **Parameters:**
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for this event. Defaults to `SerializationStrategy.DEFAULT`.
 
 ### send
 
 ```java
 static void send(String destinationId, Object message, String topic, String idempotencyKey)
+static void send(String destinationId, Object message, String topic, String idempotencyKey, SerializationStrategy serialization)
 ```
 
 Send a message to the workflow identified by `destinationID`.
@@ -47,6 +50,7 @@ Messages can optionally be associated with a topic.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`.
 
 ### recv
 
@@ -481,3 +485,18 @@ Example syntax:
 :::info
 An explicit timeout and deadline cannot both be set.
 :::
+
+## Serialization Strategy
+
+Several DBOS methods accept an optional `SerializationStrategy` parameter that controls how data is serialized.
+This is useful for cross-language interoperability&mdash;for example, if a TypeScript or Python DBOS application needs to read events or messages set by a Java application.
+
+```java
+import dev.dbos.transact.workflow.SerializationStrategy;
+```
+
+The available strategies are:
+
+- **`SerializationStrategy.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./lifecycle.md#custom-serialization) (defaults to Jackson).
+- **`SerializationStrategy.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
+- **`SerializationStrategy.NATIVE`**: Explicitly uses the native Java Jackson serializer (`java_jackson`).
