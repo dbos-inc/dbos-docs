@@ -255,7 +255,7 @@ DBOS.create_schedule(
 - Use `DBOS.create_schedule` to create a schedule with a crontab expression.
 - Use `DBOS.pause_schedule` and `DBOS.resume_schedule` to pause and resume schedules.
 - Use `DBOS.delete_schedule` to delete a schedule.
-- Use `DBOS.apply_schedules` to atomically create, update, or delete multiple schedules at once.
+- Use `DBOS.apply_schedules` to atomically create or update multiple schedules at once.
 - Use `DBOS.list_schedules` and `DBOS.get_schedule` to inspect schedules.
 - Use `DBOS.backfill_schedule` to enqueue missed executions for a time range.
 - Use `DBOS.trigger_schedule` to immediately trigger a schedule.
