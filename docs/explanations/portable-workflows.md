@@ -71,15 +71,14 @@ This ensures the workflow's arguments are serialized in portable format that can
 ```python
 from dbos import DBOSClient, WorkflowSerializationFormat
 
-client = DBOSClient(db_url)
+client = DBOSClient(system_database_url=db_url)
 handle = client.enqueue(
     {
         "workflow_name": "process_order",
         "queue_name": "orders",
         "serialization_type": WorkflowSerializationFormat.PORTABLE,
     },
-    "order-123",  # positional arg
-    priority="high",  # keyword arg
+    "order-123",
 )
 ```
 
@@ -286,43 +285,6 @@ DBOS.setEvent(
 
 </TabItem>
 </Tabs>
-
-## Portable Workflow Arguments
-
-When a workflow is enqueued with portable serialization, its arguments are structured as a JSON object with two fields:
-
-```json
-{
-  "positionalArgs": ["order-123", 42],
-  "namedArgs": {"priority": "high"}
-}
-```
-
-- **`positionalArgs`**: An array of the workflow's positional arguments.
-- **`namedArgs`**: An object of the workflow's keyword/named arguments.
-
-This structure allows any language to pass arguments to any other language's workflows.
-For example, a Java `DBOSClient` can enqueue a Python workflow that expects both positional and keyword arguments:
-
-```java
-// Java: enqueue a Python workflow
-DBOSClient client = new DBOSClient(dbUrl, dbUser, dbPassword);
-var options = new EnqueueOptions("", "process_order", "orders")
-    .withSerialization(SerializationStrategy.PORTABLE);
-// Arguments are serialized as: {"positionalArgs": ["order-123"], "namedArgs": {}}
-var handle = client.enqueue(options, "order-123");
-```
-
-The Python workflow receives the arguments normally:
-
-```python
-@DBOS.workflow()
-def process_order(order_id: str):
-    # order_id = "order-123", received from the Java client
-    ...
-```
-
-If the target language (Java, TypeScript) does not support named arguments, then `namedArgs` should not be provided when invoking workflows written in that language.
 
 ## Portable Errors
 
