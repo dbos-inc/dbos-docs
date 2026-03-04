@@ -50,7 +50,7 @@ The example below defines a simple workflow that counts from 0 to 20. DBOS persi
 ```python
 import asyncio
 
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from llama_agents.dbos import DBOSRuntime
 from pydantic import Field
 from workflows import Context, Workflow, step
@@ -58,7 +58,12 @@ from workflows.events import Event, StartEvent, StopEvent
 
 
 # 1. Configure DBOS — SQLite by default
-DBOS(config={"name": "counter-example", "run_admin_server": False})
+config: DBOSConfig = {
+    "name": "llamaindex-counter-example",
+    "system_database_url": "sqlite:///counter_example.sqlite",
+    "run_admin_server": False
+}
+DBOS(config=config)
 
 
 # 2. Define events and workflow (nothing DBOS-specific here)
@@ -110,25 +115,29 @@ If you kill the process mid-run (e.g. Ctrl+C at tick 8), calling `workflow.run(r
 
 1. Workflows must be defined before `runtime.launch()`.
 2. The `run_id` parameter uniquely identifies a workflow run, which is equivalent to DBOS workflow ID.
-3. This example uses SQLite for ease of getting started. For production, configure a Postgres database and pass the connection string to `DBOS`.
+3. This example uses SQLite for ease of getting started. Postgres is recommended for production.
 
 
 ## Durable Workflow Server
 
-`DBOSRuntime` integrates with `WorkflowServer` to serve workflows over HTTP with durable execution out of the box. Pass `runtime.create_workflow_store()` as the persistence backend and `runtime.build_server_runtime()` as the execution engine:
+`DBOSRuntime` integrates with [`WorkflowServer`](https://developers.llamaindex.ai/python/llamaagents/workflows/deployment/) to serve workflows over HTTP with durable execution out of the box. Pass `runtime.create_workflow_store()` as the persistence backend and `runtime.build_server_runtime()` as the execution engine:
 
 ```python
 import asyncio
 
-from dbos import DBOS
+from dbos import DBOS, DBOSConfig
 from llama_agents.dbos import DBOSRuntime
 from llama_agents.server import WorkflowServer
 from pydantic import Field
 from workflows import Context, Workflow, step
 from workflows.events import Event, StartEvent, StopEvent
 
-DBOS(config={"name": "quickstart", "run_admin_server": False})
-
+config: DBOSConfig = {
+    "name": "llamaindex-server",
+    "system_database_url": "sqlite:///server_example.sqlite",
+    "run_admin_server": False
+}
+DBOS(config=config)
 
 class Tick(Event):
     count: int = Field(description="Current count")
@@ -177,7 +186,7 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-The workflow debugger UI at `http://localhost:8000/` works exactly the same as with the default runtime: DBOS is transparent to the server layer.
+The LlamaIndex workflow debugger UI at `http://localhost:8000/` works exactly the same as with the default runtime: DBOS is transparent to the LlamaIndex workflow server layer.
 
 
 ## Learn More
