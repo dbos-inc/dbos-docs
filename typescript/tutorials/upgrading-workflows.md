@@ -115,7 +115,51 @@ config: DBOSConfig = {
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents recovery of workflows that depend on different code.
 
-When using versioning, we recommend **blue-green** code upgrades:
- - When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
- - Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
- - Then, once all workflows of the old version are complete (you can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to check), you can retire the old code version.
+When using versioning, we recommend **blue-green** code upgrades.
+When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
+Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
+To direct enqueued workflows to processes running the latest version of your code, use [`DBOS.getLatestApplicationVersion`](../reference/methods.md#dbosgetlatestapplicationversion) to look up the latest version:
+
+```typescript
+const latestVersion = await DBOS.getLatestApplicationVersion();
+const handle = await DBOS.startWorkflow(myWorkflow, {
+  queueName: "my_queue",
+  enqueueOptions: { applicationVersion: latestVersion.versionName },
+})(arg1, arg2);
+```
+
+Or using [`DBOSClient`](../reference/client.md#version-management):
+
+```typescript
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+
+const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+
+const latestVersion = await client.getLatestApplicationVersion();
+const handle = await client.enqueue({
+  workflowName: "myWorkflow",
+  queueName: "my_queue",
+  appVersion: latestVersion.versionName,
+}, arg1, arg2);
+```
+
+Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to your latest application version.
+
+Then, once all workflows of the old version are complete, you can retire the old code version.
+You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to check if any workflows are still active for a given version:
+
+```typescript
+const active = await DBOS.listWorkflows({
+  applicationVersion: "1.0.0",
+  status: ["ENQUEUED", "PENDING"],
+});
+if (active.length === 0) {
+  console.log("Safe to retire version 1.0.0");
+}
+```
+
+If you need to roll back to a previous version of your code, use [`DBOS.setLatestApplicationVersion`](../reference/methods.md#dbossetlatestapplicationversion) to promote that version to latest so new enqueued workflows are directed to it:
+
+```typescript
+await DBOS.setLatestApplicationVersion("1.0.0");
+```

@@ -63,6 +63,7 @@ class EnqueueOptions(TypedDict):
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
+    serialization_type: NotRequired[WorkflowSerializationFormat]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -96,6 +97,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `queue_partition_key`: A partition key for [partitioned queues](../tutorials/queue-tutorial.md#partitioning-queues). Workflows with the same partition key are processed sequentially.
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -170,6 +172,35 @@ Similar to [`DBOS.retrieve_workflow`](contexts.md#retrieve_workflow).
 **Returns:**
 - The [WorkflowHandleAsync](./workflow_handles.md#workflowhandleasync) of the workflow whose ID is `workflow_id`.
 
+### wait_first
+
+```python
+client.wait_first(
+    handles: List[WorkflowHandle[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> WorkflowHandle[Any]
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+Similar to [`DBOS.wait_first`](contexts.md#wait_first).
+
+**Parameters:**
+- **handles**: A non-empty list of workflow handles to wait on. Raises `ValueError` if the list is empty.
+- **polling_interval_sec**: The interval (in seconds) at which DBOS polls the database. Defaults to `1.0`.
+
+### wait_first_async
+
+```python
+client.wait_first_async(
+    handles: List[WorkflowHandleAsync[Any]],
+    *,
+    polling_interval_sec: float = 1.0,
+) -> WorkflowHandleAsync[Any]
+```
+
+Asynchronous version of [`wait_first`](#wait_first).
+
 ### send
 
 ```python
@@ -178,6 +209,8 @@ client.send(
     message: Any,
     topic: Optional[str] = None,
     idempotency_key: Optional[str] = None,
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -188,6 +221,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -203,6 +237,8 @@ client.send_async(
     message: Any,
     topic: Optional[str] = None,
     idempotency_key: Optional[str] = None,
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
 ) -> None
 ```
 
@@ -213,6 +249,7 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 
 ### get_event
 
@@ -762,3 +799,61 @@ client.trigger_schedule(schedule_name: str) -> WorkflowHandle[None]
 
 Immediately enqueue (on an internal queue) the scheduled workflow at the current time.
 Similar to [`DBOS.trigger_schedule`](./contexts.md#trigger_schedule).
+
+## Version Management
+
+### list_application_versions
+
+```python
+client.list_application_versions() -> List[VersionInfo]
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+Similar to [`DBOS.list_application_versions`](./contexts.md#list_application_versions).
+
+### list_application_versions_async
+
+```python
+await client.list_application_versions_async() -> List[VersionInfo]
+```
+
+Coroutine version of [`list_application_versions`](#list_application_versions).
+
+### get_latest_application_version
+
+```python
+client.get_latest_application_version() -> VersionInfo
+```
+
+Return the latest application version (the one with the highest timestamp).
+Raises `DBOSException` if no versions are registered.
+Similar to [`DBOS.get_latest_application_version`](./contexts.md#get_latest_application_version).
+
+### get_latest_application_version_async
+
+```python
+await client.get_latest_application_version_async() -> VersionInfo
+```
+
+Coroutine version of [`get_latest_application_version`](#get_latest_application_version).
+
+### set_latest_application_version
+
+```python
+client.set_latest_application_version(version_name: str) -> None
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+Similar to [`DBOS.set_latest_application_version`](./contexts.md#set_latest_application_version).
+
+**Parameters:**
+- `version_name`: The name of the version to promote.
+
+### set_latest_application_version_async
+
+```python
+await client.set_latest_application_version_async(version_name: str) -> None
+```
+
+Coroutine version of [`set_latest_application_version`](#set_latest_application_version).

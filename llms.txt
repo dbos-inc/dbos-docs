@@ -5,6 +5,7 @@
 - [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
+- [Cross-Language Interaction](https://docs.dbos.dev/explanations/portable-workflows.md): DBOS applications and clients in different languages can interoperate using portable JSON serialization
 - [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
 - [Why DBOS for Agents](https://docs.dbos.dev/explanations/why-dbos-agents.md): DBOS provides lightweight durable workflows for your AI agents.
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
@@ -82,6 +83,7 @@
 - [CI/CD Slackbot](https://docs.dbos.dev/python/examples/deploy-tracker-slackbot.md): In this example, we use DBOS and Bolt to build a CI/CD Slackbot that helps you trigger application deployments and track deployment pipeline progress directly from Slack. It listens to commands such as /deploy and /check_status in a Slack channel and posts status updates back to the channel.
 - [Document Ingestion Pipeline](https://docs.dbos.dev/python/examples/document-detective.md): In this example, we'll use DBOS to build a reliable and scalable data processing pipeline.
 - [Hacker News Research Agent](https://docs.dbos.dev/python/examples/hacker-news-agent.md): This example is also available in TypeScript.
+- [Transactional Outbox](https://docs.dbos.dev/python/examples/outbox.md): A transactional outbox is a common pattern that solves an important problem: how to reliably update a database record and send a message to another system.
 - [Advanced Queue Patterns](https://docs.dbos.dev/python/examples/queue-patterns.md): This example demonstrates how to build several advanced queue patterns with DBOS.
 - [Queue Worker](https://docs.dbos.dev/python/examples/queue-worker.md): This example is also available in TypeScript.
 - [S3 Mirror](https://docs.dbos.dev/python/examples/s3mirror.md): S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv here.

@@ -26,6 +26,7 @@ export interface EnqueueOptions {
   deduplicationID?: string;
   priority?: number;
   queuePartitionKey?: string;
+  applicationVersion?: string;
 }
 ```
 
@@ -69,15 +70,33 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+  - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
+
+### DBOS.waitFirst
+
+```typescript
+static async waitFirst(
+  handles: WorkflowHandle<unknown>[]
+): Promise<WorkflowHandle<unknown>>
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+This is useful when you have multiple concurrent workflows and want to process results as they complete.
+
+**Parameters:**
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+
+See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
 ### DBOS.send
 
 ```typescript
 DBOS.send<T>(
-  destinationID: string, 
-  message: T, 
-  topic?: string, 
-  idempotencyKey?: string
+  destinationID: string,
+  message: T,
+  topic?: string,
+  idempotencyKey?: string,
+  options?: SendOptions
 ): Promise<void>
 ```
 
@@ -88,7 +107,8 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **idempotencyKey**: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this message.
 
 ### DBOS.recv
 
@@ -117,7 +137,8 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 ```typescript
 DBOS.setEvent<T>(
   key: string,
-  value: T
+  value: T,
+  options?: SetEventOptions
 ): Promise<void>
 ```
 
@@ -128,6 +149,7 @@ Can only be called from within a workflow.
 **Parameters:**
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this event.
 
 ### DBOS.getEvent
 
@@ -182,8 +204,9 @@ Returns a random UUID, in the manner of `node:crypto`, checkpointed as a step.
 
 ```typescript
 DBOS.writeStream<T>(
-  key: string, 
-  value: T
+  key: string,
+  value: T,
+  options?: WriteStreamOptions
 ): Promise<void>
 ```
 
@@ -194,6 +217,7 @@ Can only be called from within a workflow or step.
 **Parameters:**
 - **key**: The stream key/name within the workflow.
 - **value**: A serializable value to write to the stream.
+- **options.serializationType**: The [serialization format](#serialization-strategy) to use for this value.
 
 ### DBOS.closeStream
 
@@ -781,6 +805,52 @@ DBOS.executorID: string
 
 Retrieve the current executor ID, a unique process ID used to identify the application instance in distributed environments.
 
+## Version Management
+
+DBOS automatically tracks application versions.
+Each time DBOS launches, it registers the current application version in the system database.
+You can use these methods to list all registered versions, find the latest version, or promote a version to latest.
+
+### DBOS.listApplicationVersions
+
+```typescript
+static async DBOS.listApplicationVersions(): Promise<VersionInfo[]>
+
+interface VersionInfo {
+  // A unique ID for this version
+  versionId: string;
+  // The unique name of this version
+  versionName: string;
+  // The epoch timestamp (in milliseconds) of this version. Used to determine the latest version.
+  versionTimestamp: number;
+  // The epoch timestamp (in milliseconds) when this version was first registered.
+  createdAt: number;
+}
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+
+### DBOS.getLatestApplicationVersion
+
+```typescript
+static async DBOS.getLatestApplicationVersion(): Promise<VersionInfo>
+```
+
+Return the latest application version (the one with the highest timestamp).
+Throws if no versions are registered.
+
+### DBOS.setLatestApplicationVersion
+
+```typescript
+static async DBOS.setLatestApplicationVersion(versionName: string): Promise<void>
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+
+**Parameters:**
+- `versionName`: The name of the version to promote.
+
 ## Workflow Handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
@@ -843,3 +913,18 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
   }
 });
 ```
+
+## Serialization Strategy
+
+Several DBOS methods accept an optional `serializationType` parameter that controls how data is serialized.
+This is useful for cross-language interoperability&mdash;for example, if a Python or Java DBOS application needs to read events or messages set by a TypeScript application.
+
+```typescript
+import { WorkflowSerializationFormat } from "@dbos-inc/dbos-sdk";
+```
+
+The available values are:
+
+- **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to JSON).
+- **`'portable'`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
+- **`'native'`**: Explicitly uses the native TypeScript serializer.

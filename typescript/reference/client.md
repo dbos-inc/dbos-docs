@@ -40,6 +40,7 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
+    waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
@@ -61,6 +62,10 @@ class DBOSClient {
     applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
+
+    listApplicationVersions(): Promise<VersionInfo[]>;
+    getLatestApplicationVersion(): Promise<VersionInfo>;
+    setLatestApplicationVersion(versionName: string): Promise<void>;
 }
 ```
 
@@ -112,7 +117,7 @@ Additional but optional metadata includes:
 * **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
-
+* **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
@@ -170,10 +175,21 @@ You can copy or import the function type declaration from your application's
 
 #### `send`
 
-Sends a message to a specified workflow. Identical to [`DBOS.send`](./methods.md#dbossend).
+```typescript
+send<T>(
+  destinationID: string,
+  message: T,
+  topic?: string,
+  idempotencyKey?: string,
+  options?: ClientSendOptions
+): Promise<void>
+```
+
+Sends a message to a specified workflow. Similar to [`DBOS.send`](./methods.md#dbossend).
+The optional `ClientSendOptions` parameter allows specifying a [serialization strategy](./methods.md#serialization-strategy) via `serializationType`.
 
 :::warning
-Since DBOS Client is running outside of a DBOS application, 
+Since DBOS Client is running outside of a DBOS application,
 it is highly recommended that you use the `idempotencyKey` parameter in order to get exactly-once behavior.
 :::
 
@@ -197,6 +213,18 @@ Example:
 const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
 ```
+
+#### `waitFirst`
+
+```typescript
+waitFirst(handles: WorkflowHandle<unknown>[]): Promise<WorkflowHandle<unknown>>
+```
+
+Wait for any one of the given workflow handles to complete and return the first completed handle.
+Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst).
+
+**Parameters:**
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
 
 #### `readStream`
 
@@ -386,6 +414,40 @@ client.triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>
 
 Immediately enqueue the scheduled workflow at the current time.
 Similar to [`DBOS.triggerSchedule`](./methods.md#dbostriggerschedule).
+
+## Version Management
+
+### listApplicationVersions
+
+```typescript
+client.listApplicationVersions(): Promise<VersionInfo[]>
+```
+
+Return all registered application versions, ordered by timestamp descending (newest first).
+Similar to [`DBOS.listApplicationVersions`](./methods.md#dboslistapplicationversions).
+
+### getLatestApplicationVersion
+
+```typescript
+client.getLatestApplicationVersion(): Promise<VersionInfo>
+```
+
+Return the latest application version (the one with the highest timestamp).
+Throws if no versions are registered.
+Similar to [`DBOS.getLatestApplicationVersion`](./methods.md#dbosgetlatestapplicationversion).
+
+### setLatestApplicationVersion
+
+```typescript
+client.setLatestApplicationVersion(versionName: string): Promise<void>
+```
+
+Promote a version to latest by updating its timestamp to the current time.
+This is useful when rolling back to a previous application version.
+Similar to [`DBOS.setLatestApplicationVersion`](./methods.md#dbossetlatestapplicationversion).
+
+**Parameters:**
+- `versionName`: The name of the version to promote.
 
 ## Debouncing
 
