@@ -30,6 +30,7 @@
 - [CockroachDB](https://docs.dbos.dev/integrations/cockroachdb.md): Here's how to connect your DBOS application running on your computer or cloud environment to your CockroachDB database.
 - [Django](https://docs.dbos.dev/integrations/django.md): This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 - [Lakebase](https://docs.dbos.dev/integrations/lakebase.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Databricks Lakebase Postgres database.
+- [LlamaIndex](https://docs.dbos.dev/integrations/llamaindex.md): LlamaIndex Workflows is a Python framework for orchestrating AI agents by composing steps and events into structured workflows.
 - [Logfire](https://docs.dbos.dev/integrations/logfire.md): Pydantic Logfire is an observability platform built on OpenTelemetry that makes it easy to monitor your application.
 - [DBOS MCP Server](https://docs.dbos.dev/integrations/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Neon](https://docs.dbos.dev/integrations/neon.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
