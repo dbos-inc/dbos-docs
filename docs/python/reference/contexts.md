@@ -278,6 +278,34 @@ DBOS.sleep_async(
 
 Coroutine version of [`sleep`](#sleep)
 
+### asyncio_wait
+
+```python
+DBOS.asyncio_wait(
+    fs: Iterable[Awaitable],
+    *,
+    timeout: Optional[float] = None,
+    return_when: str = asyncio.ALL_COMPLETED,
+) -> tuple[set[Future], set[Future]]
+```
+
+A durable wrapper around [`asyncio.wait`](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) with the same interface and semantics.
+It checkpoints which futures are done vs. pending so the result is deterministic during workflow recovery.
+
+When called outside a workflow, it falls back to regular `asyncio.wait`.
+
+**Parameters:**
+- **fs**: An iterable of awaitables (coroutines, tasks, or futures) to wait on.
+- **timeout**: Maximum number of seconds to wait. If `None` (the default), wait until the `return_when` condition is met.
+- **return_when**: Controls when the function returns. Must be one of the following constants:
+  - `asyncio.FIRST_COMPLETED`: The function will return when any future finishes or is cancelled.
+  - `asyncio.FIRST_EXCEPTION`: The function will return when any future finishes by raising an exception. If no future raises an exception then it is equivalent to `ALL_COMPLETED`.
+  - `asyncio.ALL_COMPLETED`: The function will return when all futures finish or are cancelled. This is the default.
+
+**Returns:** Two sets of Tasks/Futures: `(done, pending)`. The `done` set contains futures that completed (finished or were cancelled) before the function returned. The `pending` set contains futures that are still running.
+
+See the [`asyncio.wait` documentation](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) for full details.
+
 ### run_step
 
 ```python
