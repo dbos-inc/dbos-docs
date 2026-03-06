@@ -624,6 +624,47 @@ client.fork_workflow_async(
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
 
+### delete_workflow
+
+```python
+client.delete_workflow(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete a workflow and all its associated data from the system database.
+Similar to [`DBOS.delete_workflow`](./contexts.md#delete_workflow).
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to delete.
+- **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+
+:::warning
+This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
+:::
+
+### delete_workflow_async
+
+Asynchronous version of [`DBOSClient.delete_workflow`](#delete_workflow).
+
+### delete_workflows
+
+```python
+client.delete_workflows(
+    workflow_ids: List[str],
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
+Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
+
+### delete_workflows_async
+
+Asynchronous version of [`DBOSClient.delete_workflows`](#delete_workflows).
 
 ## Debouncing
 

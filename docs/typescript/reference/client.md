@@ -302,8 +302,18 @@ Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more i
 
 #### `forkWorkflow`
 
-Start a new execution of a workflow from a specific step. 
+Start a new execution of a workflow from a specific step.
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
+
+#### `deleteWorkflow`
+
+Delete a workflow and all its associated data from the system database.
+Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more information.
+
+#### `deleteWorkflows`
+
+Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
 
 ## Workflow Schedules
 
