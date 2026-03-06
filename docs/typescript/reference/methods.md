@@ -375,18 +375,38 @@ cancelWorkflow(
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
+### DBOS.cancelWorkflows
+
+```typescript
+DBOS.cancelWorkflows(
+  workflowIDs: string[]
+): Promise<void>
+```
+
+Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) but operates on a list of workflow IDs.
+
 ### DBOS.resumeWorkflow
 
 ```typescript
 DBOS.resumeWorkflow<T>(
   workflowID: string
-): Promise<WorkflowHandle<Awaited<T>>> 
+): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
 Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+### DBOS.resumeWorkflows
+
+```typescript
+DBOS.resumeWorkflows<T>(
+  workflowIDs: string[]
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#dbosresumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
 
 ### DBOS.deleteWorkflow
 
@@ -405,6 +425,17 @@ This permanently removes the workflow from the system database.
 **Parameters:**
 - **workflowID**: The ID of the workflow to delete.
 - **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
+
+### DBOS.deleteWorkflows
+
+```typescript
+DBOS.deleteWorkflows(
+  workflowIDs: string[],
+  deleteChildren?: boolean
+): Promise<void>
+```
+
+Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#dbosdeleteworkflow) but operates on a list of workflow IDs.
 
 ### DBOS.forkWorkflow
 
