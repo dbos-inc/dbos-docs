@@ -544,6 +544,20 @@ client.cancel_workflow_async(
 
 Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
 
+### cancel_workflows
+
+```python
+client.cancel_workflows(
+    workflow_ids: List[str],
+) -> None
+```
+
+Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
+Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
+
+### cancel_workflows_async
+
+Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
 
 ### resume_workflow
 
@@ -569,6 +583,20 @@ client.resume_workflow_async(
 
 Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
 
+### resume_workflows
+
+```python
+client.resume_workflows(
+    workflow_ids: List[str],
+) -> List[WorkflowHandle[Any]]
+```
+
+Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
+
+### resume_workflows_async
+
+Asynchronous version of [`DBOSClient.resume_workflows`](#resume_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
 
 ### fork_workflow
 
