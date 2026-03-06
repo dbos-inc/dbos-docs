@@ -49,7 +49,9 @@ class DBOSClient {
     listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
 
     cancelWorkflow(workflowID: string): Promise<void>;
+    cancelWorkflows(workflowIDs: string[]): Promise<void>;
     resumeWorkflow(workflowID: string): Promise<void>;
+    resumeWorkflows(workflowIDs: string[]): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
 
@@ -283,15 +285,35 @@ Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for mo
 Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
 Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for more information.
 
+#### `cancelWorkflows`
+
+Cancel multiple workflows. Behaves like [`cancelWorkflow`](#cancelworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.cancelWorkflows`](./methods.md#dboscancelworkflows) for more information.
+
 #### `resumeWorkflow`
 
 Resumes a workflow that had stopped during execution (due to cancellation or error).
 Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for more information.
 
+#### `resumeWorkflows`
+
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more information.
+
 #### `forkWorkflow`
 
-Start a new execution of a workflow from a specific step. 
+Start a new execution of a workflow from a specific step.
 Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
+
+#### `deleteWorkflow`
+
+Delete a workflow and all its associated data from the system database.
+Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more information.
+
+#### `deleteWorkflows`
+
+Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
 
 ## Workflow Schedules
 
