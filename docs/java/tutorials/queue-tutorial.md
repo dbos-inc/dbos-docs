@@ -42,7 +42,7 @@ public String example(Queue queue, Example proxy, String task) throws Exception 
 }
 ```
 
-## Queue Example
+### Queue Example
 
 Here's an example of a workflow using a queue to process tasks concurrently:
 
@@ -189,7 +189,7 @@ class ExampleImpl implements Example {
 }
 ```
 
-## Enqueueing from Another Application
+### Enqueueing from Another Application
 
 Often, you want to enqueue a workflow from outside your DBOS application.
 For example, let's say you have an API server and a data processing service.
@@ -219,7 +219,7 @@ var handle = client.enqueueWorkflow(
 Object result = handle.getResult();
 ```
 
-## Enqueueing from PL/pgSQL
+### Enqueueing from PL/pgSQL
 
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
@@ -238,12 +238,12 @@ workflow_id := dbos.enqueue_workflow(
     )
 ```
 
-## Managing Concurrency
+### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
 This helps prevent resource exhaustion when workflows consume significant memory or processing power.
 
-### Worker Concurrency
+#### Worker Concurrency
 
 Worker concurrency sets the maximum number of workflows from a queue that can run concurrently on a single DBOS process.
 This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
@@ -255,7 +255,7 @@ Queue queue = new Queue("example-queue")
 DBOS.registerQueue(queue);
 ```
 
-### Global Concurrency
+#### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
 For example, this queue will have a maximum of 10 workflows running simultaneously across your entire application.
@@ -271,7 +271,7 @@ Queue queue = new Queue("example-queue")
 DBOS.registerQueue(queue);
 ```
 
-## Rate Limiting
+### Rate Limiting
 
 You can set _rate limits_ for a queue, limiting the number of workflows that it can start in a given period.
 Rate limits are global across all DBOS processes using this queue.
@@ -285,7 +285,7 @@ DBOS.registerQueue(queue);
 
 Rate limits are especially useful when working with a rate-limited API.
 
-## Setting Timeouts
+### Setting Timeouts
 
 You can set a timeout for an enqueued workflow via the `withTimeout` function on `WorkflowOptions` and `StartWorkflowOptions`.
 When the timeout expires, the workflow **and all its children** are cancelled.
@@ -305,7 +305,7 @@ var options = new StartWorkflowOptions(queue).withTimeout(Duration.ofSeconds(10)
 var handle = DBOS.startWorkflow(() -> proxy.workflow(), options);
 ```
 
-## Partitioning Queues
+### Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
@@ -375,7 +375,7 @@ class UserTasksImpl implements UserTasks {
     }
 ```
 
-## Deduplication
+### Deduplication
 
 You can set a deduplication ID for an enqueued workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
@@ -404,7 +404,7 @@ public void example(Example proxy, String task, String userID) throws Exception 
 }
 ```
 
-## Priority
+### Priority
 
 You can set a priority for an enqueued workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
@@ -442,7 +442,7 @@ public void example(Example proxy, String task, int priority) throws Exception {
 }
 ```
 
-## Explicit Queue Listening
+### Explicit Queue Listening
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
 However, sometimes you only want a process to listen to a specific list of queues.
