@@ -65,6 +65,8 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
+Cron expressions are evaluated in UTC by default. You can set the `cron_timezone` parameter to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a different timezone.
+
 You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
 
