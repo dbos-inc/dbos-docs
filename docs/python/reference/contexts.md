@@ -295,7 +295,7 @@ It checkpoints which futures are done vs. pending so the result is deterministic
 When called outside a workflow, it falls back to regular `asyncio.wait`.
 
 **Parameters:**
-- **fs**: An iterable of awaitables (coroutines, tasks, or futures) to wait on.
+- **fs**: An list of awaitables (coroutines, tasks, or futures) to wait on.
 - **timeout**: Maximum number of seconds to wait. If `None` (the default), wait until the `return_when` condition is met.
 - **return_when**: Controls when the function returns. Must be one of the following constants:
   - `asyncio.FIRST_COMPLETED`: The function will return when any future finishes or is cancelled.
