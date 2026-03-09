@@ -537,7 +537,13 @@ DBOS.createSchedule(options: {
   workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
   schedule: string;
   context?: unknown;
+  options?: ScheduleOptions;
 }): Promise<void>
+
+interface ScheduleOptions {
+  automaticBackfill?: boolean;
+  cronTimezone?: string;
+}
 ```
 
 Create a cron schedule that periodically invokes a workflow function.
@@ -548,6 +554,8 @@ If called from within a workflow, the operation is recorded as a step.
 - **workflowFn**: The workflow function to invoke. Must take two arguments: a `Date` (the scheduled execution time) and a context object.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+- **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
+- **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 
 **Example:**
 
@@ -622,6 +630,8 @@ DBOS.applySchedules(
     workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
     schedule: string;
     context?: unknown;
+    automaticBackfill?: boolean;
+    cronTimezone?: string;
   }>,
 ): Promise<void>
 ```
@@ -675,6 +685,9 @@ interface WorkflowSchedule {
     schedule: string;
     status: string;  // "ACTIVE" or "PAUSED"
     context: unknown;
+    lastFiredAt: string | null;
+    automaticBackfill: boolean;
+    cronTimezone: string | null;
 }
 ```
 

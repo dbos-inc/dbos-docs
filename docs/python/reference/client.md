@@ -744,6 +744,8 @@ client.create_schedule(
     schedule: str,
     context: Any = None,
     workflow_class_name: Optional[str] = None,
+    automatic_backfill: bool = False,
+    cron_timezone: Optional[str] = None,
 ) -> None
 ```
 
@@ -756,6 +758,8 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **workflow_class_name**: The class name if the workflow is a static method on a [DBOS class](../tutorials/classes.md).
+- **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
+- **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 
 ### create_schedule_async
 
@@ -841,6 +845,8 @@ class ClientScheduleInput(TypedDict):
     schedule: str
     context: Any
     workflow_class_name: Optional[str]
+    automatic_backfill: bool  # Optional, defaults to False
+    cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
 ```
 
 Atomically apply a set of schedules.
