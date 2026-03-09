@@ -65,6 +65,9 @@ Workflows started with portable serialization also write their events and stream
 When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
 This ensures the workflow's arguments are serialized in portable format that can be read by the target language.
 
+You can also enqueue a workflow using the PL/pgSQL function [`dbos.enqueue_workflow`](system-tables.md#dbosenqueue_workflow).
+Only portable serialization is allowed when enqueing using PL/pgSQL.
+
 <Tabs groupId="language">
 <TabItem value="python" label="Python">
 
@@ -111,6 +114,19 @@ DBOSClient client = new DBOSClient(dbUrl, dbUser, dbPassword);
 var options = new EnqueueOptions("OrderProcessor", "processOrder", "orders")
     .withSerialization(SerializationStrategy.PORTABLE);
 var handle = client.enqueue(options, "order-123");
+```
+
+</TabItem>
+<TabItem value="plpgsql" label="PL/pgSQL">
+
+```sql
+DECLARE workflow_id text;
+workflow_id := dbos.enqueue_workflow(
+    workflow_name => 'processOrder', 
+    class_name => 'com.example.OrderProcessor',
+    queue_name => 'orders', 
+    positional_args => ARRAY['"order-123"'::json]
+)
 ```
 
 </TabItem>
@@ -194,6 +210,10 @@ Each language's `setEvent` and `writeStream` methods accept a serialization para
 
 Note that `send` is not affected by the current workflow's serialization strategy, because messages target a different workflow and the sender does not know what serialization that workflow expects.
 You should always set the serialization format explicitly on `send` when communicating cross-language.
+
+You can also send a message to a workflow using the PL/pgSQL function [`dbos.send_message`](system-tables.md#dbossend_message).
+Only portable serialization is allowed when sending a message using PL/pgSQL. 
+Note, there is no PL/pgSQL version of `setEvent` or `writeStream`.
 
 :::info
 Step outputs always use the native serializer regardless of the workflow's serialization strategy.
@@ -281,6 +301,17 @@ DBOS.setEvent(
     Map.of("percent", 75),
     SerializationStrategy.PORTABLE
 );
+```
+
+</TabItem>
+<TabItem value="plpgsql" label="PL/pgSQL">
+
+```sql
+dbos.send_message(
+    destination_id  => 'workflow-123', 
+    message => '{"status": "complete", "count": 42}'::json,
+    topic => "updates"
+)
 ```
 
 </TabItem>
