@@ -122,6 +122,8 @@ await DBOS.backfillSchedule(
 );
 ```
 
+Alternatively, you can set `automaticBackfill: true` when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
+
 You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../reference/methods.md#dbostriggerschedule):
 
 ```typescript
