@@ -282,11 +282,11 @@ Coroutine version of [`sleep`](#sleep)
 
 ```python
 DBOS.asyncio_wait(
-    fs: Iterable[Awaitable],
+    fs: List[Awaitable[Any]],
     *,
     timeout: Optional[float] = None,
     return_when: str = asyncio.ALL_COMPLETED,
-) -> tuple[set[Future], set[Future]]
+) -> tuple[set[asyncio.Task[Any]], set[asyncio.Task[Any]]]
 ```
 
 A durable wrapper around [`asyncio.wait`](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) with the same interface and semantics.
