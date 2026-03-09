@@ -1052,15 +1052,25 @@ Some schedule management methods return the `WorkflowSchedule` type:
 
 ```python
 class WorkflowSchedule(TypedDict):
+    # The unique identifier of the schedule
     schedule_id: str
+    # The human-readable name of the schedule
     schedule_name: str
+    # The name of the workflow function to execute
     workflow_name: str
+    # The class name of the workflow function, if it is a class method
     workflow_class_name: Optional[str]
+    # The cron expression defining the schedule
     schedule: str
-    status: str  # "ACTIVE" or "PAUSED"
+    # The status of the schedule: "ACTIVE" or "PAUSED"
+    status: str
+    # The context object passed to each workflow invocation
     context: Any
+    # The timestamp of when the schedule last fired, if ever
     last_fired_at: Optional[str]
+    # Whether missed executions are automatically backfilled on startup
     automatic_backfill: bool
+    # The IANA timezone in which the cron expression is evaluated, or None for UTC
     cron_timezone: Optional[str]
 ```
 

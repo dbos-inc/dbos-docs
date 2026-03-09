@@ -678,15 +678,25 @@ Some schedule management methods return the `WorkflowSchedule` type:
 
 ```typescript
 interface WorkflowSchedule {
+    // The unique identifier of the schedule
     scheduleId: string;
+    // The human-readable name of the schedule
     scheduleName: string;
+    // The name of the workflow function to execute
     workflowName: string;
+    // The class name of the workflow function, if it is a class method
     workflowClassName: string;
+    // The cron expression defining the schedule
     schedule: string;
-    status: string;  // "ACTIVE" or "PAUSED"
+    // The status of the schedule: "ACTIVE" or "PAUSED"
+    status: string;
+    // The context object passed to each workflow invocation
     context: unknown;
+    // The timestamp of when the schedule last fired, if ever
     lastFiredAt: string | null;
+    // Whether missed executions are automatically backfilled on startup
     automaticBackfill: boolean;
+    // The IANA timezone in which the cron expression is evaluated, or null for system local time
     cronTimezone: string | null;
 }
 ```
