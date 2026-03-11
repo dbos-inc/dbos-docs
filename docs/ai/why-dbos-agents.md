@@ -1,5 +1,5 @@
 ---
-sidebar_position: 30
+sidebar_position: 20
 title: Why DBOS for Agents
 hide_table_of_contents: false
 ---
