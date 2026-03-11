@@ -407,7 +407,8 @@ Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) 
 
 ```typescript
 DBOS.resumeWorkflow<T>(
-  workflowID: string
+  workflowID: string,
+  options?: { queueName?: string }
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -416,11 +417,14 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
+If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+
 ### DBOS.resumeWorkflows
 
 ```typescript
 DBOS.resumeWorkflows<T>(
-  workflowIDs: string[]
+  workflowIDs: string[],
+  options?: { queueName?: string }
 ): Promise<WorkflowHandle<Awaited<T>>[]>
 ```
 
@@ -461,7 +465,13 @@ Delete multiple workflows and all their associated data. Behaves like [`deleteWo
 static async forkWorkflow<T>(
   workflowID: string,
   startStep: number,
-  options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number },
+  options?: {
+    newWorkflowID?: string;
+    applicationVersion?: string;
+    timeoutMS?: number;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -475,6 +485,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
+- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
+- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 
 ### Workflow Status
 

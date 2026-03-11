@@ -50,10 +50,10 @@ class DBOSClient {
 
     cancelWorkflow(workflowID: string): Promise<void>;
     cancelWorkflows(workflowIDs: string[]): Promise<void>;
-    resumeWorkflow(workflowID: string): Promise<void>;
-    resumeWorkflows(workflowIDs: string[]): Promise<void>;
+    resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
+    resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string }): Promise<string>;
 
     createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string } }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
@@ -298,7 +298,7 @@ Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) fo
 #### `resumeWorkflow`
 
 Resumes a workflow that had stopped during execution (due to cancellation or error).
-Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for more information.
+Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
 
 #### `resumeWorkflows`
 
@@ -308,7 +308,7 @@ Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more i
 #### `forkWorkflow`
 
 Start a new execution of a workflow from a specific step.
-Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
+Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more information.
 
 #### `deleteWorkflow`
 

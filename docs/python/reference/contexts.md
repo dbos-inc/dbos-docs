@@ -771,7 +771,9 @@ Coroutine version of [`cancel_workflows`](#cancel_workflows).
 
 ```python
 DBOS.resume_workflow(
-    workflow_id: str
+    workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -779,6 +781,8 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
 ### resume_workflow_async
 
@@ -789,6 +793,8 @@ Coroutine version of [`resume_workflow`](#resume_workflow).
 ```python
 DBOS.resume_workflows(
     workflow_ids: List[str],
+    *,
+    queue_name: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
 
@@ -806,6 +812,8 @@ DBOS.fork_workflow(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -815,6 +823,8 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
 
 ### fork_workflow_async
 

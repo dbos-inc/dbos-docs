@@ -563,7 +563,9 @@ Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
 
 ```python
 client.resume_workflow(
-    workflow_id: str
+    workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -571,6 +573,7 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 ### resume_workflow_async
@@ -578,6 +581,8 @@ Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 ```python
 client.resume_workflow_async(
     workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -588,6 +593,8 @@ Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
 ```python
 client.resume_workflows(
     workflow_ids: List[str],
+    *,
+    queue_name: Optional[str] = None,
 ) -> List[WorkflowHandle[Any]]
 ```
 
@@ -606,6 +613,8 @@ client.fork_workflow(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -619,6 +628,8 @@ client.fork_workflow_async(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
