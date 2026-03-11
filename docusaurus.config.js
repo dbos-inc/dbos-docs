@@ -235,10 +235,10 @@ const config = {
             sidebarId: 'examplesSidebar',
           },
           {
-            type: 'docSidebar',
+            type: 'doc',
             label: 'AI Agents',
             position: 'left',
-            sidebarId: 'aiSidebar',
+            docId: 'ai/ai-quickstart',
           },
           {
             type: 'search',
