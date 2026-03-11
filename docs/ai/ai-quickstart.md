@@ -329,3 +329,16 @@ To learn more, check out the [OpenAI Agents SDK integration guide](../integratio
 
 </LargeTabItem>
 </LargeTabs>
+
+## Using Coding Agents
+
+DBOS provides skills and prompts to help you use coding agents to add DBOS to your AI applications.
+Learn more about them here:
+
+- [AI-assisted development in Python](../python/prompting.md)
+- [AI-assisted development in TypeScript](../typescript/prompting.md)
+- [AI-assisted development in Go](../golang/prompting.md)
+- [AI-assisted development in Java](../java/prompting.md)
+
+Additionally, DBOS provides an MCP server so your agents can observe and monitor your workflows and help you find and catch issues.
+Learn more about it [here](../integrations/mcp.md).
