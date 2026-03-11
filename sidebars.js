@@ -94,6 +94,28 @@ const sidebars = {
         },
         {
           type: 'category',
+          label: 'Integrations',
+          items: [
+            {
+              type: 'doc',
+              id: 'integrations/openai-agents',
+            },
+            {
+              type: 'doc',
+              id: 'integrations/pydantic-ai',
+            },
+            {
+              type: 'doc',
+              id: 'integrations/llamaindex',
+            },
+            {
+              type: 'doc',
+              id: 'integrations/mcp',
+            },
+          ],
+        },
+        {
+          type: 'category',
           label: 'Examples',
           items: [
             {
