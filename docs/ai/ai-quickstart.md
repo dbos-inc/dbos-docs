@@ -92,7 +92,7 @@ To learn more about how to build with DBOS Python, check out the [Python docs](.
 <LargeTabItem value="typescript" label="TypeScript">
 
 ### 1. Install DBOS
-`npm install` DBOS into your application. Note that DBOS requires Node.js 20 or later.
+`npm install` DBOS into your application.
 
 ```shell
 npm install @dbos-inc/dbos-sdk@latest
