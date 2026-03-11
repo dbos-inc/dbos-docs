@@ -86,6 +86,8 @@ def evaluate_results_step(
     ...
 ```
 
+To learn more about how to build with DBOS Python, check out the [Python docs](../python/programming-guide.md).
+
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
