@@ -64,6 +64,6 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can export a workflow from one application to another by clicking the "Export" button in the workflow details panel.
 This copies all information on that workflow (and optionally its children) to the other application's system database.
-This is most useful for copying workflows from a production to development environment, for example to examine and reproduce a bug that originally occured in production.
+This is most useful for copying workflows from a production to development environment, for example to examine and (using fork) reproduce a bug that originally occured in production.
 
 <img src={require('@site/static/img/workflow-management/export-workflow.png').default} alt="Workflow List" width="800" className="custom-img"/>
