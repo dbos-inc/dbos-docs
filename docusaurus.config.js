@@ -235,10 +235,9 @@ const config = {
             sidebarId: 'examplesSidebar',
           },
           {
-            type: 'doc',
+            to: 'ai/ai-quickstart',
             label: 'AI Agents',
             position: 'left',
-            docId: 'ai/ai-quickstart',
           },
           {
             type: 'search',
