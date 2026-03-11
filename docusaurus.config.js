@@ -235,6 +235,12 @@ const config = {
             sidebarId: 'examplesSidebar',
           },
           {
+            type: 'docSidebar',
+            label: 'AI Agents',
+            position: 'left',
+            sidebarId: 'aiSidebar',
+          },
+          {
             type: 'search',
             position: 'right',
           },
