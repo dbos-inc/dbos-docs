@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 title: AI Quickstart
-hide_table_of_contents: false
+hide_table_of_contents: true
 ---
 
 You can integrate DBOS durable workflows with your AI agents (or other AI systems) to make them reliable, observable, and resilient to failures.
