@@ -9,7 +9,7 @@ Rather than bolting on ad-hoc retry logic, DBOS workflows give you one consisten
 
 In particular, integrating DBOS to your agents gives you:
 
-- Automatic recovery from transient failures, server restarts, process crashes, etc.
+- Automatic recovery from transient failures, server restarts, process crashes, network hiccups or outages, and other unexpected events.
 - [Reproducibility](./debugging.md): if your agents exhibit unexpected behavior, you can use saved workflow progress to reproduce it in a development environment to identify and fix the root cause.
 - [Support for long-running flows and reliable human-in-the-loop](./hitl.md): you can build agents that run for hours, days, or weeks (potentially waiting for human responses) and seamlessly recover from any interruption.
 - [Built in scalability and task distribution](./distributing-agents.md): if your agent or AI system needs to run many tasks in parallel (for example, a data pipeline processing many documents), you can use durable queues to distribute the work across many servers with managed flow control.
