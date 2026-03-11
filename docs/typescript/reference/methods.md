@@ -364,6 +364,24 @@ interface StepInfo {
 }
 ```
 
+### DBOS.setWorkflowPriority
+
+```typescript
+DBOS.setWorkflowPriority(
+  workflowID: string,
+  priority: number
+): Promise<void>
+```
+
+Set the priority of a queued workflow.
+Only affects workflows with `ENQUEUED` status.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose priority to update.
+- **priority**: Priority value (`1` to `2,147,483,647`). Lower values are dequeued first.
+
+Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
+
 ### DBOS.cancelWorkflow
 
 ```typescript

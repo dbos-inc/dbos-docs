@@ -290,6 +290,11 @@ Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for
 Cancel multiple workflows. Behaves like [`cancelWorkflow`](#cancelworkflow) but operates on a list of workflow IDs.
 Please see [`DBOS.cancelWorkflows`](./methods.md#dboscancelworkflows) for more information.
 
+#### `setWorkflowPriority`
+
+Sets the priority of a queued workflow. Only affects workflows with `ENQUEUED` status.
+Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) for more information.
+
 #### `resumeWorkflow`
 
 Resumes a workflow that had stopped during execution (due to cancellation or error).

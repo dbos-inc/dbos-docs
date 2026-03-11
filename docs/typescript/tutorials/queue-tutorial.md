@@ -374,6 +374,14 @@ async function main() {
 }
 ```
 
+You can also dynamically update the priority of an already-enqueued workflow using [`DBOS.setWorkflowPriority`](../reference/methods.md#dbossetworkflowpriority):
+
+```javascript
+await DBOS.setWorkflowPriority(handle.workflowID, 1); // Promote to highest priority
+```
+
+This only affects workflows with `ENQUEUED` status.
+
 ## Explicit Queue Listening
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
