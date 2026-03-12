@@ -986,6 +986,11 @@ DBOS provides [streaming](../python/tutorials/workflow-communication.md#workflow
 
 Because all workflow state is stored in Postgres, you can query it with SQL. DBOS also provides programmatic APIs to [list, search, and manage workflows](../python/tutorials/workflow-management.md) by status, name, time, queue, or custom properties.
 
+### Queue Flow Control
+
+Using DBOS queues, you can manage how many workflows can execute concurrently (globally, per-worker, and per-tenant) as well as which workers can execute which workflows.
+Temporal does not have comparable queueing or flow control abstractions, making it harder to control when and where workflows execute.
+
 ## Automating Temporal -> DBOS Migration
 
 With coding agents, you can largely automate a migration from Temporal to DBOS.
