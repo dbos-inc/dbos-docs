@@ -257,7 +257,7 @@ Both DBOS and Temporal require workflows to be deterministic. Non-deterministic 
 
 ### Durable Timers
 
-Temporal's `workflow.sleep()` maps directly to `DBOS.sleep()`. Both are durable&mdash;they persist across restarts.
+Temporal's `workflow.sleep()` maps directly to `DBOS.sleep()`. Both are durable and persist across restarts.
 
 **Temporal:**
 ```python
