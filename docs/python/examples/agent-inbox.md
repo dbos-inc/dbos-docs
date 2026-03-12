@@ -1,5 +1,4 @@
 ---
-displayed_sidebar: examplesSidebar
 sidebar_position: 24
 title: Human-in-the-Loop
 ---

@@ -229,10 +229,10 @@ const config = {
             label: 'Quickstart',
           },
           {
-            type: 'docSidebar',
+            type: 'doc',
             label: 'Examples',
             position: 'left',
-            sidebarId: 'examplesSidebar',
+            docId: 'examples/index',
           },
           {
             to: 'ai/ai-quickstart',
