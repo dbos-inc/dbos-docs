@@ -193,3 +193,6 @@ Each entry represents a different scheduled workflow.
 - **schedule**: The cron expression or schedule definition.
 - **status**: The status of the schedule. One of `ACTIVE` or `PAUSED`. Defaults to `ACTIVE`.
 - **context**: The serialized schedule context.
+- **last_fired_at**: The timestamp of when the schedule last fired.
+- **automatic_backfill**: Whether the schedule should automatically backfill missed executions on startup.
+- **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.

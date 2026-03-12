@@ -364,6 +364,24 @@ interface StepInfo {
 }
 ```
 
+### DBOS.setWorkflowPriority
+
+```typescript
+DBOS.setWorkflowPriority(
+  workflowID: string,
+  priority: number
+): Promise<void>
+```
+
+Set the priority of a queued workflow.
+Only affects workflows with `ENQUEUED` status.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose priority to update.
+- **priority**: Priority value (`1` to `2,147,483,647`). Lower values are dequeued first.
+
+Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
+
 ### DBOS.cancelWorkflow
 
 ```typescript
@@ -375,18 +393,42 @@ cancelWorkflow(
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
+### DBOS.cancelWorkflows
+
+```typescript
+DBOS.cancelWorkflows(
+  workflowIDs: string[]
+): Promise<void>
+```
+
+Cancel multiple workflows. Behaves like [`cancelWorkflow`](#dboscancelworkflow) but operates on a list of workflow IDs.
+
 ### DBOS.resumeWorkflow
 
 ```typescript
 DBOS.resumeWorkflow<T>(
-  workflowID: string
-): Promise<WorkflowHandle<Awaited<T>>> 
+  workflowID: string,
+  options?: { queueName?: string }
+): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
 Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+
+### DBOS.resumeWorkflows
+
+```typescript
+DBOS.resumeWorkflows<T>(
+  workflowIDs: string[],
+  options?: { queueName?: string }
+): Promise<WorkflowHandle<Awaited<T>>[]>
+```
+
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#dbosresumeworkflow) but operates on a list of workflow IDs and returns a list of handles.
 
 ### DBOS.deleteWorkflow
 
@@ -406,13 +448,30 @@ This permanently removes the workflow from the system database.
 - **workflowID**: The ID of the workflow to delete.
 - **deleteChildren**: If true, also delete all child workflows recursively. Defaults to false.
 
+### DBOS.deleteWorkflows
+
+```typescript
+DBOS.deleteWorkflows(
+  workflowIDs: string[],
+  deleteChildren?: boolean
+): Promise<void>
+```
+
+Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#dbosdeleteworkflow) but operates on a list of workflow IDs.
+
 ### DBOS.forkWorkflow
 
 ```typescript
 static async forkWorkflow<T>(
   workflowID: string,
   startStep: number,
-  options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number },
+  options?: {
+    newWorkflowID?: string;
+    applicationVersion?: string;
+    timeoutMS?: number;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -426,6 +485,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
+- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
+- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 
 ### Workflow Status
 
@@ -506,7 +567,13 @@ DBOS.createSchedule(options: {
   workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
   schedule: string;
   context?: unknown;
+  options?: ScheduleOptions;
 }): Promise<void>
+
+interface ScheduleOptions {
+  automaticBackfill?: boolean;
+  cronTimezone?: string;
+}
 ```
 
 Create a cron schedule that periodically invokes a workflow function.
@@ -517,6 +584,8 @@ If called from within a workflow, the operation is recorded as a step.
 - **workflowFn**: The workflow function to invoke. Must take two arguments: a `Date` (the scheduled execution time) and a context object.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+- **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
+- **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 
 **Example:**
 
@@ -591,6 +660,8 @@ DBOS.applySchedules(
     workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
     schedule: string;
     context?: unknown;
+    automaticBackfill?: boolean;
+    cronTimezone?: string;
   }>,
 ): Promise<void>
 ```
@@ -637,13 +708,26 @@ Some schedule management methods return the `WorkflowSchedule` type:
 
 ```typescript
 interface WorkflowSchedule {
+    // The unique identifier of the schedule
     scheduleId: string;
+    // The human-readable name of the schedule
     scheduleName: string;
+    // The name of the workflow function to execute
     workflowName: string;
+    // The class name of the workflow function, if it is a class method
     workflowClassName: string;
+    // The cron expression defining the schedule
     schedule: string;
-    status: string;  // "ACTIVE" or "PAUSED"
+    // The status of the schedule: "ACTIVE" or "PAUSED"
+    status: string;
+    // The context object passed to each workflow invocation
     context: unknown;
+    // The timestamp of when the schedule last fired, if ever
+    lastFiredAt: string | null;
+    // Whether missed executions are automatically backfilled on startup
+    automaticBackfill: boolean;
+    // The IANA timezone in which the cron expression is evaluated, or null for system local time
+    cronTimezone: string | null;
 }
 ```
 

@@ -49,17 +49,19 @@ class DBOSClient {
     listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
 
     cancelWorkflow(workflowID: string): Promise<void>;
-    resumeWorkflow(workflowID: string): Promise<void>;
+    cancelWorkflows(workflowIDs: string[]): Promise<void>;
+    resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
+    resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string }): Promise<string>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string } }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
     deleteSchedule(name: string): Promise<void>;
     pauseSchedule(name: string): Promise<void>;
     resumeSchedule(name: string): Promise<void>;
-    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown }>): Promise<void>;
+    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
 
@@ -283,15 +285,40 @@ Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for mo
 Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
 Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for more information.
 
+#### `cancelWorkflows`
+
+Cancel multiple workflows. Behaves like [`cancelWorkflow`](#cancelworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.cancelWorkflows`](./methods.md#dboscancelworkflows) for more information.
+
+#### `setWorkflowPriority`
+
+Sets the priority of a queued workflow. Only affects workflows with `ENQUEUED` status.
+Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) for more information.
+
 #### `resumeWorkflow`
 
 Resumes a workflow that had stopped during execution (due to cancellation or error).
-Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more for more information.
+Please see [`DBOS.resumeWorkflow`](./methods.md#dbosresumeworkflow) for more information.
+
+#### `resumeWorkflows`
+
+Resume multiple workflows. Behaves like [`resumeWorkflow`](#resumeworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.resumeWorkflows`](./methods.md#dbosresumeworkflows) for more information.
 
 #### `forkWorkflow`
 
-Start a new execution of a workflow from a specific step. 
-Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more for more information.
+Start a new execution of a workflow from a specific step.
+Please see [`DBOS.forkWorkflow`](./methods.md#dbosforkworkflow) for more information.
+
+#### `deleteWorkflow`
+
+Delete a workflow and all its associated data from the system database.
+Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more information.
+
+#### `deleteWorkflows`
+
+Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
+Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
 
 ## Workflow Schedules
 
@@ -307,6 +334,10 @@ client.createSchedule(options: {
   workflowClassName?: string;
   schedule: string;
   context?: unknown;
+  options?: {
+    automaticBackfill?: boolean;
+    cronTimezone?: string;
+  };
 }): Promise<void>
 ```
 
@@ -319,6 +350,8 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 - **workflowClassName**: The class name if the workflow is a static method on a class.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+- **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
+- **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 
 #### `listSchedules`
 
@@ -384,6 +417,8 @@ client.applySchedules(
     workflowClassName?: string;
     schedule: string;
     context?: unknown;
+    automaticBackfill?: boolean;
+    cronTimezone?: string;
   }>,
 ): Promise<void>
 ```
