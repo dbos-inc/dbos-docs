@@ -44,7 +44,8 @@ def order_workflow(order: Order) -> str:
 
 ### Starting Workflows
 
-In Temporal, you start workflows through a client connected to the Temporal server. In DBOS, you can call `DBOS.start_workflow()` directly.
+In Temporal, you start workflows through a client connected to the Temporal server.
+In DBOS, you can either start a workflow in your application directly  or enqueue workflows from a separate application using the DBOS Client, which connects directly to the DBOS system database:
 
 **Temporal:**
 ```python
@@ -59,15 +60,16 @@ result = await handle.result()
 ```
 
 **DBOS:**
+
 ```python
+# Starting a workflow from in your application
 with SetWorkflowID("order-123"):
     handle = DBOS.start_workflow(order_workflow, order)
 result = handle.get_result()
 ```
 
-You can also enqueue workflows from a separate application using [`DBOSClient`](../python/reference/client.md), which connects directly to the DBOS system database:
-
 ```python
+# Starting a workflow from another application using the DBOS Client
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 handle = client.enqueue({"workflow_name": "order_workflow", "queue_name": "orders"}, order)
 result = handle.get_result()
@@ -122,7 +124,7 @@ def send_email(to: str, body: str) -> bool:
     return response.ok
 ```
 
-The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular Python functions&mdash;DBOS checkpoints their results to Postgres automatically.
+The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular Python functions; DBOS checkpoints their results to Postgres automatically.
 
 ### Retries
 
@@ -152,11 +154,12 @@ def send_email(to: str, body: str) -> bool:
 
 ### Heartbeats
 
-Temporal activities support heartbeats for long-running operations so the server knows the activity is still alive. DBOS does not require heartbeats because there is no central orchestrator monitoring activity execution&mdash;steps run directly in your application process.
+Temporal activities support heartbeats for long-running operations so the server knows the activity is still alive. DBOS does not require heartbeats because there is no central orchestrator monitoring activity execution; instead, steps run directly in your application process.
 
 ### Database Operations
 
-DBOS provides a special type of step called a [transaction](../python/tutorials/step-tutorial.md#transactions) (`@DBOS.transaction()`) that executes database operations in a single database transaction, co-committed with the DBOS checkpoint. This provides exactly-once semantics for database writes, which is stronger than what Temporal offers for database operations.
+DBOS provides a special type of step called a [transaction](../python/tutorials/step-tutorial.md#transactions) (`@DBOS.transaction()`) that executes database operations in a single database transaction, co-committed with the DBOS checkpoint.
+This provides exactly-once semantics for database writes, which is stronger than the at-least-once semantics offered by Temporal.
 
 ```python
 @DBOS.transaction()
@@ -214,7 +217,7 @@ DBOS.send("order-123", "paid", topic="payment_status")
 ```
 
 Key differences:
-- No need to define signal handler methods. `DBOS.recv()` waits inline for a message on a given topic.
+- Instead of defining signal handler methods, `DBOS.recv()` waits inline for a message on a given topic.
 - Messages are queued per-topic, so multiple messages can be sent before the workflow reads them.
 - Messages sent from workflows are delivered exactly-once.
 
@@ -327,7 +330,7 @@ DBOS schedules also support pausing, resuming, backfilling missed runs, and trig
 
 ## Child Workflows
 
-In Temporal, you can start child workflows from within a parent workflow. In DBOS, you simply call another workflow function directly or start it in the background with `DBOS.start_workflow()`.
+Both Temporal and DBOS support calling a child workflow from within another workflow.
 
 **Temporal:**
 ```python
