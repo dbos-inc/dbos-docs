@@ -12,7 +12,9 @@ For a high-level comparison of DBOS and Temporal's architectures, see [Comparing
 
 ## Workflows
 
-Both Temporal and DBOS are built around durably executed workflows, which are implemented as regular functions:
+The core feature of both DBOS and Temporal is durably executed workflows.
+Both DBOS and Temporal automatically recover workflows from the last completed step (activity) after any failure.
+Both DBOS and Temporal support extremely long-running workflows, including workflows that run for weeks or months.
 
 **Temporal:**
 ```python
