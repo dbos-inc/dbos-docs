@@ -46,6 +46,8 @@ def order_workflow(order: Order) -> str:
     return confirmation
 ```
 
+Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -57,6 +59,8 @@ async function orderWorkflow(order: Order): Promise<string> {
 }
 const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
 ```
+
+Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md).
 
 </TabItem>
 <TabItem value="go" label="Go">
@@ -76,6 +80,8 @@ func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
 }
 ```
 
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
+
 </TabItem>
 <TabItem value="java" label="Java">
 
@@ -87,6 +93,8 @@ public String orderWorkflow(Order order) {
     return confirmation;
 }
 ```
+
+Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
 </TabItem>
 </Tabs>
@@ -127,6 +135,8 @@ handle = client.enqueue({"workflow_name": "order_workflow", "queue_name": "order
 result = handle.get_result()
 ```
 
+Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -145,6 +155,8 @@ await client.enqueue<typeof orderWorkflow>(
 );
 ```
 
+Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
@@ -162,6 +174,8 @@ client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
 handle, err := dbos.Enqueue[Order, string](client, "orders", "OrderWorkflow", order)
 result, err := handle.GetResult()
 ```
+
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
 
 </TabItem>
 <TabItem value="java" label="Java">
@@ -183,6 +197,8 @@ var handle = client.enqueueWorkflow(options, new Object[]{order});
 Object result = handle.getResult();
 ```
 
+Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
+
 </TabItem>
 </Tabs>
 
@@ -198,6 +214,8 @@ with SetWorkflowID("payment-idempotency-key"):
     order_workflow(order)
 ```
 
+Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -205,12 +223,16 @@ with SetWorkflowID("payment-idempotency-key"):
 const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})();
 ```
 
+Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
 ```go
 handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWorkflowID("payment-idempotency-key"))
 ```
+
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#workflow-ids).
 
 </TabItem>
 <TabItem value="java" label="Java">
@@ -221,6 +243,8 @@ DBOS.startWorkflow(
     new StartWorkflowOptions().withWorkflowId("payment-idempotency-key")
 );
 ```
+
+Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 </TabItem>
 </Tabs>
@@ -247,12 +271,16 @@ await workflow.sleep(timedelta(hours=24))
 DBOS.sleep(86400)  # seconds
 ```
 
+Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#durable-sleep).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript
 await DBOS.sleep(86400000);  // milliseconds
 ```
+
+Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#durable-sleep).
 
 </TabItem>
 <TabItem value="go" label="Go">
@@ -261,6 +289,8 @@ await DBOS.sleep(86400000);  // milliseconds
 dbos.Sleep(ctx, 24 * time.Hour)
 ```
 
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#durable-sleep).
+
 </TabItem>
 <TabItem value="java" label="Java">
 
@@ -268,12 +298,16 @@ dbos.Sleep(ctx, 24 * time.Hour)
 DBOS.sleep(Duration.ofHours(24));
 ```
 
+Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#durable-sleep).
+
 </TabItem>
 </Tabs>
 
 ## Activities &rarr; Steps
 
 Temporal activities map to DBOS steps. Both are where side effects and non-deterministic operations happen.
+
+The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular functions; DBOS checkpoints their results to Postgres automatically.
 
 **Temporal:**
 ```python
@@ -295,6 +329,8 @@ def send_email(to: str, body: str) -> bool:
     return response.ok
 ```
 
+Learn more in the [steps tutorial](../python/tutorials/step-tutorial.md).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -308,6 +344,8 @@ const sendEmail = DBOS.registerStep(async (to: string, body: string): Promise<bo
 });
 ```
 
+Learn more in the [steps tutorial](../typescript/tutorials/step-tutorial.md).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
@@ -318,6 +356,8 @@ result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
 }, dbos.WithStepName("sendEmail"))
 ```
 
+Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md).
+
 </TabItem>
 <TabItem value="java" label="Java">
 
@@ -326,10 +366,10 @@ result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
 boolean result = DBOS.runStep(() -> sendEmail(to, body), "sendEmail");
 ```
 
+Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md).
+
 </TabItem>
 </Tabs>
-
-The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular functions; DBOS checkpoints their results to Postgres automatically.
 
 ### Retries
 
@@ -361,6 +401,8 @@ def send_email(to: str, body: str) -> bool:
     return response.ok
 ```
 
+Learn more in the [steps tutorial](../python/tutorials/step-tutorial.md#configurable-retries).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -377,6 +419,8 @@ const sendEmail = DBOS.registerStep(
 );
 ```
 
+Learn more in the [steps tutorial](../typescript/tutorials/step-tutorial.md#configurable-retries).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
@@ -391,6 +435,8 @@ result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
 )
 ```
 
+Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md#configurable-retries).
+
 </TabItem>
 <TabItem value="java" label="Java">
 
@@ -404,6 +450,8 @@ boolean result = DBOS.runStep(
         .withBackoffRate(2.0)
 );
 ```
+
+Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md#configurable-retries).
 
 </TabItem>
 </Tabs>
@@ -502,6 +550,8 @@ def order_workflow(order: Order):
 DBOS.send("order-123", "paid", topic="payment_status")
 ```
 
+Learn more in the [workflow communication tutorial](../python/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -521,6 +571,8 @@ const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
 // Sending the message
 await DBOS.send("order-123", "paid", "payment_status");
 ```
+
+Learn more in the [workflow communication tutorial](../typescript/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
 </TabItem>
 <TabItem value="go" label="Go">
@@ -545,6 +597,8 @@ func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
 err := dbos.Send(dbosContext, "order-123", "paid", "payment_status")
 ```
 
+Learn more in the [workflow communication tutorial](../golang/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
+
 </TabItem>
 <TabItem value="java" label="Java">
 
@@ -564,6 +618,8 @@ public void orderWorkflow(Order order) {
 // Sending the message
 DBOS.send("order-123", "paid", "payment_status");
 ```
+
+Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
 </TabItem>
 </Tabs>
@@ -612,6 +668,8 @@ def order_workflow(order: Order):
 progress = DBOS.get_event("order-123", "progress")
 ```
 
+Learn more in the [workflow communication tutorial](../python/tutorials/workflow-communication.md#workflow-events).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -628,6 +686,8 @@ const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
 const progress = await DBOS.getEvent<number>("order-123", "progress");
 ```
 
+Learn more in the [workflow communication tutorial](../typescript/tutorials/workflow-communication.md#workflow-events).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
@@ -642,6 +702,8 @@ func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
 // Reading workflow state
 progress, err := dbos.GetEvent[int](dbosContext, "order-123", "progress", 30*time.Second)
 ```
+
+Learn more in the [workflow communication tutorial](../golang/tutorials/workflow-communication.md#workflow-events).
 
 </TabItem>
 <TabItem value="java" label="Java">
@@ -658,6 +720,8 @@ public void orderWorkflow(Order order) {
 // Reading workflow state
 int progress = (int) DBOS.getEvent("order-123", "progress", Duration.ofSeconds(30));
 ```
+
+Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-events).
 
 </TabItem>
 </Tabs>
@@ -837,6 +901,8 @@ def parent_workflow():
     result = handle.get_result()
 ```
 
+Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
+
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
@@ -852,6 +918,8 @@ async function parentWorkflow() {
 const parentWorkflowFn = DBOS.registerWorkflow(parentWorkflow);
 ```
 
+Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
+
 </TabItem>
 <TabItem value="go" label="Go">
 
@@ -866,6 +934,8 @@ func ParentWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
     return result, err
 }
 ```
+
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#starting-workflows).
 
 </TabItem>
 <TabItem value="java" label="Java">
@@ -884,6 +954,8 @@ public String parentWorkflow() {
     return handle.getResult();
 }
 ```
+
+Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
 
 </TabItem>
 </Tabs>
