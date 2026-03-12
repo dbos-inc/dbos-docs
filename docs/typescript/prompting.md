@@ -1526,6 +1526,20 @@ interface StepInfo {
 }
 ```
 
+### DBOS.setWorkflowPriority
+
+```typescript
+DBOS.setWorkflowPriority(
+  workflowID: string,
+  priority: number
+): Promise<void>
+```
+
+Set the priority of a queued workflow.
+Only affects workflows with `ENQUEUED` status.
+Priority value must be between `1` and `2,147,483,647`. Lower values are dequeued first.
+Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
+
 ### DBOS.cancelWorkflow
 
 ```typescript
@@ -1541,14 +1555,16 @@ This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued
 
 ```typescript
 DBOS.resumeWorkflow<T>(
-  workflowID: string
-): Promise<WorkflowHandle<Awaited<T>>> 
+  workflowID: string,
+  options?: { queueName?: string }
+): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
 Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+If `queueName` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 
 ### DBOS.forkWorkflow
 
@@ -1556,7 +1572,13 @@ You can also use this to start an enqueued workflow immediately, bypassing its q
 static async forkWorkflow<T>(
   workflowID: string,
   startStep: number,
-  options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number },
+  options?: {
+    newWorkflowID?: string;
+    applicationVersion?: string;
+    timeoutMS?: number;
+    queueName?: string;
+    queuePartitionKey?: string;
+  },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
 
@@ -1570,6 +1592,8 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
 - **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
+- **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
+- **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
 
 ## Upgrading Workflow Code
 

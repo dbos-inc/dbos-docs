@@ -205,15 +205,14 @@ in a **deterministic order**. For example, the following is allowed:
 ```python
     # Start steps in a deterministic order (step1, step2, step3, step4),
     # then await them all together.
-    tasks = [
-        asyncio.create_task(step1("arg1")),
-        asyncio.create_task(step2("arg2")),
-        asyncio.create_task(step3("arg3")),
-        asyncio.create_task(step4("arg4")),
-    ]
-
     # Collects exceptions instead of raising immediately
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = await asyncio.gather(
+        step1("arg1"),
+        step2("arg2"),
+        step3("arg3"),
+        step4("arg4"),
+        return_exceptions=True,
+    )
     return results
 ```
 
@@ -229,12 +228,7 @@ By contrast, the following is not allowed:
         await step3("arg2")
         await step4("arg4")
 
-    tasks = [
-        asyncio.create_task(seq_a()),
-        asyncio.create_task(seq_b()),
-    ]
-
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = await asyncio.gather(seq_a(), seq_b(), return_exceptions=True)
     return results
 ```
 
@@ -249,6 +243,26 @@ Without `return_exceptions=True`, `gather` will raise any exception immediately
 and stop awaiting the rest of the tasks. If one of the remaining tasks later fails, its
 exception may go unobserved. Instead, prefer `asyncio.gather(..., return_exceptions=True)`,
 which safely waits for all tasks to complete and reports their outcomes.
+
+You can also use [`DBOS.asyncio_wait`](../reference/contexts.md#asyncio_wait), a durable wrapper around [`asyncio.wait`](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait), to process tasks as they complete:
+
+```python
+    pending = [
+        step1("arg1"),
+        step2("arg2"),
+        step3("arg3"),
+        step4("arg4"),
+    ]
+
+    # Process each result as it completes
+    while pending:
+        done, pending = await DBOS.asyncio_wait(
+            pending, return_when=asyncio.FIRST_COMPLETED
+        )
+        for task in done:
+            result = task.result()
+            DBOS.logger.info(f"Completed with result: {result}")
+```
 
 ## Workflow Guarantees
 

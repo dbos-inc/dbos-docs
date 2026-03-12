@@ -278,6 +278,34 @@ DBOS.sleep_async(
 
 Coroutine version of [`sleep`](#sleep)
 
+### asyncio_wait
+
+```python
+DBOS.asyncio_wait(
+    fs: List[Awaitable[Any]],
+    *,
+    timeout: Optional[float] = None,
+    return_when: str = asyncio.ALL_COMPLETED,
+) -> tuple[set[asyncio.Task[Any]], set[asyncio.Task[Any]]]
+```
+
+A durable wrapper around [`asyncio.wait`](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) with the same interface and semantics.
+It checkpoints which futures are done vs. pending so the result is deterministic during workflow recovery.
+
+When called outside a workflow, it falls back to regular `asyncio.wait`.
+
+**Parameters:**
+- **fs**: An list of awaitables (coroutines, tasks, or futures) to wait on.
+- **timeout**: Maximum number of seconds to wait. If `None` (the default), wait until the `return_when` condition is met.
+- **return_when**: Controls when the function returns. Must be one of the following constants:
+  - `asyncio.FIRST_COMPLETED`: The function will return when any future finishes or is cancelled.
+  - `asyncio.FIRST_EXCEPTION`: The function will return when any future finishes by raising an exception. If no future raises an exception then it is equivalent to `ALL_COMPLETED`.
+  - `asyncio.ALL_COMPLETED`: The function will return when all futures finish or are cancelled. This is the default.
+
+**Returns:** Two sets of Tasks/Futures: `(done, pending)`. The `done` set contains futures that completed (finished or were cancelled) before the function returned. The `pending` set contains futures that are still running.
+
+See the [`asyncio.wait` documentation](https://docs.python.org/3/library/asyncio-task.html#asyncio.wait) for full details.
+
 ### run_step
 
 ```python
@@ -725,11 +753,27 @@ This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued
 
 Coroutine version of [`cancel_workflow`](#cancel_workflow).
 
+### cancel_workflows
+
+```python
+DBOS.cancel_workflows(
+    workflow_ids: List[str],
+) -> None
+```
+
+Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
+
+### cancel_workflows_async
+
+Coroutine version of [`cancel_workflows`](#cancel_workflows).
+
 ### resume_workflow
 
 ```python
 DBOS.resume_workflow(
-    workflow_id: str
+    workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -738,9 +782,27 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
+If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
+
 ### resume_workflow_async
 
 Coroutine version of [`resume_workflow`](#resume_workflow).
+
+### resume_workflows
+
+```python
+DBOS.resume_workflows(
+    workflow_ids: List[str],
+    *,
+    queue_name: Optional[str] = None,
+) -> List[WorkflowHandle[Any]]
+```
+
+Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+
+### resume_workflows_async
+
+Coroutine version of [`resume_workflows`](#resume_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
 
 ### fork_workflow
 
@@ -750,6 +812,8 @@ DBOS.fork_workflow(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -759,6 +823,8 @@ The specified `start_step` is the step from which the new workflow will start, s
 
 The forked workflow will have a new workflow ID, which can be set with [`SetWorkflowID`](#setworkflowid).
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
+
+If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
 
 ### fork_workflow_async
 
@@ -796,6 +862,22 @@ DBOS.delete_workflow_async(
 
 Coroutine version of [`delete_workflow`](#delete_workflow).
 
+### delete_workflows
+
+```python
+DBOS.delete_workflows(
+    workflow_ids: List[str],
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
+
+### delete_workflows_async
+
+Coroutine version of [`delete_workflows`](#delete_workflows).
+
 ## Workflow Schedules
 
 ### create_schedule
@@ -807,6 +889,8 @@ DBOS.create_schedule(
     workflow_fn: Callable[[datetime, Any], None],
     schedule: str,
     context: Any = None,
+    automatic_backfill: bool = False,
+    cron_timezone: Optional[str] = None,
 ) -> None
 ```
 
@@ -817,6 +901,8 @@ Create a cron schedule that periodically invokes a workflow function.
 - **workflow_fn**: The workflow function to invoke. Must take two arguments: a `datetime` (the scheduled execution time) and a context object.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
+- **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
+- **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -930,6 +1016,8 @@ class ScheduleInput(TypedDict):
     workflow_fn: Callable[[datetime, Any], None]
     schedule: str
     context: Any
+    automatic_backfill: bool  # Optional, defaults to False
+    cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
 ```
 
 Atomically apply a set of schedules.
@@ -974,13 +1062,26 @@ Some schedule management methods return the `WorkflowSchedule` type:
 
 ```python
 class WorkflowSchedule(TypedDict):
+    # The unique identifier of the schedule
     schedule_id: str
+    # The human-readable name of the schedule
     schedule_name: str
+    # The name of the workflow function to execute
     workflow_name: str
+    # The class name of the workflow function, if it is a class method
     workflow_class_name: Optional[str]
+    # The cron expression defining the schedule
     schedule: str
-    status: str  # "ACTIVE" or "PAUSED"
+    # The status of the schedule: "ACTIVE" or "PAUSED"
+    status: str
+    # The context object passed to each workflow invocation
     context: Any
+    # The timestamp of when the schedule last fired, if ever
+    last_fired_at: Optional[str]
+    # Whether missed executions are automatically backfilled on startup
+    automatic_backfill: bool
+    # The IANA timezone in which the cron expression is evaluated, or None for UTC
+    cron_timezone: Optional[str]
 ```
 
 ### Workflow Status
