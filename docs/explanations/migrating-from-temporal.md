@@ -381,9 +381,9 @@ Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md).
 
 ### Retries
 
-Both systems support configurable retries with exponential backoff. The configuration is similar but uses different syntax.
+Both systems support configurable retries with exponential backoff. 
 
-**Temporal** (configured at the call site):
+**Temporal**:
 ```python
 result = await workflow.execute_activity(
     send_email,
