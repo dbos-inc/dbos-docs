@@ -976,15 +976,20 @@ DBOS has no central server to manage, operate, or scale. Your workflows run in y
 
 ### Fork
 
-DBOS can [fork a workflow](../python/tutorials/workflow-management.md) from a specific step, re-executing it from that point. This is powerful for recovering from failures&mdash;for example, restarting thousands of failed billing workflows from the payment step after an outage is resolved.
+DBOS can [fork a workflow](../python/tutorials/workflow-management.md) from a specific step, re-executing it from that point. This is powerful for recovering from failures, for example, restarting thousands of failed workflows from a specific step after an outage is resolved.
 
 ### Workflow Streaming
 
 DBOS provides [streaming](../python/tutorials/workflow-communication.md#workflow-streaming), an append-only stream that workflows can write to and clients can read from in real time. This is useful for streaming LLM outputs, progress updates, or real-time data from long-running workflows.
 
-### SQL-Backed Introspection
+### Postgres Integration & SQL-Based Introspection
 
-Because all workflow state is stored in Postgres, you can query it with SQL. DBOS also provides programmatic APIs to [list, search, and manage workflows](../python/tutorials/workflow-management.md) by status, name, time, queue, or custom properties.
+DBOS integrates deeply with your Postgres database.
+For example, you can [enqueue workflows directly from Postgres SQL](./portable-workflows.md#per-workflow-enqueue).
+You can also use [transactional steps](#database-operations) to perform database operations in workflows with exactly-once semantics.
+
+Moreover, because all workflow state is stored in Postgres, you can query it with SQL.
+DBOS also provides programmatic APIs to [list, search, and manage workflows](../python/tutorials/workflow-management.md) by status, name, time, queue, or custom properties.
 
 ### Queue Flow Control
 
