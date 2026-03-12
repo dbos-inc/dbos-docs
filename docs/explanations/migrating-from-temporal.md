@@ -34,6 +34,10 @@ class OrderWorkflow:
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 @DBOS.workflow()
 def order_workflow(order: Order) -> str:
@@ -42,10 +46,55 @@ def order_workflow(order: Order) -> str:
     return confirmation
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+async function orderWorkflow(order: Order): Promise<string> {
+    const result = await validateOrder(order);
+    const confirmation = await processPayment(result);
+    return confirmation;
+}
+const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
+    result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+        return validateOrder(stepCtx, order)
+    }, dbos.WithStepName("validateOrder"))
+    if err != nil {
+        return "", err
+    }
+    confirmation, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
+        return processPayment(stepCtx, result)
+    }, dbos.WithStepName("processPayment"))
+    return confirmation, err
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+@Workflow(name = "orderWorkflow")
+public String orderWorkflow(Order order) {
+    String result = DBOS.runStep(() -> validateOrder(order), "validateOrder");
+    String confirmation = DBOS.runStep(() -> processPayment(result), "processPayment");
+    return confirmation;
+}
+```
+
+</TabItem>
+</Tabs>
+
 ### Starting Workflows
 
 In Temporal, you start workflows through a client connected to the Temporal server.
-In DBOS, you can either start a workflow in your application directly  or enqueue workflows from a separate application using the DBOS Client, which connects directly to the DBOS system database:
+In DBOS, you can either start a workflow in your application directly or enqueue workflows from a separate application using the DBOS Client, which connects directly to the DBOS system database:
 
 **Temporal:**
 ```python
@@ -61,6 +110,9 @@ result = await handle.result()
 
 **DBOS:**
 
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 # Starting a workflow from in your application
 with SetWorkflowID("order-123"):
@@ -75,16 +127,103 @@ handle = client.enqueue({"workflow_name": "order_workflow", "queue_name": "order
 result = handle.get_result()
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// Starting a workflow from in your application
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "order-123"})();
+const result = await handle.getResult();
+```
+
+```typescript
+// Starting a workflow from another application using the DBOS Client
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+await client.enqueue<typeof orderWorkflow>(
+    { workflowName: "orderWorkflow", queueName: "orders" },
+    order,
+);
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+// Starting a workflow from in your application
+handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWorkflowID("order-123"))
+result, err := handle.GetResult()
+```
+
+```go
+// Starting a workflow from another application using the DBOS Client
+client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+})
+handle, err := dbos.Enqueue[Order, string](client, "orders", "OrderWorkflow", order)
+result, err := handle.GetResult()
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Starting a workflow from in your application
+WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    () -> proxy.orderWorkflow(order),
+    new StartWorkflowOptions().withWorkflowId("order-123")
+);
+String result = handle.getResult();
+```
+
+```java
+// Starting a workflow from another application using the DBOS Client
+var client = new DBOSClient(dbUrl, dbUser, dbPassword);
+var options = new DBOSClient.EnqueueOptions("OrderImpl", "orderWorkflow", "orders");
+var handle = client.enqueueWorkflow(options, new Object[]{order});
+Object result = handle.getResult();
+```
+
+</TabItem>
+</Tabs>
+
 ### Workflow IDs and Idempotency
 
-Both systems support workflow IDs for idempotency. In Temporal, you pass the ID when starting a workflow. In DBOS, you use the `SetWorkflowID` context manager:
+Both systems support workflow IDs for idempotency. In Temporal, you pass the ID when starting a workflow. In DBOS, you set the workflow ID before calling the workflow. If a workflow with that ID has already run, it returns the previous result instead of re-executing.
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
 
 ```python
 with SetWorkflowID("payment-idempotency-key"):
     order_workflow(order)
 ```
 
-If a workflow with that ID has already run, it returns the previous result instead of re-executing.
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})();
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWorkflowID("payment-idempotency-key"))
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+DBOS.startWorkflow(
+    () -> proxy.orderWorkflow(order),
+    new StartWorkflowOptions().withWorkflowId("payment-idempotency-key")
+);
+```
+
+</TabItem>
+</Tabs>
 
 ### Determinism
 
@@ -100,11 +239,39 @@ await workflow.sleep(timedelta(hours=24))
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 DBOS.sleep(86400)  # seconds
 ```
 
-## Activities → Steps
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await DBOS.sleep(86400000);  // milliseconds
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+dbos.Sleep(ctx, 24 * time.Hour)
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+DBOS.sleep(Duration.ofHours(24));
+```
+
+</TabItem>
+</Tabs>
+
+## Activities &rarr; Steps
 
 Temporal activities map to DBOS steps. Both are where side effects and non-deterministic operations happen.
 
@@ -117,6 +284,10 @@ async def send_email(to: str, body: str) -> bool:
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 @DBOS.step()
 def send_email(to: str, body: str) -> bool:
@@ -124,7 +295,41 @@ def send_email(to: str, body: str) -> bool:
     return response.ok
 ```
 
-The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular Python functions; DBOS checkpoints their results to Postgres automatically.
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const sendEmail = DBOS.registerStep(async (to: string, body: string): Promise<boolean> => {
+    const response = await fetch(EMAIL_API, {
+        method: "POST",
+        body: JSON.stringify({ to, body }),
+    });
+    return response.ok;
+});
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+// Steps are called inline using RunAsStep
+result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
+    return sendEmail(stepCtx, to, body)
+}, dbos.WithStepName("sendEmail"))
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Steps are called inline using DBOS.runStep
+boolean result = DBOS.runStep(() -> sendEmail(to, body), "sendEmail");
+```
+
+</TabItem>
+</Tabs>
+
+The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular functions; DBOS checkpoints their results to Postgres automatically.
 
 ### Retries
 
@@ -144,7 +349,11 @@ result = await workflow.execute_activity(
 )
 ```
 
-**DBOS** (configured on the step decorator):
+**DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 @DBOS.step(retries_allowed=True, max_attempts=5, interval_seconds=1.0, backoff_rate=2.0)
 def send_email(to: str, body: str) -> bool:
@@ -152,14 +361,66 @@ def send_email(to: str, body: str) -> bool:
     return response.ok
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+const sendEmail = DBOS.registerStep(
+    async (to: string, body: string): Promise<boolean> => {
+        const response = await fetch(EMAIL_API, {
+            method: "POST",
+            body: JSON.stringify({ to, body }),
+        });
+        return response.ok;
+    },
+    { retriesAllowed: true, maxAttempts: 5, intervalSeconds: 1.0, backoffRate: 2.0 }
+);
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
+    return sendEmail(stepCtx, to, body)
+},
+    dbos.WithStepName("sendEmail"),
+    dbos.WithStepMaxRetries(5),
+    dbos.WithBaseInterval(1 * time.Second),
+    dbos.WithBackoffFactor(2.0),
+)
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+boolean result = DBOS.runStep(
+    () -> sendEmail(to, body),
+    new StepOptions("sendEmail")
+        .withRetriesAllowed(true)
+        .withMaxAttempts(5)
+        .withIntervalSeconds(1.0)
+        .withBackoffRate(2.0)
+);
+```
+
+</TabItem>
+</Tabs>
+
 ### Heartbeats
 
 Temporal activities support heartbeats for long-running operations so the server knows the activity is still alive. DBOS does not require heartbeats because there is no central orchestrator monitoring activity execution; instead, steps run directly in your application process.
 
 ### Database Operations
 
-DBOS provides a special type of step called a [transaction](../python/tutorials/step-tutorial.md#transactions) (`@DBOS.transaction()`) that executes database operations in a single database transaction, co-committed with the DBOS checkpoint.
+DBOS provides a special type of step called a transaction that executes database operations in a single database transaction, co-committed with the DBOS checkpoint.
 This provides exactly-once semantics for database writes, which is stronger than the at-least-once semantics offered by Temporal.
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
+Learn more in the [transactions tutorial](../python/tutorials/step-tutorial.md#transactions).
 
 ```python
 @DBOS.transaction()
@@ -170,9 +431,30 @@ def update_order_status(order_id: str, status: str) -> None:
     )
 ```
 
-## Signals → Messages
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
 
-Temporal signals let you send data to a running workflow. The equivalent in DBOS is **messages**, using `DBOS.send()` and `DBOS.recv()`.
+Learn more in the [transactions tutorial](../typescript/tutorials/transaction-tutorial.md).
+
+```typescript
+const dataSource = new KnexDataSource('app-db', {
+    client: 'pg', connection: process.env.DBOS_DATABASE_URL
+});
+
+async function updateOrderStatus(orderId: string, status: string) {
+    await dataSource.client('orders')
+        .where({ id: orderId })
+        .update({ status });
+}
+const updateOrderStatusTx = dataSource.registerTransaction(updateOrderStatus);
+```
+
+</TabItem>
+</Tabs>
+
+## Signals &rarr; Messages
+
+Temporal signals let you send data to a running workflow. The equivalent in DBOS is **messages**, using `send()` and `recv()`.
 
 **Temporal:**
 ```python
@@ -201,6 +483,10 @@ await handle.signal(OrderWorkflow.payment_received, "paid")
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 # In the workflow
 @DBOS.workflow()
@@ -216,14 +502,75 @@ def order_workflow(order: Order):
 DBOS.send("order-123", "paid", topic="payment_status")
 ```
 
-Key differences:
-- Instead of defining signal handler methods, `DBOS.recv()` waits inline for a message on a given topic.
-- Messages are queued per-topic, so multiple messages can be sent before the workflow reads them.
-- Messages sent from workflows are delivered exactly-once.
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
 
-## Queries → Events
+```typescript
+// In the workflow
+async function orderWorkflow(order: Order) {
+    // ... start order processing ...
+    const paymentStatus = await DBOS.recv<string>("payment_status", 3600);
+    if (paymentStatus !== null && paymentStatus === "paid") {
+        // handle success
+    } else {
+        // handle failure
+    }
+}
+const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
 
-Temporal queries let external code read workflow state synchronously. The equivalent in DBOS is **events**, using `DBOS.set_event()` and `DBOS.get_event()`.
+// Sending the message
+await DBOS.send("order-123", "paid", "payment_status");
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+// In the workflow
+func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
+    // ... start order processing ...
+    paymentStatus, err := dbos.Recv[string](ctx, "payment_status", 1*time.Hour)
+    if err != nil {
+        return "", err
+    }
+    if paymentStatus == "paid" {
+        // handle success
+    } else {
+        // handle failure
+    }
+    // ...
+}
+
+// Sending the message
+err := dbos.Send(dbosContext, "order-123", "paid", "payment_status")
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// In the workflow
+@Workflow(name = "orderWorkflow")
+public void orderWorkflow(Order order) {
+    // ... start order processing ...
+    String paymentStatus = (String) DBOS.recv("payment_status", Duration.ofHours(1));
+    if (paymentStatus != null && paymentStatus.equals("paid")) {
+        // handle success
+    } else {
+        // handle failure
+    }
+}
+
+// Sending the message
+DBOS.send("order-123", "paid", "payment_status");
+```
+
+</TabItem>
+</Tabs>
+
+## Queries &rarr; Events
+
+Temporal queries let external code read workflow state synchronously. The equivalent in DBOS is **events**, using `set_event()` and `get_event()`.
 
 **Temporal:**
 ```python
@@ -249,6 +596,10 @@ progress = await handle.query(OrderWorkflow.get_progress)
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 @DBOS.workflow()
 def order_workflow(order: Order):
@@ -261,11 +612,61 @@ def order_workflow(order: Order):
 progress = DBOS.get_event("order-123", "progress")
 ```
 
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+async function orderWorkflow(order: Order) {
+    await DBOS.setEvent("progress", 25);
+    await validateOrder(order);
+    await DBOS.setEvent("progress", 50);
+    // ...
+}
+const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
+
+// Reading workflow state
+const progress = await DBOS.getEvent<number>("order-123", "progress");
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
+    dbos.SetEvent(ctx, "progress", 25)
+    // ... validate order ...
+    dbos.SetEvent(ctx, "progress", 50)
+    // ...
+}
+
+// Reading workflow state
+progress, err := dbos.GetEvent[int](dbosContext, "order-123", "progress", 30*time.Second)
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+@Workflow(name = "orderWorkflow")
+public void orderWorkflow(Order order) {
+    DBOS.setEvent("progress", 25);
+    // ... validate order ...
+    DBOS.setEvent("progress", 50);
+    // ...
+}
+
+// Reading workflow state
+int progress = (int) DBOS.getEvent("order-123", "progress", Duration.ofSeconds(30));
+```
+
+</TabItem>
+</Tabs>
+
 Events are persisted to the database, so they remain available even after the workflow completes.
 
-## Task Queues → Queues
+## Task Queues &rarr; Queues
 
-Temporal task queues control which workers execute which workflows. DBOS [queues](../python/tutorials/queue-tutorial.md) serve a similar purpose but also provide built-in concurrency control and rate limiting.
+Temporal task queues control which workers execute which workflows. DBOS queues serve a similar purpose but also provide built-in concurrency control and rate limiting.
 
 **Temporal:**
 ```python
@@ -285,6 +686,10 @@ handle = await client.start_workflow(
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 # Define a queue with concurrency limits
 order_queue = Queue("order-processing", concurrency=10)
@@ -294,17 +699,68 @@ handle = order_queue.enqueue(order_workflow, order)
 result = handle.get_result()
 ```
 
+Learn more in the [queues tutorial](../python/tutorials/queue-tutorial.md).
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+// Define a queue with concurrency limits
+const orderQueue = new WorkflowQueue("order-processing", { concurrency: 10 });
+
+// Enqueue a workflow
+const handle = await DBOS.startWorkflow(orderWorkflowFn, { queueName: orderQueue.name })(order);
+const result = await handle.getResult();
+```
+
+Learn more in the [queues tutorial](../typescript/tutorials/queue-tutorial.md).
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+// Define a queue with concurrency limits
+queue := dbos.NewWorkflowQueue(dbosContext, "order-processing", dbos.WithGlobalConcurrency(10))
+
+// Enqueue a workflow
+handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithQueue(queue.Name))
+result, err := handle.GetResult()
+```
+
+Learn more in the [queues tutorial](../golang/tutorials/queue-tutorial.md).
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Define a queue with concurrency limits
+Queue orderQueue = new Queue("order-processing").withConcurrency(10);
+DBOS.registerQueue(orderQueue);
+
+// Enqueue a workflow
+WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    () -> proxy.orderWorkflow(order),
+    new StartWorkflowOptions().withQueue(orderQueue)
+);
+String result = handle.getResult();
+```
+
+Learn more in the [queues tutorial](../java/tutorials/queue-tutorial.md).
+
+</TabItem>
+</Tabs>
+
 DBOS queues provide features that Temporal task queues don't have out of the box:
-- **Global concurrency limits**: `concurrency=10` limits total concurrent executions across all workers.
-- **Per-worker concurrency**: `worker_concurrency=5` limits concurrent executions per process.
-- **Rate limiting**: `limiter={"limit": 100, "period": 60}` limits executions per time period.
+- **Global concurrency limits**: Limit total concurrent executions across all workers.
+- **Per-worker concurrency**: Limit concurrent executions per process.
+- **Rate limiting**: Limit executions per time period.
 - **Partitioned queues**: Create per-tenant sub-queues with independent concurrency limits.
 - **Priority**: Process higher-priority workflows first.
 - **Deduplication**: Prevent duplicate workflows in the queue.
 
 ## Scheduled Workflows
 
-In Temporal, you use schedules to run workflows on a cron-like schedule. In DBOS, you use `DBOS.create_schedule()`.
+In Temporal, you use schedules to run workflows on a cron-like schedule:
 
 **Temporal:**
 ```python
@@ -322,11 +778,33 @@ await client.create_schedule(
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 DBOS.create_schedule("daily-report", daily_report_workflow, schedule="0 9 * * *")
 ```
 
 DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.
+Learn more in the [scheduling tutorial](../python/tutorials/scheduled-workflows.md).
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await DBOS.createSchedule({
+    scheduleName: "daily-report",
+    workflowFn: dailyReportWorkflow,
+    schedule: "0 9 * * *",
+});
+```
+
+DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.
+Learn more in the [scheduling tutorial](../typescript/tutorials/scheduled-workflows.md).
+
+</TabItem>
+</Tabs>
 
 ## Child Workflows
 
@@ -344,6 +822,10 @@ class ParentWorkflow:
 ```
 
 **DBOS:**
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
 ```python
 @DBOS.workflow()
 def parent_workflow():
@@ -354,6 +836,57 @@ def parent_workflow():
     handle = DBOS.start_workflow(child_workflow, data)
     result = handle.get_result()
 ```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+async function parentWorkflow() {
+    // Call directly (runs inline)
+    const result = await childWorkflowFn(data);
+
+    // Or start in background
+    const handle = await DBOS.startWorkflow(childWorkflowFn)(data);
+    const result2 = await handle.getResult();
+}
+const parentWorkflowFn = DBOS.registerWorkflow(parentWorkflow);
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+func ParentWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+    // Start child workflow in background
+    handle, err := dbos.RunWorkflow(ctx, ChildWorkflow, data)
+    if err != nil {
+        return "", err
+    }
+    result, err := handle.GetResult()
+    return result, err
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+@Workflow(name = "parentWorkflow")
+public String parentWorkflow() {
+    // Call directly (runs inline)
+    String result = proxy.childWorkflow(data);
+
+    // Or start in background
+    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+        () -> proxy.childWorkflow(data),
+        new StartWorkflowOptions()
+    );
+    return handle.getResult();
+}
+```
+
+</TabItem>
+</Tabs>
 
 ## What's Different in DBOS
 
