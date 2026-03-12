@@ -17,14 +17,12 @@ Because DBOS is just a library, you don't need to change how your application is
 By contrast, Temporal is designed around a central workflow server that orchestrates workflow execution on a cluster of workers.
 The central server runs workflow code, dispatching steps to workers.
 Workers execute steps, then return their output to the orchestrator, which durably checkpoints it then dispatches the next step.
-Application code can't call workflows directly, but instead sends requests to the workflows server to start workflows and fetch their results.
 
 Because of this design, adding Temporal to an application requires rearchitecting it.
 First, you must move all workflow and step code from application servers to Temporal workers.
 Then, you must also rewrite all interaction between your application and its workflows to go through the orchestration server and its client APIs.
 Next, you must build infrastructure to operate and scale the worker servers.
 Finally, you must operate and scale the orchestration server and its underlying Cassandra data store (Temporal supports other backends, but Cassandra is strongly recommended in production).
-[This blog post](https://www.dbos.dev/blog/durable-execution-coding-comparison) empirically benchmarks the comparison, showing how adding DBOS to an example data pipeline application requires changing &lt;10 lines of code, while adding Temporal requires a complete rewrite.
 
 <img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 
@@ -35,7 +33,7 @@ Beyond ease of adoption and operation, the DBOS architecture has a number of oth
 In DBOS, the only overhead required to call a step is checkpointing its output.
 This requires a single Postgres write, which typically takes 1-2ms. 
 In Temporal, a step requires an async dispatch from the central server, which takes [tens to hundreds of ms](https://temporal.io/blog/reduce-latency-and-speed-up-your-temporal-workflows).
-Thus, DBOS is strongly preferred for interactive or otherwise latency-sensitive workflows.
+Thus, DBOS is preferred for interactive or otherwise latency-sensitive workflows.
 
 #### Rich Workflow Introspection and Management
 
@@ -57,4 +55,11 @@ Your team is responsible for operating both, and if either has downtime, your ap
 
 #### Privacy-Preserving Architecture
 
-Because DBOS is just an open-source library and can store data in any Postgres database, it is intrinsically privacy-preserving&mdash;you own your data, you store it in your Postgres, and it is never stored or sent anywhere else. By contrast, to use Temporal, you must send potentially sensitive data (including workflow and step checkpoints) to the Temporal server for storage. To mitigate this, Temporal has privacy-preserving features, including support for [client-side encryption](https://docs.temporal.io/evaluate/development-production-features/data-encryption) of all data sent to Temporal.
+Because DBOS is just an open-source library and can store data in any Postgres database, it is intrinsically privacy-preserving&mdash;you own your data, you store it in your Postgres, and it is never stored or sent anywhere else. By contrast, to use Temporal, you must send potentially sensitive data (including workflow and step checkpoints) to the Temporal server for storage.
+
+#### Durable Workflow Queues
+
+DBOS provides durable workflow queues with managed flow control.
+Using queues, you can manage how many workflows can execute concurrently (globally, per-worker, and per-tenant) as well as which workers can execute which workflows.
+Temporal does not have comparable queueing or flow control abstractions, making it harder to control when and where workflows execute.
+Learn more about DBOS queues in the queues tutorial ([Python](../python/tutorials/queue-tutorial.md), [TypeScript](../typescript/tutorials/queue-tutorial.md), [Go](../golang/tutorials/queue-tutorial.md), [Java](../java/tutorials/queue-tutorial.md)).
