@@ -305,6 +305,12 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#du
 </TabItem>
 </Tabs>
 
+### Continue-as-New
+
+A common pattern in Temporal is to use an extremely long-running workflow as a durable object, interacting with it via signals and queries and periodically refreshing its state with `continue_as_new` to avoid Temporal's workflow size limits.
+In DBOS, we recommend instead storing long-lived objects in your database and interacting with them through shorter-lived workflows.
+You can use durable queues (in particular, partitioned queues) to manage the concurrency of those interactions, providing the same guarantees without the complexity of managing an extremely long-lived workflow.
+
 ## Activities &rarr; Steps
 
 Temporal activities map to DBOS steps. Both are where side effects and non-deterministic operations happen.
