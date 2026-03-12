@@ -832,7 +832,7 @@ DBOS queues provide features that Temporal task queues don't have out of the box
 
 ## Scheduled Workflows
 
-In Temporal, you use schedules to run workflows on a cron-like schedule:
+Both DBOS and Temporal let you run workflows on a cron schedule:
 
 **Temporal:**
 ```python
