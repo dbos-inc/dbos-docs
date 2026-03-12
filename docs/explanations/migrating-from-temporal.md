@@ -4,8 +4,11 @@ title: Migrating From Temporal
 hide_table_of_contents: false
 ---
 
-This guide explains how each major Temporal feature translates to DBOS.
+This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
+
+:::info
 For a high-level comparison of DBOS and Temporal's architectures, see [Comparing DBOS and Temporal](./comparing-temporal.md).
+:::
 
 ## Workflows
 
@@ -366,3 +369,13 @@ DBOS provides [streaming](../python/tutorials/workflow-communication.md#workflow
 ### SQL-Backed Introspection
 
 Because all workflow state is stored in Postgres, you can query it with SQL. DBOS also provides programmatic APIs to [list, search, and manage workflows](../python/tutorials/workflow-management.md) by status, name, time, queue, or custom properties.
+
+## Automating Temporal -> DBOS Migration
+
+With coding agents, you can largely automate a migration from Temporal to DBOS.
+To do this, we recommend using DBOS skills and prompts to give your coding agent access to the latest information on DBOS:
+
+- [AI-assisted development in Python](../python/prompting.md)
+- [AI-assisted development in TypeScript](../typescript/prompting.md)
+- [AI-assisted development in Go](../golang/prompting.md)
+- [AI-assisted development in Java](../java/prompting.md)
