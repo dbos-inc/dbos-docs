@@ -62,6 +62,14 @@ with SetWorkflowID("order-123"):
 result = handle.get_result()
 ```
 
+You can also enqueue workflows from a separate application using [`DBOSClient`](../python/reference/client.md), which connects directly to the DBOS system database:
+
+```python
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+handle = client.enqueue({"workflow_name": "order_workflow", "queue_name": "orders"}, order)
+result = handle.get_result()
+```
+
 ### Workflow IDs and Idempotency
 
 Both systems support workflow IDs for idempotency. In Temporal, you pass the ID when starting a workflow. In DBOS, you use the `SetWorkflowID` context manager:
