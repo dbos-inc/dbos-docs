@@ -1,5 +1,4 @@
 ---
-displayed_sidebar: examplesSidebar
 sidebar_position: 50
 title: Reliable Customer Service Agent
 ---

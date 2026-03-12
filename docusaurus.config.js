@@ -155,6 +155,10 @@ const config = {
             from: '/production/mcp',
             to: '/integrations/mcp',
           },
+          {
+            from: '/explanations/why-dbos-agents',
+            to: '/ai/ai-quickstart',
+          },
         ],
         // Blanket redirect from /cloud-tutorials to /production/dbos-cloud
         createRedirects(existingPath) {
@@ -225,10 +229,14 @@ const config = {
             label: 'Quickstart',
           },
           {
-            type: 'docSidebar',
+            to: 'examples',
             label: 'Examples',
             position: 'left',
-            sidebarId: 'examplesSidebar',
+          },
+          {
+            to: 'ai/ai-quickstart',
+            label: 'AI Agents',
+            position: 'left',
           },
           {
             type: 'search',

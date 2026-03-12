@@ -6,7 +6,7 @@ title: Why DBOS?
 
 :::info
 
-If you're building AI agents, also check out [Why DBOS for Agents](./explanations/why-dbos-agents.md).
+If you're building AI agents, also check out the [AI Quickstart](./ai/ai-quickstart.md).
 
 :::
 
@@ -81,7 +81,7 @@ Use durable workflows to build fault-tolerant and observable AI agents:
 - Seamlessly add [human-in-the-loop](./python/examples/agent-inbox.md) to your agent.
 - Natively integrate with popular frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/).
 
-[Learn More↗️](./explanations/why-dbos-agents.md)
+[Learn More↗️](./ai/ai-quickstart.md)
 
 </article>
 <article className="col col--7">

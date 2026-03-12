@@ -1,5 +1,4 @@
 ---
-displayed_sidebar: examplesSidebar
 sidebar_position: 55
 title: S3 Mirror
 ---

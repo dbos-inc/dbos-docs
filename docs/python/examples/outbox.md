@@ -1,5 +1,4 @@
 ---
-displayed_sidebar: examplesSidebar
 sidebar_position: 28
 title: Transactional Outbox
 ---
