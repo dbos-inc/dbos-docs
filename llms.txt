@@ -2,12 +2,15 @@
 
 ## Docs
 
+- [AI Quickstart](https://docs.dbos.dev/ai/ai-quickstart.md): You can integrate DBOS durable workflows with your AI agents (or other AI systems) to make them reliable, observable, and resilient to failures.
+- [Reproducing & Debugging Agents](https://docs.dbos.dev/ai/debugging.md): One of the most common problems you encounter building and operating agents is failures due to unexpected agent behavior.
+- [Distributing & Scaling Agents](https://docs.dbos.dev/ai/distributing-agents.md): Often AI applications and agents need to distribute work and run many parallel tasks across many servers.
+- [Reliable Human-in-the-Loop](https://docs.dbos.dev/ai/hitl.md): Many agents need a human in the loop for decisions that are too important to fully trust an LLM.
 - [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
 - [Cross-Language Interaction](https://docs.dbos.dev/explanations/portable-workflows.md): DBOS applications and clients in different languages can interoperate using portable JSON serialization
-- [DBOS System Tables](https://docs.dbos.dev/explanations/system-tables.md): DBOS system tables reference
-- [Why DBOS for Agents](https://docs.dbos.dev/explanations/why-dbos-agents.md): DBOS provides lightweight durable workflows for your AI agents.
+- [DBOS System Database](https://docs.dbos.dev/explanations/system-tables.md): DBOS system database reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript, Java, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/golang/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
@@ -142,4 +145,4 @@
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console, programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Upgrading to TSv3](https://docs.dbos.dev/typescript/upgrading.md): With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.
-- [Why DBOS?](https://docs.dbos.dev/why-dbos.md): If you're building AI agents, also check out Why DBOS for Agents.
+- [Why DBOS?](https://docs.dbos.dev/why-dbos.md): If you're building AI agents, also check out the AI Quickstart.

@@ -128,6 +128,25 @@ await client.enqueue<ProcessTask>(
 
 The [queue worker](../examples/queue-worker.md) example shows this design pattern in more detail.
 
+### Enqueueing from PL/pgSQL
+
+You can also enqueue a workflow from a Postgres trigger or stored procedure.
+The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
+
+For example, here is the previous example of enqueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
+
+```sql
+DECLARE workflow_id text;
+workflow_id := dbos.enqueue_workflow(
+    workflow_name => 'dataPipeline', 
+    queue_name => 'pipelineQueue', 
+    positional_args => ARRAY[
+        '"task-123"'::json, 
+        '"data"'::json]
+    )
+```
+
+
 ### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
@@ -354,6 +373,14 @@ async function main() {
   const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
 }
 ```
+
+You can also dynamically update the priority of an already-enqueued workflow using [`DBOS.setWorkflowPriority`](../reference/methods.md#dbossetworkflowpriority):
+
+```javascript
+await DBOS.setWorkflowPriority(handle.workflowID, 1); // Promote to highest priority
+```
+
+This only affects workflows with `ENQUEUED` status.
 
 ## Explicit Queue Listening
 

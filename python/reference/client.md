@@ -544,12 +544,28 @@ client.cancel_workflow_async(
 
 Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
 
+### cancel_workflows
+
+```python
+client.cancel_workflows(
+    workflow_ids: List[str],
+) -> None
+```
+
+Cancel multiple workflows. Behaves like [`cancel_workflow`](#cancel_workflow) but operates on a list of workflow IDs.
+Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
+
+### cancel_workflows_async
+
+Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
 
 ### resume_workflow
 
 ```python
 client.resume_workflow(
-    workflow_id: str
+    workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -557,6 +573,7 @@ Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+If `queue_name` is provided, the resumed workflow is enqueued on the specified queue instead of starting immediately.
 Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 
 ### resume_workflow_async
@@ -564,11 +581,29 @@ Similar to [`DBOS.resume_workflow`](./contexts.md#resume_workflow).
 ```python
 client.resume_workflow_async(
     workflow_id: str,
+    *,
+    queue_name: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
 Asynchronous version of [`DBOSClient.resume_workflow`](#resume_workflow).
 
+### resume_workflows
+
+```python
+client.resume_workflows(
+    workflow_ids: List[str],
+    *,
+    queue_name: Optional[str] = None,
+) -> List[WorkflowHandle[Any]]
+```
+
+Resume multiple workflows. Behaves like [`resume_workflow`](#resume_workflow) but operates on a list of workflow IDs and returns a list of handles.
+Similar to [`DBOS.resume_workflows`](./contexts.md#resume_workflows).
+
+### resume_workflows_async
+
+Asynchronous version of [`DBOSClient.resume_workflows`](#resume_workflows). Returns `List[WorkflowHandleAsync[Any]]`.
 
 ### fork_workflow
 
@@ -578,6 +613,8 @@ client.fork_workflow(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -591,11 +628,54 @@ client.fork_workflow_async(
     start_step: int,
     *,
     application_version: Optional[str] = None,
+    queue_name: Optional[str] = None,
+    queue_partition_key: Optional[str] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
 Asynchronous version of [`DBOSClient.fork_workflow`](#fork_workflow).
 
+### delete_workflow
+
+```python
+client.delete_workflow(
+    workflow_id: str,
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete a workflow and all its associated data from the system database.
+Similar to [`DBOS.delete_workflow`](./contexts.md#delete_workflow).
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to delete.
+- **delete_children**: If `True`, also recursively deletes all child workflows started by this workflow.
+
+:::warning
+This operation is irreversible. Once a workflow is deleted, it cannot be recovered, resumed, or forked.
+:::
+
+### delete_workflow_async
+
+Asynchronous version of [`DBOSClient.delete_workflow`](#delete_workflow).
+
+### delete_workflows
+
+```python
+client.delete_workflows(
+    workflow_ids: List[str],
+    *,
+    delete_children: bool = False,
+) -> None
+```
+
+Delete multiple workflows and all their associated data. Behaves like [`delete_workflow`](#delete_workflow) but operates on a list of workflow IDs.
+Similar to [`DBOS.delete_workflows`](./contexts.md#delete_workflows).
+
+### delete_workflows_async
+
+Asynchronous version of [`DBOSClient.delete_workflows`](#delete_workflows).
 
 ## Debouncing
 
@@ -675,6 +755,8 @@ client.create_schedule(
     schedule: str,
     context: Any = None,
     workflow_class_name: Optional[str] = None,
+    automatic_backfill: bool = False,
+    cron_timezone: Optional[str] = None,
 ) -> None
 ```
 
@@ -687,6 +769,8 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **workflow_class_name**: The class name if the workflow is a static method on a [DBOS class](../tutorials/classes.md).
+- **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
+- **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 
 ### create_schedule_async
 
@@ -772,6 +856,8 @@ class ClientScheduleInput(TypedDict):
     schedule: str
     context: Any
     workflow_class_name: Optional[str]
+    automatic_backfill: bool  # Optional, defaults to False
+    cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
 ```
 
 Atomically apply a set of schedules.

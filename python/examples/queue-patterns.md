@@ -1,5 +1,4 @@
 ---
-displayed_sidebar: examplesSidebar
 sidebar_position: 36
 title: Advanced Queue Patterns
 ---

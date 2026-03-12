@@ -61,6 +61,8 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
+Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
+
 You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
 
@@ -119,6 +121,8 @@ await DBOS.backfillSchedule(
     new Date("2025-01-02T00:00:00Z"),
 );
 ```
+
+Alternatively, you can set `automaticBackfill: true` when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
 
 You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../reference/methods.md#dbostriggerschedule):
 

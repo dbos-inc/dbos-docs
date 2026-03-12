@@ -1,12 +1,77 @@
 ---
 sidebar_position: 10
-title: DBOS System Tables
-description: DBOS system tables reference
+title: DBOS System Database
+description: DBOS system database reference
 ---
 
-## System Tables
 DBOS records application execution history in several system tables.
 These tables are located in your system database, whose location you configure when you launch your application.
+A PostgreSQL system database also includes PL/pgSQL functions that you can call from stored procedures or triggers. 
+
+## System Database Functions
+
+:::info[Reminder]
+PL/pgSQL functions can only be called from code running in the same database.
+:::
+
+### dbos.enqueue_workflow
+
+```sql
+CREATE FUNCTION dbos.enqueue_workflow(
+    workflow_name TEXT,
+    queue_name TEXT,
+    positional_args JSON[] DEFAULT ARRAY[]::JSON[],
+    named_args JSON DEFAULT '{}'::JSON,
+    class_name TEXT DEFAULT NULL,
+    config_name TEXT DEFAULT NULL,
+    workflow_id TEXT DEFAULT NULL,
+    app_version TEXT DEFAULT NULL,
+    timeout_ms BIGINT DEFAULT NULL,
+    deadline_epoch_ms BIGINT DEFAULT NULL,
+    deduplication_id TEXT DEFAULT NULL,
+    priority INTEGER DEFAULT NULL,
+    queue_partition_key TEXT DEFAULT NULL
+) RETURNS TEXT
+```
+
+PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.md#durable-queues).
+
+**Parameters:**
+- `workflow_name`: The name of workflow to enqueue.
+- `queue_name`: The durable queue on witch to enqueue this workflow.
+- `positional_args`: An array of positional parameters for the enqueued workflow. Must use [Portable JSON Format](portable-workflows.md#portable-json-format). Defaults to an empty array
+- `named_args`: The named paramters (for languages that support them, like Python). Must use [Portable JSON Format](portable-workflows.md#portable-json-format) and be a JSON object. Defaults to an empty object (`{}`).
+- `class_name`: The class name of workflow to enqueue. Defaults to null.
+- `config_name`: The config name of workflow to enqueue. For languages that support it, this is usually exposed as workflow class instance name. Defaults to null.
+- `workflow_id`: Specify the idempotency ID to assign to the enqueued workflow. If left undefined, a random UUID is generated.
+- `app_version`: The version of your application that should process this workflow. If left undefined, it will be updated to the current version when the workflow is first dequeued.
+- `timeout_ms`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution. 
+- `deadline_epoch_ms`: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status ENQUEUED or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+- `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 1 to 2,147,483,647, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+
+### dbos.send_message
+
+```sql
+CREATE FUNCTION dbos.send_message(
+    destination_id TEXT,
+    message JSON,
+    topic TEXT DEFAULT NULL,
+    idempotency_key TEXT DEFAULT NULL
+) RETURNS VOID
+```
+
+PL/pgSQL for sending a message to a workflow, similar to `DBOS.send`.
+Messages can optionally be associated with a topic.
+
+**Parameters:**
+- `destination_id`: The workflow to which to send the message.
+- `message`: The message to send. Must use [Portable JSON Format](portable-workflows.md#portable-json-format).
+- `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+
+## System Database Tables
 
 ### dbos.workflow_status
 
@@ -128,3 +193,6 @@ Each entry represents a different scheduled workflow.
 - **schedule**: The cron expression or schedule definition.
 - **status**: The status of the schedule. One of `ACTIVE` or `PAUSED`. Defaults to `ACTIVE`.
 - **context**: The serialized schedule context.
+- **last_fired_at**: The timestamp of when the schedule last fired.
+- **automatic_backfill**: Whether the schedule should automatically backfill missed executions on startup.
+- **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.
