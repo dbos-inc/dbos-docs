@@ -16,7 +16,7 @@ In particular, integrating DBOS to your agents gives you:
 
 ## Get Started
 
-You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like Pydantic AI, LlamaIndex, and the OpenAI Agents SDK.
+You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), and the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos).
 
 <LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
@@ -325,7 +325,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-To learn more, check out the [OpenAI Agents SDK integration guide](../integrations/openai-agents.md) and the [OpenAI Agents SDK documentation](https://platform.openai.com/docs/guides/agents-sdk).
+To learn more, check out the [OpenAI Agents SDK integration guide](../integrations/openai-agents.md) and the [OpenAI Agents SDK documentation](https://openai.github.io/openai-agents-python/running_agents/#dbos).
 
 </LargeTabItem>
 </LargeTabs>
