@@ -229,7 +229,7 @@ const config = {
             label: 'Quickstart',
           },
           {
-            to: '/examples',
+            to: 'examples',
             label: 'Examples',
             position: 'left',
           },

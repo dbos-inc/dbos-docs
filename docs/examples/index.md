@@ -2,6 +2,7 @@
 title: DBOS Examples
 description: Example applications built with DBOS
 pagination_next: null
+pagination_prev: null
 ---
 
 # Featured Examples

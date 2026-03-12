@@ -1,6 +1,7 @@
 ---
 hide_table_of_contents: false
 title: DBOS Architecture
+pagination_next: null
 ---
 
 DBOS provides a lightweight library for durable workflows built on top of Postgres.
