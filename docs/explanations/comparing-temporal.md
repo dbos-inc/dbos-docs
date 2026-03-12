@@ -6,7 +6,7 @@ hide_table_of_contents: false
 
 DBOS and Temporal both provide durable workflows.
 The main difference is that DBOS is a lightweight Postgres-backed library, while Temporal is an external orchestration service.
-In our opinion, this architecture makes DBOS simpler to adopt and operate.
+In our opinion, the DBOS architecture is simpler to adopt and operate.
 
 :::info
 To learn how to migrate an application from Temporal to DBOS, see the [migration guide](./migrating-from-temporal.md).
