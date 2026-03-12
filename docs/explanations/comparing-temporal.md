@@ -31,8 +31,6 @@ Finally, you must operate and scale the orchestration server and its underlying 
 
 <img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 
-Beyond ease of adoption and operation, the DBOS architecture has a number of other advantages:
-
 ### >10x Better Latency
 
 In DBOS, the only overhead required to call a step is checkpointing its output.
