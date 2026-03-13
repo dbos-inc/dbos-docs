@@ -9,6 +9,7 @@
 - [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
+- [Migrating From Temporal](https://docs.dbos.dev/explanations/migrating-from-temporal.md): This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
 - [Cross-Language Interaction](https://docs.dbos.dev/explanations/portable-workflows.md): DBOS applications and clients in different languages can interoperate using portable JSON serialization
 - [DBOS System Database](https://docs.dbos.dev/explanations/system-tables.md): DBOS system database reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
