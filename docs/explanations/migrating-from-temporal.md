@@ -234,7 +234,7 @@ Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial
 handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWorkflowID("payment-idempotency-key"))
 ```
 
-Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#workflow-ids).
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
 </TabItem>
 <TabItem value="java" label="Java">
@@ -943,7 +943,7 @@ func ParentWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 }
 ```
 
-Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#starting-workflows).
+Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
 
 </TabItem>
 <TabItem value="java" label="Java">
