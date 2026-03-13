@@ -103,8 +103,9 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
 ### Starting Workflows
 
-In Temporal, you start workflows through a client connected to the Temporal server.
-In DBOS, you can either start a workflow in your application directly or enqueue workflows from a separate application using the DBOS Client, which connects directly to the DBOS system database:
+In Temporal, workflows are started through a client connected to the Temporal server. The workflow task is then picked up by a worker, which executes the workflow logic.
+
+In DBOS, workflows can be started directly within your application process. Alternatively, you can enqueue workflows from a separate process using the DBOS Client, which connects directly to the DBOS system database.
 
 **Temporal:**
 ```python
@@ -206,7 +207,11 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
 ### Workflow IDs and Idempotency
 
-Both systems support workflow IDs for idempotency. In Temporal, you pass the ID when starting a workflow. In DBOS, you set the workflow ID before calling the workflow. If a workflow with that ID has already run, it returns the previous result instead of re-executing.
+Both systems support workflow IDs to provide idempotent execution.
+
+In Temporal, the workflow ID is passed when starting a workflow. In DBOS, you set the workflow ID before invoking the workflow. If a workflow with the same ID has already executed, DBOS returns the previously recorded result instead of running the workflow again.
+
+One important difference is how workflow executions are identified. Temporal uniquely identifies an execution using a combination of workflow ID and run ID, so a workflow may have multiple run instances over time. DBOS, by contrast, treats each execution as uniquely identified by its workflow ID, so a workflow ID corresponds to exactly one execution.
 
 <Tabs groupId="language" queryString="language">
 <TabItem value="python" label="Python">
@@ -307,15 +312,22 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#du
 
 ### Continue-as-New
 
-A common pattern in Temporal is to use an extremely long-running workflow as a durable object, interacting with it via signals and queries and periodically refreshing its state with `continue_as_new` to avoid Temporal's workflow size limits.
-In DBOS, we recommend instead storing long-lived objects in your database and interacting with them through shorter-lived workflows.
-You can use durable queues (in particular, partitioned queues) to manage the concurrency of those interactions, providing the same guarantees without the complexity of managing an extremely long-lived workflow.
+A common pattern in Temporal is to use an extremely long-running workflow as a durable object.
+Applications interact with it via signals and queries and periodically refresh its state with `continue_as_new` to avoid Temporal's workflow size limits.
+
+In DBOS, there are no workflow history limits beyond the underlying database column and storage limits. However, instead of maintaining extremely long-lived workflows, which can slow down replay during recovery, we generally recommend storing long-lived objects directly in your database and interacting with them through shorter-lived workflows.
+
+To coordinate those interactions, you can use DBOS durable queues, especially partitioned queues, to control concurrency and ordering. This approach provides similar guarantees while avoiding the complexity of managing  extremely long-running workflows.
+
+If you have workflows with many steps, another useful pattern is to use an outer control workflow that orchestrates smaller sub-workflows (child workflows). This improves observability (because you can easily isolate each sub-workflow) and can speed up recovery and replay.
 
 ## Activities &rarr; Steps
 
 Temporal activities map to DBOS steps. Both are where side effects and non-deterministic operations happen.
 
-The key architectural difference is how they're called. In Temporal, activities are dispatched to workers through the Temporal server. In DBOS, steps are called as regular functions; DBOS checkpoints their results to Postgres automatically.
+The key architectural difference is how they are executed. In Temporal, activities are dispatched to workers, often running in separate processes, through the Temporal server. This introduces a network round trip between the workflow and the worker executing the activity. Temporal also supports local activities that run in the same process as the workflow, but they come with several limitations.
+
+In DBOS, steps run in the same process as the workflow and are invoked like regular function calls. DBOS automatically checkpoints the step's result to your database, guaranteeing durability without requiring a separate worker process. Because execution happens in place, steps typically have lower latency and less overhead compared to remotely dispatched activities.
 
 **Temporal:**
 ```python
@@ -510,7 +522,7 @@ const updateOrderStatusTx = dataSource.registerTransaction(updateOrderStatus);
 
 ## Signals &rarr; Messages
 
-Temporal signals let you send data to a running workflow. The equivalent in DBOS is **messages**, using `send()` and `recv()`.
+Temporal signals allow external processes to send data to a running workflow. In DBOS, the equivalent mechanism is **messages (notifications)**, which external processes send using `send()` and workflows read using `recv()`.
 
 **Temporal:**
 ```python
@@ -632,9 +644,13 @@ Learn more in the [workflow communication tutorial](../java/tutorials/workflow-c
 </TabItem>
 </Tabs>
 
+Messages are persisted to the database, so they remain available even after the workflow completes.
+
+
 ## Queries &rarr; Events
 
-Temporal queries let external code read workflow state synchronously. The equivalent in DBOS is **events**, using `set_event()` and `get_event()`.
+Temporal queries allow external code to synchronously read the state of a workflow.
+In DBOS, the equivalent mechanism is **events**, which workflows publish using `set_event()` and external processes read using `get_event()`.
 
 **Temporal:**
 ```python
@@ -738,7 +754,7 @@ Events are persisted to the database, so they remain available even after the wo
 
 ## Task Queues &rarr; Queues
 
-Temporal task queues control which workers execute which workflows. DBOS queues serve a similar purpose but also provide built-in concurrency control and rate limiting.
+Temporal task queues control which workers execute which workflows. DBOS queues serve a similar purpose but also provide built-in advanced concurrency control and rate limiting.
 
 **Temporal:**
 ```python
@@ -825,10 +841,11 @@ Learn more in the [queues tutorial](../java/tutorials/queue-tutorial.md).
 DBOS queues provide features that Temporal task queues don't have out of the box:
 - **Global concurrency limits**: Limit total concurrent executions across all workers.
 - **Per-worker concurrency**: Limit concurrent executions per process.
-- **Rate limiting**: Limit executions per time period.
+- **Global rate limiting**: Limit executions per time period across all workers.
 - **Partitioned queues**: Create per-tenant sub-queues with independent concurrency limits.
 - **Priority**: Process higher-priority workflows first.
 - **Deduplication**: Prevent duplicate workflows in the queue.
+- **Debouncing**: Delay a workflow's execution until some time has passed since it was last called.
 
 ## Scheduled Workflows
 
@@ -972,7 +989,7 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#st
 
 ### No Orchestration Server
 
-DBOS has no central server to manage, operate, or scale. Your workflows run in your application process and checkpoint directly to Postgres. This eliminates a major source of operational complexity and latency.
+DBOS has no central server to manage, operate, or scale. Your workflows run in your application process and checkpoint directly to your database. This eliminates a major source of operational complexity and latency.
 
 ### Fork
 
@@ -982,13 +999,13 @@ DBOS can [fork a workflow](../python/tutorials/workflow-management.md) from a sp
 
 DBOS provides [streaming](../python/tutorials/workflow-communication.md#workflow-streaming), an append-only stream that workflows can write to and clients can read from in real time. This is useful for streaming LLM outputs, progress updates, or real-time data from long-running workflows.
 
-### Postgres Integration & SQL-Based Introspection
+### Database Integration & SQL-Based Introspection
 
-DBOS integrates deeply with your Postgres database.
-For example, you can [enqueue workflows directly from Postgres SQL](./portable-workflows.md#per-workflow-enqueue).
+DBOS integrates deeply with your database.
+For example, you can [enqueue workflows directly from Postgres PL/pgSQL function](./portable-workflows.md#per-workflow-enqueue).
 You can also use [transactional steps](#database-operations) to perform database operations in workflows with exactly-once semantics.
 
-Moreover, because all workflow state is stored in Postgres, you can query it with SQL.
+Moreover, because all workflow state is stored in your database, you can query it with SQL.
 DBOS also provides programmatic APIs to [list, search, and manage workflows](../python/tutorials/workflow-management.md) by status, name, time, queue, or custom properties.
 
 ### Queue Flow Control
