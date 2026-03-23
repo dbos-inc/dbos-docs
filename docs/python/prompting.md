@@ -1574,6 +1574,8 @@ class WorkflowStatus:
     queue_partition_key: Optional[str]
     # If this workflow was forked from another, that workflow's ID.
     forked_from: Optional[str]
+    # Whether this workflow has ever been forked from by another workflow.
+    was_forked_from: bool
 ```
 
 Retrieve the workflow status:

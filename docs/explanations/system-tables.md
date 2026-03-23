@@ -104,6 +104,7 @@ Each row represents a different workflow execution.
 - **priority**: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
 - **queue_partition_key**: The key associated with the workflow, if on a partitioned queue.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
+- **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.

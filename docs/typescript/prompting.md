@@ -1395,6 +1395,8 @@ export interface WorkflowStatus {
 
   // If this workflow was forked from another, that workflow's ID.
   readonly forkedFrom?: string;
+  // Whether this workflow has ever been forked from by another workflow.
+  readonly wasForkedFrom?: boolean;
 }
 ```
 
