@@ -91,6 +91,7 @@ You can view all applications registered with Conductor on the DBOS Console:
 On your application's page, you can see all executors (processes) running that application that are currently connected to Conductor.
 Executors are identified by a unique ID that they generate and print on startup.
 When you restart an executor, it generates a new ID.
+You can tag executors with custom metadata (such as region or instance type) using the `conductor_executor_metadata` configuration option. This metadata is displayed on the dashboard to help you identify executors.
 
 <img src={require('@site/static/img/conductor/app-page.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
