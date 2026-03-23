@@ -26,6 +26,7 @@ interface EnqueueOptions {
     workflowTimeoutMS?: number;
     deduplicationID?: string;
     priority?: number;
+    delaySeconds?: number;
     queuePartitionKey?: string;
 }
 
@@ -118,6 +119,7 @@ Additional but optional metadata includes:
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
 * **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 

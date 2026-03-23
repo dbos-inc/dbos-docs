@@ -25,6 +25,7 @@ interface StartWorkflowParams {
 export interface EnqueueOptions {
   deduplicationID?: string;
   priority?: number;
+  delaySeconds?: number;
   queuePartitionKey?: string;
   applicationVersion?: string;
 }
@@ -69,6 +70,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 - **enqueueOptions**:
   - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+  - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
 
@@ -303,7 +305,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
-  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string | string[]; // Retrieve workflows run by this authenticated user (or any of these users).
@@ -497,7 +499,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;

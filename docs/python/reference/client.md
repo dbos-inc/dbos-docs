@@ -59,6 +59,7 @@ class EnqueueOptions(TypedDict):
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
     priority: NotRequired[int]
+    delay_seconds: NotRequired[float]
     max_recovery_attempts: NotRequired[int]
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
@@ -93,6 +94,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 - `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.
 - `queue_partition_key`: A partition key for [partitioned queues](../tutorials/queue-tutorial.md#partitioning-queues). Workflows with the same partition key are processed sequentially.
 - `authenticated_user`: An authenticated user to associate with the workflow.
@@ -382,7 +384,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
