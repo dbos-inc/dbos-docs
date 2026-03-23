@@ -382,6 +382,32 @@ await DBOS.setWorkflowPriority(handle.workflowID, 1); // Promote to highest prio
 
 This only affects workflows with `ENQUEUED` status.
 
+### Delayed Execution
+
+You can delay an enqueued workflow by a specified number of seconds using the `delaySeconds` enqueue option.
+The workflow is initially placed in `DELAYED` status and does not execute.
+After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
+This is useful for scheduling workflows to run at a future time.
+
+Example syntax:
+
+```javascript
+const queue = new WorkflowQueue("example_queue");
+
+async function sendReminderFunc(userId: string) {
+    // ...
+}
+const sendReminder = DBOS.registerWorkflow(sendReminderFunc, {"name": "sendReminder"});
+
+async function main() {
+  // Send a reminder in one hour
+  await DBOS.startWorkflow(sendReminder, {
+    queueName: queue.name,
+    enqueueOptions: { delaySeconds: 3600 }
+  })(userId);
+}
+```
+
 ## Explicit Queue Listening
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
