@@ -575,6 +575,7 @@ DBOS.createSchedule(options: {
 interface ScheduleOptions {
   automaticBackfill?: boolean;
   cronTimezone?: string;
+  queueName?: string;
 }
 ```
 
@@ -588,6 +589,7 @@ If called from within a workflow, the operation is recorded as a step.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
+- **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
 
 **Example:**
 
@@ -664,6 +666,7 @@ DBOS.applySchedules(
     context?: unknown;
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   }>,
 ): Promise<void>
 ```
@@ -730,6 +733,8 @@ interface WorkflowSchedule {
     automaticBackfill: boolean;
     // The IANA timezone in which the cron expression is evaluated, or null for system local time
     cronTimezone: string | null;
+    // The name of the queue scheduled workflows are enqueued to, or null for the internal queue
+    queueName: string | null;
 }
 ```
 

@@ -891,6 +891,7 @@ DBOS.create_schedule(
     context: Any = None,
     automatic_backfill: bool = False,
     cron_timezone: Optional[str] = None,
+    queue_name: Optional[str] = None,
 ) -> None
 ```
 
@@ -903,6 +904,7 @@ Create a cron schedule that periodically invokes a workflow function.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
+- **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. This is useful for managing the concurrency of scheduled workflows. Defaults to `None`.
 
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -1018,6 +1020,7 @@ class ScheduleInput(TypedDict):
     context: Any
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
+    queue_name: Optional[str]  # Optional, defaults to None (internal queue)
 ```
 
 Atomically apply a set of schedules.
@@ -1082,6 +1085,8 @@ class WorkflowSchedule(TypedDict):
     automatic_backfill: bool
     # The IANA timezone in which the cron expression is evaluated, or None for UTC
     cron_timezone: Optional[str]
+    # The name of the queue scheduled workflows are enqueued to, or None for the internal queue
+    queue_name: Optional[str]
 ```
 
 ### Workflow Status

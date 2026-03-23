@@ -56,13 +56,13 @@ class DBOSClient {
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string }): Promise<string>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string } }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string } }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
     deleteSchedule(name: string): Promise<void>;
     pauseSchedule(name: string): Promise<void>;
     resumeSchedule(name: string): Promise<void>;
-    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string }>): Promise<void>;
+    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
 
@@ -339,6 +339,7 @@ client.createSchedule(options: {
   options?: {
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   };
 }): Promise<void>
 ```
@@ -354,6 +355,7 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
+- **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue.
 
 #### `listSchedules`
 
@@ -421,6 +423,7 @@ client.applySchedules(
     context?: unknown;
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   }>,
 ): Promise<void>
 ```

@@ -130,6 +130,27 @@ You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../re
 const handle = await DBOS.triggerSchedule("my-task-schedule");
 ```
 
+### Scheduling to Queues
+
+By default, scheduled workflows are enqueued on an internal queue.
+You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manage their concurrency or rate limits.
+Pass the `queueName` option when creating the schedule:
+
+```typescript
+import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+
+const queue = new WorkflowQueue("scheduled_queue", { concurrency: 1 });
+
+await DBOS.createSchedule({
+    scheduleName: "my-task-schedule",
+    workflowFn: myPeriodicTaskWorkflow,
+    schedule: "*/5 * * * *",
+    options: { queueName: "scheduled_queue" },
+});
+```
+
+This ensures that scheduled workflow executions respect the queue's flow control settings.
+
 ### Managing Schedules from Another Application
 
 You can manage schedules from outside your DBOS application using the [DBOS Client](../reference/client.md#workflow-schedules).
