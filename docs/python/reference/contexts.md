@@ -815,6 +815,7 @@ DBOS.fork_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -826,6 +827,8 @@ The forked workflow will have a new workflow ID, which can be set with [`SetWork
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
 If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+
+If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
 ### fork_workflow_async
 

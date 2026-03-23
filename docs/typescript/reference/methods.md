@@ -474,6 +474,7 @@ static async forkWorkflow<T>(
     timeoutMS?: number;
     queueName?: string;
     queuePartitionKey?: string;
+    replacementChildren?: Record<string, string>;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -490,6 +491,7 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
 ### Workflow Status
 

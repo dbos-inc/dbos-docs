@@ -618,6 +618,7 @@ client.fork_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -633,6 +634,7 @@ client.fork_workflow_async(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
