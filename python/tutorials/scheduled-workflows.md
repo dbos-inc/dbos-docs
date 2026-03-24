@@ -137,6 +137,27 @@ You can also immediately trigger a schedule using [`DBOS.trigger_schedule`](../r
 handle = DBOS.trigger_schedule("my-task-schedule")
 ```
 
+### Scheduling to Queues
+
+By default, scheduled workflows are enqueued on an internal queue.
+You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manage their concurrency or rate limits.
+Pass the `queue_name` parameter when creating the schedule:
+
+```python
+from dbos import DBOS, Queue
+
+queue = Queue("scheduled_queue", concurrency=1)
+
+DBOS.create_schedule(
+    schedule_name="my-task-schedule",
+    workflow_fn=my_periodic_task,
+    schedule="*/5 * * * *",
+    queue_name="scheduled_queue",
+)
+```
+
+This ensures that scheduled workflow executions respect the queue's flow control settings.
+
 ### Managing Schedules from Another Application
 
 You can manage schedules from outside your DBOS application using the [DBOS Client](../reference/client.md#workflow-schedules).

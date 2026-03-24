@@ -80,7 +80,7 @@ Each row represents a different workflow execution.
 
 **Columns:**
 - **workflow_uuid**: The unique identifier of the workflow execution.
-- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, or `CANCELLED`.
+- **status**: The status of the workflow execution. One of `PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`.
 - **name**: The name (in Python, fully qualified name) of the workflow function.
 - **authenticated_user**: The user who ran the workflow. Empty string if not set.
 - **assumed_role**: The role used to run this workflow.  Empty string if authorization is not required.
@@ -104,6 +104,7 @@ Each row represents a different workflow execution.
 - **priority**: The priority of this workflow on its queue, if enqueued. Defaults to 0 if not specified. Lower priorities execute first.
 - **queue_partition_key**: The key associated with the workflow, if on a partitioned queue.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
+- **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.

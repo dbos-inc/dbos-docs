@@ -329,6 +329,29 @@ with SetEnqueueOptions(priority=1):
 ```
 
 
+## Delayed Execution
+
+You can delay an enqueued workflow by a specified number of seconds using [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
+The workflow is initially placed in `DELAYED` status and does not execute.
+After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
+This is useful for scheduling workflows to run at a future time.
+
+Example syntax:
+
+```python
+from dbos import DBOS, Queue, SetEnqueueOptions
+
+queue = Queue("example_queue")
+
+@DBOS.workflow()
+def send_reminder(user_id: str):
+    ...
+
+# Send a reminder in one hour
+with SetEnqueueOptions(delay_seconds=3600):
+    queue.enqueue(send_reminder, user_id)
+```
+
 ## Explicit Queue Listening
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.

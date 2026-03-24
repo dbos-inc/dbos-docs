@@ -1387,7 +1387,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name.
@@ -1532,7 +1532,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str
@@ -1574,6 +1574,8 @@ class WorkflowStatus:
     queue_partition_key: Optional[str]
     # If this workflow was forked from another, that workflow's ID.
     forked_from: Optional[str]
+    # Whether this workflow has ever been forked from by another workflow.
+    was_forked_from: bool
 ```
 
 Retrieve the workflow status:

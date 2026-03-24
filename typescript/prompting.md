@@ -1354,7 +1354,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
@@ -1395,6 +1395,8 @@ export interface WorkflowStatus {
 
   // If this workflow was forked from another, that workflow's ID.
   readonly forkedFrom?: string;
+  // Whether this workflow has ever been forked from by another workflow.
+  readonly wasForkedFrom?: boolean;
 }
 ```
 
@@ -1466,7 +1468,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string; // Retrieve workflows with this name.
-  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
+  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `RETRIES_EXCEEDED`)
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.
