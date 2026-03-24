@@ -20,7 +20,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 * `-u, --user TEXT`: Retrieve workflows run by this user
 * `-t, --start-time TEXT`: Retrieve workflows starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve workflows starting before this timestamp (ISO 8601 format)
-* `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
+* `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
 * `-n, --name TEXT`: Retrieve workflows with this name
 * `-d, --sort-desc`: Sort the results in descending order (older first)
@@ -106,7 +106,7 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 * `-l, --limit INTEGER`: Limit the results returned
 * `-t, --start-time TEXT`: Retrieve functions starting after this timestamp (ISO 8601 format)
 * `-e, --end-time TEXT`: Retrieve functions starting before this timestamp (ISO 8601 format)
-* `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, or CANCELLED)
+* `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
 * `-n, --name TEXT`: Retrieve functions on this queue
 * `-d, --sort-desc`: Sort the results in descending order (older first)

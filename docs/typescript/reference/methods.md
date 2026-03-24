@@ -25,6 +25,7 @@ interface StartWorkflowParams {
 export interface EnqueueOptions {
   deduplicationID?: string;
   priority?: number;
+  delaySeconds?: number;
   queuePartitionKey?: string;
   applicationVersion?: string;
 }
@@ -69,6 +70,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 - **enqueueOptions**:
   - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+  - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
 
@@ -303,7 +305,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
-  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string | string[]; // Retrieve workflows run by this authenticated user (or any of these users).
@@ -313,6 +315,7 @@ interface GetWorkflowsInput {
   queueName?: string | string[]; // If this workflow is enqueued, on which queue (or any of these queues).
   queuesOnly?: boolean; // Return only workflows that are actively enqueued.
   forkedFrom?: string | string[]; // Get workflows forked from this workflow ID (or any of these workflow IDs).
+  wasForkedFrom?: boolean; // Filter workflows that have (or have not) been forked from.
   parentWorkflowID?: string | string[]; // Get workflows started by this parent workflow ID (or any of these parent workflow IDs).
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
@@ -471,6 +474,7 @@ static async forkWorkflow<T>(
     timeoutMS?: number;
     queueName?: string;
     queuePartitionKey?: string;
+    replacementChildren?: Record<string, string>;
   },
 ): Promise<WorkflowHandle<Awaited<T>>>
 ```
@@ -487,6 +491,7 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
+- **replacementChildren**: A mapping from original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
 ### Workflow Status
 
@@ -497,7 +502,7 @@ This object has the following definition:
 export interface WorkflowStatus {
   // The workflow ID
   readonly workflowID: string;
-  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
+  // The status of the workflow.  One of PENDING, SUCCESS, ERROR, ENQUEUED, DELAYED, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED.
   readonly status: string;
   // The name of the workflow function.
   readonly workflowName: string;
@@ -547,6 +552,8 @@ export interface WorkflowStatus {
 
   // If this workflow was forked from another, that workflow's ID.
   readonly forkedFrom?: string;
+  // Whether this workflow has ever been forked from by another workflow.
+  readonly wasForkedFrom?: boolean;
   // If this workflow was started by another workflow, that workflow's ID.
   readonly parentWorkflowID?: string;
 }
@@ -573,6 +580,7 @@ DBOS.createSchedule(options: {
 interface ScheduleOptions {
   automaticBackfill?: boolean;
   cronTimezone?: string;
+  queueName?: string;
 }
 ```
 
@@ -586,6 +594,7 @@ If called from within a workflow, the operation is recorded as a step.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
+- **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
 
 **Example:**
 
@@ -662,6 +671,7 @@ DBOS.applySchedules(
     context?: unknown;
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   }>,
 ): Promise<void>
 ```
@@ -728,6 +738,8 @@ interface WorkflowSchedule {
     automaticBackfill: boolean;
     // The IANA timezone in which the cron expression is evaluated, or null for system local time
     cronTimezone: string | null;
+    // The name of the queue scheduled workflows are enqueued to, or null for the internal queue
+    queueName: string | null;
 }
 ```
 

@@ -31,6 +31,7 @@ export interface DBOSConfig {
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
+  tracingEnabled?: boolean;
   logLevel?: string;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
@@ -71,7 +72,8 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ### Logging and Tracing Settings
 
-- **enableOTLP**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging.md). Defaults to False.
+- **enableOTLP**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging.md), including a built-in export pipeline. Defaults to False.
+- **tracingEnabled**: Enable DBOS trace generation without starting the built-in export pipeline. Use this when you have an existing `TracerProvider` configured by an external APM (e.g., `dd-trace`). Traces will be collected and exported by your existing provider.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.

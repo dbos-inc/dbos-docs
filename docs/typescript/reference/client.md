@@ -26,6 +26,7 @@ interface EnqueueOptions {
     workflowTimeoutMS?: number;
     deduplicationID?: string;
     priority?: number;
+    delaySeconds?: number;
     queuePartitionKey?: string;
 }
 
@@ -53,15 +54,15 @@ class DBOSClient {
     resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
     resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
-        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string }): Promise<string>;
+        options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string } }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string } }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
     deleteSchedule(name: string): Promise<void>;
     pauseSchedule(name: string): Promise<void>;
     resumeSchedule(name: string): Promise<void>;
-    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string }>): Promise<void>;
+    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
 
@@ -118,6 +119,7 @@ Additional but optional metadata includes:
 * **workflowTimeoutMS**: The timeout of this workflow in milliseconds.
 * **deduplicationID**: Optionally specified when enqueueing a workflow. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 
@@ -337,6 +339,7 @@ client.createSchedule(options: {
   options?: {
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   };
 }): Promise<void>
 ```
@@ -352,6 +355,7 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
+- **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue.
 
 #### `listSchedules`
 
@@ -419,6 +423,7 @@ client.applySchedules(
     context?: unknown;
     automaticBackfill?: boolean;
     cronTimezone?: string;
+    queueName?: string;
   }>,
 ): Promise<void>
 ```

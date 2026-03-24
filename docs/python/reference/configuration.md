@@ -37,6 +37,7 @@ class DBOSConfig(TypedDict):
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
+    conductor_executor_metadata: Optional[Dict[str, Any]]
 
     enable_otlp: Optional[bool]
     otlp_traces_endpoints: Optional[List[str]]
@@ -105,6 +106,7 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 
 - **conductor_key**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
+- **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
 
 
 ### Logging and Tracing Settings

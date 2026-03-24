@@ -59,6 +59,7 @@ class EnqueueOptions(TypedDict):
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
     priority: NotRequired[int]
+    delay_seconds: NotRequired[float]
     max_recovery_attempts: NotRequired[int]
     queue_partition_key: NotRequired[str]
     authenticated_user: NotRequired[str]
@@ -93,6 +94,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 - `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.
 - `queue_partition_key`: A partition key for [partitioned queues](../tutorials/queue-tutorial.md#partitioning-queues). Workflows with the same partition key are processed sequentially.
 - `authenticated_user`: An authenticated user to associate with the workflow.
@@ -382,7 +384,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
@@ -399,6 +401,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 
 ### list_workflows_async
 
@@ -615,6 +618,7 @@ client.fork_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -630,6 +634,7 @@ client.fork_workflow_async(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
@@ -757,6 +762,7 @@ client.create_schedule(
     workflow_class_name: Optional[str] = None,
     automatic_backfill: bool = False,
     cron_timezone: Optional[str] = None,
+    queue_name: Optional[str] = None,
 ) -> None
 ```
 
@@ -771,6 +777,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **workflow_class_name**: The class name if the workflow is a static method on a [DBOS class](../tutorials/classes.md).
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
+- **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. Defaults to `None`.
 
 ### create_schedule_async
 
@@ -858,6 +865,7 @@ class ClientScheduleInput(TypedDict):
     workflow_class_name: Optional[str]
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
+    queue_name: Optional[str]  # Optional, defaults to None (internal queue)
 ```
 
 Atomically apply a set of schedules.

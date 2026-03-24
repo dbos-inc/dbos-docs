@@ -635,7 +635,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 
 **Parameters:**
 - **workflow_ids**: Retrieve workflows with these IDs.
-- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
@@ -652,6 +652,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
+- **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 
 ### list_workflows_async
 
@@ -814,6 +815,7 @@ DBOS.fork_workflow(
     application_version: Optional[str] = None,
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
+    replacement_children: Optional[dict[str, str]] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -825,6 +827,8 @@ The forked workflow will have a new workflow ID, which can be set with [`SetWork
 It is possible to specify the application version on which the forked workflow will run by setting `application_version`, this is useful for "patching" workflows that failed due to a bug in a previous application version.
 
 If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
+
+If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
 
 ### fork_workflow_async
 
@@ -891,6 +895,7 @@ DBOS.create_schedule(
     context: Any = None,
     automatic_backfill: bool = False,
     cron_timezone: Optional[str] = None,
+    queue_name: Optional[str] = None,
 ) -> None
 ```
 
@@ -903,6 +908,7 @@ Create a cron schedule that periodically invokes a workflow function.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
+- **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. This is useful for managing the concurrency of scheduled workflows. Defaults to `None`.
 
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
@@ -1018,6 +1024,7 @@ class ScheduleInput(TypedDict):
     context: Any
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
+    queue_name: Optional[str]  # Optional, defaults to None (internal queue)
 ```
 
 Atomically apply a set of schedules.
@@ -1082,6 +1089,8 @@ class WorkflowSchedule(TypedDict):
     automatic_backfill: bool
     # The IANA timezone in which the cron expression is evaluated, or None for UTC
     cron_timezone: Optional[str]
+    # The name of the queue scheduled workflows are enqueued to, or None for the internal queue
+    queue_name: Optional[str]
 ```
 
 ### Workflow Status
@@ -1093,7 +1102,7 @@ This object has the following definition:
 class WorkflowStatus:
     # The workflow ID
     workflow_id: str
-    # The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    # The workflow status. Must be one of ENQUEUED, DELAYED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
     status: str
     # The name of the workflow function
     name: str
@@ -1135,6 +1144,8 @@ class WorkflowStatus:
     queue_partition_key: Optional[str]
     # If this workflow was forked from another, that workflow's ID.
     forked_from: Optional[str]
+    # Whether this workflow has ever been forked from by another workflow.
+    was_forked_from: bool
     # If this workflow was started as a child of another workflow, that workflow's ID.
     parent_workflow_id: Optional[str]
     # The Unix epoch timestamp at which the workflow was last dequeued, if it had been enqueued

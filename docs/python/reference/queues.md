@@ -128,6 +128,7 @@ SetEnqueueOptions(
     *,
     deduplication_id: Optional[str] = None,
     priority: Optional[int] = None,
+    delay_seconds: Optional[float] = None,
     app_version: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
 )
@@ -140,6 +141,7 @@ These options are **not propagated** to child workflows.
 
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Defaults to `None`. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. Defaults to `None` (no delay).
 - `app_version`: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
 - `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partition_queue=True`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 
