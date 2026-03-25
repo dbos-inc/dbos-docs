@@ -12,7 +12,7 @@ To learn how to run DBOS with Next.js on Vercel, see the [Vercel integration gui
 
 This guide shows you how to add DBOS durable workflows to a [Next.js](https://nextjs.org/) application.
 
-Running DBOS directly inside the Next.js process is difficult because modules (including registered workflows and queues) are evaluated in multiple chunk contexts.
+Running DBOS directly inside the Next.js process is difficult because modules containing DBOS workflows and queues may be evaluated multiple times in different contexts.
 Instead, we recommend a two-process architecture:
 
 1. A **Next.js app** that enqueues workflows using the [DBOS client](../typescript/reference/client.md) from [server actions](https://nextjs.org/docs/app/getting-started/updating-data).
