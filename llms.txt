@@ -39,6 +39,7 @@
 - [DBOS MCP Server](https://docs.dbos.dev/integrations/mcp.md): You can use the DBOS Model Context Protocol (MCP) server to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
 - [Neon](https://docs.dbos.dev/integrations/neon.md): Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add DBOS durable workflows to your existing Nest.js application to make it resilient to any failure.
+- [Next.js](https://docs.dbos.dev/integrations/nextjs.md): To learn how to run DBOS with Next.js on Vercel, see the Vercel integration guide.
 - [OpenAI Agents SDK](https://docs.dbos.dev/integrations/openai-agents.md): You can use DBOS to add durable execution to an agent built with the OpenAI Agents SDK.
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
