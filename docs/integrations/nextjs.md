@@ -15,7 +15,7 @@ This guide shows you how to add DBOS durable workflows to a [Next.js](https://ne
 Running DBOS directly inside the Next.js process is difficult because modules containing the DBOS instance or DBOS workflows and queues may be evaluated multiple times in different contexts.
 Instead, we recommend a two-process architecture:
 
-1. A **Next.js app** that enqueues workflows using the [DBOS client](../typescript/reference/client.md) from [server actions](https://nextjs.org/docs/app/getting-started/updating-data).
+1. A **Next.js app** that enqueues workflows using the [DBOS client](../typescript/reference/client.md) from server actions.
 2. A **DBOS worker** that dequeues and executes workflows.
 
 Both processes connect to the same Postgres database.
