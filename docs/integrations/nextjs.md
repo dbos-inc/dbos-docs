@@ -12,7 +12,7 @@ To learn how to run DBOS with Next.js on Vercel, see the [Vercel integration gui
 
 This guide shows you how to add DBOS durable workflows to a [Next.js](https://nextjs.org/) application.
 
-Running DBOS directly inside the Next.js process is difficult because modules containing the DBOS instance or DBOS workflows and queues may be evaluated multiple times in different contexts.
+Running DBOS directly inside the Next.js process is difficult because Next.js may evaluate modules containing the DBOS instance or DBOS workflows and queues multiple times in different contexts.
 Instead, we recommend a two-process architecture:
 
 1. A **Next.js app** that enqueues workflows using the [DBOS client](../typescript/reference/client.md) from server actions.
@@ -23,6 +23,8 @@ Both processes connect to the same Postgres database.
 You can see a full working example on [GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/dbos-nextjs-starter).
 
 ## Installation
+
+Install DBOS and its OpenTelemetry integration (required by Turbopack):
 
 ```shell
 npm install @dbos-inc/dbos-sdk @dbos-inc/otel
