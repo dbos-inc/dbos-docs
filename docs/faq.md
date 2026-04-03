@@ -116,3 +116,26 @@ The most common cause of flickering is that you have connected multiple executor
 For isolation, you should set up a separate Conductor app for each environment in which you run your DBOS application.
 For example, you may want to have separate dev, staging, and prod Conductor apps.
 See [the docs](./production/conductor.md#managing-conductor-applications) for more information.
+
+### How are "checkpoints" calculated in Conductor pricing?
+
+Every workflow counts as one checkpoint and every step counts as one additional checkpoint. You can monitor your current usage at https://console.dbos.dev/usage
+
+You can also run the following SQL query on your [System Database](./explanations/system-tables.md) to compute your daily checkpoint count:
+```SQL
+WITH daily_workflows AS (
+  SELECT
+  DATE_TRUNC('day', TO_TIMESTAMP(created_at / 1000)) AS day,
+  workflow_uuid
+  FROM dbos.workflow_status
+)
+SELECT
+  dw.day,
+  COUNT(DISTINCT dw.workflow_uuid) AS workflow_count,
+  COUNT(oo.workflow_uuid) AS step_count,
+  COUNT(DISTINCT dw.workflow_uuid) + COUNT(oo.workflow_uuid) AS total_checkpoints
+FROM daily_workflows dw
+LEFT JOIN dbos.operation_outputs oo ON dw.workflow_uuid = oo.workflow_uuid
+GROUP BY dw.day
+ORDER BY dw.day DESC;
+```
