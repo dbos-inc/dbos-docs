@@ -917,6 +917,10 @@ class ClientScheduleInput(TypedDict):
 Atomically apply a set of schedules.
 Useful for declaratively defining all your static schedules in one place.
 
+### apply_schedules_async
+
+Asynchronous version of [`apply_schedules`](#apply_schedules).
+
 ### backfill_schedule
 
 ```python

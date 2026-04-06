@@ -1053,7 +1053,7 @@ DBOS.apply_schedules(
 
 class ScheduleInput(TypedDict):
     schedule_name: str
-    workflow_fn: Callable[[datetime, Any], None]
+    workflow_fn: Union[Callable[[datetime, Any], None], Callable[[datetime, Any], Coroutine[Any, Any, None]]]
     schedule: str
     context: Any
     automatic_backfill: bool  # Optional, defaults to False
@@ -1073,6 +1073,10 @@ DBOS.apply_schedules([
     {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
 ])
 ```
+
+### apply_schedules_async
+
+Coroutine version of [`apply_schedules`](#apply_schedules).
 
 ### backfill_schedule
 
