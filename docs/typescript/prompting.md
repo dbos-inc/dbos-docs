@@ -1567,10 +1567,8 @@ interface SetWorkflowDelayOptions {
 ```
 
 Set or update the delay on a workflow.
-Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Only affects workflows with `DELAYED` status.
 Accepts a `SetWorkflowDelayOptions` object with `delaySeconds` (relative) or `delayUntilEpochMS` (absolute).
-If called on an `ENQUEUED` workflow, its status is changed to `DELAYED`.
-
 ### DBOS.cancelWorkflow
 
 ```typescript

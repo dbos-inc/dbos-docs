@@ -301,7 +301,7 @@ Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) fo
 
 #### `setWorkflowDelay`
 
-Set or update the delay on a workflow. Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Set or update the delay on a workflow. Only affects workflows with `DELAYED` status.
 Accepts a [`SetWorkflowDelayOptions`](./methods.md#dbossetworkflowdelay) object with `delaySeconds` or `delayUntilEpochMS`.
 Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more information.
 

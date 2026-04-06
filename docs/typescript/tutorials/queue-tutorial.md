@@ -408,7 +408,7 @@ async function main() {
 }
 ```
 
-You can also dynamically update the delay of a `DELAYED` or `ENQUEUED` workflow using [`DBOS.setWorkflowDelay`](../reference/methods.md#dbossetworkflowdelay):
+You can also dynamically update the delay of a `DELAYED` workflow using [`DBOS.setWorkflowDelay`](../reference/methods.md#dbossetworkflowdelay):
 
 ```javascript
 // Shorten the delay to 10 seconds from now

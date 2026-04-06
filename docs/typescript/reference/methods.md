@@ -420,7 +420,7 @@ interface SetWorkflowDelayOptions {
 ```
 
 Set or update the delay on a workflow.
-Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Only affects workflows with `DELAYED` status.
 Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 
 **Parameters:**
@@ -429,9 +429,6 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
   - **delaySeconds**: Delay the workflow by this many seconds from now. Must be greater than 0.
   - **delayUntilEpochMS**: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be greater than 0.
 
-:::warning
-If called on an `ENQUEUED` workflow, its status is changed to `DELAYED`.
-:::
 
 ### DBOS.cancelWorkflow
 
