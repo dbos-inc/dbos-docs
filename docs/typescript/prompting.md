@@ -580,7 +580,12 @@ You can also call `send` from outside of your DBOS application with the DBOS Cli
 ### Recv
 
 ```typescript
-DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
+
+interface RecvOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
@@ -641,7 +646,12 @@ Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its
 ### getEvent
 
 ```typescript
-DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>
+
+interface GetEventOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
 ```
 
 You can call `DBOS.getEvent` to retrieve the value published by a particular workflow ID for a particular key.
@@ -1541,6 +1551,25 @@ Set the priority of a queued workflow.
 Only affects workflows with `ENQUEUED` status.
 Priority value must be between `1` and `2,147,483,647`. Lower values are dequeued first.
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
+
+### DBOS.setWorkflowDelay
+
+```typescript
+DBOS.setWorkflowDelay(
+  workflowID: string,
+  options: SetWorkflowDelayOptions
+): Promise<void>
+
+interface SetWorkflowDelayOptions {
+  delaySeconds?: number;
+  delayUntilEpochMS?: number;
+}
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Accepts a `SetWorkflowDelayOptions` object with `delaySeconds` (relative) or `delayUntilEpochMS` (absolute).
+If called on an `ENQUEUED` workflow, its status is changed to `DELAYED`.
 
 ### DBOS.cancelWorkflow
 

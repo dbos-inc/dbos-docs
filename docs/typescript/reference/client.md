@@ -39,7 +39,7 @@ class DBOSClient {
         ...args: Parameters<T>
     ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
-    getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>;
+    getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
@@ -49,6 +49,7 @@ class DBOSClient {
     listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
 
+    setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string): Promise<void>;
     cancelWorkflows(workflowIDs: string[]): Promise<void>;
     resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
@@ -200,7 +201,8 @@ it is highly recommended that you use the `idempotencyKey` parameter in order to
 #### `getEvent`
 
 Retrieves an event published by workflowID for a given key.
-Identical to [DBOS.getEvent](./methods.md#dbosgetevent)
+Similar to [DBOS.getEvent](./methods.md#dbosgetevent).
+Like `DBOS.getEvent`, accepts a [`GetEventOptions`](./methods.md#dbosgetevent) object with `timeoutSeconds` or `deadlineEpochMS`.
 
 #### `retrieveWorkflow`
 
@@ -296,6 +298,12 @@ Please see [`DBOS.cancelWorkflows`](./methods.md#dboscancelworkflows) for more i
 
 Sets the priority of a queued workflow. Only affects workflows with `ENQUEUED` status.
 Please see [`DBOS.setWorkflowPriority`](./methods.md#dbossetworkflowpriority) for more information.
+
+#### `setWorkflowDelay`
+
+Set or update the delay on a workflow. Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Accepts a [`SetWorkflowDelayOptions`](./methods.md#dbossetworkflowdelay) object with `delaySeconds` or `delayUntilEpochMS`.
+Please see [`DBOS.setWorkflowDelay`](./methods.md#dbossetworkflowdelay) for more information.
 
 #### `resumeWorkflow`
 

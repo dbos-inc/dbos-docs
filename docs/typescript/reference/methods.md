@@ -117,19 +117,28 @@ Messages can optionally be associated with a topic.
 ```typescript
 recv<T>(
   topic?: string,
-  timeoutSeconds?: number // Default: 60 seconds
+  options?: RecvOptions
 ): Promise<T | null>
+```
+
+```typescript
+interface RecvOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
 ```
 
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning `null` if the wait times out.  If `timeoutSeconds` is not specified, a 60-second timeout is used.
+Calls to `recv` wait for the next message in the queue, returning `null` if the wait times out.  If no timeout is specified, a 60-second timeout is used.
 If no topic is specified, `recv` can only access messages sent without a topic.
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
+- **options**:
+  - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
+  - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -159,17 +168,26 @@ Can only be called from within a workflow.
 DBOS.getEvent<T>(
   workflowID: string,
   key: string,
-  timeoutSeconds?: number // Default: 60 seconds
+  options?: GetEventOptions
 ): Promise<T | null>
 ```
 
+```typescript
+interface GetEventOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
+```
+
 Retrieve the latest value of an event published by the workflow identified by `workflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning `null` if the wait times out.  If `timeoutSeconds` is not specified, a 60-second timeout is used.
+If the event does not yet exist, wait for it to be published, returning `null` if the wait times out.  If no timeout is specified, a 60-second timeout is used.
 
 **Parameters:**
 - **workflowID**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
+- **options**:
+  - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
+  - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
 
 ### DBOS.sleep
 
@@ -384,6 +402,36 @@ Only affects workflows with `ENQUEUED` status.
 - **priority**: Priority value (`1` to `2,147,483,647`). Lower values are dequeued first.
 
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
+
+### DBOS.setWorkflowDelay
+
+```typescript
+DBOS.setWorkflowDelay(
+  workflowID: string,
+  options: SetWorkflowDelayOptions
+): Promise<void>
+```
+
+```typescript
+interface SetWorkflowDelayOptions {
+  delaySeconds?: number;
+  delayUntilEpochMS?: number;
+}
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` or `ENQUEUED` status.
+Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
+
+**Parameters:**
+- **workflowID**: The ID of the workflow whose delay to set.
+- **options**:
+  - **delaySeconds**: Delay the workflow by this many seconds from now. Must be greater than 0.
+  - **delayUntilEpochMS**: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be greater than 0.
+
+:::warning
+If called on an `ENQUEUED` workflow, its status is changed to `DELAYED`.
+:::
 
 ### DBOS.cancelWorkflow
 

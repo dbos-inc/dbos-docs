@@ -739,6 +739,30 @@ class StepInfo(TypedDict):
 
 Coroutine version of [`list_workflow_steps`](#list_workflow_steps).
 
+### set_workflow_delay
+
+```python
+DBOS.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose delay to set.
+- `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
+- `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+
+### set_workflow_delay_async
+
+Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
+
 ### cancel_workflow
 
 ```python

@@ -1475,6 +1475,21 @@ class StepInfo(TypedDict):
     completed_at_epoch_ms: Optional[int]
 ```
 
+### set_workflow_delay
+
+```python
+DBOS.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
+
 ### cancel_workflow
 
 ```python

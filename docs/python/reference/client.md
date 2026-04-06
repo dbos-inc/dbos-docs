@@ -351,6 +351,40 @@ async for value in client.read_stream_async(workflow_id, "results"):
     print(f"Received: {value}")
 ```
 
+### set_workflow_delay
+
+```python
+client.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
+Similar to [`DBOS.set_workflow_delay`](./contexts.md#set_workflow_delay).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose delay to set.
+- `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
+- `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+
+### set_workflow_delay_async
+
+```python
+client.set_workflow_delay_async(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Asynchronous version of [`set_workflow_delay`](#set_workflow_delay).
+
 ## Workflow Management Methods
 
 ### list_workflows
