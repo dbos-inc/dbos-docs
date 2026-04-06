@@ -410,6 +410,7 @@ client.list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -436,6 +437,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_workflows_async
 
@@ -460,6 +462,7 @@ client.list_workflows_async(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -487,6 +490,7 @@ client.list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -511,6 +515,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_queued_workflows_async
 
@@ -534,6 +539,7 @@ client.list_queued_workflows_async(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -544,6 +550,9 @@ Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workfl
 ```python
 client.list_workflow_steps(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
@@ -554,10 +563,13 @@ Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 ```python
 client.list_workflow_steps_async(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
-Asnychronous version of [`list_workflow_steps`](#list_workflow_steps).
+Asynchronous version of [`list_workflow_steps`](#list_workflow_steps).
 
 ### cancel_workflow
 

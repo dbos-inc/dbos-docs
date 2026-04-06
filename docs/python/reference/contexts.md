@@ -628,6 +628,8 @@ def list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -653,6 +655,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_workflows_async
 
@@ -679,6 +682,8 @@ def list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -702,6 +707,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_queued_workflows_async
 
@@ -711,10 +717,14 @@ Coroutine version of [`list_queued_workflows`](#list_queued_workflows).
 ```python
 def list_workflow_steps(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
 Retrieve the steps of a workflow.
+Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python
