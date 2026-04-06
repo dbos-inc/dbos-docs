@@ -47,7 +47,7 @@ class DBOSClient {
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
     listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
-    listWorkflowSteps(workflowID: string): Promise<StepInfo[] | undefined>;
+    listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
     cancelWorkflow(workflowID: string): Promise<void>;

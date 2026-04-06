@@ -1488,6 +1488,7 @@ interface GetWorkflowsInput {
   queueName?: string; // If this workflow is enqueued, on which queue
   queuesOnly?: boolean; // Return only workflows that are actively enqueued
   forkedFrom?: string; // Get workflows forked from this workflow ID.
+  hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -1512,11 +1513,18 @@ The input type is the same as `DBOS.listWorkflows`; this method is equivalent to
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string
+  workflowID: string,
+  options?: ListWorkflowStepsOptions
 ): Promise<StepInfo[] | undefined>
+
+interface ListWorkflowStepsOptions {
+  limit?: number;
+  offset?: number;
+}
 ```
 
 Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
+Steps are ordered by `functionID`. Use `limit` and `offset` to paginate results.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
