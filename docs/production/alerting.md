@@ -118,6 +118,71 @@ def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None
 See the [Python reference](../python/reference/contexts.md#alert_handler) for more details.
 
 </TabItem>
+<TabItem value="golang" label="Go">
+
+Example logging alerts:
+
+```go
+dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata map[string]string) {
+    slog.Warn(fmt.Sprintf("Alert received: %s - %s", ruleType, message))
+    for key, value := range metadata {
+        slog.Warn(fmt.Sprintf("  %s: %s", key, value))
+    }
+})
+```
+
+Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+
+```go
+dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata map[string]string) {
+    webhookURL := os.Getenv("SLACK_WEBHOOK_URL")
+
+    var metaParts []string
+    for k, v := range metadata {
+        metaParts = append(metaParts, fmt.Sprintf("• %s: %s", k, v))
+    }
+    slackText := fmt.Sprintf("*Alert: %s*\n%s\n%s", ruleType, message, strings.Join(metaParts, "\n"))
+
+    body, _ := json.Marshal(map[string]string{"text": slackText})
+    resp, err := http.Post(webhookURL, "application/json", bytes.NewReader(body))
+    if err != nil {
+        slog.Error(fmt.Sprintf("Failed to send Slack alert: %v", err))
+        return
+    }
+    defer resp.Body.Close()
+})
+```
+
+Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
+
+```go
+dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata map[string]string) {
+    routingKey := os.Getenv("PAGERDUTY_ROUTING_KEY")
+
+    payload := map[string]any{
+        "routing_key":  routingKey,
+        "event_action": "trigger",
+        "payload": map[string]any{
+            "summary":        fmt.Sprintf("%s: %s", ruleType, message),
+            "severity":       "error",
+            "source":         "my-app",
+            "custom_details": metadata,
+        },
+    }
+
+    body, _ := json.Marshal(payload)
+    resp, err := http.Post("https://events.pagerduty.com/v2/enqueue", "application/json", bytes.NewReader(body))
+    if err != nil {
+        slog.Error(fmt.Sprintf("Failed to send PagerDuty alert: %v", err))
+        return
+    }
+    defer resp.Body.Close()
+})
+```
+
+See the [Go reference](../golang/reference/methods.md#alerting) for more details.
+
+</TabItem>
 <TabItem value="typescript" label="Typescript">
 
 Example logging alerts:
