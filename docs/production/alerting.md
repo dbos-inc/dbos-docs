@@ -245,4 +245,73 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
 See the [TypeScript reference](../typescript/reference/methods.md#dbossetalerthandler) for more details.
 
 </TabItem>
+<TabItem value="java" label="Java">
+
+Example logging alerts:
+
+```java
+import dev.dbos.transact.DBOS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+Logger logger = LoggerFactory.getLogger("AlertHandler");
+
+dbos.registerAlertHandler((ruleType, message, metadata) -> {
+    logger.warn("Alert received: {} - {}", ruleType, message);
+    metadata.forEach((key, value) -> logger.warn("  {}: {}", key, value));
+});
+```
+
+Example forwarding alerts to Slack using [incoming webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+
+```java
+dbos.registerAlertHandler((ruleType, message, metadata) -> {
+    String webhookUrl = System.getenv("SLACK_WEBHOOK_URL");
+
+    String metaLines = metadata.entrySet().stream()
+        .map(e -> "• " + e.getKey() + ": " + e.getValue())
+        .collect(Collectors.joining("\n"));
+    String slackText = String.format("*Alert: %s*\n%s\n%s", ruleType, message, metaLines);
+
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(webhookUrl))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString("{\"text\":\"" + slackText + "\"}"))
+        .build();
+    try {
+        client.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (Exception e) {
+        logger.error("Failed to send Slack alert: {}", e.getMessage());
+    }
+});
+```
+
+Example forwarding alerts to PagerDuty using the [Events API](https://developer.pagerduty.com/docs/events-api-v2-overview):
+
+```java
+dbos.registerAlertHandler((ruleType, message, metadata) -> {
+    String routingKey = System.getenv("PAGERDUTY_ROUTING_KEY");
+
+    String payload = String.format("""
+        {"routing_key":"%s","event_action":"trigger","payload":{
+          "summary":"%s: %s","severity":"error","source":"my-app",
+          "custom_details":%s}}""",
+        routingKey, ruleType, message, new ObjectMapper().writeValueAsString(metadata));
+
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("https://events.pagerduty.com/v2/enqueue"))
+        .header("Content-Type", "application/json")
+        .POST(HttpRequest.BodyPublishers.ofString(payload))
+        .build();
+    try {
+        client.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (Exception e) {
+        logger.error("Failed to send PagerDuty alert: {}", e.getMessage());
+    }
+});
+```
+
+</TabItem>
 </Tabs>
