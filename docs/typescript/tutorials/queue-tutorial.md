@@ -408,6 +408,16 @@ async function main() {
 }
 ```
 
+You can also dynamically update the delay of a `DELAYED` workflow using [`DBOS.setWorkflowDelay`](../reference/methods.md#dbossetworkflowdelay):
+
+```javascript
+// Shorten the delay to 10 seconds from now
+await DBOS.setWorkflowDelay(handle.workflowID, { delaySeconds: 10 });
+
+// Or set an absolute deadline
+await DBOS.setWorkflowDelay(handle.workflowID, { delayUntilEpochMS: Date.now() + 60000 });
+```
+
 ## Explicit Queue Listening
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.

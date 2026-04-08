@@ -580,7 +580,12 @@ You can also call `send` from outside of your DBOS application with the DBOS Cli
 ### Recv
 
 ```typescript
-DBOS.recv<T>(topic?: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
+
+interface RecvOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
 ```
 
 Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
@@ -641,7 +646,12 @@ Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its
 ### getEvent
 
 ```typescript
-DBOS.getEvent<T>(workflowID: string, key: string, timeoutSeconds?: number): Promise<T | null>
+DBOS.getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>
+
+interface GetEventOptions {
+  timeoutSeconds?: number;
+  deadlineEpochMS?: number;
+}
 ```
 
 You can call `DBOS.getEvent` to retrieve the value published by a particular workflow ID for a particular key.
@@ -1478,6 +1488,7 @@ interface GetWorkflowsInput {
   queueName?: string; // If this workflow is enqueued, on which queue
   queuesOnly?: boolean; // Return only workflows that are actively enqueued
   forkedFrom?: string; // Get workflows forked from this workflow ID.
+  hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -1502,11 +1513,18 @@ The input type is the same as `DBOS.listWorkflows`; this method is equivalent to
 ### DBOS.listWorkflowSteps
 ```typescript
 DBOS.listWorkflowSteps(
-  workflowID: string
+  workflowID: string,
+  options?: ListWorkflowStepsOptions
 ): Promise<StepInfo[] | undefined>
+
+interface ListWorkflowStepsOptions {
+  limit?: number;
+  offset?: number;
+}
 ```
 
 Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
+Steps are ordered by `functionID`. Use `limit` and `offset` to paginate results.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
@@ -1542,6 +1560,23 @@ Only affects workflows with `ENQUEUED` status.
 Priority value must be between `1` and `2,147,483,647`. Lower values are dequeued first.
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
 
+### DBOS.setWorkflowDelay
+
+```typescript
+DBOS.setWorkflowDelay(
+  workflowID: string,
+  options: SetWorkflowDelayOptions
+): Promise<void>
+
+interface SetWorkflowDelayOptions {
+  delaySeconds?: number;
+  delayUntilEpochMS?: number;
+}
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Accepts a `SetWorkflowDelayOptions` object with `delaySeconds` (relative) or `delayUntilEpochMS` (absolute).
 ### DBOS.cancelWorkflow
 
 ```typescript

@@ -628,6 +628,8 @@ def list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -653,6 +655,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_workflows_async
 
@@ -679,6 +682,8 @@ def list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -702,6 +707,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_queued_workflows_async
 
@@ -711,10 +717,14 @@ Coroutine version of [`list_queued_workflows`](#list_queued_workflows).
 ```python
 def list_workflow_steps(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
 Retrieve the steps of a workflow.
+Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python
@@ -738,6 +748,30 @@ class StepInfo(TypedDict):
 ### list_workflow_steps_async
 
 Coroutine version of [`list_workflow_steps`](#list_workflow_steps).
+
+### set_workflow_delay
+
+```python
+DBOS.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose delay to set.
+- `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
+- `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+
+### set_workflow_delay_async
+
+Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
 
 ### cancel_workflow
 
@@ -1019,7 +1053,7 @@ DBOS.apply_schedules(
 
 class ScheduleInput(TypedDict):
     schedule_name: str
-    workflow_fn: Callable[[datetime, Any], None]
+    workflow_fn: Union[Callable[[datetime, Any], None], Callable[[datetime, Any], Coroutine[Any, Any, None]]]
     schedule: str
     context: Any
     automatic_backfill: bool  # Optional, defaults to False
@@ -1039,6 +1073,10 @@ DBOS.apply_schedules([
     {"schedule_name": "schedule-b", "workflow_fn": workflow_b, "schedule": "0 0 * * *", "context": None},     # Every day at midnight
 ])
 ```
+
+### apply_schedules_async
+
+Coroutine version of [`apply_schedules`](#apply_schedules).
 
 ### backfill_schedule
 

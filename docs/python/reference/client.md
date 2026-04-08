@@ -351,6 +351,40 @@ async for value in client.read_stream_async(workflow_id, "results"):
     print(f"Received: {value}")
 ```
 
+### set_workflow_delay
+
+```python
+client.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
+Similar to [`DBOS.set_workflow_delay`](./contexts.md#set_workflow_delay).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose delay to set.
+- `delay_seconds`: Delay the workflow by this many seconds from now. Must be non-negative.
+- `delay_until_epoch_ms`: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be non-negative.
+
+### set_workflow_delay_async
+
+```python
+client.set_workflow_delay_async(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Asynchronous version of [`set_workflow_delay`](#set_workflow_delay).
+
 ## Workflow Management Methods
 
 ### list_workflows
@@ -376,6 +410,7 @@ client.list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -402,6 +437,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_workflows_async
 
@@ -426,6 +462,7 @@ client.list_workflows_async(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -453,6 +490,7 @@ client.list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -477,6 +515,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_queued_workflows_async
 
@@ -500,6 +539,7 @@ client.list_queued_workflows_async(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -510,6 +550,9 @@ Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workfl
 ```python
 client.list_workflow_steps(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
@@ -520,10 +563,13 @@ Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 ```python
 client.list_workflow_steps_async(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
-Asnychronous version of [`list_workflow_steps`](#list_workflow_steps).
+Asynchronous version of [`list_workflow_steps`](#list_workflow_steps).
 
 ### cancel_workflow
 
@@ -870,6 +916,10 @@ class ClientScheduleInput(TypedDict):
 
 Atomically apply a set of schedules.
 Useful for declaratively defining all your static schedules in one place.
+
+### apply_schedules_async
+
+Asynchronous version of [`apply_schedules`](#apply_schedules).
 
 ### backfill_schedule
 

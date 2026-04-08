@@ -479,7 +479,7 @@ Each SDK's approach is documented in its language-specific reference:
 - **Serialization strategy reference:**
   - [Python Serialization Strategy](../python/reference/contexts.md#serialization-strategy)
   - [TypeScript Serialization Strategy](../typescript/reference/methods.md#serialization-strategy)
-  - [Go Portable Options](../golang/reference/methods.md#portable-serialization-options)
+  - [Go Portable Options](../golang/reference/methods.md#portable-serialization-options-and-types)
   - [Java Serialization Strategy](../java/reference/methods.md#serialization-strategy)
 - **Custom serialization configuration:**
   - [Python Custom Serialization](../python/reference/contexts.md#custom-serialization)
