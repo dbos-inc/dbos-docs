@@ -1041,6 +1041,93 @@ for streamValue := range ch {
 You can also read from a stream from outside a DBOS application with a DBOS Client using `ClientReadStream` or `ClientReadStreamAsync`.
 
 
+## Cross-Language Interoperability
+
+DBOS supports multiple languages (Python, TypeScript, Go, Java).
+A client in one language can interact with workflows in another language using the **portable JSON** serialization format.
+
+### Portable Workflows
+
+Use `WithPortableWorkflow()` when calling `RunWorkflow` to serialize inputs, outputs, and errors in portable JSON:
+
+```go
+handle, err := dbos.RunWorkflow(dbosContext, processOrder, "order-123",
+    dbos.WithPortableWorkflow(),
+)
+```
+
+### Portable Communication
+
+Use portable options on `Send`, `SetEvent`, and `WriteStream` for cross-language messaging:
+
+```go
+// Send a message readable by any language
+dbos.Send(ctx, "workflow-123",
+    map[string]any{"status": "complete"},
+    "updates",
+    dbos.WithPortableSend(),
+)
+
+// Set an event readable by any language
+dbos.SetEvent(ctx, "progress",
+    map[string]any{"percent": 75},
+    dbos.WithPortableSetEvent(),
+)
+
+// Write to a stream readable by any language
+dbos.WriteStream(ctx, "results",
+    map[string]any{"item": "processed"},
+    dbos.WithPortableWriteStream(),
+)
+```
+
+### Enqueueing Cross-Language Workflows
+
+To enqueue a workflow on an application written in another language from a Go client, pass `PortableWorkflowArgs` as the input (this automatically uses portable JSON):
+
+```go
+args := dbos.PortableWorkflowArgs{
+    PositionalArgs: []any{"order-123", 42},
+}
+handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
+    client, "orders", "process_order", args,
+    dbos.WithEnqueueClassName("OrderProcessor"), // Required for Python/TS/Java targets
+)
+```
+
+### Portable Errors
+
+Return a `PortableWorkflowError` from a portable workflow to pass structured error info cross-language:
+
+```go
+return nil, &dbos.PortableWorkflowError{
+    Name:    "ValidationError",
+    Message: "invalid input",
+    Code:    400,
+    Data:    map[string]any{"field": "email"},
+}
+```
+
+## Alerting
+
+If you are using DBOS Conductor, you can register an alert handler to receive alerts when failure conditions are met.
+The handler must be registered before calling `Launch()`. Only one handler is allowed per application.
+
+```go
+dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata map[string]string) {
+    slog.Warn(fmt.Sprintf("Alert received: %s - %s", ruleType, message))
+    for key, value := range metadata {
+        slog.Warn(fmt.Sprintf("  %s: %s", key, value))
+    }
+})
+```
+
+The handler receives:
+- **ruleType**: One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
+- **message**: The alert message.
+- **metadata**: Key-value string pairs with additional alert context.
+
+
 ## Queues
 
 
@@ -1521,31 +1608,35 @@ If the event does not yet exist, wait for it to be published, returning an error
 ### SetEvent
 
 ```go
-func SetEvent[P any](ctx DBOSContext, key string, message P) error
+func SetEvent[P any](ctx DBOSContext, key string, message P, opts ...SetEventOption) error
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
 Can only be called from within a workflow.
+Use `WithPortableSetEvent()` for cross-language event consumption.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **key**: The key of the event.
 - **message**: The value of the event. Must be serializable.
+- **opts**: Optional `SetEventOption` functions (e.g., `WithPortableSetEvent()`).
 
 
 ### Send
 
 ```go
-func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 Send a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
+Use `WithPortableSend()` for cross-language messaging.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- **opts**: Optional `SendOption` functions (e.g., `WithPortableSend()`).
 
 ### Recv
 
@@ -1568,12 +1659,13 @@ Calls to `Recv` wait for the next message in the queue, returning an error if th
 ### WriteStream
 
 ```go
-func WriteStream[P any](ctx DBOSContext, key string, value P) error
+func WriteStream[P any](ctx DBOSContext, key string, value P, opts ...WriteStreamOption) error
 ```
 
 Write a value to a durable stream.
 May only be called from within a workflow or step.
 Writes from a workflow are exactly-once; writes from a step are at-least-once.
+Use `WithPortableWriteStream()` for cross-language stream reading.
 
 ### CloseStream
 
@@ -2576,4 +2668,73 @@ func ClientReadStreamAsync[R any](c Client, workflowID string, key string) (<-ch
 Read values from a durable stream asynchronously.
 Returns immediately with a channel that receives values as they are written to the stream.
 Similar to `ReadStreamAsync`.
+
+## Cross-Language Portable Types
+
+### WithPortableWorkflow
+
+```go
+func WithPortableWorkflow() WorkflowOption
+```
+
+Mark a workflow to use portable JSON serialization for cross-language interoperability.
+
+### WithPortableSend / WithPortableSetEvent / WithPortableWriteStream
+
+```go
+func WithPortableSend() SendOption
+func WithPortableSetEvent() SetEventOption
+func WithPortableWriteStream() WriteStreamOption
+```
+
+Use portable JSON for cross-language Send, SetEvent, and WriteStream operations.
+
+### PortableWorkflowArgs
+
+```go
+type PortableWorkflowArgs struct {
+    PositionalArgs []any          `json:"positional_args,omitempty"`
+    NamedArgs      map[string]any `json:"named_args,omitempty"`
+}
+```
+
+Cross-language envelope for workflow inputs. When passed as the input to `Enqueue`, portable JSON serialization is used automatically.
+
+### PortableWorkflowError
+
+```go
+type PortableWorkflowError struct {
+    Name    string
+    Message string
+    Code    any
+    Data    any
+}
+```
+
+Structured error type for portable workflows. Return this from a workflow to pass structured error info cross-language.
+
+### WithEnqueueClassName / WithEnqueueConfigName
+
+```go
+func WithEnqueueClassName(className string) EnqueueOption
+func WithEnqueueConfigName(configName string) EnqueueOption
+```
+
+Set the class/namespace and config/instance name when enqueueing to Python, TypeScript, or Java targets.
+
+## Alerting
+
+### SetAlertHandler
+
+```go
+func SetAlertHandler(ctx DBOSContext, handler AlertHandler)
+```
+
+```go
+type AlertHandler func(name string, message string, metadata map[string]string)
+```
+
+Register a handler to receive alerts from Conductor.
+Must be called before `Launch()`. Only one handler per application.
+If no handler is registered, alerts are logged automatically.
 ````

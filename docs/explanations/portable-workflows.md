@@ -9,20 +9,17 @@ A client in one language can connect to the [system database](./system-tables.md
 However, each language has a native serialization format that the other languages can't read.
 The **portable JSON** serialization format solves this by providing a common data representation that all SDKs can read and write, and can even be read and written from the database without any DBOS code at all.
 
-:::info
-Cross-language interoperability is currently supported in Python, TypeScript, and Java.
-:::
-
 ## Default Serialization Is Language-Specific
 
 By default, each DBOS SDK serializes data using its language's default format.
 These default formats are chosen for their fidelity to the wide range of data structures and objects available in each language:
 
-| Language   | Default Format  | Format Name     |
-|------------|-----------------|-----------------|
-| Python     | pickle          | `py_pickle`     |
-| TypeScript | SuperJSON       | `js_superjson`  |
-| Java       | Jackson         | `java_jackson`  |
+| Language   | Default Format      | Format Name     |
+|------------|---------------------|-----------------|
+| Python     | pickle              | `py_pickle`     |
+| TypeScript | SuperJSON           | `js_superjson`  |
+| Go         | encoding/json       | `DBOS_JSON`     |
+| Java       | Jackson             | `java_jackson`  |
 
 As the set of data structures and classes varies from language to language, data written in one language's default format cannot be read by the other languages.
 For example, a Python workflow that writes an event using pickle produces a binary blob that TypeScript and Java can't deserialize.
@@ -49,6 +46,7 @@ When these values are decoded, the recipient must restore them to the appropriat
 | Python     | `date`                 | ISO 8601 string         |
 | Python     | `Decimal`              | Numeric string          |
 | Python     | `set`, `tuple`         | JSON array              |
+| Go         | `time.Time`            | RFC 3339 UTC string     |
 | Java       | `Instant`              | RFC 3339 UTC string     |
 | Java       | `BigDecimal`           | Numeric string          |
 | TypeScript | `Date`                 | RFC 3339 UTC string     |
@@ -117,6 +115,24 @@ var handle = client.enqueue(options, "order-123");
 ```
 
 </TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+import "github.com/dbos-inc/dbos-transact-golang/dbos"
+
+client, _ := dbos.NewClient(context.Background(), dbos.ClientConfig{
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+})
+// In Go, use dbos.PortableWorkflowArgs to request a portable enqueue
+args := dbos.PortableWorkflowArgs{
+    PositionalArgs: []any{"order-123"},
+}
+handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
+    client, "orders", "process_order", args,
+)
+```
+
+</TabItem>
 <TabItem value="plpgsql" label="PL/pgSQL">
 
 ```sql
@@ -177,6 +193,17 @@ const processOrderWorkflow = DBOS.registerWorkflow(processOrder, {
   name: "processOrder",
   serializationType: "portable",
 });
+```
+
+</TabItem>
+<TabItem value="golang" label="Go">
+
+In Go, portable serialization is set per-invocation using the `WithPortableWorkflow` option on `RunWorkflow`:
+
+```go
+handle, err := dbos.RunWorkflow(dbosContext, processOrder, "order-123",
+    dbos.WithPortableWorkflow(),
+)
 ```
 
 </TabItem>
@@ -280,6 +307,32 @@ await DBOS.writeStream(
 ```
 
 </TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+import "github.com/dbos-inc/dbos-transact-golang/dbos"
+
+// Send a message readable by any language
+dbos.Send(ctx, "workflow-123",
+    map[string]any{"status": "complete", "count": 42},
+    "updates",
+    dbos.WithPortableSend(),
+)
+
+// Set an event readable by any language
+dbos.SetEvent(ctx, "progress",
+    map[string]any{"percent": 75},
+    dbos.WithPortableSetEvent(),
+)
+
+// Write to a stream readable by any language
+dbos.WriteStream(ctx, "results",
+    map[string]any{"item": "processed"},
+    dbos.WithPortableWriteStream(),
+)
+```
+
+</TabItem>
 <TabItem value="java" label="Java">
 
 ```java
@@ -370,6 +423,20 @@ throw new PortableWorkflowError(
 ```
 
 </TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+import "github.com/dbos-inc/dbos-transact-golang/dbos"
+
+return nil, &dbos.PortableWorkflowError{
+    Name:    "NotFoundError",
+    Message: "Order not found",
+    Code:    404,
+    Data:    map[string]any{"orderId": "order-123"},
+}
+```
+
+</TabItem>
 <TabItem value="java" label="Java">
 
 ```java
@@ -388,7 +455,7 @@ throw new PortableWorkflowException(
 
 ### Reading Portable Errors
 
-When a workflow that used portable serialization fails, other languages receive the error as a `PortableWorkflowError` (Python/TS) or `PortableWorkflowException` (Java) with the `name`, `message`, `code`, and `data` fields populated.
+When a workflow that used portable serialization fails, other languages receive the error as a `PortableWorkflowError` (Python/TS/Go) or `PortableWorkflowException` (Java) with the `name`, `message`, `code`, and `data` fields populated.
 
 If a workflow fails with a non-portable exception while using portable serialization, DBOS automatically converts it to the portable error format on a best-effort basis, extracting the error type name, message, and any common error code attributes.
 
@@ -404,6 +471,7 @@ Each SDK's approach is documented in its language-specific reference:
 
 - **[Java — Automatic Coercion](../java/reference/workflows-steps.md#input-validation-and-coercion)**: Java automatically coerces portable JSON arguments to match the workflow method's parameter types (e.g., `Integer` &rarr; `long`, ISO-8601 strings &rarr; `Instant`). No opt-in required.
 - **[TypeScript — Input Schema (Zod)](../typescript/reference/workflows-steps.md#input-validation-and-coercion)**: TypeScript workflows can specify an `inputSchema` (compatible with [Zod](https://zod.dev/)) that validates and optionally transforms arguments before the workflow runs.
+- **Go — Automatic Coercion**: Go automatically coerces portable JSON arguments to match the workflow function's parameter types using type assertion. No opt-in required.
 - **[Python — Argument Validator (Pydantic)](../python/reference/decorators.md#input-validation-and-coercion)**: Python workflows can specify `validate_args=pydantic_args_validator` to validate arguments against the function's type hints using [Pydantic](https://docs.pydantic.dev/).
 
 ## Further Reading
@@ -411,6 +479,7 @@ Each SDK's approach is documented in its language-specific reference:
 - **Serialization strategy reference:**
   - [Python Serialization Strategy](../python/reference/contexts.md#serialization-strategy)
   - [TypeScript Serialization Strategy](../typescript/reference/methods.md#serialization-strategy)
+  - [Go Portable Options](../golang/reference/methods.md#portable-serialization-options)
   - [Java Serialization Strategy](../java/reference/methods.md#serialization-strategy)
 - **Custom serialization configuration:**
   - [Python Custom Serialization](../python/reference/contexts.md#custom-serialization)
