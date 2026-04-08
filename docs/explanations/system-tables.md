@@ -200,3 +200,9 @@ Each entry represents a different scheduled workflow.
 - **automatic_backfill**: Whether the schedule should automatically backfill missed executions on startup.
 - **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.
 - **queue_name**: The name of the durable queue on which scheduled workflow invocations are enqueued, if any.
+
+### dbos.dbos_migrations
+This table tracks which DBOS system database schema migrations have been applied.
+
+**Columns:**
+- **version**: The version number of the most recently applied system database schema migration.
