@@ -8,7 +8,7 @@ DBOS checkpoints information about your workflows in an isolated _system databas
 You connect to this database through the `system_database_url` parameter in DBOS configuration.
 You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
 Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
-All system database tables are documented [here](./explanations/system-tables.md).
+The system database schema is documented [here](./explanations/system-tables.md).
 
 :::tip
 If you're using Supabase, only the `postgres` database is visible from the Supabase web console.
@@ -22,7 +22,7 @@ If you need to, you can cancel tasks to remove them from the queue.
 
 ### Why is my workflow not finishing?
 
-When self-hosted workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading a self-hosted app, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/workflow-management.md#workflow-management) to resume them on a new app version.
+When workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading an application, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/workflow-management.md#workflow-management) to resume them on a new app version.
 
 A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for Conductor to begin workflow recovery.
 
@@ -30,14 +30,14 @@ Workflows may also get "stuck" due to their logic: infinite loops, indefinitely 
 
 ### How can I cancel or fork a large number of workflows in a batch?
 
-Write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md) or [Go](./golang/reference/client.md)) to list all the workflows that fit your criteria, then iteratively process them.
+On the [DBOS Console](./production/workflow-management.md), filter for all workflows that meet your criteria, then select them all and apply a batch operation.
+Alternatively, write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to list all the workflows that fit your criteria, then process them.
 
 ### Why am I seeing errors that objects cannot be deserialized?
 
 DBOS requires that the inputs and outputs of workflows, as well as the outputs of steps, are **serializable**.
 This is because DBOS checkpoints these inputs and outputs to the database to recover workflows from failures.
-DBOS serializes objects to JSON in TypeScript, with `pickle` in Python (this is customizable), and with `gob` in Go.
-See these guides ([TypeScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description), [Python](https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled), [Go](https://pkg.go.dev/encoding/gob)) for information on what objects can and cannot be serialized.
+DBOS serializes objects to JSON in TypeScript and Go, with `pickle` in Python, and with Jackson in Java.
 
 If your workflow needs to access an unserializable object like a database connection or API client, do not pass it into the workflow as an argument.
 Instead, either construct the object inside the workflow from parameters passed into the workflow, or construct it globally.
@@ -68,17 +68,12 @@ However, the called step becomes part of the calling step's execution rather tha
 
 ### Can I start, monitor, or cancel DBOS workflows from a non-DBOS application?
 
-Yes, your non-DBOS application can create a DBOS Client ([Python docs](./python/reference/client.md), [TypeScript docs](./typescript/reference/client.md), [Go docs](./golang/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
+Yes, your non-DBOS application can create a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
 
 ### What happens if you start two workflows with the same workflow ID?
 
 In DBOS, workflow IDs are unique identifiers of workflow executions.
 If you enqueue a workflow with the ID of a workflow that already exists, it's a no-op and a handle to the existing workflow execution is returned.
-If you start a workflow with the ID of a workflow that has already completed, it will return the result of the previous execution.
-If you start a workflow with the ID of a workflow that is currently executing, it will attempt to recover that workflow's execution, continuing execution from the last completed step.
-
-If another process is concurrently executing the same workflow, both processes may execute the step.
-The first process to complete the step will checkpoint its outcome and continue executing the workflow. The second process will see that a checkpoint has already been written, wait for the first process to complete the workflow, retrieve the result from the database and return it.
 
 ### How can I reset all my DBOS state during development?
 
@@ -86,7 +81,8 @@ You can reset your DBOS system database and all internal DBOS state with the `db
 
 ### How can I reduce the number of Postgres connections DBOS uses?
 
-You can use the app config to reduce the system database pool size. Do not use values less than 5 ([Python](./python/reference/configuration.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md)).
+You can set the system database pool size in DBOS configuration ([Python](./python/reference/configuration.md), [TypeScript](./typescript/reference/configuration.md), [Go](./golang/reference/dbos-context.md), [Java](./java/reference/lifecycle.md)).
+Do not use values less than 5.
 
 ### Can I use DBOS with an external Postgres connection pooler?
 
