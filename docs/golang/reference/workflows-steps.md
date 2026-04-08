@@ -173,6 +173,22 @@ handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+#### WithPortableWorkflow
+
+```go
+func WithPortableWorkflow() WorkflowOption
+```
+
+Mark the workflow to use the [portable JSON serialization format](../../explanations/portable-workflows.md) for cross-language interoperability.
+When set, workflow inputs, outputs, and errors are serialized using portable JSON so they can be read by applications in other languages.
+A DBOS Go portable workflow inputs will be type-asserted into the workflow input type.
+
+```go
+handle, err := dbos.RunWorkflow(dbosContext, processOrder, "order-123",
+    dbos.WithPortableWorkflow(),
+)
+```
+
 #### WithApplicationVersion
 
 ```go
