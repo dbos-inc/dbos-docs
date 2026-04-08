@@ -83,18 +83,16 @@ For DBOS to be able to safely recover a workflow, your code must satisfy two req
 If a workflow fails while executing a step, it retries the step during recovery.
 However, once a step completes and is checkpointed, it is never re-executed.
 
-## Application and Workflow Versions
+## Upgrading Workflow Code
 
-If code changes between when a workflow starts and when it its recovered, safe recovery may not be possible.
-To guard against this, DBOS _versions_ applications and their workflows.
-When DBOS is launched, it computes an application version from a hash of the source code of your workflows. You can override the version through configuration.
-All workflows are tagged with the application version on which they started.
+One challenge you may encounter when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
+A breaking change to a workflow is any change in what steps run or the order in which steps run.
+The issue is that if a breaking change was made to a workflow, the checkpoints created by a workflow that started on the previous version of the code may not match the steps called by the workflow in the new version of the code, which makes the workflow difficult to recover.
 
-When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
-This prevents unsafe recovery of workflows that depend on different code.
-To safely recover workflows started on an older version of your code, you should start a process running that code version.
-Alternatively, you can use the [workflow fork](./production/workflow-management.md#forking-workflows) operation to restart a workflow from a specific step on a specific code version.
-For more information, see the [workflow recovery documentation](./production/workflow-recovery.md).
+DBOS supports two strategies for safely upgrading workflow code: **patching** and **versioning**.
+When using patching, you add DBOS patch statements to your code to make a breaking change in a conditional so old workflows can safely recover.
+When using versioning, DBOS versions applications and workflows so workflows only recover to processes running compatible code.
+Learn more about both strategies in the workflow upgrade tutorial ([Python](./python/tutorials/upgrading-workflows.md), [TypeScript](./typescript/tutorials/upgrading-workflows.md), [Go](./golang/tutorials/upgrading-workflows.md), [Java](./java/tutorials/upgrading-workflows.md)).
 
 ## Durable Queues
 

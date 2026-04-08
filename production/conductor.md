@@ -149,3 +149,17 @@ DBOSConfig config = DBOSConfig.defaults(appName)
 </TabItem>
 </Tabs>
 :::
+
+### Metadata-Only Mode
+
+:::info
+
+Metadata-Only mode require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
+:::
+
+If an application handles especially sensitive data, you may consider enabling metadata-only mode for it.
+In this mode, only workflow and step metadata (but not data, like workflow or step inputs or outputs) is sent to Conductor.
+As a result, workflow data will not be visible from the console.
+Note that Conductor does not store application data in any mode.
+
+<img src={require('@site/static/img/conductor/metadata.png').default} alt="Workflow List" width="800" className="custom-img"/>

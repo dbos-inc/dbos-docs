@@ -1380,6 +1380,7 @@ def list_workflows(
     load_output: bool = True,
     executor_id: Optional[str] = None,
     queues_only: bool = False,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -1403,6 +1404,7 @@ Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null).
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_queued_workflows
 ```python
@@ -1424,6 +1426,7 @@ def list_queued_workflows(
     load_input: bool = True,
     load_output: bool = True,
     executor_id: Optional[str] = None,
+    has_parent: Optional[bool] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -1446,15 +1449,20 @@ Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `ENQUEUE
 - **load_input**: Whether to load and deserialize workflow inputs. Set to `False` to improve performance when inputs are not needed.
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID.
+- **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 
 ### list_workflow_steps
 ```python
 def list_workflow_steps(
     workflow_id: str,
+    *,
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
 ) -> List[StepInfo]
 ```
 
 Retrieve the steps of a workflow.
+Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python
@@ -1474,6 +1482,21 @@ class StepInfo(TypedDict):
     # The Unix epoch timestamp at which this step completed
     completed_at_epoch_ms: Optional[int]
 ```
+
+### set_workflow_delay
+
+```python
+DBOS.set_workflow_delay(
+    workflow_id: str,
+    *,
+    delay_seconds: Optional[float] = None,
+    delay_until_epoch_ms: Optional[int] = None,
+) -> None
+```
+
+Set or update the delay on a workflow.
+Only affects workflows with `DELAYED` status.
+Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (absolute).
 
 ### cancel_workflow
 

@@ -349,7 +349,17 @@ def send_reminder(user_id: str):
 
 # Send a reminder in one hour
 with SetEnqueueOptions(delay_seconds=3600):
-    queue.enqueue(send_reminder, user_id)
+    handle = queue.enqueue(send_reminder, user_id)
+```
+
+You can also dynamically update the delay of a `DELAYED` workflow using [`DBOS.set_workflow_delay`](../reference/contexts.md#set_workflow_delay):
+
+```python
+# Shorten the delay to 10 seconds from now
+DBOS.set_workflow_delay(handle.workflow_id, delay_seconds=10)
+
+# Or set an absolute deadline
+DBOS.set_workflow_delay(handle.workflow_id, delay_until_epoch_ms=int((time.time() + 60) * 1000))
 ```
 
 ## Explicit Queue Listening
