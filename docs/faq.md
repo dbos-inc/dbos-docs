@@ -22,11 +22,13 @@ If you need to, you can cancel tasks to remove them from the queue.
 
 ### Why is my workflow not finishing?
 
-When workflows don't make progress, the cause is often [version mismatch](./architecture.md#application-and-workflow-versions). Check that your app version matches the version of your workflow. Note that changing the workflow code automatically generates a new version string, unless there is a config override. When upgrading an application, we recommend keeping at least some old-version workers running until all workflows of that version are complete. You can also cancel such workflows and, if possible, use [fork](./production/workflow-management.md#workflow-management) to resume them on a new app version.
+The most common cause of "stuck" workflows is logic issues: infinite loops, indefinitely waiting for an event, or improper use of async in Python or TypeScript.
+The last is always worth checking when using those languages: any synchronous call anywhere in your program can block your event loop, preventing async operations (such as workflows) from making progress.
 
-A worker crash or outage may delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for Conductor to begin workflow recovery.
+If a worker crash or outage occurred, it may briefly delay workflow completion. In certain rare cases, you may need to allow up to 15 minutes for Conductor to begin workflow recovery.
 
-Workflows may also get "stuck" due to their logic: infinite loops, indefinitely waiting for an event or improper use of async.
+If workflows do not recover after a code upgrade, the cause is often [version mismatch](./architecture.md#upgrading-workflow-code).
+If you are using versioning, check that your app version matches the version of your workflow.
 
 ### How can I cancel or fork a large number of workflows in a batch?
 
