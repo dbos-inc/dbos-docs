@@ -106,6 +106,7 @@ Each row represents a different workflow execution.
 - **forked_from**: The ID of the workflow that this was forked from, if applicable.
 - **was_forked_from**: Whether this workflow has ever been forked from by another workflow.
 - **parent_workflow_id**: The ID of the parent workflow, if this workflow was started as a child of another workflow.
+- **delay_until_epoch_ms**: For workflows in the `DELAYED` state, the epoch timestamp at which the workflow should transition to `ENQUEUED` and become eligible for execution.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
@@ -137,6 +138,7 @@ Each entry represents a different message.
 - **created_at_epoch_ms**: The epoch timestamp when this message was created.
 - **message_uuid**: The unique ID of the message.
 - **serialization**: The name of the serialization format used for the message. Null if the default serializer was used.
+- **consumed**: Whether the message has been consumed by a `DBOS.recv` call.
 
 ### dbos.workflow_events
 This table stores workflow events.
@@ -197,3 +199,4 @@ Each entry represents a different scheduled workflow.
 - **last_fired_at**: The timestamp of when the schedule last fired.
 - **automatic_backfill**: Whether the schedule should automatically backfill missed executions on startup.
 - **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.
+- **queue_name**: The name of the durable queue on which scheduled workflow invocations are enqueued, if any.
