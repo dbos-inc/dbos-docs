@@ -116,6 +116,14 @@ If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#withoutcancel)). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
+* `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets that register workflows on class instances (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
+
+:::tip Cross-Language Enqueue
+To enqueue a workflow on a target application written in another language, pass a [`PortableWorkflowArgs`](./methods.md#portableworkflowargs) as the input.
+This automatically uses portable JSON serialization.
+See [Cross-Language Interaction](../../explanations/portable-workflows.md) for details.
+:::
 
 **Example syntax:**
 

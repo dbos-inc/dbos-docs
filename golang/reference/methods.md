@@ -25,7 +25,7 @@ If the event does not yet exist, wait for it to be published, returning an error
 ### SetEvent
 
 ```go
-func SetEvent[P any](ctx DBOSContext, key string, message P) error
+func SetEvent[P any](ctx DBOSContext, key string, message P, opts ...SetEventOption) error
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -35,12 +35,13 @@ Can only be called from within a workflow.
 - **ctx**: The DBOS context.
 - **key**: The key of the event.
 - **message**: The value of the event. Must be serializable.
+- **opts**: Optional [SetEventOption](#withportablesetevent) functions.
 
 
 ### Send
 
 ```go
-func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 Send a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
@@ -50,6 +51,7 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+- **opts**: Optional [SendOption](#withportablesend) functions.
 
 ### Recv
 
@@ -76,7 +78,7 @@ See the [streaming tutorial](../tutorials/workflow-communication.md#workflow-str
 ### WriteStream
 
 ```go
-func WriteStream[P any](ctx DBOSContext, key string, value P) error
+func WriteStream[P any](ctx DBOSContext, key string, value P, opts ...WriteStreamOption) error
 ```
 
 Write a value to a durable stream.
@@ -87,6 +89,7 @@ Writes from a workflow are exactly-once; writes from a step are at-least-once.
 - **ctx**: The DBOS context.
 - **key**: The stream key. A workflow can have multiple streams, each identified by a unique key.
 - **value**: The value to write. Must be serializable (json-encodable).
+- **opts**: Optional [WriteStreamOption](#withportablewritestream) functions.
 
 ### CloseStream
 
@@ -466,3 +469,108 @@ Return the unique ID of the current step within a workflow. Returns an error if 
 
 **Parameters:**
 - **ctx**: The DBOS context.
+
+## Portable Serialization Options and Types
+
+These options enable [cross-language interoperability](../../explanations/portable-workflows.md) by using the portable JSON serialization format.
+
+### WithPortableSend
+
+```go
+func WithPortableSend() SendOption
+```
+
+Configure [`Send`](#send) to use the portable JSON serializer, enabling cross-language message passing.
+
+### WithPortableSetEvent
+
+```go
+func WithPortableSetEvent() SetEventOption
+```
+
+Configure [`SetEvent`](#setevent) to use the portable JSON serializer, enabling cross-language event consumption.
+
+### WithPortableWriteStream
+
+```go
+func WithPortableWriteStream() WriteStreamOption
+```
+
+Configure [`WriteStream`](#writestream) to use the portable JSON serializer, enabling cross-language stream reading.
+
+### PortableWorkflowError
+
+```go
+type PortableWorkflowError struct {
+    Name    string // The error type/class name
+    Message string // Human-readable error message
+    Code    any    // Optional application-specific error code
+    Data    any    // Optional structured error details
+}
+```
+
+A structured error type for workflows using portable serialization.
+Portable workflows automatically serialize errors in this format.
+
+```go
+return nil, &dbos.PortableWorkflowError{
+    Name:    "ValidationError",
+    Message: "invalid input",
+    Code:    400,
+}
+```
+
+### PortableWorkflowArgs
+
+```go
+type PortableWorkflowArgs struct {
+    PositionalArgs []any          `json:"positional_args,omitempty"`
+    NamedArgs      map[string]any `json:"named_args,omitempty"`
+}
+```
+
+The cross-language envelope for workflow inputs.
+When passed as the input to a DBOS Client's [`Enqueue`](./client.md#enqueue), portable JSON serialization is used automatically.
+Further, a portable workflow ran with [`RunWorkflow`](workflows-steps.md#runworkflow) will serialize its input in this format automatically.
+
+```go
+args := dbos.PortableWorkflowArgs{
+    PositionalArgs: []any{"order-123", 42},
+}
+handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
+    client, "queue", "target_workflow", args,
+)
+```
+
+## Alerting
+
+### SetAlertHandler
+
+```go
+func SetAlertHandler(ctx DBOSContext, handler AlertHandler)
+```
+
+```go
+type AlertHandler func(name string, message string, metadata map[string]string)
+```
+
+Register a handler to receive [alerts](../../production/alerting.md) from Conductor.
+The handler function is called with three arguments:
+
+- **name**: The type of alert rule. One of `WorkflowFailure`, `SlowQueue`, or `UnresponsiveApplication`.
+- **message**: The alert message.
+- **metadata**: A map of string key-value pairs with additional alert information.
+
+Only one alert handler may be registered per application, and it must be registered before [`Launch`](./dbos-context.md#launch) is called.
+If no handler is registered, alerts are logged automatically.
+
+**Example syntax:**
+
+```go
+dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata map[string]string) {
+    slog.Warn(fmt.Sprintf("Alert received: %s - %s", ruleType, message))
+    for key, value := range metadata {
+        slog.Warn(fmt.Sprintf("  %s: %s", key, value))
+    }
+})
+```
