@@ -98,7 +98,7 @@ send(String destinationId, Object message, String topic, String idempotencyKey)
 send(String destinationId, Object message, String topic, String idempotencyKey, SendOptions options)
 ```
 
-Similar to [`DBOS.send`](./methods.md#send).
+Similar to [`dbos.send`](./methods.md#send).
 
 The optional `SendOptions` parameter controls serialization:
 - **`SendOptions.defaults()`**: Uses the default serialization strategy.
@@ -110,7 +110,7 @@ The optional `SendOptions` parameter controls serialization:
 Object getEvent(String targetId, String key, Duration timeoutSeconds)
 ```
 
-Similar to [`DBOS.getEvent`](./methods.md#getevent).
+Similar to [`dbos.getEvent`](./methods.md#getevent).
 
 ## Workflow Management Methods
 
@@ -120,7 +120,7 @@ Similar to [`DBOS.getEvent`](./methods.md#getevent).
 WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
 ```
 
-Similar to [`DBOS.retrieveWorkflow`](./methods.md#retrieveworkflow).
+Similar to [`dbos.retrieveWorkflow`](./methods.md#retrieveworkflow).
 
 ### getWorkflowStatus
 
@@ -136,7 +136,7 @@ Retrieve the [`WorkflowStatus`](./methods.md#workflowstatus) of a workflow.
 List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 ```
 
-Similar to [`DBOS.listWorkflows`](./methods.md#listworkflows).
+Similar to [`dbos.listWorkflows`](./methods.md#listworkflows).
 
 ### listWorkflowSteps
 
@@ -144,7 +144,7 @@ Similar to [`DBOS.listWorkflows`](./methods.md#listworkflows).
 List<StepInfo> listWorkflowSteps(String workflowId)
 ```
 
-Similar to [`DBOS.listWorkflowSteps`](./methods.md#listworkflowsteps).
+Similar to [`dbos.listWorkflowSteps`](./methods.md#listworkflowsteps).
 
 ### cancelWorkflow
 
@@ -152,7 +152,7 @@ Similar to [`DBOS.listWorkflowSteps`](./methods.md#listworkflowsteps).
 void cancelWorkflow(String workflowId)
 ```
 
-Similar to [`DBOS.cancelWorkflow`](./methods.md#cancelworkflow).
+Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow).
 
 ### resumeWorkflow
 
@@ -160,7 +160,7 @@ Similar to [`DBOS.cancelWorkflow`](./methods.md#cancelworkflow).
 <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
 ```
 
-Similar to [`DBOS.resumeWorkflow`](./methods.md#resumeworkflow).
+Similar to [`dbos.resumeWorkflow`](./methods.md#resumeworkflow).
 
 ### forkWorkflow
 
@@ -169,4 +169,4 @@ Similar to [`DBOS.resumeWorkflow`](./methods.md#resumeworkflow).
       String originalWorkflowId, int startStep, ForkOptions options)
 ```
 
-Similar to [`DBOS.forkWorkflow`](./methods.md#forkworkflow).
+Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).

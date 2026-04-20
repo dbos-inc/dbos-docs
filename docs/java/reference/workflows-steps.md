@@ -21,7 +21,7 @@ public @interface Workflow {
 An annotation that can be applied to a class method to mark it as a durable workflow.
 
 :::info
-Workflow methods must be invoked via the proxy object returned by [`registerWorkflow`](#registerworkflows) in order to be durable.
+Workflow methods must be invoked via the proxy object returned by [`registerProxy`](#registerproxy) in order to be durable.
 :::
 
 **Parameters:**
@@ -49,7 +49,7 @@ public @interface Step {
 An annotation that can be applied to a class method to mark it as a step in a durable workflow.
 
 :::info
-Reminder, step methods must be invoked via the proxy object returned by [`registerWorkflow`](#registerworkflows) in order to be durable.
+Reminder, step methods must be invoked via the proxy object returned by [`registerProxy`](#registerproxy) in order to be durable.
 :::
 
 **Parameters:**
@@ -107,11 +107,11 @@ For more context on why input coercion matters for cross-language workflows, see
 
 ## Methods
 
-### registerWorkflows
+### registerProxy
 
 ```java
-static <T> T registerWorkflows(Class<T> interfaceClass, T implementation)
-static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
+<T> T registerProxy(Class<T> interfaceClass, T implementation)
+<T> T registerProxy(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
 Register the workflows in a class, returning a proxy object from which the class methods may be invoked as durable workflows.
@@ -131,7 +131,9 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
+DBOS dbos = new DBOS(config);
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl());
+dbos.launch();
 proxy.workflow();
 ```
 
@@ -144,10 +146,10 @@ proxy.workflow();
 ### startWorkflow
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> startWorkflow(
-    ThrowingSupplier<T, E> workflow, 
-    StartWorkflowOptions options
-)
+<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(ThrowingSupplier<T, E> workflow)
+<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(ThrowingSupplier<T, E> workflow, StartWorkflowOptions options)
+<E extends Exception> WorkflowHandle<Void, E> startWorkflow(ThrowingRunnable<E> workflow)
+<E extends Exception> WorkflowHandle<Void, E> startWorkflow(ThrowingRunnable<E> workflow, StartWorkflowOptions options)
 ```
 
 Start a workflow in the background and return a handle to it.
@@ -168,13 +170,15 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
-DBOS.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
+DBOS dbos = new DBOS(config);
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl());
+dbos.launch();
+dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
 #### StartWorkflowOptions
 
-`StartWorkflowOptions` is a with-based configuration record for parameterizing `DBOS.startWorkflow`. All fields are optional.
+`StartWorkflowOptions` is a with-based configuration record for parameterizing `dbos.startWorkflow`. All fields are optional.
 
 **Constructors:**
 ```java
@@ -228,25 +232,10 @@ An explicit timeout and deadline cannot both be set.
 ### runStep
 
 ```java
-static <T, E extends Exception> T runStep(
-    ThrowingSupplier<T, E> stepfunc, 
-    StepOptions opts
-) throws E
-
-static <T, E extends Exception> T runStep(
-    ThrowingSupplier<T, E> stepfunc, 
-    String stepName
-) throws E
-
-static <E extends Exception> void runStep(
-    ThrowingRunnable<E> stepfunc, 
-    StepOptions opts
-) throws E
-
-static <E extends Exception> runStep(
-    ThrowingRunnable<E> stepfunc, 
-    String stepName
-) throws E
+<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, StepOptions opts) throws E
+<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, String stepName) throws E
+<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, StepOptions opts) throws E
+<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, String stepName) throws E
 ```
 
 Run a function as a step.  If called from within a workflow, the result is durably stored.
@@ -256,6 +245,11 @@ Returns the output of the step.
 
 ```java
 class ExampleImpl implements Example {
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
 
     private void stepOne() {
         System.out.println("Step one completed!");
@@ -267,15 +261,15 @@ class ExampleImpl implements Example {
 
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
-        DBOS.runStep(() -> stepOne(), "stepOne");
-        DBOS.runStep(() -> stepTwo(), new StepOptions("stepTwo").withRetriesAllowed(false));
+        dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withRetriesAllowed(false));
     }
 }
 ```
 
 #### StepOptions
 
-`StepOptions` is a with-based configuration record for parameterizing `DBOS.runStep`. All fields except step name are optional.
+`StepOptions` is a with-based configuration record for parameterizing `dbos.runStep`. All fields except step name are optional.
 
 **Constructors:**
 ```java
@@ -334,4 +328,4 @@ String workflowId();
 Return the ID of the workflow underlying this handle.
 
 ### WorkflowOptions
-When DBOS workflows are called directly, without using `startWorkflow` or queues, workflow options are taken from a context kept by the calling thread.  This context is managed by the [`WorkflowOptions`](./methods.md#workflowoptions) class.
+When DBOS workflows are called directly through a proxy, without using `startWorkflow` or queues, workflow options are taken from a context kept by the calling thread.  This context is managed by the [`WorkflowOptions`](./methods.md#workflowoptions) class.

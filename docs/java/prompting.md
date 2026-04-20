@@ -39,19 +39,19 @@ For example:
 
 Workflows provide durable execution so you can write programs that are resilient to any failure.  In the event of any failure, execution will resume where it left off.
 Workflows are ordinary Java methods that are comprised of steps, which are also ordinary Java methods.  Steps are the restart unit for the workflow, their results are checkpointed to the database.
-When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a step using DBOS.runStep or @Step, that way the step will be skipped if execution resumes.
-Steps that are used once can be made as lambdas and called with DBOS.runStep().  Steps that are reused can be declared as instance methods annotated with @Step.
+When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a step using `dbos.runStep` or `@Step`, that way the step will be skipped if execution resumes.
+Steps that are used once can be made as lambdas and called with `dbos.runStep()`.  Steps that are reused can be declared as instance methods annotated with `@Step`.
 
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 - If asked to add DBOS to existing code, you MUST ask which function to make a workflow. Do NOT recommend any changes until they have told you what function to make a workflow. Do NOT make a function a workflow unless SPECIFICALLY requested.
 - When making a function a workflow, you should make all functions it calls steps. Do NOT change the functions in any way.
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
-- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step, or wrap it as a lambda with DBOS.runStep. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
+- If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step, or wrap it as a lambda with `dbos.runStep`. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access instance or static variables, but they should NOT create or update static, instance, or other variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.send, DBOS.recv, DBOS.startWorkflow, DBOS.getEvent) from a step.  Those do their own checkpointing.
+- Do NOT call any DBOS instance method (`dbos.send`, `dbos.recv`, `dbos.startWorkflow`, `dbos.getEvent`) from a step.  Those do their own checkpointing.
 - Do NOT start workflows from inside a step.
-- Do NOT call DBOS.setEvent and DBOS.recv from outside a workflow function.
+- Do NOT call `dbos.setEvent` and `dbos.recv` from outside a workflow function.
 
 ## Serializability requirements
 Workflow method arguments, and step and workflow function return values, are serialized as JSON using jackson.  Help the user with any annotations or mapping necessary to get jackson to work seamlessly.
@@ -99,20 +99,29 @@ Once some code hase been added to the project, the typical gradlew commands can 
 ## Use of Spring
 DBOS examples often use Spring boot, and there are examples of integrating it with the DBOS lifecycle, however DBOS is just a library and can be used by itself, or with other frameworks.
 
-If spring is used, the DBOS lifecycle must be captured in a SmartLifecycle:
+The preferred way to use DBOS with Spring Boot is with the `transact-spring-boot-starter` dependency, which auto-configures DBOS from `application.properties`/`application.yml`.
+See the Spring Boot configuration properties documented in the reference.
+
+If integrating manually, expose the `DBOS` instance as a bean and wire your workflow classes to receive it:
 ```java
-import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
+@Configuration
+public class DBOSConfig {
 
-import dev.dbos.transact.DBOS;
-import dev.dbos.transact.config.DBOSConfig;
+    @Bean
+    public DBOS dbos(DBOSAppService appService) {
+        var config = dev.dbos.transact.config.DBOSConfig.defaults("dbos-starter")
+                .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
+                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"));
+        var dbos = new DBOS(config);
+        var impl = new DBOSAppServiceImpl(dbos);
+        var proxy = dbos.registerProxy(DBOSAppService.class, impl);
+        impl.setProxy(proxy);
+        return dbos;
+    }
+}
 
-import java.util.Objects;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+// Use SmartLifecycle to control launch/shutdown timing relative to the web server
 @Component
 @Lazy(false)
 public class DBOSLifecycle implements SmartLifecycle {
@@ -120,22 +129,13 @@ public class DBOSLifecycle implements SmartLifecycle {
     private static final Logger log = LoggerFactory.getLogger(DBOSLifecycle.class);
     private volatile boolean running = false;
 
+    @Autowired
+    private DBOS dbos;
+
     @Override
     public void start() {
-        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
-        if (databaseUrl == null || databaseUrl.isEmpty()) {
-            databaseUrl = "jdbc:postgresql://localhost:5432/<app name goes here>";
-        }
-        var config = DBOSConfig.defaults("dbos-starter")
-                .withDatabaseUrl(databaseUrl)
-                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
-                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .withAdminServer(true)
-                .withAdminServerPort(3001);
-        DBOS.configure(config);
-
         log.info("Launch DBOS");
-        DBOS.launch();
+        dbos.launch();
         running = true;
     }
 
@@ -143,35 +143,16 @@ public class DBOSLifecycle implements SmartLifecycle {
     public void stop() {
         log.info("Shut Down DBOS");
         try {
-            DBOS.shutdown();
+            dbos.shutdown();
         } finally {
             running = false;
         }
     }
 
     @Override public boolean isRunning() { return running; }
-
     @Override public boolean isAutoStartup() { return true; }
-
     // Start BEFORE the web server (default is 0). Lower = earlier.
     @Override public int getPhase() { return -1; }
-}
-```
-
-Any DBOS workflow and step classes MAY also be configured as beans to ensure that they are registered and proxies are created (DBOSAppService is just an example, use the user's classes instead):
-```java
-@Configuration
-public class DBOSAppConfig {
-
-    @Bean
-    @Primary
-    public DBOSAppService dbosAppService(DSLContext dslContext) {
-        var impl = new DBOSAppServiceImpl(dslContext);
-	    var proxy = DBOS.registerWorkflows(DBOSAppService.class, impl);
-        impl.setDBOSAppService(proxy);
-        return proxy;
-    }
-
 }
 ```
 
@@ -196,7 +177,7 @@ import dev.dbos.transact.workflow.WorkflowState;
 import dev.dbos.transact.workflow.WorkflowStatus;
 ```
 
-Any DBOS program MUST call DBOS.configure and DBOS.launch somewhere.  For simple cases, this can be in its main function, like so.
+Any DBOS program MUST create a `DBOS` instance, register workflows and queues, then call `launch()`.  For simple cases, this can be in its main function, like so.
 You MUST use this default configuration (changing the name 'dbos-java-starter' to the real app name as appropriate) unless otherwise specified.
 
 ```java
@@ -207,9 +188,10 @@ You MUST use this default configuration (changing the name 'dbos-java-starter' t
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
-        DBOS.configure(config);
-        Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
-        DBOS.launch();
+        DBOS dbos = new DBOS(config);
+        ExampleImpl impl = new ExampleImpl(dbos);
+        Example proxy = dbos.registerProxy(Example.class, impl);
+        dbos.launch();
     }
 ```
 
@@ -257,7 +239,7 @@ Workflows provide **durable execution** so you can write programs that are **res
 Workflows are comprised of steps, which wrap ordinary Java functions.
 If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
-The recovery mechanism requires that workflow methods must be registered.  Registration creates a proxy that adds durability to the registered workflow.  For Java, this means defining both an interface and implementation class, annotating the implementation with @Workflow and @Step, and then calling DBOS.registerWorkflows.
+The recovery mechanism requires that workflow methods must be registered.  Registration creates a proxy that adds durability to the registered workflow.  For Java, this means defining both an interface and implementation class, annotating the implementation with @Workflow and @Step, and then calling `dbos.registerProxy`.
 
 ### @Workflow
 
@@ -279,11 +261,11 @@ If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EX
 
 ## Methods
 
-### registerWorkflows
+### registerProxy
 
 ```java
-static <T> T registerWorkflows(Class<T> interfaceClass, T implementation)
-static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
+<T> T registerProxy(Class<T> interfaceClass, T implementation)
+<T> T registerProxy(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
 Register the workflows in a class, returning a proxy object from which the class methods may be invoked as durable workflows.
@@ -303,7 +285,9 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
+DBOS dbos = new DBOS(config);
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl());
+dbos.launch();
 proxy.workflow();
 ```
 
@@ -315,10 +299,10 @@ proxy.workflow();
 ## Starting Workflows In The Background
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> startWorkflow(
-    ThrowingSupplier<T, E> workflow, 
-    StartWorkflowOptions options
-)
+<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(ThrowingSupplier<T, E> workflow)
+<T, E extends Exception> WorkflowHandle<T, E> startWorkflow(ThrowingSupplier<T, E> workflow, StartWorkflowOptions options)
+<E extends Exception> WorkflowHandle<Void, E> startWorkflow(ThrowingRunnable<E> workflow)
+<E extends Exception> WorkflowHandle<Void, E> startWorkflow(ThrowingRunnable<E> workflow, StartWorkflowOptions options)
 ```
 
 Start a workflow in the background and return a handle to it.
@@ -339,13 +323,14 @@ class ExampleImpl implements Example {
     }
 }
 
-Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
-DBOS.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
+dbos.launch();
+dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
 #### StartWorkflowOptions
 
-`StartWorkflowOptions` is a with-based configuration record for parameterizing `DBOS.startWorkflow`. All fields are optional.
+`StartWorkflowOptions` is a with-based configuration record for parameterizing `dbos.startWorkflow`. All fields are optional.
 
 **Constructors:**
 ```java
@@ -384,9 +369,9 @@ class ExampleImpl implements Example {
     }
 }
 
-public void runWorkflowExample(Example proxy) throws Exception {
+public void runWorkflowExample(DBOS dbos, Example proxy) throws Exception {
     // Start the background task
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.backgroundTask("input"),
         new StartWorkflowOptions()
     );
@@ -423,9 +408,9 @@ class ExampleImpl implements Example {
     }
 }
 
-public void example(Example proxy) throws Exception {
+public void example(DBOS dbos, Example proxy) throws Exception {
     String myID = "unique-workflow-id-123";
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.exampleWorkflow(),
         new StartWorkflowOptions().withWorkflowId(myID)
     );
@@ -453,9 +438,9 @@ For example, **don't do this**:
 public String exampleWorkflow() {
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), "stepOne");
+        return dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), "stepTwo");
+        return dbos.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -469,11 +454,11 @@ private int generateChoice() {
 
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow() {
-    int randomChoice = DBOS.runStep(() -> generateChoice(), "generateChoice");
+    int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), "stepOne");
+        return dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), "stepTwo");
+        return dbos.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -492,7 +477,7 @@ public void exampleWorkflow() throws InterruptedException {
     // Workflow implementation
 }
 
-WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
+WorkflowHandle<Void, InterruptedException> handle = dbos.startWorkflow(
     () -> proxy.exampleWorkflow(),
     new StartWorkflowOptions().withTimeout(Duration.ofHours(12))
 );
@@ -500,7 +485,7 @@ WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
 
 ## Durable Sleep
 
-You can use DBOS.sleep to put your workflow to sleep for any period of time.
+You can use `dbos.sleep` to put your workflow to sleep for any period of time.
 This sleep is **durable**. DBOS saves the wakeup time in the database so that even if the workflow is interrupted and restarted multiple times while sleeping, it still wakes up on schedule.
 
 Sleeping is useful for scheduling work to run in the future (even days, weeks, or months from now).
@@ -515,10 +500,10 @@ public String runTask(String task) {
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
     // Sleep for the specified duration
-    DBOS.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
+    dbos.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
 
     // Execute the task after sleeping
-    String result = DBOS.runStep(
+    String result = dbos.runStep(
         () -> runTask(task),
         "runTask"
     );
@@ -536,7 +521,7 @@ All workflows are tagged with the application version on which they started.
 
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents unsafe recovery of workflows that depend on different code.
-You cannot change the version of a workflow, but you can use `DBOS.forkWorkflow` to restart a workflow from a specific step on a specific code version.
+You cannot change the version of a workflow, but you can use `dbos.forkWorkflow` to restart a workflow from a specific step on a specific code version.
 
 
 ## Workflow Communication
@@ -556,10 +541,10 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```java
-static void send(String destinationId, Object message, String topic)
+void send(String destinationId, Object message, String topic, String idempotencyKey)
 ```
 
-You can call `DBOS.send()` to send a message to a workflow.
+You can call `dbos.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call `send` from outside of your DBOS application with the DBOS Client.
@@ -567,10 +552,10 @@ You can also call `send` from outside of your DBOS application with the DBOS Cli
 #### Recv
 
 ```java
-static Object recv(String topic, Duration timeout)
+<T> Optional<T> recv(String topic, Duration timeout)
 ```
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
+Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
@@ -593,7 +578,7 @@ class CheckoutImpl implements Checkout {
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
-        String paymentStatus = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
+        String paymentStatus = dbos.recv(PAYMENT_STATUS, Duration.ofSeconds(60)).orElse(null);
         if (paymentStatus != null && paymentStatus.equals("paid")) {
             // Handle a successful payment.
         } else {
@@ -610,7 +595,7 @@ app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
     String workflowId = ctx.pathParam("workflow_id");
     String paymentStatus = ctx.pathParam("payment_status");
     // Send the payment status to the checkout workflow.
-    DBOS.send(workflowId, paymentStatus, PAYMENT_STATUS);
+    dbos.send(workflowId, paymentStatus, PAYMENT_STATUS, null);
     ctx.result("Payment status sent");
 });
 ```
@@ -631,18 +616,18 @@ They are useful for publishing information about the status of a workflow or to 
 #### setEvent
 
 ```java
-static void setEvent(String key, Object value)
+void setEvent(String key, Object value)
 ```
 
-Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if it has already been published.
+Any workflow can call `dbos.setEvent` to publish a key-value pair, or update its value if it has already been published.
 
 #### getEvent
 
 ```java
-static Object getEvent(String workflowId, String key, Duration timeout)
+<T> Optional<T> getEvent(String workflowId, String key, Duration timeout)
 ```
 
-You can call `DBOS.getEvent` to retrieve the value published by a particular workflow identity for a particular key.
+You can call `dbos.getEvent` to retrieve the value published by a particular workflow identity for a particular key.
 If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
 
 You can also call `getEvent` from outside of your DBOS application with DBOS Client.
@@ -667,7 +652,7 @@ class CheckoutImpl implements Checkout {
     public void checkoutWorkflow() {
         // ... validation logic
         String paymentId = generatePaymentId();
-        DBOS.setEvent(PAYMENT_ID, paymentId);
+        dbos.setEvent(PAYMENT_ID, paymentId);
         // ... continue processing
     }
 }
@@ -680,13 +665,13 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     String idempotencyKey = ctx.pathParam("idempotency_key");
 
     // Idempotently start the checkout workflow in the background.
-    WorkflowHandle<Void, RuntimeException> handle = DBOS.startWorkflow(
+    WorkflowHandle<Void, RuntimeException> handle = dbos.startWorkflow(
         () -> checkoutProxy.checkoutWorkflow(),
         new StartWorkflowOptions().withWorkflowId(idempotencyKey)
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = (String) DBOS.getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60));
+    String paymentId = dbos.<String>getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60)).orElse(null);
     if (paymentId == null) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
@@ -719,7 +704,7 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflowFunction")
     public int workflowFunction(int n) {
-        int randomNumber = DBOS.runStep(
+        int randomNumber = dbos.runStep(
             () -> generateRandomNumber(n), // Run generateRandomNumber as a checkpointed step
             "generateRandomNumber" // A name for the step
         );
@@ -774,7 +759,7 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "fetchWorkflow")
     public String fetchWorkflow(String inputURL) throws Exception {
-        return DBOS.runStep(
+        return dbos.runStep(
             () -> fetchStep(inputURL),
             new StepOptions("fetchFunction")
                 .withRetriesAllowed(true)
@@ -819,7 +804,7 @@ public record Queue(
 ```
 
 Create a new workflow queue with the specified name and optional configuration parameters.
-Queues must be created and registered with `DBOS.registerQueue` before DBOS is launched.
+Queues must be created and registered with `dbos.registerQueue` before calling `dbos.launch()`.
 You can enqueue a workflow using the `withQueue` parameter of `startWorkflow`).
 
 **Parameters:**
@@ -836,11 +821,11 @@ Queue queue = new Queue("example-queue")
   .withWorkerConcurrency(1);
 ```
 
-### DBOS.registerQueue
-Queues must be registered before DBOS is launched:
+### dbos.registerQueue
+Queues must be registered before calling `dbos.launch()`:
 
 ```java
-static Queue registerQueue(Queue queue);
+Queue registerQueue(Queue queue);
 ```
 
 ### Enqueueing from Another Application with DBOSClient
@@ -923,7 +908,7 @@ For example, this queue has a worker concurrency of 5, so each process will run 
 ```java
 Queue queue = new Queue("example-queue")
     .withWorkerConcurrency(5);
-DBOS.registerQueue(queue);
+dbos.registerQueue(queue);
 ```
 
 ### Global Concurrency
@@ -939,7 +924,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 ```java
 Queue queue = new Queue("example-queue")
     .withConcurrency(10);
-DBOS.registerQueue(queue);
+dbos.registerQueue(queue);
 ```
 
 ## Rate Limiting
@@ -951,7 +936,7 @@ For example, this queue has a limit of 100 workflows with a period of 60 seconds
 ```java
 Queue queue = new Queue("example-queue")
     .withRateLimit(100, 60.0);  // 100 workflows per 60 seconds
-DBOS.registerQueue(queue);
+dbos.registerQueue(queue);
 ```
 
 Rate limits are especially useful when working with a rate-limited API.
@@ -973,9 +958,9 @@ public String taskWorkflow(String task) {
     return "completed";
 }
 
-public void example(Example proxy, String task, String userID) throws Exception {
+public void example(DBOS dbos, Example proxy, String task, String userID) throws Exception {
     // Use user ID for deduplication
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.taskWorkflow(task),
         new StartWorkflowOptions().withQueue(queue).withDeduplicationId(userID)
     );
@@ -1000,7 +985,7 @@ To use priorities in a queue, you must enable it when creating the queue:
 ```java
 Queue queue = new Queue("example-queue")
     .withPriorityEnabled(true);
-DBOS.registerQueue(queue);
+dbos.registerQueue(queue);
 ```
 
 **Example syntax:**
@@ -1012,8 +997,8 @@ public String taskWorkflow(String task) {
     return "completed";
 }
 
-public void example(Example proxy, String task, int priority) throws Exception {
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+public void example(DBOS dbos, Example proxy, String task, int priority) throws Exception {
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.taskWorkflow(task),
         new StartWorkflowOptions().withQueue(queue).withPriority(priority)
     );
@@ -1025,10 +1010,10 @@ public void example(Example proxy, String task, int priority) throws Exception {
 
 ## Classes and Instances
 
-You can use multiple instances of the same class containing workflow methods, but if you do, they must be named at the time they are registered with registerWorkflows.  This name allows workflow recovery to be directed to the correct instance.
+You can use multiple instances of the same class containing workflow methods, but if you do, they must be named at the time they are registered with `registerProxy`.  This name allows workflow recovery to be directed to the correct instance.
 
 ```java
-static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String instanceName)
+<T> T registerProxy(Class<T> interfaceClass, T implementation, String instanceName)
 ```
 
 ## Workflow Handles
@@ -1036,7 +1021,7 @@ static <T> T registerWorkflows(Class<T> interfaceClass, T implementation, String
 Starting a workflow or retrieving it produces a WorkflowHandle for interacting with the workflow.
 
 ```java
-static WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
 ```
 
 Retrieve the handle of a workflow.
@@ -1165,7 +1150,7 @@ Return `true` if the current calling context is executing a workflow step, or `f
 ### listWorkflows
 
 ```java
-static List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 ```
 
 Retrieve a list of WorkflowStatus of all workflows matching specified criteria.
@@ -1296,7 +1281,7 @@ Controls whether to load workflow output data (results and errors) (default: tru
 ### listWorkflowSteps
 
 ```java
-static List<StepInfo> listWorkflowSteps(String workflowId)
+List<StepInfo> listWorkflowSteps(String workflowId)
 ```
 
 Retrieve the execution steps of a workflow.
@@ -1320,7 +1305,7 @@ StepInfo(
 ### cancelWorkflow
 
 ```java
-static cancelWorkflow(String workflowId)
+void cancelWorkflow(String workflowId)
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
@@ -1328,7 +1313,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### resumeWorkflow
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -1336,11 +1321,8 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 ### forkWorkflow
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
-      String workflowId, 
-      int startStep, 
-      ForkOptions options
-)
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep, ForkOptions options)
 ```
 
 ```java
@@ -1369,7 +1351,7 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
 
 ## Configuring DBOS
 
-Configure the DBOS singleton.
+Configure and create a DBOS instance.
 
 **DBOSConfig**
 

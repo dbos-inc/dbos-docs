@@ -9,7 +9,7 @@ toc_max_heading_level: 3
 ### getEvent
 
 ```java
-static Object getEvent(String workflowId, String key, Duration timeout)
+<T> Optional<T> getEvent(String workflowId, String key, Duration timeout)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflowId` to the key `key`.
@@ -18,13 +18,13 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 **Parameters:**
 - **workflowId**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
-- **timeout**: A timeout duration. If the wait times out, `null` is returned.
+- **timeout**: A timeout duration. If the wait times out, an empty Optional is returned.
 
 ### setEvent
 
 ```java
-static void setEvent(String key, Object value)
-static void setEvent(String key, Object value, SerializationStrategy serialization)
+void setEvent(String key, Object value)
+void setEvent(String key, Object value, SerializationStrategy serialization)
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -38,8 +38,8 @@ If the event already exists, update its value.
 ### send
 
 ```java
-static void send(String destinationId, Object message, String topic, String idempotencyKey)
-static void send(String destinationId, Object message, String topic, String idempotencyKey, SerializationStrategy serialization)
+void send(String destinationId, Object message, String topic, String idempotencyKey)
+void send(String destinationId, Object message, String topic, String idempotencyKey, SerializationStrategy serialization)
 ```
 
 Send a message to the workflow identified by `destinationID`.
@@ -49,13 +49,13 @@ Messages can optionally be associated with a topic.
 - **destinationId**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **idempotencyKey**: If `DBOS.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- **idempotencyKey**: If `dbos.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `dbos.send` is called with this key.
 - **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`.
 
 ### recv
 
 ```java
-static Object recv(String topic, Duration timeout)
+<T> Optional<T> recv(String topic, Duration timeout)
 ```
 
 Receive and return a message sent to this workflow.
@@ -65,12 +65,12 @@ Calls to `recv` wait for the next message in the queue, returning null if the wa
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
-- **timeout**: A timeout duration. If the wait times out, return null.
+- **timeout**: A timeout duration. If the wait times out, return an empty Optional.
 
 ### sleep
 
 ```java
-static void sleep(Duration sleepduration)
+void sleep(Duration sleepduration)
 ```
 
 Sleep for the given duration.
@@ -83,7 +83,7 @@ If called from outside a workflow, or from within a step, it behaves like a regu
 ### retrieveWorkflow
 
 ```java
-static WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> retrieveWorkflow(String workflowId)
 ```
 
 Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
@@ -94,7 +94,7 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 ### patch
 
 ```java
-static boolean patch(String patchName)
+boolean patch(String patchName)
 ```
 
 Insert a patch marker at the current point in workflow history.
@@ -104,7 +104,7 @@ Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/u
 ### deprecatePatch
 
 ```java
-static boolean deprecatePatch(String patchName)
+boolean deprecatePatch(String patchName)
 ```
 Safely bypass a patch marker at the current point in workflow history if present. 
 Always returns `true`.
@@ -116,7 +116,7 @@ Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgra
 ### listWorkflows
 
 ```java
-static List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
+List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 ```
 
 Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching specified criteria.
@@ -247,7 +247,7 @@ Controls whether to load workflow output data (results and errors) (default: tru
 ### listWorkflowSteps
 
 ```java
-static List<StepInfo> listWorkflowSteps(String workflowId)
+List<StepInfo> listWorkflowSteps(String workflowId)
 ```
 
 Retrieve the execution steps of a workflow.
@@ -271,7 +271,7 @@ StepInfo(
 ### cancelWorkflow
 
 ```java
-static cancelWorkflow(String workflowId)
+void cancelWorkflow(String workflowId)
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
@@ -279,7 +279,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### resumeWorkflow
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -287,11 +287,8 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 ### forkWorkflow
 
 ```java
-static <T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(
-      String workflowId, 
-      int startStep, 
-      ForkOptions options
-)
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep, ForkOptions options)
 ```
 
 ```java

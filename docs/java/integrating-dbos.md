@@ -43,12 +43,12 @@ public class MyApp {
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
-        DBOS.configure(config);
+        DBOS dbos = new DBOS(config);
 
         // Register your workflows and queues (see step 4)
 
         // Launch DBOS
-        DBOS.launch();
+        dbos.launch();
     }
 }
 ```
@@ -91,6 +91,12 @@ interface MyWorkflows {
 }
 
 class MyWorkflowsImpl implements MyWorkflows {
+    private final DBOS dbos;
+
+    public MyWorkflowsImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
     private void stepOne() {
         System.out.println("Step one completed!");
     }
@@ -101,8 +107,8 @@ class MyWorkflowsImpl implements MyWorkflows {
 
     @Workflow(name = "reliable-workflow")
     public void reliableWorkflow() {
-        DBOS.runStep(() -> stepOne(), "stepOne");
-        DBOS.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -110,18 +116,19 @@ class MyWorkflowsImpl implements MyWorkflows {
 To use your workflows, create a proxy before launching DBOS:
 
 ```java
-// Create a workflow proxy (before launching DBOS)
-MyWorkflows workflows = DBOS.registerWorkflows(MyWorkflows.class, new MyWorkflowsImpl());
+// Create a DBOS instance and register the workflow proxy (before launching)
+DBOS dbos = new DBOS(config);
+MyWorkflows workflows = dbos.registerProxy(MyWorkflows.class, new MyWorkflowsImpl(dbos));
 
 // Launch DBOS
-DBOS.launch();
+dbos.launch();
 
 // Now you can call your workflows
 workflows.reliableWorkflow();
 ```
 
-**Important:** You must create all workflow proxies and queues before calling `DBOS.launch()`.
-Workflow recovery begins after `DBOS.launch()`, so all workflows must be registered before this point.
+**Important:** You must create all workflow proxies and queues before calling `dbos.launch()`.
+Workflow recovery begins after `dbos.launch()`, so all workflows must be registered before this point.
 
 You can add DBOS to your application incrementally—it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.

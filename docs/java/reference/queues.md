@@ -34,7 +34,7 @@ public record Queue(
 ```
 
 Create a new workflow queue with the specified name and optional configuration parameters.
-Queues must be created and registered with [`DBOS.registerQueue`](#dbosregisterqueue) before DBOS is launched.
+Queues must be created and registered with [`dbos.registerQueue`](#dbosregisterqueue) before calling `dbos.launch()`.
 You can enqueue a workflow using the `withQueue` parameter of [`startWorkflow`](./workflows-steps.md#startworkflow).
 
 **Parameters:**
@@ -52,9 +52,9 @@ Queue queue = new Queue("example-queue")
   .withWorkerConcurrency(1);
 ```
 
-### DBOS.registerQueue
-Queues must be registered before DBOS is launched:
+### dbos.registerQueue
+Queues must be registered before calling `dbos.launch()`:
 
 ```java
-static Queue registerQueue(Queue queue);
+Queue registerQueue(Queue queue);
 ```

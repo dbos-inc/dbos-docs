@@ -3,17 +3,16 @@ sidebar_position: 10
 title: DBOS Lifecycle
 ---
 
-The DBOS class is a singleton&mdash;you should configure and launch it exactly once in a program's lifetime.
-You manage and access it through static methods (e.g., `DBOS.configure()`, `DBOS.launch()`).
-Here, we document configuration and lifecycle methods.
+You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
+Here, we document the constructor, configuration, and lifecycle methods.
 
-### DBOS.configure
+### DBOS Constructor
 
 ```java
-static synchronized Instance configure(DBOSConfig config)
+new DBOS(DBOSConfig config)
 ```
 
-Configure the DBOS singleton.
+Create and configure a DBOS instance.
 
 **DBOSConfig**
 
@@ -76,24 +75,24 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 
-### DBOS.launch
+### dbos.launch
 
 ```java
-static void launch()
+void launch()
 ```
 
 Launch DBOS, initializing database connections and beginning workflow recovery and queue processing.
 This should be called after all workflows and queues are registered.
 **You should not call a DBOS workflow until after DBOS is launched.**
 
-### DBOS.shutdown
+### dbos.shutdown
 
 ```java
-static void shutdown()
+void shutdown()
 ```
 
-Destroy the DBOS singleton.
-After DBOS is shut down, a new singleton can be configured and launched.
+Shut down the DBOS instance, releasing database connections and stopping workflow processing.
+`DBOS` also implements `AutoCloseable`, so it can be used in a try-with-resources block.
 This may be useful for testing DBOS applications.
 
 ## Custom Serialization
@@ -172,8 +171,9 @@ Configure DBOS to use a custom serializer:
 ```java
 DBOSConfig config = DBOSConfig.defaultsFromEnv("myApp")
     .withSerializer(new MyCustomSerializer());
-DBOS.configure(config);
-DBOS.launch();
+DBOS dbos = new DBOS(config);
+// register workflows and queues...
+dbos.launch();
 ```
 
 If you use a custom serializer in your DBOS application, you must provide the same serializer to any [`DBOSClient`](./client.md) that interacts with the application:

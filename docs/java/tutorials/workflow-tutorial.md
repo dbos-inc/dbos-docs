@@ -20,6 +20,11 @@ interface Example {
 }
 
 class ExampleImpl implements Example {
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
 
     private String stepOne() {
         System.out.println("Step one completed");
@@ -33,23 +38,23 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflow")
     public String workflow() {
-        DBOS.runStep(() -> stepOne(), "stepOne");
-        DBOS.runStep(() -> stepTwo(), "stepTwo");
+        dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepTwo(), "stepTwo");
         return "success";
     }
 }
 
 public class App {
     public static void main(String[] args) throws Exception {
-        // Configure DBOS
+        // Configure and create a DBOS instance
         DBOSConfig config = ...
-        DBOS.configure(config);
+        DBOS dbos = new DBOS(config);
 
         // Register the workflow, creating a proxy object
-        Example proxy = DBOS.registerWorkflows(Example.class, new ExampleImpl());
+        Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
 
         // Launch DBOS after registering all workflows
-        DBOS.launch();
+        dbos.launch();
 
         // Call the registered workflow through the proxy
         String result = proxy.workflow();
@@ -75,9 +80,9 @@ class ExampleImpl implements Example {
     }
 }
 
-public void runWorkflowExample(Example proxy) throws Exception {
+public void runWorkflowExample(DBOS dbos, Example proxy) throws Exception {
     // Start the background task
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.backgroundTask("input"),
         new StartWorkflowOptions()
     );
@@ -114,9 +119,9 @@ class ExampleImpl implements Example {
     }
 }
 
-public void example(Example proxy) throws Exception {
+public void example(DBOS dbos, Example proxy) throws Exception {
     String myID = "unique-workflow-id-123";
-    WorkflowHandle<String, Exception> handle = DBOS.startWorkflow(
+    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.exampleWorkflow(),
         new StartWorkflowOptions().withWorkflowId(myID)
     );
@@ -144,9 +149,9 @@ For example, **don't do this**:
 public String exampleWorkflow() {
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), "stepOne");
+        return dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), "stepTwo");
+        return dbos.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -160,11 +165,11 @@ private int generateChoice() {
 
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow() {
-    int randomChoice = DBOS.runStep(() -> generateChoice(), "generateChoice");
+    int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
-        return DBOS.runStep(() -> stepOne(), "stepOne");
+        return dbos.runStep(() -> stepOne(), "stepOne");
     } else {
-        return DBOS.runStep(() -> stepTwo(), "stepTwo");
+        return dbos.runStep(() -> stepTwo(), "stepTwo");
     }
 }
 ```
@@ -183,7 +188,7 @@ public void exampleWorkflow() throws InterruptedException {
     // Workflow implementation
 }
 
-WorkflowHandle<Void, InterruptedException> handle = DBOS.startWorkflow(
+WorkflowHandle<Void, InterruptedException> handle = dbos.startWorkflow(
     () -> proxy.exampleWorkflow(),
     new StartWorkflowOptions().withTimeout(Duration.ofHours(12))
 );
@@ -206,10 +211,10 @@ public String runTask(String task) {
 @Workflow(name = "exampleWorkflow")
 public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
     // Sleep for the specified duration
-    DBOS.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
+    dbos.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
 
     // Execute the task after sleeping
-    String result = DBOS.runStep(
+    String result = dbos.runStep(
         () -> runTask(task),
         "runTask"
     );

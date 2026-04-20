@@ -13,6 +13,11 @@ Here's a simple example:
 
 ```java
 class ExampleImpl implements Example {
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
 
     private int generateRandomNumber(int n) {
         return new Random().nextInt(n);
@@ -20,7 +25,7 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "workflowFunction")
     public int workflowFunction(int n) {
-        int randomNumber = DBOS.runStep(
+        int randomNumber = dbos.runStep(
             () -> generateRandomNumber(n), // Run generateRandomNumber as a checkpointed step
             "generateRandomNumber" // A name for the step
         );
@@ -75,7 +80,7 @@ class ExampleImpl implements Example {
 
     @Workflow(name = "fetchWorkflow")
     public String fetchWorkflow(String inputURL) throws Exception {
-        return DBOS.runStep(
+        return dbos.runStep(
             () -> fetchStep(inputURL),
             new StepOptions("fetchFunction")
                 .withRetriesAllowed(true)
