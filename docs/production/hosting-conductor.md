@@ -64,7 +64,6 @@ services:
 
       # OAuth configuration
       # DBOS_OAUTH_ENABLED: "true"
-      # DBOS_OAUTH_JWKS_URL: "https://your-oauth-provider.com/.well-known/jwks.json"
       # DBOS_OAUTH_ISSUER: "https://your-oauth-provider.com/"
       # DBOS_OAUTH_AUDIENCE: "your-api-audience"
     ports:
@@ -229,6 +228,8 @@ You can provide the URL of this service by setting the `DBOS_CONDUCTOR_URL` envi
 When deploying to production, we recommend placing the Console container behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
 All traffic should be forwarded to the Console service container on port 80.
 You should also configure [authentication](#security).
+Without OAuth authentication, there is no user or organization management.
+In order to enable these features, you must set up Conductor with an OAuth-compatible single-sign on solution.
 
 ## Security
 
@@ -248,7 +249,6 @@ Then, set these environment variables in your Conductor container:
 
 ```yml
 DBOS_OAUTH_ENABLED: "true"
-DBOS_OAUTH_JWKS_URL: "https://your-oauth-provider.com/.well-known/jwks.json"
 DBOS_OAUTH_ISSUER: "https://your-oauth-provider.com/"
 DBOS_OAUTH_AUDIENCE: "your-api-audience"
 ```
@@ -269,13 +269,14 @@ DBOS_OAUTH_AUDIENCE: 'your-api-audience'
 These values correspond to the client credentials and endpoints provided by your OAuth identity provider (such as Google, Auth0, or Okta).
 None of these values are secrets.
 When properly configured, the DBOS Console will redirect users to your SSO login page and enforce authentication on access.
+This will also enable user and organization management features.
 
 ## Upgrading
 
 You can upgrade Conductor and the DBOS Console by simply upgrading the container versions and restarting the service.
 Because Conductor is entirely out-of-band, this will have no impact on your DBOS applications' availability; your apps will seamlessly reconnect to your new Conductor version.
 
-We recommend regularly upgrading Conductor and the DBOS Console to the latest versions to take advantage of new features. 
+We recommend regularly upgrading Conductor and the DBOS Console to the latest versions to take advantage of new features.
 We always guarantee it is safe to upgrade directly from any past version to any future version.
 For the best experience, we recommend upgrading Conductor and the DBOS Console together and not using a version of the DBOS Console more recent than your version of Conductor.
 
