@@ -81,6 +81,43 @@ If called from outside a workflow, or from within a step, it behaves like a regu
 **Parameters:**
 - **sleepduration**: The duration to sleep.
 
+### writeStream
+
+```java
+void writeStream(String key, Object value)
+void writeStream(String key, Object value, SerializationStrategy serialization)
+```
+
+Append a value to a named stream owned by the current workflow. Must be called from within a workflow or step. Consumers read the stream in order via [`readStream`](#readstream).
+
+**Parameters:**
+- **key**: The stream name within this workflow. A workflow may have multiple independent streams identified by different keys.
+- **value**: A serializable value to write.
+- **serialization**: The [serialization strategy](./methods.md#serialization-strategy) to use. Use `SerializationStrategy.PORTABLE` for cross-language consumers.
+
+### closeStream
+
+```java
+void closeStream(String key)
+```
+
+Close a stream, signalling to consumers that no more values will be written. Must be called from within a workflow (not a step). After closing, [`readStream`](#readstream) iterators will drain any remaining values and then stop.
+
+**Parameters:**
+- **key**: The stream key to close.
+
+### readStream
+
+```java
+Iterator<Object> readStream(String workflowId, String key)
+```
+
+Read all values written to a stream by the specified workflow. Returns a blocking iterator: it polls for new values while the workflow is active (`PENDING` or `ENQUEUED`) and stops when the stream is closed or the workflow terminates. Can be called from outside the workflow — typically from a separate thread or external process.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow that owns the stream.
+- **key**: The stream key to read.
+
 ### retrieveWorkflow
 
 ```java

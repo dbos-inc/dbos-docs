@@ -118,6 +118,14 @@ Optional<Object> getEvent(String targetId, String key, Duration timeout)
 
 Similar to [`dbos.getEvent`](./methods.md#getevent).
 
+### readStream
+
+```java
+Iterator<Object> readStream(String workflowId, String key)
+```
+
+Similar to [`dbos.readStream`](./methods.md#readstream). Use this from external code that does not have access to a `DBOS` instance.
+
 ## Workflow Management Methods
 
 ### retrieveWorkflow
