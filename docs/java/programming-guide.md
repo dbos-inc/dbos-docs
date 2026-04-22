@@ -14,8 +14,10 @@ First, initialize a new project with Gradle (See [the installation instructions]
 gradle init --type java-application --dsl groovy --test-framework junit --package com.example --project-name myapp --no-split-project --java-version 21
 ```
 
-Then, install DBOS (plus Logback for logging) by adding the following lines to your `app/build.gradle` dependencies:
+Then, install DBOS (plus Logback for logging) by adding the following to your build configuration.
 
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
     implementation 'dev.dbos:transact:0.6+'
@@ -23,6 +25,24 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.17' // Needed for our demo code only
 }
 ```
+</TabItem>
+<TabItem value="maven" label="Maven">
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>0.6.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.5.18</version>
+    </dependency>
+</dependencies>
+```
+</TabItem>
+</Tabs>
 
 DBOS requires a Postgres database.
 If you don't already have Postgres, you can launch it in a Docker container with this command:

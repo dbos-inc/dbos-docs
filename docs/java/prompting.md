@@ -64,12 +64,30 @@ For example, the following annotation is sometimes necessary:
 ## Getting set up
 While it is not necessary to use Gradle, Gradle should be suggested for new projects.  Gradle 8 or later should be suggested.  Java 21 should be suggested, but any Java 17 or later can be used if the user requests that.
 
-The main addition to any gradle project is additional dependencies:
+The main addition to any project is additional dependencies.
+
+For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
     implementation 'dev.dbos:transact:0.6+'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
 }
+```
+
+For **Maven** (`pom.xml`):
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.dbos</groupId>
+        <artifactId>transact</artifactId>
+        <version>0.6.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.5.18</version>
+    </dependency>
+</dependencies>
 ```
 
 The application will also need a Postgres database.  If there is not one already, it can be set up using standard approaches, or with Docker:

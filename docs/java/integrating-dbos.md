@@ -9,14 +9,15 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 
 Add DBOS to your application by including it in your build configuration.
 
-For **Gradle** (build.gradle):
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
     implementation 'dev.dbos:transact:0.6+'
 }
 ```
-
-For **Maven** (pom.xml):
+</TabItem>
+<TabItem value="maven" label="Maven">
 ```xml
 <dependencies>
     <dependency>
@@ -26,6 +27,8 @@ For **Maven** (pom.xml):
     </dependency>
 </dependencies>
 ```
+</TabItem>
+</Tabs>
 
 ### 2. Add the DBOS Initializer
 
