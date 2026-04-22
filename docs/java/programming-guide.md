@@ -20,7 +20,7 @@ Then, install DBOS (plus Logback for logging) by adding the following to your bu
 <TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:0.6+'
+    implementation 'dev.dbos:transact:0.8.0'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation 'org.slf4j:slf4j-api:2.0.17' // Needed for our demo code only
 }
@@ -32,7 +32,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>0.6.0</version>
+        <version>0.8.0</version>
     </dependency>
     <dependency>
         <groupId>ch.qos.logback</groupId>

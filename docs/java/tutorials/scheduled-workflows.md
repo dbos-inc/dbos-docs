@@ -7,21 +7,6 @@ description: Learn how to run DBOS workflows on a schedule.
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run automatically on a cron schedule.
 Scheduled workflows are **exactly-once**: DBOS assigns each firing a deterministic workflow ID derived from the schedule name and scheduled time, so even if your application restarts mid-execution, each scheduled invocation runs exactly once.
 
-## Scheduled Workflow Signature
-
-A workflow invoked by a schedule must accept exactly two `Instant` arguments:
-
-```java
-@Workflow
-public void myWorkflow(Instant scheduled, Instant actual) {
-    // scheduled: the time this run was supposed to fire
-    // actual: the time it actually started executing
-}
-```
-
-- **`scheduled`**: The exact cron fire time (used for the workflow ID; always precise).
-- **`actual`**: The time the workflow actually began executing (may be slightly later).
-
 ## Declaring Schedules with `applySchedules`
 
 The recommended way to declare schedules is to call `dbos.applySchedules()` once after `dbos.launch()`. This atomically creates or replaces the named schedules, so your code is always the source of truth:
@@ -36,6 +21,16 @@ dbos.applySchedules(
     new WorkflowSchedule("daily-report", "dailyReport", "com.example.ExampleImpl", "0 0 9 * * *")
         .withCronTimezone(ZoneId.of("America/New_York"))
 );
+```
+
+A workflow invoked by a `WorkflowSchedule` must accept exactly two arguments: an `Instant` for the scheduled fire time and an `Object` for the optional context attached via `withContext(...)`:
+
+```java
+@Workflow
+public void everyMinute(Instant scheduled, Object context) {
+    // scheduled: the exact cron fire time (used for the workflow ID)
+    // context: the value passed via withContext(), or null if not set
+}
 ```
 
 `applySchedules` is idempotent: re-running it on every startup always results in the declared set of schedules, with no duplicates.
@@ -113,12 +108,14 @@ WorkflowHandle<?, ?> handle = dbos.triggerSchedule("daily-report");
 
 ## Using the `@Scheduled` Annotation
 
-As an alternative to the programmatic API, you can annotate a workflow method directly:
+As an alternative to the programmatic API, you can annotate a workflow method directly. Workflows invoked via `@Scheduled` receive two `Instant` arguments — the scheduled fire time and the actual start time — rather than a context object:
 
 ```java
 @Workflow
 @Scheduled(cron = "0 * * * * *")  // Run at the start of every minute
 public void everyMinute(Instant scheduled, Instant actual) {
+    // scheduled: the exact cron fire time (used for the workflow ID)
+    // actual: the time the workflow actually began executing
     logger.info("Scheduled at {}, running at {}", scheduled, actual);
 }
 ```

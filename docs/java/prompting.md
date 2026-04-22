@@ -69,7 +69,7 @@ The main addition to any project is additional dependencies.
 For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:0.6+'
+    implementation 'dev.dbos:transact:0.8.0'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
 }
 ```
@@ -80,7 +80,7 @@ For **Maven** (`pom.xml`):
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>0.6.0</version>
+        <version>0.8.0</version>
     </dependency>
     <dependency>
         <groupId>ch.qos.logback</groupId>

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 15
+sidebar_position: 80
 title: Spring Boot Integration
 description: Add DBOS durable workflows to a Spring Boot application.
 ---
@@ -12,7 +12,7 @@ The `transact-spring-boot-starter` integrates DBOS into a Spring Boot applicatio
 <TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact-spring-boot-starter:0.6+'
+    implementation 'dev.dbos:transact-spring-boot-starter:0.8.0'
 }
 ```
 </TabItem>
@@ -22,7 +22,7 @@ dependencies {
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact-spring-boot-starter</artifactId>
-        <version>0.6.0</version>
+        <version>0.8.0</version>
     </dependency>
 </dependencies>
 ```

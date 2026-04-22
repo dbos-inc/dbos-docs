@@ -63,7 +63,7 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
-- **`withExecutorId(String executorId)`**:
+- **`withExecutorId(String executorId)`**: A unique process ID used to identify this application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
 - **`withDatabaseSchema(String schema)`**: Postgres database schema for system database tables. Defaults to `dbos`.
 
@@ -72,6 +72,8 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withListenQueues(Queue... queues)`**: Specify the queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
 
 - **`withListenQueues(String... queues)`**: Specify the queues by name this DBOS process should dequeue and execute workflows from.
+
+- **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 
