@@ -73,8 +73,54 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 
 **Parameters:**
 - **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
-- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified
-- **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to false to enable this behavior. Defaults to true.
+- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified.
+- **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to `false` to enable backfill. Defaults to `true`.
+
+:::tip
+For more control over scheduling — including runtime management, pausing, backfill, and timezone support — use the [`WorkflowSchedule`](#workflowschedule) API with [`dbos.applySchedules`](./methods.md#applyschedules).
+:::
+
+### WorkflowSchedule
+
+```java
+public record WorkflowSchedule(
+    String id,                // Generated schedule ID (read-only; null on creation)
+    String scheduleName,      // Unique name for this schedule
+    String workflowName,      // Name of the workflow function to invoke
+    String className,         // Class containing the workflow (use @WorkflowClassName for a portable name)
+    String cron,              // Cron expression (Spring 5.3+ format)
+    ScheduleStatus status,    // ACTIVE or PAUSED
+    Object context,           // Optional context object passed to the workflow
+    Instant lastFiredAt,      // When the schedule last fired (read-only)
+    boolean automaticBackfill,// If true, missed firings are retroactively started on launch
+    ZoneId cronTimezone,      // Timezone for interpreting the cron expression (defaults to UTC)
+    String queueName          // Queue to enqueue scheduled workflows on
+)
+```
+
+**Constructors:**
+
+```java
+new WorkflowSchedule(String scheduleName, String workflowName, String className, String cron)
+```
+
+Creates an `ACTIVE` schedule with no backfill, UTC timezone, and no queue override.
+
+**`with` Methods:**
+
+- **`withScheduleName(String name)`** — Change the schedule's unique name.
+- **`withWorkflowName(String name)`** — Change the target workflow function name.
+- **`withClassName(String name)`** — Change the target class name.
+- **`withCron(String cron)`** — Change the cron expression.
+- **`withStatus(ScheduleStatus status)`** — Set `ACTIVE` or `PAUSED`.
+- **`withContext(Object context)`** — Attach a context object, serialized and passed to the workflow as its third argument.
+- **`withAutomaticBackfill(boolean value)`** — If `true`, any firings missed while the app was down are retroactively started when the app launches.
+- **`withCronTimezone(ZoneId timezone)`** — Interpret the cron expression in this timezone instead of UTC.
+- **`withQueueName(String queueName)`** — Enqueue scheduled executions on this queue.
+
+```java
+public enum ScheduleStatus { ACTIVE, PAUSED }
+```
 
 ### @WorkflowClassName
 

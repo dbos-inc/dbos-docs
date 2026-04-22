@@ -401,6 +401,88 @@ void setLatestApplicationVersion(String versionName)
 
 Promote a version by name to be the latest application version. Used during blue-green deployments to control which version new workflows are assigned to. See [upgrading workflows](../tutorials/upgrading-workflows.md) for more detail.
 
+## Schedule Management Methods
+
+These methods manage [`WorkflowSchedule`](./workflows-steps.md#workflowschedule) records that periodically invoke workflows on a cron schedule. All schedule methods require DBOS to be launched first.
+
+### applySchedules
+
+```java
+void applySchedules(WorkflowSchedule... schedules)
+void applySchedules(List<WorkflowSchedule> schedules)
+```
+
+Atomically create or replace a set of schedules in one transaction. Each named schedule is deleted (if it exists) and re-created. This is the recommended way to declare schedules at application startup — call it once after `dbos.launch()` and it will always reflect your current schedule definitions.
+
+### createSchedule
+
+```java
+void createSchedule(WorkflowSchedule schedule)
+```
+
+Create a single schedule. Throws if a schedule with the same `scheduleName` already exists.
+
+### getSchedule
+
+```java
+Optional<WorkflowSchedule> getSchedule(String name)
+```
+
+Retrieve a schedule by name. Returns empty if not found.
+
+### listSchedules
+
+```java
+List<WorkflowSchedule> listSchedules(List<ScheduleStatus> status, List<String> workflowName, List<String> namePrefix)
+```
+
+List schedules with optional filters. Pass `null` for any filter to skip it.
+
+**Parameters:**
+- **status**: Filter by `ScheduleStatus.ACTIVE` or `ScheduleStatus.PAUSED`.
+- **workflowName**: Filter by workflow function name.
+- **namePrefix**: Filter by schedule name prefix.
+
+### pauseSchedule
+
+```java
+void pauseSchedule(String name)
+```
+
+Pause a schedule. A paused schedule does not fire until resumed.
+
+### resumeSchedule
+
+```java
+void resumeSchedule(String name)
+```
+
+Resume a paused schedule.
+
+### deleteSchedule
+
+```java
+void deleteSchedule(String name)
+```
+
+Delete a schedule by name. No-op if the schedule does not exist.
+
+### backfillSchedule
+
+```java
+List<WorkflowHandle<Object, Exception>> backfillSchedule(String scheduleName, Instant start, Instant end)
+```
+
+Manually enqueue all executions of a schedule that would have fired between `start` (exclusive) and `end` (exclusive). Uses the same deterministic workflow IDs as the live scheduler, so already-executed times are skipped. Useful for recovering from outages when automatic backfill is not enabled.
+
+### triggerSchedule
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> triggerSchedule(String scheduleName)
+```
+
+Immediately fire a scheduled workflow outside its normal cron cadence. Returns a handle to the enqueued execution.
+
 ### forkWorkflow
 
 ```java
