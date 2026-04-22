@@ -76,6 +76,34 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 - **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified
 - **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to false to enable this behavior. Defaults to true.
 
+### @WorkflowClassName
+
+```java
+public @interface WorkflowClassName {
+  String value();
+}
+```
+
+An annotation applied to a workflow **implementation class** (not the interface) to assign it a stable, portable class name for workflow registration.
+
+Without this annotation, workflows are registered under their fully-qualified Java class name (e.g., `com.example.MyServiceImpl`). Using `@WorkflowClassName` replaces that with a shorter, language-agnostic name that survives refactoring and enables cross-language interoperability.
+
+**Example:**
+
+```java
+@WorkflowClassName("MyService")
+public class MyServiceImpl implements MyService {
+    @Workflow
+    public String processOrder(String orderId) { ... }
+}
+```
+
+This workflow is registered as `MyService//processOrder` instead of `com.example.MyServiceImpl//processOrder`.
+
+:::tip
+Use `@WorkflowClassName` whenever a workflow may be invoked from another language (Python, TypeScript) or when you want workflow IDs to remain stable across package renames.
+:::
+
 ## Input Validation and Coercion
 
 Java automatically coerces portable JSON arguments to match the workflow method's parameter types.

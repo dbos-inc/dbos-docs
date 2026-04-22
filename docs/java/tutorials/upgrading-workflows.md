@@ -115,3 +115,26 @@ When using versioning, we recommend **blue-green** code upgrades:
  - When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
  - Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
  - Then, once all workflows of the old version are complete (you can use [`dbos.listWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
+
+### Application Version Management
+
+DBOS provides methods to inspect and manage registered application versions at runtime:
+
+```java
+// List all versions seen by this database, newest first
+List<VersionInfo> versions = dbos.listApplicationVersions();
+
+// Get the currently promoted "latest" version
+VersionInfo latest = dbos.getLatestApplicationVersion();
+
+// Promote a version (useful during blue-green cutover)
+dbos.setLatestApplicationVersion("2.0.0");
+```
+
+`VersionInfo` is a record with the following fields:
+- **versionId**: A generated unique ID for the version record.
+- **versionName**: The human-readable version string (e.g., `"2.0.0"`).
+- **versionTimestamp**: When this version was promoted.
+- **createdAt**: When the version record was first inserted.
+
+See [`listApplicationVersions`](../reference/methods.md#listapplicationversions), [`getLatestApplicationVersion`](../reference/methods.md#getlatestapplicationversion), and [`setLatestApplicationVersion`](../reference/methods.md#setlatestapplicationversion) for full API details.

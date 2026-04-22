@@ -350,6 +350,57 @@ Permanently delete one or more workflows and their recorded steps from the datab
 **Parameters:**
 - **deleteChildren**: If `true`, also delete all child workflows spawned by the deleted workflow(s). Defaults to `false`.
 
+### setWorkflowDelay
+
+```java
+void setWorkflowDelay(String workflowId, Duration delay)
+void setWorkflowDelay(String workflowId, Instant delayUntil)
+```
+
+Pause an enqueued or pending workflow so it will not be dequeued until after the specified duration or absolute time. The workflow's status changes to `DELAYED` while waiting.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to delay.
+- **delay**: How long from now to delay the workflow.
+- **delayUntil**: The absolute time until which to delay the workflow.
+
+### listApplicationVersions
+
+```java
+List<VersionInfo> listApplicationVersions()
+```
+
+Return all registered application versions, ordered by timestamp descending.
+
+```java
+public record VersionInfo(
+    // The generated version ID
+    String versionId,
+    // The human-readable version name (e.g., "v1.2.3")
+    String versionName,
+    // When this version was promoted
+    Instant versionTimestamp,
+    // When this version record was created
+    Instant createdAt
+)
+```
+
+### getLatestApplicationVersion
+
+```java
+VersionInfo getLatestApplicationVersion()
+```
+
+Return the most recently promoted application version.
+
+### setLatestApplicationVersion
+
+```java
+void setLatestApplicationVersion(String versionName)
+```
+
+Promote a version by name to be the latest application version. Used during blue-green deployments to control which version new workflows are assigned to. See [upgrading workflows](../tutorials/upgrading-workflows.md) for more detail.
+
 ### forkWorkflow
 
 ```java
@@ -582,6 +633,51 @@ Example syntax:
 :::info
 An explicit timeout and deadline cannot both be set.
 :::
+
+## Timeout
+
+`Timeout` is a sealed interface used by `StartWorkflowOptions`, `WorkflowOptions`, and `ForkOptions` to control how inherited timeouts are handled.
+
+```java
+import dev.dbos.transact.workflow.Timeout;
+```
+
+**Factory methods:**
+
+- **`Timeout.of(Duration duration)`** — Set an explicit timeout of the given duration.
+- **`Timeout.of(long value, TimeUnit unit)`** — Set an explicit timeout.
+- **`Timeout.none()`** — Opt out of any inherited timeout. The workflow will run without a timeout regardless of what the calling context specifies.
+- **`Timeout.inherit()`** — Explicitly inherit the timeout from the calling context (the default behavior when no timeout is set).
+
+**Example:**
+
+```java
+// Detach a child workflow from the parent's timeout
+dbos.startWorkflow(() -> proxy.longRunningChild(),
+    new StartWorkflowOptions().withTimeout(Timeout.none()));
+```
+
+## WorkflowState
+
+`WorkflowState` is an enum representing the possible states of a workflow. It is used in [`WorkflowStatus`](#workflowstatus) and [`ListWorkflowsInput`](#listworkflowsinput).
+
+```java
+import dev.dbos.transact.workflow.WorkflowState;
+```
+
+```java
+public enum WorkflowState {
+    PENDING,    // Currently executing
+    ENQUEUED,   // Waiting on a queue to be dequeued
+    DELAYED,    // Waiting until a delay expires before being dequeued
+    SUCCESS,    // Completed successfully
+    ERROR,      // Threw an unhandled exception
+    CANCELLED,  // Cancelled by cancelWorkflow()
+    MAX_RECOVERY_ATTEMPTS_EXCEEDED  // Crashed too many times; requires manual intervention
+}
+```
+
+`WorkflowState.isActive()` returns `true` for `PENDING`, `ENQUEUED`, and `DELAYED`.
 
 ## Serialization Strategy
 
