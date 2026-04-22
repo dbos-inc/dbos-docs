@@ -162,17 +162,21 @@ DBOS should be installed and imported from the `dev.dbos.transact` package.  Use
 ```java
 import dev.dbos.transact.DBOS;
 import dev.dbos.transact.DBOSClient;
-import dev.dbos.transact.ForkOptions;
-import dev.dbos.transact.ListWorkflowsInput;
 import dev.dbos.transact.StartWorkflowOptions;
 import dev.dbos.transact.config.DBOSConfig;
+import dev.dbos.transact.workflow.ForkOptions;
+import dev.dbos.transact.workflow.ListWorkflowsInput;
 import dev.dbos.transact.workflow.Queue;
+import dev.dbos.transact.workflow.ScheduleStatus;
 import dev.dbos.transact.workflow.Scheduled;
+import dev.dbos.transact.workflow.SerializationStrategy;
 import dev.dbos.transact.workflow.Step;
 import dev.dbos.transact.workflow.StepOptions;
 import dev.dbos.transact.workflow.Timeout;
 import dev.dbos.transact.workflow.Workflow;
+import dev.dbos.transact.workflow.WorkflowClassName;
 import dev.dbos.transact.workflow.WorkflowHandle;
+import dev.dbos.transact.workflow.WorkflowSchedule;
 import dev.dbos.transact.workflow.WorkflowState;
 import dev.dbos.transact.workflow.WorkflowStatus;
 ```
@@ -224,6 +228,8 @@ public void everyMinute(Instant scheduled, Instant actual) {
 ```java
 public @interface Scheduled {
   String cron();
+  String queue();
+  boolean ignoreMissed();
 }
 ```
 
@@ -231,6 +237,8 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 
 **Parameters:**
 - **cron**: The schedule, expressed in Spring 5.3+ CronExpression syntax.
+- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue.
+- **ignoreMissed**: Whether to skip firings missed while the app was not running. Defaults to `true`.
 
 
 ## Workflow Documentation
@@ -246,18 +254,17 @@ The recovery mechanism requires that workflow methods must be registered.  Regis
 ```java
 public @interface Workflow {
   String name();
-
   int maxRecoveryAttempts();
+  SerializationStrategy serializationStrategy();
 }
 ```
 
 An annotation that can be applied to a class method to mark it as a durable workflow.
 
 **Parameters:**
-- **name**: The workflow name. Must be unique.
-- **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted.
-This acts as a dead letter queue so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
+- **name**: The workflow name. Must be unique within the class. Defaults to method name.
+- **maxRecoveryAttempts**: Optionally configure the maximum number of times execution of a workflow may be attempted. Acts as a dead letter queue so that a buggy workflow that crashes its application does not do so infinitely. If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+- **serializationStrategy**: The default serialization strategy for local invocations of this workflow. Set to `SerializationStrategy.PORTABLE` to test cross-language interoperability.
 
 ## Methods
 
@@ -341,17 +348,27 @@ Create workflow options with all fields set to their defaults.
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
-- **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
+- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
-  Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with `SetWorkflowTimeout(custom_timeout)` to override the propagated timeout. You can use `SetWorkflowTimeout(None)` to start a child workflow with no timeout.
+  Timeout deadlines are propagated to child workflows by default. To detach a child workflow from its parent's timeout, start it with its own explicit timeout or use `withNoTimeout()`.
 
-- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+- **`withNoTimeout()`** - Explicitly remove any inherited timeout from this workflow.
 
-- **`withPriority(int priority)`** - May only be used when enqueuing. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withDeadline(Instant deadline)`** - Set an absolute deadline for this workflow. The workflow and all its children are cancelled if still running at the deadline.
+
+- **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+
+- **`withPriority(int priority)`** - May only be used when enqueuing. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities are dequeued first.
+
+- **`withQueuePartitionKey(String key)`** - Set a queue partition key. Only for partitioned queues (created with `withPartitioningEnabled`).
+
+- **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued.
+
+- **`withAppVersion(String appVersion)`** - Tag the workflow with a specific application version.
 
 
 One common use-case for workflows is building reliable background tasks that keep running even when your program is interrupted, restarted, or crashes.
@@ -732,13 +749,12 @@ You can optionally configure a step to automatically retry any error a set numbe
 This is useful for automatically handling transient failures, like making requests to unreliable APIs.
 Retries are configurable through step options that can be passed to `runStep`.
 
-Available retry configuration options include:
-- `withRetriesAllowed` - Whether to retry the step if it throws an exception (default: false).
-- `withMaxAttempts` - Maximum number of times this step is automatically retried on failure.
-- `withIntervalSeconds` - Initial delay between retries in seconds.
-- `withBackoffRate` - Exponential backoff multiplier between retries.
+Available retry configuration options (via `StepOptions`):
+- `withMaxAttempts(int n)` - Maximum number of attempts (default: 1, i.e. no retries). Set to >1 to enable retries.
+- `withRetryInterval(Duration interval)` - How long to wait before the first retry (default: 1 second).
+- `withBackoffRate(double rate)` - Exponential backoff multiplier between retries (default: 2.0).
 
-For example, let's write a step that fetches a website, and configure it to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
+For example, let's write a step that fetches a website, and configure it to retry failures up to 10 times:
 
 ```java
 class ExampleImpl implements Example {
@@ -762,9 +778,8 @@ class ExampleImpl implements Example {
         return dbos.runStep(
             () -> fetchStep(inputURL),
             new StepOptions("fetchFunction")
-                .withRetriesAllowed(true)
                 .withMaxAttempts(10)
-                .withIntervalSeconds(0.5)
+                .withRetryInterval(Duration.ofMillis(500))
                 .withBackoffRate(2.0)
         );
     }
@@ -792,27 +807,33 @@ public record Queue(
     Integer concurrency,
     Integer workerConcurrency,
     boolean priorityEnabled,
+    boolean partitioningEnabled,
     RateLimit rateLimit
-) { 
+) {
     public Queue withName(String name);
     public Queue withConcurrency(Integer concurrency);
     public Queue withWorkerConcurrency(Integer workerConcurrency);
-    public Queue withRateLimit(RateLimit rateLimit) {
-    public Queue withRateLimit(int limit, double period);
+    public Queue withRateLimit(RateLimit rateLimit);
+    public Queue withRateLimit(int limit, Duration period);
+    public Queue withRateLimit(int limit, double periodSeconds);
     public Queue withPriorityEnabled(boolean priorityEnabled);
+    public Queue withPartitioningEnabled(boolean partitioningEnabled);
 }
+
+public static record RateLimit(int limit, Duration period) {}
 ```
 
 Create a new workflow queue with the specified name and optional configuration parameters.
 Queues must be created and registered with `dbos.registerQueue` before calling `dbos.launch()`.
-You can enqueue a workflow using the `withQueue` parameter of `startWorkflow`).
+You can enqueue a workflow using the `withQueue` parameter of `startWorkflow`.
 
 **Parameters:**
 - **name**: The name of the queue. Must be unique among all queues in the application.
 - **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process.
 - **concurrency**: The maximum number of workflows from this queue that may run concurrently. This concurrency limit is global across all DBOS processes using this queue.
-- **rateLimit**: A limit on the maximum number of functions (`limit`) that may be started in a given period (`period`).
+- **rateLimit**: A `RateLimit` limiting the maximum number of workflows that may be started in a given period.
 - **priorityEnabled**: Enable setting priority for workflows on this queue.
+- **partitioningEnabled**: Enable partitioning on this queue. In partitioned queues, all flow control is applied per partition key.
 
 **Example Syntax:**
 
@@ -825,7 +846,8 @@ Queue queue = new Queue("example-queue")
 Queues must be registered before calling `dbos.launch()`:
 
 ```java
-Queue registerQueue(Queue queue);
+void registerQueue(Queue queue)
+void registerQueues(Queue... queues)
 ```
 
 ### Enqueueing from Another Application with DBOSClient
@@ -836,6 +858,11 @@ Queue registerQueue(Queue queue);
 
 ```java
 DBOSClient(String url, String user, String password)
+DBOSClient(String url, String user, String password, String schema)
+DBOSClient(String url, String user, String password, String schema, DBOSSerializer serializer)
+DBOSClient(DataSource dataSource)
+DBOSClient(DataSource dataSource, String schema)
+DBOSClient(DataSource dataSource, String schema, DBOSSerializer serializer)
 ```
 
 Construct the DBOSClient.
@@ -844,6 +871,9 @@ Construct the DBOSClient.
 - **url**: The JDBC URL for your system database.
 - **user**: Your Postgres username or role.
 - **password**: The password for your Postgres user or role.
+- **schema**: The schema DBOS system tables are stored in. Defaults to `dbos`.
+- **dataSource**: Provide an existing `DataSource` instead of connection URL/credentials.
+- **serializer**: A custom serializer for workflow inputs/outputs. Must match the serializer used by the DBOS application.
 
 ## Workflow Interaction Methods
 
@@ -880,20 +910,24 @@ var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argume
 **Constructors:**
 
 ```java
-public EnqueueOptions(String className, String workflowName, String queueName)
+public EnqueueOptions(String workflowName, String queueName)
+public EnqueueOptions(String workflowName, String className, String queueName)
 ```
 
-Specify the name and class name of the workflow to enqueue and the name of the queue on which it is to be enqueued.
+Specify the workflow name and queue. `className` is optional — DBOS searches all registered classes if omitted.
 
 **Methods:**
 
-- **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
-- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow. 
-If left undefined, it will be updated to the current version when the workflow is first dequeued.
-- **`withTimeout(Duration timeout)`**:  Set a timeout for the enqueued workflow. When the timeout expires, the workflow and all its children are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
-- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
-- **`withPriority(Integer priority)`**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from `1` to `2,147,483,647`, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+- **`withClassName(String className)`**: The class containing the workflow method.
 - **`withInstanceName(String name)`**: The enqueued workflow should run on this particular named class instance.
+- **`withWorkflowId(String workflowId)`**: Specify the idempotency ID to assign to the enqueued workflow.
+- **`withAppVersion(String appVersion)`**: The version of your application that should process this workflow.
+- **`withTimeout(Duration timeout)`**: Set a timeout for the enqueued workflow. Does not begin until the workflow is dequeued and starts execution.
+- **`withDeadline(Instant deadline)`**: Set an absolute deadline for the enqueued workflow.
+- **`withDelay(Duration delay)`**: Delay the start of the workflow by the specified duration after it is dequeued.
+- **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+- **`withPriority(Integer priority)`**: Priority values range from `1` to `2,147,483,647`; lower numbers run first.
+- **`withQueuePartitionKey(String key)`**: Partition key for partitioned queues.
 
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
@@ -1075,38 +1109,35 @@ This object has the following definition:
 
 ```java
 public record WorkflowStatus(
-    // The workflow ID
-    String workflowId,
-    // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
-    String status,
-    // The name of the workflow function
-    String name,
-    // The class of the workflow function
-    String className,
-    // The name given to the class instance, if any
-    String instanceName,
-    // The deserialized workflow input object
-    Object[] input,
-    // The workflow's output, if any
-    Object output,
-    // The error the workflow threw, if any
-    ErrorResult error,
-    // Workflow start time, as a Unix epoch timestamp in ms
-    Long createdAt,
-    // The last time the workflow status was updated, as a Unix epoch timestamp in ms
-    Long updatedAt,
-    // If this workflow was enqueued, on which queue
-    String queueName,
-    // The ID of the executor (process) that most recently executed this workflow
-    String executorId,
-    // The application version on which this workflow was started
-    String appVersion,
-    // The workflow timeout, if any
-    Long workflowTimeoutMs,
-    // The Unix epoch timestamp at which this workflow will time out, if any
-    Long workflowDeadlineEpochMs,
-    // The number of times this workflow has been started
-    Integer recoveryAttempts
+    String workflowId,         // The workflow ID
+    WorkflowState status,      // PENDING, ENQUEUED, DELAYED, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    String workflowName,       // The workflow function name
+    String className,          // The class containing the workflow
+    String instanceName,       // The named class instance, if any
+    String authenticatedUser,  // The authenticated user who initiated the workflow
+    String assumedRole,        // The assumed role for the workflow execution
+    String[] authenticatedRoles, // Roles authenticated for the workflow
+    Object[] input,            // The deserialized workflow input
+    Object output,             // The workflow's output, if any
+    ErrorResult error,         // The error the workflow threw, if any
+    String executorId,         // The ID of the executor that most recently ran this workflow
+    Instant createdAt,         // When the workflow was created
+    Instant updatedAt,         // When the workflow status was last updated
+    String appVersion,         // The application version on which this workflow was started
+    String appId,              // The application identifier
+    Integer recoveryAttempts,  // The number of times this workflow has been started
+    String queueName,          // If enqueued, on which queue
+    Duration timeout,          // The workflow timeout duration, if any
+    Instant deadline,          // The absolute deadline, if any
+    Instant startedAt,         // When the workflow started executing (after dequeue)
+    String deduplicationId,    // The deduplication ID, if any
+    Integer priority,          // The queue priority, if any
+    String queuePartitionKey,  // The queue partition key, if any
+    String forkedFrom,         // The workflow ID this was forked from, if any
+    String parentWorkflowId,   // The parent workflow ID if this is a child workflow
+    Boolean wasForkedFrom,     // Whether another workflow was forked from this one
+    Instant delayUntil,        // Time until which the workflow is delayed
+    String serialization       // Serialization format used for inputs/outputs
 )
 ```
 
@@ -1159,146 +1190,52 @@ Retrieve a list of WorkflowStatus of all workflows matching specified criteria.
 
 `ListWorkflowsInput` is a with-based configuration record for filtering and customizing workflow queries.  All fields are optional.
 
-**`with` Methods:**
+**`with` Methods** (most accept a single value or a `List`):
 
-##### withWorkflowId
-```java
-ListWorkflowsInput withWorkflowId(String workflowId)
-```
-Add a workflow ID to filter by.
-
-##### withWorkflowIds
-```java
-ListWorkflowsInput withWorkflowIds(List<String> workflowIDs)
-```
-Add multiple workflow IDs to filter by.
-
-##### withClassName
-```java
-ListWorkflowsInput withClassName(String className)
-```
-Filter workflows by the class name containing the workflow function.
-
-##### withInstanceName
-```java
-ListWorkflowsInput withInstanceName(String instanceName)
-```
-Filter workflows by the instance name of the class.
-
-##### withWorkflowName
-```java
-ListWorkflowsInput withWorkflowName(String workflowName)
-```
-Filter workflows by the workflow function name.
-
-##### withAuthenticatedUser
-```java
-ListWorkflowsInput withAuthenticatedUser(String authenticatedUser)
-```
-Filter workflows run by this authenticated user.
-
-##### withStartTime
-```java
-ListWorkflowsInput withStartTime(OffsetDateTime startTime)
-```
-Retrieve workflows started after this timestamp.
-
-##### withEndTime
-```java
-ListWorkflowsInput withEndTime(OffsetDateTime endTime)
-```
-Retrieve workflows started before this timestamp.
-
-##### withStatus
-```java
-ListWorkflowsInput withStatus(WorkflowState status)
-ListWorkflowsInput withStatus(String status)
-ListWorkflowsInput withStatuses(List<String> status)
-```
-Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
-
-##### withApplicationVersion
-```java
-ListWorkflowsInput withApplicationVersion(String applicationVersion)
-```
-Retrieve workflows tagged with this application version.
-
-##### withLimit
-```java
-ListWorkflowsInput withLimit(Integer limit)
-```
-Retrieve up to this many workflows.
-
-##### withOffset
-```java
-ListWorkflowsInput withOffset(Integer offset)
-```
-Skip this many workflows from the results returned (for pagination).
-
-##### withSortDesc
-```java
-ListWorkflowsInput withSortDesc(Boolean sortDesc)
-```
-Sort the results in descending (true) or ascending (false) order by workflow start time.
-
-##### withExecutorId
-```java
-ListWorkflowsInput withExecutorId(String executorId)
-```
-Retrieve workflows that ran on this executor process.
-
-##### withQueueName
-```java
-ListWorkflowsInput withQueueName(String queueName)
-```
-Retrieve workflows that were enqueued on this queue.
-
-##### withWorkflowIdPrefix
-```java
-ListWorkflowsInput withWorkflowIdPrefix(String workflowIdPrefix)
-```
-Filter workflows whose IDs start with the specified prefix.
-
-##### withQueuesOnly
-```java
-ListWorkflowsInput withQueuesOnly(Boolean queuedOnly)
-```
-Select only workflows that were enqueued.
-
-##### withLoadInput
-```java
-ListWorkflowsInput withLoadInput(Boolean value)
-```
-Controls whether to load workflow input data (default: true).
-
-##### withLoadOutput
-```java
-ListWorkflowsInput withLoadOutput(Boolean value)
-```
-Controls whether to load workflow output data (results and errors) (default: true).
+- `withWorkflowIds(String id)` / `withWorkflowIds(List<String>)` — filter by workflow ID(s)
+- `withWorkflowName(String name)` / `withWorkflowName(List<String>)` — filter by workflow function name
+- `withClassName(String className)` — filter by class name
+- `withInstanceName(String instanceName)` — filter by instance name
+- `withAuthenticatedUser(String user)` / `withAuthenticatedUser(List<String>)` — filter by authenticated user
+- `withStatus(WorkflowState status)` / `withStatus(List<WorkflowState>)` — filter by status (`ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, `DELAYED`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+- `withStartTime(Instant startTime)` — workflows created after this time
+- `withEndTime(Instant endTime)` — workflows created before this time
+- `withApplicationVersion(String version)` / `withApplicationVersion(List<String>)` — filter by app version
+- `withLimit(Integer limit)` — max results to return
+- `withOffset(Integer offset)` — skip this many results (for pagination)
+- `withSortDesc(Boolean sortDesc)` — sort by creation time descending (true) or ascending (false)
+- `withExecutorIds(String id)` / `withExecutorIds(List<String>)` — filter by executor process
+- `withQueueName(String name)` / `withQueueName(List<String>)` — filter by queue
+- `withWorkflowIdPrefix(String prefix)` / `withWorkflowIdPrefix(List<String>)` — filter by ID prefix
+- `withQueuesOnly(Boolean queuesOnly)` — only return enqueued workflows
+- `withLoadInput(Boolean value)` — whether to load workflow inputs (default: true)
+- `withLoadOutput(Boolean value)` — whether to load workflow outputs (default: true)
+- `withForkedFrom(String id)` / `withForkedFrom(List<String>)` — filter to workflows forked from these IDs
+- `withParentWorkflowId(String id)` / `withParentWorkflowId(List<String>)` — filter to child workflows of these parents
+- `withWasForkedFrom(Boolean value)` — filter to workflows that have been forked from
+- `withHasParent(Boolean value)` — filter to child workflows
 
 
 ### listWorkflowSteps
 
 ```java
 List<StepInfo> listWorkflowSteps(String workflowId)
+List<StepInfo> listWorkflowSteps(String workflowId, Integer limit, Integer offset)
 ```
 
-Retrieve the execution steps of a workflow.
+Retrieve the execution steps of a workflow (with optional pagination).
 This is a list of `StepInfo` objects, with the following structure:
 
 ```java
 StepInfo(
-    // The sequential ID of the step within the workflow
-    int functionId,
-    // The name of the step function
-    String functionName,
-    // The output returned by the step, if any
-    Object output,
-    // The error returned by the step, if any
-    ErrorResult error,
-    // If the step starts or retrieves the result of a workflow, its ID
-    String childWorkflowId
+    int functionId,        // Sequential step ID within the workflow
+    String functionName,   // Name of the step function
+    Object output,         // Output returned by the step, if any
+    ErrorResult error,     // Error returned by the step, if any
+    String childWorkflowId,// If the step starts a child workflow, its ID
+    Instant startedAt,     // When the step started
+    Instant completedAt,   // When the step completed
+    String serialization   // Serialization format used for the step's output
 )
 ```
 
@@ -1306,17 +1243,20 @@ StepInfo(
 
 ```java
 void cancelWorkflow(String workflowId)
+void cancelWorkflows(List<String> workflowIds)
 ```
 
-Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+Cancel one or more workflows. Sets status to `CANCELLED`, removes from queue, and preempts execution at the next step boundary.
 
 ### resumeWorkflow
 
 ```java
 <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId, String queueName)
+List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds)
 ```
 
-Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Resume one or more workflows from their last completed step. Optionally re-enqueue on a queue instead of starting immediately.
 
 ### forkWorkflow
 
@@ -1327,26 +1267,33 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 
 ```java
 public record ForkOptions(
-    String forkedWorkflowId, 
-    String applicationVersion, 
-    Duration timeout
-)
-{
+    String forkedWorkflowId,
+    String applicationVersion,
+    Timeout timeout,
+    String queueName,
+    String queuePartitionKey
+) {
     ForkOptions withForkedWorkflowId(String forkedWorkflowId);
     ForkOptions withApplicationVersion(String applicationVersion);
     ForkOptions withTimeout(Duration timeout);
+    ForkOptions withNoTimeout();
+    ForkOptions withQueue(Queue queue);
+    ForkOptions withQueue(String queueName);
+    ForkOptions withQueuePartitionKey(String queuePartitionKey);
 }
 ```
 
-Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+Start a new execution of a workflow from a specific step. Steps before `startStep` are not re-executed.
 
 **Parameters:**
 - **workflowId**: The ID of the workflow to fork
 - **startStep**: The step from which to fork the workflow
 - **options**:
-  - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
-  - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
-  - **timeout**: A timeout for the forked workflow.
+  - **forkedWorkflowId**: Workflow ID for the forked workflow (UUID if not provided)
+  - **applicationVersion**: App version for the forked workflow (inherited if not provided)
+  - **timeout**: A timeout for the forked workflow
+  - **queueName**: Enqueue the forked workflow on this queue instead of starting immediately
+  - **queuePartitionKey**: Partition key for partitioned queues
 
 
 ## Configuring DBOS
@@ -1371,24 +1318,38 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withAppName(String appName)`**: Your application's name. Required.
 
-- **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. Required. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`
+- **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`.
 
-- **`withDbUser(String dbUser)`**: Your Postgres username or role. Required.
+- **`withDbUser(String dbUser)`**: Your Postgres username or role.
 
-- **`withDbPassword(String dbPassword)`**: The password for your Postgres user or role. Required.
+- **`withDbPassword(String dbPassword)`**: The password for your Postgres user or role.
 
-- **`withMaximumPoolSize(int maximumPoolSize)`**: The maximum size for the system database connection pool created by DBOS.
+- **`withDataSource(DataSource dataSource)`**: Provide an existing `DataSource` instead of URL/credentials.
 
-- **`withConnectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection created by DBOS.
+- **`withDatabaseSchema(String schema)`**: The schema for DBOS system tables. Defaults to `dbos`.
 
-- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management operations. Defaults to false.
+- **`withMaximumPoolSize(int maximumPoolSize)`**: The maximum size for the system database connection pool.
+
+- **`withConnectionTimeout(int connectionTimeout)`**: The connection timeout for the system database connection.
+
+- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management. Defaults to false.
 
 - **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
 
-- **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
+- **`withMigrate(boolean enable)`**: If true, apply migrations to the system database on launch. Defaults to true.
 
-- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
+- **`withConductorKey(String key)`**: An API key for DBOS Conductor. If provided, the application is connected to Conductor.
 
-- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented here.
+- **`withAppVersion(String appVersion)`**: The code version for this application and its workflows.
+
+- **`withExecutorId(String executorId)`**: A unique identifier for this process instance.
+
+- **`withEnablePatching(boolean enable)`**: Enable workflow patching support.
+
+- **`withListenQueues(String... queues)`**: Specify the queues this DBOS process should dequeue and execute workflows from.
+
+- **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database.
+
+- **`withSchedulerPollingInterval(Duration interval)`**: How often the scheduler polls for due scheduled workflows.
 
 ````
