@@ -199,13 +199,15 @@ Shortcut for `new StartWorkflowOptions().withQueue(queue)`
 **Methods:**
 - **`withWorkflowId(String workflowId)`** - Set the workflow ID of this workflow.
 
-- **`withQueue(Queue queue)`** - Instead of starting the workflow directly, enqueue it on this queue.
+- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
 
 - **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
   Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled. If you want to detach a child workflow from its parent's timeout, you can start it with its own explicit timeout (or `Timeout.none()`) to override the propagated timeout.
+
+- **`withNoTimeout()`** - Explicitly remove any inherited timeout or deadline from this workflow.
 
 - **`withDeadline(Instant deadline)`** - Set a deadline for this workflow. If the workflow is executing at the time of the deadline, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
@@ -221,13 +223,17 @@ An explicit timeout and deadline cannot both be set.
 
 - **`withDeduplicationId(String deduplicationId)`** - May only be used when enqueuing. At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
-- **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- **`withQueuePartitionKey(String queuePartitionKey)`** - Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with `withPartitioningEnabled`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
 
 :::info
 - Partition keys are required when enqueueing to a partitioned queue.
 - Partition keys cannot be used with non-partitioned queues.
 - Partition keys and deduplication IDs cannot be used together.
 :::
+
+- **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued. Only applicable when enqueuing.
+
+- **`withAppVersion(String appVersion)`** - Tag the workflow with a specific application version, overriding the default version detected at runtime.
 
 ### runStep
 
@@ -262,7 +268,7 @@ class ExampleImpl implements Example {
     @Workflow(name="workflow")
     public void workflow() throws InterruptedException {
         dbos.runStep(() -> stepOne(), "stepOne");
-        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withRetriesAllowed(false));
+        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withMaxAttempts(3));
     }
 }
 ```
@@ -275,16 +281,14 @@ class ExampleImpl implements Example {
 ```java
 new StepOptions(String name)
 ```
-Create step options and provide a name for this step.
+Create step options and provide a name for this step. By default the step runs once (no retries).
 
 **Methods:**
-- **`withRetriesAllowed(boolean b)`** - Whether to retry the step if it throws an exception. Defaults to false.
+- **`withMaxAttempts(int n)`** - Maximum number of times to attempt the step. Defaults to `1` (no retries). Set to a value greater than `1` to enable retries on exception.
 
-- **`withMaxAttempts(int n)`** - How many times to retry a step that is throwing exceptions.
+- **`withRetryInterval(Duration interval)`** - How long to wait before the first retry. Defaults to 1 second.
 
-- **`withIntervalSeconds(double t)`** - How long to wait before the initial retry.
-
-- **`withBackoffRate(double t)`** - How much to multiplicatively increase `intervalSeconds` between retries.
+- **`withBackoffRate(double rate)`** - Exponential backoff multiplier between retries. Defaults to 2.0.
 
 ### WorkflowHandle
 

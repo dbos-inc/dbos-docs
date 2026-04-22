@@ -38,6 +38,7 @@ If the event already exists, update its value.
 ### send
 
 ```java
+void send(String destinationId, Object message, String topic)
 void send(String destinationId, Object message, String topic, String idempotencyKey)
 void send(String destinationId, Object message, String topic, String idempotencyKey, SerializationStrategy serialization)
 ```
@@ -127,17 +128,14 @@ Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching
 
 **`with` Methods:**
 
-##### withWorkflowId
-```java
-ListWorkflowsInput withWorkflowId(String workflowId)
-```
-Add a workflow ID to filter by.
+Many filters accept either a single value or a list. Single-value overloads are provided for convenience.
 
 ##### withWorkflowIds
 ```java
-ListWorkflowsInput withWorkflowIds(List<String> workflowIDs)
+ListWorkflowsInput withWorkflowIds(String workflowId)
+ListWorkflowsInput withWorkflowIds(List<String> workflowIds)
 ```
-Add multiple workflow IDs to filter by.
+Filter by one or more workflow IDs.
 
 ##### withClassName
 ```java
@@ -154,38 +152,40 @@ Filter workflows by the instance name of the class.
 ##### withWorkflowName
 ```java
 ListWorkflowsInput withWorkflowName(String workflowName)
+ListWorkflowsInput withWorkflowName(List<String> workflowNames)
 ```
 Filter workflows by the workflow function name.
 
 ##### withAuthenticatedUser
 ```java
 ListWorkflowsInput withAuthenticatedUser(String authenticatedUser)
+ListWorkflowsInput withAuthenticatedUser(List<String> authenticatedUsers)
 ```
 Filter workflows run by this authenticated user.
 
 ##### withStartTime
 ```java
-ListWorkflowsInput withStartTime(OffsetDateTime startTime)
+ListWorkflowsInput withStartTime(Instant startTime)
 ```
-Retrieve workflows started after this timestamp.
+Retrieve workflows created after this timestamp.
 
 ##### withEndTime
 ```java
-ListWorkflowsInput withEndTime(OffsetDateTime endTime)
+ListWorkflowsInput withEndTime(Instant endTime)
 ```
-Retrieve workflows started before this timestamp.
+Retrieve workflows created before this timestamp.
 
 ##### withStatus
 ```java
 ListWorkflowsInput withStatus(WorkflowState status)
-ListWorkflowsInput withStatus(String status)
-ListWorkflowsInput withStatuses(List<String> status)
+ListWorkflowsInput withStatus(List<WorkflowState> statuses)
 ```
 Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
 
 ##### withApplicationVersion
 ```java
 ListWorkflowsInput withApplicationVersion(String applicationVersion)
+ListWorkflowsInput withApplicationVersion(List<String> applicationVersions)
 ```
 Retrieve workflows tagged with this application version.
 
@@ -205,23 +205,26 @@ Skip this many workflows from the results returned (for pagination).
 ```java
 ListWorkflowsInput withSortDesc(Boolean sortDesc)
 ```
-Sort the results in descending (true) or ascending (false) order by workflow start time.
+Sort the results in descending (true) or ascending (false) order by workflow creation time.
 
-##### withExecutorId
+##### withExecutorIds
 ```java
-ListWorkflowsInput withExecutorId(String executorId)
+ListWorkflowsInput withExecutorIds(String executorId)
+ListWorkflowsInput withExecutorIds(List<String> executorIds)
 ```
-Retrieve workflows that ran on this executor process.
+Retrieve workflows that ran on these executor processes.
 
 ##### withQueueName
 ```java
 ListWorkflowsInput withQueueName(String queueName)
+ListWorkflowsInput withQueueName(List<String> queueNames)
 ```
-Retrieve workflows that were enqueued on this queue.
+Retrieve workflows that were enqueued on these queues.
 
 ##### withWorkflowIdPrefix
 ```java
 ListWorkflowsInput withWorkflowIdPrefix(String workflowIdPrefix)
+ListWorkflowsInput withWorkflowIdPrefix(List<String> workflowIdPrefixes)
 ```
 Filter workflows whose IDs start with the specified prefix.
 
@@ -243,14 +246,42 @@ ListWorkflowsInput withLoadOutput(Boolean value)
 ```
 Controls whether to load workflow output data (results and errors) (default: true).
 
+##### withForkedFrom
+```java
+ListWorkflowsInput withForkedFrom(String workflowId)
+ListWorkflowsInput withForkedFrom(List<String> workflowIds)
+```
+Filter to workflows that were forked from the specified workflow(s).
+
+##### withParentWorkflowId
+```java
+ListWorkflowsInput withParentWorkflowId(String parentWorkflowId)
+ListWorkflowsInput withParentWorkflowId(List<String> parentWorkflowIds)
+```
+Filter to workflows that are children of the specified parent workflow(s).
+
+##### withWasForkedFrom
+```java
+ListWorkflowsInput withWasForkedFrom(Boolean wasForkedFrom)
+```
+Filter to workflows from which another workflow was forked.
+
+##### withHasParent
+```java
+ListWorkflowsInput withHasParent(Boolean hasParent)
+```
+Filter to workflows that have a parent workflow.
+
 
 ### listWorkflowSteps
 
 ```java
 List<StepInfo> listWorkflowSteps(String workflowId)
+List<StepInfo> listWorkflowSteps(String workflowId, Integer limit, Integer offset)
 ```
 
 Retrieve the execution steps of a workflow.
+The `limit` and `offset` parameters support pagination over large step lists.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```java
@@ -264,25 +295,60 @@ StepInfo(
     // The error returned by the step, if any
     ErrorResult error,
     // If the step starts or retrieves the result of a workflow, its ID
-    String childWorkflowId
+    String childWorkflowId,
+    // When the step started executing
+    Instant startedAt,
+    // When the step completed
+    Instant completedAt,
+    // The serialization format used for the step's output
+    String serialization
 )
 ```
+
+### getWorkflowStatus
+
+```java
+Optional<WorkflowStatus> getWorkflowStatus(String workflowId)
+```
+
+Retrieve the [`WorkflowStatus`](#workflowstatus) of a single workflow by ID.
 
 ### cancelWorkflow
 
 ```java
 void cancelWorkflow(String workflowId)
+void cancelWorkflows(List<String> workflowIds)
 ```
 
-Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+Cancel one or more workflows. This sets their status to `CANCELLED`, removes them from their queue (if enqueued) and preempts execution (interrupting at the beginning of the next step).
 
 ### resumeWorkflow
 
 ```java
 <T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId)
+<T, E extends Exception> WorkflowHandle<T, E> resumeWorkflow(String workflowId, String queueName)
+List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds)
+List<WorkflowHandle<Object, Exception>> resumeWorkflows(List<String> workflowIds, String queueName)
 ```
 
-Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Resume one or more workflows from their last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+**Parameters:**
+- **queueName**: Optionally re-enqueue the resumed workflow on this queue instead of starting it immediately.
+
+### deleteWorkflow
+
+```java
+void deleteWorkflow(String workflowId)
+void deleteWorkflow(String workflowId, boolean deleteChildren)
+void deleteWorkflows(List<String> workflowIds)
+void deleteWorkflows(List<String> workflowIds, boolean deleteChildren)
+```
+
+Permanently delete one or more workflows and their recorded steps from the database.
+
+**Parameters:**
+- **deleteChildren**: If `true`, also delete all child workflows spawned by the deleted workflow(s). Defaults to `false`.
 
 ### forkWorkflow
 
@@ -293,14 +359,20 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 
 ```java
 public record ForkOptions(
-    String forkedWorkflowId, 
-    String applicationVersion, 
-    Duration timeout
-)
-{
+    String forkedWorkflowId,
+    String applicationVersion,
+    Timeout timeout,
+    String queueName,
+    String queuePartitionKey
+) {
     ForkOptions withForkedWorkflowId(String forkedWorkflowId);
     ForkOptions withApplicationVersion(String applicationVersion);
     ForkOptions withTimeout(Duration timeout);
+    ForkOptions withTimeout(long value, TimeUnit unit);
+    ForkOptions withNoTimeout();
+    ForkOptions withQueue(Queue queue);
+    ForkOptions withQueue(String queueName);
+    ForkOptions withQueuePartitionKey(String queuePartitionKey);
 }
 ```
 
@@ -313,6 +385,8 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
   - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
   - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
   - **timeout**: A timeout for the forked workflow.
+  - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately.
+  - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
 
 ### WorkflowStatus
 
@@ -323,36 +397,62 @@ This object has the following definition:
 public record WorkflowStatus(
     // The workflow ID
     String workflowId,
-    // The workflow status. Must be one of ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
-    String status,
+    // The workflow status: ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    WorkflowState status,
     // The name of the workflow function
-    String name,
+    String workflowName,
     // The class of the workflow function
     String className,
     // The name given to the class instance, if any
     String instanceName,
-    // The deserialized workflow input object
+    // The authenticated user who initiated the workflow, if any
+    String authenticatedUser,
+    // The assumed role for the workflow execution, if any
+    String assumedRole,
+    // Roles authenticated for the workflow
+    String[] authenticatedRoles,
+    // The deserialized workflow input
     Object[] input,
     // The workflow's output, if any
     Object output,
     // The error the workflow threw, if any
     ErrorResult error,
-    // Workflow start time, as a Unix epoch timestamp in ms
-    Long createdAt,
-    // The last time the workflow status was updated, as a Unix epoch timestamp in ms
-    Long updatedAt,
-    // If this workflow was enqueued, on which queue
-    String queueName,
     // The ID of the executor (process) that most recently executed this workflow
     String executorId,
+    // When the workflow was created
+    Instant createdAt,
+    // The last time the workflow status was updated
+    Instant updatedAt,
     // The application version on which this workflow was started
     String appVersion,
-    // The workflow timeout, if any
-    Long workflowTimeoutMs,
-    // The Unix epoch timestamp at which this workflow will time out, if any
-    Long workflowDeadlineEpochMs,
+    // The application identifier
+    String appId,
     // The number of times this workflow has been started
-    Integer recoveryAttempts
+    Integer recoveryAttempts,
+    // If this workflow was enqueued, on which queue
+    String queueName,
+    // The workflow timeout duration, if any
+    Duration timeout,
+    // The absolute deadline for the workflow, if any
+    Instant deadline,
+    // When the workflow started executing (after being dequeued), if applicable
+    Instant startedAt,
+    // The deduplication ID assigned to this workflow, if any
+    String deduplicationId,
+    // The priority assigned to this workflow in its queue, if any
+    Integer priority,
+    // The queue partition key, if any
+    String queuePartitionKey,
+    // The ID of the workflow this was forked from, if any
+    String forkedFrom,
+    // The parent workflow ID if this is a child workflow, if any
+    String parentWorkflowId,
+    // Whether another workflow has been forked from this one
+    Boolean wasForkedFrom,
+    // Time until which the workflow is delayed before starting
+    Instant delayUntil,
+    // The serialization format used for the workflow's inputs/outputs
+    String serialization
 )
 ```
 
