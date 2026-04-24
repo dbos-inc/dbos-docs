@@ -13,6 +13,10 @@ This guide shows you how to install and run it on your computer.
 <LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
 
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./python/prompting.md) and [MCP](./integrations/mcp.md).
+:::
+
 <section className="row list">
 <article className="col col--6">
 
@@ -99,7 +103,6 @@ Next:
 
 - Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./python/prompting.md) or [**DBOS MCP server**](./integrations/mcp.md).
 
 </article>
 
@@ -117,6 +120,10 @@ Next:
 </LargeTabItem>
 
 <LargeTabItem value="typescript" label="TypeScript">
+
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./typescript/prompting.md) and [MCP](./integrations/mcp.md).
+:::
 
 <section className="row list">
 <article className="col col--6">
@@ -196,7 +203,6 @@ Next:
 
 - Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./typescript/prompting.md) or [**DBOS MCP server**](./integrations/mcp.md).
 </article>
 
 <article className="col col--6">
@@ -211,6 +217,10 @@ Next:
 </LargeTabItem>
 
 <LargeTabItem value="golang" label="Go">
+
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./golang/prompting.md) and [MCP](./integrations/mcp.md).
+:::
 
 #### 1. Initialize an Application
 
@@ -274,12 +284,15 @@ Next:
 
 - Check out the [**DBOS programming guide**](./golang/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./golang/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./golang/prompting.md) or [**DBOS MCP server**](./integrations/mcp.md).
 
 
 </LargeTabItem>
 
 <LargeTabItem value="java" label="Java">
+
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./java/prompting.md) and [MCP](./integrations/mcp.md).
+:::
 
 #### 1. Download an Application
 
@@ -348,7 +361,6 @@ Next:
 
 - Check out the [**DBOS programming guide**](./java/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./java/integrating-dbos.md) to make it reliable with just a few lines of code.
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./java/prompting.md) or [**DBOS MCP server**](./integrations/mcp.md).
 
 
 </article>
