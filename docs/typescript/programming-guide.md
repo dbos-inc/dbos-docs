@@ -7,6 +7,10 @@ pagination_prev: quickstart
 
 This guide shows you how to use DBOS to build TypeScript apps that are **resilient to any failure**.
 
+:::tip
+To teach your AI coding assistant to use DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
+:::
+
 ## 1. Setting Up Your App
 
 To get started, initialize a DBOS template and install dependencies:
@@ -252,5 +256,4 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 Congratulations!  You've finished the DBOS TypeScript guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../integrations/mcp.md).
 - Check out some [**example applications**](../examples/index.md).
