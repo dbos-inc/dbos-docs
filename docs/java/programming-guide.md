@@ -6,6 +6,10 @@ pagination_prev: quickstart
 
 This guide shows you how to use DBOS to build Java apps that are **resilient to any failure**.
 
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
+:::
+
 ## 1. Setting Up Your Environment
 
 First, initialize a new project with Gradle (See [the installation instructions](https://docs.gradle.org/current/userguide/installation.html) if you do not have Gradle set up, or do not have Gradle 8 or later):
@@ -346,5 +350,4 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 Congratulations!  You've finished the DBOS Java guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../integrations/mcp.md).
 - Check out some [**example applications**](../examples/index.md).
