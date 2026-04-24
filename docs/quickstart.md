@@ -14,7 +14,7 @@ This guide shows you how to install and run it on your computer.
 <LargeTabItem value="python" label="Python">
 
 :::tip
-To teach your AI coding assistant to use DBOS, try out [skills](./python/prompting.md) and [MCP](./integrations/mcp.md).
+To teach your AI coding assistant to build with DBOS, try out [skills](./python/prompting.md) and [MCP](./integrations/mcp.md).
 :::
 
 <section className="row list">
@@ -122,7 +122,7 @@ Next:
 <LargeTabItem value="typescript" label="TypeScript">
 
 :::tip
-To teach your AI coding assistant to use DBOS, try out [skills](./typescript/prompting.md) and [MCP](./integrations/mcp.md).
+To teach your AI coding assistant to build with DBOS, try out [skills](./typescript/prompting.md) and [MCP](./integrations/mcp.md).
 :::
 
 <section className="row list">
@@ -219,7 +219,7 @@ Next:
 <LargeTabItem value="golang" label="Go">
 
 :::tip
-To teach your AI coding assistant to use DBOS, try out [skills](./golang/prompting.md) and [MCP](./integrations/mcp.md).
+To teach your AI coding assistant to build with DBOS, try out [skills](./golang/prompting.md) and [MCP](./integrations/mcp.md).
 :::
 
 #### 1. Initialize an Application
@@ -291,7 +291,7 @@ Next:
 <LargeTabItem value="java" label="Java">
 
 :::tip
-To teach your AI coding assistant to use DBOS, try out [skills](./java/prompting.md) and [MCP](./integrations/mcp.md).
+To teach your AI coding assistant to build with DBOS, try out [skills](./java/prompting.md) and [MCP](./integrations/mcp.md).
 :::
 
 #### 1. Download an Application

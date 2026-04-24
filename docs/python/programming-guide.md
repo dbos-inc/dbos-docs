@@ -8,7 +8,7 @@ pagination_prev: quickstart
 This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 
 :::tip
-To teach your AI coding assistant to use DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
+To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
 :::
 
 ## 1. Setting Up Your Environment
