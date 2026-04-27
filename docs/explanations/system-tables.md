@@ -201,6 +201,23 @@ Each entry represents a different scheduled workflow.
 - **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.
 - **queue_name**: The name of the durable queue on which scheduled workflow invocations are enqueued, if any.
 
+### dbos.queues
+This table stores [durable queue](../architecture.md#durable-queues) definitions.
+Each row represents a different queue.
+
+**Columns:**
+- **queue_id**: A unique ID for this queue.
+- **name**: The queue's unique name.
+- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. `NULL` means unlimited.
+- **worker_concurrency**: The maximum number of workflows from this queue that may run concurrently on a single DBOS process. `NULL` means unlimited.
+- **rate_limit_max**: If a rate limit is set, the maximum number of workflows that may be started in a period.
+- **rate_limit_period_sec**: If a rate limit is set, the length of the period in seconds.
+- **priority_enabled**: Whether priority is enabled for this queue.
+- **partition_queue**: Whether this queue is partitioned.
+- **polling_interval_sec**: The interval at which workers poll the database for new workflows on this queue.
+- **created_at**: The epoch timestamp (in milliseconds) when this queue was first registered.
+- **updated_at**: The epoch timestamp (in milliseconds) when this queue's configuration was last updated.
+
 ### dbos.dbos_migrations
 This table tracks which DBOS system database schema migrations have been applied.
 
