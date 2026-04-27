@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
 ```python
 DBOS.listen_queues(
-    queues: List[Queue]
+    queues: List[Union[Queue, str]]
 )
 ```
 
@@ -73,7 +73,7 @@ If this is not used, DBOS will listen to all declared queues.
 Must be called before DBOS is launched.
 
 **Parameters:**
-- `queues`: The list of queues to listen to.
+- `queues`: The queues to listen to, given as [`Queue`](./queues.md#class-dbosqueue) objects or as queue names.
 
 ### destroy
 

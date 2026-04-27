@@ -385,6 +385,53 @@ client.set_workflow_delay_async(
 
 Asynchronous version of [`set_workflow_delay`](#set_workflow_delay).
 
+## Queue Management Methods
+
+### register_queue
+
+```python
+client.register_queue(
+    name: str,
+    *,
+    concurrency: Optional[int] = None,
+    limiter: Optional[QueueRateLimit] = None,
+    worker_concurrency: Optional[int] = None,
+    priority_enabled: bool = False,
+    partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
+    on_conflict: QueueConflictResolution = "always_update",
+) -> Queue
+```
+
+Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
+Similar to [`DBOS.register_queue`](./contexts.md#register_queue).
+Parameters have the same meaning as on `DBOS.register_queue` except for `on_conflict`:
+
+- `"always_update"` (default): always overwrite the existing configuration.
+- `"never_update"`: leave any existing configuration unchanged.
+
+`"update_if_latest_version"` is **not** supported on the client because clients are not associated with an application version. Passing it raises `DBOSException`.
+
+**Example syntax:**
+
+```python
+client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+client.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
+client.enqueue({"queue_name": "email", "workflow_name": "send_email"}, "alice@example.com")
+```
+
+### retrieve_queue
+
+```python
+client.retrieve_queue(name: str) -> Optional[Queue]
+```
+
+Retrieve a queue by name from the system database, or `None` if no queue with that name has been registered.
+Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
+
+The returned queue is bound to this client's system database; you can read its configuration and call its [`set_*`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
+
+
 ## Workflow Management Methods
 
 ### list_workflows
