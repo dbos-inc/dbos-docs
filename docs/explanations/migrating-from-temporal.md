@@ -779,11 +779,11 @@ handle = await client.start_workflow(
 <TabItem value="python" label="Python">
 
 ```python
-# Define a queue with concurrency limits
-order_queue = Queue("order-processing", concurrency=10)
+# Register a queue with concurrency limits
+DBOS.register_queue("order-processing", concurrency=10)
 
 # Enqueue a workflow
-handle = order_queue.enqueue(order_workflow, order)
+handle = DBOS.enqueue_workflow("order-processing", order_workflow, order)
 result = handle.get_result()
 ```
 
