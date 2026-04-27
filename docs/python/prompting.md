@@ -197,12 +197,10 @@ Example with queues:
 import os
 import time
 
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 app = FastAPI()
-
-queue = Queue("example-queue")
 
 @DBOS.step()
 def dbos_step(n: int):
@@ -215,7 +213,7 @@ def dbos_workflow():
     print("Enqueueing steps")
     handles = []
     for i in range(10):
-        handle = queue.enqueue(dbos_step, i)
+        handle = DBOS.enqueue_workflow("example-queue", dbos_step, i)
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     print(f"Successfully completed {len(results)} steps")
@@ -227,6 +225,7 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    DBOS.register_queue("example-queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
@@ -833,21 +832,20 @@ def example_step():
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, specify its name and optional flow control parameters:
+Register a queue with `DBOS.register_queue`, specifying its name and optional flow control parameters:
 
 ```python
-from dbos import Queue
-
-Queue(
-    name: str = None,
+DBOS.register_queue(
+    name: str,
+    *,
     concurrency: Optional[int] = None,
     limiter: Optional[QueueRateLimit] = None,
-    *,
     worker_concurrency: Optional[int] = None,
     priority_enabled: bool = False,
     partition_queue: bool = False,
     polling_interval_sec: float = 1.0,
-)
+    on_conflict: QueueConflictResolution = "update_if_latest_version",
+) -> Queue
 
 class QueueRateLimit(TypedDict):
     limit: int
@@ -856,34 +854,36 @@ class QueueRateLimit(TypedDict):
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the application.
-- `concurrency`: The maximum number of functions from this queue that may run concurrently. This concurrency limit is global across all DBOS processes using this queue. If not provided, any number of functions may run concurrently.
+- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`.
 - `priority_enabled`: Enable setting priority for workflows on this queue.
 - `partition_queue`: Enable partitioning for this queue.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `on_conflict`: How to behave when a queue with this name already exists in the system database. Defaults to `"update_if_latest_version"` (only overwrite if the running app is the latest version) to keep older workers in a rolling deploy from clobbering newer config. Other options: `"always_update"`, `"never_update"`.
+
+Queues are persisted to the system database, so they are visible to every DBOS process and client connected to that database.
+Register your queues after `DBOS.launch()`.
 
 **Example syntax:**
 
 ```python
-from dbos import Queue
-
-queue = Queue("example_queue")
+DBOS.register_queue("example_queue")
 ```
 
-You can then enqueue any DBOS workflow or step.
+You can then enqueue any DBOS workflow or step with `DBOS.enqueue_workflow`.
 Enqueuing a function submits it for execution and returns a handle to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```python
-queue = Queue("example_queue")
+DBOS.register_queue("example_queue")
 
 @DBOS.workflow()
 def process_task(task):
   ...
 
 task = ...
-handle = queue.enqueue(process_task, task)
+handle = DBOS.enqueue_workflow("example_queue", process_task, task)
 ```
 
 ### Queue Example
@@ -891,9 +891,9 @@ handle = queue.enqueue(process_task, task)
 Here's an example of a workflow using a queue to process tasks concurrently:
 
 ```python
-from dbos import DBOS, Queue
+from dbos import DBOS
 
-queue = Queue("example_queue")
+DBOS.register_queue("example_queue")
 
 @DBOS.workflow()
 def process_task(task):
@@ -904,7 +904,7 @@ def process_tasks(tasks):
   task_handles = []
   # Enqueue each task so all tasks are processed concurrently.
   for task in tasks:
-    handle = queue.enqueue(process_task, task)
+    handle = DBOS.enqueue_workflow("example_queue", process_task, task)
     task_handles.append(handle)
   # Wait for each task to complete and retrieve its result.
   # Return the results of all tasks.
@@ -918,15 +918,18 @@ For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the DBOS Client to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the DBOS Client to register queues and enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
-For example, this code enqueues the `data_pipeline` workflow on the `pipeline_queue` queue with `task` as an argument.
+For example, this code registers `pipeline_queue` and enqueues the `data_pipeline` workflow on it with `task` as an argument.
 
 ```python
 from dbos import DBOSClient, EnqueueOptions
 
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+# Register the queue from the client.
+client.register_queue("pipeline_queue")
 
 options: EnqueueOptions = {
   "queue_name": "pipeline_queue",
@@ -948,9 +951,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```python
-from dbos import Queue
-
-queue = Queue("example_queue", worker_concurrency=5)
+DBOS.register_queue("example_queue", worker_concurrency=5)
 ```
 
 Note that DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
@@ -966,9 +967,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```python
-from dbos import Queue
-
-queue = Queue("example_queue", concurrency=10)
+DBOS.register_queue("example_queue", concurrency=10)
 ```
 
 #### In-Order Processing
@@ -979,16 +978,16 @@ For example, this app processes events sequentially in the order of their arriva
 
  ```python
 from fastapi import FastAPI
-from dbos import DBOS, Queue
+from dbos import DBOS
 
-queue = Queue("in_order_queue", concurrency=1)
+DBOS.register_queue("in_order_queue", concurrency=1)
 
 @DBOS.step()
 def process_event(event: str):
     ...
 
 def event_endpoint(event: str):
-    queue.enqueue(process_event, event)
+    DBOS.enqueue_workflow("in_order_queue", process_event, event)
  ```
 
 ### Rate Limiting
@@ -998,10 +997,30 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
 
 ```python
-queue = Queue("example_queue", limiter={"limit": 50, "period": 30})
+DBOS.register_queue("example_queue", limiter={"limit": 50, "period": 30})
 ```
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
+
+### Reconfiguring Queues at Runtime
+
+Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
+Use `DBOS.retrieve_queue` to fetch a queue, then call its `set_*` methods.
+Workers pick up the new configuration on their next polling iteration.
+
+Available mutators: `set_concurrency`, `set_worker_concurrency`, `set_limiter`, `set_priority_enabled`, `set_partition_queue`, `set_polling_interval_sec`. Pass `None` to a setter to remove the limit (where applicable).
+
+```python
+queue = DBOS.retrieve_queue("example_queue")
+
+# Double the queue's concurrency.
+queue.set_concurrency(20)
+
+# Tighten its rate limit.
+queue.set_limiter({"limit": 25, "period": 30})
+```
+
+You can also do this from a `DBOSClient`.
 
 
 ## Setting Timeouts
@@ -1020,11 +1039,11 @@ Example syntax:
 def example_workflow():
     ...
 
-queue = Queue("example-queue")
+DBOS.register_queue("example-queue")
 
 # If the workflow does not complete within 10 seconds after being dequeued, it times out and is cancelled
 with SetWorkflowTimeout(10):
-    queue.enqueue(example_workflow)
+    DBOS.enqueue_workflow("example-queue", example_workflow)
 ```
 
 ## Partitioning Queues
@@ -1040,7 +1059,7 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 **Example Syntax**
 
 ```python
-queue = Queue("partitioned_queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("partitioned_queue", partition_queue=True, concurrency=1)
 
 @DBOS.workflow()
 def process_task(task: Task):
@@ -1053,7 +1072,7 @@ def on_user_task_submission(user_id: str, task: Task):
     # task can run at once per user (but tasks from different
     # users can run concurrently).
     with SetEnqueueOptions(queue_partition_key=user_id):
-        queue.enqueue(process_task, task)
+        DBOS.enqueue_workflow("partitioned_queue", process_task, task)
 ```
 
 Sometimes, you want to apply global or per-worker limits to a partitioned queue.
@@ -1068,21 +1087,21 @@ For example:
 # By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
 # and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
 # across all partitions (and at most one task per partition).
-concurrency_queue = Queue("concurrency-queue", concurrency=5)
-partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("concurrency-queue", concurrency=5)
+DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
 
 def on_user_task_submission(user_id: str, task: Task):
     # First, enqueue a "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
     with SetEnqueueOptions(queue_partition_key=user_id):
-        partitioned_queue.enqueue(concurrency_manager, task)
+        DBOS.enqueue_workflow("partitioned-queue", concurrency_manager, task)
 
 @DBOS.workflow()
 def concurrency_manager(task):
     # The "concurrency manager" workflow enqueues the process_task
     # workflow on the non-partitioned queue and awaits its results
     # to enforce global flow control limits.
-    return concurrency_queue.enqueue(process_task, task).get_result()
+    return DBOS.enqueue_workflow("concurrency-queue", process_task, task).get_result()
 
 @DBOS.workflow()
 def process_task(task):
@@ -1100,14 +1119,14 @@ For example, this is useful if you only want to have one workflow active at a ti
 Example syntax:
 
 ```python
-from dbos import DBOS, Queue, SetEnqueueOptions
+from dbos import DBOS, SetEnqueueOptions
 from dbos import error as dboserror
 
-queue = Queue("example_queue")
+DBOS.register_queue("example_queue")
 
 with SetEnqueueOptions(deduplication_id="my_dedup_id"):
     try:
-        handle = queue.enqueue(example_workflow, ...)
+        handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
 ```
@@ -1125,45 +1144,44 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```python
-queue = Queue("priority_queue", priority_enabled=True)
+DBOS.register_queue("priority_queue", priority_enabled=True)
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
     # They will be dequeued in FIFO order
     for task in tasks:
-        queue.enqueue(task_workflow, task)
+        DBOS.enqueue_workflow("priority_queue", task_workflow, task)
 
 # first_workflow (priority=1) will be dequeued before all task_workflows (priority=10)
 with SetEnqueueOptions(priority=1):
-    queue.enqueue(first_workflow)
+    DBOS.enqueue_workflow("priority_queue", first_workflow)
 ```
 
 ## Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
-However, sometimes you only want a process to listen to to a specific list of queues.
+By default, a process running DBOS listens to (dequeues workflows from) all queues registered in its system database.
+However, sometimes you only want a process to listen to a specific list of queues.
 You can use `DBOS.listen_queues` to explicitly tell a process running DBOS to only listen to a specific set of queues.
 You must call `DBOS.listen_queues` before DBOS is launched.
 
 This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
 For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
-You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
+You can configure each type of worker to only listen to the appropriate queue:
 
 ```python
-cpu_queue = Queue("cpu_queue")
-gpu_queue = Queue("gpu_queue")
-
 if __name__ == "__main__":
     worker_type = ... # "cpu' or 'gpu'
     config: DBOSConfig = ...
     DBOS(config=config)
-    if worker_type = "gpu":
+    if worker_type == "gpu":
         # GPU workers will only dequeue and execute workflows from the GPU queue
-        DBOS.listen_queues([gpu_queue])
+        DBOS.listen_queues(["gpu_queue"])
     elif worker_type == "cpu":
         # CPU workers will only dequeue and execute workflows from the CPU queue
-        DBOS.listen_queues([cpu_queue])
+        DBOS.listen_queues(["cpu_queue"])
     DBOS.launch()
+    DBOS.register_queue("cpu_queue")
+    DBOS.register_queue("gpu_queue")
 ```
 
 Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.

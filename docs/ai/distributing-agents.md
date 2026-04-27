@@ -13,14 +13,14 @@ A workflow can enqueue any number of tasks for concurrent processing.
 For example, a document ingestion pipeline can enqueue workflows to process each document in a batch:
 
 ```python
-queue = Queue("indexing_queue")
+DBOS.register_queue("indexing_queue")
 
 @DBOS.workflow()
 def index_documents(urls):
     handles: List[WorkflowHandle] = []
     # Enqueue each document for indexing
     for url in urls:
-        handle = queue.enqueue(index_document, url)
+        handle = DBOS.enqueue_workflow("indexing_queue", index_document, url)
         handles.append(handle)
     # Wait for all documents to finish indexing, count the total number of indexed pages
     outputs = []
@@ -34,7 +34,7 @@ If your application is resource intensive or uses rate-limited APIs, you can use
 For example, you can specify that no more than 10 workflows should run concurrently on a single server:
 
 ```python
-queue = Queue("indexing_queue", worker_concurrency=10)
+DBOS.register_queue("indexing_queue", worker_concurrency=10)
 ```
 
 Because queues are backed by durable workflows, they can automatically recover from any failure: if a server restarts or has a network hiccup partway through a multi-hour run of your pipeline on a batch of 10K documents, your pipeline will recover from the last indexed document instead of restarting from the beginning and redoing expensive work.
