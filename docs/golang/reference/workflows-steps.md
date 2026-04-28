@@ -173,6 +173,28 @@ handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+#### WithDelay
+
+```go
+func WithDelay(delay time.Duration) WorkflowOption
+```
+
+Delay execution of a queued workflow by the specified duration.
+Must be used together with [`WithQueue`](#withqueue).
+The workflow is initially placed in `DELAYED` status and does not execute.
+After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
+This is useful for scheduling a workflow to run at a future time.
+
+You can dynamically update or shorten the delay of a `DELAYED` workflow with [`SetWorkflowDelay`](./methods.md#setworkflowdelay).
+
+```go
+// Run the reminder workflow one hour from now.
+handle, err := dbos.RunWorkflow(ctx, sendReminder, userID,
+    dbos.WithQueue("reminders"),
+    dbos.WithDelay(1 * time.Hour),
+)
+```
+
 #### WithPortableWorkflow
 
 ```go
@@ -280,7 +302,7 @@ func WithBaseInterval(interval time.Duration) StepOption
 
 WithBaseInterval sets the initial delay between retries. Default value is 100ms.
 
-### Concurrent steps.
+### Concurrent steps
 
 #### Go
 
