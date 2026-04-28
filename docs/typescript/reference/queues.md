@@ -100,14 +100,14 @@ Cancel or drain pending workflows on the queue before deleting it.
 ## class WorkflowQueue
 
 A `WorkflowQueue` is returned from [`DBOS.registerQueue`](#dbosregisterqueue) or [`DBOS.retrieveQueue`](#dbosretrievequeue).
-Its cached fields reflect the queue's configuration as of the most recent read from the database; use the `getX` methods to refresh from the database, and the `setX` methods to update.
+Its cached fields reflect the queue's configuration as of the most recent read from the database; use the `get` methods to refresh from the database, and the `set` methods to update.
 
 ```typescript
 class WorkflowQueue {
   readonly name: string;
 
   // Cached configuration. May be stale if another process has reconfigured
-  // the queue. Use the getX methods below to refresh from the database.
+  // the queue. Use the get methods below to refresh from the database.
   concurrency?: number;
   workerConcurrency?: number;
   rateLimit?: QueueRateLimit;
@@ -146,7 +146,7 @@ if (queue !== null) {
 }
 ```
 
-The `setX` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, or the equivalent [`DBOSClient`](./client.md) methods.
+The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, or the equivalent [`DBOSClient`](./client.md) methods.
 Calling them on a queue created with the legacy `new WorkflowQueue(...)` constructor throws an error.
 
 ## Enqueueing Workflows
