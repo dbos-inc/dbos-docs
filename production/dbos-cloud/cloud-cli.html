@@ -13,7 +13,7 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reo.js"></script><link rel="stylesheet" href="/assets/css/styles.cca8f98a.css">
-<script src="/assets/js/runtime~main.a8c1f766.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.f43dae9e.js" defer="defer"></script>
 <script src="/assets/js/main.7c5898ee.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -128,7 +128,7 @@ Before running this command, please first follow our <a class="" href="/producti
 <li class=""><code>-H, --hostname &lt;string&gt;</code>: The hostname for your Postgres database instance (required).</li>
 <li class=""><code>-p, --port [number]</code>: The connection port for your Postgres database instance (default: <code>5432</code>).</li>
 <li class=""><code>-W, --password [string]</code>: The password for the <code>dbosadmin</code> role. If not provided, will be prompted on the command line. Passwords must contain 8 or more characters.</li>
-<li class=""><code>--enable-timetravel</code>: Enable experimental time travel for database instance.</li>
+<li class=""><code>--dbos-admin-name &lt;string&gt;</code>: Specify a custom Postgres role name for DBOS Cloud to administer the database as (default: <code>dbosadmin</code>).</li>
 </ul>
 <hr>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dbos-cloud-db-unlink"><code>dbos-cloud db unlink</code><a href="#dbos-cloud-db-unlink" class="hash-link" aria-label="Direct link to dbos-cloud-db-unlink" title="Direct link to dbos-cloud-db-unlink" translate="no">​</a></h3>
@@ -148,7 +148,6 @@ It executes the migration commands declared in <code>dbos-config.yaml</code>, de
 <ul>
 <li class=""><code>[application-name]</code>: The name of the application to deploy. By default we obtain the application name from <code>dbos-config.yaml</code>. This argument overrides the package name.</li>
 <li class=""><code>-d, --database &lt;string&gt;</code>: The name of the Postgres database instance to which this application will connect. This may only be set the first time an application is deployed and cannot be changed afterwards.</li>
-<li class=""><code>--enable-timetravel</code>: Enable experimental time travel for this application. This may only be set the first time an application is deployed and cannot be changed afterwards.</li>
 <li class=""><code>--verbose</code>: Logs debug information about the deployment process, including config file processing and files sent.</li>
 <li class=""><code>--configFile</code>: DBOS config file path (default: <code>dbos-config.yaml</code>).</li>
 <li class=""><code>-p, --previous-version [number]</code>: The ID of a previous version of this application. If this is supplied, redeploy that version instead of deploying from the application directory. This will fail if the previous and current versions have different database schemas. You can list previous versions and their IDs with the <a href="#dbos-cloud-app-versions" class="">versions command</a>.</li>
