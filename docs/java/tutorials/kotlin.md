@@ -1,5 +1,5 @@
 ---
-sidebar_position: 78
+sidebar_position: 100
 title: Using DBOS with Kotlin
 description: Write DBOS workflows and steps in Kotlin using idiomatic trailing lambda syntax.
 ---
@@ -85,7 +85,7 @@ val handle = dbos.startWorkflow(StartWorkflowOptions("my-workflow-id")) {
 val result = handle.result
 ```
 
-:::note
+:::info
 Kotlin's SAM conversion means a plain `dbos.startWorkflow { }` call (with no options argument) would be ambiguous with the Java overload.
 Always pass `StartWorkflowOptions()` (or `null`) as the first argument when using the trailing lambda form.
 :::

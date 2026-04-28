@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 40
 title: Communicating with Workflows
 ---
 
@@ -35,7 +35,7 @@ or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-ta
 ```
 
 Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `Optional.empty()` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
@@ -57,8 +57,8 @@ class CheckoutImpl implements Checkout {
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
-        String paymentStatus = dbos.recv(PAYMENT_STATUS, Duration.ofSeconds(60)).orElse(null);
-        if (paymentStatus != null && paymentStatus.equals("paid")) {
+        Optional<String> paymentStatus = dbos.<String>recv(PAYMENT_STATUS, Duration.ofSeconds(60));
+        if (paymentStatus.isPresent() && paymentStatus.get().equals("paid")) {
             // Handle a successful payment.
         } else {
             // Handle a failed payment or timeout.
@@ -83,7 +83,7 @@ app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal Java code, you can use a unique workflow ID to guarantee exactly-once delivery.
+If you're sending a message from normal Java code, you can use a unique idempotency key to guarantee exactly-once delivery.
 
 ## Workflow Events
 
@@ -95,7 +95,7 @@ They are useful for publishing information about the status of a workflow or to 
 #### setEvent
 
 ```java
-void setEvent(String key, Object value)
+void setEvent(String key, Object value, SerializationStrategy serialization)
 ```
 
 Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
@@ -107,7 +107,7 @@ Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to pub
 ```
 
 You can call [`dbos.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+If the event does not yet exist, this call waits for it to be published, returning `Optional.empty()` if the wait times out.
 
 You can also call [`getEvent`](../reference/client.md#getevent) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
@@ -150,12 +150,12 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = dbos.<String>getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60)).orElse(null);
-    if (paymentId == null) {
+    Optional<String> paymentId = dbos.<String>getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60));
+    if (paymentId.isEmpty()) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
     } else {
-        ctx.result(paymentId);
+        ctx.result(paymentId.get());
     }
 });
 ```

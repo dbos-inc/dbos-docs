@@ -122,6 +122,6 @@ public void everyMinute(Instant scheduled, Instant actual) {
 
 DBOS registers `@Scheduled` workflows automatically at launch — no call to `applySchedules` needed.
 
-The annotation supports the same `queue` and `ignoreMissed` (`true` = skip missed firings) options, but does not support timezone, context, or runtime management. Use the `WorkflowSchedule` API when you need those features.
+The annotation supports the same `queue` and `automaticBackfill` options, but does not support timezone, context, or runtime management. Use the `WorkflowSchedule` API when you need those features.
 
 See the [`@Scheduled` reference](../reference/workflows-steps.md#scheduled) for full parameter details.

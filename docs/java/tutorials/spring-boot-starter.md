@@ -1,5 +1,5 @@
 ---
-sidebar_position: 80
+sidebar_position: 90
 title: Spring Boot Integration
 description: Add DBOS durable workflows to a Spring Boot application.
 ---
@@ -10,20 +10,20 @@ The `transact-spring-boot-starter` integrates DBOS into a Spring Boot applicatio
 
 <Tabs groupId="build-tool">
 <TabItem value="gradle" label="Gradle">
-```groovy
+```kotlin
 dependencies {
-    implementation 'dev.dbos:transact-spring-boot-starter:0.8.0'
+  implementation("dev.dbos:transact-spring-boot-starter:0.8.0")
 }
 ```
 </TabItem>
 <TabItem value="maven" label="Maven">
 ```xml
 <dependencies>
-    <dependency>
-        <groupId>dev.dbos</groupId>
-        <artifactId>transact-spring-boot-starter</artifactId>
-        <version>0.8.0</version>
-    </dependency>
+  <dependency>
+    <groupId>dev.dbos</groupId>
+    <artifactId>transact-spring-boot-starter</artifactId>
+    <version>0.8.0</version>
+  </dependency>
 </dependencies>
 ```
 </TabItem>
@@ -31,51 +31,72 @@ dependencies {
 
 ## Configuration
 
-Set your application name and database connection in `application.properties` (or `application.yml`):
+Set your application name and database connection in `application.yaml` (or `application.properties`):
 
-```properties
-spring.application.name=my-app
-
-# DBOS system database (omit if DBOS should share the app's primary DataSource)
-dbos.datasource.url=jdbc:postgresql://localhost:5432/mydb
-dbos.datasource.username=myuser
-dbos.datasource.password=secret
+```yml
+dbos:
+  application:
+    name: "my-app"
+  # DBOS system database 
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/my_app_db"
+    username: "postgres"
+    password: "${PGPASSWORD}"
 ```
 
-If `dbos.datasource.*` is not set and a `DataSource` bean exists in the Spring context, DBOS uses it automatically.
+If `dbos.application.name` or `dbos.datasource` properties are not set, `spring.application.name` and `spring.datasource` are used as a fallback.
 
-The application name can also be set via `dbos.application.name`; `spring.application.name` is used as a fallback.
+```yml
+spring:
+  application:
+    name: "widget-store"
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/widget_store_java"
+    username: "postgres"
+    password: "${PGPASSWORD}"
+    driver-class-name: "org.postgresql.Driver"
+```
+
+:::danger
+DBOS only supports PostgreSQL today. Attempting to use a non PostgreSQL database driver will throw an exception.
+:::
+
 
 ## Defining Workflows and Steps
 
-Annotate methods on any Spring-managed singleton bean (`@Service`, `@Component`, etc.) with `@Workflow` and `@Step` as usual:
+Annotate methods on any Spring-managed singleton bean (`@Service`, `@Component`, etc.) with `@Workflow` and `@Step`.
+Note, `transact-spring-boot-starter` uses [Spring AOP](https://docs.spring.io/spring-framework/reference/core/aop.html) which does not require defining a separate interface.
+You do however still need a proxy instance for invocating `@Workflow` and `@Step` methods on the same instance.
+This proxy reference can be self injected via an [`@Autowired`](https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/autowired.html) setter.
 
 ```java
 @Service
 public class OrderService {
 
-    @Autowired OrderService self;  // self-inject to go through the Spring proxy
+  private OrderService self;
 
-    @Workflow
-    public String processOrder(String orderId) {
-        String result = self.chargeCard(orderId);   // durable step via self-proxy
-        self.sendConfirmation(orderId, result);
-        return result;
-    }
+  @Autowired 
+  @Lazy
+  public void setSelf(WidgetStoreService self) {
+    this.self = self;
+  }
 
-    @Step
-    public String chargeCard(String orderId) { /* ... */ return "charged"; }
+  @Workflow
+  public String processOrder(String orderId) {
+    String result = self.chargeCard(orderId);   // durable step via self-proxy
+    self.sendConfirmation(orderId, result);
+    return result;
+  }
 
-    @Step
-    public void sendConfirmation(String orderId, String result) { /* ... */ }
+  @Step
+  public String chargeCard(String orderId) { /* ... */ return "charged"; }
+
+  @Step
+  public void sendConfirmation(String orderId, String result) { /* ... */ }
 }
 ```
 
 `DBOSWorkflowRegistrar` scans all singleton beans after initialization and registers those with `@Workflow` methods automatically — no manual `dbos.registerProxy(...)` call needed.
-
-:::warning Self-injection is required for steps
-Spring AOP only intercepts calls made **through the proxy**. A direct `this.chargeCard()` call inside a workflow body bypasses the aspect and runs outside DBOS, losing durability. Inject a self-reference with `@Autowired MyService self` and call through it.
-:::
 
 ## Lifecycle
 

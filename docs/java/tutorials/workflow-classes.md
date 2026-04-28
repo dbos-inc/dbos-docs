@@ -1,5 +1,5 @@
 ---
-sidebar_position: 55
+sidebar_position: 80
 title: Workflows on Class Instances
 description: Register multiple instances of a workflow class to share logic with per-instance configuration.
 ---

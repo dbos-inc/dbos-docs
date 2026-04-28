@@ -1,5 +1,5 @@
 ---
-sidebar_position: 77
+sidebar_position: 110
 title: Testing Workflows
 description: Unit test DBOS workflows by mocking the DBOS instance.
 ---
@@ -145,7 +145,7 @@ class MyWorkflowIntegrationTest {
 
     @Container
     static final PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:17");
+        new PostgreSQLContainer<>("postgres:latest");
 
     @Test
     void myWorkflow_completesSuccessfully() throws Exception {
@@ -162,5 +162,3 @@ class MyWorkflowIntegrationTest {
     }
 }
 ```
-
-Alternatively, use the [`dbos reset`](../reference/cli.md) CLI command to wipe system database state between manual test runs against a local Postgres instance.

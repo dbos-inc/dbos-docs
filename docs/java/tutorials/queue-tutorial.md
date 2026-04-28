@@ -1,7 +1,7 @@
 ---
 sidebar_position: 30
 title: Queues & Concurrency
-toc_max_heading_level: 3
+toc_max_heading_level: 4
 ---
 
 You can use queues to run many workflows at once with managed concurrency.
@@ -21,24 +21,24 @@ Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```java
 class ExampleImpl implements Example {
-    @Workflow
-    public String processTask(String task) {
-        // Process the task...
-        return "Processed: " + task;
-    }
+  @Workflow
+  public String processTask(String task) {
+    // Process the task...
+    return "Processed: " + task;
+  }
 }
 
 public String example(DBOS dbos, Queue queue, Example proxy, String task) throws Exception {
-    // Enqueue a workflow
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-        () -> proxy.processTask(task),
-        new StartWorkflowOptions().withQueue(queue)
-    );
+  // Enqueue a workflow
+  WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+    () -> proxy.processTask(task),
+    new StartWorkflowOptions().withQueue(queue)
+  );
 
-    // Get the result
-    String result = handle.getResult();
-    System.out.println("Task result: " + result);
-    return result;
+  // Get the result
+  String result = handle.getResult();
+  System.out.println("Task result: " + result);
+  return result;
 }
 ```
 
@@ -48,78 +48,77 @@ Here's an example of a workflow using a queue to process tasks concurrently:
 
 ```java
 interface Example {
-    public void setProxy(Example proxy);
-    public String taskWorkflow(String task);
-    public List<String> queueWorkflow(String[] tasks) throws Exception;
+  public String taskWorkflow(String task);
+  public List<String> queueWorkflow(String[] tasks) throws Exception;
 }
 
 class ExampleImpl implements Example {
 
-    private final DBOS dbos;
-    private final Queue queue;
-    private Example proxy;
+  private final DBOS dbos;
+  private final Queue queue;
+  private Example self;
 
-    public ExampleImpl(DBOS dbos, Queue queue) {
-        this.dbos = dbos;
-        this.queue = queue;
+  public ExampleImpl(DBOS dbos, Queue queue) {
+    this.dbos = dbos;
+    this.queue = queue;
+  }
+
+  public void setSelf(Example self) {
+    this.self = self;
+  }
+
+  @Workflow
+  public String taskWorkflow(String task) {
+    // Process the task...
+    return "Processed: " + task;
+  }
+
+  @Workflow
+  public List<String> queueWorkflow(String[] tasks) throws Exception {
+    // Enqueue each task so all tasks are processed concurrently
+    List<WorkflowHandle<String, RuntimeException>> handles = new ArrayList<>();
+    for (String task : tasks) {
+      WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+        () -> self.taskWorkflow(task),
+        new StartWorkflowOptions().withQueue(queue)
+      );
+      handles.add(handle);
     }
 
-    public void setProxy(Example proxy) {
-        this.proxy = proxy;
+    // Wait for each task to complete and retrieve its result
+    List<String> results = new ArrayList<>();
+    for (WorkflowHandle<String, RuntimeException> handle : handles) {
+      String result = handle.getResult();
+      results.add(result);
     }
 
-    @Workflow
-    public String taskWorkflow(String task) {
-        // Process the task...
-        return "Processed: " + task;
-    }
-
-    @Workflow
-    public List<String> queueWorkflow(String[] tasks) throws Exception {
-        // Enqueue each task so all tasks are processed concurrently
-        List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
-        for (String task : tasks) {
-            WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-                () -> proxy.taskWorkflow(task),
-                new StartWorkflowOptions().withQueue(queue)
-            );
-            handles.add(handle);
-        }
-
-        // Wait for each task to complete and retrieve its result
-        List<String> results = new ArrayList<>();
-        for (WorkflowHandle<String, Exception> handle : handles) {
-            String result = handle.getResult();
-            results.add(result);
-        }
-
-        return results;
-    }
+    return results;
+  }
 }
 
 public class App {
-    public static void main(String[] args) throws Exception {
-        DBOSConfig config = ...
-        DBOS dbos = new DBOS(config);
+  public static void main(String[] args) throws Exception {
+    DBOSConfig config = ...
+    DBOS dbos = new DBOS(config);
 
-        // Create and register a queue
-        Queue queue = new Queue("example-queue");
-        dbos.registerQueue(queue);
-        // Instantiate an Example and register its workflows
-        ExampleImpl impl = new ExampleImpl(dbos, queue);
-        Example proxy = dbos.registerProxy(Example.class, impl);
-        // Provide the workflow proxy to the class so its methods can invoke workflows
-        impl.setProxy(proxy);
+    // Create and register a queue
+    Queue queue = new Queue("example-queue");
+    dbos.registerQueue(queue);
+    // Instantiate an Example and register its workflows
+    ExampleImpl impl = new ExampleImpl(dbos, queue);
+    Example proxy = dbos.registerProxy(Example.class, impl);
+    // Provide the workflow proxy to the class so its methods can invoke workflows
+    impl.setSelf(proxy);
 
-        dbos.launch();
+    dbos.launch();
 
-        // Run the queue workflow
-        String[] tasks = {"task1", "task2", "task3", "task4", "task5"};
-        List<String> results = proxy.queueWorkflow(tasks);
-        for (String result : results) {
-            System.out.println(result);
-        }
+    // Run the queue workflow
+    String[] tasks = {"task1", "task2", "task3", "task4", "task5"};
+    List<String> results = proxy.queueWorkflow(tasks);
+    for (String result : results) {
+      System.out.println(result);
     }
+  }
 }
 ```
 
@@ -130,70 +129,69 @@ The main workflow awaits those messages, retrieving the result of each task as s
 
 ```java
 interface Example {
-    public void setProxy(Example proxy);
-    public String processTask(String parentWorkflowId, int taskId, String task);
-    public List<String> processTasks(String[] tasks) throws Exception;
+  public String processTask(String parentWorkflowId, int taskId, String task);
+  public List<String> processTasks(String[] tasks) throws Exception;
 }
 
 class ExampleImpl implements Example {
-    private static final String TASK_COMPLETE_TOPIC = "task_complete";
+  private static final String TASK_COMPLETE_TOPIC = "task_complete";
 
-    private final DBOS dbos;
-    private final Queue queue;
-    private Example proxy;
+  private final DBOS dbos;
+  private final Queue queue;
+  private Example self;
 
-    public ExampleImpl(DBOS dbos, Queue queue) {
-        this.dbos = dbos;
-        this.queue = queue;
+  public ExampleImpl(DBOS dbos, Queue queue) {
+    this.dbos = dbos;
+    this.queue = queue;
+  }
+
+  public void setSelf(Example self) {
+    this.self = self;
+  }
+
+  @Workflow
+  public String processTask(String parentWorkflowId, int taskId, String task) {
+    String result = "Processed: " + task; // Process the task
+
+    // Notify the main workflow this task is complete
+    dbos.send(parentWorkflowId, taskId, TASK_COMPLETE_TOPIC, null);
+    return result;
+  }
+
+  @Workflow
+  public List<String> processTasks(String[] tasks) throws Exception {
+    String parentWorkflowId = DBOS.workflowId();
+
+    List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
+      for (int i = 0; i < tasks.length; i++) {
+        final int taskId = i;
+        final String task = tasks[i];
+        WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+          () -> self.processTask(parentWorkflowId, taskId, task),
+          new StartWorkflowOptions().withQueue(queue)
+        );
+        handles.add(handle);
     }
 
-    public void setProxy(Example proxy) {
-        this.proxy = proxy;
+    List<String> results = new ArrayList<>();
+    while (results.size() < tasks.length) {
+      // Wait for a notification that a task is complete
+      Integer completedTaskId = dbos.<Integer>recv(TASK_COMPLETE_TOPIC, Duration.ofMinutes(5)).orElse(null);
+      if (completedTaskId == null) {
+        throw new RuntimeException("Timeout waiting for task completion");
+      }
+      // Retrieve result of the completed task
+      WorkflowHandle<String, Exception> completedTaskHandle = handles.get(completedTaskId);
+      String result = completedTaskHandle.getResult();
+      System.out.println("Task " + completedTaskId + " completed. Result: " + result);
+      results.add(result);
     }
-
-    @Workflow
-    public String processTask(String parentWorkflowId, int taskId, String task) {
-        String result = "Processed: " + task; // Process the task
-
-        // Notify the main workflow this task is complete
-        dbos.send(parentWorkflowId, taskId, TASK_COMPLETE_TOPIC, null);
-        return result;
-    }
-
-    @Workflow
-    public List<String> processTasks(String[] tasks) throws Exception {
-        String parentWorkflowId = DBOS.workflowId();
-
-        List<WorkflowHandle<String, Exception>> handles = new ArrayList<>();
-        for (int i = 0; i < tasks.length; i++) {
-            final int taskId = i;
-            final String task = tasks[i];
-            WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-                () -> proxy.processTask(parentWorkflowId, taskId, task),
-                new StartWorkflowOptions().withQueue(queue)
-            );
-            handles.add(handle);
-        }
-
-        List<String> results = new ArrayList<>();
-        while (results.size() < tasks.length) {
-            // Wait for a notification that a task is complete
-            Integer completedTaskId = (Integer) dbos.recv(TASK_COMPLETE_TOPIC, Duration.ofMinutes(5)).orElse(null);
-            if (completedTaskId == null) {
-                throw new RuntimeException("Timeout waiting for task completion");
-            }
-            // Retrieve result of the completed task
-            WorkflowHandle<String, Exception> completedTaskHandle = handles.get(completedTaskId);
-            String result = completedTaskHandle.getResult();
-            System.out.println("Task " + completedTaskId + " completed. Result: " + result);
-            results.add(result);
-        }
-        return results;
-    }
+    return results;
+  }
 }
 ```
 
-### Enqueueing from Another Application
+#### Enqueueing from Another Application
 
 Often, you want to enqueue a workflow from outside your DBOS application.
 For example, let's say you have an API server and a data processing service.
@@ -209,21 +207,21 @@ For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueu
 var client = new DBOSClient(dbUrl, dbUser, dbPassword);
 
 var options = new DBOSClient.EnqueueOptions(
-    "com.example.DataPipelineImpl",  // Class name
-    "dataPipeline",                  // Workflow name
-    "pipelineQueue"                  // Queue name
+  "dataPipeline",                  // Workflow name
+  "com.example.DataPipelineImpl",  // Class name
+  "pipelineQueue"                  // Queue name
 );
 
 var handle = client.enqueueWorkflow(
-    options,
-    new Object[]{"task-123", "data"}  // Workflow arguments
+  options,
+  new Object[]{"task-123", "data"}  // Workflow arguments
 );
 
 // Optionally wait for the result
 Object result = handle.getResult();
 ```
 
-### Enqueueing from PL/pgSQL
+#### Enqueueing from PL/pgSQL
 
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
@@ -233,13 +231,13 @@ For example, here is the previous example of enqueing the `dataPipeline` workflo
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-    workflow_name => 'dataPipeline', 
-    class_name => 'com.example.DataPipelineImpl',
-    queue_name => 'pipelineQueue', 
-    positional_args => ARRAY[
-        '"task-123"'::json, 
-        '"data"'::json]
-    )
+  workflow_name => 'dataPipeline', 
+  class_name => 'com.example.DataPipelineImpl',
+  queue_name => 'pipelineQueue', 
+  positional_args => ARRAY[
+    '"task-123"'::json, 
+    '"data"'::json]
+)
 ```
 
 ### Managing Concurrency
@@ -254,8 +252,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-Queue queue = new Queue("example-queue")
-    .withWorkerConcurrency(5);
+Queue queue = new Queue("example-queue").withWorkerConcurrency(5);
 dbos.registerQueue(queue);
 ```
 
@@ -270,8 +267,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-Queue queue = new Queue("example-queue")
-    .withConcurrency(10);
+Queue queue = new Queue("example-queue").withConcurrency(10);
 dbos.registerQueue(queue);
 ```
 
@@ -283,7 +279,7 @@ For example, this queue has a limit of 100 workflows with a period of 60 seconds
 
 ```java
 Queue queue = new Queue("example-queue")
-    .withRateLimit(100, 60.0);  // 100 workflows per 60 seconds
+  .withRateLimit(100, Duration.ofSeconds(60)); // 100 workflows per 60 seconds
 dbos.registerQueue(queue);
 ```
 
@@ -291,7 +287,7 @@ Rate limits are especially useful when working with a rate-limited API.
 
 ### Setting Timeouts
 
-You can set a timeout for an enqueued workflow via the `withTimeout` function on `WorkflowOptions` and `StartWorkflowOptions`.
+You can set a timeout for an enqueued workflow via the `withTimeout` function on `StartWorkflowOptions`.
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
@@ -306,6 +302,47 @@ dbos.registerQueue(queue);
 
 // use StartWorkflowOptions.withTimeout with dbos.startWorkflow
 var options = new StartWorkflowOptions(queue).withTimeout(Duration.ofSeconds(10));
+var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
+```
+
+### Setting Deadlines
+
+You can set a deadline for an enqueued workflow via the `withDeadline` function on `StartWorkflowOptions`.
+A deadline is an **absolute point in time** by which the workflow must complete; if the deadline passes before the workflow finishes, the workflow **and all its children** are cancelled.
+Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+
+:::warning
+You cannot set both an explicit timeout and a deadline on the same workflow — use one or the other.
+:::
+
+Like timeouts, deadlines are **durable**: they are stored in the database and persist across restarts.
+
+Example syntax:
+
+```java
+Queue queue = new Queue("example-queue");
+dbos.registerQueue(queue);
+
+// Use StartWorkflowOptions.withDeadline with dbos.startWorkflow
+Instant deadline = Instant.now().plus(Duration.ofHours(1));
+var options = new StartWorkflowOptions(queue).withDeadline(deadline);
+var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
+```
+
+### Delaying Execution
+
+You can delay when an enqueued workflow starts executing via the `withDelay` function on `StartWorkflowOptions`.
+The delay is a `Duration` that must be a positive, non-zero value.
+The workflow remains `DELAYED` until the delay has elapsed, after which its status changes to `ENQUEUED` and it is eligible to be dequeued and started normally.
+
+Example syntax:
+
+```java
+Queue queue = new Queue("example-queue");
+dbos.registerQueue(queue);
+
+// Delay the workflow's execution by 30 seconds
+var options = new StartWorkflowOptions(queue).withDelay(Duration.ofSeconds(30));
 var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ```
 
@@ -388,7 +425,7 @@ class UserTasksImpl implements UserTasks {
 
 You can set a deduplication ID for an enqueued workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will raise an exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -441,7 +478,7 @@ public String taskWorkflow(String task) {
 }
 
 public void example(DBOS dbos, Example proxy, String task, int priority) throws Exception {
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
+    WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
         () -> proxy.taskWorkflow(task),
         new StartWorkflowOptions().withQueue(queue).withPriority(priority)
     );

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 65
+sidebar_position: 60
 title: Upgrading Workflow Code
 toc_max_heading_level: 3
 ---
