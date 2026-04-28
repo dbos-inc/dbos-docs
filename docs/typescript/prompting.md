@@ -1836,7 +1836,7 @@ export interface DBOSConfig {
   runAdminServer?: boolean;
   adminPort?: number;
 
-  listenQueues?: WorkflowQueue[];
+  listenQueues?: (WorkflowQueue | string)[];
 
   serializer?: DBOSSerializer;
 }
@@ -1865,7 +1865,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
-- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
 
 ````

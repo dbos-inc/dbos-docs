@@ -88,7 +88,8 @@ await workflow();
 ```
 
 **You must register all workflows before calling `DBOS.launch()`**
-As workflow recovery will commence after `DBOS.launch()`, it is essential that all workflows, queues, and other resources be registered before this point.
+As workflow recovery will commence after `DBOS.launch()`, it is essential that all workflows and other resources be registered before this point.
+Queues are an exception: [`DBOS.registerQueue`](./reference/queues.md#dbosregisterqueue) persists configuration to the system database, so it must be called **after** `DBOS.launch()`.
 
 You can add DBOS to your application incrementally&mdash;it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
