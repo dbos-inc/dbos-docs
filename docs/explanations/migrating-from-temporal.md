@@ -793,11 +793,11 @@ Learn more in the [queues tutorial](../python/tutorials/queue-tutorial.md).
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript
-// Define a queue with concurrency limits
-const orderQueue = new WorkflowQueue("order-processing", { concurrency: 10 });
+// Register a queue with concurrency limits
+await DBOS.registerQueue("order-processing", { concurrency: 10 });
 
 // Enqueue a workflow
-const handle = await DBOS.startWorkflow(orderWorkflowFn, { queueName: orderQueue.name })(order);
+const handle = await DBOS.startWorkflow(orderWorkflowFn, { queueName: "order-processing" })(order);
 const result = await handle.getResult();
 ```
 

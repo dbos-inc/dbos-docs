@@ -137,9 +137,9 @@ You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manag
 Pass the `queueName` option when creating the schedule:
 
 ```typescript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
-const queue = new WorkflowQueue("scheduled_queue", { concurrency: 1 });
+await DBOS.registerQueue("scheduled_queue", { concurrency: 1 });
 
 await DBOS.createSchedule({
     scheduleName: "my-task-schedule",
