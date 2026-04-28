@@ -431,6 +431,20 @@ Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
 
 The returned queue is bound to this client's system database; you can read its configuration and call its [`set_*`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
 
+### delete_queue
+
+```python
+client.delete_queue(name: str) -> None
+```
+
+Delete a queue from the system database. No-op if no queue with that name exists.
+Similar to [`DBOS.delete_queue`](./contexts.md#delete_queue).
+
+:::warning
+Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
+Cancel or drain pending workflows on the queue before deleting it.
+:::
+
 
 ## Workflow Management Methods
 

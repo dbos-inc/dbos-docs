@@ -706,6 +706,19 @@ DBOS.enqueue_workflow_async(
 
 Coroutine version of [`enqueue_workflow`](#enqueue_workflow).
 
+### delete_queue
+
+```python
+DBOS.delete_queue(name: str) -> None
+```
+
+Delete a queue from the system database. No-op if no queue with that name exists.
+
+:::warning
+Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
+Cancel or drain pending workflows on the queue before deleting it.
+:::
+
 ## Workflow Management Methods
 
 ### list_workflows
