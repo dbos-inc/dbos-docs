@@ -16,50 +16,49 @@ Here's an example of a workflow:
 
 ```java
 interface Example {
-    public String workflow();
+  public String workflow();
 }
 
 class ExampleImpl implements Example {
-    private final DBOS dbos;
+  private final DBOS dbos;
 
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
+  public ExampleImpl(DBOS dbos) {
+    this.dbos = dbos;
+  }
 
-    private String stepOne() {
-        System.out.println("Step one completed");
-        return "success";
-    }
+  private void stepOne() {
+    System.out.println("Step one completed!");
+  }
 
-    private String stepTwo() {
-        System.out.println("Step two completed");
-        return "success";
-    }
+  private void stepTwo() {
+    System.out.println("Step two completed!");
+  }
 
-    @Workflow(name = "workflow")
-    public String workflow() {
-        dbos.runStep(() -> stepOne(), "stepOne");
-        dbos.runStep(() -> stepTwo(), "stepTwo");
-        return "success";
-    }
+  @Override
+  @Workflow
+  public String workflow() {
+    dbos.runStep(() -> stepOne(), "stepOne");
+    dbos.runStep(() -> stepTwo(), "stepTwo");
+    return "success";
+  }
 }
 
 public class App {
-    public static void main(String[] args) throws Exception {
-        // Configure and create a DBOS instance
-        DBOSConfig config = ...
-        DBOS dbos = new DBOS(config);
+  public static void main(String[] args) throws Exception {
+    // Configure and create a DBOS instance
+    DBOSConfig config = ...
+    DBOS dbos = new DBOS(config);
 
-        // Register the workflow, creating a proxy object
-        Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
+    // Register the workflow, creating a proxy object
+    Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
 
-        // Launch DBOS after registering all workflows
-        dbos.launch();
+    // Launch DBOS after registering all workflows
+    dbos.launch();
 
-        // Call the registered workflow through the proxy
-        String result = proxy.workflow();
-        System.out.println("Workflow result: " + result);
-    }
+    // Call the registered workflow through the proxy
+    String result = proxy.workflow();
+    System.out.println("Workflow result: " + result);
+  }
 }
 ```
 
@@ -72,23 +71,13 @@ When you start a workflow this way, it returns a [workflow handle](../reference/
 Here's an example:
 
 ```java
-class ExampleImpl implements Example {
-    @Workflow(name = "backgroundTask")
-    public String backgroundTask(String input) {
-        // ...
-        return output;
-    }
-}
-
 public void runWorkflowExample(DBOS dbos, Example proxy) throws Exception {
-    // Start the background task
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-        () -> proxy.backgroundTask("input"),
-        new StartWorkflowOptions()
-    );
-    // Wait for the background task to complete and retrieve its result
-    String result = handle.getResult();
-    System.out.println("Workflow result: " + result);
+  // Start the background task
+  WorkflowHandle<String, Exception> handle = dbos.startWorkflow(() -> proxy.workflow());
+
+  // Wait for the background task to complete and retrieve its result
+  String result = handle.getResult();
+  System.out.println("Workflow result: " + result);
 }
 ```
 
@@ -103,31 +92,32 @@ Every time you execute a workflow, that execution is assigned a unique ID, by de
 You can access this ID from the [`DBOS.workflowId`](../reference/methods.md#workflowid) method.
 Workflow IDs are useful for communicating with workflows and developing interactive workflows.
 
-You can set the workflow ID of a workflow using `withWorkflowId` when calling `startWorkflow`.
+You can set the workflow ID of a workflow using `withWorkflowId` method of `WorkflowOptions` or `StartWorkflowOptions`.
 Workflow IDs are **globally unique** within your application.
 An assigned workflow ID acts as an idempotency key: if a workflow is called multiple times with the same ID, it executes only once.
 This is useful if your operations have side effects like making a payment or sending an email.
 For example:
 
 ```java
-class ExampleImpl implements Example {
-    @Workflow(name = "exampleWorkflow")
-    public String exampleWorkflow() {
-        System.out.println("Running workflow with ID: " + DBOS.workflowId());
-        // ...
-        return "success";
-    }
+public void directInvocationExample(DBOS dbos, Example proxy) throws Exception {
+  String myID = "unique-workflow-id-123";
+  WorkflowOptions options = new WorkflowOptions().withWorkflowId(myID);
+  try (var _ctx = new options.setContext()) {
+    var result = proxy.workflow();
+    System.out.println("Result: " + result);
+  }
 }
 
-public void example(DBOS dbos, Example proxy) throws Exception {
-    String myID = "unique-workflow-id-123";
-    WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
-        () -> proxy.exampleWorkflow(),
-        new StartWorkflowOptions().withWorkflowId(myID)
-    );
-    String result = handle.getResult();
-    System.out.println("Result: " + result);
+public void startWorkflowExample(DBOS dbos, Example proxy) throws Exception {
+  String myID = "unique-workflow-id-123";
+  WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
+    () -> proxy.exampleWorkflow(),
+    new StartWorkflowOptions().withWorkflowId(myID)
+  );
+  String result = handle.getResult();
+  System.out.println("Result: " + result);
 }
+
 ```
 
 ## Determinism
@@ -145,8 +135,10 @@ Java's threading and concurrency APIs are non-deterministic. You should use them
 For example, **don't do this**:
 
 ```java
-@Workflow(name = "exampleWorkflow")
-public String exampleWorkflow() {
+@Workflow
+public String workflow() {
+    // Random number generation is not deterministic!
+    // This workflow is not idempotent!
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
         return dbos.runStep(() -> stepOne(), "stepOne");
@@ -163,8 +155,10 @@ private int generateChoice() {
     return new Random().nextInt(2);
 }
 
-@Workflow(name = "exampleWorkflow")
-public String exampleWorkflow() {
+@Workflow
+public String workflow() {
+    // this workflow is idempotent because the random number generation
+    // is inside a step so it only gets executed once per workflow ID
     int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
         return dbos.runStep(() -> stepOne(), "stepOne");
@@ -176,20 +170,25 @@ public String exampleWorkflow() {
 
 ## Workflow Timeouts
 
-You can set a timeout for a workflow using [`withTimeout`](../reference/workflows-steps.md#startworkflow) in `StartWorkflowOptions`.
+You can set a timeout for a workflow using [`withTimeout`](../reference/workflows-steps.md#startworkflow) in `WorkflowOptions` and `StartWorkflowOptions`.
 
-When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow from its parent's timeout by starting it with a custom timeout using `withTimeout`.
+When the timeout expires, the workflow and all its children (by default) are cancelled. 
+Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. 
+You can detach a child workflow from its parent's timeout by starting it with a custom timeout using `withTimeout`.
 
-Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
+Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. 
+Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
 ```java
-@Workflow(name = "exampleWorkflow")
-public void exampleWorkflow() throws InterruptedException {
-    // Workflow implementation
+// set timeout for direct invocation
+var options = new WorkflowOptions().withTimeout(Duration.ofHours(12));
+try (var _ctx = options.setContext()) {
+    proxy.workflow();
 }
 
-WorkflowHandle<Void, InterruptedException> handle = dbos.startWorkflow(
-    () -> proxy.exampleWorkflow(),
+// set timeout with start workflow
+var handle = dbos.startWorkflow(
+    () -> proxy.workflow(),
     new StartWorkflowOptions().withTimeout(Duration.ofHours(12))
 );
 ```
@@ -208,10 +207,10 @@ public String runTask(String task) {
     return "task completed";
 }
 
-@Workflow(name = "exampleWorkflow")
-public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
+@Workflow
+public String exampleWorkflow(Duration sleepTime, String task) {
     // Sleep for the specified duration
-    dbos.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
+    dbos.sleep(sleepTime);
 
     // Execute the task after sleeping
     String result = dbos.runStep(

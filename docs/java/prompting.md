@@ -70,7 +70,6 @@ For **Gradle** (`build.gradle`):
 ```groovy
 dependencies {
     implementation 'dev.dbos:transact:0.8.0'
-    implementation 'ch.qos.logback:logback-classic:1.5.18'
 }
 ```
 
@@ -81,11 +80,6 @@ For **Maven** (`pom.xml`):
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
         <version>0.8.0</version>
-    </dependency>
-    <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>1.5.18</version>
     </dependency>
 </dependencies>
 ```
@@ -304,7 +298,7 @@ interface Example {
 }
 
 class ExampleImpl implements Example {
-    @Workflow(name="workflow")
+    @Workflow
     public void workflow() {
         return;
     }
@@ -342,7 +336,7 @@ interface Example {
 }
 
 class ExampleImpl implements Example {
-    @Workflow(name="workflow")
+    @Workflow
     public void workflow() {
         return;
     }
@@ -397,7 +391,7 @@ Here's an example:
 
 ```java
 class ExampleImpl implements Example {
-    @Workflow(name = "backgroundTask")
+    @Workflow
     public String backgroundTask(String input) {
         // ...
         return output;
@@ -435,7 +429,7 @@ For example:
 
 ```java
 class ExampleImpl implements Example {
-    @Workflow(name = "exampleWorkflow")
+    @Workflow
     public String exampleWorkflow() {
         System.out.println("Running workflow with ID: " + DBOS.workflowId());
         // ...
@@ -469,7 +463,7 @@ Java's threading and concurrency APIs are non-deterministic. You should use them
 For example, **don't do this**:
 
 ```java
-@Workflow(name = "exampleWorkflow")
+@Workflow
 public String exampleWorkflow() {
     int randomChoice = new Random().nextInt(2);
     if (randomChoice == 0) {
@@ -487,7 +481,7 @@ private int generateChoice() {
     return new Random().nextInt(2);
 }
 
-@Workflow(name = "exampleWorkflow")
+@Workflow
 public String exampleWorkflow() {
     int randomChoice = dbos.runStep(() -> generateChoice(), "generateChoice");
     if (randomChoice == 0) {
@@ -507,7 +501,7 @@ When the timeout expires, the workflow and all its children are cancelled. Cance
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
 ```java
-@Workflow(name = "exampleWorkflow")
+@Workflow
 public void exampleWorkflow() throws InterruptedException {
     // Workflow implementation
 }
@@ -532,7 +526,7 @@ public String runTask(String task) {
     return "task completed";
 }
 
-@Workflow(name = "exampleWorkflow")
+@Workflow
 public String exampleWorkflow(float timeToSleepSeconds, String task) throws InterruptedException {
     // Sleep for the specified duration
     dbos.sleep(Duration.ofMillis((long)(timeToSleepSeconds*1000)));
@@ -609,7 +603,7 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_STATUS = "payment_status";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
@@ -683,7 +677,7 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_ID = "payment_id";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // ... validation logic
         String paymentId = generatePaymentId();
@@ -737,7 +731,7 @@ class ExampleImpl implements Example {
         return new Random().nextInt(n);
     }
 
-    @Workflow(name = "workflowFunction")
+    @Workflow
     public int workflowFunction(int n) {
         int randomNumber = dbos.runStep(
             () -> generateRandomNumber(n), // Run generateRandomNumber as a checkpointed step
@@ -791,7 +785,7 @@ class ExampleImpl implements Example {
         return response.body();
     }
 
-    @Workflow(name = "fetchWorkflow")
+    @Workflow
     public String fetchWorkflow(String inputURL) throws Exception {
         return dbos.runStep(
             () -> fetchStep(inputURL),
@@ -1004,7 +998,7 @@ For example, this is useful if you only want to have one workflow active at a ti
 **Example syntax:**
 
 ```java
-@Workflow(name = "taskWorkflow")
+@Workflow
 public String taskWorkflow(String task) {
     // Process the task...
     return "completed";
@@ -1043,7 +1037,7 @@ dbos.registerQueue(queue);
 **Example syntax:**
 
 ```java
-@Workflow(name = "taskWorkflow")
+@Workflow
 public String taskWorkflow(String task) {
     // Process the task...
     return "completed";

@@ -40,19 +40,16 @@ import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
 
 public class MyApp {
-    public static void main(String[] args) throws Exception {
-        // Configure DBOS
-        DBOSConfig config = DBOSConfig.defaults("my-app")
-            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-            .withDbUser(System.getenv("PGUSER"))
-            .withDbPassword(System.getenv("PGPASSWORD"));
-        DBOS dbos = new DBOS(config);
+  public static void main(String[] args) throws Exception {
+    // Configure DBOS
+    DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    DBOS dbos = new DBOS(config);
 
-        // Register your workflows and queues (see step 4)
+    // Register your workflows and queues (see step 4)
 
-        // Launch DBOS
-        dbos.launch();
-    }
+    // Launch DBOS
+    dbos.launch();
+  }
 }
 ```
 
@@ -69,7 +66,7 @@ docker run -d \
   --name dbos-postgres \
   -e POSTGRES_PASSWORD=dbos \
   -p 5432:5432 \
-  postgres:17
+  postgres:latest
 ```
 :::
 
@@ -86,33 +83,34 @@ For example, you can annotate one of your methods as a [workflow](./tutorials/wo
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```java
+import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.Workflow;
-import dev.dbos.transact.workflow.StepOptions;
 
-interface MyWorkflows {
-    void reliableWorkflow();
+interface Example {
+  public void workflow();
 }
 
-class MyWorkflowsImpl implements MyWorkflows {
-    private final DBOS dbos;
+class ExampleImpl implements Example {
+  private final DBOS dbos;
 
-    public MyWorkflowsImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
+  public ExampleImpl(DBOS dbos) {
+    this.dbos = dbos;
+  }
 
-    private void stepOne() {
-        System.out.println("Step one completed!");
-    }
+  private void stepOne() {
+    System.out.println("Step one completed!");
+  }
 
-    private void stepTwo() {
-        System.out.println("Step two completed!");
-    }
+  private void stepTwo() {
+    System.out.println("Step two completed!");
+  }
 
-    @Workflow(name = "reliable-workflow")
-    public void reliableWorkflow() {
-        dbos.runStep(() -> stepOne(), "stepOne");
-        dbos.runStep(() -> stepTwo(), "stepTwo");
-    }
+  @Override
+  @Workflow
+  public void workflow() {
+    dbos.runStep(() -> stepOne(), "stepOne");
+    dbos.runStep(() -> stepTwo(), "stepTwo");
+  }
 }
 ```
 
@@ -121,13 +119,13 @@ To use your workflows, create a proxy before launching DBOS:
 ```java
 // Create a DBOS instance and register the workflow proxy (before launching)
 DBOS dbos = new DBOS(config);
-MyWorkflows workflows = dbos.registerProxy(MyWorkflows.class, new MyWorkflowsImpl(dbos));
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
 
 // Launch DBOS
 dbos.launch();
 
 // Now you can call your workflows
-workflows.reliableWorkflow();
+proxy.workflow();
 ```
 
 **Important:** You must create all workflow proxies and queues before calling `dbos.launch()`.

@@ -53,7 +53,7 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_STATUS = "payment_status";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
@@ -127,7 +127,7 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_ID = "payment_id";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // ... validation logic
         String paymentId = generatePaymentId();

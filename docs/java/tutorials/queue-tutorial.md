@@ -151,7 +151,7 @@ class ExampleImpl implements Example {
         this.proxy = proxy;
     }
 
-    @Workflow(name = "processTask")
+    @Workflow
     public String processTask(String parentWorkflowId, int taskId, String task) {
         String result = "Processed: " + task; // Process the task
 
@@ -160,7 +160,7 @@ class ExampleImpl implements Example {
         return result;
     }
 
-    @Workflow(name = "processTasks")
+    @Workflow
     public List<String> processTasks(String[] tasks) throws Exception {
         String parentWorkflowId = DBOS.workflowId();
 
@@ -395,7 +395,7 @@ For example, this is useful if you only want to have one workflow active at a ti
 **Example syntax:**
 
 ```java
-@Workflow(name = "taskWorkflow")
+@Workflow
 public String taskWorkflow(String task) {
     // Process the task...
     return "completed";
@@ -434,7 +434,7 @@ dbos.registerQueue(queue);
 **Example syntax:**
 
 ```java
-@Workflow(name = "taskWorkflow")
+@Workflow
 public String taskWorkflow(String task) {
     // Process the task...
     return "completed";

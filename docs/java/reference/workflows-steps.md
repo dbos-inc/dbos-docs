@@ -171,7 +171,7 @@ If coercion fails (for example, a JSON object where a `String` is expected), the
 ```java
 // This workflow expects (String, long), but portable JSON delivers (String, Integer).
 // Java coerces the Integer to long automatically.
-@Workflow(name = "processOrder")
+@Workflow
 public String processOrder(String orderId, long quantity) {
     return "order:" + orderId + " qty:" + quantity;
 }
@@ -199,7 +199,7 @@ interface Example {
 }
 
 class ExampleImpl implements Example {
-    @Workflow(name="workflow")
+    @Workflow
     public void workflow() {
         return;
     }
@@ -238,7 +238,7 @@ interface Example {
 }
 
 class ExampleImpl implements Example {
-    @Workflow(name="workflow")
+    @Workflow
     public void workflow() {
         return;
     }
@@ -339,7 +339,7 @@ class ExampleImpl implements Example {
         System.out.println("Step two completed!");
     }
 
-    @Workflow(name="workflow")
+    @Workflow
     public void workflow() throws InterruptedException {
         dbos.runStep(() -> stepOne(), "stepOne");
         dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withMaxAttempts(3));
