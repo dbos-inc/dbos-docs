@@ -21,6 +21,7 @@ interface QueueParameters {
   rateLimit?: QueueRateLimit;
   priorityEnabled?: boolean;
   partitionQueue?: boolean;
+  minPollingIntervalMs?: number;
 }
 
 interface QueueRateLimit {
@@ -39,6 +40,7 @@ This concurrency limit is global across all DBOS processes using this queue.
   - **rateLimit.periodSec**: The time period across which `limitPerPeriod` applies.
 - **priorityEnabled**: Enable setting priority for workflows on this queue.
 - **partitionQueue**: Enable partitioning for this queue.
+- **minPollingIntervalMs**: The minimum interval, in milliseconds, between dequeue attempts for this queue. Defaults to 1000ms. The actual polling interval includes random jitter and increases with backoff under contention, then scales back down when contention clears.
 
 
 **Example syntax:**
