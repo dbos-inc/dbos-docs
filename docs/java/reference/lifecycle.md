@@ -1,23 +1,20 @@
 ---
 sidebar_position: 10
 title: DBOS Lifecycle
+toc_max_heading_level: 2
 ---
 
 You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
 Here, we document the constructor, configuration, and lifecycle methods.
 
-### DBOS Constructor
-
-```java
-new DBOS(DBOSConfig config)
-```
-
-Create and configure a DBOS instance.
-
-**DBOSConfig**
+### DBOSConfig
 
 `DBOSConfig` is a with-based configuration record for configuring DBOS.
-The application name, database URL, database user, and database password are required.
+The application name, and a system db datasource - specified either as database URL, user and password  or as a preconstructed `DataSource` are required.
+
+:::danger
+DBOS requires a PostgreSQL database. Creating a `DBOSConfig` with a non PostgreSQL `DataSource` will throw an exception.
+:::
 
 
 **Constructors:**
@@ -32,8 +29,8 @@ The `defaults` static method only sets the application name and sets all other c
 The `defaultsFromEnv` static method reads database connection information from environment variables.
 
 - **`DBOS_SYSTEM_JDBC_URL`**: the JDBC URL for your system database
-- **`PGUSER`**: the Postgres username or role. Defaults to `postgres` if `PGUSER` environment variable is missing or empty.
-- **`PGPASSWORD`**: The password for your Postgres user or role.
+- **`PGUSER`**: the PostgreSQL username or role. Defaults to `postgres` if `PGUSER` environment variable is missing or empty.
+- **`PGPASSWORD`**: The password for your PostgreSQL user or role.
 
 This configuration can be adjusted by using `with` methods that produce new configurations.
 
@@ -43,9 +40,9 @@ This configuration can be adjusted by using `with` methods that produce new conf
 
 - **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`. Required unless valid DataSource is provided.
 
-- **`withDbUser(String dbUser)`**: Your Postgres username or role. Required unless valid DataSource is provided.
+- **`withDbUser(String dbUser)`**: Your PostgreSQL username or role. Required unless valid DataSource is provided.
 
-- **`withDbPassword(String dbPassword)`**: The password for your Postgres user or role. Required unless valid DataSource is provided.
+- **`withDbPassword(String dbPassword)`**: The password for your PostgreSQL user or role. Required unless valid DataSource is provided.
 
 - **`withDataSource(DataSource v)`**: Instead of providing DBOS with the JDBC URL, username and password, you can provide a configured DataSource for DBOS to use. DBOS uses `HikariDataSource` if a data source is not provided.
 
@@ -53,29 +50,63 @@ This configuration can be adjusted by using `with` methods that produce new conf
 Using a data source that doesn't support connection pooling like `PGSimpleDataSource` is not recommended. 
 :::
 
-- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management operations. Defaults to false.
-
-- **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
+- **`withDatabaseSchema(String schema)`**: PostgreSQL database schema for system database tables. Defaults to `dbos`.
 
 - **`withMigrate(boolean enable)`**: If true, attempt to apply migrations to the system database.  Defaults to true.
 
 - **`withConductorKey(String key)`**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application is connected to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 
+- **`withConductorDomain(String domain)`**: The domain of the DBOS Conductor instance to connect to. Only needed when using a self-hosted Conductor.
+
+- **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
+
+- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management operations. Defaults to false.
+
+- **`enableAdminServer()`** / **`disableAdminServer()`**: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
+
+- **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
+
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
 - **`withExecutorId(String executorId)`**: A unique process ID used to identify this application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
-- **`withDatabaseSchema(String schema)`**: Postgres database schema for system database tables. Defaults to `dbos`.
-
 - **`withEnablePatching(boolean patchEnabled)`**: Enable workflow patching. Defaults to false.
 
-- **`withListenQueues(Queue... queues)`**: Specify the queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
+- **`withEnablePatching()`** / **`withDisablePatching()`**: Convenience methods equivalent to `withEnablePatching(true)` and `withEnablePatching(false)`.
 
-- **`withListenQueues(String... queues)`**: Specify the queues by name this DBOS process should dequeue and execute workflows from.
+- **`withListenQueue(Queue queue)`** / **`withListenQueue(String queueName)`**: Add a single queue to the set of queues this DBOS process listens to.
+
+- **`withListenQueues(Queue... queues)`** / **`withListenQueues(String... queues)`**: Add multiple queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
 
 - **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
+
+
+### DBOS Constructor
+
+```java
+new DBOS(DBOSConfig config)
+```
+
+Create and configure a DBOS instance.
+
+### DBOS.version
+
+```java
+static String version()
+```
+
+Return the DBOS library version string.
+
+### registerQueue / registerQueues
+
+```java
+void registerQueue(Queue queue)
+void registerQueues(Queue... queues)
+```
+
+Register one or more queues. All queues must be registered before `dbos.launch()` so that workflow recovery has the queue options available.
 
 ### dbos.launch
 
@@ -97,6 +128,14 @@ Shut down the DBOS instance, releasing database connections and stopping workflo
 `DBOS` also implements `AutoCloseable`, so it can be used in a try-with-resources block.
 This may be useful for testing DBOS applications.
 
+### getQueue
+
+```java
+Optional<Queue> getQueue(String queueName)
+```
+
+Return the registered `Queue` with the given name, or empty if no such queue is registered. Must be called after `dbos.launch()`.
+
 ## Custom Serialization
 
 DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
@@ -114,16 +153,16 @@ public interface DBOSSerializer {
   String name();
 
   /** Serialize a value to a string. */
-  String stringify(Object value, boolean noHistoricalWrapper);
+  String serialize(Object value);
 
   /** Deserialize a string back to a value, or return null if the input is null. */
-  Object parse(String text, boolean noHistoricalWrapper);
+  Object deserialize(String text);
 
   /** Serialize a Throwable to a string. */
-  String stringifyThrowable(Throwable throwable);
+  String serializeThrowable(Throwable throwable);
 
   /** Deserialize a string back to a Throwable, or return null if the input is null. */
-  Throwable parseThrowable(String text);
+  Throwable deserializeThrowable(String text);
 }
 ```
 

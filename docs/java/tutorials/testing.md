@@ -5,7 +5,7 @@ description: Unit test DBOS workflows by mocking the DBOS instance.
 ---
 
 Because `DBOS` is a regular Java object injected into your workflow classes — not a global static — it can be mocked with any standard Java mocking library such as [Mockito](https://site.mockito.org/).
-This lets you test your workflow logic in complete isolation, without a Postgres database.
+This lets you test your workflow logic in complete isolation, without a PostgreSQL database.
 
 ## Unit Testing
 
@@ -116,7 +116,7 @@ This is faster than `@SpringBootTest` and keeps the test free of container overh
 
 ## Integration Testing
 
-For tests that exercise real durable execution — recovery, exactly-once steps, queues — you need a live Postgres database and a real `DBOS` instance.
+For tests that exercise real durable execution — recovery, exactly-once steps, queues — you need a live PostgreSQL database and a real `DBOS` instance.
 
 `DBOS` implements `AutoCloseable`, so use try-with-resources to guarantee shutdown:
 
@@ -137,7 +137,7 @@ void workflow_resumesAfterInterruption() throws Exception {
 }
 ```
 
-For test isolation, use a fresh database per test run. The easiest approach is [Testcontainers](https://testcontainers.com/) with the Postgres module, which spins up a throwaway Postgres container:
+For test isolation, use a fresh database per test run. The easiest approach is [Testcontainers](https://testcontainers.com/) with the PostgreSQL module, which spins up a throwaway PostgreSQL container:
 
 ```java
 @Testcontainers

@@ -6,13 +6,17 @@ toc_max_heading_level: 3
 
 The `transact-spring-boot-starter` provides Spring Boot auto-configuration for DBOS Transact.
 
+:::danger
+DBOS requires a PostgreSQL database. If a non-PostgreSQL `DataSource` is provided or auto-detected, startup will throw an `IllegalStateException`.
+:::
+
 ## Auto-Configured Beans
 
 | Bean | Description |
 |------|-------------|
 | `DBOSConfig` | Built from `dbos.*` properties. Declare your own to replace it; use `DBOSConfigCustomizer` to extend it. |
 | `DBOS` | The main DBOS instance, injected from `DBOSConfig`. |
-| `DBOSLifecycle` | `SmartLifecycle` that calls `dbos.launch()` on context start and `dbos.shutdown()` on context stop. |
+| `DBOSLifecycle` | `SmartLifecycle` that calls `dbos.launch()` on context start and `dbos.shutdown()` on context stop. Uses `DEFAULT_PHASE` (`Integer.MAX_VALUE`), so DBOS starts last (after all other beans) and stops first. |
 | `DBOSAspect` | AOP aspect that intercepts `@Workflow` and `@Step` calls on Spring-managed beans. |
 | `DBOSWorkflowRegistrar` | Scans all singleton beans after initialization and registers those with `@Workflow` methods. |
 
@@ -83,7 +87,7 @@ public DBOSConfigCustomizer myCustomizer() {
 
 ## DBOSWorkflowRegistrar
 
-Implements `SmartInitializingSingleton`. After all singletons are created, it scans every bean for methods annotated with `@Workflow` or `@Step` and registers them with DBOS.
+Implements `SmartInitializingSingleton`. After all singletons are created, it scans every bean for methods annotated with `@Workflow` or `@Step`. Beans containing `@Workflow` methods are registered with DBOS for durable execution and recovery. `@Step` methods are not registered directly — they are intercepted at runtime by `DBOSAspect`.
 
 **Requirements:**
 - Beans with `@Workflow` or `@Step` methods must be **singletons**. Prototype-scoped beans throw `IllegalStateException`.
@@ -93,8 +97,8 @@ Implements `SmartInitializingSingleton`. After all singletons are created, it sc
 
 | Situation | Instance name |
 |-----------|---------------|
-| Only one bean of the class | Empty string (default) |
-| Multiple beans — the `@Primary` one | Empty string (default) |
+| Only one bean of the class | null string (default) |
+| Multiple beans — the `@Primary` one | null string (default) |
 | Multiple beans — non-primary | Spring bean name |
 
 ## DBOSAspect

@@ -29,8 +29,8 @@ dependencies {
 }
 ```
 
-DBOS also requires a Postgres database.
-If you don't already have Postgres, you can launch it in a Docker container with this command:
+DBOS also requires a PostgreSQL database.
+If you don't already have PostgreSQL, you can launch it in a Docker container with this command:
 
 ```shell
 docker run -d \

@@ -28,9 +28,10 @@ public record Queue(
     public Queue withWorkerConcurrency(Integer workerConcurrency);
     public Queue withRateLimit(RateLimit rateLimit);
     public Queue withRateLimit(int limit, Duration period);
-    public Queue withRateLimit(int limit, double periodSeconds);
+    public Queue withRateLimit(int limit, double period);
     public Queue withPriorityEnabled(boolean priorityEnabled);
     public Queue withPartitioningEnabled(boolean partitioningEnabled);
+    public boolean hasLimiter();
 }
 ```
 
@@ -49,6 +50,9 @@ You can enqueue a workflow using the `withQueue` parameter of [`startWorkflow`](
 - **rateLimit**: A `RateLimit` limiting the maximum number of workflows (`limit`) that may be started in a given `period`.
 - **priorityEnabled**: Enable setting priority for workflows on this queue.
 - **partitioningEnabled**: Enable partitioning on this queue.
+
+**Methods:**
+- **`hasLimiter()`**: Returns `true` if this queue has a rate limit configured.
 
 **Example Syntax:**
 

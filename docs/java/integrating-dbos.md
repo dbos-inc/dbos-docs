@@ -54,13 +54,13 @@ public class MyApp {
 ```
 
 :::info
-DBOS uses a Postgres database to durably store workflow and step state.
+DBOS uses a PostgreSQL database to durably store workflow and step state.
 You can connect to your database by setting these environment variables:
-- `DBOS_SYSTEM_JDBC_URL`: The JDBC URL for your Postgres database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
-- `PGUSER`: Your Postgres username
-- `PGPASSWORD`: Your Postgres password
+- `DBOS_SYSTEM_JDBC_URL`: The JDBC URL for your PostgreSQL database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
+- `PGUSER`: Your PostgreSQL username
+- `PGPASSWORD`: Your PostgreSQL password
 
-If you don't have a Postgres database, you can start one locally with Docker:
+If you don't have a PostgreSQL database, you can start one locally with Docker:
 ```shell
 docker run -d \
   --name dbos-postgres \

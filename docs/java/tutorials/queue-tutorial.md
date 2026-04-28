@@ -223,7 +223,7 @@ Object result = handle.getResult();
 
 #### Enqueueing from PL/pgSQL
 
-You can also enqueue a workflow from a Postgres trigger or stored procedure.
+You can also enqueue a workflow from a PostgreSQL trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
 
 For example, here is the previous example of enqueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
@@ -359,7 +359,7 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 **Example Syntax**
 
 ```java
-Queue queue = new Queue("example-queue").withConcurrency(1).withPartitionedEnabled(true);
+Queue queue = new Queue("example-queue").withConcurrency(1).withPartitioningEnabled(true);
 dbos.registerQueue(queue);
 
 void onUserTaskSubmission(String userID, Task task) {
@@ -384,7 +384,7 @@ For example:
 // By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
 // and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
 // across all partitions (and at most one task per partition).
-var partitionedQueue = new Queue("partitioned-queue").withConcurrency(1).withPartitionedEnabled(true);
+var partitionedQueue = new Queue("partitioned-queue").withConcurrency(1).withPartitioningEnabled(true);
 var concurrencyQueue = new Queue("concurrency-queue").withConcurrency(5);
 
 class UserTasksImpl implements UserTasks {

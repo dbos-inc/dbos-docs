@@ -4,7 +4,7 @@ title: DBOS Methods & Variables
 toc_max_heading_level: 3
 ---
 
-## DBOS Methods
+## Workflow Communication Methods
 
 ### getEvent
 
@@ -26,6 +26,7 @@ If the event does not yet exist, wait for it to be published, an error if the wa
 void setEvent(String key, Object value)
 void setEvent(String key, Object value, SerializationStrategy serialization)
 ```
+
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
 `setEvent` can only be called from within a workflow.
@@ -34,6 +35,17 @@ If the event already exists, update its value.
 - **key**: The key of the event.
 - **value**: The value of the event. Must be serializable.
 - **serialization**: The [serialization strategy](#serialization-strategy) to use for this event. Defaults to `SerializationStrategy.DEFAULT`.
+
+### getAllEvents
+
+```java
+Map<String, Object> getAllEvents(String workflowId)
+```
+
+Retrieve all events published by the workflow identified by `workflowId`, returned as a map of event key to deserialized value.
+
+**Parameters:**
+- **workflowId**: The identifier of the workflow whose events to retrieve.
 
 ### send
 
@@ -76,10 +88,10 @@ void sleep(Duration sleepduration)
 
 Sleep for the given duration.
 If called from within a workflow, this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
-If called from outside a workflow, or from within a step, it behaves like a regular sleep.
+If called from outside a workflow, or from within a step, it behaves like a regular `Thread.sleep`.
 
 **Parameters:**
-- **sleepduration**: The duration to sleep.
+- **duration**: The duration to sleep.
 
 ### writeStream
 
@@ -129,6 +141,18 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 **Parameters**:
 - **workflowId**: The ID of the workflow whose handle to retrieve.
 
+### getResult
+
+```java
+<T, E extends Exception> T getResult(String workflowId) throws E
+```
+
+Wait for the workflow to complete and return its result, or rethrow the exception it threw.
+This is a convenience alternative to `retrieveWorkflow(workflowId).getResult()`.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow whose result to retrieve.
+
 ### patch
 
 ```java
@@ -144,6 +168,7 @@ Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/u
 ```java
 boolean deprecatePatch(String patchName)
 ```
+
 Safely bypass a patch marker at the current point in workflow history if present. 
 Always returns `true`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md) for more detail.
@@ -159,7 +184,7 @@ List<WorkflowStatus> listWorkflows(ListWorkflowsInput input)
 
 Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching specified criteria.
 
-#### ListWorkflowsInput
+### ListWorkflowsInput
 
 `ListWorkflowsInput` is a with-based configuration record for filtering and customizing workflow queries.  All fields are optional.
 
@@ -167,146 +192,190 @@ Retrieve a list of [`WorkflowStatus`](#workflowstatus) of all workflows matching
 
 Many filters accept either a single value or a list. Single-value overloads are provided for convenience.
 
-##### withWorkflowIds
+#### withWorkflowIds
+
 ```java
 ListWorkflowsInput withWorkflowIds(String workflowId)
 ListWorkflowsInput withWorkflowIds(List<String> workflowIds)
 ```
+
 Filter by one or more workflow IDs.
 
-##### withClassName
+#### withClassName
+
 ```java
 ListWorkflowsInput withClassName(String className)
 ```
+
 Filter workflows by the class name containing the workflow function.
 
-##### withInstanceName
+#### withInstanceName
+
 ```java
 ListWorkflowsInput withInstanceName(String instanceName)
 ```
+
 Filter workflows by the instance name of the class.
 
-##### withWorkflowName
+#### withWorkflowName
+
 ```java
 ListWorkflowsInput withWorkflowName(String workflowName)
 ListWorkflowsInput withWorkflowName(List<String> workflowNames)
 ```
+
 Filter workflows by the workflow function name.
 
-##### withAuthenticatedUser
+#### withAuthenticatedUser
+
 ```java
 ListWorkflowsInput withAuthenticatedUser(String authenticatedUser)
 ListWorkflowsInput withAuthenticatedUser(List<String> authenticatedUsers)
 ```
+
 Filter workflows run by this authenticated user.
 
-##### withStartTime
+#### withStartTime
+
 ```java
 ListWorkflowsInput withStartTime(Instant startTime)
 ```
+
 Retrieve workflows created after this timestamp.
 
-##### withEndTime
+#### withEndTime
+
 ```java
 ListWorkflowsInput withEndTime(Instant endTime)
 ```
+
 Retrieve workflows created before this timestamp.
 
-##### withStatus
+#### withStatus
+
 ```java
 ListWorkflowsInput withStatus(WorkflowState status)
 ListWorkflowsInput withStatus(List<WorkflowState> statuses)
 ```
-Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
 
-##### withApplicationVersion
+Filter workflows by status. Status must be one of: `ENQUEUED`, `PENDING`, `DELAYED`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+
+#### withApplicationVersion
+
 ```java
 ListWorkflowsInput withApplicationVersion(String applicationVersion)
 ListWorkflowsInput withApplicationVersion(List<String> applicationVersions)
 ```
+
 Retrieve workflows tagged with this application version.
 
-##### withLimit
+#### withLimit
+
 ```java
 ListWorkflowsInput withLimit(Integer limit)
 ```
+
 Retrieve up to this many workflows.
 
-##### withOffset
+#### withOffset
+
 ```java
 ListWorkflowsInput withOffset(Integer offset)
 ```
+
 Skip this many workflows from the results returned (for pagination).
 
-##### withSortDesc
+#### withSortDesc
+
 ```java
 ListWorkflowsInput withSortDesc(Boolean sortDesc)
 ```
+
 Sort the results in descending (true) or ascending (false) order by workflow creation time.
 
-##### withExecutorIds
+#### withExecutorIds
+
 ```java
 ListWorkflowsInput withExecutorIds(String executorId)
 ListWorkflowsInput withExecutorIds(List<String> executorIds)
 ```
+
 Retrieve workflows that ran on these executor processes.
 
-##### withQueueName
+#### withQueueName
+
 ```java
 ListWorkflowsInput withQueueName(String queueName)
 ListWorkflowsInput withQueueName(List<String> queueNames)
 ```
+
 Retrieve workflows that were enqueued on these queues.
 
-##### withWorkflowIdPrefix
+#### withWorkflowIdPrefix
+
 ```java
 ListWorkflowsInput withWorkflowIdPrefix(String workflowIdPrefix)
 ListWorkflowsInput withWorkflowIdPrefix(List<String> workflowIdPrefixes)
 ```
+
 Filter workflows whose IDs start with the specified prefix.
 
-##### withQueuesOnly
+#### withQueuesOnly
+
 ```java
 ListWorkflowsInput withQueuesOnly(Boolean queuedOnly)
 ```
+
 Select only workflows that were enqueued.
 
-##### withLoadInput
+#### withLoadInput
+
 ```java
 ListWorkflowsInput withLoadInput(Boolean value)
 ```
+
 Controls whether to load workflow input data (default: true).
 
-##### withLoadOutput
+#### withLoadOutput
+
 ```java
 ListWorkflowsInput withLoadOutput(Boolean value)
 ```
+
 Controls whether to load workflow output data (results and errors) (default: true).
 
-##### withForkedFrom
+#### withForkedFrom
+
 ```java
 ListWorkflowsInput withForkedFrom(String workflowId)
 ListWorkflowsInput withForkedFrom(List<String> workflowIds)
 ```
+
 Filter to workflows that were forked from the specified workflow(s).
 
-##### withParentWorkflowId
+#### withParentWorkflowId
+
 ```java
 ListWorkflowsInput withParentWorkflowId(String parentWorkflowId)
 ListWorkflowsInput withParentWorkflowId(List<String> parentWorkflowIds)
 ```
+
 Filter to workflows that are children of the specified parent workflow(s).
 
-##### withWasForkedFrom
+#### withWasForkedFrom
+
 ```java
 ListWorkflowsInput withWasForkedFrom(Boolean wasForkedFrom)
 ```
+
 Filter to workflows from which another workflow was forked.
 
-##### withHasParent
+#### withHasParent
+
 ```java
 ListWorkflowsInput withHasParent(Boolean hasParent)
 ```
+
 Filter to workflows that have a parent workflow.
 
 
@@ -440,7 +509,49 @@ Promote a version by name to be the latest application version. Used during blue
 
 ## Schedule Management Methods
 
-These methods manage [`WorkflowSchedule`](./workflows-steps.md#workflowschedule) records that periodically invoke workflows on a cron schedule. All schedule methods require DBOS to be launched first.
+These methods manage [`WorkflowSchedule`](#workflowschedule) records that periodically invoke workflows on a cron schedule. All schedule methods require DBOS to be launched first.
+
+### WorkflowSchedule
+
+```java
+public record WorkflowSchedule(
+    String id,                // Generated schedule ID (read-only; null on creation)
+    String scheduleName,      // Unique name for this schedule
+    String workflowName,      // Name of the workflow function to invoke
+    String className,         // Class containing the workflow (use @WorkflowClassName for a portable name)
+    String cron,              // Cron expression (Spring 5.3+ format)
+    ScheduleStatus status,    // ACTIVE or PAUSED
+    Object context,           // Optional context object passed to the workflow
+    Instant lastFiredAt,      // When the schedule last fired (read-only)
+    boolean automaticBackfill,// If true, missed firings are retroactively started on launch
+    ZoneId cronTimezone,      // Timezone for interpreting the cron expression (defaults to UTC)
+    String queueName          // Queue to enqueue scheduled workflows on
+)
+```
+
+**Constructors:**
+
+```java
+new WorkflowSchedule(String scheduleName, String workflowName, String className, String cron)
+```
+
+Creates an `ACTIVE` schedule with no backfill, UTC timezone, and no queue override.
+
+**`with` Methods:**
+
+- **`withScheduleName(String name)`** — Change the schedule's unique name.
+- **`withWorkflowName(String name)`** — Change the target workflow function name.
+- **`withClassName(String name)`** — Change the target class name.
+- **`withCron(String cron)`** — Change the cron expression.
+- **`withStatus(ScheduleStatus status)`** — Set `ACTIVE` or `PAUSED`.
+- **`withContext(Object context)`** — Attach a context object, serialized and passed to the workflow as its third argument.
+- **`withAutomaticBackfill(boolean value)`** — If `true`, any firings missed while the app was down are retroactively started when the app launches.
+- **`withCronTimezone(ZoneId timezone)`** — Interpret the cron expression in this timezone instead of UTC.
+- **`withQueueName(String queueName)`** — Enqueue scheduled executions on this queue.
+
+```java
+public enum ScheduleStatus { ACTIVE, PAUSED }
+```
 
 ### applySchedules
 
@@ -660,99 +771,6 @@ static boolean inStep();
 
 Return `true` if the current calling context is executing a workflow step, or `false` otherwise.
 
-## WorkflowOptions
-
-When workflow functions are called directly, they take their options from the current DBOS context.  Setting options into the context can done with a `WorkflowOptions` object and a `setContext()` `try` block on the calling thread:
-
-```java
-    try (var _opts = new WorkflowOptions(wfId).setContext()) {
-        // This workflow is within the `try` and will get `wfId` from the context
-        result = workflowClass.workflowMethod(args);
-    }
-```
-
-Workflow options will be restored to prior values at the end of the `try` block.
-
-:::note
-When using background execution or queues, workflow options should be passed as a `StartWorkflowOptions` argument to `startWorkflow`.
-:::
-
-`WorkflowOptions` is a record with the following fields:
-- **workflowId**: The ID to be assigned to a workflow called within the `try` block
-- **timeout**: The timeout to be assigned to all workflows called within the `try` block
-- **deadline**: The deadline to be assigned to all workflows called within the `try` block
-
-`WorkflowOptions` also supports `with` methods.
-
-### WorkflowOptions.withWorkflowID
-Creates a new WorkflowOptions with the workflow ID set. Other `WorkflowOptions` properties will be taken from the object on which `withWorkflowId` is called.
-
-```java
-    public WorkflowOptions withWorkflowId(String workflowId);
-```
-
-This will set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
-
-Example syntax:
-```java
-    // This is a more explicit version of new WorkflowOptions(wfId)
-    var options = new WorkflowOptions().withWorkflowId(wfId);
-    try (var _o = options.setContext()) {
-      var result = inst.thisWorkflowGetsWfId();
-    }
-```
-
-### WorkflowOptions.withTimeout
-Creates a new WorkflowOptions with the timeout set.  Other `WorkflowOptions` properties will be taken from the object on which `withTimeout` is called.
-
-```java
-  public WorkflowOptions withTimeout(Timeout timeout);
-  public WorkflowOptions withTimeout(Duration timeout);
-  public WorkflowOptions withTimeout(long value, TimeUnit unit);
-```
-
-Set a timeout for all enclosed workflow invocations or enqueues.  When the timeout expires, the workflow **and all its children** are cancelled.
-
-Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
-Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
-
-Timeout deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
-
-Example syntax:
-
-```java
-    // If the workflow does not complete within 10 seconds, it times out and is cancelled
-    var options = new WorkflowOptions().withTimeout(Duration.ofSeconds(10));
-    try (var _o = options.setContext()) {
-      var result = inst.possiblySlowWorkflow();
-    }
-```
-
-### WorkflowOptions.withDeadline
-Creates a new WorkflowOptions with the deadline set.  Other `WorkflowOptions` properties will be taken from the object on which `withDeadline` is called.
-
-```java
-  public WorkflowOptions withDeadline(Instant deadline);
-```
-
-Set a deadline for all enclosed workflow invocations or enqueues.  At the deadline time, the workflow **and all its children** are cancelled.
-
-Deadlines are propagated to child workflows by default, so when a workflow's deadline expires all of its child workflows (and their children, and so on) are also cancelled.
-
-Example syntax:
-
-```java
-    // If the workflow does not complete by 10 seconds from now, it will be cancelled
-    var options = new WorkflowOptions().withDeadline(Instant.ofEpochMilli(System.currentTimeMillis() + 10000));
-    try (var _o = options.setContext()) {
-      var result = inst.possiblySlowWorkflow();
-    }
-```
-
-:::info
-An explicit timeout and deadline cannot both be set.
-:::
-
 ## Timeout
 
 `Timeout` is a sealed interface used by `StartWorkflowOptions`, `WorkflowOptions`, and `ForkOptions` to control how inherited timeouts are handled.
@@ -812,3 +830,36 @@ The available strategies are:
 - **`SerializationStrategy.DEFAULT`**: Uses the serializer configured in [`DBOSConfig`](./lifecycle.md#custom-serialization) (defaults to Jackson).
 - **`SerializationStrategy.PORTABLE`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`SerializationStrategy.NATIVE`**: Explicitly uses the native Java Jackson serializer (`java_jackson`).
+
+## Alert Handlers
+
+Alert handlers let you receive internal DBOS alerts — such as workflow recovery failures or system warnings — and route them to your observability infrastructure (logging, metrics, PagerDuty, etc.).
+
+### registerAlertHandler
+
+```java
+void registerAlertHandler(AlertHandler handler)
+```
+
+Register a handler to receive alerts generated by DBOS. Must be called **before** `dbos.launch()`.
+
+```java
+@FunctionalInterface
+public interface AlertHandler {
+  void invoke(String name, String message, Map<String, String> metadata);
+}
+```
+
+**Parameters:**
+- **name**: A short identifier for the alert type.
+- **message**: A human-readable description of the alert.
+- **metadata**: Additional key-value context about the alert.
+
+**Example:**
+
+```java
+DBOS dbos = new DBOS(config);
+dbos.registerAlertHandler((name, message, metadata) ->
+    logger.warn("DBOS alert [{}]: {} {}", name, message, metadata));
+dbos.launch();
+```

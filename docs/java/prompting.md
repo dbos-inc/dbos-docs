@@ -84,7 +84,7 @@ For **Maven** (`pom.xml`):
 </dependencies>
 ```
 
-The application will also need a Postgres database.  If there is not one already, it can be set up using standard approaches, or with Docker:
+The application will also need a PostgreSQL database.  If there is not one already, it can be set up using standard approaches, or with Docker:
 ```shell
 docker run -d \
   --name dbos-postgres \
@@ -881,8 +881,8 @@ Construct the DBOSClient.
 
 **Parameters:**
 - **url**: The JDBC URL for your system database.
-- **user**: Your Postgres username or role.
-- **password**: The password for your Postgres user or role.
+- **user**: Your PostgreSQL username or role.
+- **password**: The password for your PostgreSQL user or role.
 - **schema**: The schema DBOS system tables are stored in. Defaults to `dbos`.
 - **dataSource**: Provide an existing `DataSource` instead of connection URL/credentials.
 - **serializer**: A custom serializer for workflow inputs/outputs. Must match the serializer used by the DBOS application.
@@ -1332,9 +1332,9 @@ Create a DBOSConfig object.  This configuration can be adjusted by using `with` 
 
 - **`withDatabaseUrl(String databaseUrl)`**: The JDBC URL for your system database. A valid JDBC URL is of the form `jdbc:postgresql://host:port/database`.
 
-- **`withDbUser(String dbUser)`**: Your Postgres username or role.
+- **`withDbUser(String dbUser)`**: Your PostgreSQL username or role.
 
-- **`withDbPassword(String dbPassword)`**: The password for your Postgres user or role.
+- **`withDbPassword(String dbPassword)`**: The password for your PostgreSQL user or role.
 
 - **`withDataSource(DataSource dataSource)`**: Provide an existing `DataSource` instead of URL/credentials.
 

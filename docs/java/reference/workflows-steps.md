@@ -39,7 +39,6 @@ When a workflow uses portable serialization, Java automatically coerces JSON arg
 ```java
 public @interface Step {
   String name();
-  boolean retriesAllowed();
   int maxAttempts();
   double intervalSeconds();
   double backOffRate();
@@ -54,10 +53,9 @@ Reminder, step methods must be invoked via the proxy object returned by [`regist
 
 **Parameters:**
 - **name**: The step name. Must be unique within the class. Defaults to method name if not provided.
-- **retriesAllowed**: Optionally configure the step to retry on failure. Defaults to false.
-- **maxAttempts**: Maximum number of times this step is retried on failure (if retries are enabled). Defaults to three.
-- **intervalSeconds**: Initial delay between retries in seconds. Defaults to one second.
-- **backOffRate**: Exponential backoff multiplier between retries. Defaults to two.
+- **maxAttempts**: Maximum number of times this step is retried on failure. Must be greater than zero. Defaults to one.
+- **intervalSeconds**: Initial delay between retries in seconds. Must be positive. Defaults to one second.
+- **backOffRate**: Exponential backoff multiplier between retries. Must be greater than or equal to one. Defaults to two.
 
 ### @Scheduled
 
@@ -65,7 +63,7 @@ Reminder, step methods must be invoked via the proxy object returned by [`regist
 public @interface Scheduled {
   String cron();
   String queue();
-  boolean ignoreMissed();
+  boolean automaticBackfill();
 }
 ```
 
@@ -74,53 +72,11 @@ An annotation that can be applied to a workflow to schedule it on a cron schedul
 **Parameters:**
 - **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
 - **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified.
-- **ignoreMissed**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `ignoreMissed` to `false` to enable backfill. Defaults to `true`.
+- **automaticBackfill**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `automaticBackfill` to `true` to enable backfill. Defaults to `false`.
 
 :::tip
-For more control over scheduling — including runtime management, pausing, backfill, and timezone support — use the [`WorkflowSchedule`](#workflowschedule) API with [`dbos.applySchedules`](./methods.md#applyschedules).
+For more control over scheduling — including runtime management, pausing, backfill, and timezone support — use the [`WorkflowSchedule`](./methods.md#workflowschedule) API with [`dbos.applySchedules`](./methods.md#applyschedules).
 :::
-
-### WorkflowSchedule
-
-```java
-public record WorkflowSchedule(
-    String id,                // Generated schedule ID (read-only; null on creation)
-    String scheduleName,      // Unique name for this schedule
-    String workflowName,      // Name of the workflow function to invoke
-    String className,         // Class containing the workflow (use @WorkflowClassName for a portable name)
-    String cron,              // Cron expression (Spring 5.3+ format)
-    ScheduleStatus status,    // ACTIVE or PAUSED
-    Object context,           // Optional context object passed to the workflow
-    Instant lastFiredAt,      // When the schedule last fired (read-only)
-    boolean automaticBackfill,// If true, missed firings are retroactively started on launch
-    ZoneId cronTimezone,      // Timezone for interpreting the cron expression (defaults to UTC)
-    String queueName          // Queue to enqueue scheduled workflows on
-)
-```
-
-**Constructors:**
-
-```java
-new WorkflowSchedule(String scheduleName, String workflowName, String className, String cron)
-```
-
-Creates an `ACTIVE` schedule with no backfill, UTC timezone, and no queue override.
-
-**`with` Methods:**
-
-- **`withScheduleName(String name)`** — Change the schedule's unique name.
-- **`withWorkflowName(String name)`** — Change the target workflow function name.
-- **`withClassName(String name)`** — Change the target class name.
-- **`withCron(String cron)`** — Change the cron expression.
-- **`withStatus(ScheduleStatus status)`** — Set `ACTIVE` or `PAUSED`.
-- **`withContext(Object context)`** — Attach a context object, serialized and passed to the workflow as its third argument.
-- **`withAutomaticBackfill(boolean value)`** — If `true`, any firings missed while the app was down are retroactively started when the app launches.
-- **`withCronTimezone(ZoneId timezone)`** — Interpret the cron expression in this timezone instead of UTC.
-- **`withQueueName(String queueName)`** — Enqueue scheduled executions on this queue.
-
-```java
-public enum ScheduleStatus { ACTIVE, PAUSED }
-```
 
 ### @WorkflowClassName
 
@@ -144,7 +100,7 @@ public class MyServiceImpl implements MyService {
 }
 ```
 
-This workflow is registered as `MyService//processOrder` instead of `com.example.MyServiceImpl//processOrder`.
+This workflow is registered as `processOrder/MyService/` instead of `processOrder/com.example.MyServiceImpl/`.
 
 :::tip
 Use `@WorkflowClassName` whenever a workflow may be invoked from another language (Python, TypeScript) or when you want workflow IDs to remain stable across package renames.
@@ -190,6 +146,11 @@ For more context on why input coercion matters for cross-language workflows, see
 
 Register the workflows in a class, returning a proxy object from which the class methods may be invoked as durable workflows.
 All workflows must be registered before DBOS is launched.
+
+:::info
+`transact-spring-boot-starter` handles proxy creation and workflow registration automatically. 
+If you're using `transact-spring-boot-starter`, you _don't_ need to call registerProxy manually.
+:::
 
 **Example Syntax:**
 
@@ -250,7 +211,7 @@ dbos.launch();
 dbos.startWorkflow(() -> proxy.workflow(), new StartWorkflowOptions());
 ```
 
-#### StartWorkflowOptions
+### StartWorkflowOptions
 
 `StartWorkflowOptions` is a with-based configuration record for parameterizing `dbos.startWorkflow`. All fields are optional.
 
@@ -275,7 +236,9 @@ Shortcut for `new StartWorkflowOptions().withQueue(queue)`
 
 - **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** - Instead of starting the workflow directly, enqueue it on this queue.
 
-- **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+- **`withTimeout(Timeout timeout)`** - Set a timeout using a [`Timeout`](./methods.md#timeout) object. Use this overload to pass `Timeout.none()` (opt out of any inherited timeout) or `Timeout.inherit()` (explicitly inherit from the calling context).
+
+- **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set an explicit timeout duration for this workflow. When the timeout expires, the workflow **and all its children** are cancelled. Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
 
   Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
@@ -308,61 +271,6 @@ An explicit timeout and deadline cannot both be set.
 - **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued. Only applicable when enqueuing.
 
 - **`withAppVersion(String appVersion)`** - Tag the workflow with a specific application version, overriding the default version detected at runtime.
-
-### runStep
-
-```java
-<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, StepOptions opts) throws E
-<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, String stepName) throws E
-<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, StepOptions opts) throws E
-<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, String stepName) throws E
-```
-
-Run a function as a step.  If called from within a workflow, the result is durably stored.
-Returns the output of the step.
-
-**Example Syntax:**
-
-```java
-class ExampleImpl implements Example {
-    private final DBOS dbos;
-
-    public ExampleImpl(DBOS dbos) {
-        this.dbos = dbos;
-    }
-
-    private void stepOne() {
-        System.out.println("Step one completed!");
-    }
-
-    private void stepTwo() {
-        System.out.println("Step two completed!");
-    }
-
-    @Workflow
-    public void workflow() throws InterruptedException {
-        dbos.runStep(() -> stepOne(), "stepOne");
-        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withMaxAttempts(3));
-    }
-}
-```
-
-#### StepOptions
-
-`StepOptions` is a with-based configuration record for parameterizing `dbos.runStep`. All fields except step name are optional.
-
-**Constructors:**
-```java
-new StepOptions(String name)
-```
-Create step options and provide a name for this step. By default the step runs once (no retries).
-
-**Methods:**
-- **`withMaxAttempts(int n)`** - Maximum number of times to attempt the step. Defaults to `1` (no retries). Set to a value greater than `1` to enable retries on exception.
-
-- **`withRetryInterval(Duration interval)`** - How long to wait before the first retry. Defaults to 1 second.
-
-- **`withBackoffRate(double rate)`** - Exponential backoff multiplier between retries. Defaults to 2.0.
 
 ### WorkflowHandle
 
@@ -405,5 +313,105 @@ String workflowId();
 
 Return the ID of the workflow underlying this handle.
 
+### runStep
+
+```java
+<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, StepOptions opts) throws E
+<T, E extends Exception> T runStep(ThrowingSupplier<T, E> stepfunc, String stepName) throws E
+<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, StepOptions opts) throws E
+<E extends Exception> void runStep(ThrowingRunnable<E> stepfunc, String stepName) throws E
+```
+
+Run a function as a step.  If called from within a workflow, the result is durably stored.
+Returns the output of the step.
+
+**Example Syntax:**
+
+```java
+class ExampleImpl implements Example {
+    private final DBOS dbos;
+
+    public ExampleImpl(DBOS dbos) {
+        this.dbos = dbos;
+    }
+
+    private void stepOne() {
+        System.out.println("Step one completed!");
+    }
+
+    private void stepTwo() {
+        System.out.println("Step two completed!");
+    }
+
+    @Workflow
+    public void workflow() throws InterruptedException {
+        dbos.runStep(() -> stepOne(), "stepOne");
+        dbos.runStep(() -> stepTwo(), new StepOptions("stepTwo").withMaxAttempts(3));
+    }
+}
+```
+
+### StepOptions
+
+`StepOptions` is a with-based configuration record for parameterizing `dbos.runStep`. All fields except step name are optional.
+
+**Constructors:**
+```java
+new StepOptions(String name)
+```
+Create step options and provide a name for this step. By default the step runs once (no retries).
+
+**Methods:**
+- **`withMaxAttempts(int n)`** - Maximum number of times to attempt the step. Must be greater than zero. Defaults to `1` (no retries). Set to a value greater than `1` to enable retries on exception.
+
+- **`withRetryInterval(Duration interval)`** - How long to wait before the first retry. Must be positive. Defaults to 1 second.
+
+- **`withBackoffRate(double rate)`** - Exponential backoff multiplier between retries. Must be greater than or equal to 1.0. Defaults to 2.0.
+
+
 ### WorkflowOptions
-When DBOS workflows are called directly through a proxy, without using `startWorkflow` or queues, workflow options are taken from a context kept by the calling thread.  This context is managed by the [`WorkflowOptions`](./methods.md#workflowoptions) class.
+
+When workflow functions are called directly, they take their options from the current DBOS context. Setting options into the context is done with a `WorkflowOptions` object and a `setContext()` `try` block on the calling thread:
+
+```java
+try (var _opts = new WorkflowOptions(wfId).setContext()) {
+    // This workflow is within the `try` and will get `wfId` from the context
+    result = workflowClass.workflowMethod(args);
+}
+```
+
+Workflow options will be restored to prior values at the end of the `try` block.
+
+:::info
+When using background execution or queues, workflow options are passed as a `StartWorkflowOptions` argument to `startWorkflow`. `WorkflowOptions` context does not affect `startWorkflow`.
+:::
+
+**Constructors:**
+```java
+new WorkflowOptions()
+```
+Create workflow options with no workflow ID and no timeout.
+
+```java
+new WorkflowOptions(String workflowId)
+```
+Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
+
+**Fields:**
+- **workflowId**: The ID to be assigned to a workflow called within the `try` block
+- **timeout**: The timeout to be assigned to all workflows called within the `try` block
+- **deadline**: The deadline to be assigned to all workflows called within the `try` block
+
+**Methods:**
+
+- **`withWorkflowId(String workflowId)`** - Set the [workflow ID](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) of the next workflow run.
+
+- **`withTimeout(Timeout timeout)`** / **`withTimeout(Duration timeout)`** / **`withTimeout(long value, TimeUnit unit)`** - Set a timeout for all enclosed workflow invocations. When the timeout expires, the workflow **and all its children** are cancelled. Timeouts are **start-to-completion**: the timeout does not begin until the workflow starts execution. Timeouts are also **durable**: they persist across restarts. Timeout deadlines are propagated to child workflows by default.
+
+- **`withNoTimeout()`** - Explicitly opt out of any inherited timeout. The workflow called within the `try` block will run without a timeout regardless of any timeout in the surrounding context.
+
+- **`withDeadline(Instant deadline)`** - Set an absolute deadline for all enclosed workflow invocations. At the deadline time, the workflow **and all its children** are cancelled. Deadlines are propagated to child workflows by default.
+
+:::info
+An explicit timeout and deadline cannot both be set.
+:::
