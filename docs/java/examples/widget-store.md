@@ -23,8 +23,8 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 The core of this application is the checkout workflow, which orchestrates the entire purchase process.
 This workflow is triggered whenever a customer buys a widget and handles the complete order lifecycle:
 
-1. Creates a new order in the system
-2. Reserves inventory to ensure the item is available
+1. Reserves inventory to ensure the item is available
+2. Creates a new order in the system
 3. Processes payment 
 4. Marks the order as paid and initiates fulfillment
 5. Handles failures gracefully by releasing reserved inventory and canceling orders when necessary
@@ -40,31 +40,30 @@ Within seconds, your app will recover to exactly the state it was in before the 
 ```java
 @Workflow
 public String checkoutWorkflow(String key) {
-    Integer orderId = DBOS.runStep(() -> service.createOrder(), "createOrder");
-    try {
-        DBOS.runStep(() -> service.subtractInventory(), "subtractInventory");
-    } catch (RuntimeException e) {
-        logger.error("Failed to reserve inventory for order {}", orderId);
-        DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
-        DBOS.setEvent(PAYMENT_ID, null);
-    }
+  try {
+    dbos.runStep(() -> repo.subtractInventory(), "subtractInventory");
+  } catch (RuntimeException e) {
+    logger.error("Failed to reserve inventory for workflow {}", DBOS.workflowId());
+    dbos.setEvent(PAYMENT_ID, null);
+    return;
+  }
 
-    DBOS.setEvent(PAYMENT_ID, key);
+  var orderId = dbos.runStep(() -> repo.createOrder(), "createOrder");
 
-    String payment_status = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
+  dbos.setEvent(PAYMENT_ID, DBOS.workflowId());
+  var payment_status = dbos.<String>recv(PAYMENT_STATUS, Duration.ofSeconds(120));
 
-    if (payment_status != null && payment_status.equals("paid")) {
-        logger.info("Payment successful for order {}", orderId);
-        DBOS.runStep(() -> service.markOrderPaid(orderId), "markOrderPaid");
-        DBOS.startWorkflow(() -> service.dispatchOrderWorkflow(orderId));
-    } else {
-        logger.info("Payment failed for order {}", orderId);
-        DBOS.runStep(() -> service.errorOrder(orderId), "errorOrder");
-        DBOS.runStep(() -> service.undoSubtractInventory(), "undoSubtractInventory");
-    }
-    
-    DBOS.setEvent(ORDER_ID, String.valueOf(orderId));
-    return key;
+  if (payment_status.map(ps -> ps.equals("paid")).orElse(false)) {
+    logger.info("Payment successful for order {}", orderId);
+    dbos.runStep(() -> repo.markOrderPaid(orderId), "markOrderPaid");
+    dbos.startWorkflow(() -> self.dispatchOrderWorkflow(orderId));
+  } else {
+    logger.info("Payment failed for order {}", orderId);
+    dbos.runStep(() -> repo.errorOrder(orderId), "errorOrder");
+    dbos.runStep(() -> repo.undoSubtractInventory(), "undoSubtractInventory");
+  }
+
+  dbos.setEvent(ORDER_ID, String.valueOf(orderId));
 }
 ```
 
@@ -79,25 +78,18 @@ It then returns the payment ID so the browser can redirect the user to the payme
 The endpoint accepts an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) so that even if the customer presses "buy now" multiple times, only one checkout workflow is started.
 
 ```java
+@PostMapping("/checkout/{key}")
 public ResponseEntity<String> checkout(@PathVariable String key) {
-    logger.info("Checkout requested with key: " + key);
-    
-    try {
-        // Execute the checkout workflow using DBOS
-        logger.info("Calling checkoutWorkflow on service: {}", widgetStoreService.getClass().getName());
-        var options = new StartWorkflowOptions(key);
-        DBOS.startWorkflow(() -> widgetStoreService.checkoutWorkflow(key), options);
+  logger.info("Checkout requested with key: " + key);
 
-        String paymentID = (String) DBOS.getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
-        if (paymentID == null) {
-            return ResponseEntity.internalServerError().body("Item not available");
-        }
-        return ResponseEntity.ok(paymentID);
-        
-    } catch (RuntimeException e) {
-        logger.error("Checkout failed: " + e.getMessage());
-        return ResponseEntity.internalServerError().body("Error starting checkout");
-    }
+  var options = new StartWorkflowOptions(key);
+  dbos.startWorkflow(() -> service.checkoutWorkflow(), options);
+  var paymentId = dbos.<String>getEvent(key, PAYMENT_ID, Duration.ofSeconds(60));
+  if (paymentId.isEmpty()) {
+    throw new RuntimeException("Item not available");
+  } else {
+    return ResponseEntity.ok(paymentId.get());
+  }
 }
 ```
 
@@ -105,255 +97,114 @@ The payment endpoint handles the communication between the payment system and th
 It uses the payment ID to signal the checkout workflow whether the payment succeeded or failed.
 It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
 
-```go
+```java
 @PostMapping("/payment_webhook/{key}/{status}")
 public ResponseEntity<String> paymentWebhook(@PathVariable String key, @PathVariable String status) {
-    logger.info("Payment webhook called with key: " + key + ", status: " + status);
-    
-    try {
-        DBOS.send(key, status, PAYMENT_STATUS);
-        String orderId = (String) DBOS.getEvent(key, ORDER_ID, Duration.ofSeconds(60));
-        return ResponseEntity.ok(orderId);
-    } catch (Exception e) {
-        logger.error("Payment webhook processing failed", e);
-        return ResponseEntity.internalServerError().body("Error processing payment");
-    }
+  logger.info("Payment webhook called with key: " + key + ", status: " + status);
+
+  dbos.send(key, status, PAYMENT_STATUS);
+  var orderId = dbos.<String>getEvent(key, ORDER_ID, Duration.ofSeconds(60));
+  return ResponseEntity.ok(orderId.orElse(null));
 }
 ```
 
 ## Database Operations
 
-Now, let's implement the checkout workflow's steps.
+Now, let's take a look at how the checkout workflow's steps are implemented.
 Each step performs a database operation, like updating inventory or order status.
-These are implemented as regular Java functions that interact with the Postgres database.
-
-<details>
-<summary><strong>Database Operations</strong></summary>
+These are implemented as [@Transactional](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html) Java functions that interact with the PostgreSQL database.
 
 ```java
 @Transactional
-public class WidgetStoreServiceImpl implements WidgetStoreService {
-    
-    private static final Logger logger = LoggerFactory.getLogger(WidgetStoreServiceImpl.class);
+public class WidgetStoreRepository {
 
-    private final DSLContext dsl;
+  private static final int PRODUCT_ID = 1;
 
-    public WidgetStoreServiceImpl(DSLContext dsl) {
-        this.dsl = dsl;
+  // Product and Order Repository classes are JpaRepository implementations
+  private final ProductRepository productRepository;
+  private final OrderRepository orderRepository;
+
+  public WidgetStoreRepository(ProductRepository productRepository, OrderRepository orderRepository) {
+    this.productRepository = productRepository;
+    this.orderRepository = orderRepository;
+  }
+
+  public ProductDto retrieveProduct() {
+    return productRepository.findById(PRODUCT_ID).map(ProductDto::fromEntity).orElse(null);
+  }
+
+  @Transactional
+  public void setInventory(int inventory) {
+    productRepository.setInventory(PRODUCT_ID, inventory);
+  }
+
+  @Transactional
+  public void subtractInventory() {
+    int updated = productRepository.subtractInventory(PRODUCT_ID);
+    if (updated == 0) {
+      throw new RuntimeException("Insufficient Inventory");
     }
+  }
 
-    private WidgetStoreService service;
+  @Transactional
+  public void undoSubtractInventory() {
+    productRepository.addInventory(PRODUCT_ID);
+  }
 
-    public void setProxy(WidgetStoreService service) {
-        this.service=service;
+  @Transactional
+  public Integer createOrder() {
+    Product product = productRepository.getReferenceById(PRODUCT_ID);
+    Order order = new Order();
+    order.setOrderStatus(OrderStatus.PENDING);
+    order.setProduct(product);
+    order.setLastUpdateTime(LocalDateTime.now());
+    order.setProgressRemaining(10);
+    return orderRepository.save(order).orderId();
+  }
+
+  public OrderDto retrieveOrder(int orderId) {
+    return orderRepository.findById(orderId).map(OrderDto::fromEntity).orElse(null);
+  }
+
+  public List<OrderDto> retrieveOrders() {
+    return orderRepository.findAllByOrderByOrderIdDesc().stream()
+        .map(OrderDto::fromEntity)
+        .toList();
+  }
+
+  @Transactional
+  public void markOrderPaid(int orderId) {
+    orderRepository.updateOrderStatus(orderId, OrderStatus.PAID);
+  }
+
+  @Transactional
+  public void errorOrder(int orderId) {
+    orderRepository.updateOrderStatus(orderId, OrderStatus.CANCELLED);
+  }
+
+  @Transactional
+  public void updateOrderProgress(int orderId) {
+    Order order =
+        orderRepository
+            .findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+    order.setProgressRemaining(order.progressRemaining() - 1);
+    order.setLastUpdateTime(LocalDateTime.now());
+    if (order.progressRemaining() == 0) {
+      order.setOrderStatus(OrderStatus.DISPATCHED);
     }
-
-    public ProductDto retrieveProduct() {
-        Products product = dsl.selectFrom(PRODUCTS)
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .fetchOneInto(Products.class);
-        
-        if (product == null) {
-            return null;
-        }
-        
-        return new ProductDto(
-                product.getProductId(),
-                product.getProduct(),
-                product.getDescription(),
-                product.getInventory(),
-                product.getPrice()
-        );
-    }
-
-    public void setInventory(int inventory) {
-        dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, inventory)
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .execute();
-    }
-
-    public void subtractInventory() throws RuntimeException {
-        int updated = dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.minus(1))
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .and(PRODUCTS.INVENTORY.ge(1))
-                .execute();
-        
-        if (updated == 0) {
-            throw new RuntimeException("Insufficient Inventory");
-        }
-    }
-
-    public void undoSubtractInventory() {
-        dsl.update(PRODUCTS)
-                .set(PRODUCTS.INVENTORY, PRODUCTS.INVENTORY.plus(1))
-                .where(PRODUCTS.PRODUCT_ID.eq(PRODUCT_ID))
-                .execute();
-    }
-
-    public Integer createOrder() {
-        return dsl.insertInto(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.PENDING.getValue())
-                .set(ORDERS.PRODUCT_ID, PRODUCT_ID)
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .set(ORDERS.PROGRESS_REMAINING, 10)
-                .returningResult(ORDERS.ORDER_ID)
-                .fetchOne()
-                .get(ORDERS.ORDER_ID);
-    }
-
-    public OrderDto retrieveOrder(int orderId) {
-        Orders order = dsl.selectFrom(ORDERS)
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .fetchOneInto(Orders.class);
-        
-        if (order == null) {
-            return null;
-        }
-        
-        return new OrderDto(
-                order.getOrderId(),
-                order.getOrderStatus(),
-                order.getLastUpdateTime(),
-                order.getProductId(),
-                order.getProgressRemaining()
-        );
-    }
-
-    public List<OrderDto> retrieveOrders() {
-        List<Orders> orders = dsl.selectFrom(ORDERS)
-                .orderBy(ORDERS.ORDER_ID.desc())
-                .fetchInto(Orders.class);
-        
-        return orders.stream()
-                .map(order -> new OrderDto(
-                        order.getOrderId(),
-                        order.getOrderStatus(),
-                        order.getLastUpdateTime(),
-                        order.getProductId(),
-                        order.getProgressRemaining()
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public void markOrderPaid(int orderId) {
-        dsl.update(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.PAID.getValue())
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .execute();
-    }
-
-    public void errorOrder(int orderId) {
-        dsl.update(ORDERS)
-                .set(ORDERS.ORDER_STATUS, OrderStatus.CANCELLED.getValue())
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .execute();
-    }
-
-    @Workflow
-    public void dispatchOrderWorkflow(Integer orderId) {
-        for (int i = 0; i < 10; i++) {
-            DBOS.sleep(Duration.ofSeconds(1));
-            DBOS.runStep(() -> service.updateOrderProgress(orderId), "updateOrderProgress");
-        }
-    }
-
-    public void updateOrderProgress(Integer orderId) {
-        Integer progressRemaining = dsl.update(ORDERS)
-                .set(ORDERS.PROGRESS_REMAINING, ORDERS.PROGRESS_REMAINING.minus(1))
-                .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                .where(ORDERS.ORDER_ID.eq(orderId))
-                .returningResult(ORDERS.PROGRESS_REMAINING)
-                .fetchOne()
-                .get(ORDERS.PROGRESS_REMAINING);
-
-        if (progressRemaining == 0) {
-            dsl.update(ORDERS)
-                    .set(ORDERS.ORDER_STATUS, OrderStatus.DISPATCHED.getValue())
-                    .set(ORDERS.LAST_UPDATE_TIME, LocalDateTime.now())
-                    .where(ORDERS.ORDER_ID.eq(orderId))
-                    .execute();
-        }
-    }
+    orderRepository.save(order);
+  }
 }
 ```
-</details>
 
 ## Launching and Serving the App
 
-To run this app, we need beans to create and configure DBOS and register workflows:
+`transact-spring-boot-starter` automatically provides `DBOSConfig` and `DBOS` beans, 
+automatically creates proxies for beans with `@Workflow` or `@Step` annotations
+and hooks into Spring's lifecycle management to automatically `dbos.launch()` and `dbos.shutdown()`.
 
-```java
-@Configuration
-public class WidgetStoreConfig {
-
-    @Bean
-    @Primary
-    public WidgetStoreService widgetStoreService(DSLContext dslContext) {
-        var impl = new WidgetStoreServiceImpl(dslContext);
-	    var proxy = DBOS.registerWorkflows(WidgetStoreService.class, impl);
-        impl.setProxy(proxy);
-        return proxy;
-    }
-
-    @Bean
-    DBOSConfig dbosConfig() {
-        String databaseUrl = System.getenv("DBOS_SYSTEM_JDBC_URL");
-        if (databaseUrl == null || databaseUrl.isEmpty()) {
-            databaseUrl = "jdbc:postgresql://localhost:5432/widget_store_java";
-        }
-        return DBOSConfig.defaults("widget-store")
-                .withDatabaseUrl(databaseUrl)
-                .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
-                .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"))
-                .withAdminServer(true);
-    }
-
-    @Bean
-    public DBOS.Instance dbos(DBOSConfig config) {
-        return DBOS.configure(config);
-    }
-}
-```
-
-We also hook into the Spring Boot lifecycle to launch and shut down DBOS:
-
-```java
-@Component
-@Lazy(false)
-public class DBOSLifecycle implements SmartLifecycle {
-
-    private static final Logger log = LoggerFactory.getLogger(DBOSLifecycle.class);
-    private volatile boolean running = false;
-
-    @Override
-    public void start() {
-        log.info("Launch DBOS");
-        DBOS.launch();
-        running = true;
-    }
-
-    @Override
-    public void stop() {
-        log.info("Shut Down DBOS");
-        try {
-            DBOS.shutdown();
-        } finally {
-            running = false;
-        }
-    }
-
-    @Override public boolean isRunning() { return running; }
-
-    @Override public boolean isAutoStartup() { return true; }
-
-    // Start BEFORE the web server (default is 0). Lower = earlier.
-    @Override public int getPhase() { return -1; }
-}
-```
+WidgetStoreConfig only exists to create the app database on startup and run Flyway migrations, making the demo app easier to run.
 
 ## Try it Yourself!
 
