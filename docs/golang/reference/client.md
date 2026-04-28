@@ -20,7 +20,9 @@ type Client interface {
     GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
     RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(workflowID string) error
-    ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
+    SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
+    ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
+    ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     ClientReadStream(workflowID string, key string) ([]any, bool, error)
@@ -118,6 +120,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
 * `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets that register workflows on class instances (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
+* `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via [`SetWorkflowDelay`](#setworkflowdelay).
 
 :::tip Cross-Language Enqueue
 To enqueue a workflow on a target application written in another language, pass a [`PortableWorkflowArgs`](./methods.md#portableworkflowargs) as the input.
@@ -241,17 +244,38 @@ Cancel a workflow.
 This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`CancelWorkflow`](./methods.md#cancelworkflow).
 
+### SetWorkflowDelay
+
+```go
+SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
+```
+
+Set or update the delay on a `DELAYED` workflow.
+Provide exactly one of [`WithDelayDuration`](./methods.md#withdelayduration) (relative) or [`WithDelayUntil`](./methods.md#withdelayuntil) (absolute).
+Similar to [`SetWorkflowDelay`](./methods.md#setworkflowdelay).
+
 ### ResumeWorkflow
 
 ```go
-ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
+ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
 ```
 
 Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Pass [`WithResumeQueue`](./methods.md#withresumequeue) to re-enqueue the resumed workflow on a named queue instead of starting it immediately.
 Similar to [`ResumeWorkflow`](./methods.md#resumeworkflow).
+
+### ResumeWorkflows
+
+```go
+ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
+```
+
+Resume multiple workflows in a single database round-trip.
+Accepts the same options as [`ResumeWorkflow`](#resumeworkflow).
+Similar to [`ResumeWorkflows`](./methods.md#resumeworkflows).
 
 ### ForkWorkflow
 
@@ -259,6 +283,7 @@ Similar to [`ResumeWorkflow`](./methods.md#resumeworkflow).
 ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 ```
 
+Set `QueueName` on the input to enqueue the forked workflow on a named queue instead of starting it immediately.
 Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
 
 ### Debouncer
