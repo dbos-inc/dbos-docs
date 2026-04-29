@@ -13,7 +13,7 @@ In particular, integrating DBOS to your agents gives you:
 - [**Observability and reproducibility**](./debugging.md): Monitor your agentic workflows in real time. If they exhibit unexpected behavior, use saved workflow progress to reproduce it in a development environment to identify and fix the root cause.
 - [**Support for long-running agents and human-in-the-loop**](./hitl.md): Build agents that run for hours, days, or weeks (potentially waiting for human responses) and seamlessly recover from any interruption.
 - [**Durable streaming**](./streaming.md): Stream output from your agents as it's generated to build interactive or conversational flows that recover from any failure.
-- [**Parallelize, scale, and distribute agents**](./distributing-agents.md): Use durable queues to build agents with parallel tool calls or tasks, potentially distributing it across many servers with managed flow control.
+- [**Parallel, scalable, and distributed agents**](./distributing-agents.md): Use durable queues to build agents with parallel tool calls or tasks, potentially distributing it across many servers with managed flow control.
 
 ## Get Started
 
