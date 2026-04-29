@@ -7,7 +7,7 @@ hide_table_of_contents: false
 AI agents often need to **stream output to clients in real time**, for example, to display LLM output as it is generated, surface intermediate tool results, or report the progress of a long-running task.
 
 DBOS workflows provide **durable streams**: append-only channels you can write to from inside a workflow and read from anywhere in your application.
-Every write is checkpointed, so if a server restarts mid-response the workflow recovers from where it left off and the reader keeps receiving values without dropping output.
+Every write is persisted, so if a server restarts mid-response the workflow recovers from where it left off and the reader keeps receiving values without dropping output.
 
 ## Writing to a Stream
 

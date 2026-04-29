@@ -39,7 +39,7 @@ export interface DBOSConfig {
   runAdminServer?: boolean;
   adminPort?: number;
 
-  listenQueues?: WorkflowQueue[];
+  listenQueues?: (WorkflowQueue | string)[];
 
   schedulerPollingIntervalMs?: number;
 
@@ -85,7 +85,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ### Queue Settings
 
-- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
 
 ### Scheduler Settings
 

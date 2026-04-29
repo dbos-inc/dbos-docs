@@ -36,9 +36,7 @@ Create a standalone script that registers your workflows and launches DBOS.
 When started, it will automatically dequeue and execute workflows.
 
 ```ts title="worker/index.ts"
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-
-const taskQueue = new WorkflowQueue("task_queue");
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
 async function greetingWorkflowFn(name: string) {
   return await DBOS.runStep(
@@ -56,6 +54,7 @@ async function main() {
     runAdminServer: false,
   });
   await DBOS.launch();
+  await DBOS.registerQueue("task_queue");
   console.log("Worker listening for workflows...");
 }
 

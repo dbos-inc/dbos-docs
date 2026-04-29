@@ -47,13 +47,7 @@ def step(i: int):
     time.sleep(1)
 ```
 
-The worker service also defines a queue on which the web server can submit workflows for execution:
-
-```python
-Queue("workflow-queue")
-```
-
-In its main function, the worker service configures and launches DBOS with the registered workflows and queues then waits indefinitely, dequeuing and executing workflows:
+In its main function, the worker service configures and launches DBOS, registers the queue on which the web server can submit workflows for execution, then waits indefinitely, dequeuing and executing workflows:
 
 ```python
 if __name__ == "__main__":
@@ -66,6 +60,9 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    # Define a queue on which the web server
+    # can submit workflows for execution.
+    DBOS.register_queue("workflow-queue")
     # After launching DBOS, the worker waits indefinitely,
     # dequeuing and executing workflows.
     threading.Event().wait()

@@ -144,9 +144,9 @@ You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manag
 Pass the `queue_name` parameter when creating the schedule:
 
 ```python
-from dbos import DBOS, Queue
+from dbos import DBOS
 
-queue = Queue("scheduled_queue", concurrency=1)
+DBOS.register_queue("scheduled_queue", concurrency=1)
 
 DBOS.create_schedule(
     schedule_name="my-task-schedule",

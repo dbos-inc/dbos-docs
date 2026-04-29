@@ -123,13 +123,13 @@ Use durable workflows and queues to build fault-tolerant and observable data pip
 <article className="col col--7">
 
 ```python
-queue = Queue("indexing_queue")
+DBOS.register_queue("indexing_queue")
 
 @DBOS.workflow()
 def indexing_workflow(urls):
     handles = []
     for url in urls:
-        handles.append(queue.enqueue(index_step, url))
+        handles.append(DBOS.enqueue_workflow("indexing_queue", index_step, url))
     return [h.get_result() for h in handles]
 ```
 

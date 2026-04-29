@@ -70,14 +70,13 @@ async function exampleFunction() {
   await DBOS.runStep(() => stepTwo(), { name: 'stepTwo' });
 }
 
-// Register your workflows and queues with DBOS
+// Register your workflow with DBOS
 DBOS.registerWorkflow(exampleFunction, {
   name: 'exampleWorkflow',
 });
-const queue = new WorkflowQueue('exampleQueue');
 ```
 
-Then, configure and launch DBOS on worker startup.
+Then, configure and launch DBOS on worker startup, and register the queue.
 When started, the worker will poll your queues and execute your workflows, waiting until all enqueued workflows complete or a timeout is reached.
 If some workflows are still executing when the worker times out, don't worry&mdash;DBOS will automatically recover them when the worker next starts.
 
@@ -89,6 +88,7 @@ DBOS.setConfig({
   runAdminServer: false,
 });
 await DBOS.launch();
+await DBOS.registerQueue('exampleQueue');
 
 // After the worker Vercel function is launched,
 // it waits for either all enqueued workflows
@@ -100,7 +100,7 @@ async function waitForQueuedWorkflowsToComplete(timeoutMs: number): Promise<void
     if (Date.now() - startTime >= timeoutMs) {
       throw new Error(`Timeout reached after ${timeoutMs}ms - queued workflows still exist`);
     }
-    const queuedWorkflows = await DBOS.listQueuedWorkflows({queueName: queue.name});
+    const queuedWorkflows = await DBOS.listQueuedWorkflows({queueName: 'exampleQueue'});
     if (queuedWorkflows.length === 0) {
       console.log('All queued workflows completed');
       return;

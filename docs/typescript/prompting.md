@@ -186,13 +186,11 @@ main().catch(console.log);
 Example with queues:
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
 
 export const app = express();
 app.use(express.json());
-
-const queue = new WorkflowQueue("example_queue");
 
 async function taskFunction(n: number) {
   await DBOS.sleep(5000);
@@ -204,7 +202,7 @@ async function queueFunction() {
   DBOS.logger.info("Enqueueing tasks!")
   const handles = []
   for (let i = 0; i < 10; i++) {
-    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i))
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue" })(i))
   }
   const results = []
   for (const h of handles) {
@@ -225,6 +223,7 @@ async function main() {
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
@@ -870,21 +869,45 @@ If that exception is not caught, the workflow terminates.
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, specify its name:
+Queue configuration is persisted to the system database, so any DBOS process or DBOSClient connected to the same system database can register, retrieve, and reconfigure queues.
+
+To create a queue, register it with `DBOS.registerQueue`. This must be called **after** `DBOS.launch()`:
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
-const queue = new WorkflowQueue("example_queue");
+await DBOS.registerQueue("example_queue");
 ```
 
-You can then enqueue any workflow by passing the queue as an argument to `DBOS.startWorkflow`.
+Full signature:
+
+```typescript
+DBOS.registerQueue(
+  name: string,
+  options?: RegisterQueueOptions,
+): Promise<WorkflowQueue>
+
+interface RegisterQueueOptions {
+  concurrency?: number;
+  workerConcurrency?: number;
+  rateLimit?: { limitPerPeriod: number; periodSec: number };
+  priorityEnabled?: boolean;
+  partitionQueue?: boolean;
+  minPollingIntervalMs?: number;
+  onConflict?: 'update_if_latest_version' | 'always_update' | 'never_update';
+}
+```
+
+If a queue with this name already exists in the database, `onConflict` controls whether the configuration is overwritten:
+- `'update_if_latest_version'` (default): only overwrite when the running application is the latest registered version. Safe for rolling deploys.
+- `'always_update'`: always overwrite.
+- `'never_update'`: leave the existing configuration unchanged.
+
+You can then enqueue any workflow by passing the queue name as an argument to `DBOS.startWorkflow`.
 Enqueuing a function submits it for execution and returns a handle to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```javascript
-const queue = new WorkflowQueue("example_queue");
-
 class Tasks {
   @DBOS.workflow()
   static async processTask(task) {
@@ -893,19 +916,39 @@ class Tasks {
 }
 
 async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
+
   const task = ...
-  const handle = await DBOS.startWorkflow(Tasks, {queueName: queue.name}).processTask(task)
+  const handle = await DBOS.startWorkflow(Tasks, { queueName: "example_queue" }).processTask(task)
 }
 ```
+
+### Reconfiguring Queues at Runtime
+
+Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
+Use `DBOS.retrieveQueue` to fetch a queue, then call its `setX` methods. Workers pick up the new configuration on their next polling iteration.
+
+```javascript
+const queue = await DBOS.retrieveQueue("example_queue");
+if (queue !== null) {
+  await queue.setConcurrency(20);
+  await queue.setRateLimit({ limitPerPeriod: 25, periodSec: 30 });
+}
+```
+
+Available methods on the returned `WorkflowQueue`:
+- `setConcurrency(value)`, `setWorkerConcurrency(value)`, `setRateLimit(value)`, `setPriorityEnabled(value)`, `setPartitionQueue(value)`, `setMinPollingIntervalMs(value)` — write through to the database.
+- `getConcurrency()`, `getWorkerConcurrency()`, `getRateLimit()`, `getPriorityEnabled()`, `getPartitionQueue()`, `getMinPollingIntervalMs()` — re-read from the database.
+
+To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered. Cancel or drain pending workflows before deleting.
 
 ### Queue Example
 
 Here's an example of a workflow using a queue to process tasks in parallel:
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-
-const queue = new WorkflowQueue("example_queue");
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
 async function taskFunction(task) {
     // ...
@@ -914,10 +957,10 @@ const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"
 
 async function queueFunction(tasks) {
   const handles = []
-  
+
   // Enqueue each task so all tasks are processed concurrently.
   for (const task of tasks) {
-    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(task))
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue" })(task))
   }
 
   // Wait for each task to complete and retrieve its result.
@@ -929,6 +972,12 @@ async function queueFunction(tasks) {
   return results
 }
 const queueWorkflow = DBOS.registerWorkflow(queueFunction, {"name": "queueWorkflow"})
+
+async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
+  // ...
+}
 ```
 
 ### Enqueueing from Another Application
@@ -938,15 +987,17 @@ For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the DBOS Client to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the DBOS Client to register queues and enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
-For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with `task` as an argument.
+For example, this code registers `pipelineQueue` and enqueues the `dataPipeline` workflow on it with `task` as an argument.
 
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+
+await client.registerQueue("pipelineQueue");
 
 type ProcessTask = typeof Tasks.processTask;
 await client.enqueue<ProcessTask>(
@@ -956,6 +1007,8 @@ await client.enqueue<ProcessTask>(
     },
     task);
 ```
+
+Note: `client.registerQueue` defaults `onConflict` to `'always_update'` because clients are not associated with an application version. `'update_if_latest_version'` is not supported on the client.
 
 ### Managing Concurrency
 
@@ -968,9 +1021,9 @@ Worker concurrency sets the maximum number of workflows from a queue that can ru
 This is particularly useful for resource-intensive workflows to avoid exhausting the resources of any process.
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
-const queue = new WorkflowQueue("example_queue", { workerConcurrency: 5 });
+await DBOS.registerQueue("example_queue", { workerConcurrency: 5 });
 ```
 
 Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through configuration.
@@ -986,9 +1039,9 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
-const queue = new WorkflowQueue("example_queue", { concurrency: 10 });
+await DBOS.registerQueue("example_queue", { concurrency: 10 });
 ```
 
 #### In-Order Processing
@@ -998,10 +1051,9 @@ Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
 
-const serialQueue = new WorkflowQueue("in_order_queue", { concurrency: 1 });
 const app = express();
 
 class Tasks {
@@ -1012,13 +1064,14 @@ class Tasks {
 }
 
 app.get("/events/:event", async (req, res) => {
-  await DBOS.startWorkflow(Tasks, {queueName: serialQueue.name}).processTask(req.params);
+  await DBOS.startWorkflow(Tasks, { queueName: "in_order_queue" }).processTask(req.params);
   await res.send("Workflow Started!");
 });
 
-// Launch DBOS and start the server
+// Launch DBOS, register the queue, and start the server
 async function main() {
   await DBOS.launch();
+  await DBOS.registerQueue("in_order_queue", { concurrency: 1 });
   app.listen(3000, () => {});
 }
 
@@ -1033,7 +1086,7 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 50 with a period of 30 seconds, so it may not start more than 50 functions in 30 seconds:
 
 ```javascript
-const queue = new WorkflowQueue("example_queue", { rateLimit: { limitPerPeriod: 50, periodSec: 30 } });
+await DBOS.registerQueue("example_queue", { rateLimit: { limitPerPeriod: 50, periodSec: 30 } });
 ```
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
@@ -1050,17 +1103,18 @@ Also, timeouts are **durable**: they are stored in the database and persist acro
 Example syntax:
 
 ```javascript
-const queue = new WorkflowQueue("example_queue");
-
 async function taskFunction(task) {
     // ...
 }
 const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
+
   const task = ...
   const timeout = ... // Timeout in milliseconds
-  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, timeoutMS: timeout})(task);
+  const handle = await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", timeoutMS: timeout })(task);
 }
 ```
 
@@ -1077,14 +1131,14 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 **Example Syntax**
 
 ```ts
-const queue = new WorkflowQueue("example_queue", { partitionQueue: true, concurrency: 1 });
+await DBOS.registerQueue("example_queue", { partitionQueue: true, concurrency: 1 });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
     // Partition the task queue by user ID. As the queue has a
     // maximum concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
-    await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {queuePartitionKey: userID}})(task);
+    await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", enqueueOptions: { queuePartitionKey: userID } })(task);
 }
 ```
 
@@ -1100,14 +1154,14 @@ For example:
 // By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
 // and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
 // across all partitions (and at most one task per partition).
-const concurrencyQueue = new WorkflowQueue("concurrency-queue", { concurrency: 5 });
-const partitionedQueue = new WorkflowQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
+await DBOS.registerQueue("concurrency-queue", { concurrency: 5 });
+await DBOS.registerQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
     // First, enqueue a "concurrency manager" workflow to the partitioned
     // queue to enforce per-partition limits.
     await DBOS.startWorkflow(concurrencyManager, {
-        queueName: partitionedQueue.name,
+        queueName: "partitioned-queue",
         enqueueOptions: { queuePartitionKey: userID }
     })(task);
 }
@@ -1116,7 +1170,7 @@ async function concurrencyManagerFunc(task: Task) {
     // The "concurrency manager" workflow enqueues the processTask
     // workflow on the non-partitioned queue and awaits its results
     // to enforce global flow control limits.
-    const handle = await DBOS.startWorkflow(processTask, { queueName: concurrencyQueue.name })(task);
+    const handle = await DBOS.startWorkflow(processTask, { queueName: "concurrency-queue" })(task);
     return await handle.getResult();
 }
 const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
@@ -1138,18 +1192,19 @@ For example, this is useful if you only want to have one workflow active at a ti
 Example syntax:
 
 ```javascript
-const queue = new WorkflowQueue("example_queue");
-
 async function taskFunction(task) {
     // ...
 }
 const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
+
   const task = ...
   const dedup: string = ...
   try {
-    const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {deduplicationID: dedup}})(task);
+    const handle = await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", enqueueOptions: { deduplicationID: dedup } })(task);
   } catch (e) {
     // Handle DBOSQueueDuplicatedError
   }
@@ -1160,7 +1215,7 @@ async function main() {
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `usePriority: true` on your queue.
+If using priority, you must set `priorityEnabled: true` on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -1169,17 +1224,18 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```javascript
-const queue = new WorkflowQueue("example_queue", {usePriority: true});
-
 async function taskFunction(task) {
     // ...
 }
 const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"});
 
 async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue", { priorityEnabled: true });
+
   const task = ...
   const priority: number = ...
-  const handle = await DBOS.startWorkflow(taskWorkflow, {queueName: queue.name, enqueueOptions: {priority: priority}})(task);
+  const handle = await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", enqueueOptions: { priority: priority } })(task);
 }
 ```
 
@@ -1188,16 +1244,14 @@ async function main() {
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
 However, sometimes you only want a process to listen to a specific list of queues.
 You can configure `listenQueues` in your DBOS configuration to explicitly tell a process running DBOS to only listen to a specific set of queues.
+Each entry is either a `WorkflowQueue` instance or a queue name; names that don't match any queue at launch are deferred until a database-backed queue is registered with that name.
 
 This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
 For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.
 You can create separate queues for CPU and GPU tasks and configure each type of worker to only listen to the appropriate queue:
 
 ```javascript
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
-
-const cpuQueue = new WorkflowQueue("cpu_queue");
-const gpuQueue = new WorkflowQueue("gpu_queue");
+import { DBOS } from "@dbos-inc/dbos-sdk";
 
 async function main() {
   const workerType = process.env.WORKER_TYPE; // "cpu" or "gpu"
@@ -1205,14 +1259,16 @@ async function main() {
 
   if (workerType === "gpu") {
     // GPU workers will only dequeue and execute workflows from the GPU queue
-    config.listenQueues = [gpuQueue];
+    config.listenQueues = ["gpu_queue"];
   } else if (workerType === "cpu") {
     // CPU workers will only dequeue and execute workflows from the CPU queue
-    config.listenQueues = [cpuQueue];
+    config.listenQueues = ["cpu_queue"];
   }
 
   DBOS.setConfig(config);
   await DBOS.launch();
+  await DBOS.registerQueue("cpu_queue");
+  await DBOS.registerQueue("gpu_queue");
 }
 ```
 
@@ -1780,7 +1836,7 @@ export interface DBOSConfig {
   runAdminServer?: boolean;
   adminPort?: number;
 
-  listenQueues?: WorkflowQueue[];
+  listenQueues?: (WorkflowQueue | string)[];
 
   serializer?: DBOSSerializer;
 }
@@ -1809,7 +1865,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
-- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues.
+- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
 
 ````

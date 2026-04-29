@@ -62,12 +62,14 @@ def deploy_tracker_workflow(user_id: str, channel_id: str):
 
 ## Concurrency-Limited Queue
 
-To ensure only one deployment workflow runs at a time, we define a queue with `concurrency=1`. This is helpful when the deployment pipeline consumes significant resources and you don't want to exhaust your resource pool when multiple users trigger deployments.
+To ensure only one deployment workflow runs at a time, we register a queue with `concurrency=1`. This is helpful when the deployment pipeline consumes significant resources and you don't want to exhaust your resource pool when multiple users trigger deployments.
 
 ```python
 # Create a queue with concurrency of 1 so only one deployment workflow runs at a time
-task_queue = Queue(name="deploy-tracker-queue", concurrency=1)
+DBOS.register_queue("deploy-tracker-queue", concurrency=1)
 ```
+
+Because `register_queue` writes the configuration to the system database, it must be called after `DBOS.launch()`.
 
 ## Handle Slash Commands in Slack
 
@@ -84,7 +86,9 @@ def handle_deploy_command(ack, say, command, logger):
         # Acknowledge the command within 3 seconds, after confirming the workflow has enqueued
         user_id = command["user_id"]
         channel_id = command["channel_id"]
-        handle = task_queue.enqueue(deploy_tracker_workflow, user_id, channel_id)
+        handle = DBOS.enqueue_workflow(
+            "deploy-tracker-queue", deploy_tracker_workflow, user_id, channel_id
+        )
         ack({"response_type": "in_channel"})
         # Check the queue size, and inform the user if there are pending workflows
         queued_workflows = DBOS.list_queued_workflows(

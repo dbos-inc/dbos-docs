@@ -16,11 +16,11 @@ With fair queueing, you can limit each tenant to 1 workflow at a time while stil
 
 You can implement fair queueing in DBOS by combining a [**partitioned queue**](../tutorials/queue-tutorial.md#partitioning-queues) with a **regular (non-partitioned) queue**.
 You enforce per-tenant limits on the partitioned queue and global limits on the non-partitioned queue.
-To do that, first let's define the two queues and a workflow:
+To do that, first let's register the two queues and define a workflow:
 
 ```python
-concurrency_queue = Queue("concurrency-queue", concurrency=5)
-partitioned_queue = Queue("partitioned-queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("concurrency-queue", concurrency=5)
+DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
 
 # This workflow is fairly queued: at most five workflows can run concurrently,
 # but no more than one per tenant.
@@ -38,7 +38,7 @@ def submit_fair_queue(tenant_id: str):
     # Enqueue a "concurrency manager" workflow to the partitioned
     # queue to enforce per-partition limits.
     with SetEnqueueOptions(queue_partition_key=tenant_id):
-        partitioned_queue.enqueue(fair_queue_concurrency_manager)
+        DBOS.enqueue_workflow("partitioned-queue", fair_queue_concurrency_manager)
 ```
 
 The "concurrency manager" bridges the two queues, enqueueing the workflow on the non-partitioned queue and waiting for it to complete:
@@ -49,7 +49,7 @@ def fair_queue_concurrency_manager():
     # The "concurrency manager" workflow enqueues the
     # workflow on the non-partitioned queue and
     # awaits its results to enforce global flow control limits.
-    return concurrency_queue.enqueue(fair_queue_workflow).get_result()
+    return DBOS.enqueue_workflow("concurrency-queue", fair_queue_workflow).get_result()
 ```
 
 Because the "concurrency manager" has the same lifetime as the actual workflow, this pattern ensures both the partitioned queue's per-tenant limits and the non-partitioned queue's global concurrency limits are respected.
@@ -63,7 +63,7 @@ You can do this by applying a rate limit to a queue.
 For example, here's a rate-limited queue and workflow:
 
 ```python
-rate_limited_queue = Queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
+DBOS.register_queue("rate-limited-queue", limiter={"limit": 2, "period": 10})
 
 # This workflow is rate-limited: No more than two workflows can start per 10 seconds
 @DBOS.workflow()
@@ -79,7 +79,7 @@ You can enqueue a workflow on a rate-limited queue like with any other queue:
 ```python
 @api.post("/workflows/rate_limited_queue")
 def submit_rate_limited_queue():
-    rate_limited_queue.enqueue(rate_limited_queue_workflow)
+    DBOS.enqueue_workflow("rate-limited-queue", rate_limited_queue_workflow)
 ```
 
 ## Debouncing
@@ -91,14 +91,14 @@ For example, if a user is editing an input field, you may want to start a proces
 To debounce a workflow, we define the workflow and queue and create a debouncer for the workflow:
 
 ```python
-debouncer_queue = Queue("debouncer-queue")
+DBOS.register_queue("debouncer-queue")
 
 @DBOS.workflow()
 def debouncer_workflow(tenant_id: str, input: str):
     print(f"Executing debounced workflow for tenant {tenant_id} with input {input}")
     time.sleep(5)
 
-debouncer = Debouncer.create(debouncer_workflow, queue=debouncer_queue)
+debouncer = Debouncer.create(debouncer_workflow, queue="debouncer-queue")
 ```
 
 Then, we submit the workflow with the debouncer.

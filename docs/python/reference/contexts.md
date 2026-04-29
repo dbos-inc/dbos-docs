@@ -603,6 +603,121 @@ DBOS.deprecate_patch_async(
 ```
 Coroutine version of [`DBOS.deprecate_patch()`](#deprecate_patch)
 
+## Queue Management
+
+Queues are persisted to the system database, so any DBOS process or [`DBOSClient`](./client.md) connected to the same system database can register, retrieve, and enqueue workflows on them.
+
+### register_queue
+
+```python
+DBOS.register_queue(
+    name: str,
+    *,
+    concurrency: Optional[int] = None,
+    limiter: Optional[QueueRateLimit] = None,
+    worker_concurrency: Optional[int] = None,
+    priority_enabled: bool = False,
+    partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
+    on_conflict: QueueConflictResolution = "update_if_latest_version",
+) -> Queue
+
+QueueConflictResolution = Literal[
+    "update_if_latest_version", "always_update", "never_update"
+]
+```
+
+Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
+DBOS must be launched before calling `register_queue`.
+If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
+
+**Parameters:**
+- `name`: The name of the queue. Must be unique among all queues in the application.
+- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `limiter`: A limit on the maximum number of functions which may be started in a given period.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `concurrency`.
+- `priority_enabled`: Enable setting priority for workflows on this queue.
+- `partition_queue`: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) for this queue.
+- `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `on_conflict`: How to behave when a queue with this name already exists in the system database:
+  - `"update_if_latest_version"` (default): overwrite the existing configuration only if the running application is the latest registered [application version](#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
+  - `"always_update"`: always overwrite the existing configuration.
+  - `"never_update"`: leave the existing configuration unchanged.
+
+**Example syntax:**
+
+```python
+DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
+```
+
+### retrieve_queue
+
+```python
+DBOS.retrieve_queue(name: str) -> Optional[Queue]
+```
+
+Retrieve a queue by name from the system database, or `None` if no queue with that name has been registered.
+
+**Example syntax:**
+
+```python
+queue = DBOS.retrieve_queue("email")
+if queue is not None:
+    print(queue.concurrency)
+```
+
+### enqueue_workflow
+
+```python
+DBOS.enqueue_workflow(
+    queue_name: str,
+    func: Callable[P, R],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> WorkflowHandle[R]
+```
+
+Enqueue a workflow on a queue and return a [handle](./workflow_handles.md) to it.
+Equivalent to retrieving the queue by name and calling [`Queue.enqueue`](./queues.md#enqueue) on it.
+Raises `DBOSException` if no queue with the given name is registered.
+
+**Example syntax:**
+
+```python
+@DBOS.workflow()
+def send_email(to: str) -> None:
+    ...
+
+DBOS.register_queue("email", concurrency=10)
+handle = DBOS.enqueue_workflow("email", send_email, "alice@example.com")
+handle.get_result()
+```
+
+### enqueue_workflow_async
+
+```python
+DBOS.enqueue_workflow_async(
+    queue_name: str,
+    func: Callable[P, Coroutine[Any, Any, R]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
+```
+
+Coroutine version of [`enqueue_workflow`](#enqueue_workflow).
+
+### delete_queue
+
+```python
+DBOS.delete_queue(name: str) -> None
+```
+
+Delete a queue from the system database. No-op if no queue with that name exists.
+
+:::warning
+Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
+Cancel or drain pending workflows on the queue before deleting it.
+:::
 
 ## Workflow Management Methods
 

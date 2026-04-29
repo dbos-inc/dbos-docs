@@ -115,13 +115,13 @@ Direct new traffic to your new processes while your old processes "drain" and co
 To direct enqueued workflows to processes running the latest version of your code, use [`DBOS.get_latest_application_version`](../reference/contexts.md#get_latest_application_version) to look up the latest version:
 
 ```python
-from dbos import DBOS, Queue, SetEnqueueOptions
+from dbos import DBOS, SetEnqueueOptions
 
-queue = Queue("my_queue")
+DBOS.register_queue("my_queue")
 
 latest_version = DBOS.get_latest_application_version()
 with SetEnqueueOptions(app_version=latest_version["version_name"]):
-    queue.enqueue(my_workflow, arg1, arg2)
+    DBOS.enqueue_workflow("my_queue", my_workflow, arg1, arg2)
 ```
 
 Or using [`DBOSClient`](../reference/client.md#version-management):
