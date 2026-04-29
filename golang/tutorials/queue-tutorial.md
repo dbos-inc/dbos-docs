@@ -390,6 +390,35 @@ func onUserTaskSubmission(dbosContext dbos.DBOSContext, userID string, task Task
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+### Delayed Execution
+
+You can delay an enqueued workflow's execution using [`WithDelay`](../reference/workflows-steps#withdelay).
+The workflow is initially placed in `DELAYED` status and does not execute.
+After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
+This is useful for scheduling workflows to run at a future time.
+
+**Example syntax:**
+
+```go
+// Send a reminder in one hour
+handle, err := dbos.RunWorkflow(dbosContext, sendReminder, userID,
+    dbos.WithQueue("reminders"),
+    dbos.WithDelay(1 * time.Hour),
+)
+```
+
+When [enqueueing from a Client](#enqueueing-from-another-application), use [`WithEnqueueDelay`](../reference/client.md#enqueue) instead.
+
+You can also dynamically update or shorten the delay of a `DELAYED` workflow using [`SetWorkflowDelay`](../reference/methods.md#setworkflowdelay):
+
+```go
+// Shorten the delay to 10 seconds from now
+err := dbos.SetWorkflowDelay(ctx, handle.GetWorkflowID(), dbos.WithDelayDuration(10*time.Second))
+
+// Or set an absolute deadline
+err = dbos.SetWorkflowDelay(ctx, handle.GetWorkflowID(), dbos.WithDelayUntil(time.Now().Add(time.Minute)))
+```
+
 ### Listening to Specific Queues
 
 By default, every DBOS process listens to all registered queues.

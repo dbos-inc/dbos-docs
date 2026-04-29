@@ -368,7 +368,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### ResumeWorkflow
 
 ```go
-func ResumeWorkflow[R any](ctx DBOSContext, workflowID string) (*WorkflowHandle[R], error)
+func ResumeWorkflow[R any](ctx DBOSContext, workflowID string, opts ...ResumeWorkflowOption) (*WorkflowHandle[R], error)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -376,6 +376,32 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to resume.
+- **opts**: Optional configuration, documented below.
+
+#### WithResumeQueue
+
+```go
+func WithResumeQueue(queueName string) ResumeWorkflowOption
+```
+
+Re-enqueue the resumed workflow on the specified queue instead of starting it immediately.
+
+### ResumeWorkflows
+
+```go
+func ResumeWorkflows[R any](ctx DBOSContext, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
+```
+
+Resume multiple workflows in a single database round-trip.
+Each workflow that exists and is not in a terminal state is re-enqueued; completed or missing workflows are skipped.
+Unlike [`ResumeWorkflow`](#resumeworkflow), this function does not return an error when some IDs are missing.
+
+Accepts the same options as [`ResumeWorkflow`](#resumeworkflow) (e.g., [`WithResumeQueue`](#withresumequeue)).
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowIDs**: The IDs of the workflows to resume.
+- **opts**: Optional configuration.
 
 ### ForkWorkflow
 
@@ -395,8 +421,52 @@ type ForkWorkflowInput struct {
     ForkedWorkflowID   string // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
     StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
     ApplicationVersion string // Optional: Application version for the forked workflow (inherits from original if empty)
+    QueueName          string // Optional: Queue to enqueue the forked workflow on (defaults to starting immediately)
 }
 ```
+
+If `QueueName` is set, the forked workflow is enqueued on the specified queue instead of starting immediately.
+
+### SetWorkflowDelay
+
+```go
+func SetWorkflowDelay(ctx DBOSContext, workflowID string, opts ...SetWorkflowDelayOption) error
+```
+
+Set or update the delay on a [`DELAYED`](#workflowstatustype) workflow.
+Provide exactly one of [`WithDelayDuration`](#withdelayduration) (relative) or [`WithDelayUntil`](#withdelayuntil) (absolute).
+Only affects workflows currently in the `DELAYED` status.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowID**: The ID of the workflow whose delay to update.
+- **opts**: Exactly one of `WithDelayDuration` or `WithDelayUntil`.
+
+**Example:**
+
+```go
+// Shorten the delay to 10 seconds from now
+err := dbos.SetWorkflowDelay(ctx, workflowID, dbos.WithDelayDuration(10*time.Second))
+
+// Or set an absolute deadline
+err = dbos.SetWorkflowDelay(ctx, workflowID, dbos.WithDelayUntil(time.Now().Add(time.Hour)))
+```
+
+#### WithDelayDuration
+
+```go
+func WithDelayDuration(d time.Duration) SetWorkflowDelayOption
+```
+
+Set a relative delay measured from now.
+
+#### WithDelayUntil
+
+```go
+func WithDelayUntil(t time.Time) SetWorkflowDelayOption
+```
+
+Set an absolute time until which the workflow should remain delayed.
 
 ### Workflow Status
 
@@ -426,6 +496,7 @@ type WorkflowStatus struct {
     DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
+    DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
 }
 ```
 
@@ -439,6 +510,7 @@ type WorkflowStatusType string
 const (
     WorkflowStatusPending                     WorkflowStatusType = "PENDING"                        // Workflow is running or ready to run
     WorkflowStatusEnqueued                    WorkflowStatusType = "ENQUEUED"                       // Workflow is queued and waiting for execution
+    WorkflowStatusDelayed                     WorkflowStatusType = "DELAYED"                        // Workflow is delayed and will transition to ENQUEUED after the delay expires
     WorkflowStatusSuccess                     WorkflowStatusType = "SUCCESS"                        // Workflow completed successfully
     WorkflowStatusError                       WorkflowStatusType = "ERROR"                          // Workflow completed with an error
     WorkflowStatusCancelled                   WorkflowStatusType = "CANCELLED"                      // Workflow was cancelled (manually or due to timeout)

@@ -1,10 +1,10 @@
 ---
 sidebar_position: 20
-title: Reproducing & Debugging Agents
+title: Observability & Reproducibility
 hide_table_of_contents: false
 ---
 
-One of the most common problems you encounter building and operating agents is failures due to **unexpected agent behavior**.
+One of the most common problems you encounter building and operating agents is **debugging failures**, particularly those caused by unexpected agent behavior.
 For example, an agent might:
 
 - Return a malformed structured output, causing a tool call to fail.
@@ -13,7 +13,7 @@ For example, an agent might:
 
 These behaviors are especially hard to diagnose in a complex or long-running agent&mdash;if an agent runs for two hours then fails unexpectedly, it's difficult to reproduce the exact set of conditions that caused the failure and test a fix.
 
-Durable workflows help by making it easier to observe the root cause of the failure, deterministically reproduce the failure, and test or apply fixes.
+Durable workflows help by making it easier to **observe** the root cause of the failure, deterministically **reproduce** the failure, and **test or apply** fixes.
 Because workflows checkpoint the outcome of each step of your workflow, you can review these checkpoints to see the cause of the failure and audit every step that led to it.
 For example, using the [DBOS Console dashboard](../production/workflow-management.md), you might see that your agent failed because of a validation error caused by a malformed structured output:
 

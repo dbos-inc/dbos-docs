@@ -17,8 +17,8 @@ You can also view a searchable and expandable list of your application's workflo
 
 You can list the steps of a workflow programmatically via [`DBOS.list_workflow_steps`](../reference/contexts.md#list_workflow_steps) or from the command line with [`dbos workflow steps`](../reference/cli.md#dbos-workflow-steps).
 
-You can also visualize a workflow's execution graph (including the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
-For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
+You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
+For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
@@ -52,6 +52,6 @@ When you fork a workflow, DBOS generates a new workflow with a new workflow ID, 
 Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
 
 You can fork a workflow programmatically using [`DBOS.fork_workflow`](../reference/contexts.md#fork_workflow).
-You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
+You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>

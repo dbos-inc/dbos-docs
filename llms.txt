@@ -3,10 +3,11 @@
 ## Docs
 
 - [AI Quickstart](https://docs.dbos.dev/ai/ai-quickstart.md): You can integrate DBOS durable workflows with your AI agents (or other AI systems) to make them reliable, observable, and resilient to failures.
-- [Reproducing & Debugging Agents](https://docs.dbos.dev/ai/debugging.md): One of the most common problems you encounter building and operating agents is failures due to unexpected agent behavior.
-- [Distributing & Scaling Agents](https://docs.dbos.dev/ai/distributing-agents.md): Often AI applications and agents need to distribute work and run many parallel tasks across many servers.
+- [Observability & Reproducibility](https://docs.dbos.dev/ai/debugging.md): One of the most common problems you encounter building and operating agents is debugging failures, particularly those caused by unexpected agent behavior.
+- [Parallelizing & Scaling Agents](https://docs.dbos.dev/ai/distributing-agents.md): AI agents and applications often need to run many tasks in parallel.
 - [Reliable Human-in-the-Loop](https://docs.dbos.dev/ai/hitl.md): Many agents need a human in the loop for decisions that are too important to fully trust an LLM.
-- [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a lightweight library for durable workflows built on top of Postgres.
+- [Streaming Responses](https://docs.dbos.dev/ai/streaming.md): AI agents often need to stream output to clients in real time, for example, to display LLM output as it is generated, surface intermediate tool results, or report the progress of a long-running task.
+- [DBOS Architecture](https://docs.dbos.dev/architecture.md): DBOS provides a high-performance, easy-to-use library for durable workflows built on top of Postgres.
 - [DBOS Examples](https://docs.dbos.dev/examples/index.md): Example applications built with DBOS
 - [Comparing DBOS and Temporal](https://docs.dbos.dev/explanations/comparing-temporal.md): DBOS and Temporal both provide durable workflows.
 - [Migrating From Temporal](https://docs.dbos.dev/explanations/migrating-from-temporal.md): This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
