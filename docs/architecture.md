@@ -4,7 +4,7 @@ title: DBOS Architecture
 pagination_next: null
 ---
 
-DBOS provides a lightweight library for durable workflows built on top of Postgres.
+DBOS provides a high-performance, easy-to-use library for durable workflows built on top of Postgres.
 
 You use DBOS by installing the open-source library into your application and annotating workflows and steps.
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.

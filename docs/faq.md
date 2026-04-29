@@ -61,7 +61,7 @@ To make a workflow deterministic, make sure all non-deterministic operations (su
 
 Yes, you can call (or start, or enqueue) a workflow from inside another workflow.
 That workflow becomes a **child** of its caller and is by default assigned a workflow ID derived from its parent's.
-If you view a workflow's call graph from the [DBOS console](./production/workflow-management.md), it will include the workflow's children.
+If you view a workflow's trace from the [DBOS console](./production/workflow-management.md), it will include the workflow's children.
 
 ### Can I call a step from a step?
 
