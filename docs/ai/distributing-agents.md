@@ -18,14 +18,14 @@ Because every task is checkpointed, your agent can recover from any failure mid-
 When an LLM returns multiple tool calls in a single response, you can execute them in parallel by enqueuing each one as a workflow and waiting for all of them to complete:
 
 ```python
-tool_queue = Queue("tool_queue")
+DBOS.register_queue("tool_queue")
 
 @DBOS.workflow()
 def run_tool_calls(tool_calls):
     handles: List[WorkflowHandle] = []
     # Enqueue each tool call to run in parallel
     for call in tool_calls:
-        handle = tool_queue.enqueue(execute_tool, call.name, call.arguments)
+        handle = DBOS.enqueue_workflow("tool_queue", execute_tool, call.name, call.arguments)
         handles.append(handle)
     # Wait for all tool calls to finish and collect their outputs
     return [handle.get_result() for handle in handles]
