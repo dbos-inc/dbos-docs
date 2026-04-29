@@ -20,8 +20,8 @@ Click on a workflow to see details, including its input and output:
 
 <img src={require('@site/static/img/workflow-management/workflow-details.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-Click "Show Workflow Steps" to view the workflow's execution graph (including the workflow, its steps, and its child workflows and their steps).
-For example, here is the graph of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
+Click "Show Workflow Steps" to view the workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps).
+For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
