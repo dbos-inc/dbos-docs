@@ -6,6 +6,11 @@ description: Add DBOS durable workflows to a Spring Boot application.
 
 The `transact-spring-boot-starter` package integrates DBOS into a Spring Boot application with zero boilerplate: add the dependency, configure a datasource, annotate your beans, and DBOS launches automatically alongside the Spring context.
 
+:::tip
+The Java [Widget Store demo](https://github.com/dbos-inc/dbos-demo-apps/tree/main/java/widget-store) is a fully featured DBOS Spring Boot application
+that illustrates the features described in this documentation.
+:::
+
 ## Adding the Dependency
 
 <Tabs groupId="build-tool">
@@ -51,7 +56,7 @@ If `dbos.application.name` or `dbos.datasource` properties are not set, `spring.
 ```yml
 spring:
   application:
-    name: "widget-store"
+    name: "my-app"
   datasource:
     url: "jdbc:postgresql://localhost:5432/my_app_db"
     username: "postgres"
@@ -64,6 +69,23 @@ DBOS only supports PostgreSQL today. Attempting to use a non PostgreSQL database
 :::
 
 For a full list of DBOSConfig fields you can set via application properties, please see the [reference documentation](../reference/spring-boot-starter.md#configuration-properties).
+
+### Programmatic Configuration
+
+Declare a `DBOSConfigCustomizer` bean to adjust the auto-configured `DBOSConfig` without replacing it:
+
+```java
+@Bean
+public DBOSConfigCustomizer myCustomizer() {
+    return config -> config
+        .withAdminServer(true)
+        .withAdminServerPort(8081)
+        .withEnablePatching(true);
+}
+```
+
+Multiple `DBOSConfigCustomizer` beans are applied in `@Order` / `Ordered` order. To replace the config entirely, declare your own `@Bean DBOSConfig`.
+
 
 ## Defining Workflows and Steps
 
@@ -107,37 +129,34 @@ public class OrderService {
 }
 ```
 
-## Lifecycle
-
-`DBOSLifecycle` is a `SmartLifecycle` bean that calls `dbos.launch()` after all singletons are initialized and `dbos.shutdown()` when the context closes. Schedules and queues registered in `@PostConstruct` methods or `ApplicationListener<ContextRefreshedEvent>` handlers are guaranteed to be in place before launch.
-
-## Programmatic Configuration
-
-Declare a `DBOSConfigCustomizer` bean to adjust the auto-configured `DBOSConfig` without replacing it:
-
-```java
-@Bean
-public DBOSConfigCustomizer myCustomizer() {
-    return config -> config
-        .withAdminServer(true)
-        .withAdminServerPort(8081)
-        .withEnablePatching(true);
-}
-```
-
-Multiple `DBOSConfigCustomizer` beans are applied in `@Order` / `Ordered` order. To replace the config entirely, declare your own `@Bean DBOSConfig`.
-
-## Multiple Instances of the Same Class
+### Multiple Beans of the Same Class
 
 When multiple beans of the same class exist, the `@Primary` one is registered under the default (empty) instance name.
 Additional beans of the same class are registered as [Workflow Class Instances](./workflow-classes.md) using their Spring bean name.
 Use `withInstanceName(String)` in `StartWorkflowOptions` or `EnqueueOptions` to target a specific bean.
 
-## Using `dbos` Directly
+## Lifecycle
+
+`DBOSLifecycle` is a `SmartLifecycle` bean that calls `dbos.launch()` after all singletons are initialized and `dbos.shutdown()` when the context closes. Schedules and queues registered in `@PostConstruct` methods or `ApplicationListener<ContextRefreshedEvent>` handlers are guaranteed to be in place before launch.
+
+## Injecting `dbos` instance
 
 The auto-configured `DBOS` bean is available for injection anywhere in the application:
 
 ```java
+// Constructor injection
+@Service
+public class WidgetStoreService {
+  private final DBOS dbos;
+  private final WidgetStoreRepository repo;
+ 
+  public WidgetStoreService(DBOS dbos, WidgetStoreRepository widgetStoreRepo) {
+    this.dbos = dbos;
+    this.repo = widgetStoreRepo;
+  }
+}
+
+// @Autowired field injection
 @Service
 public class ScheduleSetup implements ApplicationListener<ContextRefreshedEvent> {
 
