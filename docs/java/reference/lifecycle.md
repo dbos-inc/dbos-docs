@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 title: DBOS Lifecycle
-toc_max_heading_level: 2
+toc_max_heading_level: 3
 ---
 
 You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
@@ -136,7 +136,7 @@ Optional<Queue> getQueue(String queueName)
 
 Return the registered `Queue` with the given name, or empty if no such queue is registered. Must be called after `dbos.launch()`.
 
-## Custom Serialization
+### Custom Serialization
 
 DBOS must serialize data such as workflow inputs and outputs and step return values to store it in the system database.
 By default, data is serialized with Jackson (format name `java_jackson`), but you can optionally supply a custom serializer through DBOS configuration.

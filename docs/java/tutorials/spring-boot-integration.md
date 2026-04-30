@@ -4,7 +4,7 @@ title: Spring Boot Integration
 description: Add DBOS durable workflows to a Spring Boot application.
 ---
 
-The `transact-spring-boot-starter` integrates DBOS into a Spring Boot application with zero boilerplate: add the dependency, configure a datasource, annotate your beans, and DBOS launches automatically alongside the Spring context.
+The `transact-spring-boot-starter` package integrates DBOS into a Spring Boot application with zero boilerplate: add the dependency, configure a datasource, annotate your beans, and DBOS launches automatically alongside the Spring context.
 
 ## Adding the Dependency
 
@@ -31,7 +31,9 @@ dependencies {
 
 ## Configuration
 
-Set your application name and database connection in `application.yaml` (or `application.properties`):
+Instead of creating the [DBOSConfig](../reference/lifecycle.md#dbosconfig) for your app programmatically, 
+the Spring Boot Starter package allows you to configure DBOS via Spring Boot 
+[External Application Properties](https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.files). For example, you can set your application name and database connection in `application.yaml` (or `application.properties`):
 
 ```yml
 dbos:
@@ -51,7 +53,7 @@ spring:
   application:
     name: "widget-store"
   datasource:
-    url: "jdbc:postgresql://localhost:5432/widget_store_java"
+    url: "jdbc:postgresql://localhost:5432/my_app_db"
     username: "postgres"
     password: "${PGPASSWORD}"
     driver-class-name: "org.postgresql.Driver"
@@ -61,12 +63,19 @@ spring:
 DBOS only supports PostgreSQL today. Attempting to use a non PostgreSQL database driver will throw an exception.
 :::
 
+For a full list of DBOSConfig fields you can set via application properties, please see the [reference documentation](../reference/spring-boot-starter.md#configuration-properties).
 
 ## Defining Workflows and Steps
 
-Annotate methods on any Spring-managed singleton bean (`@Service`, `@Component`, etc.) with `@Workflow` and `@Step`.
-Note, `transact-spring-boot-starter` uses [Spring AOP](https://docs.spring.io/spring-framework/reference/core/aop.html) which does not require defining a separate interface.
-You do however still need a proxy instance for invocating `@Workflow` and `@Step` methods on the same instance.
+In "vanilla" DBOS, you need to define an interface and a class in order use `@Workflow` and `@Step`.
+With Spring Boot Starter, you can use the `@Workflow` and `@Step` annotations on methods on any Spring-managed singleton bean (`@Service`, `@Component`, etc.).
+`transact-spring-boot-starter` uses [Spring AOP](https://docs.spring.io/spring-framework/reference/core/aop.html) instead of dynamic proxies, which do not require defining a separate interface. 
+
+With Spring Boot Starter, you also don't need to manually register workflow and step proxies with 
+[`dbos.registerProxy`](../reference/workflows-steps.md#registerproxy). 
+The `DBOSWorkflowRegistrar` automatically scans all singleton beans after initialization and registers `@Workflow` methods automatically.
+
+Note, that you do however still need a proxy instance for invocating `@Workflow` and `@Step` methods on the same instance.
 This proxy reference can be self injected via an [`@Autowired`](https://docs.spring.io/spring-framework/reference/core/beans/annotation-config/autowired.html) setter.
 
 ```java
@@ -75,6 +84,7 @@ public class OrderService {
 
   private OrderService self;
 
+  // self reference is injected automatically by Spring Boot Dependency Injection
   @Autowired 
   @Lazy
   public void setSelf(WidgetStoreService self) {
@@ -83,7 +93,8 @@ public class OrderService {
 
   @Workflow
   public String processOrder(String orderId) {
-    String result = self.chargeCard(orderId);   // durable step via self-proxy
+    // Invoke @Step via self reference to perform durable execution book keeping
+    String result = self.chargeCard(orderId);   
     self.sendConfirmation(orderId, result);
     return result;
   }
@@ -95,8 +106,6 @@ public class OrderService {
   public void sendConfirmation(String orderId, String result) { /* ... */ }
 }
 ```
-
-`DBOSWorkflowRegistrar` scans all singleton beans after initialization and registers those with `@Workflow` methods automatically — no manual `dbos.registerProxy(...)` call needed.
 
 ## Lifecycle
 
@@ -120,7 +129,9 @@ Multiple `DBOSConfigCustomizer` beans are applied in `@Order` / `Ordered` order.
 
 ## Multiple Instances of the Same Class
 
-When multiple beans of the same class exist, the `@Primary` one is registered under the default (empty) instance name; the rest are registered under their Spring bean name. Use `withInstanceName(String)` in `StartWorkflowOptions` or `EnqueueOptions` to target a specific instance.
+When multiple beans of the same class exist, the `@Primary` one is registered under the default (empty) instance name.
+Additional beans of the same class are registered as [Workflow Class Instances](./workflow-classes.md) using their Spring bean name.
+Use `withInstanceName(String)` in `StartWorkflowOptions` or `EnqueueOptions` to target a specific bean.
 
 ## Using `dbos` Directly
 

@@ -43,12 +43,12 @@ All properties are in the `dbos.*` namespace.
 | `dbos.datasource.schema` | `String` | `dbos` | Schema for DBOS system tables. |
 | `dbos.datasource.migrate` | `boolean` | `true` | Whether to run database migrations on startup. |
 
-### Conductor (DBOS Cloud)
+### DBOS Conductor
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `dbos.conductor.key` | `String` | — | DBOS Cloud conductor API key. |
-| `dbos.conductor.domain` | `String` | — | DBOS Cloud conductor domain. |
+| `dbos.conductor.key` | `String` | — | DBOS Conductor API key. |
+| `dbos.conductor.domain` | `String` | — | DBOS Conductor domain. |
 
 ### Admin Server
 
