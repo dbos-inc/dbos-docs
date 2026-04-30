@@ -1418,6 +1418,32 @@ handle, err := dbos.RunWorkflow(dbosContext, processTask, taskData,
 )
 ```
 
+### Delayed Execution
+
+You can delay an enqueued workflow's execution using `WithDelay`.
+The workflow is initially placed in `DELAYED` status and does not execute.
+After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
+
+```go
+// Send a reminder in one hour
+handle, err := dbos.RunWorkflow(dbosContext, sendReminder, userID,
+    dbos.WithQueue("reminders"),
+    dbos.WithDelay(1 * time.Hour),
+)
+```
+
+When enqueueing from a Client, use `WithEnqueueDelay` instead.
+
+You can dynamically update or shorten the delay of a `DELAYED` workflow using `SetWorkflowDelay`:
+
+```go
+// Shorten the delay to 10 seconds from now
+err := dbos.SetWorkflowDelay(ctx, handle.GetWorkflowID(), dbos.WithDelayDuration(10*time.Second))
+
+// Or set an absolute deadline
+err = dbos.SetWorkflowDelay(ctx, handle.GetWorkflowID(), dbos.WithDelayUntil(time.Now().Add(time.Minute)))
+```
+
 ### Debouncing
 
 Debouncing delays a workflow's execution until some time has passed since it was last called.
@@ -1904,7 +1930,7 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 ### ResumeWorkflow
 
 ```go
-func ResumeWorkflow[R any](ctx DBOSContext, workflowID string) (*WorkflowHandle[R], error)
+func ResumeWorkflow[R any](ctx DBOSContext, workflowID string, opts ...ResumeWorkflowOption) (*WorkflowHandle[R], error)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -1912,6 +1938,26 @@ Resume a workflow. This immediately starts it from its last completed step. You 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to resume.
+- **opts**: Optional configuration.
+
+#### WithResumeQueue
+
+```go
+func WithResumeQueue(queueName string) ResumeWorkflowOption
+```
+
+Re-enqueue the resumed workflow on the specified queue instead of starting it immediately.
+
+### ResumeWorkflows
+
+```go
+func ResumeWorkflows[R any](ctx DBOSContext, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
+```
+
+Resume multiple workflows in a single database round-trip.
+Each workflow that exists and is not in a terminal state is re-enqueued; completed or missing workflows are skipped.
+Unlike `ResumeWorkflow`, this function does not return an error when some IDs are missing.
+Accepts the same options as `ResumeWorkflow` (e.g., `WithResumeQueue`).
 
 ### ForkWorkflow
 
@@ -1931,7 +1977,23 @@ type ForkWorkflowInput struct {
     ForkedWorkflowID   string // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
     StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
     ApplicationVersion string // Optional: Application version for the forked workflow (inherits from original if empty)
+    QueueName          string // Optional: Queue to enqueue the forked workflow on (defaults to starting immediately)
 }
+```
+
+### SetWorkflowDelay
+
+```go
+func SetWorkflowDelay(ctx DBOSContext, workflowID string, opts ...SetWorkflowDelayOption) error
+```
+
+Set or update the delay on a `DELAYED` workflow.
+Provide exactly one of `WithDelayDuration` (relative) or `WithDelayUntil` (absolute).
+Only affects workflows currently in the `DELAYED` status.
+
+```go
+func WithDelayDuration(d time.Duration) SetWorkflowDelayOption
+func WithDelayUntil(t time.Time) SetWorkflowDelayOption
 ```
 
 ### Workflow Status
@@ -1962,6 +2024,7 @@ type WorkflowStatus struct {
     DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
+    DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
 }
 ```
 
@@ -1975,6 +2038,7 @@ type WorkflowStatusType string
 const (
     WorkflowStatusPending                     WorkflowStatusType = "PENDING"                        // Workflow is running or ready to run
     WorkflowStatusEnqueued                    WorkflowStatusType = "ENQUEUED"                       // Workflow is queued and waiting for execution
+    WorkflowStatusDelayed                     WorkflowStatusType = "DELAYED"                        // Workflow is delayed and will transition to ENQUEUED after the delay expires
     WorkflowStatusSuccess                     WorkflowStatusType = "SUCCESS"                        // Workflow completed successfully
     WorkflowStatusError                       WorkflowStatusType = "ERROR"                          // Workflow completed with an error
     WorkflowStatusCancelled                   WorkflowStatusType = "CANCELLED"                      // Workflow was cancelled (manually or due to timeout)
@@ -2236,6 +2300,17 @@ func WithQueuePartitionKey(partitionKey string) WorkflowOption
 Set a queue partition key for the workflow.
 Use if and only if the queue is partitioned (created with `WithPartitionQueue`).
 
+#### WithDelay
+
+```go
+func WithDelay(delay time.Duration) WorkflowOption
+```
+
+Delay execution of a queued workflow by the specified duration.
+Must be used together with `WithQueue`.
+The workflow is initially placed in `DELAYED` status and does not execute until the delay expires, at which point it transitions to `ENQUEUED` and may be dequeued.
+The delay can later be updated via `SetWorkflowDelay`.
+
 #### WithApplicationVersion
 
 ```go
@@ -2408,7 +2483,9 @@ type Client interface {
     GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
     RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(workflowID string) error
-    ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
+    SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
+    ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
+    ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     ClientReadStream(workflowID string, key string) ([]any, bool, error)
@@ -2504,6 +2581,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+* `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
 
 **Example syntax:**
 
@@ -2620,17 +2698,37 @@ Cancel a workflow.
 This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
 Similar to `CancelWorkflow`.
 
+### SetWorkflowDelay
+
+```go
+SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
+```
+
+Set or update the delay on a `DELAYED` workflow.
+Provide exactly one of `WithDelayDuration` (relative) or `WithDelayUntil` (absolute).
+Similar to `SetWorkflowDelay`.
+
 ### ResumeWorkflow
 
 ```go
-ResumeWorkflow(workflowID string) (WorkflowHandle[any], error)
+ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
 ```
 
 Resume a workflow.
 This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+Pass `WithResumeQueue` to re-enqueue the resumed workflow on a named queue instead of starting it immediately.
 Similar to `ResumeWorkflow`.
+
+### ResumeWorkflows
+
+```go
+ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
+```
+
+Resume multiple workflows in a single database round-trip.
+Accepts the same options as `ResumeWorkflow`.
 
 ### ForkWorkflow
 
@@ -2638,6 +2736,7 @@ Similar to `ResumeWorkflow`.
 ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 ```
 
+Set `QueueName` on the input to enqueue the forked workflow on a named queue instead of starting it immediately.
 Similar to `ForkWorkflow`.
 
 ### NewDebouncerClient

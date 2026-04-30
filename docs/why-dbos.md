@@ -12,7 +12,7 @@ If you're building AI agents, also check out the [AI Quickstart](./ai/ai-quickst
 
 ### What is DBOS?
 
-DBOS provides lightweight durable workflows built on top of Postgres.
+DBOS provides high-performance, easy-to-use durable workflows built on top of Postgres.
 Essentially, it helps you write long-lived, reliable code that can survive failures, crashes, and restarts without losing state or duplicating work.
 
 In practice, DBOS makes it easier to build reliable systems for use cases like AI agents, data pipelines, payments, or anything that takes minutes, days, or weeks to complete.

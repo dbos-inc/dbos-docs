@@ -116,3 +116,43 @@ func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
 ```
 
 If a step exhausts all retry attempts, it returns an error to the calling workflow.
+
+### Step Timeouts
+
+A step receives a `context.Context` like any other Go function, so you can apply a timeout or deadline to it using the standard library and react to cancellation inside the step by selecting on `ctx.Done()`.
+
+```go
+func waitStep(ctx context.Context) (string, error) {
+    select {
+    case <-time.After(10 * time.Second):
+        return "done", nil
+    case <-ctx.Done():
+        return "", ctx.Err()
+    }
+}
+
+func exampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+    result, err := dbos.RunAsStep(
+        ctx,
+        func(stepCtx context.Context) (string, error) {
+            stepCtx, cancel := context.WithTimeout(stepCtx, 2*time.Second)
+            defer cancel()
+            return waitStep(stepCtx)
+        },
+        dbos.WithStepName("waitStep"),
+    )
+    if err != nil {
+        // The workflow decides what to do: retry, fall back, or return the error.
+        return "", err
+    }
+    return result, nil
+}
+```
+
+A few important things to keep in mind:
+
+- **Timing out a step does not cancel the workflow.** When the step returns with an error (e.g. `context.DeadlineExceeded`), the workflow continues to run and is free to handle that error&mdash;retry, fall back to another step, or return. To formally transition a workflow into the `CANCELLED` terminal status, use a workflow-level timeout instead. See [Workflow Timeouts](./workflow-tutorial.md#workflow-timeouts).
+
+- **A step can inherit the workflow's cancellable context.** If you derive the step's context from a cancellable workflow's `DBOSContext`, then when the workflow's timeout fires the workflow will become `CANCELLED`, but the currently executing step will **not** be preempted&mdash;it keeps running and can still record its outcome (success or error) to the database when it returns. The workflow will not be able to enter the next step: the next call to `RunAsStep` will fail because the workflow is already cancelled.
+
+- **If you don't want that behavior**, Handle the resulting cancellation just as you would in any normal Go program&mdash;by selecting on `ctx.Done()` in long-running loops or by passing the context through to cancellation-aware APIs.

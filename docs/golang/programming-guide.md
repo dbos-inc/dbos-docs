@@ -6,6 +6,10 @@ pagination_prev: quickstart
 
 This guide shows you how to use DBOS to build Go apps that are **resilient to any failure**.
 
+:::tip
+To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
+:::
+
 ## 1. Setting Up Your Environment
 
 In an empty directory, initialize a new Go project and install DBOS:
@@ -346,5 +350,4 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 Congratulations!  You've finished the DBOS Go guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
-- Teach your AI coding assistant about DBOS with [**the DBOS prompt**](./prompting.md) or [**DBOS MCP server**](../integrations/mcp.md).
 - Check out some [**example applications**](../examples/index.md).
