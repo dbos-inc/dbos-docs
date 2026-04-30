@@ -57,27 +57,6 @@ Reminder, step methods must be invoked via the proxy object returned by [`regist
 - **intervalSeconds**: Initial delay between retries in seconds. Must be positive. Defaults to one second.
 - **backOffRate**: Exponential backoff multiplier between retries. Must be greater than or equal to one. Defaults to two.
 
-### @Scheduled
-
-```java
-public @interface Scheduled {
-  String cron();
-  String queue();
-  boolean automaticBackfill();
-}
-```
-
-An annotation that can be applied to a workflow to schedule it on a cron schedule.
-
-**Parameters:**
-- **cron**: The schedule, expressed in [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) syntax.
-- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue if not specified.
-- **automaticBackfill**: Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set `automaticBackfill` to `true` to enable backfill. Defaults to `false`.
-
-:::tip
-For more control over scheduling — including runtime management, pausing, backfill, and timezone support — use the [`WorkflowSchedule`](./methods.md#workflowschedule) API with [`dbos.applySchedules`](./methods.md#applyschedules).
-:::
-
 ### @WorkflowClassName
 
 ```java

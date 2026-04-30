@@ -46,6 +46,10 @@ new WorkflowSchedule(String scheduleName, String workflowName, String className,
 - **className**: The fully-qualified class name, or the short name set by [`@WorkflowClassName`](../reference/workflows-steps.md#workflowclassname).
 - **cron**: A [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html).
 
+:::info
+https://www.spring-cron-generator.net/ is an online tool composing and understanding Spring cron expressions.
+:::
+
 Common optional configuration via `with` methods:
 
 | Method | Description |
@@ -105,23 +109,3 @@ To fire a scheduled workflow immediately outside its normal cadence:
 ```java
 WorkflowHandle<?, ?> handle = dbos.triggerSchedule("daily-report");
 ```
-
-## Using the `@Scheduled` Annotation
-
-As an alternative to the programmatic API, you can annotate a workflow method directly. Workflows invoked via `@Scheduled` receive two `Instant` arguments — the scheduled fire time and the actual start time — rather than a context object:
-
-```java
-@Workflow
-@Scheduled(cron = "0 * * * * *")  // Run at the start of every minute
-public void everyMinute(Instant scheduled, Instant actual) {
-    // scheduled: the exact cron fire time (used for the workflow ID)
-    // actual: the time the workflow actually began executing
-    logger.info("Scheduled at {}, running at {}", scheduled, actual);
-}
-```
-
-DBOS registers `@Scheduled` workflows automatically at launch — no call to `applySchedules` needed.
-
-The annotation supports the same `queue` and `automaticBackfill` options, but does not support timezone, context, or runtime management. Use the `WorkflowSchedule` API when you need those features.
-
-See the [`@Scheduled` reference](../reference/workflows-steps.md#scheduled) for full parameter details.

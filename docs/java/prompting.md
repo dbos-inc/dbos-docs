@@ -219,38 +219,77 @@ Use of background execution:
 
 Use of queues:
 
-### Scheduled Workflow
+### Scheduled Workflows
 
-You can schedule DBOS workflows.
-To do this, use the the @Scheduled annotation on a @Workflow method.  For example:
+You can schedule DBOS workflows to run automatically on a cron schedule. Scheduled workflows are **exactly-once**: DBOS assigns each firing a deterministic workflow ID derived from the schedule name and scheduled time.
 
-- A scheduled workflow MUST specify a schedule.  This uses the Spring 5.3 CronExpression format.
-- It MUST take in two arguments, scheduled and actual time the workflow was started. Both are of type Instant.
+The recommended way to declare schedules is to call `dbos.applySchedules()` after `dbos.launch()`. This atomically creates or replaces the named schedules so your code is always the source of truth:
+
+```java
+dbos.applySchedules(
+    new WorkflowSchedule("every-minute", "everyMinute", "com.example.ExampleImpl", "0 * * * * *"),
+    new WorkflowSchedule("daily-report", "dailyReport", "com.example.ExampleImpl", "0 0 9 * * *")
+        .withCronTimezone(ZoneId.of("America/New_York"))
+);
+```
+
+A workflow invoked by a `WorkflowSchedule` must accept exactly two arguments: an `Instant` for the scheduled fire time and an `Object` for the optional context:
 
 ```java
 @Workflow
-@Scheduled(cron = "0 * * * * *") // Run at the beginning of every minute
-public void everyMinute(Instant scheduled, Instant actual) {
-    logger.info("I am a workflow scheduled to run once a minute. ");
-}
+public void everyMinute(Instant scheduled, Object context) { ... }
 ```
 
-#### @Scheduled
+#### WorkflowSchedule
 
 ```java
-public @interface Scheduled {
-  String cron();
-  String queue();
-  boolean ignoreMissed();
-}
+new WorkflowSchedule(String scheduleName, String workflowName, String className, String cron)
 ```
 
-An annotation that can be applied to a workflow to schedule it on a cron schedule.
+- **scheduleName**: A unique name for this schedule (used for management operations).
+- **workflowName**: The name of the workflow method to invoke (as registered, or as set by `@Workflow(name=...)`).
+- **className**: The fully-qualified class name, or the short name set by `@WorkflowClassName`.
+- **cron**: A [Spring 5.3+ CronExpression](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html).
 
-**Parameters:**
-- **cron**: The schedule, expressed in Spring 5.3+ CronExpression syntax.
-- **queue**: Queue to enqueue scheduled workflows to. Defaults to DBOS's internal queue.
-- **ignoreMissed**: Whether to skip firings missed while the app was not running. Defaults to `true`.
+Common optional configuration via `with` methods:
+
+| Method | Description |
+|--------|-------------|
+| `withCronTimezone(ZoneId)` | Interpret the cron in this timezone (default: UTC). |
+| `withAutomaticBackfill(true)` | Retroactively start any firings missed while the app was down. |
+| `withQueueName(String)` | Enqueue executions on this queue instead of the default scheduler queue. |
+| `withStatus(ScheduleStatus.PAUSED)` | Create the schedule in a paused state. |
+| `withContext(Object)` | Attach a serializable context object passed to the workflow. |
+
+#### Runtime Schedule Management
+
+Schedules can be created, paused, resumed, and deleted at runtime:
+
+```java
+// Create (throws if name already exists)
+dbos.createSchedule(new WorkflowSchedule("on-demand", "processReport", "com.example.ReportImpl", "0 0 * * * *"));
+
+// Pause and resume
+dbos.pauseSchedule("daily-report");
+dbos.resumeSchedule("daily-report");
+
+// Inspect
+Optional<WorkflowSchedule> s = dbos.getSchedule("every-minute");
+List<WorkflowSchedule> active = dbos.listSchedules(List.of(ScheduleStatus.ACTIVE), null, null);
+
+// Delete
+dbos.deleteSchedule("on-demand");
+
+// Fire immediately outside its normal cadence
+WorkflowHandle<?, ?> handle = dbos.triggerSchedule("daily-report");
+```
+
+To retroactively run missed firings for a time range:
+
+```java
+List<WorkflowHandle<Object, Exception>> handles =
+    dbos.backfillSchedule("every-minute", Instant.parse("2025-01-01T00:00:00Z"), Instant.parse("2025-01-02T00:00:00Z"));
+```
 
 
 ## Workflow Documentation

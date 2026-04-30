@@ -118,10 +118,9 @@ Note, as covered above, the `StepOptions.intervalSeconds` field was renamed to `
 Annotations cannot use reference types like `Duration` so `@Step` still has an `intervalSeconds` field of type `double`.
 :::
 
-## @Scheduled Changes
+## @Scheduled Removed
 
-The `@Scheduled.ignoreMissed` field was changed to `@Scheduled.automaticBackfill` for compatibility with [Schedule Management Methods](./reference/methods.md#schedule-management-methods).
-The default was flipped from `true` to `false` to match the implied semantics of the new field name.
+The `@Scheduled` annotation has been removed. For durable scheduled code in your app, you can use the new [Schedule Management Methods](./reference/methods.md#schedule-management-methods).
 
 ## DBOSClient Changes
 
