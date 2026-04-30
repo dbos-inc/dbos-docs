@@ -176,6 +176,74 @@ Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgra
 
 ## Workflow Management Methods
 
+### WorkflowStatus
+
+Some workflow introspection and management methods return a `WorkflowStatus`.
+This object has the following definition:
+
+```java
+public record WorkflowStatus(
+    // The workflow ID
+    String workflowId,
+    // The workflow status: ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
+    WorkflowState status,
+    // The name of the workflow function
+    String workflowName,
+    // The class of the workflow function
+    String className,
+    // The name given to the class instance, if any
+    String instanceName,
+    // The authenticated user who initiated the workflow, if any
+    String authenticatedUser,
+    // The assumed role for the workflow execution, if any
+    String assumedRole,
+    // Roles authenticated for the workflow
+    String[] authenticatedRoles,
+    // The deserialized workflow input
+    Object[] input,
+    // The workflow's output, if any
+    Object output,
+    // The error the workflow threw, if any
+    ErrorResult error,
+    // The ID of the executor (process) that most recently executed this workflow
+    String executorId,
+    // When the workflow was created
+    Instant createdAt,
+    // The last time the workflow status was updated
+    Instant updatedAt,
+    // The application version on which this workflow was started
+    String appVersion,
+    // The application identifier
+    String appId,
+    // The number of times this workflow has been started
+    Integer recoveryAttempts,
+    // If this workflow was enqueued, on which queue
+    String queueName,
+    // The workflow timeout duration, if any
+    Duration timeout,
+    // The absolute deadline for the workflow, if any
+    Instant deadline,
+    // When the workflow started executing (after being dequeued), if applicable
+    Instant startedAt,
+    // The deduplication ID assigned to this workflow, if any
+    String deduplicationId,
+    // The priority assigned to this workflow in its queue, if any
+    Integer priority,
+    // The queue partition key, if any
+    String queuePartitionKey,
+    // The ID of the workflow this was forked from, if any
+    String forkedFrom,
+    // The parent workflow ID if this is a child workflow, if any
+    String parentWorkflowId,
+    // Whether another workflow has been forked from this one
+    Boolean wasForkedFrom,
+    // Time until which the workflow is delayed before starting
+    Instant delayUntil,
+    // The serialization format used for the workflow's inputs/outputs
+    String serialization
+)
+```
+
 ### listWorkflows
 
 ```java
@@ -456,6 +524,44 @@ Permanently delete one or more workflows and their recorded steps from the datab
 **Parameters:**
 - **deleteChildren**: If `true`, also delete all child workflows spawned by the deleted workflow(s). Defaults to `false`.
 
+### forkWorkflow
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep)
+<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep, ForkOptions options)
+```
+
+```java
+public record ForkOptions(
+    String forkedWorkflowId,
+    String applicationVersion,
+    Timeout timeout,
+    String queueName,
+    String queuePartitionKey
+) {
+    ForkOptions withForkedWorkflowId(String forkedWorkflowId);
+    ForkOptions withApplicationVersion(String applicationVersion);
+    ForkOptions withTimeout(Duration timeout);
+    ForkOptions withTimeout(long value, TimeUnit unit);
+    ForkOptions withNoTimeout();
+    ForkOptions withQueue(Queue queue);
+    ForkOptions withQueue(String queueName);
+    ForkOptions withQueuePartitionKey(String queuePartitionKey);
+}
+```
+
+Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow to fork
+- **startStep**: The step from which to fork the workflow
+- **options**:
+  - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
+  - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
+  - **timeout**: A timeout for the forked workflow.
+  - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately.
+  - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
+
 ### setWorkflowDelay
 
 ```java
@@ -631,113 +737,8 @@ Manually enqueue all executions of a schedule that would have fired between `sta
 
 Immediately fire a scheduled workflow outside its normal cron cadence. Returns a handle to the enqueued execution.
 
-### forkWorkflow
 
-```java
-<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep)
-<T, E extends Exception> WorkflowHandle<T, E> forkWorkflow(String workflowId, int startStep, ForkOptions options)
-```
-
-```java
-public record ForkOptions(
-    String forkedWorkflowId,
-    String applicationVersion,
-    Timeout timeout,
-    String queueName,
-    String queuePartitionKey
-) {
-    ForkOptions withForkedWorkflowId(String forkedWorkflowId);
-    ForkOptions withApplicationVersion(String applicationVersion);
-    ForkOptions withTimeout(Duration timeout);
-    ForkOptions withTimeout(long value, TimeUnit unit);
-    ForkOptions withNoTimeout();
-    ForkOptions withQueue(Queue queue);
-    ForkOptions withQueue(String queueName);
-    ForkOptions withQueuePartitionKey(String queuePartitionKey);
-}
-```
-
-Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
-
-**Parameters:**
-- **workflowId**: The ID of the workflow to fork
-- **startStep**: The step from which to fork the workflow
-- **options**:
-  - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
-  - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
-  - **timeout**: A timeout for the forked workflow.
-  - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately.
-  - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
-
-### WorkflowStatus
-
-Some workflow introspection and management methods return a `WorkflowStatus`.
-This object has the following definition:
-
-```java
-public record WorkflowStatus(
-    // The workflow ID
-    String workflowId,
-    // The workflow status: ENQUEUED, PENDING, SUCCESS, ERROR, CANCELLED, or MAX_RECOVERY_ATTEMPTS_EXCEEDED
-    WorkflowState status,
-    // The name of the workflow function
-    String workflowName,
-    // The class of the workflow function
-    String className,
-    // The name given to the class instance, if any
-    String instanceName,
-    // The authenticated user who initiated the workflow, if any
-    String authenticatedUser,
-    // The assumed role for the workflow execution, if any
-    String assumedRole,
-    // Roles authenticated for the workflow
-    String[] authenticatedRoles,
-    // The deserialized workflow input
-    Object[] input,
-    // The workflow's output, if any
-    Object output,
-    // The error the workflow threw, if any
-    ErrorResult error,
-    // The ID of the executor (process) that most recently executed this workflow
-    String executorId,
-    // When the workflow was created
-    Instant createdAt,
-    // The last time the workflow status was updated
-    Instant updatedAt,
-    // The application version on which this workflow was started
-    String appVersion,
-    // The application identifier
-    String appId,
-    // The number of times this workflow has been started
-    Integer recoveryAttempts,
-    // If this workflow was enqueued, on which queue
-    String queueName,
-    // The workflow timeout duration, if any
-    Duration timeout,
-    // The absolute deadline for the workflow, if any
-    Instant deadline,
-    // When the workflow started executing (after being dequeued), if applicable
-    Instant startedAt,
-    // The deduplication ID assigned to this workflow, if any
-    String deduplicationId,
-    // The priority assigned to this workflow in its queue, if any
-    Integer priority,
-    // The queue partition key, if any
-    String queuePartitionKey,
-    // The ID of the workflow this was forked from, if any
-    String forkedFrom,
-    // The parent workflow ID if this is a child workflow, if any
-    String parentWorkflowId,
-    // Whether another workflow has been forked from this one
-    Boolean wasForkedFrom,
-    // Time until which the workflow is delayed before starting
-    Instant delayUntil,
-    // The serialization format used for the workflow's inputs/outputs
-    String serialization
-)
-```
-
-## DBOS Variables
+## DBOS Context Variables
 
 ### workflowId
 
