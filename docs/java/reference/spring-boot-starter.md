@@ -91,7 +91,7 @@ Implements `SmartInitializingSingleton`. After all singletons are created, it sc
 
 **Requirements:**
 - Beans with `@Workflow` or `@Step` methods must be **singletons**. Prototype-scoped beans throw `IllegalStateException`.
-- DBOS registers the raw (unwrapped) bean target. Calls made via `this` inside a workflow body bypass the Spring proxy and are not intercepted by `DBOSAspect`. Use a self-injected proxy instead (see [Spring Boot Integration tutorial](../tutorials/spring-boot-starter.md#defining-workflows-and-steps)).
+- DBOS registers the raw (unwrapped) bean target. Calls made via `this` inside a workflow body bypass the Spring proxy and are not intercepted by `DBOSAspect`. Use a self-injected proxy instead (see [Spring Boot Integration tutorial](../tutorials/spring-boot-integration.md#defining-workflows-and-steps))
 
 **Multiple beans of the same class:**
 

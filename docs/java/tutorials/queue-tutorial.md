@@ -492,7 +492,7 @@ public void example(DBOS dbos, Example proxy, String task, int priority) throws 
 
 By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
 However, sometimes you only want a process to listen to a specific list of queues.
-You use the `withListenQueues` method on [DBOSConfig](../reference/lifecycle.md#dbosconfigure) to explicitly tell a process running DBOS to only listen to a specific set of queues.
+You use the `withListenQueues` method on [DBOSConfig](../reference/lifecycle.md#dbosconfig) to explicitly tell a process running DBOS to only listen to a specific set of queues.
 
 This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
 For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.

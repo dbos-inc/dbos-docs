@@ -17,7 +17,7 @@ fun <T> DBOS.runStep(options: StepOptions, block: () -> T): T
 fun <T> DBOS.runStep(name: String, block: () -> T): T
 ```
 
-Kotlin-friendly alternatives to [`dbos.runStep`](./methods.md#runstep) that place the lambda last.
+Kotlin-friendly alternatives to [`dbos.runStep`](./workflows-steps.md#runstep) that place the lambda last.
 
 **Parameters:**
 - **options**: A [`StepOptions`](./workflows-steps.md#stepoptions) object controlling the step name and retry policy.
@@ -44,7 +44,7 @@ val result = dbos.runStep(StepOptions("fetchData").withMaxAttempts(3)) {
 fun <T> DBOS.startWorkflow(options: StartWorkflowOptions?, block: () -> T): WorkflowHandle<T, Exception>
 ```
 
-Kotlin-friendly alternative to [`dbos.startWorkflow`](./methods.md#startworkflow) that places the lambda last.
+Kotlin-friendly alternative to [`dbos.startWorkflow`](./workflows-steps.md#startworkflow) that places the lambda last.
 Pass `null` for `options` to use defaults.
 
 :::note
@@ -56,7 +56,7 @@ Always supply `StartWorkflowOptions()` (or `null`) as the first argument.
 - **options**: [`StartWorkflowOptions`](./workflows-steps.md#startworkflowoptions) controlling workflow ID, queue, timeout, etc. Pass `null` to use defaults.
 - **block**: A call to a registered workflow proxy method.
 
-**Returns:** A [`WorkflowHandle`](./methods.md#workflowhandle) for retrieving the workflow result.
+**Returns:** A [`WorkflowHandle`](./workflows-steps.md#workflowhandle) for retrieving the workflow result.
 
 **Example:**
 
