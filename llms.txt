@@ -51,18 +51,25 @@
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are resilient to any failure.
 - [AI Model Prompting](https://docs.dbos.dev/java/prompting.md): You may want assistance from an AI model in building a DBOS application.
 - [DBOS Client](https://docs.dbos.dev/java/reference/client.md): DBOSClient provides a programmatic way to interact with your DBOS application from external code.
-- [DBOS Lifecycle](https://docs.dbos.dev/java/reference/lifecycle.md): The DBOS class is a singleton&mdash;you should configure and launch it exactly once in a program's lifetime.
-- [DBOS Methods & Variables](https://docs.dbos.dev/java/reference/methods.md): DBOS Methods
+- [Kotlin Extensions](https://docs.dbos.dev/java/reference/kotlin.md): DBOS ships Kotlin extension functions on the DBOS class in the dev.dbos.transact package.
+- [DBOS Lifecycle](https://docs.dbos.dev/java/reference/lifecycle.md): You create a DBOS instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
+- [DBOS Methods & Variables](https://docs.dbos.dev/java/reference/methods.md): Workflow Communication Methods
 - [DBOS Plugin Architecture](https://docs.dbos.dev/java/reference/plugins.md): Unless you intend to extend the DBOS Transact library, you can ignore this topic.
 - [Queues](https://docs.dbos.dev/java/reference/queues.md): Workflow queues ensure that workflow functions will be run, without starting them immediately.
+- [Spring Boot Starter](https://docs.dbos.dev/java/reference/spring-boot-starter.md): The transact-spring-boot-starter provides Spring Boot auto-configuration for DBOS Transact.
 - [Workflows & Steps](https://docs.dbos.dev/java/reference/workflows-steps.md): Annotations
+- [Using DBOS with Kotlin](https://docs.dbos.dev/java/tutorials/kotlin.md): Write DBOS workflows and steps in Kotlin using idiomatic trailing lambda syntax.
 - [Queues & Concurrency](https://docs.dbos.dev/java/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduled Workflows](https://docs.dbos.dev/java/tutorials/scheduled-workflows.md): Learn how to run DBOS workflows on a schedule.
+- [Spring Boot Integration](https://docs.dbos.dev/java/tutorials/spring-boot-integration.md): Add DBOS durable workflows to a Spring Boot application.
 - [Steps](https://docs.dbos.dev/java/tutorials/step-tutorial.md): When using DBOS workflows, you should call any method that performs complex operations or accesses external APIs or services as a step.
+- [Testing Workflows](https://docs.dbos.dev/java/tutorials/testing.md): Unit test DBOS workflows by mocking the DBOS instance.
 - [Upgrading Workflow Code](https://docs.dbos.dev/java/tutorials/upgrading-workflows.md): A challenge encountered when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
+- [Workflows on Class Instances](https://docs.dbos.dev/java/tutorials/workflow-classes.md): Register multiple instances of a workflow class to share logic with per-instance configuration.
 - [Communicating with Workflows](https://docs.dbos.dev/java/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/java/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console or programmatically.
 - [Workflows](https://docs.dbos.dev/java/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
+- [Upgrading to v0.8](https://docs.dbos.dev/java/upgrading.md): DBOS Transact Java v0.8 contains several breaking changes.
 - [Alerting](https://docs.dbos.dev/production/alerting.md): If you are using Conductor, you can configure automatic alerts when certain failure conditions are met.
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.

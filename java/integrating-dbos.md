@@ -9,23 +9,26 @@ This guide shows you how to add the open-source [DBOS Transact](https://github.c
 
 Add DBOS to your application by including it in your build configuration.
 
-For **Gradle** (build.gradle):
+<Tabs groupId="build-tool">
+<TabItem value="gradle" label="Gradle">
 ```groovy
 dependencies {
-    implementation 'dev.dbos:transact:0.6+'
+    implementation 'dev.dbos:transact:0.8.0'
 }
 ```
-
-For **Maven** (pom.xml):
+</TabItem>
+<TabItem value="maven" label="Maven">
 ```xml
 <dependencies>
     <dependency>
         <groupId>dev.dbos</groupId>
         <artifactId>transact</artifactId>
-        <version>0.6.0</version>
+        <version>0.8.0</version>
     </dependency>
 </dependencies>
 ```
+</TabItem>
+</Tabs>
 
 ### 2. Add the DBOS Initializer
 
@@ -37,36 +40,33 @@ import dev.dbos.transact.DBOS;
 import dev.dbos.transact.config.DBOSConfig;
 
 public class MyApp {
-    public static void main(String[] args) throws Exception {
-        // Configure DBOS
-        DBOSConfig config = DBOSConfig.defaults("my-app")
-            .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
-            .withDbUser(System.getenv("PGUSER"))
-            .withDbPassword(System.getenv("PGPASSWORD"));
-        DBOS.configure(config);
+  public static void main(String[] args) throws Exception {
+    // Configure DBOS
+    DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    DBOS dbos = new DBOS(config);
 
-        // Register your workflows and queues (see step 4)
+    // Register your workflows and queues (see step 4)
 
-        // Launch DBOS
-        DBOS.launch();
-    }
+    // Launch DBOS
+    dbos.launch();
+  }
 }
 ```
 
 :::info
-DBOS uses a Postgres database to durably store workflow and step state.
+DBOS uses a PostgreSQL database to durably store workflow and step state.
 You can connect to your database by setting these environment variables:
-- `DBOS_SYSTEM_JDBC_URL`: The JDBC URL for your Postgres database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
-- `PGUSER`: Your Postgres username
-- `PGPASSWORD`: Your Postgres password
+- `DBOS_SYSTEM_JDBC_URL`: The JDBC URL for your PostgreSQL database (e.g., `jdbc:postgresql://localhost:5432/mydb`)
+- `PGUSER`: Your PostgreSQL username
+- `PGPASSWORD`: Your PostgreSQL password
 
-If you don't have a Postgres database, you can start one locally with Docker:
+If you don't have a PostgreSQL database, you can start one locally with Docker:
 ```shell
 docker run -d \
   --name dbos-postgres \
   -e POSTGRES_PASSWORD=dbos \
   -p 5432:5432 \
-  postgres:17
+  postgres:latest
 ```
 :::
 
@@ -83,45 +83,53 @@ For example, you can annotate one of your methods as a [workflow](./tutorials/wo
 DBOS durably executes the workflow so if it is ever interrupted, upon restart it automatically resumes from the last completed step.
 
 ```java
+import dev.dbos.transact.DBOS;
 import dev.dbos.transact.workflow.Workflow;
-import dev.dbos.transact.workflow.StepOptions;
 
-interface MyWorkflows {
-    void reliableWorkflow();
+interface Example {
+  public void workflow();
 }
 
-class MyWorkflowsImpl implements MyWorkflows {
-    private void stepOne() {
-        System.out.println("Step one completed!");
-    }
+class ExampleImpl implements Example {
+  private final DBOS dbos;
 
-    private void stepTwo() {
-        System.out.println("Step two completed!");
-    }
+  public ExampleImpl(DBOS dbos) {
+    this.dbos = dbos;
+  }
 
-    @Workflow(name = "reliable-workflow")
-    public void reliableWorkflow() {
-        DBOS.runStep(() -> stepOne(), "stepOne");
-        DBOS.runStep(() -> stepTwo(), "stepTwo");
-    }
+  private void stepOne() {
+    System.out.println("Step one completed!");
+  }
+
+  private void stepTwo() {
+    System.out.println("Step two completed!");
+  }
+
+  @Override
+  @Workflow
+  public void workflow() {
+    dbos.runStep(() -> stepOne(), "stepOne");
+    dbos.runStep(() -> stepTwo(), "stepTwo");
+  }
 }
 ```
 
 To use your workflows, create a proxy before launching DBOS:
 
 ```java
-// Create a workflow proxy (before launching DBOS)
-MyWorkflows workflows = DBOS.registerWorkflows(MyWorkflows.class, new MyWorkflowsImpl());
+// Create a DBOS instance and register the workflow proxy (before launching)
+DBOS dbos = new DBOS(config);
+Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
 
 // Launch DBOS
-DBOS.launch();
+dbos.launch();
 
 // Now you can call your workflows
-workflows.reliableWorkflow();
+proxy.workflow();
 ```
 
-**Important:** You must create all workflow proxies and queues before calling `DBOS.launch()`.
-Workflow recovery begins after `DBOS.launch()`, so all workflows must be registered before this point.
+**Important:** You must create all workflow proxies and queues before calling `dbos.launch()`.
+Workflow recovery begins after `dbos.launch()`, so all workflows must be registered before this point.
 
 You can add DBOS to your application incrementally—it won't interfere with code that's already there.
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
