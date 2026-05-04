@@ -211,6 +211,11 @@ queue.set_limiter({"limit": 25, "period": 30})
 
 You can also do this from a [`DBOSClient`](../reference/client.md), which is useful for managing queues from an admin tool or another service.
 
+:::warning
+If your application calls [`DBOS.register_queue`](../reference/contexts.md#register_queue) on startup, the next process to start can overwrite settings you applied at runtime via `set_*` methods.
+Either update the `register_queue` call to match the new configuration, or pass `on_conflict="never_update"` to preserve the runtime changes.
+:::
+
 #### Rolling Deployments
 
 When `register_queue` runs in a process whose application version is **not** the latest registered version, it leaves the existing configuration unchanged by default.

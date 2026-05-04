@@ -122,6 +122,11 @@ async def process_tasks(tasks):
 You can reconfigure a queue at runtime by calling its `set_*` methods.
 Each setter writes the new value to the system database; workers pick up the new configuration on their next polling iteration without needing to restart.
 
+:::warning
+If your application calls [`DBOS.register_queue`](./contexts.md#register_queue) on startup, the next process to start can overwrite settings you applied at runtime via `set_*` methods.
+Either update the `register_queue` call to match the new configuration, or pass `on_conflict="never_update"` to preserve the runtime changes.
+:::
+
 #### set_concurrency
 
 ```python

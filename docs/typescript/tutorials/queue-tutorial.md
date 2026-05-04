@@ -257,6 +257,11 @@ if (queue !== null) {
 
 You can also do this from a [`DBOSClient`](../reference/client.md), which is useful for managing queues from an admin tool or another service.
 
+:::warning
+If your application calls [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) on startup, the next process to start can overwrite settings you applied at runtime via `set` methods.
+Either update the `registerQueue` call to match the new configuration, or pass `onConflict: "never_update"` to preserve the runtime changes.
+:::
+
 #### Rolling Deployments
 
 When `DBOS.registerQueue` runs in a process whose application version is **not** the latest registered version, it leaves the existing configuration unchanged by default.

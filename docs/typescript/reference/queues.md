@@ -147,6 +147,11 @@ if (queue !== null) {
 ```
 
 The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, or the equivalent [`DBOSClient`](./client.md) methods.
+
+:::warning
+If your application calls [`DBOS.registerQueue`](#dbosregisterqueue) on startup, the next process to start can overwrite settings you applied at runtime via `set` methods.
+Either update the `registerQueue` call to match the new configuration, or pass `onConflict: "never_update"` to preserve the runtime changes.
+:::
 Calling them on a queue created with the legacy `new WorkflowQueue(...)` constructor throws an error.
 
 ## Enqueueing Workflows
