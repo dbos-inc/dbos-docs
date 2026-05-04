@@ -262,12 +262,6 @@ If your application calls [`DBOS.registerQueue`](../reference/queues.md#dbosregi
 Either update the `registerQueue` call to match the new configuration, or pass `onConflict: "never_update"` to preserve the runtime changes.
 :::
 
-#### Rolling Deployments
-
-When `DBOS.registerQueue` runs in a process whose application version is **not** the latest registered version, it leaves the existing configuration unchanged by default.
-This prevents older workers from overwriting a newer configuration during a rolling deploy.
-You can override this behavior with the `onConflict` option; see [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) for details.
-
 ### Setting Timeouts
 
 You can set a timeout for an enqueued workflow by passing a `timeoutMS` argument to `DBOS.startWorkflow`.
