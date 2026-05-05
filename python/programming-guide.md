@@ -181,12 +181,10 @@ import os
 import time
 
 import uvicorn
-from dbos import DBOS, DBOSConfig, Queue
+from dbos import DBOS, DBOSConfig
 from fastapi import FastAPI
 
 app = FastAPI()
-
-queue = Queue("example-queue")
 
 @DBOS.step()
 def dbos_step(n: int):
@@ -199,7 +197,7 @@ def dbos_workflow():
     print("Enqueueing steps")
     handles = []
     for i in range(10):
-        handle = queue.enqueue(dbos_step, i)
+        handle = DBOS.enqueue_workflow("example-queue", dbos_step, i)
         handles.append(handle)
     results = [handle.get_result() for handle in handles]
     print(f"Successfully completed {len(results)} steps")
@@ -211,11 +209,12 @@ if __name__ == "__main__":
     }
     DBOS(config=config)
     DBOS.launch()
+    DBOS.register_queue("example-queue")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
-When you enqueue a function with `queue.enqueue`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
-`enqueue` returns a handle representing the state of the enqueued function.
+When you enqueue a function with `DBOS.enqueue_workflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+`enqueue_workflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `handle.get_result()` to wait for each of their handles.
 
 Start your app with `python3 main.py`.

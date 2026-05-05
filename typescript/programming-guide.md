@@ -172,13 +172,11 @@ If you need to run many functions concurrently, use DBOS _queues_.
 To try them out, copy this code into `src/main.ts`:
 
 ```javascript showLineNumbers title="src/main.ts"
-import { DBOS, WorkflowQueue } from "@dbos-inc/dbos-sdk";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
 
 export const app = express();
 app.use(express.json());
-
-const queue = new WorkflowQueue("example_queue");
 
 async function taskFunction(n: number) {
   await DBOS.sleep(5000);
@@ -190,7 +188,7 @@ async function queueFunction() {
   DBOS.logger.info("Enqueueing tasks!")
   const handles = []
   for (let i = 0; i < 10; i++) {
-    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: queue.name })(i))
+    handles.push(await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue" })(i))
   }
   const results = []
   for (const h of handles) {
@@ -211,6 +209,7 @@ async function main() {
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
   const PORT = 3000;
   app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);

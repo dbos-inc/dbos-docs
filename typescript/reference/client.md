@@ -57,6 +57,10 @@ class DBOSClient {
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
 
+    registerQueue(name: string, options?: RegisterQueueOptions): Promise<WorkflowQueue>;
+    retrieveQueue(name: string): Promise<WorkflowQueue | null>;
+    deleteQueue(name: string): Promise<void>;
+
     createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string } }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
@@ -329,6 +333,62 @@ Please see [`DBOS.deleteWorkflow`](./methods.md#dbosdeleteworkflow) for more inf
 
 Delete multiple workflows and all their associated data. Behaves like [`deleteWorkflow`](#deleteworkflow) but operates on a list of workflow IDs.
 Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more information.
+
+### Queue Management
+
+#### `registerQueue`
+
+```typescript
+client.registerQueue(
+  name: string,
+  options?: RegisterQueueOptions,
+): Promise<WorkflowQueue>
+```
+
+Register a [queue](./queues.md) and persist its configuration to the system database, returning a [`WorkflowQueue`](./queues.md#class-workflowqueue).
+Similar to [`DBOS.registerQueue`](./queues.md#dbosregisterqueue).
+Options have the same meaning as on `DBOS.registerQueue` except for `onConflict`:
+
+- `'always_update'` (default): always overwrite the existing configuration.
+- `'never_update'`: leave any existing configuration unchanged.
+
+`'update_if_latest_version'` is **not** supported on the client because clients are not associated with an application version. Passing it throws an error.
+
+**Example syntax:**
+
+```ts
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+await client.registerQueue("email", {
+  concurrency: 10,
+  rateLimit: { limitPerPeriod: 100, periodSec: 60 },
+});
+await client.enqueue({queueName: "email", workflowName: "sendEmail"}, "alice@example.com");
+```
+
+#### `retrieveQueue`
+
+```typescript
+client.retrieveQueue(name: string): Promise<WorkflowQueue | null>
+```
+
+Retrieve a queue by name from the system database, or `null` if no queue with that name has been registered.
+Similar to [`DBOS.retrieveQueue`](./queues.md#dbosretrievequeue).
+
+The returned queue is bound to this client's system database; you can read its configuration and call its [`setX`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
+
+#### `deleteQueue`
+
+```typescript
+client.deleteQueue(name: string): Promise<void>
+```
+
+Delete a queue from the system database. No-op if no queue with that name exists.
+Similar to [`DBOS.deleteQueue`](./queues.md#dbosdeletequeue).
+
+:::warning
+Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
+Cancel or drain pending workflows on the queue before deleting it.
+:::
 
 ## Workflow Schedules
 

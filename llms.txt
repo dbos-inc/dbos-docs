@@ -111,7 +111,7 @@
 - [DBOS Methods & Variables](https://docs.dbos.dev/python/reference/contexts.md): DBOS provides a number of useful context methods and variables.
 - [DBOS Class](https://docs.dbos.dev/python/reference/dbos-class.md): The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
 - [Workflows & Steps](https://docs.dbos.dev/python/reference/decorators.md): Function Decorators
-- [Queues](https://docs.dbos.dev/python/reference/queues.md): Queues allow you to ensure that functions will be run, without starting them immediately.
+- [Queues](https://docs.dbos.dev/python/reference/queues.md): Queues let you submit functions for durable execution without starting them immediately.
 - [Workflow Handles](https://docs.dbos.dev/python/reference/workflow_handles.md): API reference for DBOS workflow handles
 - [Authentication and Authorization](https://docs.dbos.dev/python/tutorials/authentication-authorization.md): Use declarative security and authentication middleware in DBOS
 - [Working With Python Classes](https://docs.dbos.dev/python/tutorials/classes.md): You can add DBOS decorators to your Python class instance methods.
