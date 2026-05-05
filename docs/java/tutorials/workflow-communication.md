@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 40
 title: Communicating with Workflows
 ---
 
@@ -19,10 +19,10 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```java
-static void send(String destinationId, Object message, String topic)
+void send(String destinationId, Object message, String topic, String idempotencyKey)
 ```
 
-You can call `DBOS.send()` to send a message to a workflow.
+You can call `dbos.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md) 
@@ -31,11 +31,11 @@ or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-ta
 #### Recv
 
 ```java
-static Object recv(String topic, Duration timeout)
+<T> Optional<T> recv(String topic, Duration timeout)
 ```
 
-Workflows can call `DBOS.recv()` to receive messages sent to them, optionally for a particular topic.
-Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `null` if the wait times out.
+Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
+Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `Optional.empty()` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
 
 #### Messages Example
@@ -53,12 +53,12 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_STATUS = "payment_status";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // Validate the order, redirect the customer to a payments page,
         // then wait for a notification.
-        String paymentStatus = (String) DBOS.recv(PAYMENT_STATUS, Duration.ofSeconds(60));
-        if (paymentStatus != null && paymentStatus.equals("paid")) {
+        Optional<String> paymentStatus = dbos.<String>recv(PAYMENT_STATUS, Duration.ofSeconds(60));
+        if (paymentStatus.isPresent() && paymentStatus.get().equals("paid")) {
             // Handle a successful payment.
         } else {
             // Handle a failed payment or timeout.
@@ -74,7 +74,7 @@ app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
     String workflowId = ctx.pathParam("workflow_id");
     String paymentStatus = ctx.pathParam("payment_status");
     // Send the payment status to the checkout workflow.
-    DBOS.send(workflowId, paymentStatus, PAYMENT_STATUS);
+    dbos.send(workflowId, paymentStatus, PAYMENT_STATUS, null);
     ctx.result("Payment status sent");
 });
 ```
@@ -83,7 +83,7 @@ app.post("/payment_webhook/{workflow_id}/{payment_status}", ctx -> {
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal Java code, you can use a unique workflow ID to guarantee exactly-once delivery.
+If you're sending a message from normal Java code, you can use a unique idempotency key to guarantee exactly-once delivery.
 
 ## Workflow Events
 
@@ -95,19 +95,19 @@ They are useful for publishing information about the status of a workflow or to 
 #### setEvent
 
 ```java
-static void setEvent(String key, Object value)
+void setEvent(String key, Object value, SerializationStrategy serialization)
 ```
 
-Any workflow can call [`DBOS.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
+Any workflow can call [`dbos.setEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if it has already been published.
 
 #### getEvent
 
 ```java
-static Object getEvent(String workflowId, String key, Duration timeout)
+<T> Optional<T> getEvent(String workflowId, String key, Duration timeout)
 ```
 
-You can call [`DBOS.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
-If the event does not yet exist, this call waits for it to be published, returning `null` if the wait times out.
+You can call [`dbos.getEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow identity for a particular key.
+If the event does not yet exist, this call waits for it to be published, returning `Optional.empty()` if the wait times out.
 
 You can also call [`getEvent`](../reference/client.md#getevent) from outside of your DBOS application with [DBOS Client](../reference/client.md).
 
@@ -127,11 +127,11 @@ interface Checkout {
 class CheckoutImpl implements Checkout {
     private static final String PAYMENT_ID = "payment_id";
 
-    @Workflow(name = "checkout-workflow")
+    @Workflow
     public void checkoutWorkflow() {
         // ... validation logic
         String paymentId = generatePaymentId();
-        DBOS.setEvent(PAYMENT_ID, paymentId);
+        dbos.setEvent(PAYMENT_ID, paymentId);
         // ... continue processing
     }
 }
@@ -144,18 +144,18 @@ app.post("/checkout/{idempotency_key}", ctx -> {
     String idempotencyKey = ctx.pathParam("idempotency_key");
 
     // Idempotently start the checkout workflow in the background.
-    WorkflowHandle<Void, RuntimeException> handle = DBOS.startWorkflow(
+    WorkflowHandle<Void, RuntimeException> handle = dbos.startWorkflow(
         () -> checkoutProxy.checkoutWorkflow(),
         new StartWorkflowOptions().withWorkflowId(idempotencyKey)
     );
 
     // Wait for the checkout workflow to send a payment ID, then return it.
-    String paymentId = (String) DBOS.getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60));
-    if (paymentId == null) {
+    Optional<String> paymentId = dbos.<String>getEvent(handle.workflowId(), PAYMENT_ID, Duration.ofSeconds(60));
+    if (paymentId.isEmpty()) {
         ctx.status(404);
         ctx.result("Checkout failed to start");
     } else {
-        ctx.result(paymentId);
+        ctx.result(paymentId.get());
     }
 });
 ```

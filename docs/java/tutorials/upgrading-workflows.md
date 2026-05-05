@@ -1,5 +1,5 @@
 ---
-sidebar_position: 65
+sidebar_position: 60
 title: Upgrading Workflow Code
 toc_max_heading_level: 3
 ---
@@ -12,9 +12,9 @@ DBOS supports two strategies for safely upgrading workflow code: **patching** an
 
 ## Patching
 
-In patching, the result of a call to [`DBOS.patch()`](../reference/methods.md#patch) is used to conditionally execute the new code.
-`DBOS.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
-Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
+In patching, the result of a call to [`dbos.patch()`](../reference/methods.md#patch) is used to conditionally execute the new code.
+`dbos.patch()` returns `true` for new calls (those executing after the breaking change) and `false` for old calls (those that executed before the breaking change).
+Therefore, if `dbos.patch()` returns `true`, the workflow should follow the new code path, otherwise it must follow the prior codepath.
 
 To use patching, you must enable it in the configuration:
 
@@ -27,8 +27,8 @@ For example, let's say our original workflow is:
 ```java
 @Workflow
 public int workflow() {
-  DBOS.runStep(() -> foo(), "foo");
-  DBOS.runStep(() -> bar(), "bar");
+  dbos.runStep(() -> foo(), "foo");
+  dbos.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -39,13 +39,13 @@ We can make this breaking change safely using a patch:
 ```java
 @Workflow
 public int workflow() {
-  if (DBOS.patch("use-baz")) {
-    DBOS.runStep(() -> baz(), "baz");
+  if (dbos.patch("use-baz")) {
+    dbos.runStep(() -> baz(), "baz");
   } else {
-    DBOS.runStep(() -> foo(), "foo");
+    dbos.runStep(() -> foo(), "foo");
   }
   
-  DBOS.runStep(() -> bar(), "bar");
+  dbos.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -58,8 +58,8 @@ Once all workflows that started before you deployed the patch are complete, you 
 :::tip
 You can use the [list workflows APIs](./workflow-management.md#listing-workflows) to see what workflows are still active.
 :::
-First, you must deprecate the patch with [`DBOS.deprecatePatch()`](../reference/methods.md#deprecatepatch)
-`DBOS.deprecatePatch` must be used for a transition period prior to fully removing the patch, as it allows coexistence with any ongoing workflows that used `DBOS.patch()`.
+First, you must deprecate the patch with [`dbos.deprecatePatch()`](../reference/methods.md#deprecatepatch)
+`dbos.deprecatePatch` must be used for a transition period prior to fully removing the patch, as it allows coexistence with any ongoing workflows that used `dbos.patch()`.
 
 For example, here's how to deprecate the patch above:
 
@@ -67,11 +67,11 @@ For example, here's how to deprecate the patch above:
 ```java
 @Workflow
 public int workflow() {
-  if (DBOS.deprecatePatch("use-baz")) {
-    DBOS.runStep(() -> baz(), "baz");
+  if (dbos.deprecatePatch("use-baz")) {
+    dbos.runStep(() -> baz(), "baz");
   }
   
-  DBOS.runStep(() -> bar(), "bar");
+  dbos.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -80,8 +80,8 @@ Then, when all workflows that started before you deprecated the patch are comple
 ```java
 @Workflow
 public int workflow() {
-  DBOS.runStep(() -> baz(), "baz");
-  DBOS.runStep(() -> bar(), "bar");
+  dbos.runStep(() -> baz(), "baz");
+  dbos.runStep(() -> bar(), "bar");
 }
 ```
 
@@ -89,11 +89,11 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 ### How Patching Works
 
-Under the hood, when you call `DBOS.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
+Under the hood, when you call `dbos.patch()` from a workflow, it attempts to insert a "patch marker" at its current point in your workflow history (this is a new row in the `operation_outputs` table in your database).
 If it successfully inserts the patch marker or if the patch marker is already present, then the workflow should take the patch codepath.
-If there is already a record present in this point in your workflow history and it is not a patch marker, then the workflow must be old (it already continued past this point with old code), and `DBOS.patch()` returns `false`.
+If there is already a record present in this point in your workflow history and it is not a patch marker, then the workflow must be old (it already continued past this point with old code), and `dbos.patch()` returns `false`.
 
-When you deprecate a patch with `DBOS.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
+When you deprecate a patch with `dbos.deprecatePatch()`, new workflows no longer insert patch markers into their workflow history.
 However, if a workflow contains the patch marker in its history, it continues past that patch marker, safely ignoring it.
 Once all workflows with patch markers are complete, the patch may be safely removed.
 
@@ -114,4 +114,27 @@ This prevents recovery of workflows that depend on different code.
 When using versioning, we recommend **blue-green** code upgrades:
  - When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
  - Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
- - Then, once all workflows of the old version are complete (you can use [`DBOS.listWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
+ - Then, once all workflows of the old version are complete (you can use [`dbos.listWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
+
+### Application Version Management
+
+DBOS provides methods to inspect and manage registered application versions at runtime:
+
+```java
+// List all versions seen by this database, newest first
+List<VersionInfo> versions = dbos.listApplicationVersions();
+
+// Get the currently promoted "latest" version
+VersionInfo latest = dbos.getLatestApplicationVersion();
+
+// Promote a version (useful during blue-green cutover)
+dbos.setLatestApplicationVersion("2.0.0");
+```
+
+`VersionInfo` is a record with the following fields:
+- **versionId**: A generated unique ID for the version record.
+- **versionName**: The human-readable version string (e.g., `"2.0.0"`).
+- **versionTimestamp**: When this version was promoted.
+- **createdAt**: When the version record was first inserted.
+
+See [`listApplicationVersions`](../reference/methods.md#listapplicationversions), [`getLatestApplicationVersion`](../reference/methods.md#getlatestapplicationversion), and [`setLatestApplicationVersion`](../reference/methods.md#setlatestapplicationversion) for full API details.
