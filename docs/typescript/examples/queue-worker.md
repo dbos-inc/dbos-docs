@@ -51,13 +51,7 @@ async function stepFunction(i: number): Promise<void> {
 }
 ```
 
-The worker service also defines a queue on which the web server can submit workflows for execution:
-
-```ts
-new WorkflowQueue('workflow-queue');
-```
-
-In its main function, the worker service configures and launches DBOS with the registered workflows and queues then waits indefinitely, dequeuing and executing workflows:
+In its main function, the worker service configures and launches DBOS, registers the queue on which the web server can submit workflows for execution, then waits indefinitely, dequeuing and executing workflows:
 
 ```ts
 async function main(): Promise<void> {
@@ -68,6 +62,9 @@ async function main(): Promise<void> {
     systemDatabaseUrl: systemDatabaseUrl,
   });
   await DBOS.launch();
+  // Define a queue on which the web server
+  // can submit workflows for execution.
+  await DBOS.registerQueue('workflow-queue');
   // After launching DBOS, the worker waits indefinitely,
   // dequeuing and executing workflows.
   console.log('Worker started, waiting for workflows...');
