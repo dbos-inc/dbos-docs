@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
 ```python
 DBOS.listen_queues(
-    queues: List[Union[Queue, str]]
+    queues: Sequence[Union[Queue, str]]
 )
 ```
 
