@@ -650,6 +650,24 @@ If the queue already exists in the database, the `on_conflict` parameter control
 DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
 ```
 
+### register_queue_async
+
+```python
+DBOS.register_queue_async(
+    name: str,
+    *,
+    concurrency: Optional[int] = None,
+    limiter: Optional[QueueRateLimit] = None,
+    worker_concurrency: Optional[int] = None,
+    priority_enabled: bool = False,
+    partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
+    on_conflict: QueueConflictResolution = "update_if_latest_version",
+) -> Coroutine[Any, Any, Queue]
+```
+
+Coroutine version of [`register_queue`](#register_queue).
+
 ### retrieve_queue
 
 ```python
@@ -666,6 +684,14 @@ if queue is not None:
     print(queue.concurrency)
 ```
 
+### retrieve_queue_async
+
+```python
+DBOS.retrieve_queue_async(name: str) -> Coroutine[Any, Any, Optional[Queue]]
+```
+
+Coroutine version of [`retrieve_queue`](#retrieve_queue).
+
 ### enqueue_workflow
 
 ```python
@@ -679,7 +705,7 @@ DBOS.enqueue_workflow(
 
 Enqueue a workflow on a queue and return a [handle](./workflow_handles.md) to it.
 Equivalent to retrieving the queue by name and calling [`Queue.enqueue`](./queues.md#enqueue) on it.
-Raises `DBOSException` if no queue with the given name is registered.
+The queue does not need to be registered at the time of the call: if no queue with `queue_name` exists yet, the workflow is durably recorded as `ENQUEUED` and starts running once the queue is registered and a worker becomes available.
 
 **Example syntax:**
 
@@ -718,6 +744,14 @@ Delete a queue from the system database. No-op if no queue with that name exists
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
 Cancel or drain pending workflows on the queue before deleting it.
 :::
+
+### delete_queue_async
+
+```python
+DBOS.delete_queue_async(name: str) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`delete_queue`](#delete_queue).
 
 ## Workflow Management Methods
 

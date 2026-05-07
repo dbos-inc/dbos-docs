@@ -40,6 +40,8 @@ class QueueRateLimit(TypedDict):
 
 Reading any property returns the latest value from the database, so changes made by other processes are reflected.
 
+In `async` code, use the [async getters](#async-property-accessors) (`get_concurrency_async`, `get_worker_concurrency_async`, etc.) instead of property access. Property access performs a synchronous database round-trip that blocks the event loop; reading a property from a running event loop logs a warning.
+
 ### enqueue
 
 ```python
@@ -117,10 +119,24 @@ async def process_tasks(tasks):
   return [await handle.get_result() for handle in task_handles]
 ```
 
+### Async Property Accessors
+
+In `async` code, use these coroutine getters instead of reading the corresponding properties. Each one fetches the latest value from the database without blocking the event loop. Reading the synchronous property from a running event loop instead logs a warning.
+
+```python
+queue.get_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
+queue.get_worker_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
+queue.get_limiter_async() -> Coroutine[Any, Any, Optional[QueueRateLimit]]
+queue.get_priority_enabled_async() -> Coroutine[Any, Any, bool]
+queue.get_partition_queue_async() -> Coroutine[Any, Any, bool]
+queue.get_polling_interval_sec_async() -> Coroutine[Any, Any, float]
+```
+
 ### Reconfiguring Queues
 
 You can reconfigure a queue at runtime by calling its `set_*` methods.
 Each setter writes the new value to the system database; workers pick up the new configuration on their next polling iteration without needing to restart.
+In `async` code, use the [`set_*_async`](#async-reconfiguration) variants instead so the event loop is not blocked on the database write. Calling a synchronous setter from a running event loop logs a warning.
 
 :::warning
 If your application calls [`DBOS.register_queue`](./contexts.md#register_queue) on startup, the next process to start can overwrite settings you applied at runtime via `set_*` methods.
@@ -178,6 +194,19 @@ queue.set_polling_interval_sec(value: float) -> None
 ```
 
 Update the queue's polling interval. Must be positive.
+
+#### Async Reconfiguration
+
+Each setter has an async counterpart with the same parameters and validation behavior. Use these from `async` code to write to the database without blocking the event loop.
+
+```python
+queue.set_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
+queue.set_worker_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
+queue.set_limiter_async(value: Optional[QueueRateLimit]) -> Coroutine[Any, Any, None]
+queue.set_priority_enabled_async(value: bool) -> Coroutine[Any, Any, None]
+queue.set_partition_queue_async(value: bool) -> Coroutine[Any, Any, None]
+queue.set_polling_interval_sec_async(value: float) -> Coroutine[Any, Any, None]
+```
 
 
 ### SetEnqueueOptions
