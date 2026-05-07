@@ -35,6 +35,7 @@ export interface DBOSConfig {
   logLevel?: string;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
+  otelAttributeFormat?: 'legacy' | 'semconv';
 
   runAdminServer?: boolean;
   adminPort?: number;
@@ -77,6 +78,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
+- **otelAttributeFormat**: Naming convention for DBOS-emitted span attributes. Defaults to `'legacy'`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `'semconv'` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied attributes are passed through verbatim either way.
 
 ### Admin Server Settings
 
