@@ -344,6 +344,13 @@ class StepOptions(TypedDict, total=False):
         backoff_rate:
             Multiplier applied to `interval_seconds` after
             each failed attempt (e.g. 2.0 = exponential backoff).
+
+        should_retry:
+            Optional predicate called with a raised exception to decide
+            whether the step should be retried. If it returns False (or
+            an awaitable resolving to False), the exception is re-raised
+            immediately without further retries. Async predicates are
+            only supported when used with `run_step_async`.
     """
 
     name: Optional[str]
@@ -351,6 +358,7 @@ class StepOptions(TypedDict, total=False):
     interval_seconds: float
     max_attempts: int
     backoff_rate: float
+    should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]]
 ```
 
 ### run_step_async

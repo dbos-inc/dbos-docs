@@ -40,7 +40,8 @@ DBOS.step(
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
-    backoff_rate: float = 2.0
+    backoff_rate: float = 2.0,
+    should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]] = None,
 )
 ```
 
@@ -54,6 +55,35 @@ def example_step():
 
 If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesExceeded`) to the calling workflow.
 If that exception is not caught, the workflow [terminates](./workflow-tutorial.md).
+
+#### Filtering Retries With `should_retry`
+
+By default, every exception raised by the step is retried until `max_attempts` is reached.
+If you only want to retry certain exceptions; for example, transient network errors but not validation failures, pass a `should_retry` predicate.
+The predicate receives the raised exception. If it returns `False`, the exception is re-raised immediately and no further retries are attempted.
+
+```python
+@DBOS.step(
+    retries_allowed=True,
+    max_attempts=10,
+    should_retry=lambda e: not isinstance(e, FatalError),
+)
+def example_step():
+    return requests.get("https://example.com").text
+```
+
+For async steps, `should_retry` may itself be an `async` function:
+
+```python
+async def is_retryable(e: BaseException) -> bool:
+    return not isinstance(e, FatalError)
+
+@DBOS.step(retries_allowed=True, max_attempts=10, should_retry=is_retryable)
+async def example_step():
+    ...
+```
+
+Async predicates are only supported for async steps; pairing an async `should_retry` with a sync step raises an exception.
 
 ### Coroutine Steps
 

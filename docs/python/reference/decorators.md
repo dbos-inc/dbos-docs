@@ -46,7 +46,8 @@ DBOS.step(
     retries_allowed: bool = False,
     interval_seconds: float = 1.0,
     max_attempts: int = 3,
-    backoff_rate: float = 2.0
+    backoff_rate: float = 2.0,
+    should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]] = None,
 )
 ```
 
@@ -67,6 +68,7 @@ def example_step():
 - `interval_seconds`: How long to wait before the initial retry.
 - `max_attempts`: How many times to retry a step that is throwing exceptions.
 - `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
+- `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
 
 
 ### transaction
