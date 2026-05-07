@@ -103,11 +103,14 @@ A custom serializer must match this interface:
 
 ```typescript
 interface DBOSSerializer {
-  stringify: (obj: unknown) => string;
-  parse: (text: string | null | undefined) => unknown;
+  stringify: (obj: unknown) => string | Promise<string>;
+  parse: (text: string | null | undefined) => unknown | Promise<unknown>;
   name: () => string; // `name` is stored with the resulting string to ensure the correct deserializer is used.
 }
 ```
+
+Both `stringify` and `parse` may be synchronous or asynchronous.
+
 For example, here is how to configure DBOS to use a Base64-encoded JSON serializer:
 
 ```javascript
