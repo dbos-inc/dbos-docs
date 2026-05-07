@@ -420,6 +420,24 @@ client.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 
 client.enqueue({"queue_name": "email", "workflow_name": "send_email"}, "alice@example.com")
 ```
 
+### register_queue_async
+
+```python
+client.register_queue_async(
+    name: str,
+    *,
+    concurrency: Optional[int] = None,
+    limiter: Optional[QueueRateLimit] = None,
+    worker_concurrency: Optional[int] = None,
+    priority_enabled: bool = False,
+    partition_queue: bool = False,
+    polling_interval_sec: float = 1.0,
+    on_conflict: QueueConflictResolution = "always_update",
+) -> Coroutine[Any, Any, Queue]
+```
+
+Asynchronous version of [`register_queue`](#register_queue).
+
 ### retrieve_queue
 
 ```python
@@ -430,6 +448,14 @@ Retrieve a queue by name from the system database, or `None` if no queue with th
 Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
 
 The returned queue is bound to this client's system database; you can read its configuration and call its [`set_*`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
+
+### retrieve_queue_async
+
+```python
+client.retrieve_queue_async(name: str) -> Coroutine[Any, Any, Optional[Queue]]
+```
+
+Asynchronous version of [`retrieve_queue`](#retrieve_queue).
 
 ### delete_queue
 
@@ -444,6 +470,14 @@ Similar to [`DBOS.delete_queue`](./contexts.md#delete_queue).
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
 Cancel or drain pending workflows on the queue before deleting it.
 :::
+
+### delete_queue_async
+
+```python
+client.delete_queue_async(name: str) -> Coroutine[Any, Any, None]
+```
+
+Asynchronous version of [`delete_queue`](#delete_queue).
 
 
 ## Workflow Management Methods
