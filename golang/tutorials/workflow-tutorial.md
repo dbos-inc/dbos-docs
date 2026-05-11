@@ -213,45 +213,9 @@ func exampleWorkflow(ctx dbos.DBOSContext, input struct {
 
 ## Scheduled Workflows
 
-You can schedule workflows to run automatically at specified times using cron syntax with seconds precision.
-Scheduled workflows are useful for running recurring tasks like data backups, report generation, or cleanup operations.
-
-To create a scheduled workflow, use [`WithSchedule`](../reference/workflows-steps#withschedule) when registering your workflow.
-The workflow must have a single [`time.Time`](https://pkg.go.dev/time#Time) input parameter, representing the scheduled execution time.
-
-**Example syntax:**
-
-```go
-func frequentTask(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-    fmt.Printf("Performing a scheduled task at: %s\n", scheduledTime.Format(time.RFC3339))
-    ... // Perform a scheduled task operations
-    return result, nil
-}
-
-func dailyBackup(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-    fmt.Printf("Running daily backup at: %s\n", scheduledTime.Format(time.RFC3339))
-    ... // Perform daily backup operations
-    return result, nil
-}
-
-func main() {
-    dbosContext := ... // Initialize DBOS
-
-    // Register a workflow to run daily at 2:00 AM
-    dbos.RegisterWorkflow(dbosContext, dailyBackup, 
-        dbos.WithSchedule("0 0 2 * * *")) // Cron: daily at 2:00 AM
-    
-    // Register a workflow to run every 15 minutes
-    dbos.RegisterWorkflow(dbosContext, frequentTask,
-        dbos.WithSchedule("0 */15 * * * * ")) // Cron: every 15 minutes
-    
-    // Launch DBOS - scheduled workflows will start automatically
-    err := dbos.Launch(dbosContext)
-    if err != nil {
-        log.Fatal(err)
-    }
-}
-```
+You can schedule workflows to run on a cron expression.
+Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
+See the [scheduled workflows tutorial](./scheduled-workflows.md) for details.
 
 ## Debouncing
 
