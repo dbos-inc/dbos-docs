@@ -700,6 +700,30 @@ DBOS.retrieve_queue_async(name: str) -> Coroutine[Any, Any, Optional[Queue]]
 
 Coroutine version of [`retrieve_queue`](#retrieve_queue).
 
+### list_queues
+
+```python
+DBOS.list_queues() -> List[Queue]
+```
+
+List all database-backed queues registered in the system database.
+Returns an empty list if no queues have been registered.
+
+**Example syntax:**
+
+```python
+for queue in DBOS.list_queues():
+    print(queue.name, queue.concurrency)
+```
+
+### list_queues_async
+
+```python
+DBOS.list_queues_async() -> Coroutine[Any, Any, List[Queue]]
+```
+
+Coroutine version of [`list_queues`](#list_queues).
+
 ### enqueue_workflow
 
 ```python
