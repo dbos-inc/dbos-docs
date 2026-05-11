@@ -5,8 +5,6 @@ title: Reliable Customer Service Agent
 
 In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
 
-You can see the customer service agent live [here](https://demo-reliable-refunds-langchain.cloud.dbos.dev/).
-
 You can chat with this LLM-powered AI agent to check the status of your purchase order, or request a refund for your order.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.
 
@@ -51,9 +49,9 @@ from fastapi import FastAPI
 app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
-    "database_url": os.environ.get('DBOS_DATABASE_URL'),
+    "database_url": os.environ.get("DBOS_DATABASE_URL"),
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 
 APPROVAL_TIMEOUT_SEC = 60 * 60 * 24 * 7  # One week timeout for manual review
 
@@ -195,14 +193,14 @@ The `process_refund` tool uses `DBOS.start_workflow` to execute the approval wor
 ### Setting Up LangGraph
 
 Once we define all the tools we need, let's set up LangGraph.
-We'll use OpenAI's `gpt-3.5-turbo` model to answer each chat message.
+We'll use OpenAI's `gpt-5.4-mini` model to answer each chat message.
 We'll configure LangGraph to store message history in Postgres so it persists across app restarts.
 
 ```python showLineNumbers
 def create_agent():
-    llm = ChatOpenAI(model="gpt-3.5-turbo")
+    llm = ChatOpenAI(model="gpt-5.4-mini")
     tools = [tool_get_purchase_by_id, process_refund]
-    llm_with_tools = llm.bind_tools(tools)
+    llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -236,8 +234,11 @@ def create_agent():
     graph_builder.add_edge(START, "chatbot")
 
     # Create a checkpointer LangChain can use to store message history in Postgres.
-    db = DBOS.config["database"]
-    connection_string = f"postgresql://{db['username']}:{db['password']}@{db['hostname']}:{db['port']}/{db['app_db_name']}"
+    connection_string = (
+        make_url(config.get("database_url"))
+        .set(drivername="postgres")
+        .render_as_string(hide_password=False)
+    )
     pool = ConnectionPool(connection_string)
     checkpointer = PostgresSaver(pool)
 
@@ -285,32 +286,20 @@ def chat_workflow(chat: ChatSchema):
     return response_messages
 ```
 
-Next, let's add a history endpoint that retrieves all past chats from the database. This function is called when we start/refresh the chatbot page so it can display your chat history. We parse the retrieved messages from the `PostgresSaver` checkpointer to list all past chat.
+Next, let's add a history endpoint that retrieves the current chat thread from the database. This function is called when we start/refresh the chatbot page so it can display your chat history. We read the current thread's messages from the agent's checkpointed state and parse them for the frontend.
 
 ```python showLineNumbers
 @app.get("/history")
 def history_endpoint():
     # Retrieve the messages from the chat history and parse them for the frontend
-    chats = compiled_agent.checkpointer.list(config=chat_config, limit=1000)
+    state = compiled_agent.get_state(chat_config)
+    messages = state.values.get("messages", []) if state else []
     message_list = []
-    for chat in chats:
-        writes = chat.metadata.get("writes")
-        if writes is not None:
-            record = writes.get("chatbot") or writes.get(START)
-            if record is not None:
-                messages = record.get("messages")
-                if messages is not None:
-                    for message in messages:
-                        if isinstance(message, HumanMessage) and message.content:
-                            message_list.append(
-                                {"isUser": True, "content": message.content}
-                            )
-                        elif isinstance(message, AIMessage) and message.content:
-                            message_list.append(
-                                {"isUser": False, "content": message.content}
-                            )
-    # The list is reversed so the most recent messages appear at the bottom
-    message_list.reverse()
+    for message in messages:
+        if isinstance(message, HumanMessage) and message.content:
+            message_list.append({"isUser": True, "content": message.content})
+        elif isinstance(message, AIMessage) and message.content:
+            message_list.append({"isUser": False, "content": message.content})
     return message_list
 ```
 
@@ -323,6 +312,14 @@ def frontend():
     with open(os.path.join("html", "app.html")) as file:
         html = file.read()
     return HTMLResponse(html)
+```
+
+Finally, launch DBOS and start the FastAPI server with Uvicorn:
+
+```python showLineNumbers
+if __name__ == "__main__":
+    DBOS.launch()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
 
 ## Try it Yourself!
