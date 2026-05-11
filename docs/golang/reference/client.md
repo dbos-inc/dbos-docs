@@ -27,6 +27,15 @@ type Client interface {
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     ClientReadStream(workflowID string, key string) ([]any, bool, error)
     ClientReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
+    CreateSchedule(input ClientScheduleInput) error
+    ApplySchedules(schedules []ClientScheduleInput) error
+    GetSchedule(scheduleName string) (*WorkflowSchedule, error)
+    ListSchedules(opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+    PauseSchedule(scheduleName string) error
+    ResumeSchedule(scheduleName string) error
+    DeleteSchedule(scheduleName string) error
+    BackfillSchedule(scheduleName string, start, end time.Time) ([]string, error)
+    TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
     Shutdown(timeout time.Duration)
 }
 ```
@@ -325,6 +334,109 @@ Behaves the same as [`Debouncer.Debounce`](./queues.md#debouncerdebounce) but do
 - `delay`: Time by which to delay workflow execution.
 - `input`: Input parameters to pass to the workflow.
 - `opts`: Optional workflow options.
+
+## Schedule Management
+
+`Client` exposes the same [workflow scheduling](./methods.md#workflow-schedules) operations as the DBOS context, with the important difference that workflows are identified by name (string) rather than by function reference.
+See the [scheduled workflows tutorial](../tutorials/scheduled-workflows.md) for an overview.
+
+### ClientScheduleInput
+
+```go
+type ClientScheduleInput struct {
+    ScheduleName      string // Required: unique schedule name
+    WorkflowName      string // Required: target workflow name (FQN or custom name)
+    WorkflowClassName string // Optional: class/namespace name (required for Python/TS/Java targets that dispatch by class)
+    Schedule          string // Required: cron expression
+    Context           any    // Optional: user-defined context (JSON-serialized)
+    AutomaticBackfill bool   // Optional
+    CronTimezone      string // Optional: IANA timezone name
+    QueueName         string // Optional: target queue
+}
+```
+
+### Client.CreateSchedule
+
+```go
+CreateSchedule(input ClientScheduleInput) error
+```
+
+Create a new schedule. Similar to [`CreateSchedule`](./methods.md#createschedule).
+
+**Example:**
+
+```go
+err := client.CreateSchedule(dbos.ClientScheduleInput{
+    ScheduleName: "my-schedule",
+    WorkflowName: "myPeriodicTask",
+    Schedule:     "*/5 * * * *",
+    Context:      "my context",
+})
+```
+
+### Client.ApplySchedules
+
+```go
+ApplySchedules(schedules []ClientScheduleInput) error
+```
+
+Atomically create or replace the given schedules. Similar to [`ApplySchedules`](./methods.md#applyschedules).
+
+### Client.GetSchedule
+
+```go
+GetSchedule(scheduleName string) (*WorkflowSchedule, error)
+```
+
+Retrieve a [`WorkflowSchedule`](./methods.md#workflowschedule) by name. Returns `(nil, nil)` if not found.
+
+### Client.ListSchedules
+
+```go
+ListSchedules(opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+```
+
+List schedules, optionally filtered. Accepts the same options as [`ListSchedules`](./methods.md#listschedules).
+
+### Client.PauseSchedule
+
+```go
+PauseSchedule(scheduleName string) error
+```
+
+Pause a schedule so it stops firing.
+
+### Client.ResumeSchedule
+
+```go
+ResumeSchedule(scheduleName string) error
+```
+
+Resume a paused schedule.
+
+### Client.DeleteSchedule
+
+```go
+DeleteSchedule(scheduleName string) error
+```
+
+Delete a schedule.
+
+### Client.BackfillSchedule
+
+```go
+BackfillSchedule(scheduleName string, start, end time.Time) ([]string, error)
+```
+
+Backfill missed executions for the range `[start, end]`, returning the IDs of the enqueued workflows. Similar to [`BackfillSchedule`](./methods.md#backfillschedule).
+
+### Client.TriggerSchedule
+
+```go
+TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
+```
+
+Trigger a schedule to fire immediately, returning a handle for the enqueued workflow.
 
 ## Stream Methods
 

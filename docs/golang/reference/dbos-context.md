@@ -55,7 +55,7 @@ dbos.Launch(ctx DBOSContext) error
 
 Launch the following resources managed by a `DBOSContext`:
 - A [system database connection pool](../../explanations/system-tables.md)
-- A [workflow scheduler](../tutorials/workflow-tutorial.md#scheduled-workflows)
+- A [workflow scheduler](../tutorials/scheduled-workflows.md)
 - A [workflow queue runner](../tutorials/queue-tutorial.md)
 - (Optionally) an admin server
 - (Optionally) a Conductor connection
