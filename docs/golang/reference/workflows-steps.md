@@ -44,16 +44,6 @@ dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRetries(3))
 The `Attempts` field in [`WorkflowStatus`](./methods.md#workflow-status) tracks how many times a workflow has been executed: `1` on first execution, `0` if enqueued but not yet dequeued, and incremented by `1` on each recovery or dequeue. The attempt count is incremented one last time before a workflow is placed in the DLQ&mdash;for example, a workflow with max retries of 1 that has been moved to the DLQ will show 3 attempts.
 :::
 
-#### WithSchedule
-
-```go
-func WithSchedule(schedule string) WorkflowRegistrationOption
-```
-
-Registers the workflow as a scheduled workflow using cron syntax.
-The schedule string follows standard cron format with second precision.
-Scheduled workflows automatically receive a `time.Time` input parameter. 
-
 #### WithWorkflowName
 
 ```go

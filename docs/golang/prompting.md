@@ -601,45 +601,50 @@ func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
 
 ### Scheduled Workflows
 
-You can schedule workflows to run automatically at specified times using cron syntax with seconds precision.
+You can schedule workflows to run on a cron expression.
+Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
 Scheduled workflows are useful for running recurring tasks like data backups, report generation, or cleanup operations.
 
-To create a scheduled workflow, use `WithSchedule` when registering your workflow.
-The workflow must have a single `time.Time` input parameter, representing the scheduled execution time.
-
-**Example syntax:**
+Scheduled workflows must accept a `dbos.ScheduledWorkflowInput`, which carries the cron tick time and a user-defined `Context` value attached to the schedule:
 
 ```go
-func frequentTask(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-    fmt.Printf("Performing a scheduled task at: %s\n", scheduledTime.Format(time.RFC3339))
-    ... // Perform a scheduled task operations
-    return result, nil
+type ScheduledWorkflowInput struct {
+    ScheduledTime time.Time
+    Context       any
 }
+```
 
-func dailyBackup(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
-    fmt.Printf("Running daily backup at: %s\n", scheduledTime.Format(time.RFC3339))
+Register the workflow normally, then create a schedule for it using `dbos.CreateSchedule` (or `dbos.ApplySchedules` to declaratively apply a set of schedules on start):
+
+```go
+func dailyBackup(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
+    fmt.Printf("Running daily backup at: %s\n", input.ScheduledTime.Format(time.RFC3339))
     ... // Perform daily backup operations
-    return result, nil
+    return nil, nil
 }
 
 func main() {
     dbosContext := ... // Initialize DBOS
 
-    // Register a workflow to run daily at 2:00 AM
-    dbos.RegisterWorkflow(dbosContext, dailyBackup,
-        dbos.WithSchedule("0 0 2 * * *")) // Cron: daily at 2:00 AM
+    dbos.RegisterWorkflow(dbosContext, dailyBackup)
 
-    // Register a workflow to run every 15 minutes
-    dbos.RegisterWorkflow(dbosContext, frequentTask,
-        dbos.WithSchedule("0 */15 * * * * ")) // Cron: every 15 minutes
-
-    // Launch DBOS - scheduled workflows will start automatically
     err := dbos.Launch(dbosContext)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Schedule the workflow to run daily at 2:00 AM
+    err = dbos.CreateSchedule(dbosContext, dailyBackup, dbos.CreateScheduleRequest{
+        ScheduleName: "daily-backup",
+        Schedule:     "0 0 2 * * *",
+    })
     if err != nil {
         log.Fatal(err)
     }
 }
 ```
+
+Schedules can also be paused, resumed, deleted, backfilled, and triggered at runtime with `dbos.PauseSchedule`, `dbos.ResumeSchedule`, `dbos.DeleteSchedule`, `dbos.BackfillSchedule`, and `dbos.TriggerSchedule`. By default, scheduled invocations are enqueued on an internal queue; pass `dbos.WithScheduleQueueName("...")` to route them to a declared queue for concurrency or rate-limit control.
 
 ### Workflow Versioning and Recovery
 
@@ -2194,16 +2199,6 @@ func WithMaxRetries(maxRetries int) WorkflowRegistrationOption
 Configure the maximum number of times execution of a workflow may be attempted.
 This acts as a dead letter queue so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
-
-#### WithSchedule
-
-```go
-func WithSchedule(schedule string) WorkflowRegistrationOption
-```
-
-Registers the workflow as a scheduled workflow using cron syntax.
-The schedule string follows standard cron format with second precision.
-Scheduled workflows automatically receive a `time.Time` input parameter.
 
 #### WithWorkflowName
 
