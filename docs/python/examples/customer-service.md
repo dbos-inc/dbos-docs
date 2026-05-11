@@ -31,7 +31,7 @@ There are two main challenges in implementing this process within an AI agent:
 
 Traditional solutions typically require setting up a **job queue** and separate **queue consumers** to process tasks asynchronously, along with an **external orchestrator** like AWS Step Functions to coordinate multiple subprocesses, guaranteeing the workflow runs to completion.
 
-DBOS provides a simpler solution - [durable execution as an open source library](https://www.dbos.dev/blog/what-is-lightweight-durable-execution), so you can control durable execution more simply and entirely within your application code There’s no need to run and stitch together external orchestration services. In the following sections of this tutorial, we'll walk you through how we built a reliable customer service agent using DBOS + LangGraph.
+DBOS provides a simpler solution - [durable execution through a database-backed library](https://www.dbos.dev/blog/what-is-lightweight-durable-execution), so you can control durable execution more simply and entirely within your application code. There’s no need to run and stitch together external orchestration services. In the following sections of this tutorial, we'll walk you through how we built a reliable customer service agent using DBOS + LangGraph.
 
 ## Writing an AI-Powered Refund Agent
 
@@ -50,6 +50,9 @@ app = FastAPI()
 config: DBOSConfig = {
     "name": "reliable-refunds-langchain",
     "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+    "application_version": "0.1.0",
+    "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }
 DBOS(config=config)
 
