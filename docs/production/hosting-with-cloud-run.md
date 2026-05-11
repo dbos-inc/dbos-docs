@@ -31,7 +31,7 @@ A [Cloud Run worker pool](https://cloud.google.com/run/docs/overview/what-is-clo
 
 Worker pools suit DBOS applications that rely heavily on queues. Every instance actively dequeues and processes workflows, and the pool can be resized via the [Cloud Run REST API](https://docs.cloud.google.com/run/docs/reference/rest).
 
-Worker pools don't auto-scale, but you can implement an **external scaler** from within the pool. Use a DBOS [scheduled workflow](../golang/tutorials/workflow-tutorial.md#scheduled-workflows) that periodically checks queue length with [`ListWorkflows`](../golang/reference/client.md) and calls the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools) to resize the pool based on load.
+Worker pools don't auto-scale, but you can implement an **external scaler** from within the pool. Use a DBOS [scheduled workflow](../golang/tutorials/scheduled-workflows.md) that periodically checks queue length with [`ListWorkflows`](../golang/reference/client.md) and calls the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools) to resize the pool based on load.
 This works _even from within the pool_ because DBOS guarantees only one process runs a scheduled function at a time, even across multiple instances. This prevents a thundering herd of conflicting resize requests.
 
 See [Scaling a worker pool](#scaling-a-worker-pool) below for a full walkthrough.
@@ -40,7 +40,7 @@ See [Scaling a worker pool](#scaling-a-worker-pool) below for a full walkthrough
 
 A [Cloud Run job](https://cloud.google.com/run/docs/overview/what-is-cloud-run#jobs) runs a container to completion and exits without listening for HTTP requests.
 
-Because DBOS has a [built-in scheduler](../golang/tutorials/workflow-tutorial.md#scheduled-workflows), you typically don't need Cloud Run Jobs. However, Jobs suit applications that consist entirely of periodic work with no always-on requirement&mdash;the job starts, runs workflows to completion, and shuts down, so you only pay for the time it runs.
+Because DBOS has a [built-in scheduler](../golang/tutorials/scheduled-workflows.md), you typically don't need Cloud Run Jobs. However, Jobs suit applications that consist entirely of periodic work with no always-on requirement&mdash;the job starts, runs workflows to completion, and shuts down, so you only pay for the time it runs.
 
 ## Deploying to Cloud Run
 
@@ -360,7 +360,7 @@ Returns `1`, `2`, or `3` depending on how many steps have completed.
 
 ## Scaling a Worker Pool
 
-Worker pools don't auto-scale, but you can build an **external scaler** inside the pool using a DBOS [scheduled workflow](../golang/tutorials/workflow-tutorial.md#scheduled-workflows). DBOS guarantees only one instance runs a scheduled function at a time&mdash;even across a multi-instance pool&mdash;preventing a thundering herd of conflicting resize requests.
+Worker pools don't auto-scale, but you can build an **external scaler** inside the pool using a DBOS [scheduled workflow](../golang/tutorials/scheduled-workflows.md). DBOS guarantees only one instance runs a scheduled function at a time&mdash;even across a multi-instance pool&mdash;preventing a thundering herd of conflicting resize requests.
 
 The complete implementation is in the [cloud-run demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun).
 
@@ -396,7 +396,7 @@ Here's an example in Go (the same approach works in any DBOS-supported language)
 <summary><strong>Scaling workflow snippet</strong></summary>
 
 ```go title="main.go"
-func ScalingWorkflow(ctx dbos.DBOSContext, scheduledTime time.Time) (string, error) {
+func ScalingWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
     // 1. Read queue length by listing all enqueued/pending workflows
     workflows, err := dbos.ListWorkflows(ctx, dbos.WithQueuesOnly(), dbos.WithQueueName(taskQueue.Name))
     if err != nil {

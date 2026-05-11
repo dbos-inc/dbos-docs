@@ -518,6 +518,263 @@ const (
 )
 ```
 
+## Workflow Schedules
+
+DBOS lets you schedule workflows to run on a cron expression.
+Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
+See the [scheduled workflows tutorial](../tutorials/scheduled-workflows.md) for an overview.
+
+Scheduled workflows must accept a [`ScheduledWorkflowInput`](#scheduledworkflowinput) as their input parameter.
+
+### ScheduledWorkflowInput
+
+```go
+type ScheduledWorkflowInput struct {
+    ScheduledTime time.Time // The cron tick time
+    Context       any       // The user-defined context attached to the schedule (nil if none)
+}
+```
+
+The input type of a scheduled workflow function. `Context` is JSON-serialized when stored and decoded into an `any` value when the workflow fires; type-assert or unmarshal it inside the workflow.
+
+### WorkflowSchedule
+
+```go
+type WorkflowSchedule struct {
+    ScheduleID        string         // Unique ID assigned to this schedule revision
+    ScheduleName      string         // User-supplied unique name
+    WorkflowName      string         // Fully-qualified or custom name of the workflow
+    WorkflowClassName string         // Class/namespace (used for cross-language dispatch)
+    Schedule          string         // Cron expression
+    Status            ScheduleStatus // ACTIVE or PAUSED
+    Context           any            // User-defined context attached to the schedule
+    LastFiredAt       *time.Time     // Last time the schedule fired (nil if never)
+    AutomaticBackfill bool           // Whether to backfill missed ticks on application start
+    CronTimezone      string         // IANA timezone name (empty for UTC)
+    QueueName         string         // Queue on which scheduled workflows are enqueued
+}
+```
+
+#### ScheduleStatus
+
+```go
+type ScheduleStatus string
+
+const (
+    ScheduleStatusActive ScheduleStatus = "ACTIVE" // Schedule is firing
+    ScheduleStatusPaused ScheduleStatus = "PAUSED" // Schedule is paused
+)
+```
+
+### CreateSchedule
+
+```go
+func CreateSchedule(ctx DBOSContext, fn ScheduledWorkflowFunc, input CreateScheduleRequest, opts ...CreateScheduleOption) error
+```
+
+Create a new schedule for a registered workflow.
+Fails if a schedule with the same name already exists.
+The reconciler loop picks the new schedule up on its next tick and installs it in the cron scheduler.
+
+The workflow function `fn` must be already registered via [`RegisterWorkflow`](./workflows-steps.md#registerworkflow) and must conform to:
+
+```go
+type ScheduledWorkflowFunc func(ctx DBOSContext, input ScheduledWorkflowInput) (any, error)
+```
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **fn**: The scheduled workflow function reference.
+- **input**: A [`CreateScheduleRequest`](#createschedulerequest) with the schedule name and cron expression.
+- **opts**: Optional schedule configuration, documented below.
+
+#### CreateScheduleRequest
+
+```go
+type CreateScheduleRequest struct {
+    ScheduleName string // Unique name of the schedule
+    Schedule     string // Cron expression
+}
+```
+
+#### WithScheduleContext
+
+```go
+func WithScheduleContext(context any) CreateScheduleOption
+```
+
+Attach a user-defined value (serialized as JSON) that is passed to each scheduled invocation as `ScheduledWorkflowInput.Context`.
+
+#### WithAutomaticBackfill
+
+```go
+func WithAutomaticBackfill(enabled bool) CreateScheduleOption
+```
+
+Enable automatic backfill of missed ticks when the schedule is reloaded after downtime (or when a paused schedule is resumed).
+
+#### WithCronTimezone
+
+```go
+func WithCronTimezone(tz string) CreateScheduleOption
+```
+
+Interpret the cron expression in the given [IANA timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`). Defaults to UTC.
+
+#### WithScheduleQueueName
+
+```go
+func WithScheduleQueueName(name string) CreateScheduleOption
+```
+
+Route each scheduled invocation to the named [queue](./queues.md) instead of the default internal queue.
+
+#### WithScheduleWorkflowClassName
+
+```go
+func WithScheduleWorkflowClassName(name string) CreateScheduleOption
+```
+
+Record a class/namespace name on the schedule for cross-language dispatch.
+Use this when the scheduled workflow is owned by a non-Go runtime (e.g. a Python class-based workflow) so the stored schedule carries the correct class name.
+
+**Example:**
+
+```go
+err := dbos.CreateSchedule(ctx, myPeriodicTask, dbos.CreateScheduleRequest{
+    ScheduleName: "my-schedule",
+    Schedule:     "*/5 * * * *",
+},
+    dbos.WithScheduleContext("my context"),
+    dbos.WithAutomaticBackfill(true),
+)
+```
+
+### ApplySchedules
+
+```go
+func ApplySchedules(ctx DBOSContext, schedules []ApplySchedulesRequest) error
+```
+
+Atomically create or replace a list of schedules in a single transaction.
+For each entry, any existing schedule with the same name is deleted before the new schedule is inserted.
+Useful for defining a fixed set of static schedules on application start.
+
+`ApplySchedules` cannot be called from within a workflow.
+
+```go
+type ApplySchedulesRequest struct {
+    ScheduleName      string // Required
+    WorkflowFn        any    // Required: a registered scheduled workflow function
+    Schedule          string // Required: cron expression
+    Context           any    // Optional: user-defined context (JSON-serialized)
+    AutomaticBackfill bool   // Optional
+    CronTimezone      string // Optional: IANA timezone name
+    QueueName         string // Optional: target queue
+}
+```
+
+**Example:**
+
+```go
+err := dbos.ApplySchedules(ctx, []dbos.ApplySchedulesRequest{
+    {ScheduleName: "a", WorkflowFn: workflowA, Schedule: "*/10 * * * *"},
+    {ScheduleName: "b", WorkflowFn: workflowB, Schedule: "0 0 * * *"},
+})
+```
+
+### GetSchedule
+
+```go
+func GetSchedule(ctx DBOSContext, scheduleName string) (*WorkflowSchedule, error)
+```
+
+Retrieve a [`WorkflowSchedule`](#workflowschedule) by name. Returns `(nil, nil)` if no schedule with that name exists.
+
+### ListSchedules
+
+```go
+func ListSchedules(ctx DBOSContext, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+```
+
+List schedules, optionally filtered. Pass no options to return all schedules.
+
+#### WithScheduleStatuses
+
+```go
+func WithScheduleStatuses(statuses ...ScheduleStatus) ListSchedulesOption
+```
+
+Filter by one or more [`ScheduleStatus`](#schedulestatus) values.
+
+#### WithScheduleWorkflowNames
+
+```go
+func WithScheduleWorkflowNames(names ...string) ListSchedulesOption
+```
+
+Filter by workflow name(s). Use the fully qualified name or the custom name registered via [`WithWorkflowName`](./workflows-steps.md#withworkflowname).
+
+#### WithScheduleNamePrefixes
+
+```go
+func WithScheduleNamePrefixes(prefixes ...string) ListSchedulesOption
+```
+
+Filter by schedule name prefix(es).
+
+### PauseSchedule
+
+```go
+func PauseSchedule(ctx DBOSContext, scheduleName string) error
+```
+
+Pause a schedule so it stops firing. The schedule's cron entry is removed on the next reconciler tick.
+
+### ResumeSchedule
+
+```go
+func ResumeSchedule(ctx DBOSContext, scheduleName string) error
+```
+
+Resume a paused schedule. If the schedule was created with [`WithAutomaticBackfill(true)`](#withautomaticbackfill), missed ticks during the pause are backfilled.
+
+### DeleteSchedule
+
+```go
+func DeleteSchedule(ctx DBOSContext, scheduleName string) error
+```
+
+Delete a schedule. The schedule's cron entry is removed on the next reconciler tick.
+
+### BackfillSchedule
+
+```go
+func BackfillSchedule(ctx DBOSContext, scheduleName string, start, end time.Time) ([]string, error)
+```
+
+Backfill missed executions for the range `[start, end]`, returning the IDs of the enqueued workflows.
+Already-executed ticks are automatically skipped, so it is safe to overlap ranges.
+Cannot be called from within a workflow.
+
+**Example:**
+
+```go
+ids, err := dbos.BackfillSchedule(ctx, "my-schedule",
+    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+    time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC),
+)
+```
+
+### TriggerSchedule
+
+```go
+func TriggerSchedule(ctx DBOSContext, scheduleName string) (WorkflowHandle[any], error)
+```
+
+Trigger a schedule to fire immediately and return a [`WorkflowHandle`](./workflows-steps.md#workflowhandle) for the enqueued workflow.
+Cannot be called from within a workflow.
+
 ## DBOS Variables
 
 ### GetWorkflowID
