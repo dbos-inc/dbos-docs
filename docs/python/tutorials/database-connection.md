@@ -77,7 +77,7 @@ ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 
 The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database. No additional DBOS configuration is needed. See the [ Datasources](./transaction-tutorial.md#datasources) tutorial for full usage details.
 
-### @DBOS.transaction
+### `@DBOS.transaction`
 
 The legacy [@DBOS.transaction](./transaction-tutorial.md#dbostransaction) decorator is an **optional** special kind of step that are optimized for database accesses.
 Transactions need to run in the database in which your application stores data.
