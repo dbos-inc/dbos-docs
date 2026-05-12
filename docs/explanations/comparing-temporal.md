@@ -5,7 +5,7 @@ hide_table_of_contents: false
 ---
 
 DBOS and Temporal both provide durable workflows.
-The main difference is that DBOS is a lightweight Postgres-backed library, while Temporal is an external orchestration service.
+The main difference is that Temporal implements durable workflows in a heavyweight orchestration service, whereas DBOS implements them in a Postgres-backed library.
 In our opinion, the DBOS architecture is simpler to adopt and operate.
 
 :::info
@@ -14,22 +14,24 @@ To learn how to migrate an application from Temporal to DBOS, see the [migration
 
 ### Simpler Architecture
 
-To add DBOS to an application, you install the open-source library and annotate workflows and steps.
-The library checkpoints workflows to your database and recovers workflows from failures.
-Because DBOS is just a library, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
-
-<img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
-
-By contrast, Temporal is designed around a central workflow server that orchestrates workflow execution on a cluster of workers.
+Temporal is designed around a central workflow server that orchestrates workflow execution on a cluster of workers.
 The central server runs workflow code, dispatching steps to workers.
 Workers execute steps, then return their output to the orchestrator, which durably checkpoints it then dispatches the next step.
 
 Because of this design, adding Temporal to an application requires rearchitecting it.
-First, you build infrastructure to operate and scale a cluster of Temporal workers, on which you must run all your workflow and activity (step) code.
-Then, you must also rewrite all interactions between your application and its workflows to go through the orchestration server and its client APIs.
-Finally, you must operate and scale the orchestration server and its underlying Cassandra data store (Temporal supports other backends, but Cassandra is strongly recommended in production).
+First, you must move all your workflow and activity (step) code to run on a cluster of Temporal workers.
+You must also rewrite all interactions between your application and its workflows to go through the orchestration server and its client APIs.
+Then, you must manage and scale both the Temporal server and the datastores it relies on (most commonly Cassandra for durability and Elasticsearch for observability).
+The Temporal server and its data stores are on the critical path for workflow execution and are single points of failure for your system; if either has downtime your application becomes unavailable.
 
 <img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
+
+By contrast, DBOS is an open-source Postgres-backed library.
+To add DBOS to an application, you install the open-source library and annotate workflows and steps.
+The library uses Postgres to checkpoint workflow progress and recover workflows from failure.
+Because DBOS uses Postgres for orchestration, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
+
+<img src={require('@site/static/img/architecture/dbos-comparison-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 ### >10x Better Latency
 
