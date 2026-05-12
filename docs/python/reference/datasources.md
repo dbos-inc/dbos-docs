@@ -34,7 +34,7 @@ Factory method. Creates (or reuses) a SQLAlchemy engine and runs the schema migr
 ```python
 from dbos import SQLAlchemyDatasource
 
-app_db = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 ```
 
 ### `SQLAlchemyDatasource.transaction`
@@ -58,14 +58,14 @@ The decorated function must **not** be a coroutine (`async def`). Decorating an 
 
 **Example:**
 ```python
-@app_db.transaction()
+@ds.transaction()
 def insert_row(name: str, value: int) -> None:
-    session = app_db.sql_session()
+    session = ds.sql_session()
     session.execute(text("INSERT INTO t VALUES (:n, :v)"), {"n": name, "v": value})
 
-@app_db.transaction(isolation_level="READ COMMITTED", name="read_row")
+@ds.transaction(isolation_level="READ COMMITTED", name="read_row")
 def get_row(name: str) -> Optional[int]:
-    session = app_db.sql_session()
+    session = ds.sql_session()
     row = session.execute(text("SELECT value FROM t WHERE name = :n"), {"n": name}).first()
     return row[0] if row else None
 ```
@@ -91,12 +91,12 @@ Runs `func` as a datasource transaction step without requiring the `@ds.transact
 **Example:**
 ```python
 def insert_row(name: str, value: int) -> None:
-    session = app_db.sql_session()
+    session = ds.sql_session()
     session.execute(text("INSERT INTO t VALUES (:n, :v)"), {"n": name, "v": value})
 
 @DBOS.workflow()
 def my_workflow(name: str, value: int) -> None:
-    app_db.run_tx_step({"name": "insert_row"}, insert_row, name, value)
+    ds.run_tx_step({"name": "insert_row"}, insert_row, name, value)
 ```
 
 ### `SQLAlchemyDatasource.sql_session`
@@ -138,13 +138,13 @@ Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs th
 ```python
 from dbos import AsyncSQLAlchemyDatasource
 
-app_db = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 ```
 
 ### `AsyncSQLAlchemyDatasource.transaction`
 
 ```python
-ds.transaction(
+ads.transaction(
     func: Optional[Callable] = None,
     *,
     name: Optional[str] = None,
@@ -162,14 +162,14 @@ The decorated function **must** be a coroutine (`async def`). Decorating a non-c
 
 **Example:**
 ```python
-@app_db.transaction()
+@ads.transaction()
 async def insert_row(name: str, value: int) -> None:
-    session = app_db.sql_session()
+    session = ads.sql_session()
     await session.execute(text("INSERT INTO t VALUES (:n, :v)"), {"n": name, "v": value})
 
-@app_db.transaction(isolation_level="READ COMMITTED", name="read_row")
+@ads.transaction(isolation_level="READ COMMITTED", name="read_row")
 async def get_row(name: str) -> Optional[int]:
-    session = app_db.sql_session()
+    session = ads.sql_session()
     row = (await session.execute(text("SELECT value FROM t WHERE name = :n"), {"n": name})).first()
     return row[0] if row else None
 ```
@@ -177,7 +177,7 @@ async def get_row(name: str) -> Optional[int]:
 ### `AsyncSQLAlchemyDatasource.run_tx_step_async`
 
 ```python
-await ds.run_tx_step_async(
+await ads.run_tx_step_async(
     ds_options: Optional[DatasourceOptions],
     func: Callable[P, Coroutine[Any, Any, R]],
     *args: P.args,
@@ -195,18 +195,18 @@ Runs `func` as a datasource transaction step without requiring the `@ds.transact
 **Example:**
 ```python
 async def insert_row(name: str, value: int) -> None:
-    session = app_db.sql_session()
+    session = ads.sql_session()
     await session.execute(text("INSERT INTO t VALUES (:n, :v)"), {"n": name, "v": value})
 
 @DBOS.workflow()
 async def my_workflow(name: str, value: int) -> None:
-    await app_db.run_tx_step_async({"name": "insert_row"}, insert_row, name, value)
+    await ads.run_tx_step_async({"name": "insert_row"}, insert_row, name, value)
 ```
 
 ### `AsyncSQLAlchemyDatasource.sql_session`
 
 ```python
-ds.sql_session() -> AsyncSession
+ads.sql_session() -> AsyncSession
 ```
 
 Returns the SQLAlchemy `AsyncSession` for the current datasource transaction. Must be called from within a coroutine that is executing inside a datasource transaction (i.e., decorated with `@ds.transaction` or called via `run_tx_step_async`). Raises `AssertionError` if called outside a transaction.
