@@ -29,18 +29,18 @@ This database stores all workflow checkpoints, step outputs, and queue state.
 By default, each workflow runs on only a single server.
 However, you can use mechanisms like [durable queues](#durable-queues) to distribute work across many servers.
 
-Often, you have multiple applications or services that need durable workflows.
-For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
-
-Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
-For example, you might want your API server to enqueue a job on your data processing service.
+When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
+For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
 For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
 <img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+
+You may also have multiple applications or services that need durable workflows.
+For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
+You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
+This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
 
 ## How DBOS Scales
 
