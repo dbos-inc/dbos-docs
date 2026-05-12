@@ -11,9 +11,8 @@ While your application runs, DBOS checkpoints those workflows and steps to a Pos
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 
 Architecturally, an application built with DBOS looks the below diagram.
-DBOS is implemented entirely in the open-source library you install into your application.
-The library handles both checkpointing workflows and steps and recovering workflows from failures.
-There's no orchestration server and no external dependencies except a Postgres database.
+The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
+There's neither a separate orchestration server nor other external dependencies.
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
