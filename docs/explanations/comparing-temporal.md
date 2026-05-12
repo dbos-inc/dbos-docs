@@ -12,7 +12,7 @@ In our opinion, the DBOS architecture is simpler to adopt and operate.
 To learn how to migrate an application from Temporal to DBOS, see the [migration guide](./migrating-from-temporal.md).
 :::
 
-### Simpler Architecture
+## Simpler Architecture
 
 Temporal is designed around a central workflow server that orchestrates workflow execution on a cluster of workers.
 The central server runs workflow code, dispatching steps to workers.
@@ -30,8 +30,19 @@ By contrast, DBOS is an open-source Postgres-backed library.
 To add DBOS to an application, you install the open-source library and annotate workflows and steps.
 The library uses Postgres to checkpoint workflow progress and recover workflows from failure.
 Because DBOS uses Postgres for orchestration, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
+You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres).
 
 <img src={require('@site/static/img/architecture/dbos-comparison-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+
+## Advantages of DBOS
+
+### Improved Operational Reliability
+
+The only point of failure in DBOS is Postgres.
+If your organization already uses Postgres, DBOS does not add any new infrastructural dependencies or points of failure to your application's architecture.
+
+By contrast, the Temporal architecture adds two new two points of failure: the Temporal server and its Cassandra data store.
+Your team is responsible for operating both, and if either has downtime, your application becomes unavailable.
 
 ### >10x Better Latency
 
@@ -39,6 +50,12 @@ In DBOS, the only overhead required to call a step is checkpointing its output.
 This requires a single Postgres write, which typically takes 1-2ms. 
 In Temporal, a step requires an async dispatch from the central server, which takes [tens to hundreds of ms](https://temporal.io/blog/reduce-latency-and-speed-up-your-temporal-workflows).
 Thus, DBOS is preferred for interactive or otherwise latency-sensitive workflows.
+
+### Privacy-Preserving Architecture
+
+Because DBOS stores workflow data in your Postgres database, it is intrinsically privacy-preserving: you own your data, you store it in your Postgres, and it is never stored or sent anywhere else.
+By contrast, to use Temporal, you must send potentially sensitive data (including workflow and step checkpoints) to the Temporal server for storage.
+
 
 ### Rich Workflow Introspection and Management
 
@@ -49,18 +66,6 @@ All these capabilities are available both programmatically and through a web UI.
 One particularly powerful and unique feature is **fork**: you can restart a workflow from a specific step, either programmatically or from the UI.
 This is useful for recovering from an unexpected failure in a step, such as a failure due to a bug or an outage.
 For example, if a large number of billing workflows failed overnight due to an outage in a payment API, you can use fork to restart them all from the payment step after the outage is resolved.
-
-### Improved Operational Reliability
-
-Because DBOS is just a library, its only point of failure is Postgres.
-If your organization already uses Postgres, DBOS does not add any new infrastructural dependencies or points of failure to your application's architecture.
-
-By contrast, the Temporal architecture adds two new two points of failure: the Temporal server and its Cassandra data store.
-Your team is responsible for operating both, and if either has downtime, your application becomes unavailable.
-
-### Privacy-Preserving Architecture
-
-Because DBOS is just an open-source library and can store data in any Postgres database, it is intrinsically privacy-preserving&mdash;you own your data, you store it in your Postgres, and it is never stored or sent anywhere else. By contrast, to use Temporal, you must send potentially sensitive data (including workflow and step checkpoints) to the Temporal server for storage.
 
 ### Durable Workflow Queues
 
