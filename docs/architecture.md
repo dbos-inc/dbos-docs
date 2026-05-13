@@ -95,18 +95,13 @@ Learn more about both strategies in the workflow upgrade tutorial ([Python](./py
 ## Durable Queues
 
 One powerful feature of DBOS is that you can **enqueue** workflows for distributed execution with flow control.
-You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
+You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)).
 
-An enqueued workflow may be dequeued and executed by any of your application's servers.
-All processes running DBOS periodically poll their queues to find and execute new work.
-Essentially, all of your application servers act as queue workers, as in this diagram:
+An enqueued workflow may be dequeued and executed by your application's servers.
+All processes running DBOS periodically poll queues to find and execute new work.
+You can configure which processes listen to which queues.
 
 <img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
-
-Sometimes, you want to separate the worker servers that execute your queued tasks from the rest of your application.
-For example, you may want to scale them separately.
-To do this in DBOS, deploy your queue workers as a separate [application](#using-dbos-in-a-distributed-setting) with their own system database.
-Then, use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to enqueue and manage workflows on your worker application from your other applications.
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
