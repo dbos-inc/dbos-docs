@@ -488,7 +488,7 @@ This provides exactly-once semantics for database writes, which is stronger than
 <Tabs groupId="language" queryString="language">
 <TabItem value="python" label="Python">
 
-Learn more in the [transactions tutorial](../python/tutorials/step-tutorial.md#transactions).
+Learn more in the [transactions tutorial](../python/tutorials/transaction-tutorial.md).
 
 ```python
 @DBOS.transaction()

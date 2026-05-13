@@ -92,7 +92,7 @@ If no connection string is provided, DBOS uses a SQLite database:
 sqlite:///[application_name].sqlite
 ```
 - **application_database_url**: A connection string to your application database.
-This is the database in which DBOS executes [`@DBOS.transaction`](../tutorials/step-tutorial.md#transactions) functions.
+This is the database in which DBOS executes legacy [`@DBOS.transaction`](../tutorials/transaction-tutorial.md#dbostransaction) functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.

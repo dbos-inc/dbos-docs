@@ -271,7 +271,7 @@ These guarantees assume that the application and database may crash and go offli
 
 1.  Workflows always run to completion.  If a DBOS process is interrupted while executing a workflow and restarts, it resumes the workflow from the last completed step.
 2.  [Steps](./step-tutorial.md) are tried _at least once_ but are never re-executed after they complete.  If a failure occurs inside a step, the step may be retried, but once a step has completed, it will never be re-executed.
-3.  [Transactions](./step-tutorial.md#transactions) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
+3.  [Transactions](./transaction-tutorial.md) commit _exactly once_.  Once a workflow commits a transaction, it will never retry that transaction.
 
 If an exception is thrown from a workflow, the workflow terminates&mdash;DBOS records the exception, sets the workflow status to `ERROR`, and does not recover the workflow.
 This is because uncaught exceptions are assumed to be nonrecoverable.
