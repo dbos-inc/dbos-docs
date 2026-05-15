@@ -28,6 +28,7 @@ interface EnqueueOptions {
     priority?: number;
     delaySeconds?: number;
     queuePartitionKey?: string;
+    duplicationPolicy?: 'reject' | 'return-existing';
 }
 
 class DBOSClient {
@@ -126,6 +127,9 @@ Additional but optional metadata includes:
 * **priority**: Optionally specified when enqueueing a workflow. The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 * **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned. In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+* **duplicationPolicy**: How to handle a collision with another workflow that has the same `deduplicationID` on the same queue. Defaults to `'reject'`.
+  * `'reject'`: throw `DBOSQueueDuplicatedError`.
+  * `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 

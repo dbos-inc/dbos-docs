@@ -24,7 +24,7 @@ To do this, we simply perform each operation as a separate step in a durable wor
 For example:
 
 ```python
-@DBOS.transaction()
+@ds.transaction()
 def insert_order(customer: str, item: str, quantity: int) -> int:
     """Insert an order and return its ID.
 
@@ -32,7 +32,7 @@ def insert_order(customer: str, item: str, quantity: int) -> int:
     With DBOS the workflow itself provides that guarantee, so no outbox table
     is needed.
     """
-    result = DBOS.sql_session.execute(
+    result = ds.sql_session().execute(
         orders.insert().values(customer=customer, item=item, quantity=quantity)
     )
     order_id: int = result.inserted_primary_key[0]

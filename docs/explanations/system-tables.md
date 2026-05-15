@@ -110,6 +110,7 @@ Each row represents a different workflow execution.
 - **owner_xid**: Internal transaction ID used to prevent duplicate workflow starts.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
+- **rate_limited**: Whether this workflow was dequeued from a rate-limited queue.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.

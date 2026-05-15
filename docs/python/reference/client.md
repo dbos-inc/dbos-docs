@@ -447,8 +447,6 @@ client.retrieve_queue(name: str) -> Optional[Queue]
 Retrieve a queue by name from the system database, or `None` if no queue with that name has been registered.
 Similar to [`DBOS.retrieve_queue`](./contexts.md#retrieve_queue).
 
-The returned queue is bound to this client's system database; you can read its configuration and call its [`set_*`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
-
 ### retrieve_queue_async
 
 ```python
@@ -456,6 +454,24 @@ client.retrieve_queue_async(name: str) -> Coroutine[Any, Any, Optional[Queue]]
 ```
 
 Asynchronous version of [`retrieve_queue`](#retrieve_queue).
+
+### list_queues
+
+```python
+client.list_queues() -> List[Queue]
+```
+
+List all database-backed queues registered in the system database.
+Returns an empty list if no queues have been registered.
+Similar to [`DBOS.list_queues`](./contexts.md#list_queues).
+
+### list_queues_async
+
+```python
+client.list_queues_async() -> Coroutine[Any, Any, List[Queue]]
+```
+
+Asynchronous version of [`list_queues`](#list_queues).
 
 ### delete_queue
 
