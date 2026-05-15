@@ -13,7 +13,7 @@ When failures occur, whether from crashes, interruptions, or restarts, DBOS uses
 Architecturally, an application built with DBOS looks the below diagram.
 The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
 There's no separate orchestration server and no infrastructure required besides Postgres.
-When running in production, you may optionally connect your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), an out-of-band management service providing useful features such as an admin UI and dashboard, coordination for distributed workflow recovery, and managed workflow retention policies.
+When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), an out-of-band management service providing useful features such as an admin UI and dashboard, distributed workflow recovery, and managed workflow retention policies.
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
