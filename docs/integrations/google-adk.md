@@ -15,7 +15,7 @@ To get started, install DBOS and the [durable Google ADK agents integration](htt
 pip install dbos dbos-google-adk
 ```
 
-You may also need a [Gemini API key](https://aistudio.google.com/app/api-keys) (or any [supported model](/agents/models/)).
+You may also need a [Gemini API key](https://aistudio.google.com/app/api-keys) (or any [supported model](https://adk.dev/agents/models/)).
 
 
 ## Building Reliable Agents
