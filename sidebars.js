@@ -110,6 +110,10 @@ const sidebars = {
             },
             {
               type: 'doc',
+              id: 'integrations/google-adk',
+            },
+            {
+              type: 'doc',
               id: 'integrations/mcp',
             },
           ],
