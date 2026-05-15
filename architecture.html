@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reo.js"></script><link rel="stylesheet" href="/assets/css/styles.cca8f98a.css">
-<script src="/assets/js/runtime~main.cb7812ee.js" defer="defer"></script>
-<script src="/assets/js/main.c2c0d9f7.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.33d659e4.js" defer="defer"></script>
+<script src="/assets/js/main.e9536707.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -25,10 +25,10 @@
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.</p>
 <p>Architecturally, an application built with DBOS looks the below diagram.
-DBOS is implemented entirely in the open-source library you install into your application.
-The library handles both checkpointing workflows and steps and recovering workflows from failures.
-There&#x27;s no orchestration server and no external dependencies except a Postgres database.</p>
-<img src="/assets/images/dbos-architecture-be89e880bc75334f1743bf8c256209cf.png" alt="DBOS Architecture" width="750" class="custom-img">
+The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
+There&#x27;s no separate orchestration server and no infrastructure required besides Postgres.
+When running in production, we also recommend connecting your DBOS applications to <a href="#operating-dbos-in-production-with-conductor" class="">Conductor</a>, an out-of-band management service providing useful features such as an admin UI and dashboard, distributed workflow recovery, and managed workflow retention policies.</p>
+<img src="/assets/images/dbos-architecture-161928caa5052c6600dc55ea62b7ecfa.png" alt="DBOS Conductor Architecture" width="750" class="custom-img">
 <p>To learn more about how to add DBOS to your application, check out the language-specific integration guides (<a class="" href="/python/integrating-dbos">Python</a>, <a class="" href="/typescript/integrating-dbos">TypeScript</a>, <a class="" href="/golang/integrating-dbos">Go</a>, <a class="" href="/java/integrating-dbos">Java</a>).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="using-dbos-in-a-distributed-setting">Using DBOS in a Distributed Setting<a href="#using-dbos-in-a-distributed-setting" class="hash-link" aria-label="Direct link to Using DBOS in a Distributed Setting" title="Direct link to Using DBOS in a Distributed Setting" translate="no">​</a></h2>
 <p>DBOS naturally scales to a distributed setting with many servers per application and many applications.
@@ -37,16 +37,16 @@ Each of your application&#x27;s servers should connect to the same Postgres data
 This database stores all workflow checkpoints, step outputs, and queue state.
 By default, each workflow runs on only a single server.
 However, you can use mechanisms like <a href="#durable-queues" class="">durable queues</a> to distribute work across many servers.</p>
-<p>Often, you have multiple applications or services that need durable workflows.
-For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn&#x27;t require multiple Postgres servers—a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.</p>
-<p>Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
-For example, you might want your API server to enqueue a job on your data processing service.
+<p>When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
+For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>, <a class="" href="/java/reference/client">Java</a>) to programmatically interact with your application from external code.
 For example, your API server can create a client connected to your data processing service&#x27;s system database and use it to enqueue a job, monitor the job&#x27;s status, and retrieve its result when complete.
 Here&#x27;s a diagram of what that might look like:</p>
-<img src="/assets/images/api-worker-4886260a57fb925ca48bd183e05ebe89.png" alt="DBOS Architecture" width="750" class="custom-img">
+<img src="/assets/images/api-worker-c191e6a8e517fdff66e07ea0aa368c9e.png" alt="DBOS Architecture" width="750" class="custom-img">
+<p>You may also have multiple applications or services that need durable workflows.
+For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
+You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
+This doesn&#x27;t require multiple Postgres servers—a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-dbos-scales">How DBOS Scales<a href="#how-dbos-scales" class="hash-link" aria-label="Direct link to How DBOS Scales" title="Direct link to How DBOS Scales" translate="no">​</a></h2>
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step&#x27;s outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).</p>
@@ -98,15 +98,11 @@ When using versioning, DBOS versions applications and workflows so workflows onl
 Learn more about both strategies in the workflow upgrade tutorial (<a class="" href="/python/tutorials/upgrading-workflows">Python</a>, <a class="" href="/typescript/tutorials/upgrading-workflows">TypeScript</a>, <a class="" href="/golang/tutorials/upgrading-workflows">Go</a>, <a class="" href="/java/tutorials/upgrading-workflows">Java</a>).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="durable-queues">Durable Queues<a href="#durable-queues" class="hash-link" aria-label="Direct link to Durable Queues" title="Direct link to Durable Queues" translate="no">​</a></h2>
 <p>One powerful feature of DBOS is that you can <strong>enqueue</strong> workflows for distributed execution with flow control.
-You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.</p>
-<p>An enqueued workflow may be dequeued and executed by any of your application&#x27;s servers.
-All processes running DBOS periodically poll their queues to find and execute new work.
-Essentially, all of your application servers act as queue workers, as in this diagram:</p>
+You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>, <a class="" href="/java/reference/client">Java</a>).</p>
+<p>An enqueued workflow may be dequeued and executed by your application&#x27;s servers.
+All processes running DBOS periodically poll queues to find and execute new work.
+You can configure which processes listen to which queues.</p>
 <img src="/assets/images/dbos-queues-3c55540c18343e0602412501556bbc40.png" alt="DBOS Queues" width="750" class="custom-img">
-<p>Sometimes, you want to separate the worker servers that execute your queued tasks from the rest of your application.
-For example, you may want to scale them separately.
-To do this in DBOS, deploy your queue workers as a separate <a href="#using-dbos-in-a-distributed-setting" class="">application</a> with their own system database.
-Then, use the DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>) to enqueue and manage workflows on your worker application from your other applications.</p>
 <p>To help you operate at scale, DBOS queues provide <strong>flow control</strong>.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
 For example, you can set a <strong>worker concurrency</strong> for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
@@ -121,7 +117,7 @@ Conductor is a management service that provides:</p>
 <li class=""><a class="" href="/production/retention"><strong>Managed Retention Policies</strong></a>: From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.</li>
 </ul>
 <p>Architecturally, Conductor looks like this:</p>
-<img src="/assets/images/dbos-conductor-architecture-052b057ba4714b1909a6dd3bc4a95f9e.png" alt="DBOS Conductor Architecture" width="750" class="custom-img">
+<img src="/assets/images/dbos-conductor-architecture-f6f6921a6f3d4415563201cf0150e767.png" alt="DBOS Conductor Architecture" width="750" class="custom-img">
 <p>Each of your application servers opens a secure websocket connection to Conductor.
 All of Conductor&#x27;s capabilities are powered by these websocket connections.
 When you open a Conductor dashboard in your browser, your request is sent over websocket to one of your application servers, which serves the request (for example, retrieving a list of recent workflows) and sends the result back through the websocket.
