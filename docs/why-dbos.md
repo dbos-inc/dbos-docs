@@ -79,7 +79,7 @@ Use durable workflows to build fault-tolerant and observable AI agents:
 - Pinpoint the root cause of failures from the [workflow dashboard](./python/tutorials/workflow-management.md).
 - Simplify evals by using [fork](./python/tutorials/workflow-management.md#forking-workflows) to restart an agent from a specific step or tool call.
 - Seamlessly add [human-in-the-loop](./python/examples/agent-inbox.md) to your agent.
-- Natively integrate with popular frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/).
+- Natively integrate with popular frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos/), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos) and [Google ADK](https://adk.dev/integrations/dbos/).
 
 [Learn More↗️](./ai/ai-quickstart.md)
 

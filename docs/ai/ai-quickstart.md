@@ -17,7 +17,7 @@ In particular, integrating DBOS to your agents gives you:
 
 ## Get Started
 
-You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), and the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos).
+You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos), and [Google ADK](https://adk.dev/integrations/dbos/).
 
 <LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
@@ -327,6 +327,83 @@ if __name__ == "__main__":
 ```
 
 To learn more, check out the [OpenAI Agents SDK integration guide](../integrations/openai-agents.md) and the [OpenAI Agents SDK documentation](https://openai.github.io/openai-agents-python/running_agents/#dbos).
+
+</LargeTabItem>
+<LargeTabItem value="google-adk" label="Google ADK">
+
+### 1. Install DBOS and the Google ADK Integration
+
+Install DBOS and the [durable Google ADK agents integration](https://github.com/dbos-inc/dbos-google-adk).
+
+```shell
+pip install dbos dbos-google-adk
+```
+
+### 2. Configure DBOS and Wrap Your Agent
+
+Add `DBOSPlugin` to your `Runner` and annotate your agent's workflow and tool calls with DBOS decorators.
+
+```python
+import asyncio
+import logging
+
+# highlight-start
+from dbos import DBOS, DBOSConfig
+from dbos_google_adk import DBOSPlugin
+# highlight-end
+from google.adk.agents import LlmAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
+
+# Decorate tool calls with @DBOS.step() for durable execution
+# highlight-next-line
+@DBOS.step()
+async def get_weather(city: str) -> str:
+    """Get the weather for a city."""
+    return f"Sunny in {city}"
+
+agent = LlmAgent(name="weather", model="gemini-flash-latest", tools=[get_weather])
+runner = Runner(
+    app_name="my-agent",
+    agent=agent,
+    # highlight-next-line
+    plugins=[DBOSPlugin()],
+    session_service=InMemorySessionService(),
+)
+
+# Drive the agent from a DBOS workflow for durable execution
+# highlight-next-line
+@DBOS.workflow()
+async def run_agent(user_id: str, session_id: str, message: str) -> str:
+    new_message = types.Content(role="user", parts=[types.Part.from_text(text=message)])
+    async for event in runner.run_async(
+        user_id=user_id, session_id=session_id, new_message=new_message
+    ):
+        if event.is_final_response():
+            return event.content.parts[0].text
+    return ""
+
+
+async def main():
+    # highlight-start
+    # DBOS checkpoints to SQLite by default. Postgres is recommended for production.
+    config: DBOSConfig = {"name": "my-agent", "system_database_url": "sqlite:///dbostest.sqlite"}
+    DBOS(config=config)
+    DBOS.launch()
+    # highlight-end
+
+    await runner.session_service.create_session(
+        app_name="my-agent", user_id="u", session_id="s"
+    )
+    print(await run_agent("u", "s", "How is the weather in San Francisco?"))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+To learn more, check out the [Google ADK integration guide](../integrations/google-adk.md) and the [Google ADK documentation](https://adk.dev/integrations/dbos).
 
 </LargeTabItem>
 </LargeTabs>

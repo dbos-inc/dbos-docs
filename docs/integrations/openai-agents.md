@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
 1. Workflows and agents must be defined before [`DBOS.launch()`](../python/reference/dbos-class.md#launch).
 2. This example uses SQLite for ease of getting started. Postgres is recommended for production.
-3. Each agent must have a unique `name`, which DBOS uses to identify its workflows.
 
+## Learn More
 
 For more details on building agents, see the [OpenAI Agents SDK documentation](https://platform.openai.com/docs/guides/agents-sdk). For information about durable execution and workflow design, see the [DBOS programming guide](../python/programming-guide). Together, these resources cover everything from getting started with simple agents to designing production-ready, fault-tolerant applications.
