@@ -88,7 +88,9 @@ def record_recent_earthquakes(current_time: datetime):
     if len(earthquakes) == 0:
         DBOS.logger.info(f"No earthquakes found between {start_time} and {end_time}")
     for earthquake in earthquakes:
-        new_earthquake = record_earthquake_data(earthquake)
+        new_earthquake = ds.run_tx_step(
+            {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+        )
         if new_earthquake:
             DBOS.logger.info(f"Recorded earthquake: {earthquake}")
 ```

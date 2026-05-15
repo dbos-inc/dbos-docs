@@ -43,6 +43,7 @@ class DBOSConfig(TypedDict):
     otlp_traces_endpoints: Optional[List[str]]
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
+    otel_attribute_format: Optional[Literal["legacy", "semconv"]]
     log_level: Optional[str]
     otlp_log_level: Optional[str]
     console_log_level: Optional[str]
@@ -115,6 +116,7 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
+- **otel_attribute_format**: Naming convention for DBOS-emitted span attributes. Defaults to `"legacy"`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `"semconv"` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied `otlp_attributes` are passed through verbatim either way.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
 - **otlp_log_level**: Log level specifically for OTLP logging (if enabled). Must be no less severe than `log_level`. Defaults to the value of `log_level`.
 - **console_log_level**: Log level specifically for console logging. Must be no less severe than `log_level`. Defaults to the value of `log_level`.

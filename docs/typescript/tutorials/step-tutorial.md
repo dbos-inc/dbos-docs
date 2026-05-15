@@ -78,6 +78,7 @@ export interface StepConfig {
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
   maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
+  shouldRetry?: (error: unknown) => boolean | Promise<boolean>; // Predicate called after a failure to decide whether to retry (default: retry every error).
 }
 ```
 
@@ -120,3 +121,22 @@ static async exampleStep() {
 
 If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
 If that exception is not caught, the workflow terminates.
+
+#### Filtering Retries With `shouldRetry`
+
+By default, every error thrown by the step is retried until `maxAttempts` is reached.
+If you only want to retry certain errors; for example, transient network errors but not validation failures, pass a `shouldRetry` predicate.
+The predicate receives the thrown error. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately and no further retries are attempted.
+
+```typescript
+await DBOS.runStep(() => fetchFunction(), {
+  name: "fetchFunction",
+  retriesAllowed: true,
+  maxAttempts: 10,
+  shouldRetry: (e) => !(e instanceof FatalError),
+});
+```
+
+The predicate may be async, and it works the same way on `runStep`, `registerStep`, and the `@DBOS.step` decorator.
+If the predicate itself throws or rejects, that error is recorded as the step's failure and propagated to the workflow.
+`shouldRetry` is ignored when `retriesAllowed` is `false`.
