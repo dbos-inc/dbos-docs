@@ -149,7 +149,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 Now, let's implement the checkout workflow's steps.
 Each step performs a database operation, like updating inventory or order status.
-Because these steps access the database, they are implemented as [transactions](../tutorials/step-tutorial.md#transactions).
+Because these steps access the database, they are implemented as [transactions](../tutorials/transaction-tutorial.md).
 
 <details>
 <summary><strong>Database Operations</strong></summary>

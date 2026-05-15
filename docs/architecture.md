@@ -11,11 +11,11 @@ While your application runs, DBOS checkpoints those workflows and steps to a Pos
 When failures occur, whether from crashes, interruptions, or restarts, DBOS uses those checkpoints to recover each of your workflows from the last completed step.
 
 Architecturally, an application built with DBOS looks the below diagram.
-DBOS is implemented entirely in the open-source library you install into your application.
-The library handles both checkpointing workflows and steps and recovering workflows from failures.
-There's no orchestration server and no external dependencies except a Postgres database.
+The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
+There's no separate orchestration server and no infrastructure required besides Postgres.
+When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), an out-of-band management service providing useful features such as an admin UI and dashboard, distributed workflow recovery, and managed workflow retention policies.
 
-<img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+<img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 To learn more about how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md), [Java](./java/integrating-dbos.md)).
 
@@ -29,18 +29,18 @@ This database stores all workflow checkpoints, step outputs, and queue state.
 By default, each workflow runs on only a single server.
 However, you can use mechanisms like [durable queues](#durable-queues) to distribute work across many servers.
 
-Often, you have multiple applications or services that need durable workflows.
-For example, you might have a service that handles client requests, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
-
-Sometimes, you need to communicate between separate DBOS applications, or between a DBOS application and an application not using DBOS.
-For example, you might want your API server to enqueue a job on your data processing service.
+When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
+For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
 For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
 <img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
+
+You may also have multiple applications or services that need durable workflows.
+For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
+You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
+This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
 
 ## How DBOS Scales
 
@@ -96,18 +96,13 @@ Learn more about both strategies in the workflow upgrade tutorial ([Python](./py
 ## Durable Queues
 
 One powerful feature of DBOS is that you can **enqueue** workflows for distributed execution with flow control.
-You can enqueue a workflow from within a DBOS app directly or from anywhere using a DBOS client.
+You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)).
 
-An enqueued workflow may be dequeued and executed by any of your application's servers.
-All processes running DBOS periodically poll their queues to find and execute new work.
-Essentially, all of your application servers act as queue workers, as in this diagram:
+An enqueued workflow may be dequeued and executed by your application's servers.
+All processes running DBOS periodically poll queues to find and execute new work.
+You can configure which processes listen to which queues.
 
 <img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
-
-Sometimes, you want to separate the worker servers that execute your queued tasks from the rest of your application.
-For example, you may want to scale them separately.
-To do this in DBOS, deploy your queue workers as a separate [application](#using-dbos-in-a-distributed-setting) with their own system database.
-Then, use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md)) to enqueue and manage workflows on your worker application from your other applications.
 
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.

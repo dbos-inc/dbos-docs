@@ -199,10 +199,12 @@ def checkout_workflow()
 
 ### DBOS vs. Temporal
 
-Both DBOS and Temporal provide durable execution, but DBOS is implemented in a lightweight Postgres-backed library whereas Temporal is implemented in an externally orchestrated server.
+DBOS and Temporal both provide durable workflows.
+The main difference is that Temporal implements durable workflows in a heavyweight orchestration service, whereas DBOS implements them in a Postgres-backed library.
 
 You can add DBOS to your program by installing the open-source library, connecting it to Postgres, and annotating workflows and steps.
-By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows and steps (activities) to a Temporal worker, configure a Temporal server to orchestrate those workflows, and access your workflows only through a Temporal client.
+By contrast, to add Temporal to your program, you must rearchitect your program to move your workflows and steps (activities) to a cluster of Temporal workers, then manage and scale both the Temporal orchestration server and the datastores it depends on (most commonly Cassandra for durability and Elasticsearch for observability).
+The Temporal server and its data stores are on the critical path for workflow execution and are single points of failure for your system; if they have downtime your application becomes unavailable.
 [This page](./explanations/comparing-temporal.md) makes the comparison in more detail.
 
 ### DBOS vs. Airflow
@@ -218,4 +220,4 @@ DBOS provides a similar queue abstraction to dedicated queueing systems like Cel
 However, DBOS queues are **durable and Postgres-backed** and integrate with durable workflows.
 For example, in DBOS you can write a durable workflow that enqueues a thousand tasks and waits for their results.
 DBOS checkpoints the workflow and each of its tasks in Postgres, guaranteeing that even if failures or interruptions occur, the tasks will complete and the workflow will collect their results.
-By contrast, Celery/BullMQ are Redis-backed and don't provide workflows, so they provide fewer guarantees but better performance.
+By contrast, Celery/BullMQ are Redis-backed and don't provide workflows.
