@@ -116,6 +116,7 @@ def example_workflow(friend: str):
 You can set a timeout for a workflow with [`SetWorkflowTimeout`](../reference/contexts.md#setworkflowtimeout).
 When the timeout expires, the workflow **and all its children** are cancelled.
 Cancelling a workflow sets its status to `CANCELLED` and preempts its execution at the beginning of its next step.
+To cancel an executing async step immediately rather than waiting for it to complete, mark the step as [`preemptible`](../reference/decorators.md#step).
 
 Timeouts are **start-to-completion**: if a workflow is enqueued, the timeout does not begin until the workflow is dequeued and starts execution.
 Also, timeouts are **durable**: they are stored in the database and persist across restarts, so workflows can have very long timeouts.

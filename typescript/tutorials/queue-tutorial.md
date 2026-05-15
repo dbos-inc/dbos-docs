@@ -382,6 +382,37 @@ async function main() {
 }
 ```
 
+### Singleton Workflows
+
+If you want only one instance of a workflow to be active at a time, you can set `duplicationPolicy: 'return-existing'` on `DBOS.startWorkflow`.
+When a workflow with the same `deduplicationID` is already enqueued or executing on the queue, this returns a handle to that existing workflow instead of throwing `DBOSQueueDuplicatedError`.
+The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
+
+This requires both a `queueName` and an `enqueueOptions.deduplicationID`.
+
+Example syntax:
+
+```javascript
+async function taskFunction(task) {
+    // ...
+}
+const taskWorkflow = DBOS.registerWorkflow(taskFunction, { name: "taskWorkflow" });
+
+async function main() {
+  await DBOS.launch();
+  await DBOS.registerQueue("example_queue");
+
+  // Only one workflow with deduplicationID "singleton" can run on this queue
+  // at a time. Subsequent callers attach to it and receive its result.
+  const handle = await DBOS.startWorkflow(taskWorkflow, {
+    queueName: "example_queue",
+    enqueueOptions: { deduplicationID: "singleton" },
+    duplicationPolicy: "return-existing",
+  })(task);
+  const result = await handle.getResult();
+}
+```
+
 ### Priority
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.

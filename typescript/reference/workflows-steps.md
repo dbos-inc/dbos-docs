@@ -237,6 +237,7 @@ interface StepConfig {
   intervalSeconds?: number;
   maxAttempts?: number;
   backoffRate?: number;
+  shouldRetry?: (error: unknown) => boolean | Promise<boolean>;
   name?: string;
 }
 ```
@@ -271,6 +272,7 @@ export class Example {
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+  - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **name**: Name for the step function.  If not specified, the method name is used.
 
 ### DBOS.registerStep
@@ -314,6 +316,7 @@ const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkfl
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+  - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
 
 ### DBOS.runStep
 
@@ -354,6 +357,7 @@ async function exampleWorkflow() {
   - **intervalSeconds**: How long to wait before the initial retry.
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
+  - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
 
 ## Class Names
 

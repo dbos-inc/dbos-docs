@@ -20,6 +20,7 @@ interface StartWorkflowParams {
   queueName?: string;
   timeoutMS?: number | null;
   enqueueOptions?: EnqueueOptions;
+  duplicationPolicy?: 'reject' | 'return-existing';
 }
 
 export interface EnqueueOptions {
@@ -67,6 +68,9 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 - **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
 - **queueName**: The name of the queue on which to enqueue this workflow, if any.
 - **timeoutMS**: The timeout of this workflow in milliseconds.
+- **duplicationPolicy**: How to handle a collision with another workflow that has the same `enqueueOptions.deduplicationID` on the same queue. Defaults to `'reject'`.
+  - `'reject'`: throw `DBOSQueueDuplicatedError`.
+  - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
   - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
