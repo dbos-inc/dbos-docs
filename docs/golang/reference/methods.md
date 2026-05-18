@@ -353,6 +353,70 @@ type StepInfo struct {
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to cancel.
 
+### GetWorkflowAggregates
+
+```go
+func GetWorkflowAggregates(ctx DBOSContext, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
+```
+
+Return aggregate workflow counts grouped by one or more columns and/or by `created_at` time bucket.
+At least one `GroupBy*` flag must be set, or `TimeBucketSize` must be greater than zero.
+Filter fields narrow which workflows are counted before grouping.
+
+```go
+type GetWorkflowAggregatesInput struct {
+    GroupByStatus             bool
+    GroupByName               bool
+    GroupByQueueName          bool
+    GroupByExecutorID         bool
+    GroupByApplicationVersion bool
+
+    // When non-zero, groups results by created_at time bucket of this size.
+    TimeBucketSize time.Duration
+
+    // Filters
+    Status             []WorkflowStatusType
+    StartTime          time.Time
+    EndTime            time.Time
+    Name               []string
+    ApplicationVersion []string
+    ExecutorID         []string
+    QueueName          []string
+    WorkflowIDPrefix   []string
+}
+```
+
+The result is one [`WorkflowAggregateRow`](#workflowaggregaterow) per non-empty group.
+The `Group` map contains an entry per enabled grouping column (`"status"`, `"name"`, `"queue_name"`, `"executor_id"`, `"application_version"`, `"time_bucket"`).
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **input**: A `GetWorkflowAggregatesInput` describing the grouping columns, time bucket, and filters.
+
+**Example:**
+
+```go
+rows, err := dbos.GetWorkflowAggregates(ctx, dbos.GetWorkflowAggregatesInput{
+    GroupByStatus: true,
+    StartTime:     time.Now().Add(-24 * time.Hour),
+})
+if err != nil {
+    log.Fatal(err)
+}
+for _, r := range rows {
+    fmt.Printf("status=%s count=%d\n", *r.Group["status"], r.Count)
+}
+```
+
+#### WorkflowAggregateRow
+
+```go
+type WorkflowAggregateRow struct {
+    Group map[string]*string // One entry per enabled grouping column; nil values represent NULL
+    Count int64              // Number of workflows in this group
+}
+```
+
 ### CancelWorkflow
 
 ```go
@@ -364,6 +428,20 @@ Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queu
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to cancel.
+
+### CancelWorkflows
+
+```go
+func CancelWorkflows(ctx DBOSContext, workflowIDs []string) error
+```
+
+Cancel multiple workflows in a single database round-trip.
+Each workflow that exists and is not already in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`) is moved to `CANCELLED` and removed from its queue.
+Unlike [`CancelWorkflow`](#cancelworkflow), this function does not return an error when some IDs are missing.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowIDs**: The IDs of the workflows to cancel.
 
 ### ResumeWorkflow
 
@@ -422,10 +500,12 @@ type ForkWorkflowInput struct {
     StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
     ApplicationVersion string // Optional: Application version for the forked workflow (inherits from original if empty)
     QueueName          string // Optional: Queue to enqueue the forked workflow on (defaults to starting immediately)
+    QueuePartitionKey  string // Optional: Partition key when enqueueing onto a partitioned queue (requires QueueName)
 }
 ```
 
 If `QueueName` is set, the forked workflow is enqueued on the specified queue instead of starting immediately.
+Set `QueuePartitionKey` together with `QueueName` to enqueue the forked workflow onto a specific partition of a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
 
 ### SetWorkflowDelay
 
@@ -774,6 +854,56 @@ func TriggerSchedule(ctx DBOSContext, scheduleName string) (WorkflowHandle[any],
 
 Trigger a schedule to fire immediately and return a [`WorkflowHandle`](./workflows-steps.md#workflowhandle) for the enqueued workflow.
 Cannot be called from within a workflow.
+
+## Application Versions
+
+DBOS tracks each application version that has launched against the system database.
+You can use these methods to inspect the registered versions and control which one is treated as latest&mdash;for example, to recover workflows onto a specific version after a rollout.
+
+### VersionInfo
+
+```go
+type VersionInfo struct {
+    ID        string // Internal version ID
+    Name      string // Application version name
+    Timestamp int64  // Epoch milliseconds; the most recent timestamp identifies the latest version
+    CreatedAt int64  // Epoch milliseconds at which the version was first registered
+}
+```
+
+### ListApplicationVersions
+
+```go
+func ListApplicationVersions(ctx DBOSContext) ([]VersionInfo, error)
+```
+
+Return every application version registered in the system database, ordered by timestamp (newest first).
+
+**Parameters:**
+- **ctx**: The DBOS context.
+
+### GetLatestApplicationVersion
+
+```go
+func GetLatestApplicationVersion(ctx DBOSContext) (*VersionInfo, error)
+```
+
+Return the application version with the most recent timestamp, or `nil` if no versions are registered.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+
+### SetLatestApplicationVersion
+
+```go
+func SetLatestApplicationVersion(ctx DBOSContext, versionName string) error
+```
+
+Mark the named application version as latest by updating its timestamp to the current time.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **versionName**: The name of the registered application version to mark as latest.
 
 ## DBOS Variables
 
