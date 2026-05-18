@@ -23,6 +23,7 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 ## Cancelling Workflows
 
 You can cancel the execution of a workflow from the web UI or programmatically via [`CancelWorkflow`](../reference/methods#cancelworkflow).
+To cancel many workflows at once, use [`CancelWorkflows`](../reference/methods#cancelworkflows), which cancels them in a single database round-trip.
 
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.

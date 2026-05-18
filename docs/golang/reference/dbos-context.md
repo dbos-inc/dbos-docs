@@ -19,18 +19,19 @@ func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error
 
 ```go
 type Config struct {
-    AppName            string        // Application name for identification (required)
-    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string to your system database. Either this or SystemDBPool is required.
-    SystemDBPool       *pgxpool.Pool // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
-    DatabaseSchema     string        // Database schema name (defaults to "dbos")
-    Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
-    AdminServer        bool          // Enable Transact admin HTTP server (disabled by default)
-    AdminServerPort    int           // Port for the admin HTTP server (default: 3001)
-    ConductorURL       string        // DBOS conductor service URL (optional)
-    ConductorAPIKey    string        // DBOS conductor API key (optional)
-    ApplicationVersion string        // Application version (optional)
-    ExecutorID         string        // Executor ID (optional)
-    EnablePatching     bool          // Enable the patching system for Patch/DeprecatePatch (default: false)
+    AppName                   string         // Application name for identification (required)
+    DatabaseURL               string         // DatabaseURL is a PostgreSQL connection string to your system database. Either this or SystemDBPool is required.
+    SystemDBPool              *pgxpool.Pool  // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
+    DatabaseSchema            string         // Database schema name (defaults to "dbos")
+    Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
+    AdminServer               bool           // Enable Transact admin HTTP server (disabled by default)
+    AdminServerPort           int            // Port for the admin HTTP server (default: 3001)
+    ConductorURL              string         // DBOS conductor service URL (optional)
+    ConductorAPIKey           string         // DBOS conductor API key (optional)
+    ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
+    ApplicationVersion        string         // Application version (optional)
+    ExecutorID                string         // Executor ID (optional)
+    EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
 }
 ```
 
