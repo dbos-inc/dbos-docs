@@ -20,10 +20,14 @@ type Client interface {
     GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
     RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(workflowID string) error
+    CancelWorkflows(workflowIDs []string) error
     SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
     ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
+    ListApplicationVersions() ([]VersionInfo, error)
+    GetLatestApplicationVersion() (*VersionInfo, error)
+    SetLatestApplicationVersion(versionName string) error
     GetWorkflowSteps(workflowID string) ([]StepInfo, error)
     ClientReadStream(workflowID string, key string) ([]any, bool, error)
     ClientReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
@@ -253,6 +257,16 @@ Cancel a workflow.
 This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
 Similar to [`CancelWorkflow`](./methods.md#cancelworkflow).
 
+### CancelWorkflows
+
+```go
+CancelWorkflows(workflowIDs []string) error
+```
+
+Cancel multiple workflows in a single database round-trip.
+Missing or already-terminal IDs are silently skipped.
+Similar to [`CancelWorkflows`](./methods.md#cancelworkflows).
+
 ### SetWorkflowDelay
 
 ```go
@@ -437,6 +451,35 @@ TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
 ```
 
 Trigger a schedule to fire immediately, returning a handle for the enqueued workflow.
+
+## Application Version Management
+
+### ListApplicationVersions
+
+```go
+ListApplicationVersions() ([]VersionInfo, error)
+```
+
+Return every application version registered in the system database, ordered by timestamp (newest first).
+Similar to [`ListApplicationVersions`](./methods.md#listapplicationversions).
+
+### GetLatestApplicationVersion
+
+```go
+GetLatestApplicationVersion() (*VersionInfo, error)
+```
+
+Return the application version with the most recent timestamp.
+Similar to [`GetLatestApplicationVersion`](./methods.md#getlatestapplicationversion).
+
+### SetLatestApplicationVersion
+
+```go
+SetLatestApplicationVersion(versionName string) error
+```
+
+Mark the named application version as latest by updating its timestamp to the current time.
+Similar to [`SetLatestApplicationVersion`](./methods.md#setlatestapplicationversion).
 
 ## Stream Methods
 

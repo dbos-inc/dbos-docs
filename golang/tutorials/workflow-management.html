@@ -13,7 +13,7 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reo.js"></script><link rel="stylesheet" href="/assets/css/styles.cca8f98a.css">
-<script src="/assets/js/runtime~main.837748f6.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.ea01555c.js" defer="defer"></script>
 <script src="/assets/js/main.ae00fd24.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -30,7 +30,8 @@
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:</p>
 <img src="/assets/images/workflow-steps-ecd9202e53034df122c59a7433a7d414.png" alt="Workflow List" width="800" class="custom-img">
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="cancelling-workflows">Cancelling Workflows<a href="#cancelling-workflows" class="hash-link" aria-label="Direct link to Cancelling Workflows" title="Direct link to Cancelling Workflows" translate="no">​</a></h2>
-<p>You can cancel the execution of a workflow from the web UI or programmatically via <a class="" href="/golang/reference/methods#cancelworkflow"><code>CancelWorkflow</code></a>.</p>
+<p>You can cancel the execution of a workflow from the web UI or programmatically via <a class="" href="/golang/reference/methods#cancelworkflow"><code>CancelWorkflow</code></a>.
+To cancel many workflows at once, use <a class="" href="/golang/reference/methods#cancelworkflows"><code>CancelWorkflows</code></a>, which cancels them in a single database round-trip.</p>
 <p>If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="resuming-workflows">Resuming Workflows<a href="#resuming-workflows" class="hash-link" aria-label="Direct link to Resuming Workflows" title="Direct link to Resuming Workflows" translate="no">​</a></h2>
