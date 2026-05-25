@@ -376,7 +376,7 @@ const config = {
     }),
     scripts: [
       {
-        src: '/scripts/reo.js',
+        src: '/scripts/reb2b.js',
       },
     ]
 };
