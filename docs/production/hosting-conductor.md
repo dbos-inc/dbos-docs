@@ -102,7 +102,7 @@ services:
       # DBOS_OAUTH_AUDIENCE: 'your-api-identifier'
     ports:
       # Expose console on port 80 (or override with DBOS_CONSOLE_PORT env var)
-      - '${DBOS_CONSOLE_PORT:-80}:80'
+      - '${DBOS_CONSOLE_PORT:-80}:8080'
     depends_on:
       conductor:
         condition: service_healthy
