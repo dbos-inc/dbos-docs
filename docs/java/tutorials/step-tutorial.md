@@ -198,3 +198,15 @@ class ExampleImpl implements Example {
 ```
 
 If a step exhausts all retry attempts, it throws an exception to the calling workflow.
+
+## Step Factories
+
+Regular steps checkpoint their output _after_ the step body completes.
+If your step writes to a database and the application crashes before the checkpoint is saved, the step runs again on recovery — potentially writing twice.
+
+If you need your database write and the DBOS checkpoint to be committed in the **same transaction**, use a step factory:
+
+- **Plain JDBC / JDBI / jOOQ**: use [`JdbcStepFactory`, `JdbiStepFactory`, or `JooqStepFactory`](../tutorials/step-factory-tutorial.md).
+- **Spring Boot**: annotate the method with [`@TransactionalStep`](../tutorials/step-factory-tutorial.md#spring-boot-transactionalstep) from `transact-spring-txstep-starter`.
+
+See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md) for full details.

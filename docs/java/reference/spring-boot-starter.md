@@ -101,6 +101,78 @@ Implements `SmartInitializingSingleton`. After all singletons are created, it sc
 | Multiple beans — the `@Primary` one | null string (default) |
 | Multiple beans — non-primary | Spring bean name |
 
+## @TransactionalStep
+
+Module: `dev.dbos:transact-spring-txstep-starter` (separate from `transact-spring-boot-starter`).
+Package: `dev.dbos.transact.spring.txstep`.
+
+```java
+public @interface TransactionalStep {
+  String name() default "";
+}
+```
+
+Marks a Spring-managed method as a step factory step.
+
+The behaviour depends on calling context:
+
+| Context | Behaviour |
+|---------|-----------|
+| Inside a `@Workflow`, not inside a step | Full step factory behaviour: runs in a `REQUIRES_NEW` transaction, output written to `tx_step_outputs` atomically with user database work. On workflow retry the recorded output is replayed without re-executing the method body. |
+| Outside a workflow, or inside any step (including another `@TransactionalStep`) | Behaves like `@Transactional`: runs with `PROPAGATION_REQUIRED` (joins an existing transaction or starts a new one), no DBOS checkpoint recorded. |
+
+The annotated method must be called through a Spring proxy — calls via `this` bypass the aspect.
+
+**Parameters:**
+- **name**: Stable name for this step within the workflow. Defaults to the method name.
+
+**Supported stacks**: Spring JDBC / `JdbcTemplate`, JDBI (`jdbi3-spring`), jOOQ (`spring-boot-starter-jooq`), JPA / Hibernate.
+
+### Installation
+
+```kotlin title="build.gradle.kts"
+implementation("dev.dbos:transact-spring-boot-starter:<version>")
+implementation("dev.dbos:transact-spring-txstep-starter:<version>")
+```
+
+```xml title="pom.xml"
+<dependency>
+  <groupId>dev.dbos</groupId>
+  <artifactId>transact-spring-boot-starter</artifactId>
+  <version>VERSION</version>
+</dependency>
+<dependency>
+  <groupId>dev.dbos</groupId>
+  <artifactId>transact-spring-txstep-starter</artifactId>
+  <version>VERSION</version>
+</dependency>
+```
+
+### Auto-Configured Beans
+
+| Bean | Description |
+|------|-------------|
+| `TransactionalStepAspect` | AOP aspect that intercepts `@TransactionalStep` calls and delegates to `TransactionalStepFactory`. |
+| `TransactionalStepFactory` | Manages step lifecycle: idempotency check, transaction, and output recording. |
+| `TransactionalStepRegistrar` | Scans the Spring context post-startup and calls `factory.initialize()` (creates `tx_step_outputs`) only when annotated methods are found — no DB contact for apps that don't use the annotation. |
+
+All beans are `@ConditionalOnMissingBean`.
+
+### Configuration
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `dbos.txstep.schema` | DBOS system schema | PostgreSQL schema for the `tx_step_outputs` table |
+
+### How it works
+
+1. `TransactionalStepAspect` intercepts every `@TransactionalStep` call and delegates to `TransactionalStepFactory`.
+2. The factory calls `DBOS.runStep()`, which checks `tx_step_outputs` for a prior result. If one exists, it is returned immediately (idempotent replay).
+3. Otherwise, a `REQUIRES_NEW` Spring transaction is started. The method body runs, and the result is written to `tx_step_outputs` using `DataSourceUtils.getConnection()` — the same connection the transaction holds.
+4. The transaction commits, making the user's write and the step output record atomic. If the method throws, the transaction rolls back and the error is recorded separately so retries can replay it.
+
+See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md#spring-boot-transactionalstep) for per-stack examples (JDBC, JDBI, jOOQ, JPA).
+
 ## DBOSAspect
 
 An `@Aspect` that intercepts:
