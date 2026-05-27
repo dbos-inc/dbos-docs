@@ -109,7 +109,7 @@ public class OrderService {
   // self reference is injected automatically by Spring Boot Dependency Injection
   @Autowired 
   @Lazy
-  public void setSelf(WidgetStoreService self) {
+  public void setSelf(OrderService self) {
     this.self = self;
   }
 
