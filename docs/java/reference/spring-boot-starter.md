@@ -52,6 +52,10 @@ All properties are in the `dbos.*` namespace.
 
 ### Admin Server
 
+:::warning
+`dbos.admin-server.*` properties are deprecated since 0.9 and will be removed before 1.0. Use [DBOS Conductor](../../production/conductor.md) instead.
+:::
+
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `dbos.admin-server.enabled` | `boolean` | `false` | Whether to enable the admin HTTP server. |
@@ -65,6 +69,7 @@ All properties are in the `dbos.*` namespace.
 | `dbos.enable-patching` | `boolean` | `false` | Enable [workflow patching](./methods.md#patch). |
 | `dbos.listen-queues` | `List<String>` | `[]` | Queues this executor should dequeue from. |
 | `dbos.scheduler-polling-interval` | `Duration` | — | Override the default scheduler polling interval. |
+| `dbos.use-listen-notify` | `boolean` | `true` | Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery. Automatically set to `false` when CockroachDB is detected. |
 
 ## DBOSConfigCustomizer
 
