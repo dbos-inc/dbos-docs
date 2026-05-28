@@ -124,9 +124,36 @@ send(String destinationId, Object message, String topic, String idempotencyKey, 
 
 Similar to [`dbos.send`](./methods.md#send).
 
-The optional `SendOptions` parameter controls serialization:
+The optional `SendOptions` parameter controls serialization and fork delivery; see [`SendOptions`](#sendoptions) below.
+
+### sendBulk
+
+```java
+void sendBulk(List<SendMessage> messages)
+void sendBulk(List<SendMessage> messages, SendOptions options)
+```
+
+Send multiple messages to workflows in a single batch. Each message is delivered to its destination workflow independently; messages need not share the same destination.
+
+**Parameters:**
+- **messages**: A list of [`SendMessage`](./methods.md#sendmessage) records describing each message to send.
+- **options**: Optional send options controlling serialization and fork delivery; see [`SendOptions`](#sendoptions) below.
+
+### SendOptions
+
+```java
+SendOptions.defaults()
+SendOptions.portable()
+```
+
+`SendOptions` controls serialization and fork delivery for [`send`](#send) and [`sendBulk`](#sendbulk).
+
+**Factory methods:**
 - **`SendOptions.defaults()`**: Uses the default serialization strategy.
 - **`SendOptions.portable()`**: Uses portable JSON serialization for cross-language interoperability.
+
+**Builder method:**
+- **`withSendToForks(boolean)`**: Returns a new `SendOptions` with the `sendToForks` flag set. If `true`, the message is also delivered to any forked copies of the destination workflow.
 
 ### getEvent
 

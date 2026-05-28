@@ -65,6 +65,37 @@ Messages can optionally be associated with a topic.
 - **idempotencyKey**: If `dbos.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `dbos.send` is called with this key.
 - **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`.
 
+### sendBulk
+
+```java
+void sendBulk(List<SendMessage> messages)
+void sendBulk(List<SendMessage> messages, boolean sendToForks)
+void sendBulk(List<SendMessage> messages, boolean sendToForks, SerializationStrategy serialization)
+```
+
+Send multiple messages to workflows in a single batch. Each message is delivered to its destination workflow independently; messages need not share the same destination.
+
+**Parameters:**
+- **messages**: A list of [`SendMessage`](#sendmessage) records describing each message to send.
+- **sendToForks**: If `true`, also deliver each message to any forked copies of the destination workflow. Defaults to `false`.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for all messages in the batch. Defaults to `SerializationStrategy.DEFAULT`.
+
+#### SendMessage
+
+```java
+new SendMessage(String destinationId, Object message)
+new SendMessage(String destinationId, Object message, String topic)
+new SendMessage(String destinationId, Object message, String topic, String idempotencyKey)
+```
+
+A record describing a single message in a [`sendBulk`](#sendbulk) batch.
+
+**Parameters:**
+- **destinationId**: The workflow to which to send the message.
+- **message**: The message to send. Must be serializable.
+- **topic**: A topic with which to associate the message.
+- **idempotencyKey**: Idempotency key for exactly-once delivery; a message with a given key is sent only once.
+
 ### recv
 
 ```java

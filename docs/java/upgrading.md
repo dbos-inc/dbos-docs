@@ -70,6 +70,19 @@ public Order createOrder(OrderRequest request) {
 
 See the [Step Factories tutorial](./tutorials/step-factory-tutorial.md) for setup instructions and per-library examples.
 
+#### sendBulk
+
+`DBOS.sendBulk` and `DBOSClient.sendBulk` let you send multiple workflow messages in a single batch:
+
+```java
+dbos.sendBulk(List.of(
+    new SendMessage(workflowIdA, "hello", "topic"),
+    new SendMessage(workflowIdB, "world", "topic")));
+```
+
+Each message in the batch is delivered independently; messages need not share the same destination.
+`DBOSClient.sendBulk` accepts an optional `SendOptions` for serialization and fork-delivery control.
+
 #### Debouncer
 
 A new `Debouncer` class lets you coalesce repeated workflow invocations on the same key into a single execution that uses the most recently supplied arguments.
