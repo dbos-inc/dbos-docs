@@ -222,6 +222,34 @@ public String exampleWorkflow(Duration sleepTime, String task) {
 }
 ```
 
+## Debouncing Workflows
+
+You can debounce workflows to delay their execution until some time has passed since the workflow was last called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time:
+
+```java
+@Workflow
+public String processInput(String userInput) {
+    ...
+}
+
+var debouncer = dbos.<String>debouncer()
+    .withDebounceTimeout(Duration.ofMinutes(5));
+
+// Each time a user submits a new input, debounce the processInput workflow.
+// The workflow will wait until 60 seconds after the user stops submitting new inputs,
+// then process the last input submitted.
+void onUserInputSubmit(String userId, String userInput) {
+    debouncer.debounce(
+        userId,
+        Duration.ofSeconds(60),
+        () -> svc.processInput(userInput));
+}
+```
+
+See the [debouncing reference](../reference/methods.md#debouncing) for more details.
+
 ## Workflow Guarantees
 
 Workflows provide the following reliability guarantees.

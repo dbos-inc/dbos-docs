@@ -70,6 +70,24 @@ public Order createOrder(OrderRequest request) {
 
 See the [Step Factories tutorial](./tutorials/step-factory-tutorial.md) for setup instructions and per-library examples.
 
+#### Debouncer
+
+A new `Debouncer` class lets you coalesce repeated workflow invocations on the same key into a single execution that uses the most recently supplied arguments.
+The workflow fires after `debouncePeriod` of inactivity, or after an absolute `debounceTimeout` cap regardless of ongoing calls:
+
+```java
+var debouncer = dbos.<String>debouncer()
+    .withDebounceTimeout(Duration.ofMinutes(5));
+
+WorkflowHandle<String, Exception> handle = debouncer.debounce(
+    userId,
+    Duration.ofSeconds(60),
+    () -> svc.processInput(userInput));
+```
+
+`DebouncerClient` provides the same capability from external code without a running DBOS executor.
+See the [Debouncing reference](./reference/methods.md#debouncing) for the full API.
+
 #### Dynamic queue management
 
 Queues can now be registered, updated, and deleted at runtime without restarting your application.

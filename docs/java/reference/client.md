@@ -400,3 +400,57 @@ void setLatestApplicationVersion(String versionName)
 ```
 
 Promote an existing version to be the latest application version by updating its timestamp. The version must already exist.
+
+## Debouncing
+
+Workflows can be debounced from external code using `DebouncerClient`.
+
+### DBOSClient.debouncer
+
+```java
+<R> DebouncerClient<R> debouncer(String workflowName)
+```
+
+Create a `DebouncerClient` for the named workflow. Similar to [`dbos.debouncer()`](./methods.md#debouncer) but operates externally — no running DBOS executor is required on the caller's side.
+
+`DebouncerClient<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
+
+- **`withClassName(String className)`**: The fully-qualified Java class name of the workflow implementation. **Required** — must be set before calling `debounce`.
+- **`withInstanceName(String instanceName)`**: The DBOS instance name of the target workflow implementation.
+- **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key.
+- **`withQueue(String queueName)`** / **`withQueue(Queue queue)`**: Enqueue the user workflow on the specified queue when the debounce period elapses.
+- **`withTimeout(Duration timeout)`**: Set a timeout for the user workflow.
+- **`withAppVersion(String appVersion)`**: Target a specific application version.
+- **`withPriority(Integer priority)`**: Set the priority (only applies when a queue is configured).
+- **`withDeduplicationId(String deduplicationId)`**: Set a deduplication ID forwarded to the user workflow.
+
+### DebouncerClient.debounce
+
+```java
+WorkflowHandle<R, ?> debounce(String debounceKey, Duration debouncePeriod, Object... args)
+```
+
+Similar to [`debouncer.debounce`](./methods.md#debouncerdebounce) but takes positional arguments directly instead of a workflow proxy lambda.
+
+**Parameters:**
+- **debounceKey**: A key used to group workflow executions that will be debounced together.
+- **debouncePeriod**: Inactivity window before the user workflow runs; each call resets it.
+- **args**: Positional arguments to pass to the workflow when it runs.
+
+**Example Syntax:**
+
+```java
+var client = new DBOSClient(url, user, password);
+
+var debouncer = client.<String>debouncer("processInput")
+    .withClassName(MyServiceImpl.class.getName())
+    .withDebounceTimeout(Duration.ofMinutes(5));
+
+// Each time a user submits input, debounce the processInput workflow.
+// The workflow will run 60 seconds after the user stops submitting.
+WorkflowHandle<String, ?> handle = debouncer.debounce(
+    userId,
+    Duration.ofSeconds(60),
+    userInput);
+String result = handle.getResult();
+```
