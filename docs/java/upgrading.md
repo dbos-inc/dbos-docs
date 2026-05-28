@@ -1,7 +1,115 @@
 ---
 sidebar_position: 200
-title: Upgrading to v0.8
+title: Upgrading
 ---
+
+## Upgrading to v0.9
+
+### Breaking Changes
+
+#### Queue.withRateLimit(int, double)
+
+The `withRateLimit(int limit, double period)` overload on the `Queue` record has been removed.
+Replace it with the new `withRateLimit(int limit, long period, TimeUnit unit)` overload:
+
+```java
+// Before
+new Queue("example-queue").withRateLimit(100, 60.0);
+
+// After
+new Queue("example-queue").withRateLimit(100, 60, TimeUnit.SECONDS);
+```
+
+#### DBOS.registerWorkflow
+
+The static `DBOS.registerWorkflow` method has been removed.
+Call `DBOSIntegration.registerWorkflow` instead, which is accessible via `dbos.integration()`:
+
+```java
+// Before
+DBOS.registerWorkflow(name, target, method);
+
+// After
+dbos.integration().registerWorkflow(name, target, method);
+```
+
+#### DBOSIntegration.registerWorkflow
+
+`DBOSIntegration.registerWorkflow` now returns a `RegisteredWorkflow` instead of `void`.
+Code that discards the return value continues to compile without changes.
+Code that stores the result must update its declared type from `void` to `RegisteredWorkflow`.
+
+### New Features
+
+#### Step Factories
+
+Two new mechanisms let you commit a step's database write and its DBOS checkpoint atomically, so a crash between the two can never leave them out of sync.
+
+**Step factories** (non-Spring): construct a factory for your database library and pass it to `DBOS.runStep`:
+
+```java
+// Plain JDBC
+var factory = new JdbcStepFactory(dataSource);
+dbos.runStep(factory, conn -> {
+    conn.prepareStatement("INSERT INTO orders ...").executeUpdate();
+    return orderId;
+});
+```
+
+`JdbcStepFactory`, `JdbiStepFactory`, and `JooqStepFactory` are available for JDBC, JDBI 3, and jOOQ respectively.
+
+**`@TransactionalStep`** (Spring Boot): annotate any Spring-managed method with `@TransactionalStep` and the `transact-spring-txstep-starter` module handles the rest — no factory wiring required:
+
+```java
+@TransactionalStep
+public Order createOrder(OrderRequest request) {
+    // Spring transaction + DBOS checkpoint committed atomically
+    return orderRepository.save(new Order(request));
+}
+```
+
+See the [Step Factories tutorial](./tutorials/step-factory-tutorial.md) for setup instructions and per-library examples.
+
+#### Dynamic queue management
+
+Queues can now be registered, updated, and deleted at runtime without restarting your application.
+Queue configuration is persisted to the system database and survives restarts.
+Register a queue after `dbos.launch()` using `DBOS.registerQueue`:
+
+```java
+DBOS.registerQueue("pipeline-queue",
+    QueueOptions.setConcurrency(10).andRateLimit(100, Duration.ofSeconds(60)));
+```
+
+Update configuration at runtime with `DBOS.updateQueue` — only the fields you specify are changed:
+
+```java
+DBOS.updateQueue("pipeline-queue", QueueOptions.setConcurrency(20));
+```
+
+Additional methods — `DBOS.findQueue`, `DBOS.listQueues`, and `DBOS.deleteQueue` — let you inspect and manage queues at runtime.
+[`DBOSClient`](./reference/client.md#queue-management-methods) exposes the same operations for managing queues from outside your application.
+
+See [Queues & Concurrency](./tutorials/queue-tutorial.md) for a full guide and [Queues reference](./reference/queues.md) for the complete API.
+
+#### CockroachDB support
+
+CockroachDB is now a supported system database backend alongside PostgreSQL.
+No configuration changes are required; DBOS auto-detects CockroachDB and adjusts its behaviour accordingly (for example, `useListenNotify` is automatically set to `false`).
+
+### Deprecations
+
+#### Admin server
+
+The built-in admin server is deprecated and will be removed before v1.0.
+Use [DBOS Conductor](https://docs.dbos.dev/conductor) instead.
+
+The related configuration APIs — `withAdminServer()`, `disableAdminServer()`, `enableAdminServer()`, and `withAdminServerPort()` on `DBOSConfig`, and the `dbos.admin-server.*` properties in Spring Boot — are deprecated alongside it.
+
+
+---
+
+## Upgrading to v0.8
 
 DBOS Transact Java v0.8 contains several breaking changes.
 These changes were made to improve the developer experience as well as how DBOS Transact Java integrates into the larger Java ecosystem.
@@ -11,7 +119,7 @@ This document explains how to update your existing DBOS Java app to v0.8.
 Although we cannot guarantee that v0.8 will be the final release with breaking changes, our intention is to minimize or eliminate further breaking changes in DBOS Transact Java after v0.8.
 :::
 
-## DBOS Instance API
+### DBOS Instance API
 `DBOS` is now an instance class instead of a static utility class.
 While static methods were easier to access, they are harder to test and mock. 
 Furthermore, a `DBOS` instance API fits better into Dependency Injection based Java frameworks like [Spring](https://spring.io/).
@@ -55,7 +163,7 @@ Like prior releases, all proxies must be registered before calling `DBOS.launch(
 For [plugin](./reference/plugins.md) developers, the `DBOS` instance is now provided as a parameter on `dbosLaunched`.
 For more information, see the [Lifecycle Listeners documentation](./reference/plugins.md#lifecycle-listeners)
 
-## DBOS API Changes
+### DBOS API Changes
 
 Beyond the overarching change from static to instance methods, there were assorted other minor breaking changes to the DBOS API:
 
@@ -79,7 +187,7 @@ The `DBOSIntegration` instance can be accessed via `DBOS.integration()`.
 There are several `DBOS.startWorkflow` overloads, only the one with a `RegisteredWorkflow` parameter was renamed and moved.
 :::
 
-## Strongly Typed Fields
+### Strongly Typed Fields
 
 In a variety of places across the public API surface area, fields have been changed to more semantically relevant types.
 For example, previously we represented both timeout and deadline as `Long` with semantic information encoded in the field names - i.e. `timeoutMs` and `deadlineEpochMs`.
@@ -106,7 +214,7 @@ ListWorkflowsInput
 * `withStatuses` was renamed `withStatus` and the parameter type changed from `List<String>` to `List<WorkflowState>`
 * `withWorkflowId` was renamed `withWorkflowIds`
 
-## @Step / StepOptions Changes
+### @Step / StepOptions Changes
 
 In previous versions, both `@Step` and `StepOptions` had a boolean `retriesAllowed` field. 
 This field has been removed.
@@ -118,11 +226,11 @@ Note, as covered above, the `StepOptions.intervalSeconds` field was renamed to `
 Annotations cannot use reference types like `Duration` so `@Step` still has an `intervalSeconds` field of type `double`.
 :::
 
-## @Scheduled Removed
+### @Scheduled Removed
 
 The `@Scheduled` annotation has been removed. For durable scheduled code in your app, you can use the new [Schedule Management Methods](./reference/methods.md#schedule-management-methods).
 
-## DBOSClient Changes
+### DBOSClient Changes
 
 `DBOSClient.EnqueueOptions` changed the order of the parameters for the three string constructor.
 Previously, the className parameter was first and the workflowName was second.
