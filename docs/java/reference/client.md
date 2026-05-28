@@ -325,6 +325,56 @@ Immediately enqueue the scheduled workflow at the current time.
 **Parameters:**
 - **scheduleName**: Name of an existing schedule.
 
+## Queue Management Methods
+
+`DBOSClient` can manage queues directly in the system database without a running DBOS executor.
+See [Queues & Concurrency](../tutorials/queue-tutorial.md) in the tutorial for usage examples.
+
+### registerQueue
+
+```java
+void registerQueue(String name, QueueOptions options)
+void registerQueue(String name, QueueOptions options, QueueConflictResolution onConflict)
+```
+
+Register or update a queue in the system database. The default conflict resolution is `ALWAYS_UPDATE`.
+
+:::info
+`QueueConflictResolution.UPDATE_IF_LATEST_VERSION` is not supported for `DBOSClient` because clients are not associated with an application version. Use `ALWAYS_UPDATE` or `NEVER_UPDATE`.
+:::
+
+### updateQueue
+
+```java
+void updateQueue(String name, QueueOptions options)
+```
+
+Update the configuration of an existing queue. Only fields set on `options` are modified; absent fields are left unchanged (see [`QueueOptions`](./queues.md#queueoptions) and [`Field<T>`](./queues.md#fieldt)).
+
+### findQueue
+
+```java
+Optional<Queue> findQueue(String name)
+```
+
+Look up a queue by name. Returns empty if no queue with that name exists.
+
+### listQueues
+
+```java
+List<Queue> listQueues()
+```
+
+Return all queues registered in the system database.
+
+### deleteQueue
+
+```java
+boolean deleteQueue(String name)
+```
+
+Delete a queue from the system database. Returns `true` if the queue was deleted, `false` if it did not exist.
+
 ## Application Version Methods
 
 ### listApplicationVersions

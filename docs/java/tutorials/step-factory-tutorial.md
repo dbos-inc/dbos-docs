@@ -1,7 +1,7 @@
 ---
 sidebar_position: 25
-title: Step Factory
-toc_max_heading_level: 3
+title: Step Factories
+toc_max_heading_level: 4
 ---
 
 Regular DBOS steps checkpoint their output _after_ the step body completes.
@@ -154,7 +154,7 @@ factory.txStep(trx -> {
 
 ---
 
-## Spring Boot: `@TransactionalStep`
+## `@TransactionalStep`
 
 If you are using Spring Boot, the `transact-spring-txstep-starter` module provides `@TransactionalStep` — an annotation that turns any Spring-managed method into a step factory step with no lambda wrapping required.
 
@@ -188,7 +188,7 @@ The method must be called through a Spring proxy — inject the bean into a `@Wo
 When called from inside a `@Workflow` (and not already inside a step), the full step factory behaviour applies: the method runs in a `REQUIRES_NEW` transaction and the output is checkpointed atomically.
 When called from outside a workflow, or from inside any step (including another `@TransactionalStep`), it behaves like `@Transactional` — the transaction runs normally with `PROPAGATION_REQUIRED` but no DBOS checkpoint is recorded. This makes `@TransactionalStep` methods safe to call from any context.
 
-### Spring JDBC / JdbcTemplate
+#### JdbcTemplate
 
 No extra dependencies needed. Spring Boot auto-configures `DataSourceTransactionManager` and `JdbcTemplate`.
 
@@ -216,7 +216,7 @@ public class OrderWorkflowService {
 }
 ```
 
-### JDBI
+#### JDBI
 
 Add `jdbi3-spring` so JDBI's `SpringTransactionHandler` reuses the active Spring transaction:
 
@@ -255,7 +255,7 @@ public class OrderStepService {
 }
 ```
 
-### jOOQ
+#### jOOQ
 
 Spring Boot auto-configures `DSLContext` with `SpringTransactionProvider` when you add `spring-boot-starter-jooq`:
 
@@ -279,7 +279,7 @@ public class OrderStepService {
 }
 ```
 
-### JPA / Hibernate
+#### JPA / Hibernate
 
 Spring Boot auto-configures `JpaTransactionManager` when `spring-boot-starter-data-jpa` is present:
 
@@ -303,7 +303,7 @@ public class OrderStepService {
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `dbos.txstep.schema` | DBOS system schema | PostgreSQL schema for the `tx_step_outputs` table |
+| `dbos.txstep.schema` | DBOS system schema | PostgreSQL schema for the `tx_step_outputs` table. Defaults to `DBOSConfig.databaseSchema` if unspecified. |
 
 The `tx_step_outputs` table is created lazily on startup — only if at least one `@TransactionalStep` method is found in the Spring context.
 Applications that never use the annotation incur no database contact.
