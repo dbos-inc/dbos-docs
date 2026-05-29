@@ -795,6 +795,10 @@ def list_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -821,6 +825,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -850,6 +858,10 @@ def list_queued_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -875,6 +887,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -1369,6 +1385,8 @@ class WorkflowStatus:
     parent_workflow_id: Optional[str]
     # The Unix epoch timestamp at which the workflow was last dequeued, if it had been enqueued
     dequeued_at: Optional[int]
+    # The Unix epoch timestamp in ms at which the workflow completed (SUCCESS, ERROR, or CANCELLED), if it has completed
+    completed_at: Optional[int]
 ```
 
 ## Context Variables

@@ -507,6 +507,10 @@ client.list_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -533,6 +537,10 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -559,6 +567,10 @@ client.list_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -588,6 +600,10 @@ client.list_queued_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -613,6 +629,10 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -637,6 +657,10 @@ client.list_queued_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
