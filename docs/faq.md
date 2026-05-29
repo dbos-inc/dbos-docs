@@ -15,6 +15,12 @@ If you're using Supabase, only the `postgres` database is visible from the Supab
 You can use `postgres` as your system database, or you can use a different system database and connect to and explore your system database using a client like [psql](https://www.postgresql.org/docs/current/app-psql.html) or [DBeaver](https://dbeaver.io/).
 :::
 
+### What size of database should I use for DBOS?
+
+For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) on DBOS requires 4 Postgres vCPUs.
+This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
+When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
+
 ### Why is my queue stuck?
 
 If a DBOS queue is stuck (workflows are not moving from `ENQUEUED` to `PENDING`), it is likely that either the number of `PENDING` workflows exceeds the queue's global "concurrency" limit or the number of queued workflows in a `PENDING` state on each worker exceeds the queue's "worker concurrency" limit. In either case, new tasks cannot be dequeued until some currently executing tasks complete or are cancelled. You can view all tasks executing on a queue from the "Queues" tab of the [DBOS Console](./production/workflow-management.md)

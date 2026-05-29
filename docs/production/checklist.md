@@ -29,7 +29,7 @@ Then, a DBOS application can run with lower privilege (requiring only access to 
 You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 We recommend taking these steps in Postgres to guarantee the scalability of your application.
 
-**Database Sizing** - For a typical workload, processing 1000 actions (steps or workflows) per second on DBOS requires 4 Postgres vCPUs.
+**Database Sizing** - For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) on DBOS requires 4 Postgres vCPUs.
 This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
 
