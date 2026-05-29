@@ -17,7 +17,7 @@ You can use `postgres` as your system database, or you can use a different syste
 
 ### What size of database should I use for DBOS?
 
-For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) on DBOS requires 4 Postgres vCPUs.
+For a typical workload, processing 1000 actions (steps or workflows) per second (2 billion actions per month) with DBOS requires 4 Postgres vCPUs.
 This is a conservative estimate that leaves headroom for unexpected bursts or spikes.
 When sizing your database for DBOS, we recommend using that number (scaled to your actual workload size) as a starting point then measuring usage in practice.
 
