@@ -99,6 +99,7 @@ DBOS.send(
     *,
     idempotency_key: Optional[str] = None,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -112,6 +113,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
 - `serialization_type`: The [serialization format](#serialization-strategy) to use for this message. Defaults to `WorkflowSerializationFormat.DEFAULT`.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively [forked](#fork_workflow) from `destination_id` (forks, forks of forks, and so on) that exists at send time. Defaults to `False`.
 
 ### send_async
 
@@ -123,10 +125,59 @@ DBOS.send_async(
     *,
     idempotency_key: Optional[str] = None,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> Coroutine[Any, Any, None]
 ```
 
 Coroutine version of [`send`](#send)
+
+### send_bulk
+
+```python
+DBOS.send_bulk(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Send many messages to workflow executions in a single transaction.
+Each message is described by a `SendMessage` object specifying its destination, payload, and optional topic and idempotency key:
+
+```python
+@dataclass
+class SendMessage:
+    # The workflow to which to send the message
+    destination_id: str
+    # The message to send. Must be serializable.
+    message: Any
+    # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+    topic: Optional[str] = None
+    # If set, the message is sent only once no matter how many times it is submitted with this key.
+    idempotency_key: Optional[str] = None
+```
+
+The send is atomic: if any message cannot be delivered (for example, its destination workflow does not exist), the entire batch is rolled back and no messages are sent.
+The `send_bulk` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`send_bulk_async`](#send_bulk_async) should be used instead.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization format](#serialization-strategy) to use for these messages. Defaults to `WorkflowSerializationFormat.DEFAULT`.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively [forked](#fork_workflow) from its destination. Defaults to `False`.
+
+### send_bulk_async
+
+```python
+DBOS.send_bulk_async(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`send_bulk`](#send_bulk)
 
 ### recv
 

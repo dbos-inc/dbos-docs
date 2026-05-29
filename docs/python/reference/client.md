@@ -213,6 +213,7 @@ client.send(
     idempotency_key: Optional[str] = None,
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -224,6 +225,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -241,6 +243,7 @@ client.send_async(
     idempotency_key: Optional[str] = None,
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -252,6 +255,66 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
 - `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
+
+### send_bulk
+
+```python
+client.send_bulk(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Sends many messages to workflow executions in a single transaction. Similar to [`DBOS.send_bulk`](contexts.md#send_bulk).
+Each message is described by a `SendMessage` object specifying its destination, payload, and optional topic and idempotency key:
+
+```python
+@dataclass
+class SendMessage:
+    # The workflow to which to send the message
+    destination_id: str
+    # The message to send. Must be serializable.
+    message: Any
+    # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+    topic: Optional[str] = None
+    # If set, the message is sent only once no matter how many times it is submitted with this key.
+    idempotency_key: Optional[str] = None
+```
+
+The send is atomic: if any message cannot be delivered, the entire batch is rolled back and no messages are sent.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the messages.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively forked from its destination. Defaults to `False`.
+
+:::warning
+Since DBOS Client is running outside of a DBOS application,
+it is highly recommended that you set an idempotency key on each message
+in order to get exactly-once behavior.
+:::
+
+### send_bulk_async
+
+```python
+client.send_bulk_async(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Asynchronously sends many messages to workflow executions in a single transaction. Similar to [`DBOS.send_bulk_async`](contexts.md#send_bulk_async).
+See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the messages.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively forked from its destination. Defaults to `False`.
 
 ### get_event
 
