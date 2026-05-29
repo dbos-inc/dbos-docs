@@ -223,7 +223,7 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
 
@@ -253,7 +253,7 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
 
@@ -280,7 +280,7 @@ class SendMessage:
     message: Any
     # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
     topic: Optional[str] = None
-    # If set, the message is sent only once no matter how many times it is submitted with this key.
+    # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
     idempotency_key: Optional[str] = None
 ```
 

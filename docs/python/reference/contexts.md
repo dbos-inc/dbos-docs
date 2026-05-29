@@ -111,7 +111,7 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- `idempotency_key`: If an idempotency key is set, the message will only be sent once to each destination no matter how many times `DBOS.send` is called with this key. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization format](#serialization-strategy) to use for this message. Defaults to `WorkflowSerializationFormat.DEFAULT`.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively [forked](#fork_workflow) from `destination_id` (forks, forks of forks, and so on) that exists at send time. Defaults to `False`.
 
@@ -154,7 +154,7 @@ class SendMessage:
     message: Any
     # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
     topic: Optional[str] = None
-    # If set, the message is sent only once no matter how many times it is submitted with this key.
+    # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
     idempotency_key: Optional[str] = None
 ```
 
