@@ -563,7 +563,9 @@ Coroutine version of [`close_stream`](#close_stream)
 ```python
 DBOS.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -575,6 +577,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -591,7 +594,10 @@ for value in DBOS.read_stream(workflow_id, example_key):
 ```python
 DBOS.read_stream_async(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
 ) -> AsyncGenerator[Any, None]
 ```
 
@@ -603,6 +609,8 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
 
 **Example syntax:**
 

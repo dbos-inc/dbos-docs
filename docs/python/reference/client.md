@@ -365,7 +365,9 @@ Similar to [`DBOS.get_event_async](contexts.md#get_event_async).
 ```python
 client.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -377,6 +379,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream).
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -392,7 +395,9 @@ for value in client.read_stream(workflow_id, "results"):
 ```python
 client.read_stream_async(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> AsyncGenerator[Any, None]
 ```
 
@@ -404,6 +409,7 @@ Similar to [`DBOS.read_stream_async`](contexts.md#read_stream_async).
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
