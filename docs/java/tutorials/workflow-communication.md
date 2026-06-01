@@ -16,7 +16,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 
 <img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
-#### Send
+#### send
 
 ```java
 void send(String destinationId, Object message, String topic, String idempotencyKey)
@@ -28,7 +28,7 @@ Messages can optionally be associated with a topic and are queued on the receive
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md) 
 or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
 
-#### Recv
+#### recv
 
 ```java
 <T> Optional<T> recv(String topic, Duration timeout)
@@ -37,6 +37,24 @@ or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-ta
 Workflows can call `dbos.recv()` to receive messages sent to them, optionally for a particular topic.
 Each call to `recv()` waits for and consumes the next message to arrive in the queue for the specified topic, returning `Optional.empty()` if the wait times out.
 If the topic is not specified, this method only receives messages sent without a topic.
+
+#### sendBulk
+
+```java
+void sendBulk(List<SendMessage> messages)
+```
+
+You can call `dbos.sendBulk()` to send multiple messages to workflows in a single batch.
+Each `SendMessage` in the list specifies its own destination, message, topic, and optional idempotency key — messages need not share the same destination workflow.
+
+```java
+dbos.sendBulk(List.of(
+    new SendMessage(orderWorkflowId, "confirmed", ORDER_STATUS),
+    new SendMessage(inventoryWorkflowId, order, RESERVE_TOPIC),
+    new SendMessage(notificationWorkflowId, customerId, NOTIFY_TOPIC)));
+```
+
+You can also call [`sendBulk`](../reference/client.md#sendbulk) from outside your DBOS application with the [DBOS Client](../reference/client.md).
 
 #### Messages Example
 
