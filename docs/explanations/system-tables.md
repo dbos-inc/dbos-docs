@@ -30,7 +30,10 @@ CREATE FUNCTION dbos.enqueue_workflow(
     deadline_epoch_ms BIGINT DEFAULT NULL,
     deduplication_id TEXT DEFAULT NULL,
     priority INTEGER DEFAULT NULL,
-    queue_partition_key TEXT DEFAULT NULL
+    queue_partition_key TEXT DEFAULT NULL,
+    authenticated_user TEXT DEFAULT NULL,
+    authenticated_roles TEXT DEFAULT NULL,
+    delay_until_epoch_ms BIGINT DEFAULT NULL
 ) RETURNS TEXT
 ```
 
@@ -50,6 +53,9 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status ENQUEUED or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 1 to 2,147,483,647, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
+- `authenticated_roles`: The authenticated roles to associate with the enqueued workflow, as a JSON-encoded array of strings (e.g. `'["admin", "reader"]'`). Defaults to null.
+- `delay_until_epoch_ms`: A Unix epoch timestamp (in milliseconds) before which the workflow should not be dequeued. The workflow is enqueued with `DELAYED` status until this time arrives, after which it becomes `ENQUEUED` and eligible to run. Must be `>= 0`. Defaults to null (the workflow is enqueued immediately).
 
 ### dbos.send_message
 
