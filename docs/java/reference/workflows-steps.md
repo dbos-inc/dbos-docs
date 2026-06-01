@@ -394,3 +394,124 @@ Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
 :::info
 An explicit timeout and deadline cannot both be set.
 :::
+
+## Step Factories
+
+A step factory commits your database work and the DBOS step checkpoint in the **same transaction**, making the step exactly-once even for database writes.
+On workflow retry, the recorded output is replayed without re-executing the callback.
+
+Step factories must be constructed before `dbos.launch()`. Each constructor immediately opens a connection to verify the datasource is PostgreSQL and to create the `tx_step_outputs` table in the target schema if it does not already exist.
+
+**Common constructor parameters:**
+- **dbos**: The DBOS runtime instance.
+- **schema**: The PostgreSQL schema to use for `tx_step_outputs`. Defaults to the DBOS system schema from configuration.
+- **serializer**: The serializer to use for step outputs. Defaults to the serializer from `dbos` configuration.
+
+Every step factory method takes a `stepName` used for observability. Steps are identified by their sequential position within the workflow execution, not by name.
+
+See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md) for full examples.
+
+### JdbcStepFactory
+
+Module: `dev.dbos:transact` (core module, no extra dependency).
+Package: `dev.dbos.transact.txstep`.
+
+```java
+new JdbcStepFactory(DBOS dbos, DataSource dataSource)
+new JdbcStepFactory(DBOS dbos, DataSource dataSource, String schema)
+new JdbcStepFactory(DBOS dbos, DataSource dataSource, DBOSSerializer serializer)
+new JdbcStepFactory(DBOS dbos, DataSource dataSource, String schema, DBOSSerializer serializer)
+```
+
+#### txStep
+
+```java
+<R, X extends Exception> R txStep(TransactionalFunction<R, X> callback, String stepName) throws X
+<X extends Exception> void txStep(TransactionalRunnable<X> callback, String stepName) throws X
+```
+
+Executes `callback` as an idempotent DBOS step inside a JDBC transaction. If a result is already recorded for this step (e.g. on workflow retry), the callback is skipped and the cached result is returned.
+
+The callback receives an open `Connection` with autocommit disabled. It must **not** call `commit`, `rollback`, or `close` — the factory manages the transaction lifecycle.
+
+**`TransactionalFunction<R, X>`** — database work that returns a result:
+```java
+@FunctionalInterface
+interface TransactionalFunction<R, X extends Exception> {
+    R execute(Connection conn) throws X;
+}
+```
+
+**`TransactionalRunnable<X>`** — database work with no return value:
+```java
+@FunctionalInterface
+interface TransactionalRunnable<X extends Exception> {
+    void execute(Connection conn) throws X;
+}
+```
+
+---
+
+### JdbiStepFactory
+
+Module: `dev.dbos:transact-jdbi-step-factory`.
+Package: `dev.dbos.transact.jdbi`.
+
+```java
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, DBOSSerializer serializer)
+new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema, DBOSSerializer serializer)
+```
+
+#### inStep
+
+```java
+<R, X extends Exception> R inStep(HandleCallback<R, X> callback, String stepName) throws X
+```
+
+Executes `callback` as an idempotent DBOS step inside a JDBI transaction, returning a result. The callback receives an open `Handle`. It must **not** call `commit`, `rollback`, or `close`.
+
+#### useStep
+
+```java
+<X extends Exception> void useStep(HandleConsumer<X> callback, String stepName) throws X
+```
+
+Void variant of `inStep`. Accepts a `HandleConsumer` for callers that do not need to return a value.
+
+---
+
+### JooqStepFactory
+
+Module: `dev.dbos:transact-jooq-step-factory`.
+Package: `dev.dbos.transact.jooq`.
+
+```java
+new JooqStepFactory(DBOS dbos, DSLContext dsl)
+new JooqStepFactory(DBOS dbos, DSLContext dsl, String schema)
+new JooqStepFactory(DBOS dbos, DSLContext dsl, DBOSSerializer serializer)
+new JooqStepFactory(DBOS dbos, DSLContext dsl, String schema, DBOSSerializer serializer)
+```
+
+#### txStepResult
+
+```java
+<T> T txStepResult(TransactionalCallable<T> callback, String stepName)
+```
+
+Executes `callback` as an idempotent DBOS step inside a jOOQ transaction, returning a result. The callback receives a jOOQ `Configuration` with an open transaction. It must **not** commit or close the underlying connection.
+
+#### txStep
+
+```java
+void txStep(TransactionalRunnable transactional, String stepName)
+```
+
+Void variant of `txStepResult`. Accepts a jOOQ `TransactionalRunnable` for callers that do not need to return a value.
+
+---
+
+### @TransactionalStep
+
+Spring Boot annotation from the `transact-spring-txstep-starter` module. See [`@TransactionalStep`](./spring-boot-starter.md#transactionalstep) in the Spring Boot Starter reference.

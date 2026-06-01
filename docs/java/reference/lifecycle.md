@@ -13,7 +13,7 @@ Here, we document the constructor, configuration, and lifecycle methods.
 The application name, and a system db datasource - specified either as database URL, user and password  or as a preconstructed `DataSource` are required.
 
 :::danger
-DBOS requires a PostgreSQL database. Creating a `DBOSConfig` with a non PostgreSQL `DataSource` will throw an exception.
+DBOS requires a PostgreSQL-compatible database. PostgreSQL and CockroachDB are supported. Creating a `DBOSConfig` with any other `DataSource` will throw an exception.
 :::
 
 
@@ -60,11 +60,11 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 
 - **`withConductorExecutorMetadata(Map<String, Object> metadata)`**: Arbitrary key-value metadata attached to this executor and reported to Conductor.
 
-- **`withAdminServer(boolean enable)`**: Whether to run an HTTP admin server for workflow management operations. Defaults to false.
+- **`withAdminServer(boolean enable)`** *(deprecated since 0.9, will be removed before 1.0)*: Whether to run the built-in HTTP admin server. Use [DBOS Conductor](../../production/conductor.md) for remote administration instead.
 
-- **`enableAdminServer()`** / **`disableAdminServer()`**: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
+- **`enableAdminServer()`** / **`disableAdminServer()`** *(deprecated since 0.9)*: Convenience methods equivalent to `withAdminServer(true)` and `withAdminServer(false)`.
 
-- **`withAdminServerPort(int port)`**: The port on which the admin server runs. Defaults to 3001.
+- **`withAdminServerPort(int port)`** *(deprecated since 0.9)*: The port on which the admin server runs. Defaults to 3001.
 
 - **`withAppVersion(String appVersion)`**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 
@@ -79,6 +79,8 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withListenQueues(Queue... queues)`** / **`withListenQueues(String... queues)`**: Add multiple queues this DBOS process should dequeue and execute workflows from. Defaults to dequeuing from all registered queues.
 
 - **`withSchedulerPollingInterval(Duration interval)`**: How frequently the scheduler polls the database for new scheduled workflow firings. Defaults to 30 seconds.
+
+- **`withUseListenNotify(boolean enable)`**: Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery (e.g. `recv`, `getEvent`). Defaults to `true`. Automatically set to `false` when CockroachDB is detected, since CockroachDB does not support `LISTEN`/`NOTIFY`. Set this to `false` explicitly if your PostgreSQL configuration does not support it.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 

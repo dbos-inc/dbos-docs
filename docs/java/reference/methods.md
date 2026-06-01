@@ -65,6 +65,37 @@ Messages can optionally be associated with a topic.
 - **idempotencyKey**: If `dbos.send` is called from outside a workflow and an idempotency key is set, the message will only be sent once no matter how many times `dbos.send` is called with this key.
 - **serialization**: The [serialization strategy](#serialization-strategy) to use for this message. Defaults to `SerializationStrategy.DEFAULT`.
 
+### sendBulk
+
+```java
+void sendBulk(List<SendMessage> messages)
+void sendBulk(List<SendMessage> messages, boolean sendToForks)
+void sendBulk(List<SendMessage> messages, boolean sendToForks, SerializationStrategy serialization)
+```
+
+Send multiple messages to workflows in a single batch. Each message is delivered to its destination workflow independently; messages need not share the same destination.
+
+**Parameters:**
+- **messages**: A list of [`SendMessage`](#sendmessage) records describing each message to send.
+- **sendToForks**: If `true`, also deliver each message to any forked copies of the destination workflow. Defaults to `false`.
+- **serialization**: The [serialization strategy](#serialization-strategy) to use for all messages in the batch. Defaults to `SerializationStrategy.DEFAULT`.
+
+#### SendMessage
+
+```java
+new SendMessage(String destinationId, Object message)
+new SendMessage(String destinationId, Object message, String topic)
+new SendMessage(String destinationId, Object message, String topic, String idempotencyKey)
+```
+
+A record describing a single message in a [`sendBulk`](#sendbulk) batch.
+
+**Parameters:**
+- **destinationId**: The workflow to which to send the message.
+- **message**: The message to send. Must be serializable.
+- **topic**: A topic with which to associate the message.
+- **idempotencyKey**: Idempotency key for exactly-once delivery; a message with a given key is sent only once.
+
 ### recv
 
 ```java
@@ -737,6 +768,68 @@ Manually enqueue all executions of a schedule that would have fired between `sta
 
 Immediately fire a scheduled workflow outside its normal cron cadence. Returns a handle to the enqueued execution.
 
+
+## Debouncing
+
+You can create a `Debouncer` to debounce your workflows.
+Debouncing delays workflow execution until some time has passed since the workflow was last called.
+This is useful for preventing wasted work when a workflow may be triggered multiple times in quick succession.
+For example, if a user is editing an input field, you can debounce their changes to execute a processing workflow only after they haven't edited the field for some time.
+
+### Debouncer
+
+Obtain a `Debouncer` via `dbos.debouncer()`:
+
+```java
+<R> Debouncer<R> debouncer()
+```
+
+`Debouncer<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
+
+- **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key. After this duration elapses from the first call, the user workflow starts regardless of further incoming calls.
+- **`withQueue(String queueName)`** / **`withQueue(Queue queue)`**: Enqueue the user workflow on the specified queue when the debounce period elapses instead of starting it directly.
+- **`withAppVersion(String appVersion)`**: Target a specific application version for the user workflow.
+- **`withPriority(Integer priority)`**: Set the priority for the user workflow (only applies when a queue is configured).
+- **`withDeduplicationId(String deduplicationId)`**: Set a deduplication ID forwarded to the user workflow.
+
+### debouncer.debounce
+
+```java
+<E extends Exception> WorkflowHandle<Void, E> debounce(
+    String debounceKey, Duration debouncePeriod, ThrowingRunnable<E> wfLambda)
+
+<E extends Exception> WorkflowHandle<R, E> debounce(
+    String debounceKey, Duration debouncePeriod, ThrowingSupplier<R, E> wfLambda)
+```
+
+Submit a workflow for execution but delay it by `debouncePeriod`. Returns a handle to the workflow.
+The workflow may be debounced again, which further delays its execution (up to `debounceTimeout`).
+When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
+After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+
+**Parameters:**
+- **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows are debounced separately.
+- **debouncePeriod**: Inactivity window before the user workflow runs; each call resets it.
+- **wfLambda**: A lambda calling exactly one `@Workflow` method on a registered proxy.
+
+**Example Syntax:**
+
+```java
+var dbos = new DBOS(config);
+MyService svc = dbos.registerProxy(MyService.class, new MyServiceImpl());
+dbos.launch();
+
+var debouncer = dbos.<String>debouncer()
+    .withDebounceTimeout(Duration.ofMinutes(5));
+
+// Each time a user submits input, debounce the processInput workflow.
+// The workflow will run 60 seconds after the user stops submitting.
+WorkflowHandle<String, Exception> handle = debouncer.debounce(
+    userId,
+    Duration.ofSeconds(60),
+    () -> svc.processInput(userInput));
+String result = handle.getResult();
+```
 
 ## DBOS Context Variables
 

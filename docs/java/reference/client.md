@@ -124,9 +124,36 @@ send(String destinationId, Object message, String topic, String idempotencyKey, 
 
 Similar to [`dbos.send`](./methods.md#send).
 
-The optional `SendOptions` parameter controls serialization:
+The optional `SendOptions` parameter controls serialization and fork delivery; see [`SendOptions`](#sendoptions) below.
+
+### sendBulk
+
+```java
+void sendBulk(List<SendMessage> messages)
+void sendBulk(List<SendMessage> messages, SendOptions options)
+```
+
+Send multiple messages to workflows in a single batch. Each message is delivered to its destination workflow independently; messages need not share the same destination.
+
+**Parameters:**
+- **messages**: A list of [`SendMessage`](./methods.md#sendmessage) records describing each message to send.
+- **options**: Optional send options controlling serialization and fork delivery; see [`SendOptions`](#sendoptions) below.
+
+### SendOptions
+
+```java
+SendOptions.defaults()
+SendOptions.portable()
+```
+
+`SendOptions` controls serialization and fork delivery for [`send`](#send) and [`sendBulk`](#sendbulk).
+
+**Factory methods:**
 - **`SendOptions.defaults()`**: Uses the default serialization strategy.
 - **`SendOptions.portable()`**: Uses portable JSON serialization for cross-language interoperability.
+
+**Builder method:**
+- **`withSendToForks(boolean)`**: Returns a new `SendOptions` with the `sendToForks` flag set. If `true`, the message is also delivered to any forked copies of the destination workflow.
 
 ### getEvent
 
@@ -325,6 +352,56 @@ Immediately enqueue the scheduled workflow at the current time.
 **Parameters:**
 - **scheduleName**: Name of an existing schedule.
 
+## Queue Management Methods
+
+`DBOSClient` can manage queues directly in the system database without a running DBOS executor.
+See [Queues & Concurrency](../tutorials/queue-tutorial.md) in the tutorial for usage examples.
+
+### registerQueue
+
+```java
+void registerQueue(String name, QueueOptions options)
+void registerQueue(String name, QueueOptions options, QueueConflictResolution onConflict)
+```
+
+Register or update a queue in the system database. The default conflict resolution is `ALWAYS_UPDATE`.
+
+:::info
+`QueueConflictResolution.UPDATE_IF_LATEST_VERSION` is not supported for `DBOSClient` because clients are not associated with an application version. Use `ALWAYS_UPDATE` or `NEVER_UPDATE`.
+:::
+
+### updateQueue
+
+```java
+void updateQueue(String name, QueueOptions options)
+```
+
+Update the configuration of an existing queue. Only fields set on `options` are modified; absent fields are left unchanged (see [`QueueOptions`](./queues.md#queueoptions) and [`Field<T>`](./queues.md#fieldt)).
+
+### findQueue
+
+```java
+Optional<Queue> findQueue(String name)
+```
+
+Look up a queue by name. Returns empty if no queue with that name exists.
+
+### listQueues
+
+```java
+List<Queue> listQueues()
+```
+
+Return all queues registered in the system database.
+
+### deleteQueue
+
+```java
+boolean deleteQueue(String name)
+```
+
+Delete a queue from the system database. Returns `true` if the queue was deleted, `false` if it did not exist.
+
 ## Application Version Methods
 
 ### listApplicationVersions
@@ -350,3 +427,57 @@ void setLatestApplicationVersion(String versionName)
 ```
 
 Promote an existing version to be the latest application version by updating its timestamp. The version must already exist.
+
+## Debouncing
+
+Workflows can be debounced from external code using `DebouncerClient`.
+
+### DBOSClient.debouncer
+
+```java
+<R> DebouncerClient<R> debouncer(String workflowName)
+```
+
+Create a `DebouncerClient` for the named workflow. Similar to [`dbos.debouncer()`](./methods.md#debouncer) but operates externally — no running DBOS executor is required on the caller's side.
+
+`DebouncerClient<R>` is an immutable builder. Configure it with the following methods before calling `debounce`:
+
+- **`withClassName(String className)`**: The fully-qualified Java class name of the workflow implementation. **Required** — must be set before calling `debounce`.
+- **`withInstanceName(String instanceName)`**: The DBOS instance name of the target workflow implementation.
+- **`withDebounceTimeout(Duration debounceTimeout)`**: Set an absolute cap on how long the debouncer may keep absorbing calls for a single key.
+- **`withQueue(String queueName)`** / **`withQueue(Queue queue)`**: Enqueue the user workflow on the specified queue when the debounce period elapses.
+- **`withTimeout(Duration timeout)`**: Set a timeout for the user workflow.
+- **`withAppVersion(String appVersion)`**: Target a specific application version.
+- **`withPriority(Integer priority)`**: Set the priority (only applies when a queue is configured).
+- **`withDeduplicationId(String deduplicationId)`**: Set a deduplication ID forwarded to the user workflow.
+
+### DebouncerClient.debounce
+
+```java
+WorkflowHandle<R, ?> debounce(String debounceKey, Duration debouncePeriod, Object... args)
+```
+
+Similar to [`debouncer.debounce`](./methods.md#debouncerdebounce) but takes positional arguments directly instead of a workflow proxy lambda.
+
+**Parameters:**
+- **debounceKey**: A key used to group workflow executions that will be debounced together.
+- **debouncePeriod**: Inactivity window before the user workflow runs; each call resets it.
+- **args**: Positional arguments to pass to the workflow when it runs.
+
+**Example Syntax:**
+
+```java
+var client = new DBOSClient(url, user, password);
+
+var debouncer = client.<String>debouncer("processInput")
+    .withClassName(MyServiceImpl.class.getName())
+    .withDebounceTimeout(Duration.ofMinutes(5));
+
+// Each time a user submits input, debounce the processInput workflow.
+// The workflow will run 60 seconds after the user stops submitting.
+WorkflowHandle<String, ?> handle = debouncer.debounce(
+    userId,
+    Duration.ofSeconds(60),
+    userInput);
+String result = handle.getResult();
+```

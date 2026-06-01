@@ -7,12 +7,13 @@ toc_max_heading_level: 4
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, instantiate and register a [`Queue`](../reference/queues.md#queue) object.
-All queues must be created and registered before DBOS is launched.
+Register a queue with [`DBOS.registerQueue`](../reference/queues.md#dbos-registerqueue), specifying its name and options.
+Queues must be registered **after** [`dbos.launch()`](../reference/lifecycle.md).
+Queue configuration is persisted to the system database, so queues are visible to every DBOS process connected to that database.
 
 ```java
-Queue queue = new Queue("example-queue");
-dbos.registerQueue(queue);
+dbos.launch();
+DBOS.registerQueue("example-queue", QueueOptions.empty());
 ```
 
 You can then enqueue any workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
@@ -28,7 +29,8 @@ class ExampleImpl implements Example {
   }
 }
 
-public String example(DBOS dbos, Queue queue, Example proxy, String task) throws Exception {
+public String example(DBOS dbos, String queue, Example proxy, String task) 
+    throws Exception {
   // Enqueue a workflow
   WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
     () -> proxy.processTask(task),
@@ -55,12 +57,15 @@ interface Example {
 class ExampleImpl implements Example {
 
   private final DBOS dbos;
-  private final Queue queue;
+  private String queueName;
   private Example self;
 
-  public ExampleImpl(DBOS dbos, Queue queue) {
+  public ExampleImpl(DBOS dbos) {
     this.dbos = dbos;
-    this.queue = queue;
+  }
+
+  public void setQueueName(String queueName) {
+    this.queueName = queueName;
   }
 
   public void setSelf(Example self) {
@@ -80,7 +85,7 @@ class ExampleImpl implements Example {
     for (String task : tasks) {
       WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
         () -> self.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue)
+        new StartWorkflowOptions().withQueue(queueName)
       );
       handles.add(handle);
     }
@@ -101,16 +106,17 @@ public class App {
     DBOSConfig config = ...
     DBOS dbos = new DBOS(config);
 
-    // Create and register a queue
-    Queue queue = new Queue("example-queue");
-    dbos.registerQueue(queue);
     // Instantiate an Example and register its workflows
-    ExampleImpl impl = new ExampleImpl(dbos, queue);
+    ExampleImpl impl = new ExampleImpl(dbos);
     Example proxy = dbos.registerProxy(Example.class, impl);
     // Provide the workflow proxy to the class so its methods can invoke workflows
     impl.setSelf(proxy);
 
     dbos.launch();
+
+    // Register the queue
+    DBOS.registerQueue("example-queue", QueueOptions.empty());
+    impl.setQueueName("example-queue");
 
     // Run the queue workflow
     String[] tasks = {"task1", "task2", "task3", "task4", "task5"};
@@ -137,12 +143,12 @@ class ExampleImpl implements Example {
   private static final String TASK_COMPLETE_TOPIC = "task_complete";
 
   private final DBOS dbos;
-  private final Queue queue;
+  private final String queueName;
   private Example self;
 
-  public ExampleImpl(DBOS dbos, Queue queue) {
+  public ExampleImpl(DBOS dbos, String queueName) {
     this.dbos = dbos;
-    this.queue = queue;
+    this.queueName = queueName;
   }
 
   public void setSelf(Example self) {
@@ -168,7 +174,7 @@ class ExampleImpl implements Example {
         final String task = tasks[i];
         WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
           () -> self.processTask(parentWorkflowId, taskId, task),
-          new StartWorkflowOptions().withQueue(queue)
+          new StartWorkflowOptions().withQueue(queueName)
         );
         handles.add(handle);
     }
@@ -252,8 +258,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```java
-Queue queue = new Queue("example-queue").withWorkerConcurrency(5);
-dbos.registerQueue(queue);
+DBOS.registerQueue("example-queue", QueueOptions.setWorkerConcurrency(5));
 ```
 
 #### Global Concurrency
@@ -267,8 +272,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```java
-Queue queue = new Queue("example-queue").withConcurrency(10);
-dbos.registerQueue(queue);
+DBOS.registerQueue("example-queue", QueueOptions.setConcurrency(10));
 ```
 
 ### Rate Limiting
@@ -278,12 +282,65 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```java
-Queue queue = new Queue("example-queue")
-  .withRateLimit(100, Duration.ofSeconds(60)); // 100 workflows per 60 seconds
-dbos.registerQueue(queue);
+DBOS.registerQueue("example-queue", QueueOptions.setRateLimit(100, 60, TimeUnit.SECONDS));
 ```
 
 Rate limits are especially useful when working with a rate-limited API.
+
+### Reconfiguring Queues at Runtime
+
+Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
+Use `DBOS.updateQueue` to modify a queue's configuration. Workers pick up the new configuration on their next polling iteration.
+
+```java
+// Change the queue's concurrency
+DBOS.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+
+// Change its rate limit
+DBOS.updateQueue("example-queue", QueueOptions.setRateLimit(25, 30, TimeUnit.SECONDS));
+```
+
+:::warning
+If your application calls `DBOS.registerQueue` on startup, the next process to start can overwrite settings you applied at runtime via `updateQueue`.
+Either update the `registerQueue` call to match the new configuration, or pass `QueueConflictResolution.NEVER_UPDATE` to preserve the runtime changes.
+:::
+
+You can also find, list, and delete queues:
+
+```java
+// Find a specific queue by name
+Optional<Queue> queue = DBOS.findQueue("example-queue");
+
+// List all queues in the system database
+List<Queue> queues = DBOS.listQueues();
+
+// Delete a queue
+boolean deleted = DBOS.deleteQueue("example-queue");
+```
+
+You can do all of this from a [`DBOSClient`](../reference/client.md#queue-management-methods) as well, which is useful for managing queues from an admin tool or another service.
+
+```java
+var client = new DBOSClient(dbUrl, dbUser, dbPassword);
+
+// Register or update a queue
+client.registerQueue("example-queue", QueueOptions.setConcurrency(10));
+
+// Register only if it doesn't already exist
+client.registerQueue("example-queue", QueueOptions.setConcurrency(10), QueueConflictResolution.NEVER_UPDATE);
+
+// Update only the concurrency of an existing queue
+client.updateQueue("example-queue", QueueOptions.setConcurrency(20));
+
+// Find a queue by name
+Optional<Queue> queue = client.findQueue("example-queue");
+
+// List all queues
+List<Queue> queues = client.listQueues();
+
+// Delete a queue
+boolean deleted = client.deleteQueue("example-queue");
+```
 
 ### Setting Timeouts
 
@@ -297,11 +354,8 @@ Also, timeouts are **durable**: they are stored in the database and persist acro
 Example syntax:
 
 ```java
-Queue queue = new Queue("example-queue");
-dbos.registerQueue(queue);
-
 // use StartWorkflowOptions.withTimeout with dbos.startWorkflow
-var options = new StartWorkflowOptions(queue).withTimeout(Duration.ofSeconds(10));
+var options = new StartWorkflowOptions().withQueue("example-queue").withTimeout(Duration.ofSeconds(10));
 var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ```
 
@@ -320,12 +374,9 @@ Like timeouts, deadlines are **durable**: they are stored in the database and pe
 Example syntax:
 
 ```java
-Queue queue = new Queue("example-queue");
-dbos.registerQueue(queue);
-
 // Use StartWorkflowOptions.withDeadline with dbos.startWorkflow
 Instant deadline = Instant.now().plus(Duration.ofHours(1));
-var options = new StartWorkflowOptions(queue).withDeadline(deadline);
+var options = new StartWorkflowOptions().withQueue("example-queue").withDeadline(deadline);
 var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ```
 
@@ -338,11 +389,8 @@ The workflow remains `DELAYED` until the delay has elapsed, after which its stat
 Example syntax:
 
 ```java
-Queue queue = new Queue("example-queue");
-dbos.registerQueue(queue);
-
 // Delay the workflow's execution by 30 seconds
-var options = new StartWorkflowOptions(queue).withDelay(Duration.ofSeconds(30));
+var options = new StartWorkflowOptions().withQueue("example-queue").withDelay(Duration.ofSeconds(30));
 var handle = dbos.startWorkflow(() -> proxy.workflow(), options);
 ```
 
@@ -359,15 +407,15 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 **Example Syntax**
 
 ```java
-Queue queue = new Queue("example-queue").withConcurrency(1).withPartitioningEnabled(true);
-dbos.registerQueue(queue);
+DBOS.registerQueue("example-queue",
+    QueueOptions.setConcurrency(1).andPartitionQueue(true));
 
 void onUserTaskSubmission(String userID, Task task) {
     // Partition the task queue by user ID. As the queue has a
     // maximum concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
-    var options = new StartWorkflowOptions(queue).withQueuePartitionKey(userID);
+    var options = new StartWorkflowOptions().withQueue("example-queue").withQueuePartitionKey(userID);
     dbos.startWorkflow(() -> taskWorkflow(task), options);
 }
 ```
@@ -384,8 +432,9 @@ For example:
 // By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
 // and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
 // across all partitions (and at most one task per partition).
-var partitionedQueue = new Queue("partitioned-queue").withConcurrency(1).withPartitioningEnabled(true);
-var concurrencyQueue = new Queue("concurrency-queue").withConcurrency(5);
+DBOS.registerQueue("concurrency-queue", QueueOptions.setConcurrency(5));
+DBOS.registerQueue("partitioned-queue",
+    QueueOptions.setConcurrency(1).andPartitionQueue(true));
 
 class UserTasksImpl implements UserTasks {
 
@@ -401,7 +450,7 @@ class UserTasksImpl implements UserTasks {
     void onUserTaskSubmission(String userID, Task task) {
         // First, enqueue a "concurrency manager" workflow to the partitioned
         // queue to enforce per-partition limits.
-        var options = new StartWorkflowOptions(partitionedQueue).withQueuePartitionKey(userID);
+        var options = new StartWorkflowOptions().withQueue("partitioned-queue").withQueuePartitionKey(userID);
         dbos.startWorkflow(() -> proxy.concurrencyManager(task), options);
     }
 
@@ -410,7 +459,7 @@ class UserTasksImpl implements UserTasks {
         // The "concurrency manager" workflow enqueues the processTask
         // workflow on the non-partitioned queue and awaits its results
         // to enforce global flow control limits.
-        var options = new StartWorkflowOptions(concurrencyQueue);
+        var options = new StartWorkflowOptions().withQueue("concurrency-queue");
         var handle = dbos.startWorkflow(() -> proxy.processTask(task), options);
         return handle.getResult();
     }
@@ -442,7 +491,7 @@ public void example(DBOS dbos, Example proxy, String task, String userID) throws
     // Use user ID for deduplication
     WorkflowHandle<String, Exception> handle = dbos.startWorkflow(
         () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue).withDeduplicationId(userID)
+        new StartWorkflowOptions().withQueue("example-queue").withDeduplicationId(userID)
     );
 
     String result = handle.getResult();
@@ -454,7 +503,7 @@ public void example(DBOS dbos, Example proxy, String task, String userID) throws
 
 You can set a priority for an enqueued workflow using [`withQueue`](../reference/workflows-steps.md#startworkflow) when calling `startWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set [`priorityEnabled`](../reference/queues.md#queue) on your queue.
+If using priority, you must set [`priorityEnabled`](../reference/queues.md#queueoptions) on your queue.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -463,9 +512,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 To use priorities in a queue, you must enable it when creating the queue:
 
 ```java
-Queue queue = new Queue("example-queue")
-    .withPriorityEnabled(true);
-dbos.registerQueue(queue);
+DBOS.registerQueue("example-queue", QueueOptions.setPriorityEnabled(true));
 ```
 
 **Example syntax:**
@@ -480,7 +527,7 @@ public String taskWorkflow(String task) {
 public void example(DBOS dbos, Example proxy, String task, int priority) throws Exception {
     WorkflowHandle<String, RuntimeException> handle = dbos.startWorkflow(
         () -> proxy.taskWorkflow(task),
-        new StartWorkflowOptions().withQueue(queue).withPriority(priority)
+        new StartWorkflowOptions().withQueue("example-queue").withPriority(priority)
     );
 
     String result = handle.getResult();
@@ -490,7 +537,7 @@ public void example(DBOS dbos, Example proxy, String task, int priority) throws 
 
 ### Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+By default, a process running DBOS listens to (dequeues workflows from) all queues registered in its system database.
 However, sometimes you only want a process to listen to a specific list of queues.
 You use the `withListenQueues` method on [DBOSConfig](../reference/lifecycle.md#dbosconfig) to explicitly tell a process running DBOS to only listen to a specific set of queues.
 
@@ -508,13 +555,11 @@ if (workerType.equals("gpu")) {
 }
 DBOS dbos = new DBOS(config);
 
-var cpuQueue = new Queue("cpuQueue");
-dbos.registerQueue(cpuQueue);
-var gpuQueue = new Queue("gpuQueue");
-dbos.registerQueue(gpuQueue);
-
 // register workflows...
 dbos.launch();
+
+DBOS.registerQueue("cpuQueue", QueueOptions.empty());
+DBOS.registerQueue("gpuQueue", QueueOptions.empty());
 ```
 
 Note that `withListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.

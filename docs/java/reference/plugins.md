@@ -79,7 +79,7 @@ Register a lifecycle listener. Must be called before `dbos.launch()`. See [Liste
 Collection<RegisteredWorkflow> getRegisteredWorkflows()
 ```
 
-Return all workflow methods registered with DBOS. Must be called after `dbos.launch()`.
+Return all workflow methods registered with DBOS. May be called before or after `dbos.launch()`.
 
 ### getRegisteredWorkflowInstances
 
@@ -87,7 +87,7 @@ Return all workflow methods registered with DBOS. Must be called after `dbos.lau
 Collection<RegisteredWorkflowInstance> getRegisteredWorkflowInstances()
 ```
 
-Return all class instances containing registered workflow methods. Must be called after `dbos.launch()`.
+Return all class instances containing registered workflow methods. May be called before or after `dbos.launch()`.
 
 ### getRegisteredWorkflow
 
@@ -96,7 +96,7 @@ Optional<RegisteredWorkflow> getRegisteredWorkflow(String workflowName, String c
 Optional<RegisteredWorkflow> getRegisteredWorkflow(String workflowName, String className, String instanceName)
 ```
 
-Find a specific registered workflow by its workflow name, class name, and optional instance name. Returns empty if no matching workflow is found. Must be called after `dbos.launch()`.
+Find a specific registered workflow by its workflow name, class name, and optional instance name. Returns empty if no matching workflow is found. May be called before or after `dbos.launch()`.
 
 **Parameters:**
 - **workflowName**: The name of the workflow function.
@@ -135,17 +135,43 @@ Execute a workflow method via its reflective `Method` handle. Intended for use b
 
 ### registerWorkflow
 
+:::info
+`DBOS.registerWorkflow` was removed in 0.9. Use `dbos.integration().registerWorkflow(...)` instead.
+:::
+
 ```java
-void registerWorkflow(Workflow wfTag, Object target, Method method, String instanceName)
+RegisteredWorkflow registerWorkflow(Workflow wfTag, Object target, Method method, String instanceName)
 ```
 
-Register a single workflow method via reflection. Must be called before `dbos.launch()`. Intended for framework integrators (e.g., AOP-based integrations) that construct proxies themselves.
+Register a single workflow method via reflection, deriving the workflow name and class name from the `@Workflow` annotation and target object. Returns the `RegisteredWorkflow` record. Must be called before `dbos.launch()`. Intended for framework integrators (e.g., AOP-based integrations) that construct proxies themselves.
 
 **Parameters:**
 - **wfTag**: The `@Workflow` annotation instance from the method.
 - **target**: The object instance that owns the method.
 - **method**: The `java.lang.reflect.Method` to register as a workflow.
 - **instanceName**: Optional instance name (can be null).
+
+```java
+RegisteredWorkflow registerWorkflow(
+    String workflowName,
+    String className,
+    String instanceName,
+    Object target,
+    Method method,
+    Integer maxRecoveryAttempts,
+    SerializationStrategy serializationStrategy)
+```
+
+Overload that takes explicit field values rather than deriving them from a `@Workflow` annotation. Use when you need to supply names or options that differ from the annotation. Returns the `RegisteredWorkflow` record. Must be called before `dbos.launch()`.
+
+**Parameters:**
+- **workflowName**: Logical name of the workflow.
+- **className**: Name of the class that declares the workflow method.
+- **instanceName**: Optional instance name distinguishing multiple registrations of the same class; may be `null`.
+- **target**: The object instance on which the method will be invoked.
+- **method**: The workflow `Method`.
+- **maxRecoveryAttempts**: Maximum number of recovery attempts; `null` uses the default.
+- **serializationStrategy**: Strategy used to serialize and deserialize workflow arguments and return values; `null` uses the default.
 
 ### upsertExternalState
 
