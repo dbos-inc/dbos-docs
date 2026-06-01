@@ -1,14 +1,20 @@
 ---
 sidebar_position: 25
-title: Step Factories
+title: Transactional Steps
 toc_max_heading_level: 4
 ---
 
 Regular DBOS steps checkpoint their output _after_ the step body completes.
 If the application crashes after your database write but before the checkpoint is saved, the step runs again on recovery — potentially writing to the database twice.
 
-**Step factories** solve this by committing the step output and your database work in the **same transaction**.
+**Transactional step factories** solve this by committing the step output and your database work in the **same transaction**.
 On retry, DBOS finds the recorded output and returns it without re-executing, making the step exactly-once even for database writes.
+
+:::info
+Transactional step factories require the `tx_step_outputs` table in your application database.
+This table is created automatically at startup, but your database user must have `CREATE TABLE` privileges in the configured schema.
+If you use a restricted database role in production, grant the necessary privileges or create the table manually before deploying.
+:::
 
 ## Choosing an approach
 
