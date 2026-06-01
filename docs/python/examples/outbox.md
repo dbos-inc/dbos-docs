@@ -15,7 +15,7 @@ When we need to perform an atomic update, we run a single database transaction t
 
 A separate background process then polls the outbox table and sends the messages there to the other system.
 
-Performing the database record update and writing the message to the "outbox" table in one transaction guarantees atomicity: either both records are updated and neither are, and once the message is written to the outbox, it will asynchronously be consumed and sent by the background process even if failures occur later.
+Performing the database record update and writing the message to the "outbox" table in one transaction guarantees atomicity: either both records are updated or neither are, and once the message is written to the outbox, it will asynchronously be consumed and sent by the background process even if failures occur later.
 
 ### Performing Multiple Operations Atomically With DBOS
 
@@ -67,17 +67,74 @@ def place_order_workflow(customer: str, item: str, quantity: int) -> int:
 
 This works because **durable workflows are atomic**.
 If a failure occurs after writing to the database but before sending the message to the external system, the workflow will recover from its last completed step (writing to the database) and retry the next step (sending the message) until the message is successfully sent.
-This is the same guarantee a conventional transactional outbox provides: assuming the message is eventually delievered after enough retries, either both operations occur or neither do.
+This is the same guarantee a conventional transactional outbox provides: assuming the message is eventually delivered after enough retries, either both operations occur or neither do.
 
 One noteworthy detail is that we perform the initial database write in a [transactional step](../tutorials/transaction-tutorial.md), which performs the workflow checkpoint in the same database transaction as the step logic.
 This way, the database write is guaranteed to execute exactly-once no matter what failures occur during workflow execution.
 Other operations may execute at-least-once, and so should be idempotent (the same is true in a conventional transactional outbox pattern, where messages are sent from the outbox with at-least-once semantics).
 
-Full source code for this example, demoing how this pattern can recover from any failure, is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox).
+### Transactionally Enqueuing a Workflow
 
-### Try it Yourself!
+The durable workflow above replaces the outbox entirely.
+If you instead want a pattern that more closely mirrors a conventional outbox, where you write a database record and durably schedule some follow-up work in the same transaction, you can **transactionally enqueue a workflow**.
 
-Clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
+Inside the transaction that inserts the order, we call the [`dbos.enqueue_workflow` Postgres function](../../explanations/system-tables.md) to enqueue a notification workflow.
+Because the enqueue happens in the same transaction as the order insert, the order row and the enqueued workflow commit (or roll back) together: the notification workflow is durably enqueued if and only if the order is created.
+This is exactly the guarantee a conventional outbox provides, except the "outbox" is DBOS's own queue table instead of one you build and poll yourself.
+
+```python
+@ds.transaction()
+def insert_order(customer: str, item: str, quantity: int) -> int:
+    """Insert an order and transactionally enqueue its notification workflow."""
+    session = ds.sql_session()
+    result = session.execute(
+        orders.insert().values(customer=customer, item=item, quantity=quantity)
+    )
+    order_id: int = result.inserted_primary_key[0]
+
+    # Enqueue the notification workflow as part of this transaction.
+    session.execute(
+        sa.text("""
+            SELECT dbos.enqueue_workflow(
+                workflow_name => :workflow_name,
+                queue_name => :queue_name,
+                positional_args => ARRAY[
+                    CAST(:arg_order_id AS json),
+                    CAST(:arg_customer AS json),
+                    CAST(:arg_item AS json)
+                ]
+            )
+            """),
+        {
+            "workflow_name": "send_notification_workflow",
+            "queue_name": NOTIFICATION_QUEUE,
+            "arg_order_id": json.dumps(order_id),
+            "arg_customer": json.dumps(customer),
+            "arg_item": json.dumps(item),
+        },
+    )
+
+    DBOS.logger.info(f"Inserted order {order_id}: {quantity}x {item} for {customer}")
+    return order_id
+```
+
+The enqueued workflow acts as the "consumer" of the outbox.
+DBOS guarantees it runs exactly once for every committed order, recovering automatically if the process crashes partway through:
+
+```python
+@DBOS.workflow()
+def send_notification_workflow(order_id: int, customer: str, item: str) -> None:
+    """Send a notification for an order, then mark it sent."""
+    send_order_notification(order_id, customer, item)
+    update_notification_status(order_id, "SENT")
+```
+
+### Try it Yourself
+
+Full source code for both patterns, demoing how they can recover from any failure, is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/transactional-outbox).
+The single-workflow pattern is in `atomic_workflow.py` and the transactional enqueue pattern is in `transactional_enqueue.py`.
+
+To run it, clone and enter the [dbos-demo-apps](https://github.com/dbos-inc/dbos-demo-apps) repository:
 
 ```shell
 git clone https://github.com/dbos-inc/dbos-demo-apps.git
