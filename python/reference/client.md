@@ -213,6 +213,7 @@ client.send(
     idempotency_key: Optional[str] = None,
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -222,8 +223,9 @@ Sends a message to a specified workflow. Similar to [`DBOS.send`](contexts.md#se
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
 
 :::warning
 Since DBOS Client is running outside of a DBOS application, 
@@ -241,6 +243,7 @@ client.send_async(
     idempotency_key: Optional[str] = None,
     *,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -250,8 +253,68 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: An optional topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application.
+- `idempotency_key`: An optional string used to ensure exactly-once delivery, even from outside of the DBOS application. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
+
+### send_bulk
+
+```python
+client.send_bulk(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Sends many messages to workflow executions in a single transaction. Similar to [`DBOS.send_bulk`](contexts.md#send_bulk).
+Each message is described by a `SendMessage` object specifying its destination, payload, and optional topic and idempotency key:
+
+```python
+@dataclass
+class SendMessage:
+    # The workflow to which to send the message
+    destination_id: str
+    # The message to send. Must be serializable.
+    message: Any
+    # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+    topic: Optional[str] = None
+    # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
+    idempotency_key: Optional[str] = None
+```
+
+The send is atomic: if any message cannot be delivered, the entire batch is rolled back and no messages are sent.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the messages.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively forked from its destination. Defaults to `False`.
+
+:::warning
+Since DBOS Client is running outside of a DBOS application,
+it is highly recommended that you set an idempotency key on each message
+in order to get exactly-once behavior.
+:::
+
+### send_bulk_async
+
+```python
+client.send_bulk_async(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Asynchronously sends many messages to workflow executions in a single transaction. Similar to [`DBOS.send_bulk_async`](contexts.md#send_bulk_async).
+See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the messages.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively forked from its destination. Defaults to `False`.
 
 ### get_event
 
@@ -302,7 +365,9 @@ Similar to [`DBOS.get_event_async](contexts.md#get_event_async).
 ```python
 client.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -314,6 +379,7 @@ Similar to [`DBOS.read_stream`](contexts.md#read_stream).
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -329,7 +395,9 @@ for value in client.read_stream(workflow_id, "results"):
 ```python
 client.read_stream_async(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> AsyncGenerator[Any, None]
 ```
 
@@ -341,6 +409,7 @@ Similar to [`DBOS.read_stream_async`](contexts.md#read_stream_async).
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -507,6 +576,10 @@ client.list_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -533,6 +606,10 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -559,6 +636,10 @@ client.list_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -588,6 +669,10 @@ client.list_queued_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -613,6 +698,10 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -637,6 +726,10 @@ client.list_queued_workflows_async(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,

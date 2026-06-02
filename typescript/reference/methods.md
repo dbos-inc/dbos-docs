@@ -330,6 +330,10 @@ interface GetWorkflowsInput {
   status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+  completedAfter?: string; // Retrieve workflows completed at or after this (RFC 3339-compliant) timestamp.
+  completedBefore?: string; // Retrieve workflows completed at or before this (RFC 3339-compliant) timestamp.
+  dequeuedAfter?: string; // Retrieve workflows dequeued at or after this (RFC 3339-compliant) timestamp.
+  dequeuedBefore?: string; // Retrieve workflows dequeued at or before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string | string[]; // Retrieve workflows run by this authenticated user (or any of these users).
   applicationVersion?: string | string[]; // Retrieve workflows started on this application version (or any of these versions).
   executorId?: string | string[]; // Retrieve workflows run by this executor ID (or any of these executor IDs).
@@ -608,6 +612,8 @@ export interface WorkflowStatus {
   readonly queuePartitionKey?: string;
   // If this workflow was enqueued, the time it was dequeued (started execution), as a UNIX epoch timestamp in milliseconds.
   readonly dequeuedAt?: number;
+  // The time the workflow completed (transitioned to SUCCESS, ERROR, or CANCELLED), as a UNIX epoch timestamp in milliseconds. Undefined if the workflow has not completed.
+  readonly completedAt?: number;
 
   // If this workflow was forked from another, that workflow's ID.
   readonly forkedFrom?: string;

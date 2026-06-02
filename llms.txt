@@ -64,6 +64,7 @@
 - [Queues & Concurrency](https://docs.dbos.dev/java/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
 - [Scheduled Workflows](https://docs.dbos.dev/java/tutorials/scheduled-workflows.md): Learn how to run DBOS workflows on a schedule.
 - [Spring Boot Integration](https://docs.dbos.dev/java/tutorials/spring-boot-integration.md): Add DBOS durable workflows to a Spring Boot application.
+- [Transactional Steps](https://docs.dbos.dev/java/tutorials/step-factory-tutorial.md): Regular DBOS steps checkpoint their output after the step body completes.
 - [Steps](https://docs.dbos.dev/java/tutorials/step-tutorial.md): When using DBOS workflows, you should call any method that performs complex operations or accesses external APIs or services as a step.
 - [Testing Workflows](https://docs.dbos.dev/java/tutorials/testing.md): Unit test DBOS workflows by mocking the DBOS instance.
 - [Upgrading Workflow Code](https://docs.dbos.dev/java/tutorials/upgrading-workflows.md): A challenge encountered when operating long-running durable workflows in production is how to deploy breaking changes without disrupting in-progress workflows.
@@ -71,7 +72,7 @@
 - [Communicating with Workflows](https://docs.dbos.dev/java/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/java/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console or programmatically.
 - [Workflows](https://docs.dbos.dev/java/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
-- [Upgrading to v0.8](https://docs.dbos.dev/java/upgrading.md): DBOS Transact Java v0.8 contains several breaking changes.
+- [Upgrading](https://docs.dbos.dev/java/upgrading.md): Upgrading to v0.9
 - [Alerting](https://docs.dbos.dev/production/alerting.md): If you are using Conductor, you can configure automatic alerts when certain failure conditions are met.
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.

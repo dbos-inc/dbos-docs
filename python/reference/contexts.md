@@ -99,6 +99,7 @@ DBOS.send(
     *,
     idempotency_key: Optional[str] = None,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> None
 ```
 
@@ -110,8 +111,9 @@ The `send` function should not be used in [coroutine workflows](../tutorials/wor
 - `destination_id`: The workflow to which to send the message.
 - `message`: The message to send. Must be serializable.
 - `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- `idempotency_key`: If an idempotency key is set, the message will only be sent once no matter how many times `DBOS.send` is called with this key.
+- `idempotency_key`: If an idempotency key is set, the message will only be sent once to each destination no matter how many times `DBOS.send` is called with this key. The key is scoped per destination workflow.
 - `serialization_type`: The [serialization format](#serialization-strategy) to use for this message. Defaults to `WorkflowSerializationFormat.DEFAULT`.
+- `send_to_forks`: If `True`, also deliver the message to every workflow recursively [forked](#fork_workflow) from `destination_id` (forks, forks of forks, and so on) that exists at send time. Defaults to `False`.
 
 ### send_async
 
@@ -123,10 +125,59 @@ DBOS.send_async(
     *,
     idempotency_key: Optional[str] = None,
     serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
 ) -> Coroutine[Any, Any, None]
 ```
 
 Coroutine version of [`send`](#send)
+
+### send_bulk
+
+```python
+DBOS.send_bulk(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Send many messages to workflow executions in a single transaction.
+Each message is described by a `SendMessage` object specifying its destination, payload, and optional topic and idempotency key:
+
+```python
+@dataclass
+class SendMessage:
+    # The workflow to which to send the message
+    destination_id: str
+    # The message to send. Must be serializable.
+    message: Any
+    # A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
+    topic: Optional[str] = None
+    # If set, the message is sent only once per destination no matter how many times it is submitted with this key.
+    idempotency_key: Optional[str] = None
+```
+
+The send is atomic: if any message cannot be delivered (for example, its destination workflow does not exist), the entire batch is rolled back and no messages are sent.
+The `send_bulk` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`send_bulk_async`](#send_bulk_async) should be used instead.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization format](#serialization-strategy) to use for these messages. Defaults to `WorkflowSerializationFormat.DEFAULT`.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively [forked](#fork_workflow) from its destination. Defaults to `False`.
+
+### send_bulk_async
+
+```python
+DBOS.send_bulk_async(
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> Coroutine[Any, Any, None]
+```
+
+Coroutine version of [`send_bulk`](#send_bulk)
 
 ### recv
 
@@ -512,7 +563,9 @@ Coroutine version of [`close_stream`](#close_stream)
 ```python
 DBOS.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -524,6 +577,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
 
 **Yields:**
 - Each value in the stream until the stream is closed
@@ -540,7 +594,10 @@ for value in DBOS.read_stream(workflow_id, example_key):
 ```python
 DBOS.read_stream_async(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
 ) -> AsyncGenerator[Any, None]
 ```
 
@@ -552,6 +609,8 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
 
 **Example syntax:**
 
@@ -795,6 +854,10 @@ def list_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -821,6 +884,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
 - **start_time**: Retrieve workflows started after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows started before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -850,6 +917,10 @@ def list_queued_workflows(
     status: Optional[Union[str, List[str]]] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
+    completed_after: Optional[str] = None,
+    completed_before: Optional[str] = None,
+    dequeued_after: Optional[str] = None,
+    dequeued_before: Optional[str] = None,
     name: Optional[Union[str, List[str]]] = None,
     app_version: Optional[Union[str, List[str]]] = None,
     forked_from: Optional[Union[str, List[str]]] = None,
@@ -875,6 +946,10 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **status**: Retrieve workflows with this status (or one of these statuses) (Must be `ENQUEUED` or `PENDING`)
 - **start_time**: Retrieve workflows enqueued after this (RFC 3339-compliant) timestamp.
 - **end_time**: Retrieve workflows enqueued before this (RFC 3339-compliant) timestamp.
+- **completed_after**: Retrieve workflows that completed after this (RFC 3339-compliant) timestamp.
+- **completed_before**: Retrieve workflows that completed before this (RFC 3339-compliant) timestamp.
+- **dequeued_after**: Retrieve workflows that were dequeued after this (RFC 3339-compliant) timestamp.
+- **dequeued_before**: Retrieve workflows that were dequeued before this (RFC 3339-compliant) timestamp.
 - **name**: Retrieve workflows with this fully-qualified name (or one of these names).
 - **app_version**: Retrieve workflows tagged with this application version (or one of these versions).
 - **forked_from**: Retrieve workflows forked from this workflow ID (or one of these IDs).
@@ -1369,6 +1444,8 @@ class WorkflowStatus:
     parent_workflow_id: Optional[str]
     # The Unix epoch timestamp at which the workflow was last dequeued, if it had been enqueued
     dequeued_at: Optional[int]
+    # The Unix epoch timestamp in ms at which the workflow completed (SUCCESS, ERROR, or CANCELLED), if it has completed
+    completed_at: Optional[int]
 ```
 
 ## Context Variables
