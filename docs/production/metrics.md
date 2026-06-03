@@ -195,7 +195,7 @@ A few example [PromQL](https://prometheus.io/docs/prometheus/latest/querying/bas
 # workflow_success_rate is a per-second gauge, so average it over the hour and multiply by 3600 seconds.
 sum(avg_over_time(dbos_conductor_v1_workflow_success_rate{application="my-app"}[1h])) * 3600
 
-# Age, in seconds, of the oldest workflow currently enqueued
+# Age, in seconds, of the oldest currently enqueued workflow 
 time() - dbos_conductor_v1_workflow_oldest_enqueued_timestamp_seconds
 
 # Number of healthy executors per application
