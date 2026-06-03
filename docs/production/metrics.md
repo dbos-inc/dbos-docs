@@ -31,7 +31,7 @@ curl https://cloud.dbos.dev/v1/metrics \
 ```
 
 
-### Configuring Integrations
+### Endpoint Integrations
 
 The endpoint works with any tool that can scrape the OpenMetrics or Prometheus exposition format.
 
