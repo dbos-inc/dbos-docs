@@ -144,8 +144,6 @@ Every metric this endpoint emits is an OpenMetrics **gauge**. All metric names a
 
 Each scrape reports data for the **most recently completed clock-aligned minute**.
 For example, a scrape at any time during `12:34` reports data aggregated over the window `[12:33:00, 12:34:00)`.
-Using a fixed, clock-aligned window (rather than a sliding window relative to scrape time) ensures that every scrape within the same minute returns identical data, which avoids the double-counting that overlapping windows would cause.
-The tradeoff is up to one minute of latency before an event appears in the metrics. There is no benefit to scraping more than once per minute.
 
 Although every metric is a gauge, the value a gauge carries falls into one of three flavors, noted in the **Measurement** column below:
 
@@ -153,7 +151,7 @@ Although every metric is a gauge, the value a gauge carries falls into one of th
 - **Point-in-time** — the value at scrape time, not tied to the window (for example, the number of workflows currently enqueued).
 - **Windowed** — an aggregate, such as a maximum, computed over the window.
 
-Rate and windowed metrics are stamped with the window's timestamp (so scrapes within the same minute dedupe); point-in-time metrics carry no explicit timestamp and use the scrape time.
+Rate and windowed metrics are stamped with the window's timestamp (so scrapes within the same minute deduplicate); point-in-time metrics carry no explicit timestamp and use the scrape time.
 
 ### Workflow metrics
 
