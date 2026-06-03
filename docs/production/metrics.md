@@ -13,15 +13,14 @@ Metrics require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 
 ## The Metrics Endpoint
 
-Conductor exposes metrics for all of your applications at a single scrape endpoint:
+Conductor exposes metrics for all of your applications at a single OpenMetrics scrape endpoint:
 
 ```
 https://cloud.dbos.dev/v1/metrics
 ```
 
 The endpoint is authenticated with a DBOS Cloud API key, passed as a bearer token in the `Authorization` header.
-You can generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey) of the DBOS Console.
-The endpoint reports metrics for every application in the organization the API key belongs to&mdash;there is no tenant identifier in the URL, because the organization is resolved from the key.
+You can generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey) of the DBOS Console. **Make sure to enable the metrics read permission for the key.**
 
 A scrape is a simple authenticated `GET`:
 
@@ -31,7 +30,6 @@ curl https://cloud.dbos.dev/v1/metrics \
   -H "Accept: application/openmetrics-text"
 ```
 
-The `Accept: application/openmetrics-text` header requests the OpenMetrics format; without it the endpoint returns the legacy Prometheus text format. Real Prometheus scrapers negotiate this automatically.
 
 ### Configuring Prometheus
 
