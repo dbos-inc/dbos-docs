@@ -76,8 +76,6 @@ instances:
       Accept: application/openmetrics-text
 ```
 
-The Agent honors the timestamps the endpoint emits, so rate and latency metrics are not double-counted across collections within the same minute.
-
 </TabItem>
 
 <TabItem value="otel" label="OpenTelemetry Collector">
