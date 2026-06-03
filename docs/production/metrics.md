@@ -19,7 +19,7 @@ Conductor exposes metrics for all of your applications at a single Prometheus-co
 https://cloud.dbos.dev/v1/metrics
 ```
 
-The endpoint is authenticated with a DBOS Cloud API key, passed as a bearer token in the `Authorization` header.
+The endpoint is authenticated with a Conductor API key, passed as a bearer token in the `Authorization` header.
 You can generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey) of the DBOS Console. **Make sure to enable the metrics read permission for the key.**
 
 A scrape is a simple authenticated `GET`:
