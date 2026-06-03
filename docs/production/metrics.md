@@ -1,5 +1,5 @@
 ---
-sidebar_position: 26
+sidebar_position: 24
 title: Metrics
 toc_max_heading_level: 3
 ---
