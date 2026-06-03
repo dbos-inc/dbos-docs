@@ -320,7 +320,7 @@ const config = {
         },
       },
       prism: {
-        additionalLanguages: ['bash', 'java'],
+        additionalLanguages: ['bash', 'java', 'promql'],
         theme: {
           ...prismThemes.okaidia,
           styles: [
