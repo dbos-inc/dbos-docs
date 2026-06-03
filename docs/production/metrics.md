@@ -46,7 +46,6 @@ scrape_configs:
   - job_name: dbos
     scheme: https
     metrics_path: /v1/metrics
-    # Scrape no more than once per minute (see "Aggregation Window" below).
     scrape_interval: 60s
     honor_timestamps: true
     static_configs:
@@ -56,7 +55,7 @@ scrape_configs:
       credentials_file: /etc/prometheus/dbos_api_key
 ```
 
-Keep `honor_timestamps: true` (the default). Rate and latency metrics are stamped with the timestamp of the window they describe so that repeated scrapes within the same minute do not double-count.
+Set `honor_timestamps: true` as rate and latency metrics are stamped with the timestamp of the window they describe so that repeated scrapes within the same minute do not double-count.
 
 </TabItem>
 
