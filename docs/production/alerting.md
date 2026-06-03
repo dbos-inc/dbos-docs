@@ -319,24 +319,24 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
 
 ### Metrics-Based Alerts
 
-If you scrape [Conductor metrics](./metrics.md) into a monitoring system such as Prometheus (with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/)), Datadog, or Grafana you can define alerts directly on DBOS metrics.
+If you scrape [Conductor metrics](./metrics.md) into a monitoring system such as Prometheus (with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/)), Datadog, or Grafana, you can define alerts directly on DBOS metrics.
 This is an alternative to the Conductor-managed alerts above, useful if you already run a monitoring and alerting stack.
 
-The example conditions below are written in [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/), but the same metrics and thresholds translate directly to other tools' query and monitor languages.
+Here are some example alerting conditions written in in [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/):
 
-Elevated workflow failures: more than 10 workflows failing per minute for an application:
+**Elevated workflow failures:** more than 10 workflows failing per minute for an application:
 
 ```promql
 sum by (application) (dbos_conductor_v1_workflow_failed_rate) * 60 > 10
 ```
 
-Stuck queue: a workflow has been waiting in a queue for more than 5 minutes:
+**Stuck queue:** a workflow has been waiting in a queue for more than 5 minutes:
 
 ```promql
 time() - dbos_conductor_v1_workflow_oldest_enqueued_timestamp_seconds > 300
 ```
 
-Application offline: no healthy executors are connected for an application:
+**Application offline:** no healthy executors are connected for an application:
 
 ```promql
 absent(dbos_conductor_v1_executor_count{application="my-app", status="HEALTHY"})
