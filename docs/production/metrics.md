@@ -13,7 +13,7 @@ Metrics require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 
 ## The Metrics Endpoint
 
-Conductor exposes metrics for all of your applications at a single OpenMetrics scrape endpoint:
+Conductor exposes metrics for all of your applications at a single Prometheus-compatible OpenMetrics scrape endpoint:
 
 ```
 https://cloud.dbos.dev/v1/metrics
