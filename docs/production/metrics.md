@@ -55,7 +55,7 @@ scrape_configs:
       credentials_file: /etc/prometheus/dbos_api_key
 ```
 
-Set `honor_timestamps: true` as rate and latency metrics are stamped with the timestamp of the window they describe so that repeated scrapes within the same minute do not double-count.
+Set `honor_timestamps: true` so the window timestamps the endpoint emits are preserved.
 
 </TabItem>
 
@@ -111,7 +111,7 @@ service:
       exporters: [otlphttp]
 ```
 
-Keep `honor_timestamps: true` (the default) so the window timestamps the endpoint emits are preserved and rate and latency metrics are not double-counted across scrapes within the same minute.
+Set `honor_timestamps: true` so the window timestamps the endpoint emits are preserved.
 
 </TabItem>
 
