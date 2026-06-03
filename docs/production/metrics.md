@@ -31,7 +31,13 @@ curl https://cloud.dbos.dev/v1/metrics \
 ```
 
 
-### Configuring Prometheus
+### Configuring Integrations
+
+The endpoint works with any tool that can scrape the OpenMetrics or Prometheus exposition format.
+
+<Tabs groupId="integration" queryString="integration">
+
+<TabItem value="prometheus" label="Prometheus">
 
 To scrape the endpoint from Prometheus, add a job like the following to your `prometheus.yml`. Store your API key in a file and reference it with `authorization.credentials_file` (or use `credentials` directly):
 
@@ -40,7 +46,7 @@ scrape_configs:
   - job_name: dbos
     scheme: https
     metrics_path: /v1/metrics
-    # Scrape no more than once per minute (see "Aggregation window" below).
+    # Scrape no more than once per minute (see "Aggregation Window" below).
     scrape_interval: 60s
     honor_timestamps: true
     static_configs:
@@ -51,6 +57,68 @@ scrape_configs:
 ```
 
 Keep `honor_timestamps: true` (the default). Rate and latency metrics are stamped with the timestamp of the window they describe so that repeated scrapes within the same minute do not double-count.
+
+</TabItem>
+
+<TabItem value="datadog" label="Datadog">
+
+To collect the metrics with Datadog, use the [OpenMetrics integration](https://docs.datadoghq.com/integrations/openmetrics/) built into the Datadog Agent. Add an instance like the following to `conf.d/openmetrics.d/conf.yaml`, then restart the Agent:
+
+```yaml
+instances:
+  - openmetrics_endpoint: https://cloud.dbos.dev/v1/metrics
+    namespace: dbos
+    # Collect no more than once per minute (see "Aggregation Window" below).
+    min_collection_interval: 60
+    metrics:
+      - "dbos_conductor_v1_.*"
+    headers:
+      Authorization: "Bearer <YOUR_DBOS_API_KEY>"
+      Accept: application/openmetrics-text
+```
+
+The Agent honors the timestamps the endpoint emits, so rate and latency metrics are not double-counted across collections within the same minute.
+
+</TabItem>
+
+<TabItem value="otel" label="OpenTelemetry Collector">
+
+The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)'s [`prometheus` receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver) scrapes the endpoint and forwards the metrics to any backend you configure an exporter for. It takes a standard Prometheus `scrape_configs` block, so store your API key in a file and reference it with `authorization.credentials_file`:
+
+```yaml
+receivers:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: dbos
+          scheme: https
+          metrics_path: /v1/metrics
+          # Scrape no more than once per minute (see "Aggregation Window" below).
+          scrape_interval: 60s
+          honor_timestamps: true
+          static_configs:
+            - targets: ["cloud.dbos.dev"]
+          authorization:
+            type: Bearer
+            credentials_file: /etc/otelcol/dbos_api_key
+
+exporters:
+  # Configure an exporter for your observability backend.
+  otlphttp:
+    endpoint: https://your-backend.example.com
+
+service:
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      exporters: [otlphttp]
+```
+
+Keep `honor_timestamps: true` (the default) so the window timestamps the endpoint emits are preserved and rate and latency metrics are not double-counted across scrapes within the same minute.
+
+</TabItem>
+
+</Tabs>
 
 ### Filtering metrics
 
