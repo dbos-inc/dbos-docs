@@ -153,6 +153,8 @@ Although every metric is a gauge, the value a gauge carries falls into one of th
 
 Rate and windowed metrics are stamped with the window's timestamp (so scrapes within the same minute deduplicate); point-in-time metrics carry no explicit timestamp and use the scrape time.
 
+The windowed metrics (`workflow_max_queue_wait_seconds`, `workflow_max_total_latency_seconds`, and `step_max_duration_seconds`) report a **maximum per label group**. When you combine groups in a query, aggregate them with `max()` — a maximum of maximums is still a maximum — rather than `sum()` or `avg()`, which are not meaningful over these values.
+
 ### Workflow metrics
 
 These metrics are labeled by `workflow_name` and, where noted, `queue_name`.
@@ -173,7 +175,7 @@ These metrics are labeled by `workflow_name` and, where noted, `queue_name`.
 
 ### Step metrics
 
-These metrics are labeled by `function_name` (the step's function name).
+These metrics are labeled by `step_name`.
 
 | Metric | Measurement | Description |
 | --- | --- | --- |
@@ -192,10 +194,11 @@ These metrics are labeled by `function_name` (the step's function name).
 A few example [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/) queries:
 
 ```promql
-# Total workflow success rate (per second) for an application, summed across workflows and queues
-sum(dbos_conductor_v1_workflow_success_rate{application="my-app"})
+# Number of workflows that completed successfully in the past hour, across all workflows and queues.
+# workflow_success_rate is a per-second gauge, so average it over the hour and multiply by 3600 seconds.
+sum(avg_over_time(dbos_conductor_v1_workflow_success_rate{application="my-app"}[1h])) * 3600
 
-# Age, in seconds, of the oldest workflow stuck in a queue
+# Age, in seconds, of the oldest workflow currently enqueued
 time() - dbos_conductor_v1_workflow_oldest_enqueued_timestamp_seconds
 
 # Number of healthy executors per application
