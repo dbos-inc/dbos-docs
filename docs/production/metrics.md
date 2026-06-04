@@ -11,6 +11,10 @@ This lets you monitor your DBOS applications in Prometheus, Grafana, or any othe
 Metrics require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 :::
 
+:::info
+Metrics require DBOS Python >=2.23.0 or DBOS TypeScript >=4.19.
+:::
+
 ## The Metrics Endpoint
 
 Conductor exposes metrics for all of your applications at a single Prometheus-compatible OpenMetrics scrape endpoint:
