@@ -5,6 +5,7 @@ toc_max_heading_level: 3
 ---
 
 If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
+You can configure alerts either in Conductor directly or on [Conductor-exported metrics](#metrics-based-alerts) using your existing observability stack.
 
 :::info
 
@@ -315,3 +316,31 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
 
 </TabItem>
 </Tabs>
+
+### Metrics-Based Alerts
+
+If you scrape [Conductor metrics](./metrics.md) into a monitoring system such as Prometheus (with [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/)), Datadog, or Grafana, you can define alerts directly on DBOS metrics.
+This is an alternative to the Conductor-managed alerts above, useful if you already run a monitoring and alerting stack.
+
+Here are some example alerting conditions written in in [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/):
+
+**Elevated workflow failures:** more than 10 workflows failing per minute for an application:
+
+```promql
+sum by (application) (dbos_conductor_v1_workflow_failed_rate) * 60 > 10
+```
+
+**Stuck queue:** a workflow has been waiting in a queue for more than 5 minutes:
+
+```promql
+time() - dbos_conductor_v1_workflow_oldest_enqueued_timestamp_seconds > 300
+```
+
+**Application offline:** no healthy executors are connected for an application:
+
+```promql
+absent(dbos_conductor_v1_executor_count{application="my-app", status="HEALTHY"})
+```
+
+Detecting an offline application is a "missing data" condition: a fully disconnected application emits no executor series at all.
+In PromQL, use `absent()` with an explicit `application` label for each app you want to monitor.

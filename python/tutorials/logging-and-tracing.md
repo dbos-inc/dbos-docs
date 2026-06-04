@@ -74,3 +74,7 @@ DBOS(config=config)
 
 
 For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application, or export your logs and traces to [Logfire](../../integrations/logfire).
+
+### Metrics
+
+Using [Conductor](../../production/conductor.md), you can also scrape metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint. See [Metrics](../../production/metrics.md) for details.

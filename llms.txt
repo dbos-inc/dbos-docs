@@ -92,6 +92,7 @@
 - [Self-Hosting Conductor With Kubernetes](https://docs.dbos.dev/production/hosting-conductor-with-kubernetes.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Google Cloud Run](https://docs.dbos.dev/production/hosting-with-cloud-run.md): This guide covers deploying a DBOS application to Google Cloud Run with a Cloud SQL for PostgreSQL database. It includes best practices for security, availability, and scalability. This guide assumes DBOS Conductor is hosted separately.
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide covers deploying a DBOS application on Kubernetes.
+- [Metrics](https://docs.dbos.dev/production/metrics.md): If you are using Conductor, you can scrape metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint.
 - [Workflow Retention Policies](https://docs.dbos.dev/production/retention.md): If you are using Conductor, you can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 - [Workflow Management](https://docs.dbos.dev/production/workflow-management.md): Workflow observability and management features are only available for applications connected to Conductor.
 - [Workflow Recovery](https://docs.dbos.dev/production/workflow-recovery.md): When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
