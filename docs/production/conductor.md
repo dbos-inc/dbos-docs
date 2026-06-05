@@ -24,10 +24,10 @@ To connect your application to Conductor, first register your application on the
 
 <img src={require('@site/static/img/conductor/register-app.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-Next, generate an API key.
-By default, API keys do not expire, though they may be revoked at any time from the [key settings page](https://console.dbos.dev/settings/apikey):
+Next, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+By default, API keys do not expire, though they may be revoked at any time.
 
-<img src={require('@site/static/img/conductor/conductor-key.png').default} alt="Workflow List" width="800" className="custom-img"/>
+<img src={require('@site/static/img/conductor/conductor-key.png').default} alt="Workflow List" width="400" className="custom-img"/>
 
 Finally, supply that API key to your DBOS application to connect it to Conductor.
 This initiates a websocket connection with Conductor:
