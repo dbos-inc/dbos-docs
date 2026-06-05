@@ -99,10 +99,6 @@ Then, restart it with `python3 app/main.py` and watch it seamlessly recover from
 
 
 Congratulations, you've run your first durable workflow with DBOS!
-Next:
-
-- Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build reliable applications with DBOS.
-- Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
 
 </article>
 
@@ -113,6 +109,42 @@ Next:
 </article>
 
 <article className="col col--6">
+</article>
+
+</section>
+
+#### 4. Connect to Conductor
+
+<section className="row list">
+
+<article className="col col--6">
+[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev), then generate an API key.
+Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+python3 app/main.py
+```
+</article>
+
+<article className="col col--6">
+Your app is now connected to Conductor!
+You can view and manage its workflows, including visualizing their steps, from the [DBOS console](https://console.dbos.dev).
+</article>
+
+<article className="col col--6">
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+</article>
+
+<article className="col col--6">
+Next:
+
+- Check out the [**DBOS programming guide**](./python/programming-guide.md) to learn how to build reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./python/integrating-dbos.md) to make it reliable with just a few lines of code.
 </article>
 
 </section>
