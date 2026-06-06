@@ -443,7 +443,7 @@ Now, start your app!
 </article>
 
 <article className="col col--6">
-To see that your app is working, visit this URL in your browser: http://localhost:8080/
+To see that your app is working, visit this URL in your browser: http://localhost:7070/
 
 This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
@@ -455,7 +455,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 </article>
 
 <article className="col col--6">
-<BrowserWindow url="http://localhost:8080/">
+<BrowserWindow url="http://localhost:7070/">
 <img src={require('@site/static/img/quickstart/java-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
 </BrowserWindow>
 </article>
