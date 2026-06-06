@@ -472,7 +472,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <article className="col col--6">
 [Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-java-starter`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-starter-java`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
 Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
 </article>
 
