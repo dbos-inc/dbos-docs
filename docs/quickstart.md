@@ -438,7 +438,7 @@ Now, start your app!
 
 <article className="col col--6">
 ```bash
-./gradlew bootRun
+./gradlew run
 ```
 </article>
 
@@ -448,7 +448,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 This app lets you test the reliability of DBOS for yourself.
 Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
-Then, restart it with `./gradlew bootRun` and watch it seamlessly recover from where it left off.
+Then, restart it with `./gradlew run` and watch it seamlessly recover from where it left off.
 
 
 Congratulations, you've run your first durable workflow with DBOS!
@@ -479,7 +479,7 @@ Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment va
 <article className="col col--6">
 ```bash
 export DBOS_CONDUCTOR_KEY=<your-api-key>
-./gradlew bootRun
+./gradlew run
 ```
 </article>
 
