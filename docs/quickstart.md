@@ -231,10 +231,6 @@ Then, restart it with `npm run start` and watch it seamlessly recover from where
 
 
 Congratulations, you've run your first durable workflow with DBOS!
-Next:
-
-- Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build reliable applications with DBOS.
-- Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
 </article>
 
 <article className="col col--6">
@@ -243,6 +239,42 @@ Next:
 </BrowserWindow>
 </article>
 
+
+</section>
+
+#### 4. Connect to Conductor
+
+<section className="row list">
+
+<article className="col col--6">
+[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-node-starter`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+npm run start
+```
+</article>
+
+<article className="col col--6">
+Your app is now connected to Conductor!
+You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+</article>
+
+<article className="col col--6">
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+</article>
+
+<article className="col col--6">
+Next:
+
+- Check out the [**DBOS programming guide**](./typescript/programming-guide.md) to learn how to build reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./typescript/integrating-dbos.md) to make it reliable with just a few lines of code.
+</article>
 
 </section>
 
@@ -312,11 +344,42 @@ go run main.go
 To see that your app is working, visit this URL in your browser: http://localhost:8080/
 
 Congratulations, you've run your first durable workflow with DBOS!
+
+#### 4. Connect to Conductor
+
+<section className="row list">
+
+<article className="col col--6">
+[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-toolbox`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+go run main.go
+```
+</article>
+
+<article className="col col--6">
+Your app is now connected to Conductor!
+You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+</article>
+
+<article className="col col--6">
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+</article>
+
+<article className="col col--6">
 Next:
 
 - Check out the [**DBOS programming guide**](./golang/programming-guide.md) to learn how to build reliable applications with DBOS.
 - Learn how to [**add DBOS to your application**](./golang/integrating-dbos.md) to make it reliable with just a few lines of code.
+</article>
 
+</section>
 
 </LargeTabItem>
 
@@ -389,12 +452,6 @@ Then, restart it with `./gradlew bootRun` and watch it seamlessly recover from w
 
 
 Congratulations, you've run your first durable workflow with DBOS!
-Next:
-
-- Check out the [**DBOS programming guide**](./java/programming-guide.md) to learn how to build reliable applications with DBOS.
-- Learn how to [**add DBOS to your application**](./java/integrating-dbos.md) to make it reliable with just a few lines of code.
-
-
 </article>
 
 <article className="col col--6">
@@ -404,6 +461,42 @@ Next:
 </article>
 
 <article className="col col--6">
+</article>
+
+</section>
+
+#### 4. Connect to Conductor
+
+<section className="row list">
+
+<article className="col col--6">
+[Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-java-starter`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
+</article>
+
+<article className="col col--6">
+```bash
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+./gradlew bootRun
+```
+</article>
+
+<article className="col col--6">
+Your app is now connected to Conductor!
+You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
+</article>
+
+<article className="col col--6">
+<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+</article>
+
+<article className="col col--6">
+Next:
+
+- Check out the [**DBOS programming guide**](./java/programming-guide.md) to learn how to build reliable applications with DBOS.
+- Learn how to [**add DBOS to your application**](./java/integrating-dbos.md) to make it reliable with just a few lines of code.
 </article>
 
 </section>
