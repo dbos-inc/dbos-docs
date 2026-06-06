@@ -133,7 +133,7 @@ python3 app/main.py
 
 <article className="col col--6">
 Your app is now connected to Conductor!
-You can view and manage its workflows, including visualizing their steps, from the [DBOS console](https://console.dbos.dev).
+You can view and manage its workflows from the [DBOS console](https://console.dbos.dev).
 </article>
 
 <article className="col col--6">
