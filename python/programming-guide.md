@@ -240,6 +240,36 @@ Successfully completed 10 steps
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
+## 4. Connecting to DBOS Conductor
+
+[Conductor](../production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+Once you connect your app to Conductor, you can view and manage all its workflows and queued tasks from the [DBOS console](https://console.dbos.dev).
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-starter` (the name must match the `name` in your DBOS configuration).
+Then, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+
+Next, supply your API key to your app through the `conductor_key` configuration option.
+Update the configuration in `main.py` to read the key from an environment variable:
+
+```python showLineNumbers title="main.py"
+    config: DBOSConfig = {
+        "name": "dbos-starter",
+        "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
+        "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
+    }
+```
+
+Finally, set the `DBOS_CONDUCTOR_KEY` environment variable to the key you generated and restart your app:
+
+```shell
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+python3 main.py
+```
+
+Your app is now connected to Conductor!
+Launch a workflow by visiting http://localhost:8000, then watch it execute in real time from the [DBOS console](https://console.dbos.dev).
+Learn more about Conductor [here](../production/conductor.md).
+
 Congratulations!  You've finished the DBOS Python guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).

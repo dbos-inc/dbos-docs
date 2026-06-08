@@ -176,7 +176,7 @@ All beans are `@ConditionalOnMissingBean`.
 3. Otherwise, a `REQUIRES_NEW` Spring transaction is started. The method body runs, and the result is written to `tx_step_outputs` using `DataSourceUtils.getConnection()` — the same connection the transaction holds.
 4. The transaction commits, making the user's write and the step output record atomic. If the method throws, the transaction rolls back and the error is recorded separately so retries can replay it.
 
-See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md#spring-boot-transactionalstep) for per-stack examples (JDBC, JDBI, jOOQ, JPA).
+See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md#transactionalstep) for per-stack examples (JDBC, JDBI, jOOQ, JPA).
 
 ## DBOSAspect
 
