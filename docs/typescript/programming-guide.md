@@ -252,6 +252,33 @@ Wait five seconds and you should see an output like:
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
+## 4. Connecting to Conductor
+
+[Conductor](../production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
+Once you connect your app to Conductor, you can view and manage all its workflows and queued tasks from the [DBOS console](https://console.dbos.dev).
+
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-node-starter` (the name must match the `name` in your DBOS configuration).
+Then, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+
+Next, supply your API key to your app through the `conductorKey` launch option.
+Update the call to `DBOS.launch` in `main` to read the key from an environment variable:
+
+```javascript
+  await DBOS.launch({ conductorKey: process.env.DBOS_CONDUCTOR_KEY });
+```
+
+Finally, set the `DBOS_CONDUCTOR_KEY` environment variable to the key you generated, then rebuild and restart your app:
+
+```shell
+export DBOS_CONDUCTOR_KEY=<your-api-key>
+npm run build
+npm run start
+```
+
+Your app is now connected to Conductor!
+Launch a workflow by visiting http://localhost:3000, then watch it execute in real time from the [DBOS console](https://console.dbos.dev).
+Learn more about Conductor [here](../production/conductor.md).
+
 Congratulations!  You've finished the DBOS TypeScript guide.
 Next, you should:
 - Learn how to [**add DBOS to your own application**](./integrating-dbos.md).
