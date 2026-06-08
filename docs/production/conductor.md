@@ -60,7 +60,7 @@ await DBOS.launch({conductorKey})
 <TabItem value="golang" label="Go">
 
 ```go
-conductorKey := os.Getenv("CONDUCTOR_KEY")
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     AppName:         "dbos-starter",
     DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -128,7 +128,7 @@ await DBOS.launch({conductorKey})
 <TabItem value="golang" label="Go">
 
 ```go
-conductorKey := os.Getenv("CONDUCTOR_KEY")
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     AppName:         os.Getenv("DBOS_APPLICATION_NAME"),
     DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
