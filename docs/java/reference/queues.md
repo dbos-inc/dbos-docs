@@ -156,7 +156,7 @@ The `QueueOptions` convenience methods (`set*` / `and*`) call these automaticall
 ## Legacy: In-Memory Queues
 
 :::warning Deprecated
-The `Queue` record and pre-launch `dbos.registerQueue(Queue)` are deprecated in favour of [`DBOS.registerQueue`](#dbos-registerqueue), which persists queue configuration to the system database and supports runtime reconfiguration.
+The `Queue` record and pre-launch `dbos.registerQueue(Queue)` are deprecated in favour of [`DBOS.registerQueue`](#dbosregisterqueue), which persists queue configuration to the system database and supports runtime reconfiguration.
 :::
 
 ### Queue
