@@ -113,7 +113,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 </section>
 
-#### 4. Connect to Conductor
+#### 4. Connect to DBOS Conductor
 
 <section className="row list">
 
@@ -242,7 +242,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 </section>
 
-#### 4. Connect to Conductor
+#### 4. Connect to DBOS Conductor
 
 <section className="row list">
 
@@ -345,7 +345,7 @@ To see that your app is working, visit this URL in your browser: http://localhos
 
 Congratulations, you've run your first durable workflow with DBOS!
 
-#### 4. Connect to Conductor
+#### 4. Connect to DBOS Conductor
 
 <section className="row list">
 
@@ -465,7 +465,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 </section>
 
-#### 4. Connect to Conductor
+#### 4. Connect to DBOS Conductor
 
 <section className="row list">
 

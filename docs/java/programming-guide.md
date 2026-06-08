@@ -351,7 +351,7 @@ Successfully completed 10 workflows!
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.
 Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 
-## 4. Connecting to Conductor
+## 4. Connecting to DBOS Conductor
 
 [Conductor](../production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 Once you connect your app to Conductor, you can view and manage all its workflows and queued tasks from the [DBOS console](https://console.dbos.dev).
