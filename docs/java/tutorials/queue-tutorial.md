@@ -7,7 +7,7 @@ toc_max_heading_level: 4
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-Register a queue with [`DBOS.registerQueue`](../reference/queues.md#dbos-registerqueue), specifying its name and options.
+Register a queue with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue), specifying its name and options.
 Queues must be registered **after** [`dbos.launch()`](../reference/lifecycle.md).
 Queue configuration is persisted to the system database, so queues are visible to every DBOS process connected to that database.
 

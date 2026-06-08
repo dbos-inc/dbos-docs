@@ -10,6 +10,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Workflow and queue observability**](./workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
 - [**Workflow and queue management**](./workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
+- [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 
 Architecturally, Conductor is not part of your application's critical path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
@@ -24,10 +25,10 @@ To connect your application to Conductor, first register your application on the
 
 <img src={require('@site/static/img/conductor/register-app.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-Next, generate an API key.
-By default, API keys do not expire, though they may be revoked at any time from the [key settings page](https://console.dbos.dev/settings/apikey):
+Next, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+By default, API keys do not expire, though they may be revoked at any time.
 
-<img src={require('@site/static/img/conductor/conductor-key.png').default} alt="Workflow List" width="800" className="custom-img"/>
+<img src={require('@site/static/img/conductor/conductor-key.png').default} alt="Workflow List" width="400" className="custom-img"/>
 
 Finally, supply that API key to your DBOS application to connect it to Conductor.
 This initiates a websocket connection with Conductor:
@@ -60,7 +61,7 @@ await DBOS.launch({conductorKey})
 <TabItem value="golang" label="Go">
 
 ```go
-conductorKey := os.Getenv("CONDUCTOR_KEY")
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     AppName:         "dbos-starter",
     DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -128,7 +129,7 @@ await DBOS.launch({conductorKey})
 <TabItem value="golang" label="Go">
 
 ```go
-conductorKey := os.Getenv("CONDUCTOR_KEY")
+conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     AppName:         os.Getenv("DBOS_APPLICATION_NAME"),
     DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
