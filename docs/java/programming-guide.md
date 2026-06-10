@@ -25,7 +25,7 @@ Then, install DBOS (plus Logback for logging) by adding the following to your `a
 
 ```kotlin
 dependencies {
-  implementation("dev.dbos:transact:0.8.0")
+  implementation("dev.dbos:transact:0.9.0")
   implementation("org.slf4j:slf4j-simple:2.0.17") // needed to see DBOS log messages
   implementation("io.javalin:javalin:7.0.1") // needed for creating HTTP endpoint later in the guide
 
@@ -119,12 +119,12 @@ Now, build and run this code with:
 Your program should print output like:
 
 ```shell
-[main] INFO dev.dbos.transact.DBOS - Launching DBOS v0.8.0-m57
+[main] INFO dev.dbos.transact.DBOS - Launching DBOS v0.9.0
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - DBOS Executor starting
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database: jdbc:postgresql://localhost:5432/dbos_java_starter
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - System Database User name: postgres
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - Executor ID: local
-[main] INFO dev.dbos.transact.execution.DBOSExecutor - Application Version: ba1bd9eb7e0c99845dd339a348f64a42902b719fb4c553e0c49f76a63633609e
+[main] INFO dev.dbos.transact.execution.DBOSExecutor - Application Version: 18d0a53492115958cbeca6ca9cb01b226b11c0cdb9286a91010bc4cba3d8d73f
 Step one completed!
 Step two completed!
 [main] INFO dev.dbos.transact.execution.DBOSExecutor - DBOS Executor stopping
