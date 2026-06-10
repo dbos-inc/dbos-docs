@@ -207,6 +207,6 @@ If your step writes to a database and the application crashes before the checkpo
 If you need your database write and the DBOS checkpoint to be committed in the **same transaction**, use a step factory:
 
 - **Plain JDBC / JDBI / jOOQ**: use [`JdbcStepFactory`, `JdbiStepFactory`, or `JooqStepFactory`](../tutorials/step-factory-tutorial.md).
-- **Spring Boot**: annotate the method with [`@TransactionalStep`](../tutorials/step-factory-tutorial.md#spring-boot-transactionalstep) from `transact-spring-txstep-starter`.
+- **Spring Boot**: annotate the method with [`@TransactionalStep`](../tutorials/step-factory-tutorial.md#transactionalstep) from `transact-spring-txstep-starter`.
 
 See the [Step Factory tutorial](../tutorials/step-factory-tutorial.md) for full details.

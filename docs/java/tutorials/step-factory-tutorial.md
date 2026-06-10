@@ -23,7 +23,7 @@ If you use a restricted database role in production, grant the necessary privile
 | Plain JDBC / `DataSource` | [`JdbcStepFactory`](#jdbcstepfactory) from the `transact` module |
 | JDBI 3 | [`JdbiStepFactory`](#jdbistepfactory) from `transact-jdbi-step-factory` |
 | jOOQ | [`JooqStepFactory`](#jooqstepfactory) from `transact-jooq-step-factory` |
-| Spring Boot app | [`@TransactionalStep`](#spring-boot-transactionalstep) from `transact-spring-txstep-starter` |
+| Spring Boot app | [`@TransactionalStep`](#transactionalstep) from `transact-spring-txstep-starter` |
 
 ---
 
