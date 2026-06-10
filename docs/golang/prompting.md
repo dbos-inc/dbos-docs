@@ -1322,6 +1322,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 You can set a deduplication ID for an enqueued workflow using `WithDeduplicationID` when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
+Alternatively, use `WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting)` to instead return a handle to the existing workflow holding the deduplication ID.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -1897,10 +1898,58 @@ func WithQueuesOnly() ListWorkflowsOption
 
 Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
 
+#### WithCompletedAfter
+
+```go
+func WithCompletedAfter(completedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or after this timestamp.
+
+#### WithCompletedBefore
+
+```go
+func WithCompletedBefore(completedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or before this timestamp.
+
+#### WithDequeuedAfter
+
+```go
+func WithDequeuedAfter(dequeuedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or after this timestamp.
+
+#### WithDequeuedBefore
+
+```go
+func WithDequeuedBefore(dequeuedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or before this timestamp.
+
+#### WithWasForkedFrom
+
+```go
+func WithWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have been forked from (true) or not (false).
+
+#### WithHasParent
+
+```go
+func WithHasParent(hasParent bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have a parent workflow (true) or not (false).
+
 ### GetWorkflowSteps
 
 ```go
-func GetWorkflowSteps(ctx DBOSContext, workflowID string) ([]StepInfo, error)
+func GetWorkflowSteps(ctx DBOSContext, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 GetWorkflowSteps retrieves the execution steps of a workflow.
@@ -1919,6 +1968,16 @@ type StepInfo struct {
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow whose steps to retrieve.
+- **opts**: Optional configuration, documented below.
+
+#### WithStepsLoadOutput
+
+```go
+func WithStepsLoadOutput(loadOutput bool) GetWorkflowStepsOption
+```
+
+Control whether to load step output data.
+When unset, output is loaded only if the DBOS context has been launched.
 
 ### CancelWorkflow
 
@@ -2026,6 +2085,10 @@ type WorkflowStatus struct {
     Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
     Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
     StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
+    CompletedAt        time.Time          `json:"completed_at"`        // When the workflow reached a terminal state (SUCCESS, ERROR, or CANCELLED)
+    ForkedFrom         string             `json:"forked_from"`         // ID of the original workflow if this is a fork
+    WasForkedFrom      bool               `json:"was_forked_from"`     // Whether this workflow has been forked from
+    ParentWorkflowID   string             `json:"parent_workflow_id"`  // ID of the parent workflow if this is a child
     DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
@@ -2274,6 +2337,16 @@ Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
 
+#### WithDeduplicationPolicy
+
+```go
+func WithDeduplicationPolicy(policy DeduplicationPolicy) WorkflowOption
+```
+
+Set how a colliding deduplication ID is handled for a queued workflow.
+Must be used alongside `WithQueue` and `WithDeduplicationID`.
+With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
+
 #### WithPriority
 
 ```go
@@ -2321,6 +2394,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 ```
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
+Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
 
 ### RunAsStep
 
@@ -2575,6 +2649,7 @@ Please see Workflow IDs and Idempotency for more information.
 If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
+* `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
 

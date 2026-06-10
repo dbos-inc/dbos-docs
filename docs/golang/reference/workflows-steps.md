@@ -118,6 +118,36 @@ Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+This behavior can be changed with [`WithDeduplicationPolicy`](#withdeduplicationpolicy).
+
+#### WithDeduplicationPolicy
+
+```go
+func WithDeduplicationPolicy(policy DeduplicationPolicy) WorkflowOption
+```
+
+Set how a colliding deduplication ID is handled for a queued workflow.
+Must be used alongside `WithQueue` and `WithDeduplicationID`.
+
+```go
+type DeduplicationPolicy int
+
+const (
+    // DeduplicationPolicyReject (default) returns a QueueDeduplicated error if another workflow
+    // already holds the deduplication ID on the queue.
+    DeduplicationPolicyReject DeduplicationPolicy = iota
+    // DeduplicationPolicyReturnExisting returns a handle to the existing workflow instead of an error.
+    DeduplicationPolicyReturnExisting
+)
+```
+
+```go
+handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task,
+    dbos.WithQueue(queue.Name),
+    dbos.WithDeduplicationID("user_12345"),
+    dbos.WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting),
+)
+```
 
 #### WithPriority
 
@@ -216,6 +246,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 ```
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
+Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
 
 ### RunAsStep
 

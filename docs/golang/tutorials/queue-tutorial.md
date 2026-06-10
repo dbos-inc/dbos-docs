@@ -253,6 +253,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 You can set a deduplication ID for an enqueued workflow using [`WithDeduplicationID`](../reference/workflows-steps#withdeduplicationid) when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
+Alternatively, use [`WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting)`](../reference/workflows-steps#withdeduplicationpolicy) to instead return a handle to the existing workflow holding the deduplication ID.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
