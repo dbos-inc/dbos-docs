@@ -430,9 +430,9 @@ For example:
 
 ```java
 // By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
 // across all partitions (and at most one task per partition).
-DBOS.registerQueue("concurrency-queue", QueueOptions.setConcurrency(5));
+DBOS.registerQueue("concurrency-queue", QueueOptions.setWorkerConcurrency(5));
 DBOS.registerQueue("partitioned-queue",
     QueueOptions.setConcurrency(1).andPartitionQueue(true));
 

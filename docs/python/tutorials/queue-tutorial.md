@@ -278,9 +278,9 @@ For example:
 
 ```python
 # By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-# and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+# and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
 # across all partitions (and at most one task per partition).
-DBOS.register_queue("concurrency-queue", concurrency=5)
+DBOS.register_queue("concurrency-queue", worker_concurrency=5)
 DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
 
 def on_user_task_submission(user_id: str, task: Task):
