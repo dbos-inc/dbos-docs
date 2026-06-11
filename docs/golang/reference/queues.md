@@ -204,6 +204,19 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
 
+#### WithDebouncerInstance
+
+```go
+func WithDebouncerInstance(instance ConfiguredInstance) DebouncerOption
+```
+
+Target the workflow registration bound to the given configured instance (see [`WithInstance`](./workflows-steps.md#withinstance)).
+Required when the debounced workflow is a method of a configured instance.
+
+```go
+debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
+```
+
 #### Debouncer.Debounce
 
 ```go

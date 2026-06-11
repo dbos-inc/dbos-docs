@@ -53,6 +53,51 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
+#### WithInstance
+
+```go
+func WithInstance(instance ConfiguredInstance) WorkflowRegistrationOption
+```
+
+Register a workflow method bound to a specific configured instance.
+Method values bound to different receivers (e.g. `a.Run` and `b.Run`) share a function name, so each instance's method must be registered under a per-instance key, derived from the instance's config name.
+
+The instance must implement the `ConfiguredInstance` interface:
+
+```go
+type ConfiguredInstance interface {
+    ConfigName() string
+}
+```
+
+`ConfigName` must return a stable, unique name for the instance: it is durably recorded so recovery runs the workflow on the correct instance.
+Instances must be registered with the same config name on every process start, before `Launch()`.
+
+Run a workflow registered with `WithInstance` using the matching [`WithRunInstance`](#withruninstance) option.
+
+**Example syntax:**
+
+```go
+type Messenger struct {
+    name string
+}
+
+func (m *Messenger) ConfigName() string {
+    return m.name
+}
+
+func (m *Messenger) Send(ctx dbos.DBOSContext, message string) (string, error) {
+    // Workflow implementation using m...
+    return "sent", nil
+}
+
+slack := &Messenger{name: "slack"}
+email := &Messenger{name: "email"}
+
+dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
+dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
+```
+
 ### RunWorkflow
 
 ```go
@@ -99,6 +144,18 @@ func WithWorkflowID(id string) WorkflowOption
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
 
+#### WithRunInstance
+
+```go
+func WithRunInstance(instance ConfiguredInstance) WorkflowOption
+```
+
+Run a workflow method registered with [`WithInstance`](#withinstance).
+
+```go
+handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(slack))
+```
+
 #### WithQueue
 
 ```go
@@ -118,6 +175,36 @@ Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
+This behavior can be changed with [`WithDeduplicationPolicy`](#withdeduplicationpolicy).
+
+#### WithDeduplicationPolicy
+
+```go
+func WithDeduplicationPolicy(policy DeduplicationPolicy) WorkflowOption
+```
+
+Set how a colliding deduplication ID is handled for a queued workflow.
+Must be used alongside `WithQueue` and `WithDeduplicationID`.
+
+```go
+type DeduplicationPolicy int
+
+const (
+    // DeduplicationPolicyReject (default) returns a QueueDeduplicated error if another workflow
+    // already holds the deduplication ID on the queue.
+    DeduplicationPolicyReject DeduplicationPolicy = iota
+    // DeduplicationPolicyReturnExisting returns a handle to the existing workflow instead of an error.
+    DeduplicationPolicyReturnExisting
+)
+```
+
+```go
+handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task,
+    dbos.WithQueue(queue.Name),
+    dbos.WithDeduplicationID("user_12345"),
+    dbos.WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting),
+)
+```
 
 #### WithPriority
 
@@ -216,6 +303,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 ```
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
+Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
 
 ### RunAsStep
 

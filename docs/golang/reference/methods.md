@@ -330,10 +330,58 @@ func WithQueuesOnly() ListWorkflowsOption
 
 Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
 
+#### WithCompletedAfter
+
+```go
+func WithCompletedAfter(completedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or after this timestamp.
+
+#### WithCompletedBefore
+
+```go
+func WithCompletedBefore(completedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or before this timestamp.
+
+#### WithDequeuedAfter
+
+```go
+func WithDequeuedAfter(dequeuedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or after this timestamp.
+
+#### WithDequeuedBefore
+
+```go
+func WithDequeuedBefore(dequeuedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or before this timestamp.
+
+#### WithWasForkedFrom
+
+```go
+func WithWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have been forked from (true) or not (false).
+
+#### WithHasParent
+
+```go
+func WithHasParent(hasParent bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have a parent workflow (true) or not (false).
+
 ### GetWorkflowSteps
 
 ```go
-func GetWorkflowSteps(ctx DBOSContext, workflowID string) ([]StepInfo, error)
+func GetWorkflowSteps(ctx DBOSContext, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 GetWorkflowSteps retrieves the execution steps of a workflow.
@@ -351,7 +399,17 @@ type StepInfo struct {
 
 **Parameters:**
 - **ctx**: The DBOS context.
-- **workflowID**: The ID of the workflow to cancel.
+- **workflowID**: The ID of the workflow whose steps to retrieve.
+- **opts**: Optional configuration, documented below.
+
+#### WithStepsLoadOutput
+
+```go
+func WithStepsLoadOutput(loadOutput bool) GetWorkflowStepsOption
+```
+
+Control whether to load step output data.
+When unset, output is loaded only if the DBOS context has been launched.
 
 ### GetWorkflowAggregates
 
@@ -414,6 +472,72 @@ for _, r := range rows {
 type WorkflowAggregateRow struct {
     Group map[string]*string // One entry per enabled grouping column; nil values represent NULL
     Count int64              // Number of workflows in this group
+}
+```
+
+### GetStepAggregates
+
+```go
+func GetStepAggregates(ctx DBOSContext, input GetStepAggregatesInput) ([]StepAggregateRow, error)
+```
+
+Return aggregate counts and/or max durations of steps grouped by function name and/or status, optionally bucketed by `completed_at` time.
+At least one `GroupBy*` flag must be set, or `TimeBucketSize` must be greater than zero.
+At least one `Select*` flag must be set.
+Step status is derived from the step's recorded outcome: steps with no recorded error are `SUCCESS`, otherwise `ERROR`.
+
+```go
+type GetStepAggregatesInput struct {
+    GroupByFunctionName bool
+    GroupByStatus       bool
+
+    SelectCount         bool
+    SelectMaxDurationMs bool
+
+    // When non-zero, groups results by completed_at time bucket of this size.
+    TimeBucketSize time.Duration
+
+    // Filters
+    Status           []string
+    FunctionName     []string
+    WorkflowIDPrefix []string
+    CompletedAfter   time.Time
+    CompletedBefore  time.Time
+}
+```
+
+The result is one [`StepAggregateRow`](#stepaggregaterow) per non-empty group.
+The `Group` map contains an entry per enabled grouping column (`"function_name"`, `"status"`, `"time_bucket"`).
+`Count` and `MaxDurationMs` are populated only for the corresponding enabled `Select*` flag.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **input**: A `GetStepAggregatesInput` describing the grouping columns, aggregates, time bucket, and filters.
+
+**Example:**
+
+```go
+rows, err := dbos.GetStepAggregates(ctx, dbos.GetStepAggregatesInput{
+    GroupByFunctionName: true,
+    SelectCount:         true,
+    SelectMaxDurationMs: true,
+    CompletedAfter:      time.Now().Add(-24 * time.Hour),
+})
+if err != nil {
+    log.Fatal(err)
+}
+for _, r := range rows {
+    fmt.Printf("step=%s count=%d max_duration_ms=%d\n", *r.Group["function_name"], *r.Count, *r.MaxDurationMs)
+}
+```
+
+#### StepAggregateRow
+
+```go
+type StepAggregateRow struct {
+    Group         map[string]*string // One entry per enabled grouping column; nil values represent NULL
+    Count         *int64             // Number of steps in this group (nil if SelectCount is false)
+    MaxDurationMs *int64             // Max step duration in this group (nil if SelectMaxDurationMs is false)
 }
 ```
 
@@ -573,6 +697,10 @@ type WorkflowStatus struct {
     Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
     Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
     StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
+    CompletedAt        time.Time          `json:"completed_at"`        // When the workflow reached a terminal state (SUCCESS, ERROR, or CANCELLED)
+    ForkedFrom         string             `json:"forked_from"`         // ID of the original workflow if this is a fork
+    WasForkedFrom      bool               `json:"was_forked_from"`     // Whether this workflow has been forked from
+    ParentWorkflowID   string             `json:"parent_workflow_id"`  // ID of the parent workflow if this is a child
     DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)

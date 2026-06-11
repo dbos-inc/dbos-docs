@@ -1322,6 +1322,7 @@ Rate limits are especially useful when working with a rate-limited API, such as 
 You can set a deduplication ID for an enqueued workflow using `WithDeduplicationID` when calling `RunWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will return an error.
+Alternatively, use `WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting)` to instead return a handle to the existing workflow holding the deduplication ID.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -1490,6 +1491,12 @@ func main() {
     result, err := handle.GetResult()
     fmt.Println("Result:", result) // Processed with "updated input"
 }
+```
+
+To debounce a workflow method of a configured instance (registered with `WithInstance`), pass the instance with `WithDebouncerInstance`:
+
+```go
+debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
 ```
 
 ### ListenQueues
@@ -1897,10 +1904,58 @@ func WithQueuesOnly() ListWorkflowsOption
 
 Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
 
+#### WithCompletedAfter
+
+```go
+func WithCompletedAfter(completedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or after this timestamp.
+
+#### WithCompletedBefore
+
+```go
+func WithCompletedBefore(completedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or before this timestamp.
+
+#### WithDequeuedAfter
+
+```go
+func WithDequeuedAfter(dequeuedAfter time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or after this timestamp.
+
+#### WithDequeuedBefore
+
+```go
+func WithDequeuedBefore(dequeuedBefore time.Time) ListWorkflowsOption
+```
+
+Retrieve workflows that started executing at or before this timestamp.
+
+#### WithWasForkedFrom
+
+```go
+func WithWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have been forked from (true) or not (false).
+
+#### WithHasParent
+
+```go
+func WithHasParent(hasParent bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they have a parent workflow (true) or not (false).
+
 ### GetWorkflowSteps
 
 ```go
-func GetWorkflowSteps(ctx DBOSContext, workflowID string) ([]StepInfo, error)
+func GetWorkflowSteps(ctx DBOSContext, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 GetWorkflowSteps retrieves the execution steps of a workflow.
@@ -1919,6 +1974,16 @@ type StepInfo struct {
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow whose steps to retrieve.
+- **opts**: Optional configuration, documented below.
+
+#### WithStepsLoadOutput
+
+```go
+func WithStepsLoadOutput(loadOutput bool) GetWorkflowStepsOption
+```
+
+Control whether to load step output data.
+When unset, output is loaded only if the DBOS context has been launched.
 
 ### CancelWorkflow
 
@@ -2026,6 +2091,10 @@ type WorkflowStatus struct {
     Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
     Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
     StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
+    CompletedAt        time.Time          `json:"completed_at"`        // When the workflow reached a terminal state (SUCCESS, ERROR, or CANCELLED)
+    ForkedFrom         string             `json:"forked_from"`         // ID of the original workflow if this is a fork
+    WasForkedFrom      bool               `json:"was_forked_from"`     // Whether this workflow has been forked from
+    ParentWorkflowID   string             `json:"parent_workflow_id"`  // ID of the parent workflow if this is a child
     DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
@@ -2209,6 +2278,33 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
+#### WithInstance
+
+```go
+func WithInstance(instance ConfiguredInstance) WorkflowRegistrationOption
+```
+
+Register a workflow method bound to a specific configured instance.
+Method values bound to different receivers (e.g. `a.Run` and `b.Run`) share a function name, so each instance's method must be registered under a per-instance key, derived from the instance's config name.
+
+The instance must implement the `ConfiguredInstance` interface:
+
+```go
+type ConfiguredInstance interface {
+    ConfigName() string
+}
+```
+
+`ConfigName` must return a stable, unique name for the instance: it is durably recorded so recovery runs the workflow on the correct instance.
+Instances must be registered with the same config name on every process start, before `Launch()`.
+
+```go
+dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
+dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
+```
+
+Run a workflow registered with `WithInstance` using the matching `WithRunInstance` option.
+
 ### RunWorkflow
 
 ```go
@@ -2255,6 +2351,19 @@ func WithWorkflowID(id string) WorkflowOption
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
 
+#### WithRunInstance
+
+```go
+func WithRunInstance(instance ConfiguredInstance) WorkflowOption
+```
+
+Run a workflow method registered with `WithInstance`.
+The instance's config name selects the per-instance registration, so the workflow executes on (and recovers to) the correct instance.
+
+```go
+handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(slack))
+```
+
 #### WithQueue
 
 ```go
@@ -2273,6 +2382,16 @@ func WithDeduplicationID(id string) WorkflowOption
 Set a deduplication ID for this workflow.
 Should be used alongside `WithQueue`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in a given queue.
+
+#### WithDeduplicationPolicy
+
+```go
+func WithDeduplicationPolicy(policy DeduplicationPolicy) WorkflowOption
+```
+
+Set how a colliding deduplication ID is handled for a queued workflow.
+Must be used alongside `WithQueue` and `WithDeduplicationID`.
+With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 
 #### WithPriority
 
@@ -2321,6 +2440,7 @@ func WithAuthenticatedUser(user string) WorkflowOption
 ```
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
+Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
 
 ### RunAsStep
 
@@ -2575,6 +2695,7 @@ Please see Workflow IDs and Idempotency for more information.
 If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using `WithoutCancel`). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
+* `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
 
@@ -2742,6 +2863,7 @@ func NewDebouncerClient[P any, R any](workflowName string, client Client, opts .
 
 Create a new debouncer client for use from outside a DBOS application.
 Similar to `NewDebouncer` but uses a Client instead of a DBOSContext and takes a workflow name string instead of a function reference.
+To debounce a workflow registered on a configured instance, pass the instance's config name with `WithDebouncerConfigName(configName string)`.
 
 ### ClientReadStream
 
@@ -2815,6 +2937,7 @@ func WithEnqueueConfigName(configName string) EnqueueOption
 ```
 
 Set the class/namespace and config/instance name when enqueueing to Python, TypeScript, or Java targets.
+`WithEnqueueConfigName` is also required when enqueueing to a Go workflow registered on a configured instance with `WithInstance`; the value must match the instance's config name.
 
 ## Alerting
 
