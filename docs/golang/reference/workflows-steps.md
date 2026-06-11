@@ -151,7 +151,6 @@ func WithRunInstance(instance ConfiguredInstance) WorkflowOption
 ```
 
 Run a workflow method registered with [`WithInstance`](#withinstance).
-The instance's config name selects the per-instance registration, so the workflow executes on (and recovers to) the correct instance.
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(slack))
