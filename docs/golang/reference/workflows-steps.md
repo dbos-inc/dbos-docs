@@ -53,6 +53,51 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
+#### WithInstance
+
+```go
+func WithInstance(instance ConfiguredInstance) WorkflowRegistrationOption
+```
+
+Register a workflow method bound to a specific configured instance.
+Method values bound to different receivers (e.g. `a.Run` and `b.Run`) share a function name, so each instance's method must be registered under a per-instance key, derived from the instance's config name.
+
+The instance must implement the `ConfiguredInstance` interface:
+
+```go
+type ConfiguredInstance interface {
+    ConfigName() string
+}
+```
+
+`ConfigName` must return a stable, unique name for the instance: it is durably recorded so recovery runs the workflow on the correct instance.
+Instances must be registered with the same config name on every process start, before `Launch()`.
+
+Run a workflow registered with `WithInstance` using the matching [`WithRunInstance`](#withruninstance) option.
+
+**Example syntax:**
+
+```go
+type Messenger struct {
+    name string
+}
+
+func (m *Messenger) ConfigName() string {
+    return m.name
+}
+
+func (m *Messenger) Send(ctx dbos.DBOSContext, message string) (string, error) {
+    // Workflow implementation using m...
+    return "sent", nil
+}
+
+slack := &Messenger{name: "slack"}
+email := &Messenger{name: "email"}
+
+dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
+dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
+```
+
 ### RunWorkflow
 
 ```go
@@ -98,6 +143,19 @@ func WithWorkflowID(id string) WorkflowOption
 
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
+
+#### WithRunInstance
+
+```go
+func WithRunInstance(instance ConfiguredInstance) WorkflowOption
+```
+
+Run a workflow method registered with [`WithInstance`](#withinstance).
+The instance's config name selects the per-instance registration, so the workflow executes on (and recovers to) the correct instance.
+
+```go
+handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(slack))
+```
 
 #### WithQueue
 

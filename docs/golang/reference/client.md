@@ -133,7 +133,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow. See [`WithDeduplicationPolicy`](./workflows-steps.md#withdeduplicationpolicy).
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
-* `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets that register workflows on class instances (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
+* `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to a workflow registered on a configured instance: a Go workflow registered with [`WithInstance`](./workflows-steps.md#withinstance), or a Python, TypeScript, or Java class instance workflow (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via [`SetWorkflowDelay`](#setworkflowdelay).
 
 :::tip Cross-Language Enqueue
@@ -334,6 +334,21 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
+
+#### WithDebouncerConfigName
+
+```go
+func WithDebouncerConfigName(configName string) DebouncerOption
+```
+
+Target the workflow registration bound to the configured instance with the given config name (see [`WithInstance`](./workflows-steps.md#withinstance)).
+Required when the debounced workflow is a method of a configured instance.
+Use with `NewDebouncerClient`, where the instance object itself is not available.
+
+```go
+dc := dbos.NewDebouncerClient[string, string]("Send", client,
+    dbos.WithDebouncerConfigName("slack"))
+```
 
 #### DebouncerClient.Debounce
 

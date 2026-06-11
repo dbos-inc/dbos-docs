@@ -1493,6 +1493,12 @@ func main() {
 }
 ```
 
+To debounce a workflow method of a configured instance (registered with `WithInstance`), pass the instance with `WithDebouncerInstance`:
+
+```go
+debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
+```
+
 ### ListenQueues
 
 You can configure which queues the current DBOS process should listen to for workflow execution using `ListenQueues`.
@@ -2272,6 +2278,33 @@ func WithWorkflowName(name string) WorkflowRegistrationOption
 Register a workflow with a custom name.
 If not provided, the name of the workflow function is used.
 
+#### WithInstance
+
+```go
+func WithInstance(instance ConfiguredInstance) WorkflowRegistrationOption
+```
+
+Register a workflow method bound to a specific configured instance.
+Method values bound to different receivers (e.g. `a.Run` and `b.Run`) share a function name, so each instance's method must be registered under a per-instance key, derived from the instance's config name.
+
+The instance must implement the `ConfiguredInstance` interface:
+
+```go
+type ConfiguredInstance interface {
+    ConfigName() string
+}
+```
+
+`ConfigName` must return a stable, unique name for the instance: it is durably recorded so recovery runs the workflow on the correct instance.
+Instances must be registered with the same config name on every process start, before `Launch()`.
+
+```go
+dbos.RegisterWorkflow(ctx, slack.Send, dbos.WithInstance(slack))
+dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
+```
+
+Run a workflow registered with `WithInstance` using the matching `WithRunInstance` option.
+
 ### RunWorkflow
 
 ```go
@@ -2317,6 +2350,19 @@ func WithWorkflowID(id string) WorkflowOption
 
 Run the workflow with a custom workflow ID.
 If not specified, a UUID workflow ID is generated.
+
+#### WithRunInstance
+
+```go
+func WithRunInstance(instance ConfiguredInstance) WorkflowOption
+```
+
+Run a workflow method registered with `WithInstance`.
+The instance's config name selects the per-instance registration, so the workflow executes on (and recovers to) the correct instance.
+
+```go
+handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(slack))
+```
 
 #### WithQueue
 
@@ -2817,6 +2863,7 @@ func NewDebouncerClient[P any, R any](workflowName string, client Client, opts .
 
 Create a new debouncer client for use from outside a DBOS application.
 Similar to `NewDebouncer` but uses a Client instead of a DBOSContext and takes a workflow name string instead of a function reference.
+To debounce a workflow registered on a configured instance, pass the instance's config name with `WithDebouncerConfigName(configName string)`.
 
 ### ClientReadStream
 
@@ -2890,6 +2937,7 @@ func WithEnqueueConfigName(configName string) EnqueueOption
 ```
 
 Set the class/namespace and config/instance name when enqueueing to Python, TypeScript, or Java targets.
+`WithEnqueueConfigName` is also required when enqueueing to a Go workflow registered on a configured instance with `WithInstance`; the value must match the instance's config name.
 
 ## Alerting
 
