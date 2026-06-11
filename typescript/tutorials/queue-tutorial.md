@@ -323,9 +323,9 @@ For example:
 
 ```ts
 // By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-// and a global concurrency limit of 5, meaning that no more than 5 tasks can run concurrently
+// and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
 // across all partitions (and at most one task per partition).
-await DBOS.registerQueue("concurrency-queue", { concurrency: 5 });
+await DBOS.registerQueue("concurrency-queue", { workerConcurrency: 5 });
 await DBOS.registerQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
