@@ -1839,6 +1839,7 @@ export interface DBOSConfig {
 
   enableOTLP?: boolean;
   logLevel?: string;
+  logger?: DLogger;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
 
@@ -1871,6 +1872,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
+- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
 - **otlpTracesEndpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.

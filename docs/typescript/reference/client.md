@@ -32,7 +32,7 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
@@ -90,6 +90,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabaseSchemaName**: An optional Postgres schema name for DBOS system tables. Defaults to `dbos`. If your DBOS application uses a [custom schema name](./configuration.md#database-connection-settings), you must provide the same schema name to the client.
 - **systemDatabasePoolSize**: An optional maximum size for the system database connection pool. Defaults to 10.
 - **systemDatabasePollingConcurrency**: An optional maximum number of concurrent database-backed polling reads from wait operations. See [`systemDatabasePollingConcurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
+- **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
 
 Example:
 

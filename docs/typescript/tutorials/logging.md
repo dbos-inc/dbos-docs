@@ -25,6 +25,49 @@ await DBOS.launch();
 
 Setting `logLevel` also affects any log messages emitted by the DBOS library.
 
+### Custom Logger
+
+By default, the DBOS logger writes to the console (or exports its logs over OTLP when `enableOTLP` is set).
+To route all of DBOS's internal logging to your own logging system instead, supply a custom logger that implements the `DLogger` interface (exported from the DBOS package, along with the `ContextualMetadata` and `StackTrace` types):
+
+```typescript
+export interface DLogger {
+  info(logEntry: unknown, metadata?: ContextualMetadata): void;
+  debug(logEntry: unknown, metadata?: ContextualMetadata): void;
+  warn(logEntry: unknown, metadata?: ContextualMetadata): void;
+  error(inputError: unknown, metadata?: ContextualMetadata & StackTrace): void;
+}
+```
+
+Pass your implementation through the `logger` field in DBOS configuration:
+
+```typescript
+DBOS.setConfig({
+  name: 'my-app',
+  logger: myCustomLogger,
+});
+await DBOS.launch();
+```
+
+You can also supply a custom logger to the [DBOS Client](../reference/client.md):
+
+```typescript
+const client = await DBOSClient.create({
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  logger: myCustomLogger,
+});
+```
+
+When a custom logger is set, DBOS directs all its internal logging to it (including `DBOS.logger` calls in your workflows and steps), replacing the built-in console and OTLP log sinks.
+Keep the following contract in mind when implementing `DLogger`:
+
+- **Log entries arrive as strings.** DBOS stringifies non-string entries before delegating. `error()` receives the message of an `Error`, with its stack trace in `metadata.stack`.
+- **Context metadata is provided via the span.** When called from a workflow or step, `metadata.span?.attributes` carries the operation context (workflow ID, operation name and type, etc.).
+- **Level routing is your responsibility.** DBOS does not filter by `logLevel` before delegating; your implementation decides what to do with each level.
+- **OTLP log export is disabled.** Logs are not sent over OTLP even if `enableOTLP` is on (tracing is unaffected).
+- **The logger's lifecycle is yours.** DBOS never flushes or closes it.
+- **Do not log back through `DBOS.logger`** from within your implementation, as this could cause infinite recursion.
+
 
 ### Tracing
 
