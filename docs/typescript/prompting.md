@@ -1833,6 +1833,7 @@ export interface DBOSConfig {
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabasePollingConcurrency?: number;
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
@@ -1865,6 +1866,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the DBOS system database. Defaults to 10.
+- **systemDatabasePollingConcurrency**: The maximum number of database-backed polling reads from wait operations (such as `getResult`, `waitAll`, `waitFirst`, `recv`, and `getEvent`) that may run concurrently against the system database pool. This prevents high-fan-out polling from starving control-plane operations such as enqueue/dequeue, status writes, recovery, and cancellation. Defaults to half the `systemDatabasePoolSize` (minimum 1). Set to a non-positive value to disable the limit.
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
