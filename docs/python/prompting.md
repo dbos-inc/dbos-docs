@@ -1521,11 +1521,14 @@ Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (abs
 ```python
 DBOS.cancel_workflow(
     workflow_id: str,
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+If `cancel_children` is `True`, also recursively cancels all child workflows started by this workflow.
 
 ### resume_workflow
 

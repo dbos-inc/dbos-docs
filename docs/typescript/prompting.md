@@ -584,6 +584,7 @@ DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
 interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -650,6 +651,7 @@ DBOS.getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Pr
 interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -1398,10 +1400,14 @@ Retrieve the ID of the workflow.
 ### handle.getResult
 
 ```typescript
-handle.getResult(): Promise<R>;
+handle.getResult(
+  options?: { pollingIntervalMs?: number }
+): Promise<R>;
 ```
 
 Wait for the workflow to complete, then return its result.
+The optional `pollingIntervalMs` sets the interval between system database polls while waiting.
+It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client), not to a handle from `DBOS.startWorkflow` in the same process.
 
 ### handle.getStatus
 
@@ -1637,12 +1643,14 @@ Accepts a `SetWorkflowDelayOptions` object with `delaySeconds` (relative) or `de
 
 ```typescript
 cancelWorkflow(
-  workflowID: string
+  workflowID: string,
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+If `cancelChildren` is true, also cancel all child workflows recursively.
 
 ### DBOS.resumeWorkflow
 
@@ -1825,11 +1833,13 @@ export interface DBOSConfig {
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabasePollingConcurrency?: number;
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
   logLevel?: string;
+  logger?: DLogger;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
 
@@ -1857,10 +1867,12 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the DBOS system database. Defaults to 10.
+- **systemDatabasePollingConcurrency**: The maximum number of database-backed polling reads from wait operations (such as `getResult`, `waitAll`, `waitFirst`, `recv`, and `getEvent`) that may run concurrently against the system database pool. This prevents high-fan-out polling from starving control-plane operations such as enqueue/dequeue, status writes, recovery, and cancellation. Defaults to half the `systemDatabasePoolSize` (minimum 1). Set to a non-positive value to disable the limit.
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
+- **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
 - **otlpTracesEndpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.

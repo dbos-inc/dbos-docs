@@ -1034,11 +1034,17 @@ Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
 ```python
 DBOS.cancel_workflow(
     workflow_id: str,
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+
+**Parameters:**
+- **workflow_id**: The ID of the workflow to cancel.
+- **cancel_children**: If `True`, also recursively cancels all child workflows started by this workflow.
 
 ### cancel_workflow_async
 
@@ -1049,6 +1055,8 @@ Coroutine version of [`cancel_workflow`](#cancel_workflow).
 ```python
 DBOS.cancel_workflows(
     workflow_ids: List[str],
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
