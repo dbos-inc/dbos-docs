@@ -1406,8 +1406,8 @@ handle.getResult(
 ```
 
 Wait for the workflow to complete, then return its result.
-The optional `pollingIntervalMs` (which must be a positive, finite number) sets the interval between system database polls while waiting.
-It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client); a handle returned by `DBOS.startWorkflow` in the same process awaits the running workflow directly and does not poll.
+The optional `pollingIntervalMs` sets the interval between system database polls while waiting.
+It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client), not to a handle from `DBOS.startWorkflow` in the same process.
 
 ### handle.getStatus
 
