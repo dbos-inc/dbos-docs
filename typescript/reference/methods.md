@@ -82,8 +82,15 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 ```typescript
 static async waitFirst(
-  handles: WorkflowHandle<unknown>[]
+  handles: WorkflowHandle<unknown>[],
+  options?: WaitFirstOptions
 ): Promise<WorkflowHandle<unknown>>
+```
+
+```typescript
+interface WaitFirstOptions {
+  pollingIntervalMs?: number;
+}
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.
@@ -91,8 +98,36 @@ This is useful when you have multiple concurrent workflows and want to process r
 
 **Parameters:**
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
+
+### DBOS.waitAll
+
+```typescript
+static async waitAll<R>(
+  handles: WorkflowHandle<R>[],
+  options?: WaitAllOptions
+): Promise<WorkflowHandle<R>[]>
+```
+
+```typescript
+interface WaitAllOptions {
+  pollingIntervalMs?: number;
+}
+```
+
+Wait for **all** of the given workflow handles to complete, then return them.
+The returned array contains the input handles in the same order, including any duplicates.
+
+`waitAll` only waits for the workflows to finish; it does not return their results or throw if one of them failed.
+To retrieve results, call [`getResult`](#handlegetresult) on the returned handles.
+
+**Parameters:**
+- **handles**: An array of workflow handles to wait on.
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
 
 ### DBOS.send
 
@@ -129,6 +164,7 @@ recv<T>(
 interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -143,6 +179,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 - **options**:
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -180,6 +217,7 @@ DBOS.getEvent<T>(
 interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -192,6 +230,7 @@ If the event does not yet exist, wait for it to be published, returning `null` i
 - **options**:
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
 
 ### DBOS.sleep
 
@@ -452,18 +491,24 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 
 ```typescript
 cancelWorkflow(
-  workflowID: string
+  workflowID: string,
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
+**Parameters:**
+- **workflowID**: The ID of the workflow to cancel.
+- **cancelChildren**: If true, also cancel all child workflows recursively. Defaults to false.
+
 ### DBOS.cancelWorkflows
 
 ```typescript
 DBOS.cancelWorkflows(
-  workflowIDs: string[]
+  workflowIDs: string[],
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 
@@ -1031,10 +1076,16 @@ Retrieve the ID of the workflow.
 ### handle.getResult
 
 ```typescript
-handle.getResult(): Promise<R>;
+handle.getResult(
+  options?: { pollingIntervalMs?: number }
+): Promise<R>;
 ```
 
 Wait for the workflow to complete, then return its result.
+
+**Parameters:**
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow) or the [DBOS Client](./client.md)), not to a handle from `DBOS.startWorkflow` in the same process.
 
 ### handle.getStatus
 

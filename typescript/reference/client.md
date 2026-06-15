@@ -32,7 +32,7 @@ interface EnqueueOptions {
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger}): Promise<DBOSClient>
     destroy(): Promise<void>;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
@@ -42,7 +42,8 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
-    waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>;
+    waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
+    waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
@@ -51,8 +52,8 @@ class DBOSClient {
     listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
-    cancelWorkflow(workflowID: string): Promise<void>;
-    cancelWorkflows(workflowIDs: string[]): Promise<void>;
+    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
+    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
     resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
     resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,
@@ -84,9 +85,12 @@ You construct a `DBOSClient` with the static `create` function.
 
 **Parameters:**
 - **systemDatabaseUrl**: A connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
-- **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations.
+- **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations, and `systemDatabasePoolSize` is ignored.
 - **serializer**: An optional custom serializer. If your DBOS application uses [custom serialization](./configuration.md#custom-serialization), you must provide the same serializer to the client to correctly deserialize workflow results and events.
 - **systemDatabaseSchemaName**: An optional Postgres schema name for DBOS system tables. Defaults to `dbos`. If your DBOS application uses a [custom schema name](./configuration.md#database-connection-settings), you must provide the same schema name to the client.
+- **systemDatabasePoolSize**: An optional maximum size for the system database connection pool. Defaults to 10.
+- **systemDatabasePollingConcurrency**: An optional maximum number of concurrent database-backed polling reads from wait operations. See [`systemDatabasePollingConcurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
+- **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
 
 Example:
 
@@ -210,7 +214,7 @@ it is highly recommended that you use the `idempotencyKey` parameter in order to
 
 Retrieves an event published by workflowID for a given key.
 Similar to [DBOS.getEvent](./methods.md#dbosgetevent).
-Like `DBOS.getEvent`, accepts a [`GetEventOptions`](./methods.md#dbosgetevent) object with `timeoutSeconds` or `deadlineEpochMS`.
+Like `DBOS.getEvent`, accepts a [`GetEventOptions`](./methods.md#dbosgetevent) object with `timeoutSeconds` or `deadlineEpochMS`, plus an optional `pollingIntervalMs`.
 
 #### `retrieveWorkflow`
 
@@ -231,14 +235,35 @@ const pageCount = await handle.getResult();
 #### `waitFirst`
 
 ```typescript
-waitFirst(handles: WorkflowHandle<unknown>[]): Promise<WorkflowHandle<unknown>>
+waitFirst(
+  handles: WorkflowHandle<unknown>[],
+  options?: { pollingIntervalMs?: number }
+): Promise<WorkflowHandle<unknown>>
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.
-Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst).
+Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst), including the optional `pollingIntervalMs`.
 
 **Parameters:**
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+
+#### `waitAll`
+
+```typescript
+waitAll<R>(
+  handles: WorkflowHandle<R>[],
+  options?: { pollingIntervalMs?: number }
+): Promise<WorkflowHandle<R>[]>
+```
+
+Wait for **all** of the given workflow handles to complete, then return them in the same order (including duplicates).
+An empty input array returns immediately with an empty array.
+Similar to [`DBOS.waitAll`](./methods.md#dboswaitall), including the optional `pollingIntervalMs`.
+
+`waitAll` only waits for the workflows to finish; it does not return their results. To retrieve results, call `getResult` on the returned handles.
+
+**Parameters:**
+- **handles**: An array of workflow handles to wait on.
 
 #### `readStream`
 

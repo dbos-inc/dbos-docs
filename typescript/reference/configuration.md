@@ -27,12 +27,14 @@ export interface DBOSConfig {
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
+  systemDatabasePollingConcurrency?: number;
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
 
   enableOTLP?: boolean;
   tracingEnabled?: boolean;
   logLevel?: string;
+  logger?: DLogger;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
   otelAttributeFormat?: 'legacy' | 'semconv';
@@ -68,6 +70,7 @@ postgresql://postgres:dbos@localhost:5432/[application name]_dbos_sys
 ```
 If the Postgres database referenced by this connection string does not exist, DBOS will attempt to create it.
 - **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 10.
+- **systemDatabasePollingConcurrency**: The maximum number of database-backed polling reads from wait operations (such as [`getResult`](./methods.md#handlegetresult), [`waitAll`](./methods.md#dboswaitall), [`waitFirst`](./methods.md#dboswaitfirst), [`recv`](./methods.md#dbosrecv), and [`getEvent`](./methods.md#dbosgetevent)) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `systemDatabasePoolSize` (minimum 1). Set to a non-positive value to disable the limit.
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 
@@ -76,6 +79,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **enableOTLP**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging.md), including a built-in export pipeline. Defaults to False.
 - **tracingEnabled**: Enable DBOS trace generation without starting the built-in export pipeline. Use this when you have an existing `TracerProvider` configured by an external APM (e.g., `dd-trace`). Traces will be collected and exported by your existing provider.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
+- **logger**: A [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
 - **otlpTracesEndpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otlpLogsEndpoints**: DBOS operations [automatically generate OpenTelemetry Logs](../tutorials/logging.md). Use this field to declare a list of OTLP-compatible receivers.
 - **otelAttributeFormat**: Naming convention for DBOS-emitted span attributes. Defaults to `'legacy'`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `'semconv'` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied attributes are passed through verbatim either way.
