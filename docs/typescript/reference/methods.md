@@ -103,6 +103,32 @@ This is useful when you have multiple concurrent workflows and want to process r
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
+### DBOS.waitAll
+
+```typescript
+static async waitAll<R>(
+  handles: WorkflowHandle<R>[],
+  options?: WaitAllOptions
+): Promise<WorkflowHandle<R>[]>
+```
+
+```typescript
+interface WaitAllOptions {
+  pollingIntervalMs?: number;
+}
+```
+
+Wait for **all** of the given workflow handles to complete, then return them.
+The returned array contains the input handles in the same order, including any duplicates.
+
+`waitAll` only waits for the workflows to finish; it does not return their results or throw if one of them failed.
+To retrieve results, call [`getResult`](#handlegetresult) on the returned handles.
+
+**Parameters:**
+- **handles**: An array of workflow handles to wait on.
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Must be a positive, finite number, or a `DBOSError` is thrown. If not set, DBOS uses its default polling interval. DBOS waits primarily on database notifications and polls only as a fallback, so this setting mainly affects how quickly a wait completes when notifications are unavailable.
+
 ### DBOS.send
 
 ```typescript

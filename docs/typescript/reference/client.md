@@ -43,6 +43,7 @@ class DBOSClient {
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
+    waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
@@ -242,6 +243,24 @@ Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst), including the optiona
 
 **Parameters:**
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+
+#### `waitAll`
+
+```typescript
+waitAll<R>(
+  handles: WorkflowHandle<R>[],
+  options?: { pollingIntervalMs?: number }
+): Promise<WorkflowHandle<R>[]>
+```
+
+Wait for **all** of the given workflow handles to complete, then return them in the same order (including duplicates).
+An empty input array returns immediately with an empty array.
+Similar to [`DBOS.waitAll`](./methods.md#dboswaitall), including the optional `pollingIntervalMs`.
+
+`waitAll` only waits for the workflows to finish; it does not return their results. To retrieve results, call `getResult` on the returned handles.
+
+**Parameters:**
+- **handles**: An array of workflow handles to wait on.
 
 #### `readStream`
 
