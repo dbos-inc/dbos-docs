@@ -104,6 +104,31 @@ However, in production environments, a DBOS application may not run with suffici
 In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
 Then, a DBOS application can run without privilege (requiring only access to the system database).
 
+### What database privileges does DBOS need, and how do I grant them manually?
+
+DBOS uses two distinct sets of privileges: the elevated privileges needed to **create or migrate** its schema, and the runtime privileges your **application** needs to operate on it. Separating them lets you run migrations with a privileged role and then run your application with a minimally-privileged role.
+
+**Migrating the schema.** Running the migration command (or letting a DBOS application create its tables on startup) creates the DBOS schema (`dbos` by default) and its tables, indexes, sequences, functions, and triggers in the system database. The role that runs the migration must be able to:
+- Create the schema if it does not already exist (the `CREATE` privilege on the database).
+- Create tables, indexes, sequences, functions, and triggers within that schema.
+- Create extensions.
+
+**Running your application.** Once the schema exists, your application does not need any DDL privileges, only read/write access to the DBOS schema. If you want to script this grant independently (rather than using the migration command), grant the following to your application's role on the DBOS schema (`dbos` by default) in the system database:
+
+```sql
+GRANT USAGE ON SCHEMA "dbos" TO "your_app_role";
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA "dbos" TO "your_app_role";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA "dbos" TO "your_app_role";
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "dbos" TO "your_app_role";
+
+-- So the role also has access to objects created by future migrations run by this user:
+ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT ALL ON TABLES TO "your_app_role";
+ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT ALL ON SEQUENCES TO "your_app_role";
+ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT EXECUTE ON FUNCTIONS TO "your_app_role";
+```
+
+The [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, and the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript do this automatically if you supply an application role.
+
 ### How does DBOS scale?
 
 The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
