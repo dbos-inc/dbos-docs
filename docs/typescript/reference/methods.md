@@ -82,8 +82,15 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 ```typescript
 static async waitFirst(
-  handles: WorkflowHandle<unknown>[]
+  handles: WorkflowHandle<unknown>[],
+  options?: WaitFirstOptions
 ): Promise<WorkflowHandle<unknown>>
+```
+
+```typescript
+interface WaitFirstOptions {
+  pollingIntervalMs?: number;
+}
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.
@@ -91,6 +98,8 @@ This is useful when you have multiple concurrent workflows and want to process r
 
 **Parameters:**
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Must be a positive, finite number, or a `DBOSError` is thrown. If not set, DBOS uses its default polling interval. DBOS waits primarily on database notifications and polls only as a fallback, so this setting mainly affects how quickly a wait completes when notifications are unavailable.
 
 See the [queue tutorial](../tutorials/queue-tutorial.md#queue-example) for an example.
 
@@ -129,6 +138,7 @@ recv<T>(
 interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -143,6 +153,7 @@ If no topic is specified, `recv` can only access messages sent without a topic.
 - **options**:
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Must be a positive, finite number, or a `DBOSError` is thrown. If not set, DBOS uses its default polling interval. DBOS waits primarily on database notifications and polls only as a fallback, so this setting mainly affects how quickly a wait completes when notifications are unavailable.
 
 **Returns:**
 - The first message enqueued on the input topic, or `null` if the wait times out.
@@ -180,6 +191,7 @@ DBOS.getEvent<T>(
 interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -192,6 +204,7 @@ If the event does not yet exist, wait for it to be published, returning `null` i
 - **options**:
   - **timeoutSeconds**: A timeout in seconds. If the wait times out, return `null`.
   - **deadlineEpochMS**: An absolute deadline as a Unix epoch timestamp in milliseconds. If the deadline passes, return `null`.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Must be a positive, finite number, or a `DBOSError` is thrown. If not set, DBOS uses its default polling interval. DBOS waits primarily on database notifications and polls only as a fallback, so this setting mainly affects how quickly a wait completes when notifications are unavailable.
 
 ### DBOS.sleep
 
@@ -1037,10 +1050,16 @@ Retrieve the ID of the workflow.
 ### handle.getResult
 
 ```typescript
-handle.getResult(): Promise<R>;
+handle.getResult(
+  options?: { pollingIntervalMs?: number }
+): Promise<R>;
 ```
 
 Wait for the workflow to complete, then return its result.
+
+**Parameters:**
+- **options**:
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Must be a positive, finite number, or a `DBOSError` is thrown. If not set, DBOS uses its default polling interval. This only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow) or the [DBOS Client](./client.md)); a handle returned by `DBOS.startWorkflow` in the same process awaits the running workflow directly and does not poll.
 
 ### handle.getStatus
 

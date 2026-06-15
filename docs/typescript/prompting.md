@@ -584,6 +584,7 @@ DBOS.recv<T>(topic?: string, options?: RecvOptions): Promise<T | null>
 interface RecvOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -650,6 +651,7 @@ DBOS.getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Pr
 interface GetEventOptions {
   timeoutSeconds?: number;
   deadlineEpochMS?: number;
+  pollingIntervalMs?: number;
 }
 ```
 
@@ -1398,10 +1400,14 @@ Retrieve the ID of the workflow.
 ### handle.getResult
 
 ```typescript
-handle.getResult(): Promise<R>;
+handle.getResult(
+  options?: { pollingIntervalMs?: number }
+): Promise<R>;
 ```
 
 Wait for the workflow to complete, then return its result.
+The optional `pollingIntervalMs` (which must be a positive, finite number) sets the interval between system database polls while waiting.
+It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client); a handle returned by `DBOS.startWorkflow` in the same process awaits the running workflow directly and does not poll.
 
 ### handle.getStatus
 

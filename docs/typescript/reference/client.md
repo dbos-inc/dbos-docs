@@ -42,7 +42,7 @@ class DBOSClient {
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
-    waitFirst(handles: WorkflowHandle<any>[]): Promise<WorkflowHandle<any>>;
+    waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
     readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
@@ -210,7 +210,7 @@ it is highly recommended that you use the `idempotencyKey` parameter in order to
 
 Retrieves an event published by workflowID for a given key.
 Similar to [DBOS.getEvent](./methods.md#dbosgetevent).
-Like `DBOS.getEvent`, accepts a [`GetEventOptions`](./methods.md#dbosgetevent) object with `timeoutSeconds` or `deadlineEpochMS`.
+Like `DBOS.getEvent`, accepts a [`GetEventOptions`](./methods.md#dbosgetevent) object with `timeoutSeconds` or `deadlineEpochMS`, plus an optional `pollingIntervalMs`.
 
 #### `retrieveWorkflow`
 
@@ -231,11 +231,14 @@ const pageCount = await handle.getResult();
 #### `waitFirst`
 
 ```typescript
-waitFirst(handles: WorkflowHandle<unknown>[]): Promise<WorkflowHandle<unknown>>
+waitFirst(
+  handles: WorkflowHandle<unknown>[],
+  options?: { pollingIntervalMs?: number }
+): Promise<WorkflowHandle<unknown>>
 ```
 
 Wait for any one of the given workflow handles to complete and return the first completed handle.
-Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst).
+Similar to [`DBOS.waitFirst`](./methods.md#dboswaitfirst), including the optional `pollingIntervalMs`.
 
 **Parameters:**
 - **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
