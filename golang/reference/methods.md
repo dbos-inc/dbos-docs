@@ -109,16 +109,18 @@ Streams are also automatically closed when the workflow terminates.
 ### ReadStream
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 Read all values from a durable stream.
-Blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+By default, blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
+Pass [`WithReadStreamSnapshot`](#withreadstreamsnapshot) to instead return immediately once all currently-available values have been drained.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow whose stream to read.
 - **key**: The stream key to read.
+- **opts**: Optional [ReadStreamOption](#withreadstreamsnapshot) functions.
 
 **Returns:**
 - The values read from the stream.
@@ -1084,6 +1086,14 @@ func WithPortableWriteStream() WriteStreamOption
 ```
 
 Configure [`WriteStream`](#writestream) to use the portable JSON serializer, enabling cross-language stream reading.
+
+### WithReadStreamSnapshot
+
+```go
+func WithReadStreamSnapshot(fromOffset int) ReadStreamOption
+```
+
+Configure [`ReadStream`](#readstream) to return as soon as all currently-available values have been drained, instead of blocking until the stream is closed or the workflow becomes inactive. `fromOffset` sets the base offset (zero-indexed) to start reading from, allowing you to poll a stream incrementally.
 
 ### PortableWorkflowError
 

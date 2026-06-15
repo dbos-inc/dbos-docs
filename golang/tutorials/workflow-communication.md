@@ -213,13 +213,20 @@ func producerWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 #### Reading from Streams
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 You can read values from a stream from anywhere using [`ReadStream`](../reference/methods.md#readstream).
 This function reads all values from a stream identified by a workflow ID and key.
 It blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
 It returns the values, whether the stream is closed, and any error.
+
+To read without blocking, pass [`WithReadStreamSnapshot`](../reference/methods.md#withreadstreamsnapshot), which returns as soon as all currently-available values have been drained. Its `fromOffset` argument sets the offset to start reading from, so you can poll a stream incrementally:
+
+```go
+// Read whatever is available right now, starting from offset 0, without blocking.
+values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress", dbos.WithReadStreamSnapshot(0))
+```
 
 You can also read from a stream asynchronously using [`ReadStreamAsync`](../reference/methods.md#readstreamasync), which returns a channel:
 
