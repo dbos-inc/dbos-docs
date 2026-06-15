@@ -51,8 +51,8 @@ class DBOSClient {
     listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined>;
 
     setWorkflowDelay(workflowID: string, options: SetWorkflowDelayOptions): Promise<void>;
-    cancelWorkflow(workflowID: string): Promise<void>;
-    cancelWorkflows(workflowIDs: string[]): Promise<void>;
+    cancelWorkflow(workflowID: string, options?: { cancelChildren?: boolean }): Promise<void>;
+    cancelWorkflows(workflowIDs: string[], options?: { cancelChildren?: boolean }): Promise<void>;
     resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void>;
     resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void>;
     forkWorkflow(workflowID: string, startStep: number,

@@ -452,18 +452,24 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 
 ```typescript
 cancelWorkflow(
-  workflowID: string
+  workflowID: string,
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
+**Parameters:**
+- **workflowID**: The ID of the workflow to cancel.
+- **cancelChildren**: If true, also cancel all child workflows recursively. Defaults to false.
+
 ### DBOS.cancelWorkflows
 
 ```typescript
 DBOS.cancelWorkflows(
-  workflowIDs: string[]
+  workflowIDs: string[],
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 

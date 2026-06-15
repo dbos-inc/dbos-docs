@@ -1637,12 +1637,14 @@ Accepts a `SetWorkflowDelayOptions` object with `delaySeconds` (relative) or `de
 
 ```typescript
 cancelWorkflow(
-  workflowID: string
+  workflowID: string,
+  options?: { cancelChildren?: boolean }
 ): Promise<void>
 ```
 
 Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+If `cancelChildren` is true, also cancel all child workflows recursively.
 
 ### DBOS.resumeWorkflow
 
