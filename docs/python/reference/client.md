@@ -836,6 +836,8 @@ Asynchronous version of [`list_workflow_steps`](#list_workflow_steps).
 ```python
 client.cancel_workflow(
     workflow_id: str,
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
@@ -843,11 +845,17 @@ Cancel a workflow.
 This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 Similar to [`DBOS.cancel_workflow`](./contexts.md#cancel_workflow).
 
+**Parameters:**
+- **workflow_id**: The ID of the workflow to cancel.
+- **cancel_children**: If `True`, also recursively cancels all child workflows started by this workflow.
+
 ### cancel_workflow_async
 
 ```python
 client.cancel_workflow_async(
     workflow_id: str,
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
@@ -858,6 +866,8 @@ Asynchronous version of [`DBOSClient.cancel_workflow`](#cancel_workflow).
 ```python
 client.cancel_workflows(
     workflow_ids: List[str],
+    *,
+    cancel_children: bool = False,
 ) -> None
 ```
 
