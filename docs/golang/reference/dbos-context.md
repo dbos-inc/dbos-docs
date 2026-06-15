@@ -11,7 +11,7 @@ A DBOS Context is at the center of a DBOS-enabled application. Use it to registe
 ## Lifecycle
 ### Initialization
 
-You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL` or `SystemDBPool` are mandatory.
+You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SqliteSystemDB` are mandatory.
 
 ```go
 func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error)
@@ -20,9 +20,10 @@ func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error
 ```go
 type Config struct {
     AppName                   string         // Application name for identification (required)
-    DatabaseURL               string         // DatabaseURL is a PostgreSQL connection string to your system database. Either this or SystemDBPool is required.
-    SystemDBPool              *pgxpool.Pool  // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
-    DatabaseSchema            string         // Database schema name (defaults to "dbos")
+    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
+    SystemDBPool              *pgxpool.Pool  // A custom Postgres/CockroachDB connection pool DBOS can use to access your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
+    SqliteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) DBOS can use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
     Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
     AdminServer               bool           // Enable Transact admin HTTP server (disabled by default)
     AdminServerPort           int            // Port for the admin HTTP server (default: 3001)
@@ -91,6 +92,22 @@ func WithoutCancel(ctx DBOSContext) DBOSContext
 ```
 
 `WithoutCancel` returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
+
+### WithCancel
+
+```go
+func WithCancel(ctx DBOSContext) (DBOSContext, context.CancelFunc)
+```
+
+`WithCancel` returns a copy of the DBOS context that can be manually canceled, along with a `CancelFunc`. Cancelling propagates to workflows and steps running under the returned context. You must call the returned `CancelFunc` (e.g. with `defer`) when the derived context is no longer needed to release its resources.
+
+### WithCancelCause
+
+```go
+func WithCancelCause(ctx DBOSContext) (DBOSContext, context.CancelCauseFunc)
+```
+
+`WithCancelCause` behaves like [`WithCancel`](#withcancel) but returns a [`context.CancelCauseFunc`](https://pkg.go.dev/context#CancelCauseFunc), letting you supply an error describing why the context was canceled. The cause can later be retrieved with [`context.Cause`](https://pkg.go.dev/context#Cause).
 
 ## Context metadata
 ### GetApplicationVersion

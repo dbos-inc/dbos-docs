@@ -56,10 +56,11 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string. Either this or SystemDBPool is required.
-    SystemDBPool       *pgxpool.Pool // SystemDBPool is a custom System Database Pool. It's optional and takes precedence over DatabaseURL if both are provided.
-    DatabaseSchema string            // Database schema name (defaults to "dbos")
-    Logger             *slog.Logger  // Optional custom logger
+    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
+    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
+    SqliteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema string        // Database schema name (defaults to "dbos"; Postgres only)
+    Logger         *slog.Logger  // Optional custom logger
 }
 ```
 
@@ -135,6 +136,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
 * `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to a workflow registered on a configured instance: a Go workflow registered with [`WithInstance`](./workflows-steps.md#withinstance), or a Python, TypeScript, or Java class instance workflow (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via [`SetWorkflowDelay`](#setworkflowdelay).
+* `WithEnqueueQueuePartitionKey(partitionKey string)`: The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). Each partition has its own concurrency limits.
 
 :::tip Cross-Language Enqueue
 To enqueue a workflow on a target application written in another language, pass a [`PortableWorkflowArgs`](./methods.md#portableworkflowargs) as the input.

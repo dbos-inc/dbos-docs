@@ -983,13 +983,14 @@ Writes to a stream from a step happen at-least-once; if a step fails and is retr
 #### Reading from Streams
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 You can read values from a stream from anywhere.
 This function reads all values from a stream identified by a workflow ID and key.
 It blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
 It returns the values, whether the stream is closed, and any error.
+To read without blocking, pass `WithReadStreamSnapshot(fromOffset int)`, which returns as soon as all currently-available values (from `fromOffset` onward) have been drained, so you can poll a stream incrementally.
 
 You can also read from a stream asynchronously, which returns a channel:
 
@@ -1527,7 +1528,7 @@ A DBOS Context is at the center of a DBOS-enabled application. Use it to registe
 ## Lifecycle
 ### Initialization
 
-You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL` or `SystemDBPool` are mandatory.
+You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SqliteSystemDB` are mandatory.
 
 ```go
 func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error)
@@ -1536,9 +1537,10 @@ func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error
 ```go
 type Config struct {
     AppName            string        // Application name for identification (required)
-    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string to your system database. Either this or SystemDBPool is required.
-    SystemDBPool       *pgxpool.Pool // SystemDBPool is a connection pool DBOS can use to access your system database. Optional but takes precedence over DatabaseURL if both are provided.
-    DatabaseSchema     string        // Database schema name (defaults to "dbos")
+    DatabaseURL        string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
+    SystemDBPool       *pgxpool.Pool // A custom Postgres/CockroachDB connection pool for your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
+    SqliteSystemDB     *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite) to use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema     string        // Database schema name (defaults to "dbos"; Postgres only)
     Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
     AdminServer        bool          // Enable Transact admin HTTP server (disabled by default)
     AdminServerPort    int           // Port for the admin HTTP server (default: 3001)
@@ -1562,6 +1564,8 @@ if err != nil {
 ```
 
 The newly created DBOSContext must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
+
+DBOS can back its system database with either Postgres (recommended for production; pass a `postgres://` `DatabaseURL` or a `*pgxpool.Pool` as `SystemDBPool`) or SQLite (useful for local development, testing, and single-node deployments; pass a `sqlite:` `DatabaseURL` or a `*sql.DB` as `SqliteSystemDB`). SQLite support is built in through the pure-Go `modernc.org/sqlite` driver, so no extra dependencies or cgo are required. SQLite `DatabaseURL` examples: `"sqlite:dbos.db"` (relative file) or `"sqlite:/var/lib/dbos.db"` (absolute file). `DatabaseSchema` applies to Postgres only.
 
 ### launch
 
@@ -1606,6 +1610,14 @@ func WithoutCancel(ctx DBOSContext) DBOSContext
 ```
 
 `WithoutCancel` returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
+
+### WithCancel
+
+```go
+func WithCancel(ctx DBOSContext) (DBOSContext, context.CancelFunc)
+```
+
+`WithCancel` returns a copy of the DBOS context that can be manually canceled, along with a `CancelFunc`. Cancelling propagates to workflows and steps running under the returned context. Call the returned `CancelFunc` when the derived context is no longer needed to release its resources. `WithCancelCause` is a variant that returns a `context.CancelCauseFunc`, letting you supply an error describing why the context was canceled (retrievable with `context.Cause`).
 
 ## Context metadata
 ### GetApplicationVersion
@@ -1718,11 +1730,12 @@ Streams are also automatically closed when the workflow terminates.
 ### ReadStream
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string) ([]R, bool, error)
+func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 Read all values from a durable stream.
 Blocks until the stream is closed or the workflow becomes inactive.
+Pass `WithReadStreamSnapshot(fromOffset int)` to instead return immediately once all currently-available values have been drained.
 
 ### ReadStreamAsync
 
@@ -2621,10 +2634,11 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL        string        // DatabaseURL is a PostgreSQL connection string. Either this or SystemDBPool is required.
-    SystemDBPool       *pgxpool.Pool // SystemDBPool is a custom System Database Pool. It's optional and takes precedence over DatabaseURL if both are provided.
-    DatabaseSchema string            // Database schema name (defaults to "dbos")
-    Logger             *slog.Logger  // Optional custom logger
+    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
+    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
+    SqliteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema string        // Database schema name (defaults to "dbos"; Postgres only)
+    Logger         *slog.Logger  // Optional custom logger
 }
 ```
 
