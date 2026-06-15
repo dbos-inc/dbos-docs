@@ -140,6 +140,62 @@ handle = await client.enqueue_async(options, task)
 result = await handle.get_result()
 ```
 
+### enqueue_in_transaction
+
+```python
+client.enqueue_in_transaction(
+    conn_or_session: Union[sqlalchemy.Connection, sqlalchemy.orm.Session],
+    options: EnqueueOptions,
+    *args: Any,
+    **kwargs: Any
+) -> WorkflowHandle[R]
+```
+
+Similar to [enqueue](#enqueue), but performs the enqueue write inside a caller-owned SQLAlchemy transaction instead of in its own transaction.
+This lets you enqueue a workflow **atomically** with your own database writes: either both are committed or both are rolled back.
+Pass either a SQLAlchemy [`Connection`](https://docs.sqlalchemy.org/en/20/core/connections.html) or an ORM [`Session`](https://docs.sqlalchemy.org/en/20/orm/session_basics.html) as `conn_or_session`.
+The remaining parameters are the same as [enqueue](#enqueue).
+
+You own the transaction: `enqueue_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
+You must commit (or roll back) the transaction yourself.
+The returned [WorkflowHandle](./workflow_handles.md#workflowhandle) is created immediately, but the workflow is not enqueued until you commit, so do not call `get_result` on the handle until after the transaction commits.
+
+:::warning
+`conn_or_session` must target the DBOS system database.
+The enqueue cannot atomically span a separate application database.
+:::
+
+**Example syntax:**
+
+```python
+import sqlalchemy as sa
+
+engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+options: EnqueueOptions = {
+  "queue_name": "process_task",
+  "workflow_name": "example_queue",
+}
+
+with engine.connect() as conn:
+    with conn.begin():
+        # Perform your own writes on conn here, in the same transaction...
+        handle = client.enqueue_in_transaction(conn, options, task)
+# Once the transaction commits, the workflow is enqueued.
+result = handle.get_result()
+```
+
+There is no asynchronous variant of this method.
+From an async context, bridge to it using [`AsyncConnection.run_sync`](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html), which hands your callable the underlying synchronous `Connection` bound to the same transaction:
+
+```python
+async with async_engine.connect() as conn:
+    async with conn.begin():
+        handle = await conn.run_sync(
+            lambda sync_conn: client.enqueue_in_transaction(sync_conn, options, task)
+        )
+```
+
 ### retrieve_workflow
 
 ```python
