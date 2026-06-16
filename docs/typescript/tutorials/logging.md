@@ -97,6 +97,7 @@ There are two steps:
 1. Register your provider's OpenTelemetry `TracerProvider` **before** calling `DBOS.launch()`.
 2. Set `tracingEnabled: true` in your DBOS configuration.
 
+Install your provider's OpenTelemetry packages alongside `@dbos-inc/otel` (for example, `@opentelemetry/sdk-node` and `@opentelemetry/exporter-trace-otlp-proto` for an OTLP endpoint, or `dd-trace` for Datadog).
 Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
 
 <Tabs groupId="provider" className="small-tabs">
