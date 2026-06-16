@@ -74,10 +74,10 @@ Keep the following contract in mind when implementing `DLogger`:
 ### Tracing
 
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for every workflow and step.
-Spans are hierarchical: a step's span is a child of its workflow's span. If the workflow was started from an already-traced operation—such as an instrumented HTTP request—the workflow span is a child of that operation's span and shares its trace. Otherwise, DBOS starts a new trace.
+Spans are hierarchical: a step's span is a child of its workflow's span. If the workflow was started from an already-traced operation, such as an instrumented HTTP request, the workflow span is a child of that operation's span and shares its trace. Otherwise, DBOS starts a new trace.
 
-Crucially, DBOS emits these spans on the **global OpenTelemetry tracer**.
-This means that if your application already sends telemetry to an observability provider through OpenTelemetry, DBOS spans automatically join your existing traces—you don't need to set up a separate export pipeline just for DBOS.
+DBOS emits spans on the **global OpenTelemetry tracer**.
+This means that if your application already sends telemetry to an observability provider through OpenTelemetry, DBOS spans automatically join your existing traces. You don't need to set up a separate export pipeline just for DBOS.
 
 :::info
 OpenTelemetry support in DBOS is optional. To use it, install the DBOS OpenTelemetry dependencies:
@@ -94,34 +94,10 @@ If you already send telemetry to an observability provider (Datadog, Langfuse, H
 
 There are two steps:
 
-1. **Register your provider's OpenTelemetry `TracerProvider` before calling `DBOS.launch()`.**
-DBOS uses whichever global provider is already registered (registration is "first one wins"). If none is registered when DBOS launches, DBOS installs its own—so your provider must be set up first.
-2. **Set `tracingEnabled: true` in your DBOS configuration.**
-This tells DBOS to create spans. Leave `enableOTLP` off: your provider, not DBOS, is responsible for exporting them.
+1. Register your provider's OpenTelemetry `TracerProvider` **before** calling `DBOS.launch()`.
+2. Set `tracingEnabled: true` in your DBOS configuration.
 
-```typescript
-DBOS.setConfig({
-  name: 'my-app',
-  tracingEnabled: true,           // create spans; your provider exports them
-  otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
-});
-await DBOS.launch();
-```
-
-Because tracing libraries are sensitive to load order, set up your provider in a separate module that is imported _before_ any code that touches DBOS:
-
-```typescript
-// main.ts
-import './tracing';                 // 1. register your TracerProvider FIRST
-import { launchApp } from './app';  // 2. then import code that launches DBOS
-
-async function main() {
-  await launchApp(); // DBOS.launch() runs in here, after tracing is registered
-}
-main().catch(console.error);
-```
-
-Set up your provider in `tracing.ts` using whichever option matches your platform:
+Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
 
 <Tabs groupId="provider" className="small-tabs">
 <TabItem value="otlp" label="OpenTelemetry (OTLP)">
@@ -129,10 +105,11 @@ Set up your provider in `tracing.ts` using whichever option matches your platfor
 Most observability platforms—Honeycomb, Grafana, Logfire, a self-hosted [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/), or local [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)—accept the OpenTelemetry Protocol (OTLP). Point an OTLP exporter at your endpoint:
 
 ```typescript
-// tracing.ts
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 
+// Set up your provider
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter({
     url: 'http://localhost:4318/v1/traces',
@@ -140,6 +117,14 @@ const sdk = new NodeSDK({
   }),
 });
 sdk.start();
+
+// Configure and launch DBOS
+DBOS.setConfig({
+  name: 'my-app',
+  tracingEnabled: true,           // DBOS will create spans; your provider exports them
+  otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
+});
+await DBOS.launch();
 ```
 
 </TabItem>
@@ -148,13 +133,21 @@ sdk.start();
 [`dd-trace`](https://docs.datadoghq.com/tracing/trace_collection/automatic_instrumentation/dd_libraries/nodejs/) exposes an OpenTelemetry-compatible `TracerProvider`. Initialize it and register the provider:
 
 ```typescript
-// tracing.ts
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import tracer from 'dd-trace';
-tracer.init();
 
+// Set up your provider
+tracer.init();
 const { TracerProvider } = tracer;
-const provider = new TracerProvider();
-provider.register();
+new TracerProvider().register();
+
+// Configure and launch DBOS
+DBOS.setConfig({
+  name: 'my-app',
+  tracingEnabled: true,
+  otelAttributeFormat: 'semconv',
+});
+await DBOS.launch();
 ```
 
 `dd-trace` then forwards all spans—including DBOS workflow and step spans—to your Datadog agent.
@@ -165,22 +158,27 @@ provider.register();
 [Langfuse](https://langfuse.com/) is an LLM-observability platform that ingests OpenTelemetry. Point an OTLP exporter at its endpoint, authenticated with your project keys:
 
 ```typescript
-// tracing.ts
+import { DBOS } from '@dbos-inc/dbos-sdk';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 
-const auth = Buffer.from(
-  `${process.env.LANGFUSE_PUBLIC_KEY}:${process.env.LANGFUSE_SECRET_KEY}`,
-).toString('base64');
-
+// Set up your provider
+const auth = // ...
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter({
-    // Use https://us.cloud.langfuse.com/... for the US region, or your self-hosted host
     url: 'https://cloud.langfuse.com/api/public/otel/v1/traces',
     headers: { Authorization: `Basic ${auth}` },
   }),
 });
 sdk.start();
+
+// Configure and launch DBOS
+DBOS.setConfig({
+  name: 'my-app',
+  tracingEnabled: true,
+  otelAttributeFormat: 'semconv',
+});
+await DBOS.launch();
 ```
 
 Each DBOS workflow becomes a Langfuse trace and each step a nested observation.
@@ -191,7 +189,7 @@ For the current endpoint and credentials, see the [Langfuse OpenTelemetry docs](
 </Tabs>
 
 :::tip
-The exact setup and `import` order are sensitive to the specific versions of the `@opentelemetry` (and provider) libraries you use. Consult your provider's documentation for the authoritative setup.
+Set up your provider before calling `DBOS.launch()`: DBOS adopts whichever global provider exists at launch (importing DBOS or registering workflows beforehand is fine).
 :::
 
 #### Adding custom attributes and events
