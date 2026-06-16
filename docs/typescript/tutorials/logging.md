@@ -5,7 +5,7 @@ title: Logging & Tracing
 
 ### Logging
 
-For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger). Use of this logger is **optional**.
+For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger).
 For example:
 
 ```javascript
@@ -25,17 +25,19 @@ await DBOS.launch();
 
 Setting `logLevel` also affects any log messages emitted by the DBOS library.
 
-### Custom Logger
+#### Custom Logger
 
 By default, the DBOS logger writes to the console (or exports its logs over OTLP when `enableOTLP` is set).
-To route all of DBOS's internal logging to your own logging system instead, supply a custom logger that implements the `DLogger` interface (exported from the DBOS package, along with the `ContextualMetadata` and `StackTrace` types):
+To route all of DBOS's internal logging to your own logging system instead, supply a custom logger that implements the `DLogger` interface:
 
 ```typescript
-export interface DLogger {
-  info(logEntry: unknown, metadata?: ContextualMetadata): void;
-  debug(logEntry: unknown, metadata?: ContextualMetadata): void;
-  warn(logEntry: unknown, metadata?: ContextualMetadata): void;
-  error(inputError: unknown, metadata?: ContextualMetadata & StackTrace): void;
+import { DLogger, ContextualMetadata, StackTrace } from '@dbos-inc/dbos-sdk';
+
+class MyCustomLogger implements DLogger {
+  info(logEntry: unknown, metadata?: ContextualMetadata): void {}
+  debug(logEntry: unknown, metadata?: ContextualMetadata): void {}
+  warn(logEntry: unknown, metadata?: ContextualMetadata): void {}
+  error(inputError: unknown, metadata?: ContextualMetadata & StackTrace): void {}
 }
 ```
 
