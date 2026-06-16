@@ -92,11 +92,10 @@ npm i @dbos-inc/otel@latest
 This is the recommended way to use tracing with DBOS.
 If you already send telemetry to an observability provider (Datadog, Langfuse, Honeycomb, Grafana, Logfire, Jaeger, ...) through OpenTelemetry, you can have DBOS workflow and step spans join your existing traces with no extra setup.
 
-There are three steps:
+There are two steps:
 
-1. Install your provider's OpenTelemetry packages alongside `@dbos-inc/otel` (for example, `@opentelemetry/sdk-node` and `@opentelemetry/exporter-trace-otlp-proto` for an OTLP endpoint, or `dd-trace` for Datadog).
-2. Register your provider's OpenTelemetry `TracerProvider` **before** calling `DBOS.launch()`.
-3. Set `tracingEnabled: true` in your DBOS configuration.
+1. Register your provider's OpenTelemetry `TracerProvider` **before** calling `DBOS.launch()`.
+2. Set `tracingEnabled: true` in your DBOS configuration.
 
 Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
 
