@@ -121,7 +121,7 @@ sdk.start();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
-  tracingEnabled: true,           // DBOS will create spans; your provider exports them
+  tracingEnabled: true,           // DBOS creates spans; your provider exports them
   otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
 await DBOS.launch();
@@ -144,8 +144,8 @@ new TracerProvider().register();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
-  tracingEnabled: true,
-  otelAttributeFormat: 'semconv',
+  tracingEnabled: true,           // DBOS creates spans; your provider exports them
+  otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
 await DBOS.launch();
 ```
@@ -175,8 +175,8 @@ sdk.start();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
-  tracingEnabled: true,
-  otelAttributeFormat: 'semconv',
+  tracingEnabled: true,           // DBOS creates spans; your provider exports them
+  otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
 await DBOS.launch();
 ```
@@ -194,7 +194,7 @@ Set up your provider before calling `DBOS.launch()`: DBOS adopts whichever globa
 
 #### Adding custom attributes and events
 
-Within a workflow or step, you can access the current span and enrich it—useful for attaching domain data such as a user ID, a request size, or LLM token usage.
+Within a workflow or step, you can access the current span and enrich it. This is useful for attaching domain data such as a user ID, a request size, or LLM token usage.
 Access it via [`DBOS.span`](../reference/methods.md#dbosspan), or in the standard OpenTelemetry way with `trace.getSpan(context.active())`:
 
 ```typescript
@@ -215,64 +215,6 @@ const llmWorkflow = DBOS.registerWorkflow(async (prompt: string) => {
 
 Your provider exports these attributes on the span alongside DBOS's own, so they appear together in your dashboards.
 
-:::tip
-By default, DBOS emits its built-in span attributes under their original names (`operationUUID`, `operationType`, ...).
-Set `otelAttributeFormat: 'semconv'` in your [configuration](../reference/configuration.md) to emit them under the OpenTelemetry-style `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.operation.type`, ...) instead.
-These names follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. Attributes you set yourself are passed through unchanged either way.
-:::
-
-#### Tracing HTTP requests
-
-For an incoming HTTP request to share a trace with the DBOS workflows it invokes, the request itself must be traced; DBOS spans then attach to the request's span automatically.
-
-If you use auto-instrumentation, the relevant package depends on your server. For Koa, add the instrumentations to the OTLP `NodeSDK` setup above:
-
-```typescript
-// tracing.ts
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
-
-const sdk = new NodeSDK({
-  traceExporter: new OTLPTraceExporter({ url: 'http://localhost:4318/v1/traces' }),
-  instrumentations: [new HttpInstrumentation(), new KoaInstrumentation()],
-});
-sdk.start();
-```
-
-Alternatively, manage the request span explicitly in middleware. The key is to activate the span with `context.with(...)` so it becomes the active span that DBOS spans attach to. For Koa:
-
-```typescript
-const koaOtelMiddleware: Koa.Middleware = async (ctx, next) => {
-  const span = tracer.startSpan(`HTTP ${ctx.method} ${ctx.path}`, {
-    attributes: {
-      'http.method': ctx.method,
-      'http.url': ctx.url,
-    },
-  });
-
-  // `context.with` is the key ingredient: it makes `span` the active span, so
-  // DBOS workflow and step spans created during `next()` become its children.
-  await context.with(trace.setSpan(context.active(), span), async () => {
-    try {
-      await next();
-
-      span.setAttribute('http.status_code', ctx.status);
-      if (ctx.status >= 400) {
-        span.setStatus({ code: SpanStatusCode.ERROR });
-      }
-    } catch (err) {
-      span.recordException(err);
-      span.setStatus({ code: SpanStatusCode.ERROR });
-      throw err;
-    } finally {
-      span.end(); // Always end the span
-    }
-  });
-};
-```
-
 #### Letting DBOS export traces directly
 
 If you don't already run an observability provider, DBOS can export traces and logs itself to any OpenTelemetry Protocol (OTLP)-compliant receiver.
@@ -288,12 +230,8 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-Unlike the provider-based approach above, `enableOTLP` also exports your [`DBOS.logger`](#logging) logs over OTLP.
+If `otlpLogsEndpoints` is configured, `enableOTLP` also exports your [`DBOS.logger`](#logging) logs over OTLP.
 For example, try using [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/) to visualize the traces of your local application, or export your logs and traces to [Logfire](../../integrations/logfire).
-
-:::note
-`enableOTLP` is on by default when running on [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md), which collects and visualizes your traces and logs automatically.
-:::
 
 ### Metrics
 
