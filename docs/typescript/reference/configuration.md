@@ -80,9 +80,9 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **otelAttributeFormat**: Naming convention for DBOS-emitted span attributes. Defaults to `'legacy'`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `'semconv'` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied attributes are passed through verbatim either way.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **logger**: A [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
-- **enableOTLP**: Enable the built-in DBOS OpenTelemetry export pipeline. Defaults to False. Do not set if using an external OTLP `TracerProvider` and export pipeline.
-- **otlpTracesEndpoints**: If using the built-in DBOS OpenTelemetry export pipeline, a list of receivers to which to send traces.
-- **otlpLogsEndpoints**: If using the built-in DBOS OpenTelemetry export pipeline, a list of receivers to which to send logs.
+- **enableOTLP**: Enable the built-in DBOS OpenTelemetry `TracerProvider`. Defaults to False. Do not set if using an external OTLP `TracerProvider`.
+- **otlpTracesEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send traces.
+- **otlpLogsEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send logs.
 
 ### Admin Server Settings
 
