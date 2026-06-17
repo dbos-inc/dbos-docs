@@ -112,9 +112,9 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 
 ### Logging and Tracing Settings
 
-- **enable_otlp**: Enable DBOS OpenTelemetry [tracing and export](../tutorials/logging-and-tracing.md). Defaults to False.
-- **otlp_traces_endpoints**: DBOS operations [automatically generate OpenTelemetry Traces](../tutorials/logging-and-tracing#tracing). Use this field to declare a list of OTLP-compatible trace receivers. Requires `enable_otlp` to be True.
-- **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
+- **enable_otlp**: Enable DBOS OpenTelemetry [tracing](../tutorials/logging-and-tracing.md), which makes DBOS create spans for all workflows and steps. To export those spans, either set `otlp_traces_endpoints`/`otlp_logs_endpoints` (DBOS runs its own built-in `TracerProvider`) or [register your own `TracerProvider`](../tutorials/logging-and-tracing.md#connecting-dbos-to-your-observability-provider) before launch and let your observability provider export them. Defaults to False.
+- **otlp_traces_endpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send traces.
+- **otlp_logs_endpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send logs.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **otel_attribute_format**: Naming convention for DBOS-emitted span attributes. Defaults to `"legacy"`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `"semconv"` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied `otlp_attributes` are passed through verbatim either way.
 - **log_level**: Configure the [DBOS logger](../tutorials/logging-and-tracing#logging) severity. Defaults to `INFO`.
