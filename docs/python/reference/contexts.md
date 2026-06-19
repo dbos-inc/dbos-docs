@@ -1828,7 +1828,7 @@ SetWorkflowAttributes(
 ```
 
 Attach a dictionary of custom key-value attributes to all workflows started or enqueued within the block.
-Attributes must be a dictionary of JSON-serializable values; passing a non-dict or a non-serializable value raises an exception.
+Attributes must be a dictionary of JSON-serializable values.
 Pass `None` to attach no attributes.
 
 Attributes are recorded in a workflow's [status](#workflow-status) at creation time and are **not inherited** by child workflows.
