@@ -262,6 +262,8 @@ class ScheduledExample{
 }
 ```
 
+Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.listWorkflows({ scheduleName: "my-task-schedule" })`.
+
 ## Workflow Documentation:
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.

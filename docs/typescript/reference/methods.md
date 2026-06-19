@@ -386,6 +386,7 @@ interface GetWorkflowsInput {
   parentWorkflowID?: string | string[]; // Get workflows started by this parent workflow ID (or any of these parent workflow IDs).
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
+  scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -672,6 +673,9 @@ export interface WorkflowStatus {
 
   // Custom key-value attributes attached to the workflow at creation, if any.
   readonly attributes?: Record<string, unknown>;
+
+  // If this workflow was enqueued by a scheduled workflow, that schedule's name.
+  readonly scheduleName?: string;
 }
 ```
 
