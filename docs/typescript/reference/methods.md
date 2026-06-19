@@ -985,6 +985,9 @@ interface StepStatus {
   currentAttempt?: number;
   // For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
   maxAttempts?: number;
+  // For steps configured with `timeoutMS`: an AbortSignal that fires when the current attempt's timeout
+  // expires, so the step can cancel its underlying operation. A fresh signal is issued for each retry attempt.
+  timeoutSignal?: AbortSignal;
 }
 ```
 

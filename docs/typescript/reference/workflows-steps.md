@@ -238,6 +238,7 @@ interface StepConfig {
   maxAttempts?: number;
   backoffRate?: number;
   shouldRetry?: (error: unknown) => boolean | Promise<boolean>;
+  timeoutMS?: number;
   name?: string;
 }
 ```
@@ -273,6 +274,7 @@ export class Example {
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
+  - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
   - **name**: Name for the step function.  If not specified, the method name is used.
 
 ### DBOS.registerStep
@@ -317,6 +319,7 @@ const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkfl
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
+  - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
 
 ### DBOS.runStep
 
@@ -358,6 +361,7 @@ async function exampleWorkflow() {
   - **maxAttempts**: How many times to retry a step that is throwing exceptions.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
+  - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
 
 ## Class Names
 

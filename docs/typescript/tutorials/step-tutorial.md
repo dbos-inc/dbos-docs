@@ -79,6 +79,7 @@ export interface StepConfig {
   maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
   shouldRetry?: (error: unknown) => boolean | Promise<boolean>; // Predicate called after a failure to decide whether to retry (default: retry every error).
+  timeoutMS?: number;       // Maximum duration of a single step attempt, in milliseconds. An attempt exceeding it fails with DBOSStepTimeoutError.
 }
 ```
 
@@ -140,3 +141,35 @@ await DBOS.runStep(() => fetchFunction(), {
 The predicate may be async, and it works the same way on `runStep`, `registerStep`, and the `@DBOS.step` decorator.
 If the predicate itself throws or rejects, that error is recorded as the step's failure and propagated to the workflow.
 `shouldRetry` is ignored when `retriesAllowed` is `false`.
+
+### Step Timeouts
+
+You can set a timeout on a step by passing `timeoutMS` to its [`StepConfig`](../reference/workflows-steps.md#dbosstep).
+If a single attempt of the step runs longer than the timeout, it fails with a `DBOSStepTimeoutError`.
+If `retriesAllowed` is `true`, a timed-out attempt is retried like any other failure.
+
+```typescript
+await DBOS.runStep(() => callSlowService(), {
+  name: "callSlowService",
+  timeoutMS: 5000, // Fail this attempt if it runs longer than 5 seconds
+});
+```
+
+Step timeouts are **cooperative**: DBOS does not forcibly terminate a running step.
+When the timeout expires, DBOS aborts the [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) exposed at [`DBOS.stepStatus.timeoutSignal`](../reference/methods.md#dbosstepstatus) and the step's attempt fails.
+A step that does not observe this signal keeps running in the background, but its result is discarded.
+To stop work promptly when a step times out, pass the signal to APIs that accept one (for example, `fetch`):
+
+```typescript
+async function fetchData() {
+  // fetch aborts as soon as the step's timeout fires
+  const response = await fetch("https://example.com", { signal: DBOS.stepStatus?.timeoutSignal });
+  return await response.text();
+}
+
+async function workflowFunction() {
+  return await DBOS.runStep(() => fetchData(), { name: "fetchData", timeoutMS: 5000 });
+}
+```
+
+A fresh `timeoutSignal` is issued for each retry attempt.
