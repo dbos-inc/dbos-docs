@@ -461,6 +461,26 @@ async function main() {
 }
 ```
 
+## Workflow Attributes
+
+You can attach a record of custom, JSON-serializable key-value attributes to a workflow by passing `workflowAttributes` to `DBOS.startWorkflow`.
+This is useful for tagging workflows with application-specific metadata (such as a customer ID, tenant, or region) so you can find them later.
+Attributes must be a key-value object (not a scalar or array), are recorded at creation time, and are **not** inherited by child workflows.
+
+```javascript
+const handle = await DBOS.startWorkflow(taskWorkflow, {
+  workflowAttributes: { customer: "acme", region: "us-east-1" },
+})(task);
+```
+
+Attributes are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to `DBOS.listWorkflows`.
+A workflow matches if its attributes contain all the key-value pairs you provide:
+
+```javascript
+// Retrieve all workflows tagged with this customer
+const workflows = await DBOS.listWorkflows({ attributes: { customer: "acme" } });
+```
+
 ## Durable Sleep
 
 You can use `DBOS.sleep()` to put your workflow to sleep for any period of time.

@@ -22,6 +22,26 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
+## Workflow Attributes
+
+You can attach a record of custom, JSON-serializable key-value **attributes** to a workflow by passing `workflowAttributes` to [`DBOS.startWorkflow`](../reference/methods.md#dbosstartworkflow).
+This is useful for tagging workflows with application-specific metadata such as a customer ID, tenant, or region.
+
+```typescript
+const handle = await DBOS.startWorkflow(processOrder, {
+  workflowAttributes: { customer: 'acme', region: 'us-east-1' },
+})(order);
+```
+
+Attributes must be a key-value object (not a scalar or array), are recorded at creation time, and are not inherited by child workflows.
+They are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows).
+A workflow matches if its attributes contain all the key-value pairs you provide:
+
+```typescript
+// Retrieve all workflows tagged with this customer
+const workflows = await DBOS.listWorkflows({ attributes: { customer: 'acme' } });
+```
+
 ## Cancelling Workflows
 
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancelWorkflow`](../reference/methods.md#dboscancelworkflow), or through the command line with [`npx dbos workflow cancel`](../reference/cli.md#npx-dbos-workflow-cancel).

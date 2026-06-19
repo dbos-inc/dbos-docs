@@ -21,6 +21,7 @@ interface StartWorkflowParams {
   timeoutMS?: number | null;
   enqueueOptions?: EnqueueOptions;
   duplicationPolicy?: 'reject' | 'return-existing';
+  workflowAttributes?: Record<string, unknown>;
 }
 
 export interface EnqueueOptions {
@@ -77,6 +78,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
+- **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
 
 ### DBOS.waitFirst
 
@@ -383,6 +385,7 @@ interface GetWorkflowsInput {
   wasForkedFrom?: boolean; // Filter workflows that have (or have not) been forked from.
   parentWorkflowID?: string | string[]; // Get workflows started by this parent workflow ID (or any of these parent workflow IDs).
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
+  attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -666,6 +669,9 @@ export interface WorkflowStatus {
   readonly wasForkedFrom?: boolean;
   // If this workflow was started by another workflow, that workflow's ID.
   readonly parentWorkflowID?: string;
+
+  // Custom key-value attributes attached to the workflow at creation, if any.
+  readonly attributes?: Record<string, unknown>;
 }
 ```
 
