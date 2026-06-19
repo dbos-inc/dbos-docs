@@ -396,6 +396,28 @@ with SetWorkflowTimeout(10):
     example_workflow()
 ```
 
+## Workflow Attributes
+
+You can attach a dictionary of custom, JSON-serializable key-value attributes to your workflows with `SetWorkflowAttributes`.
+Every workflow started or enqueued inside the block is recorded with those attributes.
+This is useful for tagging workflows with application-specific metadata (such as a customer ID, tenant, or region) so you can find them later.
+Attributes are recorded at creation time and are **not** inherited by child workflows.
+
+```python
+from dbos import DBOS, SetWorkflowAttributes
+
+with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
+    example_workflow()
+```
+
+Attributes are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to `DBOS.list_workflows` or `DBOS.list_queued_workflows`.
+A workflow matches if its attributes contain all the key-value pairs you provide (filtering by attribute requires a Postgres system database):
+
+```python
+# Retrieve all workflows tagged with this customer
+workflows = DBOS.list_workflows(attributes={"customer": "acme"})
+```
+
 ## Durable Sleep
 
 You can use `DBOS.sleep()` to put your workflow to sleep for any period of time.

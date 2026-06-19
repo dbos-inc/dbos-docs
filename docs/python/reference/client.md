@@ -65,6 +65,7 @@ class EnqueueOptions(TypedDict):
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
+    attributes: NotRequired[Dict[str, Any]]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -100,6 +101,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
+- `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -651,6 +653,7 @@ client.list_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -682,6 +685,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 
 ### list_workflows_async
 
@@ -711,6 +715,7 @@ client.list_workflows_async(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -743,6 +748,7 @@ client.list_queued_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -772,6 +778,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 
 ### list_queued_workflows_async
 
@@ -800,6 +807,7 @@ client.list_queued_workflows_async(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
