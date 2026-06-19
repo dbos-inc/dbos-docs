@@ -1032,6 +1032,30 @@ Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (abs
 
 Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
 
+### update_workflow_attributes
+
+```python
+DBOS.update_workflow_attributes(
+    workflow_id: str,
+    attributes: Optional[Dict[str, Any]],
+) -> None
+```
+
+Replace the custom [attributes](#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
+This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+Attributes must be a dictionary of JSON-serializable values.
+
+You can use this to attach attributes to a workflow that started without them, or to update attributes as a workflow progresses.
+This method is safe to call from within a workflow (including to update the calling workflow's own attributes).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose attributes to replace.
+- `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+
+### update_workflow_attributes_async
+
+Coroutine version of [`update_workflow_attributes`](#update_workflow_attributes).
+
 ### cancel_workflow
 
 ```python
@@ -1457,7 +1481,8 @@ class WorkflowStatus:
     dequeued_at: Optional[int]
     # The Unix epoch timestamp in ms at which the workflow completed (SUCCESS, ERROR, or CANCELLED), if it has completed
     completed_at: Optional[int]
-    # Custom key-value attributes attached to the workflow at creation with SetWorkflowAttributes, if any
+    # Custom key-value attributes attached to the workflow with SetWorkflowAttributes
+    # or update_workflow_attributes, if any
     attributes: Optional[Dict[str, Any]]
 ```
 
@@ -1808,6 +1833,7 @@ Pass `None` to attach no attributes.
 
 Attributes are recorded in a workflow's [status](#workflow-status) at creation time and are **not inherited** by child workflows.
 You can later retrieve a workflow's attributes from its [`WorkflowStatus`](#workflow-status) and filter workflows by attribute with [`list_workflows`](#list_workflows) and [`list_queued_workflows`](#list_queued_workflows).
+To change a workflow's attributes after it is created, use [`update_workflow_attributes`](#update_workflow_attributes).
 
 Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
 

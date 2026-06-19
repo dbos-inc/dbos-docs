@@ -43,6 +43,8 @@ A workflow matches if its attributes contain all the key-value pairs you provide
 workflows = DBOS.list_workflows(attributes={"customer": "acme"})
 ```
 
+To change a workflow's attributes after it is created, use [`DBOS.update_workflow_attributes`](../reference/contexts.md#update_workflow_attributes), which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
+
 :::note
 Filtering workflows by attribute is only supported when using a Postgres system database.
 :::

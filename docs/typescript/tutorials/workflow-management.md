@@ -22,14 +22,6 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-## Listing Enqueued Workflows
-
-You can list all **currently enqueued** workflows and steps of your application via [`DBOS.listQueuedWorkflows`](../reference/methods.md#dboslistqueuedworkflows) or from the command line with [`npx dbos workflow queue list`](../reference/cli.md#npx-dbos-workflow-queue-list).
-
-You can also view a searchable and expandable list of your application's currently enqueued workflows and steps from its page on the [DBOS Console](../../production/workflow-management.md).
-
-<img src={require('@site/static/img/workflow-management/queue-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 ## Cancelling Workflows
 
 You can cancel the execution of a workflow from the web UI, programmatically via [`DBOS.cancelWorkflow`](../reference/methods.md#dboscancelworkflow), or through the command line with [`npx dbos workflow cancel`](../reference/cli.md#npx-dbos-workflow-cancel).

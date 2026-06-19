@@ -418,6 +418,14 @@ A workflow matches if its attributes contain all the key-value pairs you provide
 workflows = DBOS.list_workflows(attributes={"customer": "acme"})
 ```
 
+To change a workflow's attributes after it is created, use `DBOS.update_workflow_attributes`, which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
+This is safe to call from within a workflow, including on the workflow itself, because the update is recorded as a step.
+
+```python
+# Replace the attributes of a workflow by ID
+DBOS.update_workflow_attributes(workflow_id, {"customer": "acme", "phase": "processing"})
+```
+
 ## Durable Sleep
 
 You can use `DBOS.sleep()` to put your workflow to sleep for any period of time.

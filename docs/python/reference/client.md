@@ -886,6 +886,28 @@ Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
 
 Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
 
+### update_workflow_attributes
+
+```python
+client.update_workflow_attributes(
+    workflow_id: str,
+    attributes: Optional[Dict[str, Any]],
+) -> None
+```
+
+Replace the custom [attributes](./contexts.md#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
+This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+Attributes must be a dictionary of JSON-serializable values.
+Similar to [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose attributes to replace.
+- `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+
+### update_workflow_attributes_async
+
+Asynchronous version of [`DBOSClient.update_workflow_attributes`](#update_workflow_attributes).
+
 ### resume_workflow
 
 ```python
