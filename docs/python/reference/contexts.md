@@ -875,6 +875,7 @@ def list_workflows(
     was_forked_from: Optional[bool] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -906,6 +907,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 
 ### list_workflows_async
 
@@ -1484,6 +1486,8 @@ class WorkflowStatus:
     # Custom key-value attributes attached to the workflow with SetWorkflowAttributes
     # or update_workflow_attributes, if any
     attributes: Optional[Dict[str, Any]]
+    # If this workflow was enqueued by a scheduled workflow, that schedule's name
+    schedule_name: Optional[str]
 ```
 
 ## Context Variables

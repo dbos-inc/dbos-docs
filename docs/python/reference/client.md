@@ -742,6 +742,7 @@ client.list_workflows(
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -774,6 +775,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 
 ### list_workflows_async
 
@@ -804,6 +806,7 @@ client.list_workflows_async(
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 

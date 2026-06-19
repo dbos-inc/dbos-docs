@@ -258,6 +258,7 @@ DBOS.create_schedule(
 - Use `DBOS.list_schedules` and `DBOS.get_schedule` to inspect schedules.
 - Use `DBOS.backfill_schedule` to enqueue missed executions for a time range.
 - Use `DBOS.trigger_schedule` to immediately trigger a schedule.
+- Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.list_workflows(schedule_name="my-task-schedule")`.
 
 
 ## Workflow Documentation:
