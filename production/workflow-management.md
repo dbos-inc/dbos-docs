@@ -25,15 +25,6 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-## Viewing Queues
-
-Navigate to the queues tab of your application's page to see all **currently enqueued** workflows.
-This page only shows workflows that are currently executing on a queue (`PENDING` status) or are enqueued for execution (`ENQUEUED` status).
-By default, the oldest (first enqueued) workflows are shown first.
-You can click on workflows to expand them and see their steps, just as in the workflows page.
-
-<img src={require('@site/static/img/workflow-management/queue-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 ## Workflow Management
 
 You can manage individual workflows directly from the DBOS console.

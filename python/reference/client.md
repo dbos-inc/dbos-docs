@@ -65,6 +65,7 @@ class EnqueueOptions(TypedDict):
     authenticated_user: NotRequired[str]
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
+    attributes: NotRequired[Dict[str, Any]]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -100,6 +101,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `authenticated_user`: An authenticated user to associate with the workflow.
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
+- `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -313,6 +315,60 @@ Asynchronously sends a message to a specified workflow. Similar to [`DBOS.send_a
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the message.
 - `send_to_forks`: If `True`, also deliver the message to every workflow recursively forked from `destination_id`. Defaults to `False`.
 
+### send_in_transaction
+
+```python
+client.send_in_transaction(
+    conn_or_session: Union[sqlalchemy.Connection, sqlalchemy.orm.Session],
+    destination_id: str,
+    message: Any,
+    topic: Optional[str] = None,
+    idempotency_key: Optional[str] = None,
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Similar to [send](#send), but performs the send inside a caller-owned SQLAlchemy transaction instead of in its own transaction.
+This lets you send a message **atomically** with your own database writes: either both are committed or both are rolled back.
+Pass either a SQLAlchemy [`Connection`](https://docs.sqlalchemy.org/en/20/core/connections.html) or an ORM [`Session`](https://docs.sqlalchemy.org/en/20/orm/session_basics.html) as `conn_or_session`.
+The remaining parameters are the same as [send](#send).
+
+You own the transaction: `send_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
+You must commit (or roll back) the transaction yourself.
+The message is not visible to the destination workflow until the transaction commits.
+
+:::warning
+`conn_or_session` must target the DBOS system database.
+The send cannot atomically span a separate application database.
+:::
+
+**Example syntax:**
+
+```python
+import sqlalchemy as sa
+
+engine = sa.create_engine(os.environ["DBOS_SYSTEM_DATABASE_URL"])
+
+with engine.connect() as conn:
+    with conn.begin():
+        # Perform your own writes on conn here, in the same transaction...
+        client.send_in_transaction(conn, destination_id, message, idempotency_key="my-key")
+# Once the transaction commits, the message is sent.
+```
+
+There is no asynchronous variant of this method.
+From an async context, bridge to it using [`AsyncConnection.run_sync`](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html), which hands your callable the underlying synchronous `Connection` bound to the same transaction:
+
+```python
+async with async_engine.connect() as conn:
+    async with conn.begin():
+        await conn.run_sync(
+            lambda sync_conn: client.send_in_transaction(sync_conn, destination_id, message)
+        )
+```
+
 ### send_bulk
 
 ```python
@@ -366,6 +422,40 @@ client.send_bulk_async(
 
 Asynchronously sends many messages to workflow executions in a single transaction. Similar to [`DBOS.send_bulk_async`](contexts.md#send_bulk_async).
 See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
+
+**Parameters:**
+- `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
+- `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the messages.
+- `send_to_forks`: If `True`, every message is also delivered to all workflows recursively forked from its destination. Defaults to `False`.
+
+### send_bulk_in_transaction
+
+```python
+client.send_bulk_in_transaction(
+    conn_or_session: Union[sqlalchemy.Connection, sqlalchemy.orm.Session],
+    messages: List[SendMessage],
+    *,
+    serialization_type: Optional[WorkflowSerializationFormat] = WorkflowSerializationFormat.DEFAULT,
+    send_to_forks: bool = False,
+) -> None
+```
+
+Similar to [send_bulk](#send_bulk), but performs the sends inside a caller-owned SQLAlchemy transaction instead of in its own transaction.
+This lets you send messages **atomically** with your own database writes: either both are committed or both are rolled back.
+Pass either a SQLAlchemy [`Connection`](https://docs.sqlalchemy.org/en/20/core/connections.html) or an ORM [`Session`](https://docs.sqlalchemy.org/en/20/orm/session_basics.html) as `conn_or_session`.
+See [`send_bulk`](#send_bulk) for the `SendMessage` definition.
+
+You own the transaction: `send_bulk_in_transaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
+You must commit (or roll back) the transaction yourself.
+The messages are not visible to their destination workflows until the transaction commits.
+
+:::warning
+`conn_or_session` must target the DBOS system database.
+The send cannot atomically span a separate application database.
+:::
+
+There is no asynchronous variant of this method.
+From an async context, bridge to it using [`AsyncConnection.run_sync`](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html) as shown for [`send_in_transaction`](#send_in_transaction).
 
 **Parameters:**
 - `messages`: The list of `SendMessage` objects to send. Two messages in the same call may not share an idempotency key.
@@ -651,6 +741,8 @@ client.list_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -682,6 +774,8 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 
 ### list_workflows_async
 
@@ -711,6 +805,8 @@ client.list_workflows_async(
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -743,6 +839,7 @@ client.list_queued_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -772,6 +869,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 
 ### list_queued_workflows_async
 
@@ -800,6 +898,7 @@ client.list_queued_workflows_async(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -877,6 +976,28 @@ Similar to [`DBOS.cancel_workflows`](./contexts.md#cancel_workflows).
 ### cancel_workflows_async
 
 Asynchronous version of [`DBOSClient.cancel_workflows`](#cancel_workflows).
+
+### update_workflow_attributes
+
+```python
+client.update_workflow_attributes(
+    workflow_id: str,
+    attributes: Optional[Dict[str, Any]],
+) -> None
+```
+
+Replace the custom [attributes](./contexts.md#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
+This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+Attributes must be a dictionary of JSON-serializable values.
+Similar to [`DBOS.update_workflow_attributes`](./contexts.md#update_workflow_attributes).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose attributes to replace.
+- `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+
+### update_workflow_attributes_async
+
+Asynchronous version of [`DBOSClient.update_workflow_attributes`](#update_workflow_attributes).
 
 ### resume_workflow
 

@@ -872,8 +872,10 @@ def list_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     queues_only: bool = False,
+    was_forked_from: Optional[bool] = None,
     has_parent: Optional[bool] = None,
-    has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
+    schedule_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -904,6 +906,8 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **queues_only**: If `True`, only retrieve workflows that are currently queued (status `ENQUEUED` or `PENDING` and `queue_name` not null). Equivalent to using [`list_queued_workflows`](#list_queued_workflows).
 - **was_forked_from**: If `True`, only retrieve workflows that have been forked from. If `False`, only retrieve workflows that have not been forked from.
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
 
 ### list_workflows_async
 
@@ -935,7 +939,7 @@ def list_queued_workflows(
     load_output: bool = True,
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
-    has_parent: Optional[bool] = None,
+    attributes: Optional[Dict[str, Any]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -964,6 +968,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **load_output**: Whether to load and deserialize workflow outputs. Set to `False` to improve performance when outputs are not needed.
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
+- **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 
 ### list_queued_workflows_async
 
@@ -1028,6 +1033,30 @@ Provide exactly one of `delay_seconds` (relative) or `delay_until_epoch_ms` (abs
 ### set_workflow_delay_async
 
 Coroutine version of [`set_workflow_delay`](#set_workflow_delay).
+
+### update_workflow_attributes
+
+```python
+DBOS.update_workflow_attributes(
+    workflow_id: str,
+    attributes: Optional[Dict[str, Any]],
+) -> None
+```
+
+Replace the custom [attributes](#setworkflowattributes) attached to a workflow, identified by `workflow_id`.
+This overwrites the workflow's attributes dictionary; it is not a merge. Pass `None` to clear all attributes.
+Attributes must be a dictionary of JSON-serializable values.
+
+You can use this to attach attributes to a workflow that started without them, or to update attributes as a workflow progresses.
+This method is safe to call from within a workflow (including to update the calling workflow's own attributes).
+
+**Parameters:**
+- `workflow_id`: The ID of the workflow whose attributes to replace.
+- `attributes`: The new attributes dictionary, or `None` to clear all attributes.
+
+### update_workflow_attributes_async
+
+Coroutine version of [`update_workflow_attributes`](#update_workflow_attributes).
 
 ### cancel_workflow
 
@@ -1454,6 +1483,11 @@ class WorkflowStatus:
     dequeued_at: Optional[int]
     # The Unix epoch timestamp in ms at which the workflow completed (SUCCESS, ERROR, or CANCELLED), if it has completed
     completed_at: Optional[int]
+    # Custom key-value attributes attached to the workflow with SetWorkflowAttributes
+    # or update_workflow_attributes, if any
+    attributes: Optional[Dict[str, Any]]
+    # If this workflow was enqueued by a scheduled workflow, that schedule's name
+    schedule_name: Optional[str]
 ```
 
 ## Context Variables
@@ -1786,6 +1820,36 @@ def example_workflow():
 
 # If the workflow does not complete within 10 seconds, it times out and is cancelled
 with SetWorkflowTimeout(10):
+    example_workflow()
+```
+
+### SetWorkflowAttributes
+
+```python
+SetWorkflowAttributes(
+    attributes: Optional[Dict[str, Any]]
+)
+```
+
+Attach a dictionary of custom key-value attributes to all workflows started or enqueued within the block.
+Attributes must be a dictionary of JSON-serializable values.
+Pass `None` to attach no attributes.
+
+Attributes are recorded in a workflow's [status](#workflow-status) at creation time and are **not inherited** by child workflows.
+You can later retrieve a workflow's attributes from its [`WorkflowStatus`](#workflow-status) and filter workflows by attribute with [`list_workflows`](#list_workflows) and [`list_queued_workflows`](#list_queued_workflows).
+To change a workflow's attributes after it is created, use [`update_workflow_attributes`](#update_workflow_attributes).
+
+Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
+
+Example syntax:
+
+```python
+@DBOS.workflow()
+def example_workflow():
+    ...
+
+# example_workflow is recorded with these attributes
+with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
     example_workflow()
 ```
 

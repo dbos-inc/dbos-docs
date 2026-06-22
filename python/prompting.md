@@ -258,6 +258,7 @@ DBOS.create_schedule(
 - Use `DBOS.list_schedules` and `DBOS.get_schedule` to inspect schedules.
 - Use `DBOS.backfill_schedule` to enqueue missed executions for a time range.
 - Use `DBOS.trigger_schedule` to immediately trigger a schedule.
+- Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.list_workflows(schedule_name="my-task-schedule")`.
 
 
 ## Workflow Documentation:
@@ -394,6 +395,36 @@ def example_workflow():
 # If the workflow does not complete within 10 seconds, it times out and is cancelled
 with SetWorkflowTimeout(10):
     example_workflow()
+```
+
+## Workflow Attributes
+
+You can attach a dictionary of custom, JSON-serializable key-value attributes to your workflows with `SetWorkflowAttributes`.
+Every workflow started or enqueued inside the block is recorded with those attributes.
+This is useful for tagging workflows with application-specific metadata (such as a customer ID, tenant, or region) so you can find them later.
+Attributes are recorded at creation time and are **not** inherited by child workflows.
+
+```python
+from dbos import DBOS, SetWorkflowAttributes
+
+with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
+    example_workflow()
+```
+
+Attributes are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to `DBOS.list_workflows` or `DBOS.list_queued_workflows`.
+A workflow matches if its attributes contain all the key-value pairs you provide (filtering by attribute requires a Postgres system database):
+
+```python
+# Retrieve all workflows tagged with this customer
+workflows = DBOS.list_workflows(attributes={"customer": "acme"})
+```
+
+To change a workflow's attributes after it is created, use `DBOS.update_workflow_attributes`, which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
+This is safe to call from within a workflow, including on the workflow itself, because the update is recorded as a step.
+
+```python
+# Replace the attributes of a workflow by ID
+DBOS.update_workflow_attributes(workflow_id, {"customer": "acme", "phase": "processing"})
 ```
 
 ## Durable Sleep

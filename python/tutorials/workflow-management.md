@@ -22,13 +22,32 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-## Listing Enqueued Workflows
+## Workflow Attributes
 
-You can list all **currently enqueued** workflows and steps of your application via [`DBOS.list_queued_workflows`](../reference/contexts.md#list_queued_workflows) or from the command line with [`dbos workflow queue list`](../reference/cli.md#dbos-workflow-queue-list).
+You can attach a dictionary of custom, JSON-serializable key-value **attributes** to your workflows using [`SetWorkflowAttributes`](../reference/contexts.md#setworkflowattributes).
+This is useful for tagging workflows with application-specific metadata such as a customer ID, tenant, or region.
 
-You can also view a searchable and expandable list of your application's currently enqueued workflows and steps from its page on the [DBOS Console](../../production/workflow-management.md).
+```python
+from dbos import DBOS, SetWorkflowAttributes
 
-<img src={require('@site/static/img/workflow-management/queue-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
+with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
+    process_order(order)
+```
+
+Attributes are recorded at creation time and are not inherited by child workflows.
+They are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to [`DBOS.list_workflows`](../reference/contexts.md#list_workflows).
+A workflow matches if its attributes contain all the key-value pairs you provide:
+
+```python
+# Retrieve all workflows tagged with this customer
+workflows = DBOS.list_workflows(attributes={"customer": "acme"})
+```
+
+To change a workflow's attributes after it is created, use [`DBOS.update_workflow_attributes`](../reference/contexts.md#update_workflow_attributes), which replaces the workflow's entire attributes dictionary (pass `None` to clear them).
+
+:::note
+Filtering workflows by attribute is only supported when using a Postgres system database.
+:::
 
 ## Cancelling Workflows
 
