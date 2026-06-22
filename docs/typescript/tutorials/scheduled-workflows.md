@@ -109,6 +109,14 @@ const schedules = await DBOS.listSchedules({ status: "ACTIVE" });
 const schedule = await DBOS.getSchedule("my-task-schedule");
 ```
 
+Each workflow enqueued by a schedule is tagged with that schedule's name, which is recorded in its [`WorkflowStatus`](../reference/methods.md#workflow-status) and is queryable.
+You can retrieve all runs of a given schedule by passing `scheduleName` to [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows):
+
+```typescript
+// Retrieve all workflows enqueued by a schedule
+const runs = await DBOS.listWorkflows({ scheduleName: "my-task-schedule" });
+```
+
 ### Backfilling and Triggering
 
 If a schedule was paused or your application was offline, you can backfill missed executions using [`DBOS.backfillSchedule`](../reference/methods.md#dbosbackfillschedule).

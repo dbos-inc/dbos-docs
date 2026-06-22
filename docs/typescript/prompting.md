@@ -262,6 +262,8 @@ class ScheduledExample{
 }
 ```
 
+Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.listWorkflows({ scheduleName: "my-task-schedule" })`.
+
 ## Workflow Documentation:
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
@@ -459,6 +461,26 @@ async function main() {
   const timeout = ... // Timeout in milliseconds
   const handle = await DBOS.startWorkflow(taskWorkflow, {timeoutMS: timeout})(task);
 }
+```
+
+## Workflow Attributes
+
+You can attach a record of custom, JSON-serializable key-value attributes to a workflow by passing `workflowAttributes` to `DBOS.startWorkflow`.
+This is useful for tagging workflows with application-specific metadata (such as a customer ID, tenant, or region) so you can find them later.
+Attributes must be a key-value object (not a scalar or array), are recorded at creation time, and are **not** inherited by child workflows.
+
+```javascript
+const handle = await DBOS.startWorkflow(taskWorkflow, {
+  workflowAttributes: { customer: "acme", region: "us-east-1" },
+})(task);
+```
+
+Attributes are stored in Postgres as GIN-indexed JSONB, so you can efficiently search for workflows by attribute by passing the `attributes` filter to `DBOS.listWorkflows`.
+A workflow matches if its attributes contain all the key-value pairs you provide:
+
+```javascript
+// Retrieve all workflows tagged with this customer
+const workflows = await DBOS.listWorkflows({ attributes: { customer: "acme" } });
 ```
 
 ## Durable Sleep
@@ -865,6 +887,22 @@ static async exampleStep() {
 
 If a step exhausts all `maxAttempts` retries, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
 If that exception is not caught, the workflow terminates.
+
+### Step Timeouts
+
+You can set a timeout on a step by passing `timeoutMS` to its `StepConfig`.
+If a single attempt of the step runs longer than the timeout, it fails with a `DBOSStepTimeoutError` (retried like any other failure if `retriesAllowed` is `true`).
+Step timeouts are **cooperative**: DBOS does not forcibly terminate a running step. When the timeout expires, DBOS aborts the `AbortSignal` exposed at `DBOS.stepStatus.timeoutSignal`; pass it to APIs like `fetch` so they stop work promptly. A step that ignores the signal keeps running in the background, but its result is discarded.
+
+```javascript
+async function fetchFunction() {
+    return await fetch("https://example.com", { signal: DBOS.stepStatus?.timeoutSignal }).then(r => r.text());
+}
+
+async function workflowFunction() {
+    return await DBOS.runStep(() => fetchFunction(), { name: "fetchFunction", timeoutMS: 5000 });
+}
+```
 
 ## Queues
 

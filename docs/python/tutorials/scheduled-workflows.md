@@ -114,6 +114,14 @@ schedules = DBOS.list_schedules(status="ACTIVE")
 schedule = DBOS.get_schedule("my-task-schedule")
 ```
 
+Each workflow enqueued by a schedule is tagged with that schedule's name, which is recorded in its [`WorkflowStatus`](../reference/contexts.md#workflow-status) and is queryable.
+You can retrieve all runs of a given schedule by passing `schedule_name` to [`DBOS.list_workflows`](../reference/contexts.md#list_workflows):
+
+```python
+# Retrieve all workflows enqueued by a schedule
+runs = DBOS.list_workflows(schedule_name="my-task-schedule")
+```
+
 ### Backfilling and Triggering
 
 If a schedule was paused or your application was offline, you can backfill missed executions using [`DBOS.backfill_schedule`](../reference/contexts.md#backfill_schedule).

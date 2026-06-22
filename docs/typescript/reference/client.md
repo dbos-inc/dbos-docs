@@ -29,6 +29,7 @@ interface EnqueueOptions {
     delaySeconds?: number;
     queuePartitionKey?: string;
     duplicationPolicy?: 'reject' | 'return-existing';
+    attributes?: Record<string, unknown>;
 }
 
 class DBOSClient {
@@ -135,6 +136,7 @@ Additional but optional metadata includes:
   * `'reject'`: throw `DBOSQueueDuplicatedError`.
   * `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
+* **attributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](./methods.md#workflow-status) and are searchable via the `attributes` filter of [`listWorkflows`](./methods.md#dboslistworkflows).
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
