@@ -44,6 +44,7 @@
 - [Nest.js](https://docs.dbos.dev/integrations/nestjs.md): This guide shows you how to add DBOS durable workflows to your existing Nest.js application to make it resilient to any failure.
 - [Next.js](https://docs.dbos.dev/integrations/nextjs.md): To learn how to run DBOS with Next.js on Vercel, see the Vercel integration guide.
 - [OpenAI Agents SDK](https://docs.dbos.dev/integrations/openai-agents.md): You can use DBOS to add durable execution to an agent built with the OpenAI Agents SDK.
+- [Parseable](https://docs.dbos.dev/integrations/parseable.md): Parseable can ingest OpenTelemetry logs and traces from DBOS application processes as well as Conductor Metrics.
 - [Pydantic AI](https://docs.dbos.dev/integrations/pydantic-ai.md): Pydantic AI is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
 - [Tiger Data](https://docs.dbos.dev/integrations/tigerdata.md): Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
