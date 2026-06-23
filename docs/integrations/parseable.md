@@ -6,7 +6,7 @@ hide_table_of_contents: false
 
 # Use DBOS With Parseable
 
-[Parseable](https://www.parseable.com/) can ingest Logs and Traces from DBOS application processes as well as [Conductor Metrics](../production/metrics.md). 
+[Parseable](https://www.parseable.com/) can ingest OpenTelemetry logs and traces from DBOS application processes as well as [Conductor Metrics](../production/metrics.md). 
 
 ![DBOS Logs and Traces on Parseable](./assets/parseable-screenshot.png)
 
