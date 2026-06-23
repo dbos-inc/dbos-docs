@@ -12,7 +12,7 @@ For a high-level comparison of DBOS and Temporal's architectures, see [Comparing
 
 ## DBOSify: A Drop-In Replacement for Temporal Python
 
-If you'd rather not rewrite your application, you can run your existing Temporal code on DBOS with [**DBOSify**](https://github.com/dbos-inc/dbosify-py).
+You can run your existing Temporal code on DBOS with [**DBOSify**](https://github.com/dbos-inc/dbosify-py).
 DBOSify is a drop-in replacement for the [Temporal Python SDK](https://github.com/temporalio/sdk-python) that uses Postgres (through [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py)) instead of a Temporal server.
 It runs your workflows, activities, signals, updates, queries, retries, and recovery with no infrastructure except Postgres.
 
