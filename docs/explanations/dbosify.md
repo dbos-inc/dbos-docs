@@ -98,9 +98,9 @@ client = await Client.connect(
 )
 ```
 
-For full control, instead build a `dbos.DBOSClient` yourself and pass it to the `Client(...)` constructor.
+For full control, instead build a [`dbos.DBOSClient`](../python/reference/client.md) yourself and pass it to the `Client(...)` constructor.
 
-**Worker.** To configure a `Worker`, pass it a Postgres connection string or a `dbos.DBOSConfig`:
+**Worker.** To configure a `Worker`, pass it a Postgres connection string or a [`dbos.DBOSConfig`](../python/reference/configuration.md):
 
 ```python
 worker = Worker(
