@@ -1,6 +1,6 @@
 ---
 sidebar_position: 40
-title: "DBOSify: Temporal Drop-in Replacement"
+title: "DBOSify: Drop-in Temporal Replacement"
 hide_table_of_contents: false
 ---
 
@@ -11,7 +11,7 @@ It runs your workflows, activities, signals, updates, queries, retries, and reco
 <img src={require('@site/static/img/architecture/dbosify.png').default} alt="DBOSify architecture: a DBOSify Client and Workers coordinate through Postgres, which handles workflow orchestration" width="750" className="custom-img"/>
 
 
-To migrate, you import `dbosify` instead of `temporalio` and point your clients and workers at a Postgres connection string instead of a Temporal server.
+To migrate, you import `dbosify` instead of `temporalio` and connect your clients and workers to a Postgres database instead of a Temporal server.
 
 :::info
 DBOSify only supports Python for now.
@@ -89,7 +89,7 @@ Where a Temporal application connects to a Temporal server, a DBOSify applicatio
 Both the client and the worker take a Postgres connection string.
 For more control, you can also construct a client from a `dbos.DBOSClient` and a worker from a `dbos.DBOSConfig`.
 
-**Client.** Connect a client with `Client.connect`:
+**Client:** Connect a client with `Client.connect`:
 
 ```python
 client = await Client.connect(
@@ -100,7 +100,7 @@ client = await Client.connect(
 
 For full control, instead build a [`dbos.DBOSClient`](../python/reference/client.md) yourself and pass it to the `Client(...)` constructor.
 
-**Worker.** To configure a `Worker`, pass it a Postgres connection string or a [`dbos.DBOSConfig`](../python/reference/configuration.md):
+**Worker:** To configure a `Worker`, pass it a Postgres connection string or a [`dbos.DBOSConfig`](../python/reference/configuration.md):
 
 ```python
 worker = Worker(
