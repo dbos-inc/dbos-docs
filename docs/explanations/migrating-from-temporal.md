@@ -88,9 +88,10 @@ if __name__ == "__main__":
 ### Connection API
 
 Where a Temporal application connects to a Temporal server, a DBOSify application connects to Postgres.
-Both clients and workers take a Postgres connection string (or a full `dbos.DBOSConfig`).
+Both the client and the worker take a Postgres connection string.
+For more control, you can also construct a client from a `dbos.DBOSClient` and a worker from a `dbos.DBOSConfig`.
 
-**Client.** Connect a client with `Client.connect`, the DBOSify equivalent of Temporal's `await Client.connect("localhost:7233")`:
+**Client.** Connect a client with `Client.connect`:
 
 ```python
 client = await Client.connect(
@@ -102,7 +103,7 @@ client = await Client.connect(
 The returned client owns its underlying connection. Close it with `await client.close()` or by using it as an `async with` context manager.
 (For full control over connection pooling, build a `dbos.DBOSClient` yourself and pass it to the `Client(...)` constructor.)
 
-**Worker.** Unlike Temporal, where a `Worker` takes a pre-connected client, a DBOSify `Worker` takes the Postgres connection target directly&mdash;there is no server to connect to, so the worker drives the DBOS runtime against Postgres itself:
+**Worker.** To configure a `Worker` pass it a Postgres connection string or a `dbos.DBOSConfig`:
 
 ```python
 worker = Worker(
