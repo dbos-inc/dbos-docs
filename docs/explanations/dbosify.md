@@ -98,8 +98,7 @@ client = await Client.connect(
 )
 ```
 
-The returned client owns its underlying connection. Close it with `await client.close()` or by using it as an `async with` context manager.
-(For full control, build a `dbos.DBOSClient` yourself and pass it to the `Client(...)` constructor.)
+For full control, instead build a `dbos.DBOSClient` yourself and pass it to the `Client(...)` constructor.
 
 **Worker.** To configure a `Worker` pass it a Postgres connection string or a `dbos.DBOSConfig`:
 
