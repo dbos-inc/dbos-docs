@@ -8,4 +8,6 @@ hide_table_of_contents: false
 
 [Parseable](https://www.parseable.com/) can ingest Logs and Traces from DBOS application processes as well as [Conductor Metrics](../production/metrics.md). 
 
+![DBOS Logs and Traces on Parseable](./assets/parseable-screenshot.png)
+
 For details, see the [Parseable DBOS Guide](https://www.parseable.com/docs/ingest-data/ai-agents/dbos).
