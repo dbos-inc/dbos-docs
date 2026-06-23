@@ -10,6 +10,111 @@ This guide explains how to migrate a Temporal application to DBOS, with a focus 
 For a high-level comparison of DBOS and Temporal's architectures, see [Comparing DBOS and Temporal](./comparing-temporal.md).
 :::
 
+## DBOSify: A Drop-In Replacement for Temporal Python
+
+If you'd rather not rewrite your application, you can run your existing Temporal code on DBOS with [**DBOSify**](https://github.com/dbos-inc/dbosify-py).
+DBOSify is a drop-in replacement for the [Temporal Python SDK](https://github.com/temporalio/sdk-python) that uses Postgres (through [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py)) instead of a Temporal server.
+It runs your workflows, activities, signals, updates, queries, retries, and recovery with no infrastructure except Postgres.
+
+To migrate, you import `dbosify` instead of `temporalio` and point your clients and workers at a Postgres connection string instead of a Temporal server.
+The rest of this guide describes how to rewrite a Temporal application to use DBOS natively; DBOSify is the alternative when you want to keep your Temporal code largely as-is.
+
+:::info
+DBOSify only supports Python for now.
+For architectural details and detailed feature compatibility, see the [DBOSify architecture page](https://github.com/dbos-inc/dbosify-py/blob/main/docs/ARCHITECTURE.md).
+:::
+
+### Using DBOSify
+
+Install DBOSify:
+
+```shell
+pip install dbosify
+```
+
+Then import `dbosify` instead of `temporalio` and connect to Postgres instead of a Temporal server:
+
+<details>
+<summary><strong>DBOSify Example</strong></summary>
+
+```python
+import asyncio
+import os
+from datetime import timedelta
+
+from dbosify import activity, workflow
+from dbosify.client import Client
+from dbosify.worker import Worker
+
+# A connection string to your Postgres database, instead of a Temporal server address
+DB_URL = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
+
+
+@activity.defn
+async def compose_greeting(name: str) -> str:
+    return f"Hello, {name}!"
+
+
+@workflow.defn
+class GreetingWorkflow:
+    @workflow.run
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            compose_greeting, name, start_to_close_timeout=timedelta(seconds=10)
+        )
+
+
+async def main() -> None:
+    worker = Worker(
+        DB_URL,
+        task_queue="greetings",
+        workflows=[GreetingWorkflow],
+        activities=[compose_greeting],
+    )
+    async with worker:
+        async with await Client.connect(DB_URL) as client:
+            result = await client.execute_workflow(
+                GreetingWorkflow.run, "World", id="greeting-1", task_queue="greetings"
+            )
+            print(result)  # Hello, World!
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+</details>
+
+### Connection API
+
+Where a Temporal application connects to a Temporal server, a DBOSify application connects to Postgres.
+Both clients and workers take a Postgres connection string (or a full `dbos.DBOSConfig`).
+
+**Client.** Connect a client with `Client.connect`, the DBOSify equivalent of Temporal's `await Client.connect("localhost:7233")`:
+
+```python
+client = await Client.connect(
+    system_database_url,    # Postgres connection string
+    namespace="default",    # optional; each namespace maps to its own Postgres schema
+)
+```
+
+The returned client owns its underlying connection. Close it with `await client.close()` or by using it as an `async with` context manager.
+(For full control over connection pooling, build a `dbos.DBOSClient` yourself and pass it to the `Client(...)` constructor.)
+
+**Worker.** Unlike Temporal, where a `Worker` takes a pre-connected client, a DBOSify `Worker` takes the Postgres connection target directly&mdash;there is no server to connect to, so the worker drives the DBOS runtime against Postgres itself:
+
+```python
+worker = Worker(
+    config,                         # Postgres connection string or a dbos.DBOSConfig
+    task_queue="greetings",         # required
+    namespace="default",            # optional
+    workflows=[GreetingWorkflow],
+    activities=[compose_greeting],
+)
+await worker.run()                  # or use `async with worker:`
+```
+
 ## Workflows
 
 The core feature of both DBOS and Temporal is durably executed workflows.
