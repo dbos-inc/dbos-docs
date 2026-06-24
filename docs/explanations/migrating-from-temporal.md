@@ -10,6 +10,10 @@ This guide explains how to migrate a Temporal application to DBOS, with a focus 
 For a high-level comparison of DBOS and Temporal's architectures, see [Comparing DBOS and Temporal](./comparing-temporal.md).
 :::
 
+:::tip
+Also check out [DBOSify](./dbosify.md), a drop-in replacement for the Temporal Python SDK backed by Postgres.
+:::
+
 ## Workflows
 
 The core feature of both DBOS and Temporal is durably executed workflows.
