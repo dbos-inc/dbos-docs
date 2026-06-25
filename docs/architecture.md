@@ -22,12 +22,12 @@ To learn more about how to add DBOS to your application, check out the language-
 
 ## Using DBOS in a Distributed Setting
 
-DBOS naturally scales to a distributed setting with many servers per application and many applications.
-For example, you might deploy a DBOS application to a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
-Each of your application's servers should connect to the same Postgres database, called the system database.
-This database stores all workflow checkpoints, step outputs, and queue state.
-By default, each workflow runs on only a single server.
-However, you can use mechanisms like [durable queues](#durable-queues) to distribute work across many servers.
+You can create a distributed DBOS application by launching multiple server processes (sometimes called "workers" or "executors") on a variety of platforms, such as a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
+Within an application, each server must connect to the same Postgres database, called the system database. 
+This database stores all workflow checkpoints, step outputs, and schedule and queue state.
+To distribute work across many work across many servers in a cluster, you should use [durable queues](#durable-queues).
+Distributed applications should also connect to [DBOS Conductor](#operating-dbos-in-production-with-conductor), a "control plane" providing cluster-wide observability and management.
+For example, if one of your workers crashes or fails, Conductor detects the failure and automatically recovers its workflows to a compatible live worker.
 
 When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
@@ -39,8 +39,12 @@ Here's a diagram of what that might look like:
 
 You may also have multiple applications or services that need durable workflows.
 For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn't require multiple Postgres servers&mdash;a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.
+You can separately add DBOS to each of these applications. 
+Each application should have a separate system database and a unique Conductor application name.
+This doesn't require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases, with each database serving a separate DBOS application.
+
+Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client. For example a Typescript application can enqueue workflows onto a separate Python application, monitor their progress and gather results.
+Cross-language operations are documented [here](./explanations/portable-workflows.md).
 
 ## How DBOS Scales
 
