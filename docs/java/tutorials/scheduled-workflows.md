@@ -103,6 +103,12 @@ new WorkflowSchedule("every-minute", "everyMinute", "com.example.ExampleImpl", "
     .withAutomaticBackfill(true)
 ```
 
+## Startup Behavior
+
+For the first 60 seconds after `dbos.launch()`, the scheduler polls the database every 1 second instead of the configured interval. This ensures that schedules registered at startup are picked up promptly even if their first firing occurs within the fast-poll window.
+
+After the 60-second window, the scheduler returns to the normal polling interval (default 30 seconds, configurable via `DBOSConfig.withSchedulerPollingInterval`).
+
 ## Triggering a Schedule Immediately
 
 To fire a scheduled workflow immediately outside its normal cadence:

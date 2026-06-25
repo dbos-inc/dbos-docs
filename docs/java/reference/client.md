@@ -101,6 +101,16 @@ Timeout and deadline cannot both be set
 - Partition keys and deduplication IDs cannot be used together.
 :::
 
+- **`withAuthenticatedUser(String user)`**: Set the authenticated user for the enqueued workflow. Stored in the workflow record and accessible via `DBOS.authenticatedUser()` when the workflow executes.
+
+- **`withAssumedRole(String role)`**: Set the assumed role for the workflow. Accessible via `DBOS.assumedRole()`.
+
+- **`withAuthenticatedRoles(String... roles)`**: Set the list of authenticated roles. Accessible via `DBOS.authenticatedRoles()`.
+
+- **`withAuthentication(String user, String... roles)`**: Convenience method to set both `authenticatedUser` and `authenticatedRoles` in one call.
+
+- **`withAttributes(Map<String, Object> attributes)`**: Attach custom JSON-serializable key-value metadata to the workflow. Searchable via `ListWorkflowsInput.withAttributes(Map)`.
+
 ### enqueuePortableWorkflow
 
 ```java
@@ -210,10 +220,12 @@ Similar to [`dbos.listWorkflowSteps`](./methods.md#listworkflowsteps).
 
 ```java
 void cancelWorkflow(String workflowId)
+void cancelWorkflow(String workflowId, boolean cancelChildren)
 void cancelWorkflows(List<String> workflowIds)
+void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 ```
 
-Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow).
+Similar to [`dbos.cancelWorkflow`](./methods.md#cancelworkflow). When `cancelChildren` is `true`, also recursively cancels all descendant workflows.
 
 ### resumeWorkflow
 
@@ -245,6 +257,14 @@ Similar to [`dbos.deleteWorkflow`](./methods.md#deleteworkflow).
 ```
 
 Similar to [`dbos.forkWorkflow`](./methods.md#forkworkflow).
+
+### updateWorkflowAttributes
+
+```java
+void updateWorkflowAttributes(String workflowId, Map<String, Object> attributes)
+```
+
+Similar to [`dbos.updateWorkflowAttributes`](./methods.md#updateworkflowattributes).
 
 ### setWorkflowDelay
 
