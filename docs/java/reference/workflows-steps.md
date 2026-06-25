@@ -42,6 +42,7 @@ public @interface Step {
   int maxAttempts();
   double intervalSeconds();
   double backOffRate();
+  Class<? extends StepShouldRetry> shouldRetry();
 }
 ```
 
@@ -56,6 +57,35 @@ Reminder, step methods must be invoked via the proxy object returned by [`regist
 - **maxAttempts**: Maximum number of times this step is retried on failure. Must be greater than zero. Defaults to one.
 - **intervalSeconds**: Initial delay between retries in seconds. Must be positive. Defaults to one second.
 - **backOffRate**: Exponential backoff multiplier between retries. Must be greater than or equal to one. Defaults to two.
+- **shouldRetry**: A class implementing `StepShouldRetry` that decides per-exception whether to retry. The class must have a public no-arg constructor. Defaults to always retrying. Use this to short-circuit retries for non-transient errors without exhausting `maxAttempts`. See [`StepShouldRetry`](#stepshouldretry).
+
+#### StepShouldRetry
+
+```java
+@FunctionalInterface
+public interface StepShouldRetry {
+  boolean shouldRetry(Throwable e);
+}
+```
+
+Implement this interface and pass the class to `@Step(shouldRetry = MyPolicy.class)` to control whether a given exception should trigger a retry. Return `true` to retry, `false` to fail immediately.
+
+The class must be `public` and have a public no-arg constructor.
+
+**Example:**
+
+```java
+public class NoRetryOnValidation implements StepShouldRetry {
+    @Override
+    public boolean shouldRetry(Throwable e) {
+        return !(e instanceof ValidationException);
+    }
+}
+
+// Usage:
+@Step(maxAttempts = 5, shouldRetry = NoRetryOnValidation.class)
+public String fetchData(String id) { ... }
+```
 
 ### @WorkflowClassName
 
@@ -251,6 +281,16 @@ An explicit timeout and deadline cannot both be set.
 
 - **`withAppVersion(String appVersion)`** - Tag the workflow with a specific application version, overriding the default version detected at runtime.
 
+- **`withAuthenticatedUser(String user)`** - Set the authenticated user for the workflow.
+
+- **`withAssumedRole(String role)`** - Set the assumed role for the workflow.
+
+- **`withAuthenticatedRoles(String... roles)`** - Set the list of authenticated roles.
+
+- **`withAuthentication(String user, String... roles)`** - Convenience method to set both `authenticatedUser` and `authenticatedRoles` in one call.
+
+- **`withAttributes(Map<String, Object> attributes)`** - Attach custom JSON-serializable key-value metadata to the workflow.
+
 ### WorkflowHandle
 
 ```java
@@ -347,6 +387,8 @@ Create step options and provide a name for this step. By default the step runs o
 
 - **`withBackoffRate(double rate)`** - Exponential backoff multiplier between retries. Must be greater than or equal to 1.0. Defaults to 2.0.
 
+- **`withShouldRetry(Predicate<Throwable> shouldRetry)`** - Supply a predicate that decides per-exception whether to retry. Return `true` to retry, `false` to fail immediately without consuming remaining attempts. Equivalent to the annotation `shouldRetry` parameter but accepts a lambda directly. See [`StepShouldRetry`](#stepshouldretry).
+
 
 ### WorkflowOptions
 
@@ -395,6 +437,16 @@ Shortcut for `new WorkflowOptions().withWorkflowId(workflowId)`.
 An explicit timeout and deadline cannot both be set.
 :::
 
+- **`withAuthenticatedUser(String user)`** - Set the authenticated user for the workflow. Stored in the workflow record and accessible via `DBOS.authenticatedUser()`.
+
+- **`withAssumedRole(String role)`** - Set the assumed role for the workflow. Accessible via `DBOS.assumedRole()`.
+
+- **`withAuthenticatedRoles(String... roles)`** - Set the list of authenticated roles. Accessible via `DBOS.authenticatedRoles()`.
+
+- **`withAuthentication(String user, String... roles)`** - Convenience method to set both `authenticatedUser` and `authenticatedRoles` in one call.
+
+- **`withAttributes(Map<String, Object> attributes)`** - Attach custom JSON-serializable key-value metadata to the workflow. Stored in the workflow record and searchable via `ListWorkflowsInput.withAttributes(Map)`. Pass `null` or an empty map to set no attributes.
+
 ## Step Factories
 
 A step factory commits your database work and the DBOS step checkpoint in the **same transaction**, making the step exactly-once even for database writes.
@@ -427,12 +479,42 @@ new JdbcStepFactory(DBOS dbos, DataSource dataSource, String schema, DBOSSeriali
 
 ```java
 <R, X extends Exception> R txStep(TransactionalFunction<R, X> callback, String stepName) throws X
+<R, X extends Exception> R txStep(TransactionalFunction<R, X> callback, StepFactoryOptions options) throws X
 <X extends Exception> void txStep(TransactionalRunnable<X> callback, String stepName) throws X
+<X extends Exception> void txStep(TransactionalRunnable<X> callback, StepFactoryOptions options) throws X
 ```
 
 Executes `callback` as an idempotent DBOS step inside a JDBC transaction. If a result is already recorded for this step (e.g. on workflow retry), the callback is skipped and the cached result is returned.
 
 The callback receives an open `Connection` with autocommit disabled. It must **not** call `commit`, `rollback`, or `close` — the factory manages the transaction lifecycle.
+
+The step automatically retries on PostgreSQL serialization failures (SQL state `40001`) and deadlocks (`40P01`).
+
+#### StepFactoryOptions
+
+```java
+new StepFactoryOptions(String name)
+new StepFactoryOptions(String name, IsolationLevel isolationLevel)
+```
+
+Options for `txStep`. Pass instead of a bare `String` step name to control transaction isolation.
+
+**`IsolationLevel`** enum (`dev.dbos.transact.txstep`):
+- `DEFAULT` — leave the connection pool's default isolation level unchanged
+- `READ_COMMITTED`
+- `REPEATABLE_READ`
+- `SERIALIZABLE`
+- `READ_UNCOMMITTED`
+
+**Example:**
+
+```java
+factory.txStep(conn -> {
+    // critical section — use serializable isolation
+    conn.prepareStatement("INSERT INTO orders(id) VALUES (?)").executeUpdate();
+    return orderId;
+}, new StepFactoryOptions("insertOrder", IsolationLevel.SERIALIZABLE));
+```
 
 **`TransactionalFunction<R, X>`** — database work that returns a result:
 ```java
@@ -468,17 +550,30 @@ new JdbiStepFactory(DBOS dbos, Jdbi jdbi, String schema, DBOSSerializer serializ
 
 ```java
 <R, X extends Exception> R inStep(HandleCallback<R, X> callback, String stepName) throws X
+<R, X extends Exception> R inStep(HandleCallback<R, X> callback, JdbiStepOptions options) throws X
 ```
 
 Executes `callback` as an idempotent DBOS step inside a JDBI transaction, returning a result. The callback receives an open `Handle`. It must **not** call `commit`, `rollback`, or `close`.
+
+The step automatically retries on PostgreSQL serialization failures (SQL state `40001`) and deadlocks (`40P01`).
 
 #### useStep
 
 ```java
 <X extends Exception> void useStep(HandleConsumer<X> callback, String stepName) throws X
+<X extends Exception> void useStep(HandleConsumer<X> callback, JdbiStepOptions options) throws X
 ```
 
 Void variant of `inStep`. Accepts a `HandleConsumer` for callers that do not need to return a value.
+
+#### JdbiStepOptions
+
+```java
+new JdbiStepOptions(String name)
+new JdbiStepOptions(String name, TransactionIsolationLevel isolationLevel)
+```
+
+Options for `inStep`/`useStep`. Pass instead of a bare `String` step name to control transaction isolation using JDBI's `TransactionIsolationLevel` enum (`org.jdbi.v3.core.transaction`).
 
 ---
 

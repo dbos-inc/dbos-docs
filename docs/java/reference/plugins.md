@@ -197,7 +197,7 @@ public record ExternalState(
     String workflowName,
     String key,
     String value,
-    BigDecimal updateTime,
+    Instant updateTime,
     BigInteger updateSeq) {}
 ```
 
@@ -208,5 +208,5 @@ Key fields — together these form a unique record per plugin entry:
 
 Value fields:
 - **value**: A string value. Use JSON for structured data.
-- **updateTime**: Timestamp when the value was set. Upserts with an earlier `updateTime` have no effect.
+- **updateTime**: `java.time.Instant` timestamp when the value was set. Upserts with an earlier `updateTime` have no effect.
 - **updateSeq**: Monotonic sequence number. Upserts with a smaller `updateSeq` have no effect.

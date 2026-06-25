@@ -3,6 +3,74 @@ sidebar_position: 200
 title: Upgrading
 ---
 
+## Upgrading to v1.0
+
+### Breaking Changes
+
+#### ExternalState.updateTime: BigDecimal → Instant
+
+The `updateTime` field on the `ExternalState` record changed from `BigDecimal` to `java.time.Instant`, and the `withUpdateTime` builder method updated accordingly.
+
+This only affects custom plugin authors who directly construct or pattern-match on `ExternalState`.
+
+```java
+// Before
+ExternalState state = new ExternalState(service, wfName, key, value,
+    new BigDecimal(System.currentTimeMillis()), BigInteger.ZERO);
+
+// After
+ExternalState state = new ExternalState(service, wfName, key, value,
+    Instant.now(), BigInteger.ZERO);
+```
+
+#### ForkOptions.timeout: Timeout → @Nullable Duration
+
+The `timeout` field on `ForkOptions` changed from the `Timeout` sealed interface to `@Nullable Duration`. The `withTimeout(Timeout)` and `withNoTimeout()` methods were removed.
+
+```java
+// Before
+new ForkOptions().withTimeout(Timeout.none());
+new ForkOptions().withNoTimeout();
+
+// After
+new ForkOptions().withTimeout((Duration) null);  // no timeout
+new ForkOptions().withTimeout(Duration.ofMinutes(5));  // explicit timeout
+```
+
+`Timeout.of(...)` usage can be replaced directly with the equivalent `Duration`:
+
+```java
+// Before
+new ForkOptions().withTimeout(Timeout.of(Duration.ofMinutes(5)));
+
+// After
+new ForkOptions().withTimeout(Duration.ofMinutes(5));
+```
+
+Note: `Timeout` itself is still used by `StartWorkflowOptions` and `WorkflowOptions` — only `ForkOptions` changed.
+
+#### CLI: postgres and workflow subcommands removed
+
+The `dbos postgres` and `dbos workflow` subcommand groups have been removed from the CLI. The CLI now only supports `dbos migrate` and `dbos reset`.
+
+Use the [`DBOSClient`](./reference/client.md) API or the [DBOS Console](../production/workflow-management.md) to manage workflows programmatically.
+
+Additionally, the CLI now ships as a pre-compiled native binary (via GraalVM AOT compilation) for Linux, macOS, and Windows. Download the appropriate binary from the GitHub Releases page — no JVM required.
+
+#### Jackson upgraded to 3.1.x
+
+The Jackson library dependency was upgraded from 2.x to 3.1.x. Jackson 3.x has breaking API changes relative to 2.x (notably, `JsonRuntimeException` was removed).
+
+If your application has an explicit dependency on Jackson 2.x, you will need to upgrade it to 3.x. Jackson 3.x follows the same JSON format as 2.x, so no data migration is required.
+
+#### Cancellation while waiting in recv() / getEvent()
+
+`recv()` and `getEvent()` now throw `DBOSWorkflowCancelledException` when the calling workflow is cancelled while they are waiting for a message or event. Previously the behavior was inconsistent; this aligns Java with the TypeScript and Python behavior.
+
+If your code catches `Exception` or `RuntimeException` around `recv`/`getEvent`, no change is needed. If you were relying on the previous behavior where cancellation during a wait would leave the workflow in a non-cancelled state, update accordingly.
+
+---
+
 ## Upgrading to v0.9
 
 ### Breaking Changes

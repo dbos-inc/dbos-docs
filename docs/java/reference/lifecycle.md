@@ -85,6 +85,20 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
 
 
+### Cloud Environment Variables
+
+When deploying to DBOS Cloud, several environment variables are automatically set and override `DBOSConfig` values:
+
+| Variable | Description |
+|----------|-------------|
+| `DBOS__CLOUD` | Set to `true` by DBOS Cloud. Enables cloud mode: `DBOS_APP_NAME` becomes required and the admin server is forced to port 3001. |
+| `DBOS_APP_NAME` | Overrides `DBOSConfig.appName()`. Required when `DBOS__CLOUD=true`; `launch()` throws if absent. |
+| `DBOS__CONDUCTOR_URL` | URL of the DBOS Cloud Conductor. Overrides `withConductorDomain(...)`. |
+| `DBOS__CONDUCTOR_APP_NAME` | Application name used to identify this executor with Conductor. |
+| `DBOS__CONDUCTOR_KEY` | API key for DBOS Cloud Conductor. Overrides `withConductorKey(...)`. Set by the cloud platform; avoids putting credentials in `DBOSConfig`. |
+
+These variables take precedence over any values set in `DBOSConfig`. In local development you do not need to set them.
+
 ### DBOS Constructor
 
 ```java

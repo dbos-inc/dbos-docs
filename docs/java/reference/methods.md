@@ -13,7 +13,7 @@ toc_max_heading_level: 3
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `workflowId` to the key `key`.
-If the event does not yet exist, wait for it to be published, an error if the wait times out.
+If the event does not yet exist, wait for it to be published, returning empty if the wait times out. If the calling workflow is cancelled while waiting, throws `DBOSWorkflowCancelledException`.
 
 **Parameters:**
 - **workflowId**: The identifier of the workflow whose events to retrieve.
@@ -105,7 +105,7 @@ A record describing a single message in a [`sendBulk`](#sendbulk) batch.
 Receive and return a message sent to this workflow.
 Can only be called from within a workflow.
 Messages are dequeued first-in, first-out from a queue associated with the topic.
-Calls to `recv` wait for the next message in the queue, returning null if the wait times out.
+Calls to `recv` wait for the next message in the queue, returning null if the wait times out. If the workflow is cancelled while waiting, `recv` throws `DBOSWorkflowCancelledException`.
 
 **Parameters:**
 - **topic**: A topic queue on which to wait.
@@ -155,7 +155,9 @@ Close a stream, signalling to consumers that no more values will be written. Mus
 Iterator<Object> readStream(String workflowId, String key)
 ```
 
-Read all values written to a stream by the specified workflow. Returns a blocking iterator: it polls for new values while the workflow is active (`PENDING` or `ENQUEUED`) and stops when the stream is closed or the workflow terminates. Can be called from outside the workflow — typically from a separate thread or external process.
+Read all values written to a stream by the specified workflow. Returns a blocking iterator that stops when the stream is closed or the workflow terminates. Can be called from outside the workflow — typically from a separate thread or external process.
+
+On PostgreSQL, the iterator wakes up immediately when a new value is written (via `LISTEN`/`NOTIFY`). On CockroachDB, it falls back to polling once per second.
 
 **Parameters:**
 - **workflowId**: The ID of the workflow that owns the stream.
@@ -270,8 +272,12 @@ public record WorkflowStatus(
     Boolean wasForkedFrom,
     // Time until which the workflow is delayed before starting
     Instant delayUntil,
+    // When the workflow completed (terminal states only)
+    Instant completedAt,
     // The serialization format used for the workflow's inputs/outputs
-    String serialization
+    String serialization,
+    // Custom key-value metadata attached to the workflow
+    Map<String, Object> attributes
 )
 ```
 
@@ -353,7 +359,7 @@ Retrieve workflows created before this timestamp.
 #### withStatus
 
 ```java
-ListWorkflowsInput withStatus(WorkflowState status)
+ListWorkflowsInput withStatus(WorkflowState... statuses)
 ListWorkflowsInput withStatus(List<WorkflowState> statuses)
 ```
 
@@ -477,6 +483,46 @@ ListWorkflowsInput withHasParent(Boolean hasParent)
 
 Filter to workflows that have a parent workflow.
 
+#### withCompletedAfter
+
+```java
+ListWorkflowsInput withCompletedAfter(Instant completedAfter)
+```
+
+Filter to workflows that completed after this timestamp.
+
+#### withCompletedBefore
+
+```java
+ListWorkflowsInput withCompletedBefore(Instant completedBefore)
+```
+
+Filter to workflows that completed before this timestamp.
+
+#### withDequeuedAfter
+
+```java
+ListWorkflowsInput withDequeuedAfter(Instant dequeuedAfter)
+```
+
+Filter to workflows that were dequeued (started execution) after this timestamp.
+
+#### withDequeuedBefore
+
+```java
+ListWorkflowsInput withDequeuedBefore(Instant dequeuedBefore)
+```
+
+Filter to workflows that were dequeued (started execution) before this timestamp.
+
+#### withAttributes
+
+```java
+ListWorkflowsInput withAttributes(Map<String, Object> attributes)
+```
+
+Filter to workflows whose custom attributes contain all the specified key-value pairs (PostgreSQL `@>` containment check using a GIN index). Pass a map with the subset of attributes to match.
+
 
 ### listWorkflowSteps
 
@@ -522,10 +568,15 @@ Retrieve the [`WorkflowStatus`](#workflowstatus) of a single workflow by ID.
 
 ```java
 void cancelWorkflow(String workflowId)
+void cancelWorkflow(String workflowId, boolean cancelChildren)
 void cancelWorkflows(List<String> workflowIds)
+void cancelWorkflows(List<String> workflowIds, boolean cancelChildren)
 ```
 
 Cancel one or more workflows. This sets their status to `CANCELLED`, removes them from their queue (if enqueued) and preempts execution (interrupting at the beginning of the next step).
+
+**Parameters:**
+- **cancelChildren**: If `true`, recursively cancel all descendant workflows spawned by the cancelled workflow(s). Defaults to `false`.
 
 ### resumeWorkflow
 
@@ -566,7 +617,7 @@ Permanently delete one or more workflows and their recorded steps from the datab
 public record ForkOptions(
     String forkedWorkflowId,
     String applicationVersion,
-    Timeout timeout,
+    Duration timeout,       // null means no timeout
     String queueName,
     String queuePartitionKey
 ) {
@@ -574,7 +625,6 @@ public record ForkOptions(
     ForkOptions withApplicationVersion(String applicationVersion);
     ForkOptions withTimeout(Duration timeout);
     ForkOptions withTimeout(long value, TimeUnit unit);
-    ForkOptions withNoTimeout();
     ForkOptions withQueue(Queue queue);
     ForkOptions withQueue(String queueName);
     ForkOptions withQueuePartitionKey(String queuePartitionKey);
@@ -589,9 +639,71 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
 - **options**:
   - **forkedWorkflowId**: The workflow ID for the newly forked workflow (if not provided, generate a UUID)
   - **applicationVersion**: The application version for the forked workflow (inherited from the original if not provided)
-  - **timeout**: A timeout for the forked workflow.
+  - **timeout**: A `Duration` timeout for the forked workflow. Pass `null` for no timeout.
   - **queueName**: Enqueue the forked workflow on this queue instead of starting it immediately.
   - **queuePartitionKey**: Partition key for the queue (only for partitioned queues).
+
+### forkFromFailure
+
+```java
+<T, E extends Exception> WorkflowHandle<T, E> forkFromFailure(
+    String workflowId, ForkFromFailureOptions options)
+<T, E extends Exception> WorkflowHandle<T, E> forkFromFailure(
+    List<String> workflowIds, ForkFromFailureOptions options)
+```
+
+Re-execute a failed workflow starting from a selected prior step, reusing all completed step outputs up to that point. The original workflow is not modified; a new workflow with a new ID is created.
+
+**Parameters:**
+- **workflowId** / **workflowIds**: The ID(s) of the workflow(s) to fork.
+- **options**: A [`ForkFromFailureOptions`](#forkfromfailureoptions) value specifying which step to restart from.
+
+#### ForkFromFailureOptions
+
+`ForkFromFailureOptions` is a sealed interface with four permitted subtypes. Construct one of the subtypes, then optionally chain `with*` calls for queue and version options.
+
+```java
+import dev.dbos.transact.workflow.ForkFromFailureOptions;
+```
+
+**Subtypes:**
+
+- **`new ForkFromFailureOptions.FromLastFailure()`** — restart from the last step that recorded an error. Falls back to the last step executed if no step has an error.
+- **`new ForkFromFailureOptions.FromLastStep()`** — restart from the last step executed, regardless of success or failure.
+- **`new ForkFromFailureOptions.FromStep(int step)`** — restart from a specific step number (0-indexed `functionId` from `listWorkflowSteps`). Steps before this are copied; execution starts at this step.
+- **`new ForkFromFailureOptions.FromStepName(String stepName)`** — restart from the last occurrence of a step with the given name.
+
+**Common `with` methods on all subtypes:**
+- **`withApplicationVersion(String version)`** — run the new workflow on this application version.
+- **`withQueue(Queue queue)`** / **`withQueue(String queueName)`** — enqueue the new workflow on this queue instead of starting immediately.
+- **`withQueuePartitionKey(String key)`** — partition key for partitioned queues.
+
+**Example:**
+
+```java
+// Restart the failed workflow from its last error step
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromLastFailure());
+
+// Restart from step 3
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromStep(3)
+        .withApplicationVersion("v2.0"));
+```
+
+### updateWorkflowAttributes
+
+```java
+void updateWorkflowAttributes(String workflowId, Map<String, Object> attributes)
+```
+
+Replace the custom attributes attached to a workflow. Pass `null` or an empty map to clear all attributes.
+
+Safe to call from within a workflow — the update is recorded as a step so it executes exactly once even if the workflow is recovered.
+
+**Parameters:**
+- **workflowId**: The ID of the workflow whose attributes to update.
+- **attributes**: The new JSON-serializable key-value attributes, or `null`/empty map to clear.
 
 ### setWorkflowDelay
 
@@ -865,9 +977,33 @@ static boolean inStep();
 
 Return `true` if the current calling context is executing a workflow step, or `false` otherwise.
 
+### authenticatedUser
+
+```java
+static @Nullable String authenticatedUser()
+```
+
+Return the authenticated user associated with the current workflow, or `null` if none was set. Must be called from within a workflow or step.
+
+### assumedRole
+
+```java
+static @Nullable String assumedRole()
+```
+
+Return the assumed role for the current workflow execution, or `null` if none was set. Must be called from within a workflow or step.
+
+### authenticatedRoles
+
+```java
+static @Nullable List<String> authenticatedRoles()
+```
+
+Return the list of authenticated roles for the current workflow, or `null` if none were set. Must be called from within a workflow or step.
+
 ## Timeout
 
-`Timeout` is a sealed interface used by `StartWorkflowOptions`, `WorkflowOptions`, and `ForkOptions` to control how inherited timeouts are handled.
+`Timeout` is a sealed interface used by `StartWorkflowOptions` and `WorkflowOptions` to control how inherited timeouts are handled.
 
 ```java
 import dev.dbos.transact.workflow.Timeout;
