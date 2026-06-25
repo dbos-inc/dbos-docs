@@ -22,14 +22,14 @@ To learn more about how to add DBOS to your application, check out the language-
 
 ## Using DBOS in a Distributed Setting
 
-You can create a distributed DBOS application by launching multiple processes, sometimes called "workers" or "executors."
-You can deploy such a distributed app to a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
-Each worker must connect to the same logical Postgres database, called the system database. 
+You can create a distributed DBOS app by launching multiple processes, sometimes called "workers" or "executors" on a variety of platforms, such as a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
+Within an app, each worker must connect to the same logical Postgres database, called the system database. 
 This database stores all workflow checkpoints, step outputs, schedule and queue state.
-We also recommend connecting your workers to [Conductor](#operating-dbos-in-production-with-conductor) for cross-worker recovery, observability, and workflow management.
+
+Distributed apps should also be connected to [DBOS Conductor](#operating-dbos-in-production-with-conductor) in order to observe and manage your workflows, including workflow recovery frop stopped workers to live ones.
 DBOS automatically leverages the database to prevent duplicate execution of workflows with the same ID. 
-Scheduled workflows and alert triggers are also automatically assigned to exactly one worker, selected randomly at each iteration.
-You can use [durable queues](#durable-queues) to distribute workflows among the workers, with controls over concurrency, rate limits and priority.
+Scheduled workflows and alert triggers are also assigned to exactly one worker, selected randomly at each iteration.
+You can use [durable queues](#durable-queues) to distribute or "fan-out" workflows among the workers, with controls over concurrency, rate limits and priority.
 
 When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
