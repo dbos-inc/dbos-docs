@@ -5,6 +5,7 @@ title: Scheduling Workflows
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
 Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
+Each time a scheduled fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow that takes two arguments: a `Date` (the scheduled execution time) and a context object:
 
