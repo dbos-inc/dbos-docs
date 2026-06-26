@@ -25,14 +25,14 @@ To learn more about how to add DBOS to your application, check out the language-
 You can create a distributed DBOS application by launching multiple server processes (sometimes called "workers" or "executors") on a variety of platforms, such as a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
 Within an application, each server must connect to the same Postgres database, called the system database. 
 This database stores all workflow checkpoints, step outputs, and schedule and queue state.
-To distribute work across many work across many servers in a cluster, you should use [durable queues](#durable-queues).
-Distributed applications should also connect to [DBOS Conductor](#operating-dbos-in-production-with-conductor), a "control plane" providing cluster-wide observability and management.
+To distribute work across many servers in a cluster, you should use [durable queues](#durable-queues).
+Distributed applications should also connect to [DBOS Conductor](#operating-dbos-in-production-with-conductor), the control plane for cluster-wide observability and management.
 For example, if one of your workers crashes or fails, Conductor detects the failure and automatically recovers its workflows to a compatible live worker.
 
 When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
-For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
+Your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
 <img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
