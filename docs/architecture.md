@@ -13,7 +13,7 @@ When failures occur, whether from crashes, interruptions, or restarts, DBOS uses
 Architecturally, an application built with DBOS looks the below diagram.
 The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
 There's no separate orchestration server and no infrastructure required besides Postgres.
-When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows providing useful features such as an admin UI and dashboard, distributed workflow recovery, and managed workflow retention policies.
+When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows that coordinates workflow recovery to guarantee high availability and provides operational tooling such as an admin UI and dashboard, observability integrations, and managed workflow retention policies.
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
@@ -118,7 +118,7 @@ For more information on queues, see the docs ([Python](./python/tutorials/queue-
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is the control plane for your durable workflows, providing:
 
-- [**Distributed workflow recovery**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
+- [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
 - [**Workflow and queue observability**](./production/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
 - [**Workflow and queue management**](./production/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./production/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
