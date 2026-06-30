@@ -56,15 +56,12 @@ Custom roles require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) 
 
 Organization admins can create **custom roles** with any combination of permissions.
 This is useful for granting narrower access than the built-in roles; for example, a read-only role that can view applications and metrics but not modify them.
+You can manage custom roles from the [organization settings](https://console.dbos.dev/settings/organization) page in the console.
 
-To create a custom role, open **Organization Settings** in the [console](https://console.dbos.dev/settings/organization), click **Create role**, give it a name, and choose an access level for each resource.
-
-A custom role can be deleted once no members are assigned to it.
-To delete a role that is still in use, first reassign its members to another role.
 
 ### Assigning roles to members
 
-Organization admins manage members and their roles from **Organization Settings** in the [console](https://console.dbos.dev/settings/organization):
+Organization admins manage members and their roles from the [organization settings](https://console.dbos.dev/settings/organization) page in the console:
 
 - **Change a member's role** to any role whose permissions the admin also holds.
 - **Remove a member** from the organization.
@@ -88,17 +85,6 @@ An API key has two independent restrictions:
 - **Application scope** — either *all applications* in the organization (org-wide), or a specific list of applications. A key scoped to specific applications is rejected on any request targeting an application outside its list, even if it holds the required permission.
 
 For example, an API key with only `application.read` scoped to a single application can read that application's workflows and nothing else.
-
-### Creating an API key
-
-Generate API keys from the **API Keys** settings page in the [console](https://console.dbos.dev/settings/apikey):
-
-1. Create a new key and give it a name.
-2. Choose an application scope: **All applications**, or **Specific applications**.
-3. Choose an access level for each resource. You can only grant permissions you hold yourself.
-4. Generate the key and copy it; it is displayed only once.
-
-Creating and revoking API keys requires the `token.write` permission (held by both built-in roles).
 
 ### Using an API key
 
