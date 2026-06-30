@@ -199,6 +199,59 @@ class ExampleImpl implements Example {
 
 If a step exhausts all retry attempts, it throws an exception to the calling workflow.
 
+## Selective Retry with `shouldRetry`
+
+By default, every exception triggers a retry (up to `maxAttempts`). Use `shouldRetry` to short-circuit retries for exceptions you know are non-transient — for example, validation errors or 4xx HTTP responses — without wasting attempts on them.
+
+### With `runStep`
+
+Pass a `Predicate<Throwable>` via `StepOptions.withShouldRetry`:
+
+```java
+@Workflow
+public String fetchWorkflow(String url) throws Exception {
+    return dbos.runStep(
+        () -> fetchStep(url),
+        new StepOptions("fetchStep")
+            .withMaxAttempts(5)
+            .withShouldRetry(e -> {
+                // retry on network errors; fail fast on HTTP 4xx
+                if (e instanceof HttpClientResponseException ex) {
+                    return ex.getStatus().getCode() >= 500;
+                }
+                return true;
+            })
+    );
+}
+```
+
+### With `@Step`
+
+Implement `StepShouldRetry` as a public class with a public no-arg constructor and reference it from the annotation:
+
+```java
+public class RetryOnServerError implements StepShouldRetry {
+    @Override
+    public boolean shouldRetry(Throwable e) {
+        if (e instanceof HttpClientResponseException ex) {
+            return ex.getStatus().getCode() >= 500;
+        }
+        return true;
+    }
+}
+
+interface Example {
+    String fetchStep(String url) throws Exception;
+}
+
+class ExampleImpl implements Example {
+    @Step(maxAttempts = 5, shouldRetry = RetryOnServerError.class)
+    public String fetchStep(String url) throws Exception {
+        // ...
+    }
+}
+```
+
 ## Step Factories
 
 Regular steps checkpoint their output _after_ the step body completes.

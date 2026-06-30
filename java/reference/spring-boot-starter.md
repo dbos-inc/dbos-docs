@@ -114,6 +114,7 @@ Package: `dev.dbos.transact.spring.txstep`.
 ```java
 public @interface TransactionalStep {
   String name() default "";
+  Isolation isolationLevel() default Isolation.DEFAULT;
 }
 ```
 
@@ -128,8 +129,11 @@ The behaviour depends on calling context:
 
 The annotated method must be called through a Spring proxy — calls via `this` bypass the aspect.
 
+The step automatically retries on PostgreSQL serialization failures (SQL state `40001`) and deadlocks (`40P01`) when called from within a workflow.
+
 **Parameters:**
 - **name**: Stable name for this step within the workflow. Defaults to the method name.
+- **isolationLevel**: Transaction isolation level for this step. Uses `org.springframework.transaction.annotation.Isolation`. Defaults to `Isolation.DEFAULT`, which leaves the datasource/connection-pool default unchanged. Example: `@TransactionalStep(isolationLevel = Isolation.SERIALIZABLE)`.
 
 **Supported stacks**: Spring JDBC / `JdbcTemplate`, JDBI (`jdbi3-spring`), jOOQ (`spring-boot-starter-jooq`), JPA / Hibernate.
 

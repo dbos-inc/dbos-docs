@@ -29,6 +29,16 @@ You can cancel the execution of a workflow from the web UI, programmatically via
 If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
 If the workflow is enqueued, cancelling removes it from the queue.
 
+To also cancel all descendant workflows spawned by the cancelled workflow, pass `cancelChildren = true`:
+
+```java
+dbos.cancelWorkflow(workflowId, true);
+// or for multiple workflows:
+dbos.cancelWorkflows(workflowIds, true);
+```
+
+When a workflow is cancelled while it is waiting inside [`recv`](../reference/methods.md#recv) or [`getEvent`](../reference/methods.md#getevent), a `DBOSWorkflowCancelledException` is thrown to abort it immediately rather than waiting for the timeout to expire.
+
 ## Resuming Workflows
 
 You can resume a workflow from its last completed step from the web UI, programmatically via [`dbos.resumeWorkflow`](../reference/methods.md#resumeworkflow), or using the [`DBOSClient`](../reference/client.md#resumeworkflow).
@@ -47,3 +57,69 @@ You can fork a workflow programmatically using [`dbos.forkWorkflow`](../referenc
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's graph visualization:
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>
+
+## Forking from Failure
+
+When a workflow fails and you want to re-run it from where it went wrong, use [`forkFromFailure`](../reference/methods.md#forkfromfailure). Unlike `forkWorkflow`, you don't need to look up the exact step number — DBOS finds it automatically based on the mode you choose.
+
+```java
+// Restart from the last step that recorded an error (most common)
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromLastFailure());
+
+// Restart from the very last step (whether it failed or succeeded)
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromLastStep());
+
+// Restart from a specific step number
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromStep(3));
+
+// Restart from the last occurrence of a named step
+dbos.forkFromFailure(failedWorkflowId,
+    new ForkFromFailureOptions.FromStepName("callPaymentAPI"));
+```
+
+All options support chaining `withApplicationVersion`, `withQueue`, and `withQueuePartitionKey`.
+
+You can also retry multiple failed workflows at once:
+
+```java
+dbos.forkFromFailure(List.of(id1, id2, id3),
+    new ForkFromFailureOptions.FromLastFailure()
+        .withApplicationVersion("v2.1"));
+```
+
+See [`ForkFromFailureOptions`](../reference/methods.md#forkfromfailureoptions) for the full API.
+
+## Workflow Attributes
+
+You can attach custom metadata to any workflow as a `Map<String, Object>`. Attributes are stored as JSON and are searchable.
+
+**At creation:**
+
+```java
+dbos.startWorkflow(() -> proxy.processOrder(orderId),
+    new StartWorkflowOptions()
+        .withAttributes(Map.of("customerId", "cust-123", "region", "us-west")));
+```
+
+**After creation (from anywhere, including inside a workflow):**
+
+```java
+dbos.updateWorkflowAttributes(workflowId,
+    Map.of("status", "awaiting-payment", "invoiceId", "inv-456"));
+```
+
+When called from within a workflow, `updateWorkflowAttributes` is recorded as a step and executes exactly once even under recovery.
+
+**Filtering by attributes:**
+
+```java
+// Find all workflows for customer cust-123
+List<WorkflowStatus> results = dbos.listWorkflows(
+    new ListWorkflowsInput()
+        .withAttributes(Map.of("customerId", "cust-123")));
+```
+
+The filter uses PostgreSQL's `@>` containment operator — it matches any workflow whose `attributes` map contains all the specified key-value pairs. Pass a subset of the attributes to match; extra attributes on the workflow are ignored.

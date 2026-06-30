@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.cca8f98a.css">
-<script src="/assets/js/runtime~main.59fb947f.js" defer="defer"></script>
-<script src="/assets/js/main.3bd07559.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.0203f2b2.js" defer="defer"></script>
+<script src="/assets/js/main.4cf74bc0.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -31,22 +31,25 @@ When running in production, we also recommend connecting your DBOS applications 
 <img src="/assets/images/dbos-architecture-161928caa5052c6600dc55ea62b7ecfa.png" alt="DBOS Conductor Architecture" width="750" class="custom-img">
 <p>To learn more about how to add DBOS to your application, check out the language-specific integration guides (<a class="" href="/python/integrating-dbos">Python</a>, <a class="" href="/typescript/integrating-dbos">TypeScript</a>, <a class="" href="/golang/integrating-dbos">Go</a>, <a class="" href="/java/integrating-dbos">Java</a>).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="using-dbos-in-a-distributed-setting">Using DBOS in a Distributed Setting<a href="#using-dbos-in-a-distributed-setting" class="hash-link" aria-label="Direct link to Using DBOS in a Distributed Setting" title="Direct link to Using DBOS in a Distributed Setting" translate="no">​</a></h2>
-<p>DBOS naturally scales to a distributed setting with many servers per application and many applications.
-For example, you might deploy a DBOS application to a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
-Each of your application&#x27;s servers should connect to the same Postgres database, called the system database.
-This database stores all workflow checkpoints, step outputs, and queue state.
-By default, each workflow runs on only a single server.
-However, you can use mechanisms like <a href="#durable-queues" class="">durable queues</a> to distribute work across many servers.</p>
+<p>You can create a distributed DBOS application by launching multiple server processes (sometimes called &quot;workers&quot; or &quot;executors&quot;) on a variety of platforms, such as a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
+Within an application, each server must connect to the same Postgres database, called the system database.
+This database stores all workflow checkpoints, step outputs, and schedule and queue state.
+To distribute work across many servers in a cluster, you should use <a href="#durable-queues" class="">durable queues</a>.
+Distributed applications should also connect to <a href="#operating-dbos-in-production-with-conductor" class="">DBOS Conductor</a>, the control plane for cluster-wide observability and management.
+For example, if one of your workers crashes or fails, Conductor detects the failure and automatically recovers its workflows to a compatible live worker.</p>
 <p>When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>, <a class="" href="/java/reference/client">Java</a>) to programmatically interact with your application from external code.
-For example, your API server can create a client connected to your data processing service&#x27;s system database and use it to enqueue a job, monitor the job&#x27;s status, and retrieve its result when complete.
+Your API server can create a client connected to your data processing service&#x27;s system database and use it to enqueue a job, monitor the job&#x27;s status, and retrieve its result when complete.
 Here&#x27;s a diagram of what that might look like:</p>
 <img src="/assets/images/api-worker-c191e6a8e517fdff66e07ea0aa368c9e.png" alt="DBOS Architecture" width="750" class="custom-img">
 <p>You may also have multiple applications or services that need durable workflows.
 For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications, connecting each to a separate system database to isolate their workflows.
-This doesn&#x27;t require multiple Postgres servers—a single physical Postgres server can host multiple system databases, with each database serving a separate DBOS application.</p>
+You can separately add DBOS to each of these applications.
+Each application should have a separate system database and a unique Conductor application name.
+This doesn&#x27;t require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases, with each database serving a separate DBOS application.</p>
+<p>Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client. For example a Typescript application can enqueue workflows onto a separate Python application, monitor their progress and gather results.
+Cross-language operations are documented <a class="" href="/explanations/portable-workflows">here</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-dbos-scales">How DBOS Scales<a href="#how-dbos-scales" class="hash-link" aria-label="Direct link to How DBOS Scales" title="Direct link to How DBOS Scales" translate="no">​</a></h2>
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
 The only overhead DBOS adds is database writes: one database write per step (to checkpoint the step&#x27;s outcome) plus two additional database writes per workflow (one at the beginning to checkpoint workflow inputs, one at the end to checkpoint the workflow outcome).</p>

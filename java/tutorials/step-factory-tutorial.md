@@ -72,6 +72,24 @@ factory.txStep(conn -> {
 }, "deleteStaging");
 ```
 
+### Isolation level
+
+To override the transaction isolation level, pass a `StepFactoryOptions` instead of a plain step name:
+
+```java
+import dev.dbos.transact.txstep.IsolationLevel;
+import dev.dbos.transact.txstep.StepFactoryOptions;
+
+factory.txStep(conn -> {
+    // ...
+    return result;
+}, new StepFactoryOptions("insertOrder", IsolationLevel.SERIALIZABLE));
+```
+
+Available levels: `DEFAULT` (pool default), `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE`, `READ_UNCOMMITTED`.
+
+Steps automatically retry on PostgreSQL serialization failures (`40001`) and deadlocks (`40P01`), so `SERIALIZABLE` isolation can be used safely with retries already configured.
+
 ---
 
 ## JdbiStepFactory
@@ -116,6 +134,22 @@ factory.useStep(handle -> {
         .execute();
 }, "deleteStaging");
 ```
+
+### Isolation level
+
+To override the transaction isolation level, pass a `JdbiStepOptions` instead of a plain step name:
+
+```java
+import dev.dbos.transact.jdbi.JdbiStepOptions;
+import org.jdbi.v3.core.transaction.TransactionIsolationLevel;
+
+factory.inStep(handle -> {
+    // ...
+    return result;
+}, new JdbiStepOptions("insertOrder", TransactionIsolationLevel.SERIALIZABLE));
+```
+
+Steps automatically retry on PostgreSQL serialization failures (`40001`) and deadlocks (`40P01`).
 
 ---
 
@@ -193,6 +227,19 @@ The method must be called through a Spring proxy — inject the bean into a `@Wo
 
 When called from inside a `@Workflow` (and not already inside a step), the full step factory behaviour applies: the method runs in a `REQUIRES_NEW` transaction and the output is checkpointed atomically.
 When called from outside a workflow, or from inside any step (including another `@TransactionalStep`), it behaves like `@Transactional` — the transaction runs normally with `PROPAGATION_REQUIRED` but no DBOS checkpoint is recorded. This makes `@TransactionalStep` methods safe to call from any context.
+
+Steps automatically retry on PostgreSQL serialization failures (`40001`) and deadlocks (`40P01`) when called from within a workflow.
+
+To override the transaction isolation level:
+
+```java
+@TransactionalStep(isolationLevel = Isolation.SERIALIZABLE)
+public Order saveOrder(Order order) {
+    return orderRepository.save(order);
+}
+```
+
+`Isolation` is `org.springframework.transaction.annotation.Isolation`.
 
 #### JdbcTemplate
 
