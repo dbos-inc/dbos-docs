@@ -95,8 +95,3 @@ You can also use an API key to authenticate HTTP calls to the Conductor API (for
 ```
 Authorization: Bearer dbos_...
 ```
-
-### Revoking an API key
-
-Revoke a key from the **API Keys** settings page.
-Revocation takes effect immediately: the key can no longer authenticate any request, and any application using it will be unable to reconnect to Conductor.
