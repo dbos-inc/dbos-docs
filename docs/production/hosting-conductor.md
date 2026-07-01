@@ -238,7 +238,7 @@ All Conductor instances connect to the same Postgres database, which holds all C
 
 In a highly available configuration, you should additionally use a highly available Postgres database, such as AWS RDS or Aurora in a multi-AZ replicated configuration, or equivalent offerings from other Postgres providers.
 
-### Architecture
+### How It Works
 
 Each of your DBOS application's executors maintains a long-lived WebSocket connection to Conductor.
 When you run multiple Conductor instances behind a load balancer, the load balancer distributes these connections across instances, so each executor connects to (and is owned by) exactly one Conductor instance at a time.
