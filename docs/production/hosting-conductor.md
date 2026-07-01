@@ -256,7 +256,7 @@ Set the `DBOS__ADVERTISE_ADDRESS` environment variable to a routable address (a 
 
 | Environment variable | Default | Description |
 |---|---|---|
-| `DBOS__ADVERTISE_ADDRESS` | `127.0.0.1` | Routable address peers use to forward requests to this instance. **Must be set** for multi-instance deployments. |
+| `DBOS__ADVERTISE_ADDRESS` | `127.0.0.1` | Routable address or URL peers use to forward requests to this instance. **Must be set** for multi-instance deployments. |
 | `DBOS__CONDUCTOR_PORT` | `8090` | Port Conductor listens on and advertises to peers. |
 
 ## Security
