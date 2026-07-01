@@ -241,7 +241,7 @@ In a highly available configuration, you should additionally use a highly availa
 ### Architecture
 
 Each of your DBOS application's executors maintains a long-lived WebSocket connection to Conductor.
-When you run multiple Conductor instances behind a load balancer, the load balancer distributes these connections across instances, so each executor connects to (and is "owned" by) exactly one Conductor instance at a time.
+When you run multiple Conductor instances behind a load balancer, the load balancer distributes these connections across instances, so each executor connects to (and is owned by) exactly one Conductor instance at a time.
 
 When a request (for example, from the DBOS Console) needs to reach a particular executor, it may land on any Conductor instance.
 If that instance does not own the target executor's connection, it looks up the owning instance in Postgres and forwards the request to it directly.
