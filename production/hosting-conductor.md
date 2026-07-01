@@ -231,6 +231,34 @@ You should also configure [authentication](#security).
 Without OAuth authentication, there is no user or organization management.
 In order to enable these features, you must set up Conductor with an OAuth-compatible single-sign on solution.
 
+## High Availability
+
+For production deployments that require fault tolerance, you can run multiple Conductor instances in a highly available configuration.
+All Conductor instances connect to the same Postgres database, which holds all Conductor state, so you can run multiple Conductor instances in multiple availability zones (or other failure domains) behind a load balancer.
+
+In a highly available configuration, you should additionally use a highly available Postgres database, such as AWS RDS or Aurora in a multi-AZ replicated configuration, or equivalent offerings from other Postgres providers.
+
+### How It Works
+
+Each of your DBOS application's executors maintains a long-lived WebSocket connection to Conductor.
+When you run multiple Conductor instances behind a load balancer, the load balancer distributes these connections across instances, so each executor connects to (and is owned by) exactly one Conductor instance at a time.
+
+When a request (for example, from the DBOS Console) needs to reach a particular executor, it may land on any Conductor instance.
+If that instance does not own the target executor's connection, it looks up the owning instance in Postgres and forwards the request to it directly.
+The owning instance then relays the request to the executor over its WebSocket.
+This means **Conductor instances must be able to reach each other directly over the network**, in addition to being reachable through the load balancer.
+This peer-to-peer traffic flows directly between instances.
+
+To enable peer forwarding, each Conductor instance must advertise an address that its peers can use to reach it.
+Set the `DBOS__ADVERTISE_ADDRESS` environment variable to a routable address (a hostname or IP, without a port); peers connect to this address on the Conductor port (`8090` by default, configurable with `DBOS__CONDUCTOR_PORT`).
+
+### Configuration summary
+
+| Environment variable | Default | Description |
+|---|---|---|
+| `DBOS__ADVERTISE_ADDRESS` | `127.0.0.1` | Routable address or URL peers use to forward requests to this instance. **Must be set** for multi-instance deployments. |
+| `DBOS__CONDUCTOR_PORT` | `8090` | Port Conductor listens on and advertises to peers. |
+
 ## Security
 
 To securely self-host Conductor in production, you should set up authentication and authorization for all API calls made to it.
