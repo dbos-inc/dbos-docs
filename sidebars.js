@@ -114,6 +114,10 @@ const sidebars = {
             },
             {
               type: 'doc',
+              id: 'integrations/vercel-ai',
+            },
+            {
+              type: 'doc',
               id: 'integrations/mcp',
             },
           ],
