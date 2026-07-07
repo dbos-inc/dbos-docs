@@ -15,6 +15,7 @@ If your process crashes mid-agent, DBOS replays the completed steps from their c
 
 This package is implemented as standard AI SDK [middleware](https://ai-sdk.dev/docs/ai-sdk-core/middleware), so you keep your provider, your model configuration, and the familiar APIs like `generateText`, `streamText`, and `ToolLoopAgent`.
 Durability is transparent to your agent code.
+For example:
 
 ```ts
 import { DBOS } from '@dbos-inc/dbos-sdk';
@@ -220,4 +221,3 @@ const { images } = await generateImage({ model: imageModel, prompt: 'a durable c
 
 For more details on building agents with the Vercel AI SDK, see the [Vercel AI SDK documentation](https://ai-sdk.dev/).
 For information about durable execution and workflow design, see the [DBOS programming guide](../typescript/programming-guide.md).
-Together, these resources cover everything from getting started with simple agents to designing production-ready, fault-tolerant applications.
