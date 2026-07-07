@@ -258,11 +258,11 @@ func taskWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
     return i, nil
 }
 
-func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) (int, error) {
+func queueWorkflow(ctx dbos.DBOSContext, queueName string) (int, error) {
     fmt.Println("Enqueuing tasks")
     handles := make([]dbos.WorkflowHandle[int], 10)
     for i := range 10 {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue.Name))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queueName))
         if err != nil {
             return 0, err
         }
@@ -289,7 +289,6 @@ func main() {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
     }
 
-    queue := dbos.NewWorkflowQueue(dbosContext, "queue")
     dbos.RegisterWorkflow(dbosContext, queueWorkflow)
     dbos.RegisterWorkflow(dbosContext, taskWorkflow)
 
@@ -299,10 +298,15 @@ func main() {
     }
     defer dbos.Shutdown(dbosContext, 5 * time.Second)
 
+    _, err = dbos.RegisterQueue(dbosContext, "queue")
+    if err != nil {
+        panic(fmt.Sprintf("Registering queue failed: %v", err))
+    }
+
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
+        dbos.RunWorkflow(dbosContext, queueWorkflow, "queue")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
@@ -314,7 +318,7 @@ func main() {
 }
 ```
 
-When you enqueue a function by passing `dbos.WithQueue(queue.Name)` into `dbos.RunWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+When you enqueue a function by passing `dbos.WithQueue(queueName)` into `dbos.RunWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `dbos.RunWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.GetResult()` to wait for each of their handles.
 

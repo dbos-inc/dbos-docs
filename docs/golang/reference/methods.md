@@ -51,7 +51,22 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **opts**: Optional [SendOption](#withportablesend) functions.
+- **opts**: Optional `SendOption` functions ([`WithIdempotencyKey`](#withidempotencykey), [`WithPortableSend`](#withportablesend)).
+
+#### WithIdempotencyKey
+
+```go
+func WithIdempotencyKey(key string) SendOption
+```
+
+Make a `Send` deliver at most once.
+The key is combined with the destination workflow ID to form the message's primary key, so retrying a `Send` with the same key (after a crash, timeout, or network failure) inserts the message only once.
+Keys are scoped per destination.
+Without a key, every `Send` delivers a new message.
+
+```go
+err := dbos.Send(ctx, destinationID, payload, "payments", dbos.WithIdempotencyKey("payment-123"))
+```
 
 ### Recv
 
@@ -236,6 +251,15 @@ func WithEndTime(endTime time.Time) ListWorkflowsOption
 
 Retrieve workflows started before this timestamp.
 
+#### WithFilterAttributes
+
+```go
+func WithFilterAttributes(attributes map[string]any) ListWorkflowsOption
+```
+
+Retrieve workflows whose [attributes](./workflows-steps.md#withworkflowattributes) contain all the given key-value pairs (JSONB containment).
+Requires a Postgres system database; listing fails with an error on SQLite.
+
 #### WithLimit
 
 ```go
@@ -413,15 +437,32 @@ func WithStepsLoadOutput(loadOutput bool) GetWorkflowStepsOption
 Control whether to load step output data.
 When unset, output is loaded only if the DBOS context has been launched.
 
+#### WithStepsLimit
+
+```go
+func WithStepsLimit(limit int) GetWorkflowStepsOption
+```
+
+Limit the number of steps returned, ordered by step ID ascending.
+
+#### WithStepsOffset
+
+```go
+func WithStepsOffset(offset int) GetWorkflowStepsOption
+```
+
+Skip the given number of steps before returning results. Combine with `WithStepsLimit` to paginate through a workflow's steps.
+
 ### GetWorkflowAggregates
 
 ```go
 func GetWorkflowAggregates(ctx DBOSContext, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
 ```
 
-Return aggregate workflow counts grouped by one or more columns and/or by `created_at` time bucket.
+Return aggregates of workflows grouped by one or more columns and/or by `created_at` time bucket.
 At least one `GroupBy*` flag must be set, or `TimeBucketSize` must be greater than zero.
-Filter fields narrow which workflows are counted before grouping.
+At least one `Select*` flag must be set.
+Filter fields narrow which workflows are aggregated before grouping.
 
 ```go
 type GetWorkflowAggregatesInput struct {
@@ -431,6 +472,12 @@ type GetWorkflowAggregatesInput struct {
     GroupByExecutorID         bool
     GroupByApplicationVersion bool
 
+    // Select* flags choose which aggregates to compute. At least one must be true.
+    SelectCount             bool
+    SelectMinCreatedAt      bool
+    SelectMaxQueueWaitMs    bool
+    SelectMaxTotalLatencyMs bool
+
     // When non-zero, groups results by created_at time bucket of this size.
     TimeBucketSize time.Duration
 
@@ -438,6 +485,10 @@ type GetWorkflowAggregatesInput struct {
     Status             []WorkflowStatusType
     StartTime          time.Time
     EndTime            time.Time
+    CompletedAfter     time.Time
+    CompletedBefore    time.Time
+    DequeuedAfter      time.Time
+    DequeuedBefore     time.Time
     Name               []string
     ApplicationVersion []string
     ExecutorID         []string
@@ -448,23 +499,25 @@ type GetWorkflowAggregatesInput struct {
 
 The result is one [`WorkflowAggregateRow`](#workflowaggregaterow) per non-empty group.
 The `Group` map contains an entry per enabled grouping column (`"status"`, `"name"`, `"queue_name"`, `"executor_id"`, `"application_version"`, `"time_bucket"`).
+`Count`, `MinCreatedAt`, `MaxQueueWaitMs`, and `MaxTotalLatencyMs` are populated only for the corresponding enabled `Select*` flag.
 
 **Parameters:**
 - **ctx**: The DBOS context.
-- **input**: A `GetWorkflowAggregatesInput` describing the grouping columns, time bucket, and filters.
+- **input**: A `GetWorkflowAggregatesInput` describing the grouping columns, aggregates, time bucket, and filters.
 
 **Example:**
 
 ```go
 rows, err := dbos.GetWorkflowAggregates(ctx, dbos.GetWorkflowAggregatesInput{
     GroupByStatus: true,
+    SelectCount:   true,
     StartTime:     time.Now().Add(-24 * time.Hour),
 })
 if err != nil {
     log.Fatal(err)
 }
 for _, r := range rows {
-    fmt.Printf("status=%s count=%d\n", *r.Group["status"], r.Count)
+    fmt.Printf("status=%s count=%d\n", *r.Group["status"], *r.Count)
 }
 ```
 
@@ -472,8 +525,11 @@ for _, r := range rows {
 
 ```go
 type WorkflowAggregateRow struct {
-    Group map[string]*string // One entry per enabled grouping column; nil values represent NULL
-    Count int64              // Number of workflows in this group
+    Group             map[string]*string // One entry per enabled grouping column; nil values represent NULL
+    Count             *int64             // Number of workflows in this group (nil if SelectCount is false)
+    MinCreatedAt      *int64             // Earliest created_at in this group, as an epoch-ms timestamp (nil if SelectMinCreatedAt is false)
+    MaxQueueWaitMs    *int64             // Max time workflows in this group spent enqueued, in milliseconds (nil if SelectMaxQueueWaitMs is false)
+    MaxTotalLatencyMs *int64             // Max total latency in this group, in milliseconds (nil if SelectMaxTotalLatencyMs is false)
 }
 ```
 
@@ -546,28 +602,45 @@ type StepAggregateRow struct {
 ### CancelWorkflow
 
 ```go
-func CancelWorkflow(ctx DBOSContext, workflowID string) error
+func CancelWorkflow(ctx DBOSContext, workflowID string, opts ...CancelWorkflowOptions) error
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+Cancellation also interrupts a durable [`Sleep`](#sleep): a cancelled workflow's sleep wakes immediately instead of waiting out the timer.
 
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowID**: The ID of the workflow to cancel.
+- **opts**: Optional configuration, documented below.
+
+#### WithCancelChildren
+
+```go
+func WithCancelChildren() CancelWorkflowOptions
+```
+
+Also cancel all the workflow's child workflows, recursively.
+
+```go
+err := dbos.CancelWorkflow(ctx, workflowID, dbos.WithCancelChildren())
+```
 
 ### CancelWorkflows
 
 ```go
-func CancelWorkflows(ctx DBOSContext, workflowIDs []string) error
+func CancelWorkflows(ctx DBOSContext, workflowIDs []string, opts ...CancelWorkflowOptions) error
 ```
 
 Cancel multiple workflows in a single database round-trip.
 Each workflow that exists and is not already in a terminal state (`SUCCESS`, `ERROR`, `CANCELLED`) is moved to `CANCELLED` and removed from its queue.
 Unlike [`CancelWorkflow`](#cancelworkflow), this function does not return an error when some IDs are missing.
 
+Accepts the same options as [`CancelWorkflow`](#cancelworkflow) (e.g., [`WithCancelChildren`](#withcancelchildren)).
+
 **Parameters:**
 - **ctx**: The DBOS context.
 - **workflowIDs**: The IDs of the workflows to cancel.
+- **opts**: Optional configuration.
 
 ### ResumeWorkflow
 
@@ -674,6 +747,52 @@ func WithDelayUntil(t time.Time) SetWorkflowDelayOption
 
 Set an absolute time until which the workflow should remain delayed.
 
+### UpdateWorkflowAttributes
+
+```go
+func UpdateWorkflowAttributes(ctx DBOSContext, workflowID string, attributes map[string]any) error
+```
+
+Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
+Pass a `nil` attributes map to clear all attributes.
+Attributes must be JSON-serializable.
+Returns an error if the workflow does not exist.
+
+**Example:**
+
+```go
+err := dbos.UpdateWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"customer": "acme"})
+```
+
+### DeleteWorkflows
+
+```go
+func DeleteWorkflows(ctx DBOSContext, workflowIDs []string, opts ...DeleteWorkflowOption) error
+```
+
+Permanently delete one or more workflows and all their associated data (status, step outputs, events, messages, and streams) from the system database, regardless of their current status, including active (`PENDING`, `ENQUEUED`) workflows.
+
+:::warning
+This operation is irreversible.
+:::
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **workflowIDs**: The IDs of the workflows to delete.
+- **opts**: Optional configuration, documented below.
+
+#### WithDeleteChildren
+
+```go
+func WithDeleteChildren() DeleteWorkflowOption
+```
+
+Also delete all child workflows, recursively.
+
+```go
+err := dbos.DeleteWorkflows(ctx, []string{"wf-1", "wf-2"}, dbos.WithDeleteChildren())
+```
+
 ### Workflow Status
 
 Some workflow introspection and management methods return a `WorkflowStatus`.
@@ -707,6 +826,7 @@ type WorkflowStatus struct {
     Input              any                `json:"input"`               // Input parameters passed to the workflow
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
     DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
+    Attributes         map[string]any     `json:"attributes"`          // Custom key-value attributes attached to the workflow
 }
 ```
 

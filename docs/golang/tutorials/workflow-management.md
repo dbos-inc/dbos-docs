@@ -20,12 +20,33 @@ For example, here is the trace of a workflow that processes multiple tasks concu
 
 <img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
+## Tagging Workflows with Attributes
+
+You can attach custom key-value attributes to a workflow with [`WithWorkflowAttributes`](../reference/workflows-steps.md#withworkflowattributes) when starting or enqueueing it:
+
+```go
+handle, err := dbos.RunWorkflow(ctx, processOrder, order,
+    dbos.WithWorkflowAttributes(map[string]any{"customer": "acme", "region": "us-east"}),
+)
+```
+
+Attributes are recorded in the workflow's status and can be used to find workflows with [`ListWorkflows`](../reference/methods.md#listworkflows) and the [`WithFilterAttributes`](../reference/methods.md#withfilterattributes) filter (Postgres only):
+
+```go
+workflows, err := dbos.ListWorkflows(ctx,
+    dbos.WithFilterAttributes(map[string]any{"customer": "acme"}),
+)
+```
+
+You can replace a workflow's attributes at any time with [`UpdateWorkflowAttributes`](../reference/methods.md#updateworkflowattributes).
+
 ## Cancelling Workflows
 
 You can cancel the execution of a workflow from the web UI or programmatically via [`CancelWorkflow`](../reference/methods#cancelworkflow).
 To cancel many workflows at once, use [`CancelWorkflows`](../reference/methods#cancelworkflows), which cancels them in a single database round-trip.
+Pass [`WithCancelChildren`](../reference/methods#withcancelchildren) to also cancel all the workflow's children, recursively.
 
-If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step).
+If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step, or waking it immediately if it is in a durable sleep).
 If the workflow is enqueued, cancelling removes it from the queue.
 
 ## Resuming Workflows
