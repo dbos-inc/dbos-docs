@@ -50,6 +50,7 @@
 - [Supabase](https://docs.dbos.dev/integrations/supabase.md): To learn more about how DBOS and Supabase are working together, check out this blog post!
 - [Tiger Data](https://docs.dbos.dev/integrations/tigerdata.md): Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
 - [Vercel](https://docs.dbos.dev/integrations/vercel.md): You can use DBOS to add durable workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
+- [Vercel AI SDK](https://docs.dbos.dev/integrations/vercel-ai.md): You can use DBOS to add durable execution to agents built with the Vercel AI SDK through the @dbos-inc/vercel-ai package.
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/java/examples/widget-store.md): This example is also available in TypeScript, Go, and Python.
 - [Add DBOS To Your App](https://docs.dbos.dev/java/integrating-dbos.md): This guide shows you how to add the open-source DBOS Transact library to your existing application to durably execute it and make it resilient to any failure.
 - [Learn DBOS Java](https://docs.dbos.dev/java/programming-guide.md): This guide shows you how to use DBOS to build Java apps that are resilient to any failure.
@@ -76,6 +77,7 @@
 - [Workflows](https://docs.dbos.dev/java/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
 - [Upgrading](https://docs.dbos.dev/java/upgrading.md): Upgrading to v1.0
 - [Alerting](https://docs.dbos.dev/production/alerting.md): If you are using Conductor, you can configure automatic alerts when certain failure conditions are met.
+- [Audit Logs](https://docs.dbos.dev/production/audit-logs.md): If you are using Conductor, you can retrieve an audit log of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 - [Account Management](https://docs.dbos.dev/production/dbos-cloud/account-management.md): Learn how to manage DBOS Cloud users
