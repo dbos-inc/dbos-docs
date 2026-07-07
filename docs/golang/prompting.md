@@ -805,6 +805,7 @@ A transaction run through a datasource inside a workflow commits your applicatio
 
 Create a datasource with `NewDataSource`, passing a `*pgxpool.Pool` (Postgres/CockroachDB) or `*sql.DB` (SQLite).
 It may be called at any time, before or after `Launch()`, and provisions a `transaction_completion` durability table in your database unless it already exists.
+If the engine is the same handle as the DBOS system database (passed via `Config.SystemDBPool` or `Config.SqliteSystemDB`), no `transaction_completion` table is created or managed: application writes and the DBOS checkpoint commit together in a single transaction (detection is by pointer identity, not connection string).
 
 ```go
 func NewDataSource[E Engine](ctx DBOSContext, engine E, opts ...DataSourceOption) (*DataSource, error)
