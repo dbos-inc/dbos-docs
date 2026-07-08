@@ -6,27 +6,31 @@ title: Queues
 Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
 
-All queues should be created before DBOS is launched.
+Queue configuration is persisted to the system database, so any DBOS process connected to the same system database can register, retrieve, and reconfigure queues.
 
-### NewWorkflowQueue
+## Queue Management
+
+### RegisterQueue
 
 ```go
-func NewWorkflowQueue(dbosCtx DBOSContext, name string, options ...queueOption) WorkflowQueue
+func RegisterQueue(ctx DBOSContext, name string, options ...QueueOption) (Queue, error)
 ```
 
-NewWorkflowQueue creates a new workflow queue with the specified name and configuration options.
-Queues must be created before DBOS is launched.
+Register a queue and persist its configuration to the system database, returning a [`Queue`](#queue-interface).
+If a queue with the same name already exists in the database, the [`WithQueueOnConflict`](#withqueueonconflict) option controls whether its configuration is overwritten.
+Queues may be registered at any time, including after `Launch()`; live workers periodically reload queue configuration, so changes take effect without a restart.
+
 You can enqueue a workflow using the [`WithQueue`](./workflows-steps.md#withqueue) parameter of [`RunWorkflow`](./workflows-steps.md#runworkflow).
 
 **Parameters:**
-- **dbosCtx**: The DBOSContext.
+- **ctx**: The DBOSContext.
 - **name**: The name of the queue.  Must be unique among all queues in the application.
 - **options**: Functional options for the queue, documented below.
 
 **Example Syntax:**
 
 ```go
-queue := dbos.NewWorkflowQueue(ctx, "email-queue",
+queue, err := dbos.RegisterQueue(ctx, "email-queue",
     dbos.WithWorkerConcurrency(5),
     dbos.WithRateLimiter(&dbos.RateLimiter{
         Limit:  100,
@@ -39,12 +43,10 @@ queue := dbos.NewWorkflowQueue(ctx, "email-queue",
 handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
 ```
 
-See [ListRegisteredQueues](./dbos-context.md#listregisteredqueues) for obtaining a list of all registered queues.
-
 #### WithWorkerConcurrency
 
 ```go
-func WithWorkerConcurrency(concurrency int) queueOption
+func WithWorkerConcurrency(concurrency int) QueueOption
 ```
 
 Set the maximum number of workflows from this queue that may run concurrently within a single DBOS process.
@@ -52,7 +54,7 @@ Set the maximum number of workflows from this queue that may run concurrently wi
 #### WithGlobalConcurrency
 
 ```go
-func WithGlobalConcurrency(concurrency int) queueOption
+func WithGlobalConcurrency(concurrency int) QueueOption
 ```
 
 Set the maximum number of workflows from this queue that may run concurrently. Defaults to 0 (no limit).
@@ -61,7 +63,7 @@ This concurrency limit is global across all DBOS processes using this queue.
 ####  WithMaxTasksPerIteration
 
 ```go
-func WithMaxTasksPerIteration(maxTasks int) queueOption
+func WithMaxTasksPerIteration(maxTasks int) QueueOption
 ```
 
 Sets the maximum number of workflows that can be dequeued in a single iteration.
@@ -70,7 +72,7 @@ This controls batch sizes for queue processing.
 ####  WithPriorityEnabled
 
 ```go
-func WithPriorityEnabled() queueOption
+func WithPriorityEnabled() QueueOption
 ```
 
 Enable setting priority for workflows on this queue.
@@ -78,7 +80,7 @@ Enable setting priority for workflows on this queue.
 ####  WithRateLimiter
 
 ```go
-func WithRateLimiter(limiter *RateLimiter) queueOption
+func WithRateLimiter(limiter *RateLimiter) QueueOption
 ```
 
 ```go
@@ -93,7 +95,7 @@ A limit on the maximum number of functions which may be started in a given perio
 ####  WithPartitionQueue
 
 ```go
-func WithPartitionQueue() queueOption
+func WithPartitionQueue() QueueOption
 ```
 
 Enable partitioning for this queue.
@@ -107,7 +109,7 @@ For example, if you create a partitioned queue with a global concurrency of 1, t
 
 ```go
 // Create a partitioned queue with a global concurrency limit of 1
-partitionedQueue := dbos.NewWorkflowQueue(ctx, "user-tasks",
+partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
     dbos.WithPartitionQueue(),
     dbos.WithGlobalConcurrency(1),
 )
@@ -136,7 +138,7 @@ Set the base polling interval for this queue. This also acts as the minimum (fas
 **Example Syntax:**
 
 ```go
-queue := dbos.NewWorkflowQueue(ctx, "email-queue", dbos.WithQueueBasePollingInterval(100*time.Millisecond))
+queue, err := dbos.RegisterQueue(ctx, "email-queue", dbos.WithQueueBasePollingInterval(100*time.Millisecond))
 ```
 
 #### WithQueueMaxPollingInterval
@@ -147,13 +149,151 @@ func WithQueueMaxPollingInterval(interval time.Duration) QueueOption
 
 Set the maximum (slowest) polling interval for this queue. Polling intervals are subject to base 2 exponential backoff.
 
+This option only applies to legacy in-memory queues created with [`NewWorkflowQueue`](#legacy-in-memory-queues).
+For queues registered with [`RegisterQueue`](#registerqueue), the maximum polling interval is derived from the base polling interval, and an explicit `WithQueueMaxPollingInterval` is ignored with a warning.
+
+#### WithQueueOnConflict
+
+```go
+func WithQueueOnConflict(policy QueueConflictResolution) QueueOption
+
+type QueueConflictResolution string
+
+const (
+    QueueConflictUpdateIfLatestVersion QueueConflictResolution = "update_if_latest_version"
+    QueueConflictAlwaysUpdate          QueueConflictResolution = "always_update"
+    QueueConflictNeverUpdate           QueueConflictResolution = "never_update"
+)
+```
+
+Set how `RegisterQueue` behaves when a queue with the same name already exists in the system database:
+
+- **QueueConflictUpdateIfLatestVersion** (default): overwrite the existing configuration only if the running application is the latest registered application version. This prevents older versions in a rolling deploy from overwriting a newer configuration.
+- **QueueConflictAlwaysUpdate**: always overwrite the existing configuration.
+- **QueueConflictNeverUpdate**: leave the existing configuration unchanged. The returned queue reflects the persisted configuration, not the supplied options.
+
+### RetrieveQueue
+
+```go
+func RetrieveQueue(ctx DBOSContext, name string) (Queue, error)
+```
+
+Retrieve a queue by name from the system database. Returns `nil` if no queue with that name has been registered.
+
 **Example Syntax:**
 
 ```go
-queue := dbos.NewWorkflowQueue(ctx, "email-queue", dbos.WithQueueMaxPollingInterval(10*time.Second))
+queue, err := dbos.RetrieveQueue(ctx, "email-queue")
+if err != nil {
+    return err
+}
+if queue != nil {
+    fmt.Println("Priority enabled:", queue.GetPriorityEnabled())
+}
 ```
 
-### ListenQueues
+### ListQueues
+
+```go
+func ListQueues(ctx DBOSContext) ([]Queue, error)
+```
+
+Return all queues registered in the system database.
+
+### DeleteQueue
+
+```go
+func DeleteQueue(ctx DBOSContext, name string) error
+```
+
+Delete a queue from the system database. No-op if no queue with that name exists.
+
+:::warning
+Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
+However, if a queue with the same name is later registered, it will dequeue the leftover workflows.
+Do not rely on this: stale workflows unexpectedly resuming on a future queue is rarely the intended behavior.
+Instead, cancel or drain pending workflows on the queue before deleting it.
+:::
+
+## Queue Interface
+
+A `Queue` is returned from [`RegisterQueue`](#registerqueue), [`RetrieveQueue`](#retrievequeue), and [`ListQueues`](#listqueues).
+Its `Get*` methods reflect the queue's configuration as of the most recent read from the database; the `Set*` methods update the configuration in the database.
+
+```go
+type Queue interface {
+    GetName() string
+    GetGlobalConcurrency() *int
+    GetWorkerConcurrency() *int
+    GetRateLimit() *RateLimiter
+    GetPriorityEnabled() bool
+    GetPartitionQueue() bool
+    GetPollingInterval() time.Duration
+
+    SetGlobalConcurrency(ctx DBOSContext, value *int) error
+    SetWorkerConcurrency(ctx DBOSContext, value *int) error
+    SetRateLimit(ctx DBOSContext, value *RateLimiter) error
+    SetPriorityEnabled(ctx DBOSContext, value bool) error
+    SetPartitionQueue(ctx DBOSContext, value bool) error
+    SetPollingInterval(ctx DBOSContext, value time.Duration) error
+}
+```
+
+### Reconfiguring Queues
+
+Because queue configuration lives in the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
+Workers pick up the new configuration on their next polling iteration.
+For `SetGlobalConcurrency`, `SetWorkerConcurrency`, and `SetRateLimit`, pass `nil` to clear the limit.
+
+```go
+queue, err := dbos.RetrieveQueue(ctx, "email-queue")
+if err != nil {
+    return err
+}
+if queue != nil {
+    concurrency := 50
+    if err := queue.SetGlobalConcurrency(ctx, &concurrency); err != nil {
+        return err
+    }
+    if err := queue.SetRateLimit(ctx, &dbos.RateLimiter{Limit: 500, Period: 60 * time.Second}); err != nil {
+        return err
+    }
+}
+```
+
+:::warning
+If your application calls [`RegisterQueue`](#registerqueue) on startup, the next process to start can overwrite settings you applied at runtime via `Set*` methods.
+Either update the `RegisterQueue` call to match the new configuration, or pass `WithQueueOnConflict(dbos.QueueConflictNeverUpdate)` to preserve the runtime changes.
+:::
+
+The `Set*` methods return an error when called on a legacy in-memory queue.
+
+## Legacy: In-Memory Queues
+
+```go
+func NewWorkflowQueue(dbosCtx DBOSContext, name string, options ...QueueOption) WorkflowQueue
+```
+
+`NewWorkflowQueue` declares an in-memory queue whose configuration is fixed at construction and lives only in process memory.
+It must be called before `Launch()`, and the resulting queue cannot be reconfigured at runtime.
+
+:::warning
+This API is deprecated. Use [`RegisterQueue`](#registerqueue) instead.
+:::
+
+```go
+queue := dbos.NewWorkflowQueue(ctx, "email-queue",
+    dbos.WithWorkerConcurrency(5),
+    dbos.WithRateLimiter(&dbos.RateLimiter{
+        Limit:  100,
+        Period: 60 * time.Second, // 100 workflows per minute
+    }),
+)
+```
+
+See [ListRegisteredQueues](./dbos-context.md#listregisteredqueues) for obtaining a list of all in-memory queues.
+
+## ListenQueues
 
 ```go
 func ListenQueues(ctx DBOSContext, queues ...WorkflowQueue)
@@ -163,15 +303,25 @@ Configure which queues the current DBOS process should listen to for workflow ex
 By default, all registered queues are listened to.
 When `ListenQueues` is called, only the specified queues (and the internal DBOS queue) will be processed by the queue runner.
 
-This allows multiple DBOS processes to share the same queue registry but listen to different subsets of queues.
+This allows multiple DBOS processes to share the same queues but listen to different subsets.
 
-:::warning
-`ListenQueues` can only be called before `Launch()`. Calling it after launch will panic.
-:::
+A queue is identified by name, so a queue can be listened to by passing a `WorkflowQueue` with its `Name` set, even before the queue exists in the database; names are resolved against the database on each polling iteration.
+
+```go
+dbos.RegisterQueue(ctx, "queue-1")
+dbos.RegisterQueue(ctx, "queue-2")
+
+// Only listen to queue-1 and queue-2.
+dbos.ListenQueues(ctx,
+    dbos.WorkflowQueue{Name: "queue-1"},
+    dbos.WorkflowQueue{Name: "queue-2"})
+```
+
+Queue names may be added to the listen set at any time, including after `Launch()`.
 
 ---
 
-### Debouncer
+## Debouncer
 
 A debouncer delays workflow execution until a configurable delay has elapsed since the last invocation.
 Each subsequent call pushes back the start time by the delay amount.
@@ -179,7 +329,7 @@ This is useful when you want to coalesce rapid successive triggers (e.g., text f
 
 See the [debouncing tutorial](../tutorials/workflow-tutorial.md#debouncing) for usage examples.
 
-#### NewDebouncer
+### NewDebouncer
 
 ```go
 func NewDebouncer[P any, R any](ctx DBOSContext, workflow Workflow[P, R], opts ...DebouncerOption) *Debouncer[P, R]
@@ -195,7 +345,7 @@ Multiple debouncers can be created for the same workflow.
 - **workflow**: The workflow function to debounce (must be registered).
 - **opts**: Optional configuration, documented below.
 
-#### WithDebouncerTimeout
+### WithDebouncerTimeout
 
 ```go
 func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
@@ -204,7 +354,7 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
 
-#### WithDebouncerInstance
+### WithDebouncerInstance
 
 ```go
 func WithDebouncerInstance(instance ConfiguredInstance) DebouncerOption
@@ -217,7 +367,7 @@ Required when the debounced workflow is a method of a configured instance.
 debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
 ```
 
-#### Debouncer.Debounce
+### Debouncer.Debounce
 
 ```go
 func (d *Debouncer[P, R]) Debounce(ctx DBOSContext, key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)

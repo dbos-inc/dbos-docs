@@ -143,7 +143,7 @@ You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manag
 Pass [`WithScheduleQueueName`](../reference/methods.md#withschedulequeuename) when creating the schedule:
 
 ```go
-dbos.NewWorkflowQueue(dbosContext, "scheduled_queue",
+dbos.RegisterQueue(dbosContext, "scheduled_queue",
     dbos.WithGlobalConcurrency(1))
 
 err := dbos.CreateSchedule(dbosContext, myPeriodicTask, dbos.CreateScheduleRequest{
