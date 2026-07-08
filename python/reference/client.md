@@ -699,7 +699,9 @@ Similar to [`DBOS.delete_queue`](./contexts.md#delete_queue).
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
-Cancel or drain pending workflows on the queue before deleting it.
+However, if a queue with the same name is later registered, it will dequeue the leftover workflows.
+Do not rely on this: stale workflows unexpectedly resuming on a future queue is rarely the intended behavior.
+Instead, cancel or drain pending workflows on the queue before deleting it.
 :::
 
 ### delete_queue_async

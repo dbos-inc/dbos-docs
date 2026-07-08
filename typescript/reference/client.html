@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.cca8f98a.css">
-<script src="/assets/js/runtime~main.e19457f8.js" defer="defer"></script>
-<script src="/assets/js/main.6dce74f0.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.735cf973.js" defer="defer"></script>
+<script src="/assets/js/main.b11e49c7.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg style="display: none;"><defs>
@@ -208,7 +208,9 @@ Similar to <a class="" href="/typescript/reference/queues#dbosretrievequeue"><co
 <p>Delete a queue from the system database. No-op if no queue with that name exists.
 Similar to <a class="" href="/typescript/reference/queues#dbosdeletequeue"><code>DBOS.deleteQueue</code></a>.</p>
 <div class="theme-admonition theme-admonition-warning admonition_xJq3 alert alert--warning"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5zm.133 11.497H6.987v-2.003h2.039v2.003zm0-3.004H6.987V5.987h2.039v4.006z"></path></svg></span>warning</div><div class="admonitionContent_BuS1"><p>Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
-Cancel or drain pending workflows on the queue before deleting it.</p></div></div>
+However, if a queue with the same name is later registered, it will dequeue the leftover workflows.
+Do not rely on this: stale workflows unexpectedly resuming on a future queue is rarely the intended behavior.
+Instead, cancel or drain pending workflows on the queue before deleting it.</p></div></div>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="workflow-schedules">Workflow Schedules<a href="#workflow-schedules" class="hash-link" aria-label="Direct link to Workflow Schedules" title="Direct link to Workflow Schedules" translate="no">​</a></h2>
 <p><code>DBOSClient</code> provides methods to manage <a class="" href="/typescript/reference/methods#workflow-schedules">workflow schedules</a> from outside a DBOS application.
 Unlike the <code>DBOS</code> class methods which accept workflow functions directly, client schedule methods accept workflow names as strings.</p>

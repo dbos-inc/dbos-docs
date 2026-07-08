@@ -6,6 +6,9 @@ title: Steps
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
+Steps execute **at least once**: if a process crashes after a step's side effects but before the step is checkpointed, the step re-executes on recovery.
+For exactly-once database writes, use a [datasource transaction](./transaction-tutorial.md) instead.
+
 You can use [`RunAsStep`](../reference/workflows-steps#runasstep) to call a function as a step.
 For a function to be used as a step, it should return a serializable ([json-encodable](https://pkg.go.dev/encoding/json)) value and an error and have this signature:
 

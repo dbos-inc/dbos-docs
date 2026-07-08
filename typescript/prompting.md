@@ -981,7 +981,7 @@ Available methods on the returned `WorkflowQueue`:
 - `setConcurrency(value)`, `setWorkerConcurrency(value)`, `setRateLimit(value)`, `setPriorityEnabled(value)`, `setPartitionQueue(value)`, `setMinPollingIntervalMs(value)` — write through to the database.
 - `getConcurrency()`, `getWorkerConcurrency()`, `getRateLimit()`, `getPriorityEnabled()`, `getPartitionQueue()`, `getMinPollingIntervalMs()` — re-read from the database.
 
-To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered. Cancel or drain pending workflows before deleting.
+To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered — unless a queue with the same name is later registered, in which case it will dequeue the leftover workflows. Do not rely on this behavior: cancel or drain pending workflows before deleting.
 
 ### Queue Example
 

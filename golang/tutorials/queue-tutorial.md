@@ -7,11 +7,14 @@ toc_max_heading_level: 3
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
-To create a queue, use [`NewWorkflowQueue`](../reference/queues#newworkflowqueue)
+To create a queue, register it with [`RegisterQueue`](../reference/queues#registerqueue):
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue")
+queue, err := dbos.RegisterQueue(dbosContext, "example_queue")
 ```
+
+`RegisterQueue` persists the queue's configuration to the system database.
+It can be called at any time, including after [`Launch`](../reference/dbos-context.md#launch), and the queue's configuration can be [changed at runtime](#reconfiguring-queues).
 
 You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps#withqueue) when calling `RunWorkflow`.
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflows-steps#workflowhandle) to it.
@@ -23,10 +26,10 @@ func processTask(ctx dbos.DBOSContext, task string) (string, error) {
     return fmt.Sprintf("Processed: %s", task), nil
 }
 
-func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
+func example(dbosContext dbos.DBOSContext) error {
     // Enqueue a workflow
     task := "example_task"
-    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue(queue.Name))
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue("example_queue"))
     if err != nil {
         return err
     }
@@ -51,13 +54,13 @@ func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
     return fmt.Sprintf("Processed: %s", task), nil
 }
 
-func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) ([]string, error) {
+func queueWorkflow(ctx dbos.DBOSContext, queueName string) ([]string, error) {
     // Enqueue each task so all tasks are processed concurrently
     tasks := []string{"task1", "task2", "task3", "task4", "task5"}
 
     var handles []dbos.WorkflowHandle[string]
     for _, task := range tasks {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queue.Name))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queueName))
         if err != nil {
             return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
         }
@@ -77,8 +80,8 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) ([]string, er
     return results, nil
 }
 
-func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
-    handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, queue)
+func example(dbosContext dbos.DBOSContext) error {
+    handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, "example_queue")
     if err != nil {
         return err
     }
@@ -130,7 +133,7 @@ func processTasks(ctx dbos.DBOSContext, tasks []string) ([]string, error) {
     for i, task := range tasks {
         handle, err := dbos.RunWorkflow(ctx, processTask,
             TaskInput{ParentWorkflowID: parentWorkflowID, TaskID: i, Task: task},
-            dbos.WithQueue(queue.Name),
+            dbos.WithQueue("example_queue"),
         )
         if err != nil {
             return nil, fmt.Errorf("failed to enqueue task %d: %w", i, err)
@@ -214,7 +217,7 @@ This is particularly useful for resource-intensive workflows to avoid exhausting
 For example, this queue has a worker concurrency of 5, so each process will run at most 5 workflows from this queue simultaneously:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue",  dbos.WithWorkerConcurrency(5))
+queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithWorkerConcurrency(5))
 ```
 
 #### Global Concurrency
@@ -228,7 +231,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", dbos.WithGlobalConcurrency(10))
+queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithGlobalConcurrency(10))
 ```
 
 ### Rate Limiting
@@ -238,15 +241,34 @@ Rate limits are global across all DBOS processes using this queue.
 For example, this queue has a limit of 100 workflows with a period of 60 seconds, so it may not start more than 100 workflows in 60 seconds:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", 
+queue, err := dbos.RegisterQueue(dbosContext, "example_queue",
     dbos.WithRateLimiter(&dbos.RateLimiter{
         Limit:  100,
-        Period: 60.0, // 60 seconds
+        Period: 60 * time.Second,
     }))
 ```
 
 Rate limits are especially useful when working with a rate-limited API, such as many LLM APIs.
 
+### Reconfiguring Queues
+
+Because queue configuration is persisted to the system database, you can change a queue's configuration at runtime without redeploying or restarting your workers.
+Workers pick up the new configuration on their next polling iteration.
+Use [`RetrieveQueue`](../reference/queues.md#retrievequeue) to fetch a queue, then call its [`Set*`](../reference/queues.md#reconfiguring-queues) methods.
+
+```go
+queue, err := dbos.RetrieveQueue(dbosContext, "example_queue")
+if err != nil {
+    return err
+}
+concurrency := 50
+err = queue.SetGlobalConcurrency(dbosContext, &concurrency)
+```
+
+:::warning
+If your application calls [`RegisterQueue`](../reference/queues.md#registerqueue) on startup, the next process to start can overwrite settings you applied at runtime via `Set*` methods.
+Either update the `RegisterQueue` call to match the new configuration, or pass `WithQueueOnConflict(dbos.QueueConflictNeverUpdate)` to preserve the runtime changes.
+:::
 
 ### Deduplication
 
@@ -265,13 +287,13 @@ func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
     return "completed", nil
 }
 
-func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
+func example(dbosContext dbos.DBOSContext) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
     
     handle, err := dbos.RunWorkflow(
         dbosContext, taskWorkflow, task,
-        dbos.WithQueue(queue.Name),
+        dbos.WithQueue("example_queue"),
         dbos.WithDeduplicationID(deduplicationID))
     if err != nil {
         // Handle deduplication error or other failures
@@ -301,7 +323,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 To use priorities in a queue, you must enable it when creating the queue:
 
 ```go
-queue := dbos.NewWorkflowQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
+queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithPriorityEnabled())
 ```
 
 **Example syntax:**
@@ -312,12 +334,12 @@ func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
     return "completed", nil
 }
 
-func example(dbosContext dbos.DBOSContext, queue dbos.WorkflowQueue) error {
+func example(dbosContext dbos.DBOSContext) error {
     task := "example_task"
     priority := uint(10) // Lower number = higher priority
     
     handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
-        dbos.WithQueue(queue.Name),
+        dbos.WithQueue("example_queue"),
         dbos.WithPriority(priority))
     if err != nil {
         return err
@@ -347,7 +369,7 @@ You can do this with a partitioned queue with a maximum concurrency limit of 1 w
 
 ```go
 // Create a partitioned queue with a global concurrency limit of 1
-partitionedQueue := dbos.NewWorkflowQueue(dbosContext, "user-tasks",
+partitionedQueue, err := dbos.RegisterQueue(dbosContext, "user-tasks",
     dbos.WithPartitionQueue(),
     dbos.WithGlobalConcurrency(1),
 )
@@ -427,15 +449,14 @@ You can use [`ListenQueues`](../reference/queues.md#listenqueues) to configure a
 This is useful when you have multiple DBOS processes and want each one to handle different types of work.
 
 ```go
-emailQueue := dbos.NewWorkflowQueue(dbosContext, "email-queue")
-dataQueue := dbos.NewWorkflowQueue(dbosContext, "data-queue")
+dbos.RegisterQueue(dbosContext, "email-queue")
+dbos.RegisterQueue(dbosContext, "data-queue")
 
 // This process will only dequeue workflows from the email queue
-dbos.ListenQueues(dbosContext, emailQueue)
+dbos.ListenQueues(dbosContext, dbos.WorkflowQueue{Name: "email-queue"})
 
 dbos.Launch(dbosContext)
 ```
 
-:::warning
-`ListenQueues` must be called before `Launch()`.
-:::
+Note that `ListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued, so any process can still enqueue workflows on any queue.
+Queue names may be added to the listen set at any time, including after `Launch()`.
