@@ -164,6 +164,10 @@ DBOS.kafka_consumer(
         config: dict[str, Any],
         topics: list[str],
         in_order: bool = False,
+        *,
+        ordering: Optional[Literal["none", "partition", "topic"]] = None,
+        batch_size: int = 250,
+        queue: Optional[Queue] = None,
 )
 ```
 
@@ -177,8 +181,14 @@ The decorated function must take a KafkaMessage as its only parameter.
   - `bootstrap.servers`: A list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
     This list should be in the form host1:port1,host2:port2,...
   - `group.id`: A unique string that identifies the consumer group this consumer belongs to.
-- `topics`: a list of Kafka topics to subscribe to
-- `in_order`: If true, messages will be processed sequentially in offset order.
+- `topics`: a list of Kafka topics to subscribe to. A topic prefixed with `^` is treated as a regular expression.
+- `ordering`: Controls how messages are processed. See [In-Order Processing](../tutorials/kafka-integration.md#in-order-processing).
+  - `"none"` (default): messages are processed in parallel.
+  - `"partition"`: messages are processed serially per topic partition (preserving Kafka's per-partition delivery order) and in parallel across partitions.
+  - `"topic"`: messages are processed serially per topic.
+- `batch_size`: The maximum number of messages consumed from Kafka and durably enqueued per batch. Defaults to 250.
+- `queue`: An optional [queue](./queues.md) on which consumer workflows run, for example to configure concurrency or rate limits. Only valid with `ordering="none"`; ordered consumers share an internal partitioned queue.
+- `in_order`: **(Deprecated)** Alias for `ordering="topic"`. Use `ordering` instead.
 
 **Example**
 ```python

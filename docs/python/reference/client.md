@@ -22,6 +22,8 @@ DBOSClient(
     system_database_engine: Optional[sa.Engine] = None,
     dbos_system_schema: Optional[str] = "dbos",
     serializer: Serializer = DefaultSerializer(),
+    system_database_pool_size: Optional[int] = None,
+    system_database_polling_concurrency: Optional[int] = None,
 )
 ```
 **Parameters:**
@@ -29,6 +31,8 @@ DBOSClient(
 - `system_database_engine`: A custom SQLAlchemy engine to use to connect to your system database. If provided, the client will not create an engine but use this instead.
 - `dbos_system_schema`: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
+- `system_database_pool_size`: The maximum size of the client's system database connection pool. Defaults to 5.
+- `system_database_polling_concurrency`: The maximum number of concurrent database-backed polling reads from wait operations. See [`sys_db_polling_concurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 
 **Example syntax:**
 

@@ -1682,6 +1682,7 @@ class DBOSConfig(TypedDict):
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
+    sys_db_polling_concurrency: Optional[int]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
@@ -1735,6 +1736,7 @@ This is the database in which DBOS executes `@DBOS.transaction` functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
+- **sys_db_polling_concurrency**: The maximum number of database-backed polling reads from wait operations (such as `get_result`, `recv`, `get_event`, and `read_stream`) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `sys_db_pool_size` (minimum 1). Set to a non-positive value to disable the limit.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
