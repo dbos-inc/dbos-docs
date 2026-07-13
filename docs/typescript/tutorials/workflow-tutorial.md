@@ -47,8 +47,8 @@ export class Example {
   // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Toolbox.stepOne();
-    await Toolbox.stepTwo();
+    await Example.stepOne();
+    await Example.stepTwo();
   }
 }
 
