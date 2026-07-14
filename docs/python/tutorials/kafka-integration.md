@@ -91,24 +91,24 @@ def process_messages(msg: KafkaMessage):
     ...
 ```
 
-For unordered (`ordering="none"`) consumers, you can also supply a custom [queue](./queue-tutorial.md) to configure concurrency or rate limits on the workflows that process your messages:
+For unordered (`ordering="none"`) consumers, you can also name a custom [queue](./queue-tutorial.md) on which to run your consumer workflows, for example to configure concurrency or rate limits:
 
 ```python
-from dbos import DBOS, Queue, KafkaMessage
+from dbos import DBOS, KafkaMessage
 
-queue = Queue("kafka_processing_queue", concurrency=10)
+DBOS.register_queue("kafka_processing_queue", concurrency=10)
 
 @DBOS.kafka_consumer(
         config=config,
         topics=["example-topic"],
-        queue=queue,
+        queue_name="kafka_processing_queue",
 )
 @DBOS.workflow()
 def process_messages(msg: KafkaMessage):
     ...
 ```
 
-A custom queue is only supported with `ordering="none"`; ordered consumers share an internal partitioned queue.
+A custom queue is only supported with `ordering="none"`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
 
 ## Consumer Groups
 
