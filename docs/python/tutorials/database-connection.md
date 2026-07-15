@@ -72,7 +72,8 @@ from dbos import SQLAlchemyDatasource, AsyncSQLAlchemyDatasource
 # Sync
 ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 
-# Async. The datasource is not tied to the event loop that created it, so it can be used from the event loop that runs your application
+# Async. The datasource is not tied to the event loop that created it,
+# so it can be used from the event loop that runs your application
 ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
