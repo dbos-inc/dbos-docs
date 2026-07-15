@@ -1855,6 +1855,7 @@ def greeting_workflow(name: str, note: str) -> None:
 
 ```python
 import asyncio
+import os
 from dbos import DBOS, AsyncSQLAlchemyDatasource
 from sqlalchemy import text
 

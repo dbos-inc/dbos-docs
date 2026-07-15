@@ -140,6 +140,7 @@ To safely create `AsyncSQLAlchemyDatasource` at module scope:
 
 ```python
 import asyncio
+import os
 from dbos import AsyncSQLAlchemyDatasource
 
 # The datasource is not tied to the event loop that created it,

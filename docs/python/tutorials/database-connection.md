@@ -67,6 +67,7 @@ Datasources are the recommended approach. You create a datasource with its own d
 
 ```python
 import asyncio
+import os
 from dbos import SQLAlchemyDatasource, AsyncSQLAlchemyDatasource
 
 # Sync
