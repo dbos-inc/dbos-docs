@@ -135,10 +135,14 @@ Async factory method. Creates (or reuses) a SQLAlchemy `AsyncEngine` and runs th
 - `serializer`: A custom serializer for transaction outputs. Defaults to the DBOS JSON serializer.
 
 **Example:**
+To safely create `AsyncSQLAlchemyDatasource` at module scope:
+
 ```python
+import asyncio
 from dbos import AsyncSQLAlchemyDatasource
 
-ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+# The datasource is not tied to the event loop that created it, so it can be used from the event loop that runs your application.
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
 ### `AsyncSQLAlchemyDatasource.transaction`
