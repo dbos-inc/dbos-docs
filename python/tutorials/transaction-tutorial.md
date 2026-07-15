@@ -16,16 +16,23 @@ Datasources wrap a SQLAlchemy engine with DBOS transaction tracking, ensuring th
 
 Create a datasource by calling the `create` factory method with a database URL. The factory automatically sets up the `datasource_outputs` tracking table in the target database.
 
-Use `SQLAlchemyDatasource` for synchronous (non-async) code and `AsyncSQLAlchemyDatasource` for async code.
+Use `SQLAlchemyDatasource` for synchronous (non-async) code and `AsyncSQLAlchemyDatasource` for async code:
 
 ```python
-from dbos import SQLAlchemyDatasource, AsyncSQLAlchemyDatasource
+import os
+from dbos import SQLAlchemyDatasource
 
-# Sync datasource
 ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+```
 
-# Async datasource (use `await` since create() is a coroutine)
-ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+```python
+import asyncio
+import os
+from dbos import AsyncSQLAlchemyDatasource
+
+# The datasource is not tied to the event loop that created it,
+# so it can be used from the event loop that runs your application.
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
 :::warning
@@ -81,6 +88,48 @@ async def insert_greeting(name: str, note: str) -> None:
 async def greeting_workflow(name: str, note: str) -> None:
     await insert_greeting(name, note)
 ```
+
+Putting it together, a complete async program looks like this. The datasource is created at module scope so that `@ads.transaction()` can decorate `insert_greeting` and `insert_greeting` can call `ads.sql_session()`:
+
+<details>
+<summary><strong>Async Datasource Example</strong></summary>
+
+```python
+import asyncio
+import os
+
+from dbos import DBOS, DBOSConfig, AsyncSQLAlchemyDatasource
+from sqlalchemy import text
+
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
+
+config: DBOSConfig = {
+    "name": "greeting-app",
+    "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
+}
+DBOS(config=config)
+
+@ads.transaction()
+async def insert_greeting(name: str, note: str) -> None:
+    session = ads.sql_session()
+    await session.execute(
+        text("INSERT INTO greetings (name, note) VALUES (:name, :note)"),
+        {"name": name, "note": note},
+    )
+
+@DBOS.workflow()
+async def greeting_workflow(name: str, note: str) -> None:
+    await insert_greeting(name, note)
+
+async def main() -> None:
+    await greeting_workflow("Alice", "Hello!")
+
+if __name__ == "__main__":
+    DBOS.launch()
+    asyncio.run(main())
+```
+</details>
+
 
 The decorator accepts two optional keyword arguments:
 - `name` – a custom step name recorded in the workflow log (defaults to the function's qualified name)

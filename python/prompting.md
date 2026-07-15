@@ -1851,13 +1851,15 @@ def greeting_workflow(name: str, note: str) -> None:
 
 #### Asynchronous datasource
 
-`AsyncSQLAlchemyDatasource.create` is a coroutine (use `await`), and it ONLY accepts `async def` transaction functions.
+`AsyncSQLAlchemyDatasource.create` is a coroutine and it ONLY accepts `async def` transaction functions. Because Python does NOT allow `await` at module scope, create the datasource with `asyncio.run` so it is a module-level global that the `@ads.transaction()` decorators can use. Only use `await ...create(...)` if you are already inside a coroutine.
 
 ```python
+import asyncio
+import os
 from dbos import DBOS, AsyncSQLAlchemyDatasource
 from sqlalchemy import text
 
-ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 
 @ads.transaction()
 async def example_insert(name: str, note: str) -> None:
