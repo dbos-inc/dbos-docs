@@ -1360,6 +1360,8 @@ Atomically apply a set of schedules.
 Useful for declaratively defining all your static schedules in one place.
 May not be called from within a workflow.
 
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queue_name` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
+
 **Example:**
 
 ```python

@@ -27,6 +27,7 @@ type Client interface {
     ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
     ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
     ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
+    ForkWorkflows(input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
     ListApplicationVersions() ([]VersionInfo, error)
     GetLatestApplicationVersion() (*VersionInfo, error)
     SetLatestApplicationVersion(versionName string) error
@@ -46,7 +47,7 @@ type Client interface {
 }
 ```
 
-Several methods returning `WorkflowHandle[any]` have generic package-level counterparts (`ClientRetrieveWorkflow`, `ClientResumeWorkflow`, `ClientResumeWorkflows`, `ClientForkWorkflow`, `ClientTriggerSchedule`, `ClientGetEvent`) that return typed handles or values, documented alongside each method below.
+Several methods returning `WorkflowHandle[any]` have generic package-level counterparts (`ClientRetrieveWorkflow`, `ClientResumeWorkflow`, `ClientResumeWorkflows`, `ClientForkWorkflow`, `ClientForkWorkflows`, `ClientTriggerSchedule`, `ClientGetEvent`) that return typed handles or values, documented alongside each method below.
 
 ### Constructor
 
@@ -356,6 +357,19 @@ func ClientForkWorkflow[R any](c Client, input ForkWorkflowInput) (WorkflowHandl
 Set `QueueName` on the input to enqueue the forked workflow on a named queue instead of starting it immediately.
 The generic `ClientForkWorkflow` returns a typed handle whose `GetResult` decodes the forked workflow's output into type `R`.
 Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
+
+### ForkWorkflows
+
+```go
+ForkWorkflows(input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
+
+func ClientForkWorkflows[R any](c Client, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
+```
+
+Fork a batch of workflows in a single database round-trip.
+The returned handles are in the same order as `input.Workflows`.
+The generic `ClientForkWorkflows` returns typed handles whose `GetResult` decodes each forked workflow's output into type `R`.
+Similar to [`ForkWorkflows`](./methods.md#forkworkflows).
 
 ### Debouncer
 
