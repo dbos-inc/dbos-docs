@@ -49,6 +49,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - Do NOT make functions steps unless they are DIRECTLY called by a workflow.
 - If the workflow function performs a non-deterministic action, you MUST move that action to its own function and make that function a step. Examples of non-deterministic actions include accessing an external API or service, accessing files on disk, generating a random number, of getting the current time.
 - Do NOT start goroutines from workflows or use select in workflows. Instead, use DBOS's durable `dbos.Go` and `dbos.Select` functions which provide deterministic replay. For more complex parallel execution, use DBOS.RunWorkflow and DBOS queues.
+- Do NOT range over a map to call steps or start workflows: Go map iteration order is random, which breaks determinism. Sort the keys first (e.g. `slices.Sorted(maps.Keys(m))`) and iterate over the sorted slice.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
 - Do NOT call any DBOS context method (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsStep, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent) from a step.
 
@@ -481,6 +482,8 @@ Instead, you should do all non-deterministic operations in steps.
 
 :::warning
 Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps, or use the durable `dbos.Go` and `dbos.Select` functions instead.
+
+Go's map iteration order is also random. Don't call steps or start workflows while ranging over a map: sort the keys first (e.g. `slices.Sorted(maps.Keys(m))`) and iterate over the sorted slice.
 :::
 
 For example, **don't do this**:

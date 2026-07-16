@@ -809,7 +809,7 @@ void applySchedules(WorkflowSchedule... schedules)
 void applySchedules(List<WorkflowSchedule> schedules)
 ```
 
-Atomically create or replace a set of schedules in one transaction. Each named schedule is deleted (if it exists) and re-created. This is the recommended way to declare schedules at application startup — call it once after `dbos.launch()` and it will always reflect your current schedule definitions.
+Atomically create or update a set of schedules in one transaction. Existing schedules are upserted by name: all definition fields are replaced with the new declaration's values (so any optional setting left unset is cleared, e.g. an omitted queue name reverts the schedule to the default scheduler queue), while the schedule's status and last-fired time are preserved. This is the recommended way to declare schedules at application startup — call it once after `dbos.launch()` and it will always reflect your current schedule definitions.
 
 ### createSchedule
 

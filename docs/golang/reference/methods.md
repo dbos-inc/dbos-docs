@@ -404,6 +404,15 @@ func WithHasParent(hasParent bool) ListWorkflowsOption
 
 Filter workflows by whether they have a parent workflow (true) or not (false).
 
+#### WithFilterScheduleName
+
+```go
+func WithFilterScheduleName(scheduleName ...string) ListWorkflowsOption
+```
+
+Filter workflows by the name(s) of the [schedule](#workflow-schedules) that enqueued them.
+Only workflows enqueued by a named schedule match.
+
 ### GetWorkflowSteps
 
 ```go
@@ -706,6 +715,49 @@ type ForkWorkflowInput struct {
 If `QueueName` is set, the forked workflow is enqueued on the specified queue instead of starting immediately.
 Set `QueuePartitionKey` together with `QueueName` to enqueue the forked workflow onto a specific partition of a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
 
+### ForkWorkflows
+
+```go
+func ForkWorkflows[R any](ctx DBOSContext, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
+```
+
+Fork a batch of workflows in a single database round-trip.
+Each forked workflow gets a new UUID (unless a custom `ForkedWorkflowID` is provided) and executes from its specified `StartStep`, reusing the operation outputs of steps `0` to `StartStep-1` copied from the original workflow.
+The returned handles are in the same order as `input.Workflows`.
+
+**Parameters:**
+- **ctx**: The DBOS context.
+- **input**: A `ForkWorkflowsInput` struct where `Workflows` is mandatory.
+
+```go
+type ForkWorkflowsInput struct {
+    Workflows          []ForkWorkflowSpec // Required: The workflows to fork
+    ApplicationVersion string             // Optional: Application version for the forked workflows (inherits from originals if empty)
+    QueueName          string             // Optional: Queue to enqueue the forked workflows on (defaults to the internal queue)
+    QueuePartitionKey  string             // Optional: Partition key when enqueueing the forked workflows onto a partitioned queue
+}
+
+type ForkWorkflowSpec struct {
+    OriginalWorkflowID string // Required: The UUID of the original workflow to fork from
+    ForkedWorkflowID   string // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
+    StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
+}
+```
+
+The `ApplicationVersion`, `QueueName`, and `QueuePartitionKey` settings apply to every forked workflow in the batch.
+
+**Example:**
+
+```go
+handles, err := dbos.ForkWorkflows[any](ctx, dbos.ForkWorkflowsInput{
+    Workflows: []dbos.ForkWorkflowSpec{
+        {OriginalWorkflowID: "wf-1", StartStep: 2},
+        {OriginalWorkflowID: "wf-2"},
+    },
+    QueueName: "fork_queue",
+})
+```
+
 ### SetWorkflowDelay
 
 ```go
@@ -827,6 +879,7 @@ type WorkflowStatus struct {
     Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
     DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
     Attributes         map[string]any     `json:"attributes"`          // Custom key-value attributes attached to the workflow
+    ScheduleName       string             `json:"schedule_name"`       // Name of the schedule that enqueued this workflow (if any)
 }
 ```
 
@@ -943,6 +996,9 @@ func WithAutomaticBackfill(enabled bool) CreateScheduleOption
 
 Enable automatic backfill of missed ticks when the schedule is reloaded after downtime (or when a paused schedule is resumed).
 
+Missed ticks are computed with the schedule's **current** cron expression, over the window from the last fire to now.
+If you change a schedule's cron expression (e.g. with [`ApplySchedules`](#applyschedules)) while it is not running, the backfill generates one execution per tick of the *new* expression across that entire window—including times the old expression would never have matched.
+
 #### WithCronTimezone
 
 ```go
@@ -986,11 +1042,16 @@ err := dbos.CreateSchedule(ctx, myPeriodicTask, dbos.CreateScheduleRequest{
 func ApplySchedules(ctx DBOSContext, schedules []ApplySchedulesRequest) error
 ```
 
-Atomically create or replace a list of schedules in a single transaction.
-For each entry, any existing schedule with the same name is deleted before the new schedule is inserted.
+Atomically create or update a list of schedules in a single transaction.
+Existing schedules are upserted by name: all definition fields (workflow name and class, cron expression, context, timezone, queue, and backfill flag) are replaced with the new entry's values, while the schedule's ID, status, and last-fired time are preserved.
 Useful for defining a fixed set of static schedules on application start.
 
 `ApplySchedules` cannot be called from within a workflow.
+
+:::warning
+Because every definition field is replaced, omitting an optional field on re-apply clears it.
+In particular, a schedule previously routed to a named queue reverts to the internal queue if the new entry does not set `QueueName`.
+:::
 
 ```go
 type ApplySchedulesRequest struct {

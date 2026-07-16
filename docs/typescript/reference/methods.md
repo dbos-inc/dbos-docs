@@ -800,6 +800,8 @@ Atomically apply a set of schedules.
 Creates or updates each schedule in the list.
 May not be called from within a workflow.
 
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queueName` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
+
 **Example:**
 
 ```typescript
