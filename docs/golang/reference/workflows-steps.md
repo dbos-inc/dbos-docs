@@ -18,6 +18,10 @@ Workflow functions must be compatible with the following signature:
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
+Returned errors are persisted with [gob](https://pkg.go.dev/encoding/gob), preserving their concrete type when read back (e.g., from a workflow handle in another process).
+An error that cannot be gob-encoded—including those created by `errors.New` or `fmt.Errorf`, whose fields are unexported—is stored as its message string only, so `errors.Is` and `errors.As` will not match it after a database round-trip.
+To preserve a custom error type, give it exported fields and register it with [`gob.Register`](https://pkg.go.dev/encoding/gob#Register).
+
 **Parameters:**
 - **ctx**: The DBOSContext.
 - **fn**: The workflow function to register.
