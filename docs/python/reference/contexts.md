@@ -1526,8 +1526,7 @@ context manager` error.
 DBOS.workflow_id: str
 ```
 
-May only be accessed from within a workflow, step, or transaction.
-Return the identity of the current workflow.
+Return the ID of the currently executing workflow. If a workflow is not executing, return None.
 
 ### step_id
 
@@ -1535,7 +1534,7 @@ Return the identity of the current workflow.
 DBOS.step_id: int
 ```
 
-Returns the unique ID of the current step within a workflow.
+Return the step ID for the currently executing step. This is a unique identifier of the current step within the workflow. If a step is not currently executing, return None.
 
 ### step_status
 
@@ -1544,7 +1543,8 @@ DBOS.step_status: StepStatus
 ```
 
 Return the status of the currently executing step.
-This object has the following properties:
+If a step is not currently executing, return None.
+The `StepStatus` object has the following properties:
 
 ```python
 class StepStatus:
