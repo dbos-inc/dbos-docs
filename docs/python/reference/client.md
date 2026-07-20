@@ -24,6 +24,7 @@ DBOSClient(
     serializer: Serializer = DefaultSerializer(),
     system_database_pool_size: Optional[int] = None,
     system_database_polling_concurrency: Optional[int] = None,
+    use_listen_notify: bool = False,
 )
 ```
 **Parameters:**
@@ -33,6 +34,7 @@ DBOSClient(
 - `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
 - `system_database_pool_size`: The maximum size of the client's system database connection pool. Defaults to 5.
 - `system_database_polling_concurrency`: The maximum number of concurrent database-backed polling reads from wait operations. See [`sys_db_polling_concurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
+- `use_listen_notify`: Whether the client runs a background listener thread that uses PostgreSQL LISTEN, so wait operations such as [`get_event`](#get_event) and [`read_stream`](#read_stream) are woken by notifications instead of polling the database. Defaults to `False`. Only enable this if your DBOS application's system database is Postgres and was created with [`use_listen_notify`](./configuration.md#database-connection-settings) enabled (the Postgres default).
 
 **Example syntax:**
 
