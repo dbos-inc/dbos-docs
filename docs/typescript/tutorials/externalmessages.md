@@ -134,7 +134,7 @@ Ordered consumers share an internal [partitioned queue](./queue-tutorial.md#part
 
 ## Batching and Throughput
 
-DBOS consumes and durably enqueues Kafka messages in batches, which is much faster than processing one message per transaction.
+DBOS consumes and durably enqueues Kafka messages in batches.
 You can tune the maximum number of messages enqueued per batch with the `batchSize` option (default 250):
 
 ```typescript
