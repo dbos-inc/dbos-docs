@@ -981,6 +981,7 @@ Coroutine version of [`list_queued_workflows`](#list_queued_workflows).
 def list_workflow_steps(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
@@ -988,6 +989,7 @@ def list_workflow_steps(
 
 Retrieve the steps of a workflow.
 Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
+Set `load_output` to `False` to improve performance when step outputs and errors are not needed; the `output` and `error` fields are then always `None`.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python

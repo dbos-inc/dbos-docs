@@ -916,6 +916,7 @@ Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workfl
 client.list_workflow_steps(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
@@ -923,12 +924,19 @@ client.list_workflow_steps(
 
 Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 
+**Parameters:**
+- **workflow_id**: The ID of the workflow whose steps to list.
+- **load_output**: Whether to load and deserialize step outputs and errors. Set to `False` to improve performance when they are not needed.
+- **limit**: The maximum number of steps to return.
+- **offset**: The number of steps to skip, for pagination.
+
 ### list_workflow_steps_async
 
 ```python
 client.list_workflow_steps_async(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
