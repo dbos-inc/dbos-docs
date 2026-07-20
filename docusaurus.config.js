@@ -112,6 +112,10 @@ const config = {
             to: '/quickstart',
           },
           {
+            from: '/typescript/upgrading',
+            to: '/typescript/programming-guide',
+          },
+          {
             from: '/explanations/core-concepts',
             to: '/',
           },
