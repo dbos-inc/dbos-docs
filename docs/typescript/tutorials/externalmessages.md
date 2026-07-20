@@ -1,9 +1,9 @@
 ---
 sidebar_position: 65
-title: Kafka & SQS Integration
+title: Kafka Integration
 ---
 
-In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) or [Simple Queue Service (SQS)](https://aws.amazon.com/sqs/) messages with exactly-once semantics.
+In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly-once semantics.
 
 ## Installation
 
@@ -21,13 +21,6 @@ npm i @dbos-inc/kafkajs-receive
 
 ```shell
 npm i @dbos-inc/confluent-kafka-receive
-```
-
-</TabItem>
-<TabItem value="sqs" label="SQS">
-
-```shell
-npm i @dbos-inc/sqs-receive
 ```
 
 </TabItem>
@@ -60,24 +53,6 @@ const kafkaReceiver = new ConfluentKafkaReceiver(kafkaConfig);
 ```
 
 The `ConfluentKafkaReceiver` constructor takes a configuration as its argument.
-
-</TabItem>
-<TabItem value="sqs" label="SQS">
-
-```typescript
-import { SQSClient } from '@aws-sdk/client-sqs';
-import { SQSReceiver } from '@dbos-inc/sqs-receive';
-
-function createSQS() {
-  return new SQSClient({ /*configuration per SQS library...*/  });
-}
-
-const sqsReceiver = new SQSReceiver({
-  client: createSQS,
-});
-```
-
-The `SQSReceiver` constructor takes either an `SQSClient` instance, or a function to provide it.  See the [configuration reference](#configuration-reference) below.
 
 </TabItem>
 </Tabs>
@@ -124,47 +99,82 @@ kafkaReceiver.registerConsumer(DBOS.registerWorkflow(myWorkflowFunction), 'my-to
 ```
 
 </TabItem>
-
-<TabItem value="sqs" label="SQS">
-
-The `SQSReceiver` instance provides a decorator for connecting `static` class workflow methods to message receipt:
-```typescript
-@sqsReceiver.messageConsumer({ queueUrl: process.env['SQS_QUEUE_URL']})
-@DBOS.workflow()
-static async recvMessage(msg: Message) {
-  //...
-}
-```
-Note that the `messageConsumer` configuration can override all configuration provided to the receiver instance, including the client.
-
-</TabItem>
 </Tabs>
 
 Note that the function signatures should match those above, as these match the arguments that are provided by the event receivers.
 
+A consumer must be a registered DBOS workflow and must not be a method on an [instantiated object](./instantiated-objects.md)&mdash;use a `static` method or a free function registered with `registerConsumer`.
+DBOS raises an error at launch if a consumer does not meet these requirements.
+
 ## Deduplicating Messages
-DBOS event receivers use a [workflow id](./workflow-tutorial.md#workflow-ids-and-idempotency) to ensure that messages are processed exactly once.  This key is computed from the message.
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
-The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is executed per message.
-</TabItem>
+DBOS event receivers use a [workflow id](./workflow-tutorial.md#workflow-ids-and-idempotency) to ensure that messages are processed exactly once.
+The message topic, partition, and offset uniquely identify a Kafka message, and are used along with the consumer group to ensure that only one DBOS workflow is executed per message.
 
-<TabItem value="confluentkafka" label="Confluent Kafka">
-The message topic, partition, and offset uniquely identify a Kafka message, and are used to ensure that only one DBOS workflow is executed per message.
-</TabItem>
+## Message Ordering
 
-<TabItem value="sqs" label="SQS">
-AWS SQS messages have unique IDs assigned, which are used by default to create workflow IDs.  However, SQS messages may be sent more than once by the sender, so an [option](#configuration-reference) is provided to generate IDs from the message contents.
-</TabItem>
-</Tabs>
+By default, DBOS processes Kafka messages in parallel, in no particular order.
+You can instead process messages in order using the `ordering` option:
+
+- `ordering: 'none'` (the default) processes messages in parallel.
+- `ordering: 'partition'` processes messages **serially per topic partition**, preserving Kafka's per-partition delivery order, while processing different partitions in parallel. This preserves ordering while still allowing your consumer to scale across partitions.
+- `ordering: 'topic'` processes messages **serially per topic**. Only one message from the topic is processed at a time: processing of the next message does not begin until the current one is fully processed.
+
+For example, to process each partition's messages in order:
+
+```typescript
+@kafkaReceiver.consumer('example-topic', { ordering: 'partition' })
+@DBOS.workflow()
+static async processMessagesInOrder(topic: string, partition: number, message: KafkaMessage) {
+  DBOS.logger.info(`Messages within a partition are processed in order`);
+}
+```
+
+Ordered consumers share an internal [partitioned queue](./queue-tutorial.md#partitioning-queues), so they cannot also specify a `queueName`.
+
+## Batching and Throughput
+
+DBOS consumes and durably enqueues Kafka messages in batches, which is much faster than processing one message per transaction.
+You can tune the maximum number of messages enqueued per batch with the `batchSize` option (default 250):
+
+```typescript
+@kafkaReceiver.consumer('example-topic', { batchSize: 500 })
+@DBOS.workflow()
+static async processMessages(topic: string, partition: number, message: KafkaMessage) {
+  //...
+}
+```
+
+Offsets are committed only once a batch is durably enqueued, so if your application crashes mid-batch, those messages are redelivered rather than lost.
+Because each workflow's ID is derived from its message's topic, partition, consumer group, and offset, redelivery is idempotent: every message is processed exactly once.
 
 ## Rate-Limiting Message Processing
-By default, event receivers start new workflows immediately upon message receipt.  If message processing should be rate-limited, DBOS [queues](./queue-tutorial.md) can be used.  Generally, the queue name is provided as a parameter; see [configuration](#configuration-reference) for details.
+
+Consumer workflows run on a DBOS [queue](./queue-tutorial.md).
+By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits:
+
+```typescript
+await DBOS.registerQueue("kafka_processing_queue", { concurrency: 10 });
+
+@kafkaReceiver.consumer('example-topic', { queueName: 'kafka_processing_queue' })
+@DBOS.workflow()
+static async processMessages(topic: string, partition: number, message: KafkaMessage) {
+  //...
+}
+```
+
+A custom queue is only supported with `ordering: 'none'`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
+
+## Consumer Groups
+
+Each consumer's [`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id) determines how Kafka distributes messages among consumers.
+You can run multiple consumers on the same topics, including with ordering, by giving each a distinct `group.id`.
+Every consumer group receives its own copy of each message.
+Two consumers that share both a `group.id` and a topic would each receive only some of that topic's messages, so DBOS raises an error at startup if it detects this configuration.
 
 ## Sending Messages
 
-The DBOS libraries for Kafka and SQS do not include code for sending messages.  Messages should be sent using the underlying messaging library, but wrapped in [DBOS steps](./step-tutorial.md).
+The DBOS libraries for Kafka do not include code for sending messages.  Messages should be sent using the underlying messaging library, but wrapped in [DBOS steps](./step-tutorial.md).
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
@@ -198,21 +208,6 @@ await DBOS.runStep(async () => {
 
 // ... shutdown
 await producer?.disconnect();
-```
-
-</TabItem>
-<TabItem value="sqs" label="SQS">
-
-```typescript
-// Setup ...
-const sqs = new SQSClient(sqsConfig);
-
-// ... produce messages during workflow processing
-await DBOS.runStep(async () => {
-  await sqs.send(new SendMessageCommand(message));
-});    
-
-// SQS client - no cleanup
 ```
 
 </TabItem>
@@ -229,16 +224,22 @@ export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
 ```
 
 Options for the decorator and `registerConsumer` are the same:
- - `queueName`: If specified, workflows for processing messages will be enqueued
+ - `queueName`: The [queue](./queue-tutorial.md) on which to run workflows processing messages.  If not specified, an internal queue is used.  Only supported with `ordering: 'none'`, and must not be a partitioned queue.
  - `config`: Configuration, as specified by the underlying kafka library
+ - `ordering`: Whether to process messages in order.  One of `'none'` (the default), `'partition'`, or `'topic'`.
+ - `batchSize`: Maximum number of messages durably enqueued per batch.  Defaults to 250.
 
 ```typescript
+export type KafkaOrdering = 'none' | 'partition' | 'topic';
+
 registerConsumer<This, Return>(
   func: (this: This, ...args: KafkaArgs) => Promise<Return>,
   topics: ConsumerTopics,
   options: {
     queueName?: string;
     config?: ConsumerConfig;
+    ordering?: KafkaOrdering;
+    batchSize?: number;
   } = {},
 );
 
@@ -246,7 +247,9 @@ consumer(
   topics: ConsumerTopics,
   options: {
     queueName?: string;
-    config?: ConsumerConfig
+    config?: ConsumerConfig;
+    ordering?: KafkaOrdering;
+    batchSize?: number;
   }
 );
 
@@ -262,12 +265,15 @@ export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
 ```
 
 Options for the decorator and `registerConsumer` are the same:
- - `queueName`: If specified, workflows for processing messages will be enqueued
+ - `queueName`: The [queue](./queue-tutorial.md) on which to run workflows processing messages.  If not specified, an internal queue is used.  Only supported with `ordering: 'none'`, and must not be a partitioned queue.
  - `config`: Configuration, as specified by the underlying kafka library
+ - `ordering`: Whether to process messages in order.  One of `'none'` (the default), `'partition'`, or `'topic'`.
+ - `batchSize`: Maximum number of messages durably enqueued per batch.  Defaults to 250.
 
 
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
+export type KafkaOrdering = 'none' | 'partition' | 'topic';
 
 registerConsumer<This, Return>(
   func: (this: This, ...args: KafkaArgs) => Promise<Return>,
@@ -275,6 +281,8 @@ registerConsumer<This, Return>(
   options: {
     queueName?: string;
     config?: KafkaJS.ConsumerConstructorConfig;
+    ordering?: KafkaOrdering;
+    batchSize?: number;
   } = {},
 )
 
@@ -282,31 +290,12 @@ consumer(
   topics: ConsumerTopics,
   options: {
     queueName?: string;
-    config?: KafkaJS.ConsumerConstructorConfig
+    config?: KafkaJS.ConsumerConstructorConfig;
+    ordering?: KafkaOrdering;
+    batchSize?: number;
   }
 );
 
-```
-
-</TabItem>
-
-<TabItem value="sqs" label="SQS">
-
-SQS message receipt can be configured at the receiver, class, or method level, with method-level configuration items overriding the class- or receiver-level defaults.
-
-Configuration items are:
- - `client`: Fully configured SQS client, or a function to get it
- - `workflowQueueName`: If specified, workflows for processing messages will be enqueued to the named queue
- - `queueUrl`: SQS Queue URL (or part) for receiving messages
- - `getWorkflowKey`: Optional function to calculate a [workflow key](./workflow-tutorial.md#workflow-ids-and-idempotency) from a message; if not specified, the [message ID](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-message-identifiers.html) will be used
-
-```typescript
-interface SQSConfig {
-  client?: SQSClient | (() => SQSClient);
-  queueUrl?: string;
-  getWorkflowKey?: (m: Message) => string;
-  workflowQueueName?: string;
-}
 ```
 
 </TabItem>
