@@ -24,6 +24,7 @@ DBOSClient(
     serializer: Serializer = DefaultSerializer(),
     system_database_pool_size: Optional[int] = None,
     system_database_polling_concurrency: Optional[int] = None,
+    use_listen_notify: bool = False,
 )
 ```
 **Parameters:**
@@ -33,6 +34,7 @@ DBOSClient(
 - `serializer`: A custom [serializer](./contexts.md#custom-serialization) for workflow inputs and outputs. Must match the serializer used by the DBOS application.
 - `system_database_pool_size`: The maximum size of the client's system database connection pool. Defaults to 5.
 - `system_database_polling_concurrency`: The maximum number of concurrent database-backed polling reads from wait operations. See [`sys_db_polling_concurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
+- `use_listen_notify`: Whether the client runs a background listener thread that uses PostgreSQL LISTEN, so wait operations such as [`get_event`](#get_event) and [`read_stream`](#read_stream) are woken by notifications instead of polling the database. Defaults to `False`. Only enable this if your DBOS application's system database is Postgres and was created with [`use_listen_notify`](./configuration.md#database-connection-settings) enabled (the Postgres default).
 
 **Example syntax:**
 
@@ -916,6 +918,7 @@ Asynchronous version of [`DBOSClient.list_queued_workflows`](#list_queued_workfl
 client.list_workflow_steps(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
@@ -923,12 +926,19 @@ client.list_workflow_steps(
 
 Similar to [`DBOS.list_workflow_steps`](./contexts.md#list_workflow_steps).
 
+**Parameters:**
+- **workflow_id**: The ID of the workflow whose steps to list.
+- **load_output**: Whether to load and deserialize step outputs and errors. Set to `False` to improve performance when they are not needed.
+- **limit**: The maximum number of steps to return.
+- **offset**: The number of steps to skip, for pagination.
+
 ### list_workflow_steps_async
 
 ```python
 client.list_workflow_steps_async(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
