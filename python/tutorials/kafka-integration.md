@@ -110,6 +110,18 @@ def process_messages(msg: KafkaMessage):
 
 A custom queue is only supported with `ordering="none"`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
 
+Consumers that don't name a custom queue run on internal queues shared by the whole process.
+Those queues poll the database every second by default; you can tune that interval with the [`kafka_queue_polling_interval_sec`](../reference/configuration.md#kafka-settings) configuration parameter:
+
+```python
+DBOS(config={
+    "name": "kafka-app",
+    "kafka_queue_polling_interval_sec": 0.1,
+})
+```
+
+Lowering the interval reduces the delay between a message being enqueued and its workflow starting, but requires more frequent database polling.
+
 ## Consumer Groups
 
 Each consumer's [`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id) determines how Kafka distributes messages among consumers.

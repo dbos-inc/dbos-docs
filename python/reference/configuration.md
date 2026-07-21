@@ -55,6 +55,8 @@ class DBOSConfig(TypedDict):
 
     scheduler_polling_interval_sec: Optional[float]
 
+    kafka_queue_polling_interval_sec: Optional[float]
+
     serializer: Optional[Serializer]
 ```
 
@@ -132,6 +134,10 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 ### Scheduler Settings
 
 - **scheduler_polling_interval_sec**: Polling interval in seconds for the scheduler thread to detect new [workflow schedules](./contexts.md#workflow-schedules). Defaults to `30.0`.
+
+### Kafka Settings
+
+- **kafka_queue_polling_interval_sec**: Polling interval in seconds for the internal queues on which [Kafka consumer](../tutorials/kafka-integration.md) workflows run. Defaults to `1.0`; the minimum is `0.001`. Lowering it reduces the latency between a message being enqueued and its workflow starting, but requires more frequent database polling.
 
 ### Serialization Settings
 

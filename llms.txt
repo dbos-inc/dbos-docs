@@ -155,7 +155,7 @@
 - [DBOS Plugin Architecture](https://docs.dbos.dev/typescript/reference/plugins.md): Unless you intend to extend the DBOS Transact library, you can ignore this topic.
 - [Queues](https://docs.dbos.dev/typescript/reference/queues.md): Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 - [Workflows & Steps](https://docs.dbos.dev/typescript/reference/workflows-steps.md): Workflows
-- [Kafka & SQS Integration](https://docs.dbos.dev/typescript/tutorials/externalmessages.md): In this guide, you'll learn how to use DBOS workflows to process Kafka or Simple Queue Service (SQS) messages with exactly-once semantics.
+- [Kafka Integration](https://docs.dbos.dev/typescript/tutorials/externalmessages.md): In this guide, you'll learn how to use DBOS workflows to process Kafka messages with exactly-once semantics.
 - [Using Typescript Objects](https://docs.dbos.dev/typescript/tutorials/instantiated-objects.md): You can use class instance methods as workflows and steps.
 - [Logging & Tracing](https://docs.dbos.dev/typescript/tutorials/logging.md): Logging
 - [Queues & Concurrency](https://docs.dbos.dev/typescript/tutorials/queue-tutorial.md): You can use queues to run many workflows at once with managed concurrency.
@@ -167,5 +167,4 @@
 - [Communicating with Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-communication.md): DBOS provides a few different ways to communicate with your workflows.
 - [Workflow Management](https://docs.dbos.dev/typescript/tutorials/workflow-management.md): You can view and manage your durable workflow executions via the DBOS Console, programmatically, or via command line.
 - [Workflows](https://docs.dbos.dev/typescript/tutorials/workflow-tutorial.md): Workflows provide durable execution so you can write programs that are resilient to any failure.
-- [Upgrading to TSv3](https://docs.dbos.dev/typescript/upgrading.md): With the release of DBOS Transact TypeScript version 3 (DBOS TSv3), some APIs that were marked as deprecated in v2 have been removed.
 - [Why DBOS?](https://docs.dbos.dev/why-dbos.md): If you're building AI agents, also check out the AI Quickstart.

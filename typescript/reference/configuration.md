@@ -43,6 +43,7 @@ export interface DBOSConfig {
   adminPort?: number;
 
   listenQueues?: (WorkflowQueue | string)[];
+  maxConcurrentQueueDispatches?: number;
 
   schedulerPollingIntervalMs?: number;
 
@@ -92,6 +93,9 @@ If the Postgres database referenced by this connection string does not exist, DB
 ### Queue Settings
 
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
+- **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time.
+  A process dequeues from each of its queues in turn. Because dequeuing from a large queue (especially a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues) with many active partitions) can take a while, allowing several queues to be dequeued from concurrently prevents a busy queue from delaying work on smaller ones. A single queue is never dequeued from twice concurrently in the same process.
+  This setting does not affect [workflow concurrency](../tutorials/queue-tutorial.md#managing-concurrency), [rate limits](../tutorials/queue-tutorial.md#rate-limiting), or `systemDatabasePollingConcurrency`.
 
 ### Scheduler Settings
 

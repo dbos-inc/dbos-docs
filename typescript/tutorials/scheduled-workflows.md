@@ -104,6 +104,14 @@ await DBOS.resumeSchedule("my-task-schedule");
 await DBOS.deleteSchedule("my-task-schedule");
 ```
 
+You can also edit an existing schedule with [`DBOS.updateSchedule`](../reference/methods.md#dbosupdateschedule).
+Unlike `DBOS.applySchedules`, which replaces a schedule's entire definition, this changes only the fields you pass, leaving the rest of the schedule (including its status and last-fired time) untouched:
+
+```typescript
+// Change how often a schedule fires, leaving its other settings alone
+await DBOS.updateSchedule("my-task-schedule", { schedule: "0 * * * *" });
+```
+
 You can also list and inspect schedules:
 
 ```typescript
