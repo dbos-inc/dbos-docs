@@ -64,8 +64,9 @@ All workflows must be registered and queues created BEFORE DBOS is launched
 ```go
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -97,8 +98,9 @@ import (
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -172,8 +174,9 @@ func stepTwo(ctx context.Context) (string, error) {
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -243,8 +246,9 @@ func stepTwo(ctx context.Context) (string, error) {
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -324,8 +328,9 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) (int, error) 
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -1464,8 +1469,9 @@ func processInput(ctx dbos.DBOSContext, input string) (string, error) {
 
 func main() {
     dbosContext, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "debounce-example",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "debounce-example",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
 
     dbos.RegisterWorkflow(dbosContext, processInput)
@@ -1555,8 +1561,9 @@ type Config struct {
 For example:
 ```go
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:     "dbos-starter",
-    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 })
 if err != nil {
     panic(err)

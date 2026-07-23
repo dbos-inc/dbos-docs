@@ -87,6 +87,7 @@ if __name__ == "__main__":
     )
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_engine": engine,
     }
     DBOS(config=config)

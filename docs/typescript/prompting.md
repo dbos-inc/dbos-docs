@@ -80,6 +80,7 @@ You MUST use this default configuration (changing the name as appropriate) unles
 ```javascript
 DBOS.setConfig({
   "name": "dbos-node-starter",
+  "applicationVersion": "0.1.0",
   "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();
@@ -93,6 +94,7 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -130,6 +132,7 @@ const exampleWorkflow = DBOS.registerWorkflow(exampleFunction);
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -171,6 +174,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -220,6 +224,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -1394,6 +1399,7 @@ describe('example integration tests', () => {
     // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
       name: "my-integration-test",
+      applicationVersion: "0.1.0",
       systemDatabaseUrl: databaseUrl,
     };
     DBOS.setConfig(dbosTestConfig);
@@ -1855,6 +1861,7 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();

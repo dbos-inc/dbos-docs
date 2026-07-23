@@ -38,6 +38,8 @@ async function bootstrap() {
   // highlight-next-line
     name: 'dbos-nestjs-starter',
   // highlight-next-line
+    applicationVersion: '0.1.0',
+  // highlight-next-line
     systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   // highlight-next-line
   });

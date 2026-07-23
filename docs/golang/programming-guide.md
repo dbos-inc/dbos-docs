@@ -81,8 +81,9 @@ func stepTwo(ctx context.Context) (string, error) {
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -169,8 +170,9 @@ func stepTwo(ctx context.Context) (string, error) {
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -282,8 +284,9 @@ func queueWorkflow(ctx dbos.DBOSContext, queue dbos.WorkflowQueue) (int, error) 
 
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))
@@ -360,9 +363,10 @@ Update the call to `dbos.NewDBOSContext` in `main` to read the key from an envir
 
 ```go
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:         "dbos-starter",
-        DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-        ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_KEY"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_KEY"),
     })
 ```
 

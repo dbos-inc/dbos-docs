@@ -37,8 +37,9 @@ They initialize a DBOS context when your program starts.
 ```go
 func main() {
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "dbos-starter",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "dbos-starter",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
     if err != nil {
         panic(fmt.Sprintf("Initializing DBOS failed: %v", err))

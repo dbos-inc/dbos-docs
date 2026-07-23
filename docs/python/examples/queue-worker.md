@@ -56,6 +56,7 @@ if __name__ == "__main__":
     )
     config: DBOSConfig = {
         "name": "dbos-queue-worker",
+        "application_version": "0.1.0",
         "system_database_url": system_database_url,
     }
     DBOS(config=config)

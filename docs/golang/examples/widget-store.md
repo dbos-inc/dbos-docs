@@ -329,11 +329,12 @@ func main() {
     }
 
     dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:         "widget-store",
-        DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-        AdminServer:     true,
-        Logger:          logger,
-        ConductorAPIKey: os.Getenv("DBOS_CONDUCTOR_API_KEY"),
+        AppName:            "widget-store",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AdminServer:        true,
+        Logger:             logger,
+        ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_API_KEY"),
     })
     if err != nil {
         logger.Error("DBOS initialization failed", "error", err)

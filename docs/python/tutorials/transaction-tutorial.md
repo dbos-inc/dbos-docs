@@ -183,6 +183,7 @@ By default, transactions run against the DBOS system database. To use a separate
 ```python
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
     "application_database_url": os.environ["APP_DATABASE_URL"],
 }

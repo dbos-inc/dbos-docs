@@ -57,6 +57,7 @@ async def main():
     # highlight-start
     config: DBOSConfig = {
         "name": "my-agent",
+        "application_version": "0.1.0",
         "system_database_url": 'sqlite:///my_agent.sqlite',
     }
     DBOS(config=config)

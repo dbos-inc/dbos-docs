@@ -74,7 +74,7 @@ async def run_agent(user_id: str, session_id: str, message: str) -> str:
 async def main():
     # highlight-start
     # DBOS checkpoints to SQLite by default. Postgres is recommended for production.
-    config: DBOSConfig = {"name": "my-agent", "system_database_url": "sqlite:///dbostest.sqlite"}
+    config: DBOSConfig = {"name": "my-agent", "application_version": "0.1.0", "system_database_url": "sqlite:///dbostest.sqlite"}
     DBOS(config=config)
     DBOS.launch()
     # highlight-end

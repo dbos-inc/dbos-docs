@@ -37,6 +37,7 @@ const PORT = parseInt(process.env.NODE_PORT ?? '3000');
 async function main() {
   DBOS.setConfig({
     "name": "alert-center", // Setting app name is required
+    "applicationVersion": "0.1.0",
   });
 
   await DBOS.launch();

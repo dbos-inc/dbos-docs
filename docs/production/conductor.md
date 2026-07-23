@@ -44,6 +44,7 @@ The application name in your DBOS configuration must match the name with which y
 ```python
 config: DBOSConfig = {
     "name": "my-app-name",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
 }
@@ -63,9 +64,10 @@ await DBOS.launch({conductorKey})
 ```go
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:         "dbos-starter",
-    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-    ConductorAPIKey: conductorKey,
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey:    conductorKey,
 })
 ```
 </TabItem>
@@ -76,6 +78,7 @@ dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+    .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
     .withConductorKey(conductorKey)
 ```
@@ -109,6 +112,7 @@ To facilitate this, pass in your application name as an environment variable, fo
 ```python
 config: DBOSConfig = {
     "name": os.environ.get("DBOS_APPLICATION_NAME"),
+    "application_version": "0.1.0",
     "database_url": os.environ.get("DBOS_DATABASE_URL"),
     "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
 }
@@ -120,6 +124,7 @@ DBOS(config=config)
 ```javascript
 DBOS.setConfig({
     "name": process.env.DBOS_APPLICATION_NAME,
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
@@ -131,9 +136,10 @@ await DBOS.launch({conductorKey})
 ```go
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:         os.Getenv("DBOS_APPLICATION_NAME"),
-    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-    ConductorAPIKey: conductorKey,
+    AppName:            os.Getenv("DBOS_APPLICATION_NAME"),
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorAPIKey:    conductorKey,
 })
 ```
 </TabItem>
@@ -144,6 +150,7 @@ String appName = System.getenv("DBOS_APPLICATION_NAME")
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 
 DBOSConfig config = DBOSConfig.defaults(appName)
+    .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
     .withConductorKey(conductorKey)
 ```
