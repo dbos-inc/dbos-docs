@@ -986,7 +986,7 @@ Available methods on the returned `WorkflowQueue`:
 - `setConcurrency(value)`, `setWorkerConcurrency(value)`, `setRateLimit(value)`, `setPriorityEnabled(value)`, `setPartitionQueue(value)`, `setMinPollingIntervalMs(value)` — write through to the database.
 - `getConcurrency()`, `getWorkerConcurrency()`, `getRateLimit()`, `getPriorityEnabled()`, `getPartitionQueue()`, `getMinPollingIntervalMs()` — re-read from the database.
 
-To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered. Cancel or drain pending workflows before deleting.
+To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered — unless a queue with the same name is later registered, in which case it will dequeue the leftover workflows. Do not rely on this behavior: cancel or drain pending workflows before deleting.
 
 ### Queue Example
 
@@ -1892,6 +1892,7 @@ export interface DBOSConfig {
   adminPort?: number;
 
   listenQueues?: (WorkflowQueue | string)[];
+  maxConcurrentQueueDispatches?: number;
 
   serializer?: DBOSSerializer;
 }
@@ -1923,6 +1924,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
 - **adminPort**: The port on which the admin server runs. Defaults to 3001.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
+- **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
 - **serializer**: A custom serializer for the system database. Must match the `DBOSSerializer` interface with `stringify` and `parse` methods.
 
 ````

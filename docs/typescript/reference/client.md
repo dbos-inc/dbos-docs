@@ -65,6 +65,7 @@ class DBOSClient {
     deleteQueue(name: string): Promise<void>;
 
     createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string } }): Promise<void>;
+    updateSchedule(name: string, updates: { schedule?: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string | null; queueName?: string | null }): Promise<void>;
     listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
     deleteSchedule(name: string): Promise<void>;
@@ -418,7 +419,9 @@ Similar to [`DBOS.deleteQueue`](./queues.md#dbosdeletequeue).
 
 :::warning
 Workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered.
-Cancel or drain pending workflows on the queue before deleting it.
+However, if a queue with the same name is later registered, it will dequeue the leftover workflows.
+Do not rely on this: stale workflows unexpectedly resuming on a future queue is rarely the intended behavior.
+Instead, cancel or drain pending workflows on the queue before deleting it.
 :::
 
 ## Workflow Schedules
@@ -455,6 +458,25 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue.
+
+#### `updateSchedule`
+
+```typescript
+client.updateSchedule(
+  name: string,
+  updates: {
+    schedule?: string;
+    context?: unknown;
+    automaticBackfill?: boolean;
+    cronTimezone?: string | null;
+    queueName?: string | null;
+  },
+): Promise<void>
+```
+
+Update an existing schedule in place, changing only the fields you pass and preserving the schedule's ID, status, and last-fired time.
+Throws if no schedule with the given name exists.
+Similar to [`DBOS.updateSchedule`](./methods.md#dbosupdateschedule).
 
 #### `listSchedules`
 

@@ -17,7 +17,7 @@ In particular, integrating DBOS to your agents gives you:
 
 ## Get Started
 
-You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos), and [Google ADK](https://adk.dev/integrations/dbos/).
+You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos), [Google ADK](https://adk.dev/integrations/dbos/), and the [Vercel AI SDK](https://ai-sdk.dev/).
 
 <LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
@@ -409,6 +409,67 @@ if __name__ == "__main__":
 ```
 
 To learn more, check out the [Google ADK integration guide](../integrations/google-adk.md) and the [Google ADK documentation](https://adk.dev/integrations/dbos).
+
+</LargeTabItem>
+<LargeTabItem value="vercel-ai" label="Vercel AI SDK">
+
+### 1. Install DBOS and the Vercel AI Integration
+
+Install DBOS and the [Vercel AI SDK integration](https://www.npmjs.com/package/@dbos-inc/vercel-ai).
+
+```shell
+npm install @dbos-inc/vercel-ai @dbos-inc/dbos-sdk ai
+```
+
+### 2. Wrap Your Model and Run Your Agent in a Workflow
+
+Wrap your model with `durableCalls` middleware so every model call is checkpointed, then register your agent's generation loop as a DBOS workflow.
+DBOS checkpoints the progress of your agent in your database so it can recover from any failure, replaying completed model calls from their checkpoints instead of re-contacting the provider.
+
+```typescript
+// highlight-start
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { durableCalls } from '@dbos-inc/vercel-ai';
+// highlight-end
+import { generateText, wrapLanguageModel } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
+// Wrap your model so every model call is checkpointed in Postgres
+// highlight-next-line
+const model = wrapLanguageModel({
+  model: openai('gpt-5'),
+  // highlight-next-line
+  middleware: durableCalls({ retriesAllowed: true, maxAttempts: 5 }),
+});
+
+// Register your agent's generation loop as a durable workflow
+// highlight-next-line
+const researchAgent = DBOS.registerWorkflow(
+  async (question: string) => {
+    const { text } = await generateText({
+      model,
+      prompt: question,
+      system: 'You are a helpful research assistant.',
+    });
+    return text;
+  },
+  { name: 'researchAgent' },
+);
+
+async function main() {
+  // highlight-start
+  DBOS.setConfig({ name: 'my-agent', systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+  await DBOS.launch();
+  // highlight-end
+  console.log(await researchAgent('Why did the agent cross the road?'));
+}
+
+main();
+```
+
+Wrap tool `execute` functions in [`DBOS.runStep`](../typescript/tutorials/step-tutorial.md) to make their side effects durable too. The integration also supports durable [streaming](../integrations/vercel-ai.md#streaming), [MCP tools](../integrations/vercel-ai.md#mcp-tools), [embeddings](../integrations/vercel-ai.md#embeddings), and [image generation](../integrations/vercel-ai.md#images).
+
+To learn more, check out the [Vercel AI SDK integration guide](../integrations/vercel-ai.md) and the [Vercel AI SDK documentation](https://ai-sdk.dev/).
 
 </LargeTabItem>
 </LargeTabs>

@@ -150,7 +150,11 @@ type WorkflowRegistryEntry struct {
 func ListRegisteredQueues(ctx DBOSContext) ([]WorkflowQueue, error)
 ```
 
-`ListRegisteredQueues` returns a list of all queues registered in the DBOSContext.
+`ListRegisteredQueues` returns a list of all in-memory queues registered in the DBOSContext.
+
+:::warning
+This API is deprecated, along with in-memory queues. Use [`ListQueues`](./queues.md#listqueues) to list queues registered with [`RegisterQueue`](./queues.md#registerqueue).
+:::
 
 ```go
 type WorkflowQueue struct {

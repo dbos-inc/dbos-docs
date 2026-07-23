@@ -52,10 +52,14 @@ Thus, even if a message is delivered multiple times (e.g., due to transient netw
 
 ## In-Order Processing
 
-You can process Kafka events in-order by setting `in_order=True` in the `@DBOS.kafka_consumer` decorator.
-If this is set, messages are processed **sequentially** in order by offset.
-In other words, processing of Message #4 does not begin until Message #3 is fully processed.
-For example:
+By default, DBOS processes Kafka messages in parallel.
+You can instead process messages in order using the `ordering` parameter of the `@DBOS.kafka_consumer` decorator:
+
+- `ordering="none"` (the default) processes messages in parallel.
+- `ordering="partition"` processes messages **serially per topic partition**, preserving Kafka's per-partition delivery order, while processing different partitions in parallel. This preserves ordering while still allowing your consumer to scale across partitions.
+- `ordering="topic"` processes messages **serially per topic**. Only one message from the topic is processed at a time: processing of the next message does not begin until the current one is fully processed.
+
+For example, to process each partition's messages in order:
 
 ```python
 from dbos import DBOS, KafkaMessage
@@ -63,10 +67,64 @@ from dbos import DBOS, KafkaMessage
 @DBOS.kafka_consumer(
         config=config,
         topics=["example-topic"],
-        in_order=True
+        ordering="partition",
 )
 @DBOS.workflow()
 def process_messages_in_order(msg: KafkaMessage):
-    DBOS.logger.info(f"Messages are processed sequentially in offset order")
+    DBOS.logger.info(f"Messages within a partition are processed in order")
 
 ```
+
+## Batching and Throughput
+
+DBOS consumes and durably enqueues Kafka messages in batches for higher throughput.
+You can tune the maximum batch size with the `batch_size` parameter (default 250):
+
+```python
+@DBOS.kafka_consumer(
+        config=config,
+        topics=["example-topic"],
+        batch_size=500,
+)
+@DBOS.workflow()
+def process_messages(msg: KafkaMessage):
+    ...
+```
+
+For unordered (`ordering="none"`) consumers, you can also name a custom [queue](./queue-tutorial.md) on which to run your consumer workflows, for example to configure concurrency or rate limits:
+
+```python
+from dbos import DBOS, KafkaMessage
+
+DBOS.register_queue("kafka_processing_queue", concurrency=10)
+
+@DBOS.kafka_consumer(
+        config=config,
+        topics=["example-topic"],
+        queue_name="kafka_processing_queue",
+)
+@DBOS.workflow()
+def process_messages(msg: KafkaMessage):
+    ...
+```
+
+A custom queue is only supported with `ordering="none"`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
+
+Consumers that don't name a custom queue run on internal queues shared by the whole process.
+Those queues poll the database every second by default; you can tune that interval with the [`kafka_queue_polling_interval_sec`](../reference/configuration.md#kafka-settings) configuration parameter:
+
+```python
+DBOS(config={
+    "name": "kafka-app",
+    "kafka_queue_polling_interval_sec": 0.1,
+})
+```
+
+Lowering the interval reduces the delay between a message being enqueued and its workflow starting, but requires more frequent database polling.
+
+## Consumer Groups
+
+Each consumer's [`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id) determines how Kafka distributes messages among consumers.
+You can run multiple consumers on the same topics, including with ordering, by giving each a distinct `group.id`.
+Every consumer group receives its own copy of each message.
+Two consumers that share both a `group.id` and a topic would each receive only some of that topic's messages, so DBOS raises an error at startup if it detects this configuration.

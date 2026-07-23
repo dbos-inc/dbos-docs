@@ -21,8 +21,9 @@ Workers execute steps, then return their output to the orchestrator, which durab
 Because of this design, adding Temporal to an application requires rearchitecting it.
 First, you must move all your workflow and activity (step) code to run on a cluster of Temporal workers.
 You must also rewrite all interactions between your application and its workflows to go through the orchestration server and its client APIs.
-Then, you must manage and scale both the Temporal server and the datastores it relies on (most commonly Cassandra for durability and Elasticsearch for observability).
-The Temporal server and its data stores are on the critical path for workflow execution and are single points of failure for your system; if they have downtime your application becomes unavailable.
+Then, if you self-host Temporal, you must also operate a highly available Temporal cluster and its supporting datastores (typically a durable database such as Cassandra and a visibility store such as Elasticsearch), effectively adding another distributed system alongside your application.
+Alternatively, you can use their managed cloud service, but that places critical workflow state in a third-party service.
+In either case, the Temporal server and its data stores are on the critical path for workflow execution and are single points of failure for your system; if they have downtime your application becomes unavailable.
 
 <img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
 

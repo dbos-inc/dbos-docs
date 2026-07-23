@@ -67,13 +67,16 @@ If you need to run database operations in coroutines (`async def` functions), yo
 Datasources are the recommended approach. You create a datasource with its own database URL, independent of the DBOS system database:
 
 ```python
+import asyncio
+import os
 from dbos import SQLAlchemyDatasource, AsyncSQLAlchemyDatasource
 
 # Sync
 ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
 
-# Async
-ads = await AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+# Async. The datasource is not tied to the event loop that created it,
+# so it can be used from the event loop that runs your application
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
 ```
 
 The datasource manages its own connection pool and can point to any PostgreSQL or SQLite database. No additional DBOS configuration is needed. See the [ Datasources](./transaction-tutorial.md#datasources) tutorial for full usage details.

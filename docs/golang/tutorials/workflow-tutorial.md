@@ -118,6 +118,18 @@ Instead, you should do all database operations in non-deterministic operations i
 
 :::warning
 Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps, or use the durable [`Go`](#concurrent-steps) and [`Select`](#selecting-the-first-result) functions instead.
+
+Go's map iteration order is also random: each iteration over the same map may visit keys in a different order.
+Don't call steps or start workflows while ranging over a map—on recovery, the iteration order changes and operations replay in a different order, breaking determinism.
+Sort the keys first and iterate over the sorted slice instead:
+
+```go
+keys := slices.Sorted(maps.Keys(m))
+for _, k := range keys {
+    handle, err := dbos.RunWorkflow(ctx, processItem, m[k])
+    // ...
+}
+```
 :::
 
 For example, **don't do this**:

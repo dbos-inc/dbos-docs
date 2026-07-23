@@ -36,6 +36,10 @@ public void everyMinute(Instant scheduled, Object context) {
 
 `applySchedules` is idempotent: re-running it on every startup always results in the declared set of schedules, with no duplicates.
 
+When `applySchedules` updates an existing schedule, it replaces the entire definition with the new declaration, so any optional setting left unset is cleared.
+For example, if a schedule was routed to a named queue and you re-apply it without `withQueueName(...)`, it reverts to the default scheduler queue.
+The schedule's status and last-fired time are preserved.
+
 ### WorkflowSchedule Parameters
 
 ```java
@@ -95,6 +99,10 @@ List<WorkflowHandle<Object, Exception>> handles =
 ```
 
 DBOS uses the same deterministic workflow IDs as the live scheduler, so executions that already ran are skipped.
+
+Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
+If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.
+For example, changing a daily schedule to an hourly one and then backfilling yesterday enqueues 24 executions, not 1.
 
 You can also enable **automatic backfill** on a schedule so DBOS does this for you on every startup:
 

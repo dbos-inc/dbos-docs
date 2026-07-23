@@ -731,6 +731,44 @@ await DBOS.createSchedule({
 });
 ```
 
+### DBOS.updateSchedule
+
+```typescript
+DBOS.updateSchedule(
+  name: string,
+  updates: {
+    schedule?: string;
+    context?: unknown;
+    automaticBackfill?: boolean;
+    cronTimezone?: string | null;
+    queueName?: string | null;
+  },
+): Promise<void>
+```
+
+Update an existing schedule in place.
+Unlike [`applySchedules`](#dbosapplyschedules), which replaces a schedule's entire definition, this changes only the fields you pass and preserves everything else, including the schedule's ID, status, and last-fired time.
+Throws if no schedule with the given name exists.
+If called from within a workflow, the operation is recorded as a step.
+
+**Parameters:**
+- **name**: The name of the schedule to update.
+- **updates**: The fields to change. Any field you omit is left unchanged. `cronTimezone` and `queueName` may be set to `null` to clear them (reverting the schedule to the system's local timezone and to the internal queue, respectively). The workflow a schedule invokes cannot be changed; use [`applySchedules`](#dbosapplyschedules) for that.
+
+:::note
+`context` is special: because `undefined` is itself a valid context, passing the key at all sets the context, even if its value is `undefined`. To leave the context unchanged, omit the key entirely.
+:::
+
+**Example:**
+
+```typescript
+// Change the cadence, and clear the schedule's queue.
+await DBOS.updateSchedule("my-task-schedule", {
+    schedule: "0 * * * *",
+    queueName: null,
+});
+```
+
 ### DBOS.listSchedules
 
 ```typescript
@@ -799,6 +837,8 @@ DBOS.applySchedules(
 Atomically apply a set of schedules.
 Creates or updates each schedule in the list.
 May not be called from within a workflow.
+
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queueName` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
 
 **Example:**
 

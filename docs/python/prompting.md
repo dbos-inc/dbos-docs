@@ -352,7 +352,7 @@ Workflows are in most respects normal Python functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in transactions and all other non-deterministic operations in steps.
+Instead, you should do all database operations in datasource transactions and all other non-deterministic operations in steps.
 
 For example, **don't do this**:
 
@@ -551,8 +551,8 @@ Additionally, coroutine workflows should use the asynchronous versions of the wo
 
 :::tip
 
-At this time, DBOS does not support coroutine transactions.
-To execute transaction functions without blocking the event loop, use `asyncio.to_thread`.
+For async database operations, use an `AsyncSQLAlchemyDatasource`, which supports `async def` transaction functions (see Datasources below).
+The legacy `@DBOS.transaction` decorator does not support coroutine functions; to call it or any other blocking function from an async workflow without blocking the event loop, use `asyncio.to_thread`.
 
 :::
 
@@ -567,7 +567,8 @@ async def example_step():
 async def example_workflow(friend: str):
     await DBOS.sleep_async(10)
     body = await example_step()
-    result = await asyncio.to_thread(example_transaction, body)
+    # asyncio.to_thread runs a synchronous, blocking function without stalling the event loop
+    result = await asyncio.to_thread(blocking_function, body)
     return result
 ```
 
@@ -1514,6 +1515,7 @@ Retrieve a list of `WorkflowStatus` of all **queued** workflows (status `ENQUEUE
 def list_workflow_steps(
     workflow_id: str,
     *,
+    load_output: bool = True,
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[StepInfo]
@@ -1521,6 +1523,7 @@ def list_workflow_steps(
 
 Retrieve the steps of a workflow.
 Steps are ordered by `function_id`. Use `limit` and `offset` to paginate results.
+Set `load_output` to `False` to improve performance when step outputs and errors are not needed; the `output` and `error` fields are then always `None`.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```python
@@ -1692,6 +1695,7 @@ class DBOSConfig(TypedDict):
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
+    sys_db_polling_concurrency: Optional[int]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
@@ -1745,6 +1749,7 @@ This is the database in which DBOS executes `@DBOS.transaction` functions.
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
+- **sys_db_polling_concurrency**: The maximum number of database-backed polling reads from wait operations (such as `get_result`, `recv`, `get_event`, and `read_stream`) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `sys_db_pool_size` (minimum 1). Set to a non-positive value to disable the limit.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
@@ -1809,66 +1814,83 @@ DBOS.launch()
 
 The serializer's `name` is stored with serialized values and used to ensure that the correct deserializer is used.
 
-### Transactions
+### Datasources
 
-Transactions are a special type of step that are optimized for database accesses.
-They execute as a single database transaction.
+Datasources are the recommended way to durably perform database operations inside workflows.
+A datasource wraps a SQLAlchemy engine so that each database transaction inside a workflow runs exactly once, even if the workflow is interrupted and retried.
 
-ONLY use transactions if you are SPECIFICALLY requested to perform database operations, DO NOT USE THEM OTHERWISE.
+ONLY use datasource transactions if you are SPECIFICALLY requested to perform database operations, DO NOT USE THEM OTHERWISE.
 
-If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a transaction unless requested.
+If asked to add DBOS to code that already contains database operations, ALWAYS make it a step, do NOT attempt to make it a datasource transaction unless requested.
 
-ONLY use transactions with a Postgres database.
+ONLY use datasource transactions with a PostgreSQL or SQLite database.
 To access any other database, ALWAYS use steps.
 
-To make a Python function a transaction, annotate it with the DBOS.transaction decorator.
-Then, access the database using the DBOS.sql_session client, which is a SQLAlchemy client DBOS automatically connects to your database.
-Here are some examples:
+Create a datasource with the `create` factory method, passing your database URL.
+Use `SQLAlchemyDatasource` for synchronous code and `AsyncSQLAlchemyDatasource` for async code.
+Annotate a function with `@ds.transaction()` to run it as a tracked database transaction, and access the current SQLAlchemy session with `ds.sql_session()`.
 
-
-#### SQLAlchemy
+#### Synchronous datasource
 
 ```python
-greetings = Table(
-    "greetings", 
-    MetaData(), 
-    Column("name", String), 
-    Column("note", String)
-)
+from dbos import DBOS, SQLAlchemyDatasource
+from sqlalchemy import text
 
-@DBOS.transaction()
+ds = SQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"])
+
+@ds.transaction()
 def example_insert(name: str, note: str) -> None:
     # Insert a new greeting into the database
-    DBOS.sql_session.execute(greetings.insert().values(name=name, note=note))
+    session = ds.sql_session()  # sqlalchemy.orm.Session
+    session.execute(
+        text("INSERT INTO greetings (name, note) VALUES (:name, :note)"),
+        {"name": name, "note": note},
+    )
 
-@DBOS.transaction()
+@ds.transaction()
 def example_select(name: str) -> Optional[str]:
     # Select the first greeting to a particular name
-    row = DBOS.sql_session.execute(
-        select(greetings.c.note).where(greetings.c.name == name)
+    session = ds.sql_session()
+    row = session.execute(
+        text("SELECT note FROM greetings WHERE name = :name LIMIT 1"),
+        {"name": name},
     ).first()
     return row[0] if row else None
+
+@DBOS.workflow()
+def greeting_workflow(name: str, note: str) -> None:
+    example_insert(name, note)
 ```
 
-#### Raw SQL
+#### Asynchronous datasource
+
+`AsyncSQLAlchemyDatasource.create` is a coroutine and it ONLY accepts `async def` transaction functions. Because Python does NOT allow `await` at module scope, create the datasource with `asyncio.run` so it is a module-level global that the `@ads.transaction()` decorators can use. Only use `await ...create(...)` if you are already inside a coroutine.
 
 ```python
-@DBOS.transaction()
-def example_insert(name: str, note: str) -> None:
+import asyncio
+import os
+from dbos import DBOS, AsyncSQLAlchemyDatasource
+from sqlalchemy import text
+
+ads = asyncio.run(AsyncSQLAlchemyDatasource.create(os.environ["APP_DATABASE_URL"]))
+
+@ads.transaction()
+async def example_insert(name: str, note: str) -> None:
     # Insert a new greeting into the database
-    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
-    DBOS.sql_session.execute(sql, {"name": name, "note": note})
+    session = ads.sql_session()  # sqlalchemy.ext.asyncio.AsyncSession
+    await session.execute(
+        text("INSERT INTO greetings (name, note) VALUES (:name, :note)"),
+        {"name": name, "note": note},
+    )
 
-
-@DBOS.transaction()
-def example_select(name: str) -> Optional[str]:
-    # Select the first greeting to a particular name
-    sql = text("SELECT note FROM greetings WHERE name = :name LIMIT 1")
-    row = DBOS.sql_session.execute(sql, {"name": name}).first()
-    return row[0] if row else None
+@DBOS.workflow()
+async def greeting_workflow(name: str, note: str) -> None:
+    await example_insert(name, note)
 ```
 
-NEVER async def a transaction.
+`SQLAlchemyDatasource` ONLY supports synchronous (non-`async def`) functions and `AsyncSQLAlchemyDatasource` ONLY supports `async def` functions. Decorating the wrong function type raises a `DBOSException`.
+
+`@DBOS.transaction` is an older, synchronous-only alternative to datasources. Prefer datasources for new code.
 
 ````
 

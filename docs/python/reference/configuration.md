@@ -30,6 +30,7 @@ class DBOSConfig(TypedDict):
     system_database_url: Optional[str]
     application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
+    sys_db_polling_concurrency: Optional[int]
     db_engine_kwargs: Optional[Dict[str, Any]]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
@@ -54,6 +55,8 @@ class DBOSConfig(TypedDict):
     max_executor_threads: Optional[int]
 
     scheduler_polling_interval_sec: Optional[float]
+
+    kafka_queue_polling_interval_sec: Optional[float]
 
     serializer: Optional[Serializer]
 ```
@@ -98,6 +101,7 @@ This is the database in which DBOS executes legacy [`@DBOS.transaction`](../tuto
 This parameter has the same format and default as `system_database_url`.
 If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 20.
+- **sys_db_polling_concurrency**: The maximum number of database-backed polling reads from wait operations (such as [`get_result`](./contexts.md#get_result), [`recv`](./contexts.md#recv), [`get_event`](./contexts.md#get_event), and [`read_stream`](./contexts.md#read_stream)) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `sys_db_pool_size` (minimum 1). Set to a non-positive value to disable the limit.
 - **db_engine_kwargs**: A dictionary of additional keyword arguments passed to the SQLAlchemy [create_engine](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine) call. Can be used to customize connection pool settings, timeouts, and other engine parameters.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
@@ -131,6 +135,10 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 ### Scheduler Settings
 
 - **scheduler_polling_interval_sec**: Polling interval in seconds for the scheduler thread to detect new [workflow schedules](./contexts.md#workflow-schedules). Defaults to `30.0`.
+
+### Kafka Settings
+
+- **kafka_queue_polling_interval_sec**: Polling interval in seconds for the internal queues on which [Kafka consumer](../tutorials/kafka-integration.md) workflows run. Defaults to `1.0`; the minimum is `0.001`. Lowering it reduces the latency between a message being enqueued and its workflow starting, but requires more frequent database polling.
 
 ### Serialization Settings
 

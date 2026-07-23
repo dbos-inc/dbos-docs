@@ -18,6 +18,10 @@ Workflow functions must be compatible with the following signature:
 type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
 ```
 
+Returned errors are persisted with [gob](https://pkg.go.dev/encoding/gob), preserving their concrete type when read back (e.g., from a workflow handle in another process).
+An error that cannot be gob-encoded—including those created by `errors.New` or `fmt.Errorf`, whose fields are unexported—is stored as its message string only, so `errors.Is` and `errors.As` will not match it after a database round-trip.
+To preserve a custom error type, give it exported fields and register it with [`gob.Register`](https://pkg.go.dev/encoding/gob#Register).
+
 **Parameters:**
 - **ctx**: The DBOSContext.
 - **fn**: The workflow function to register.
@@ -232,7 +236,7 @@ In partitioned queues, all flow control (including concurrency and rate limits) 
 
 ```go
 // Create a partitioned queue
-partitionedQueue := dbos.NewWorkflowQueue(ctx, "user-tasks",
+partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
     dbos.WithPartitionQueue(),
 )
 
@@ -304,6 +308,23 @@ func WithAuthenticatedUser(user string) WorkflowOption
 
 Associate the workflow execution with a user name. Useful to define workflow identity.
 Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
+
+#### WithWorkflowAttributes
+
+```go
+func WithWorkflowAttributes(attributes map[string]any) WorkflowOption
+```
+
+Attach custom key-value attributes to the workflow.
+Attributes are recorded in the [workflow status](./methods.md#workflow-status) at creation, must be JSON-serializable, and are not inherited by child workflows.
+On Postgres they are stored as GIN-indexed JSONB and can be searched with [`WithFilterAttributes`](./methods.md#withfilterattributes).
+Attributes can later be replaced with [`UpdateWorkflowAttributes`](./methods.md#updateworkflowattributes).
+
+```go
+handle, err := dbos.RunWorkflow(ctx, processOrder, order,
+    dbos.WithWorkflowAttributes(map[string]any{"customer": "acme", "region": "us-east"}),
+)
+```
 
 ### RunAsStep
 

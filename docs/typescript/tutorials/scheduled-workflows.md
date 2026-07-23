@@ -47,6 +47,10 @@ await DBOS.applySchedules([
 ]);
 ```
 
+When `DBOS.applySchedules` updates an existing schedule, it replaces the entire definition with the new entry, so any optional field left unset is cleared.
+For example, if a schedule was routed to a named queue and you re-apply it without setting `queueName`, it reverts to the internal queue.
+The schedule's status and last-fired time are preserved.
+
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
 
@@ -100,6 +104,14 @@ await DBOS.resumeSchedule("my-task-schedule");
 await DBOS.deleteSchedule("my-task-schedule");
 ```
 
+You can also edit an existing schedule with [`DBOS.updateSchedule`](../reference/methods.md#dbosupdateschedule).
+Unlike `DBOS.applySchedules`, which replaces a schedule's entire definition, this changes only the fields you pass, leaving the rest of the schedule (including its status and last-fired time) untouched:
+
+```typescript
+// Change how often a schedule fires, leaving its other settings alone
+await DBOS.updateSchedule("my-task-schedule", { schedule: "0 * * * *" });
+```
+
 You can also list and inspect schedules:
 
 ```typescript
@@ -132,6 +144,10 @@ await DBOS.backfillSchedule(
 ```
 
 Alternatively, you can set `automaticBackfill: true` when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
+
+Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
+If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.
+For example, changing a daily schedule to an hourly one and then backfilling yesterday enqueues 24 executions, not 1.
 
 You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../reference/methods.md#dbostriggerschedule):
 

@@ -13,7 +13,7 @@ When failures occur, whether from crashes, interruptions, or restarts, DBOS uses
 Architecturally, an application built with DBOS looks the below diagram.
 The open-source DBOS library uses Postgres to orchestrate durable workflows and queues.
 There's no separate orchestration server and no infrastructure required besides Postgres.
-When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows providing useful features such as an admin UI and dashboard, distributed workflow recovery, and managed workflow retention policies.
+When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows that coordinates workflow recovery to guarantee high availability and provides operational tooling such as an admin UI and dashboard, observability integrations, and managed workflow retention policies.
 
 <img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
@@ -25,14 +25,14 @@ To learn more about how to add DBOS to your application, check out the language-
 You can create a distributed DBOS application by launching multiple server processes (sometimes called "workers" or "executors") on a variety of platforms, such as a Kubernetes cluster, a fleet of EC2 instances, or a serverless platform like Google Cloud Run.
 Within an application, each server must connect to the same Postgres database, called the system database. 
 This database stores all workflow checkpoints, step outputs, and schedule and queue state.
-To distribute work across many work across many servers in a cluster, you should use [durable queues](#durable-queues).
-Distributed applications should also connect to [DBOS Conductor](#operating-dbos-in-production-with-conductor), a "control plane" providing cluster-wide observability and management.
+To distribute work across many servers in a cluster, you should use [durable queues](#durable-queues).
+Distributed applications should also connect to [DBOS Conductor](#operating-dbos-in-production-with-conductor), the control plane for cluster-wide observability and management.
 For example, if one of your workers crashes or fails, Conductor detects the failure and automatically recovers its workflows to a compatible live worker.
 
 When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
-For example, your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
+Your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
 <img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
@@ -118,7 +118,7 @@ For more information on queues, see the docs ([Python](./python/tutorials/queue-
 When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
 Conductor is the control plane for your durable workflows, providing:
 
-- [**Distributed workflow recovery**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
+- [**High availability**](./production/workflow-recovery.md): In a distributed environment with many executors running durable workflows, Conductor automatically detects when the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes) and recovers the workflow to another healthy executor.
 - [**Workflow and queue observability**](./production/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
 - [**Workflow and queue management**](./production/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./production/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.

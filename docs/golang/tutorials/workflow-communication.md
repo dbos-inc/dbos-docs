@@ -20,11 +20,12 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```go
-func Send[P any](ctx DBOSContext, destinationID string, message P, topic string) error
+func Send[P any](ctx DBOSContext, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 
 You can call `Send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
+Pass [`WithIdempotencyKey`](../reference/methods.md#withidempotencykey) to make a retried `Send` deliver at most once: retrying with the same key (for example, after a crash or network failure) inserts the message only once.
 
 #### Recv
 
