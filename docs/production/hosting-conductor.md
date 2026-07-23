@@ -152,6 +152,7 @@ For example, for the Docker compose setup above, this URL is `ws://localhost:809
 ```python
 config: DBOSConfig = {
     "name": "my-app-name",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     "conductor_url": os.environ.get("DBOS_CONDUCTOR_URL"),
@@ -173,10 +174,11 @@ await DBOS.launch({conductorKey, conductorURL});
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
 conductorURL := os.Getenv("DBOS_CONDUCTOR_URL")
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:         "dbos-starter",
-    DatabaseURL:     os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-	ConductorURL:    conductorURL,
-    ConductorAPIKey: conductorKey,
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    ConductorURL:       conductorURL,
+    ConductorAPIKey:    conductorKey,
 })
 ```
 </TabItem>
@@ -188,6 +190,7 @@ String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
 String conductorDomain = System.getenv("DBOS_CONDUCTOR_URL");
 
 DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+    .withAppVersion("0.1.0")
     .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
     .withConductorKey(conductorKey)
     .withConductorDomain(conductorDomain);

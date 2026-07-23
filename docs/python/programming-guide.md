@@ -83,6 +83,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -131,6 +132,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -205,6 +207,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -254,6 +257,7 @@ Update the configuration in `main.py` to read the key from an environment variab
 ```python showLineNumbers title="main.py"
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
         "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY"),
     }

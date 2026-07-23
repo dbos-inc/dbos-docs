@@ -11,6 +11,7 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();

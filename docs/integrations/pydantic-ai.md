@@ -112,6 +112,7 @@ from pydantic_ai.durable_exec.dbos import DBOSAgent
 # highlight-start
 dbos_config: DBOSConfig = {
     'name': 'pydantic_dbos_agent',
+    'application_version': '0.1.0',
     'system_database_url': 'sqlite:///dbostest.sqlite',
 }
 DBOS(config=dbos_config)

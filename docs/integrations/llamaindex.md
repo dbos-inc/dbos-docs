@@ -60,6 +60,7 @@ from workflows.events import Event, StartEvent, StopEvent
 # 1. Configure DBOS — SQLite by default
 config: DBOSConfig = {
     "name": "llamaindex-counter-example",
+    "application_version": "0.1.0",
     "system_database_url": "sqlite:///counter_example.sqlite",
     "run_admin_server": False
 }
@@ -134,6 +135,7 @@ from workflows.events import Event, StartEvent, StopEvent
 
 config: DBOSConfig = {
     "name": "llamaindex-server",
+    "application_version": "0.1.0",
     "system_database_url": "sqlite:///server_example.sqlite",
     "run_admin_server": False
 }

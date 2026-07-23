@@ -197,6 +197,7 @@ describe('example integration tests', () => {
     // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
       name: "my-integration-test",
+      applicationVersion: "0.1.0",
       systemDatabaseUrl: databaseUrl,
     };
     DBOS.setConfig(dbosTestConfig);

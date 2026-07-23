@@ -92,6 +92,7 @@ In the app code, when creating the `DBOS` object, pass in the Logs and Traces en
 from dbos import DBOSConfig
 config: DBOSConfig = {
         "name": "your-app-name", 
+        "application_version": "0.1.0",
         "otlp_traces_endpoints": [ "http://0.0.0.0:4318/v1/traces" ], #match the config in step 1 above
         "otlp_logs_endpoints": [  "http://0.0.0.0:4318/v1/logs" ]
 }
@@ -102,6 +103,7 @@ DBOS(fastapi=app, config=config)
 ```typescript
 DBOS.setConfig({ 
   "name": "your-app-name",
+  "applicationVersion": "0.1.0",
   "otlpTracesEndpoints": [ "http://0.0.0.0:4318/v1/traces" ],
   "otlpLogsEndpoints": [  "http://0.0.0.0:4318/v1/logs" ]
 });

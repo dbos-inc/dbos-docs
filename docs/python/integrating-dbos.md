@@ -24,6 +24,7 @@ from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)

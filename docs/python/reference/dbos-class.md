@@ -53,6 +53,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)

@@ -124,6 +124,7 @@ For tests that exercise real durable execution — recovery, exactly-once steps,
 @Test
 void workflow_resumesAfterInterruption() throws Exception {
     DBOSConfig config = DBOSConfig.defaults("test-app")
+        .withAppVersion("0.1.0")
         .withDatabaseUrl(System.getenv("DBOS_TEST_JDBC_URL"))
         .withDbUser(System.getenv("PGUSER"))
         .withDbPassword(System.getenv("PGPASSWORD"));
@@ -150,6 +151,7 @@ class MyWorkflowIntegrationTest {
     @Test
     void myWorkflow_completesSuccessfully() throws Exception {
         DBOSConfig config = DBOSConfig.defaults("test-app")
+            .withAppVersion("0.1.0")
             .withDatabaseUrl(postgres.getJdbcUrl())
             .withDbUser(postgres.getUsername())
             .withDbPassword(postgres.getPassword());

@@ -327,6 +327,7 @@ async function main() {
   const PORT = parseInt(process.env.NODE_PORT || '3000');
   DBOS.setConfig({
     "name": 'widget-store-node',
+    "applicationVersion": '0.1.0',
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   DBOS.logRegisteredEndpoints();

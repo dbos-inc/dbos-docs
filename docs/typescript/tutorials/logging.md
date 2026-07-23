@@ -18,6 +18,7 @@ You can [configure](../reference/configuration.md) the log level of this built-i
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   logLevel: "info",
 });
 await DBOS.launch();
@@ -46,6 +47,7 @@ Pass your implementation through the `logger` field in DBOS configuration:
 ```typescript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   logger: myCustomLogger,
 });
 await DBOS.launch();
@@ -121,6 +123,7 @@ sdk.start();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   tracingEnabled: true,           // DBOS creates spans; your provider exports them
   otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
@@ -144,6 +147,7 @@ new TracerProvider().register();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   tracingEnabled: true,           // DBOS creates spans; your provider exports them
   otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
@@ -175,6 +179,7 @@ sdk.start();
 // Configure and launch DBOS
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   tracingEnabled: true,           // DBOS creates spans; your provider exports them
   otelAttributeFormat: 'semconv', // emit dbos.* attribute names (recommended)
 });
@@ -223,6 +228,7 @@ Set `enableOTLP: true` and [configure](../reference/configuration.md) your expor
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   enableOTLP: true,
   otlpTracesEndpoints: ["http://localhost:4318/v1/traces"],
   otlpLogsEndpoints: ["http://localhost:4318/v1/logs"],

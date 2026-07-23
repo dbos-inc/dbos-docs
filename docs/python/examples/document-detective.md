@@ -41,6 +41,7 @@ if not database_url:
 app = FastAPI()
 config: DBOSConfig = {
     "name": "document-detective",
+    "application_version": "0.1.0",
     "system_database_url": database_url,
     "conductor_key": os.environ.get("CONDUCTOR_KEY"),
 }

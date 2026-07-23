@@ -59,6 +59,7 @@ async function main(): Promise<void> {
     process.env.DBOS_SYSTEM_DATABASE_URL || 'postgresql://postgres:dbos@localhost:5432/dbos_queue_worker';
   DBOS.setConfig({
     name: 'dbos-queue-worker',
+    applicationVersion: '0.1.0',
     systemDatabaseUrl: systemDatabaseUrl,
   });
   await DBOS.launch();
