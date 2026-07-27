@@ -117,6 +117,11 @@ Each row represents a different workflow execution.
 - **application_id**: Internal field used only in DBOS Cloud.
 - **serialization**: The name of the serialization format used for this workflow's inputs, output, and error (e.g. `java_jackson`, `py_pickle`, `portable_json`). Null if the default serializer was used.
 - **rate_limited**: Whether this workflow was dequeued from a rate-limited queue.
+- **completed_at**: The epoch timestamp (in milliseconds) at which this workflow reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`). Null while the workflow is still active.
+- **attributes**: Custom key-value attributes attached to this workflow, if any. Stored in Postgres as GIN-indexed JSONB, so workflows can be efficiently searched by attribute.
+- **schedule_name**: If this workflow was started by a [scheduled workflow](#dbosworkflow_schedules), the name of its schedule.
+- **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
+- **is_debounced**: Whether this workflow was created by a debouncer.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
