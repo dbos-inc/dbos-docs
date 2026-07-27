@@ -405,6 +405,14 @@ func WithFilterHasParent(hasParent bool) ListWorkflowsOption
 
 Filter workflows by whether they have a parent workflow (true) or not (false).
 
+#### WithFilterIsDebounced
+
+```go
+func WithFilterIsDebounced(isDebounced bool) ListWorkflowsOption
+```
+
+Filter workflows by whether they are pending [debounced](./queues.md#debouncer) invocations (true) or not (false).
+
 #### WithFilterScheduleName
 
 ```go

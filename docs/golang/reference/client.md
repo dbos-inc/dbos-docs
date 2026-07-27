@@ -4,50 +4,64 @@ title: DBOS Client
 ---
 
 `Client` provides a programmatic way to interact with your DBOS application from external code.
-`Client` includes methods similar to [`Context`](./dbos-context.md) that can be used outside of a DBOS application.
-
-:::note 
-`Client` is included in the `dbos` package, the same package that is used by DBOS applications.
-Where DBOS applications use the [`Context` methods](./dbos-context.md),
-external applications use `Client` methods instead.
-:::
+It is a formal sub-interface of [`Context`](./dbos-context.md): it owns every DBOS operation that does not require a launched runtime — enqueue, messaging, events, streams, workflow management, queue management, schedule management, application-version management, and `Shutdown`.
+Every `Context` **is** a `Client`, so anywhere a `Client` is accepted you can also pass a (launched or unlaunched) `Context`.
 
 ```go
 type Client interface {
-    Enqueue(queueName, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
-    ListWorkflows(opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
-    Send(destinationID string, message any, topic string, opts ...SendOption) error
-    GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
-    RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
-    CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
-    CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOption) error
-    SetWorkflowAttributes(workflowID string, attributes map[string]any) error
-    SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
-    DeleteWorkflows(workflowIDs []string, opts ...DeleteWorkflowOption) error
-    ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
-    ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
-    ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
-    ForkWorkflows(input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
-    ListApplicationVersions() ([]VersionInfo, error)
-    GetLatestApplicationVersion() (*VersionInfo, error)
-    SetLatestApplicationVersion(versionName string) error
-    GetWorkflowSteps(workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
-    ReadStream(workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
-    ReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
-    CreateSchedule(input ClientScheduleInput) error
-    ApplySchedules(schedules []ClientScheduleInput) error
-    GetSchedule(scheduleName string) (*WorkflowSchedule, error)
-    ListSchedules(opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
-    PauseSchedule(scheduleName string) error
-    ResumeSchedule(scheduleName string) error
-    DeleteSchedule(scheduleName string) error
-    BackfillSchedule(scheduleName string, start, end time.Time) ([]string, error)
-    TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
-    Shutdown(timeout time.Duration)
+    context.Context
+
+    // Workflow operations
+    Enqueue(_ Client, queueName string, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
+    Send(_ Client, destinationID string, message any, topic string, opts ...SendOption) error
+    GetEvent(_ Client, targetWorkflowID string, key string, timeout time.Duration) (any, error)
+    ReadStream(_ Client, workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
+    ReadStreamAsync(_ Client, workflowID string, key string) (<-chan StreamValue[any], error)
+
+    // Workflow management
+    RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
+    CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
+    CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
+    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any) error
+    SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
+    ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
+    ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
+    ForkWorkflow(_ Client, input ForkWorkflowInput) (WorkflowHandle[any], error)
+    ForkWorkflows(_ Client, input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
+    ListWorkflows(_ Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+    GetWorkflowSteps(_ Client, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
+    GetWorkflowAggregates(_ Client, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
+    GetStepAggregates(_ Client, input GetStepAggregatesInput) ([]StepAggregateRow, error)
+    DeleteWorkflows(_ Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
+
+    // Queue management
+    RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
+    RetrieveQueue(_ Client, name string) (Queue, error)
+    ListQueues(_ Client) ([]Queue, error)
+    DeleteQueue(_ Client, name string) error
+
+    // Schedule management
+    CreateSchedule(_ Client, spec ScheduleSpec) error
+    ApplySchedules(_ Client, schedules []ScheduleSpec) error
+    PauseSchedule(_ Client, scheduleName string) error
+    ResumeSchedule(_ Client, scheduleName string) error
+    DeleteSchedule(_ Client, scheduleName string) error
+    GetSchedule(_ Client, scheduleName string) (WorkflowSchedule, error)
+    ListSchedules(_ Client, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+    BackfillSchedule(_ Client, scheduleName string, start, end time.Time) ([]string, error)
+    TriggerSchedule(_ Client, scheduleName string) (WorkflowHandle[any], error)
+
+    // Application version management
+    ListApplicationVersions(_ Client) ([]VersionInfo, error)
+    GetLatestApplicationVersion(_ Client) (VersionInfo, error)
+    SetLatestApplicationVersion(_ Client, versionName string) error
+
+    Shutdown(_ Client, timeout time.Duration) error
 }
 ```
 
-Several methods returning `WorkflowHandle[any]` have generic package-level counterparts (`RetrieveWorkflow`, `ResumeWorkflow`, `ResumeWorkflows`, `ForkWorkflow`, `ForkWorkflows`, `TriggerSchedule`, `GetEvent`) that return typed handles or values, documented alongside each method below.
+Like `Context` methods, `Client` interface methods take a leading `Client` receiver-argument.
+In practice, always call the package-level functions documented below instead: they accept any `Client`, and the generic ones (`Enqueue[R]`, `RetrieveWorkflow[R]`, `GetEvent[R]`, `ReadStream[R]`, `ResumeWorkflow[R]`, `ForkWorkflow[R]`, `TriggerSchedule[R]`, …) return typed handles and values instead of `WorkflowHandle[any]`.
 
 ### Constructor
 
@@ -61,13 +75,18 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
-    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
-    SQLiteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
-    DatabaseSchema string        // Database schema name (defaults to "dbos"; Postgres only)
-    Logger         *slog.Logger  // Optional custom logger
+    DatabaseURL            string          // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    SystemDBPool           *pgxpool.Pool   // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB         *sql.DB         // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema         string          // Database schema name (defaults to "dbos")
+    Logger                 *slog.Logger    // Optional custom logger
+    Serializer             Serializer[any] // Optional custom serializer (defaults to JSON). See the serialization reference.
+    SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
 }
 ```
+
+`NewClient` connects to the system database and starts a notification listener (or a poller on backends without listen/notify support), so every client operation — including blocking ones like `GetEvent` — works without launching the DBOS runtime.
+Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeout` — see [System database startup](./configuration.md#system-database-startup).
 
 **Returns:**
 - A new `Client` instance or an error if initialization fails
@@ -93,12 +112,14 @@ A client manages a connection pool to the [DBOS system database](../../explanati
 ### Shutdown
 
 ```go
-Shutdown(timeout time.Duration)
+func Shutdown(c Client, timeout time.Duration) error
 ```
 
 Gracefully shuts down the client and releases the system database connection pool.
+Returns a non-nil error if the timeout expired before all resources stopped.
 
 **Parameters:**
+- `c`: The DBOS client instance
 - `timeout`: Maximum time to wait for graceful shutdown
 
 ## Workflow Interaction Methods
@@ -106,7 +127,7 @@ Gracefully shuts down the client and releases the system database connection poo
 ### Enqueue
 
 ```go
-func Enqueue[P any, R any](
+func Enqueue[R any, P any](
     c Client, 
     queueName string,
     workflowName string, 
@@ -114,6 +135,8 @@ func Enqueue[P any, R any](
     opts ...EnqueueOption
 ) (WorkflowHandle[R], error)
 ```
+
+The input type `P` is inferred from the `input` argument — name only the result type `R`.
 
 Enqueue a workflow for processing and return a handle to it, similar to [RunWorkflow with the WithQueue option](./workflows-steps.md#withqueue).
 Returns a [WorkflowHandle](./workflows-steps.md#workflowhandle).
@@ -165,7 +188,7 @@ type ProcessOutput struct {
     Status string
 }
 
-handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+handle, err := dbos.Enqueue[ProcessOutput](
     client, 
     "process_queue",
     "ProcessWorkflow",
@@ -188,8 +211,6 @@ if err != nil {
 ### RetrieveWorkflow
 
 ```go
-RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
-
 func RetrieveWorkflow[R any](c Client, workflowID string) (WorkflowHandle[R], error)
 ```
 
@@ -206,7 +227,7 @@ The generic `RetrieveWorkflow` returns a typed handle whose `GetResult` decodes 
 ### Send
 
 ```go
-Send(destinationID string, message any, topic string, opts ...SendOption) error
+func Send[P any](c Client, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 
 Sends a message to a specified workflow. Similar to [`Send`](../tutorials/workflow-communication.md#send).
@@ -220,8 +241,6 @@ Sends a message to a specified workflow. Similar to [`Send`](../tutorials/workfl
 ### GetEvent
 
 ```go
-GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
-
 func GetEvent[R any](c Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
@@ -243,7 +262,7 @@ The generic `GetEvent` decodes the event value into type `R`.
 ### ListWorkflows
 
 ```go
-ListWorkflows(opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+func ListWorkflows(c Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
 ```
 
 Retrieve a list of [`WorkflowStatus`](./methods.md#workflow-status) of all workflows matching specified criteria.
@@ -260,7 +279,7 @@ Pass [`WithFilterLoadInput(true)`](./methods.md#withfilterloadinput) / [`WithFil
 ### GetWorkflowSteps
 
 ```go
-GetWorkflowSteps(workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
+func GetWorkflowSteps(c Client, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 List the steps of a given workflow. Similar to [`GetWorkflowSteps`](./methods.md#getworkflowsteps).
@@ -270,18 +289,18 @@ Also accepts [`WithStepsLimit`](./methods.md#withstepslimit) and [`WithStepsOffs
 ### CancelWorkflow
 
 ```go
-CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
+func CancelWorkflow(c Client, workflowID string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
+This sets its status to `CANCELLED` and removes it from its queue (if it is enqueued); a running execution stops at the start of its next durable operation.
 Pass [`WithCancelChildren`](./methods.md#withcancelchildren) to also cancel the workflow's children, recursively.
-Similar to [`CancelWorkflow`](./methods.md#cancelworkflow).
+Similar to [`CancelWorkflow`](./methods.md#cancelworkflow); see [cancellation behavior](../tutorials/workflow-management.md#cancelling-workflows).
 
 ### CancelWorkflows
 
 ```go
-CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOption) error
+func CancelWorkflows(c Client, workflowIDs []string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel multiple workflows in a single database round-trip.
@@ -291,7 +310,7 @@ Similar to [`CancelWorkflows`](./methods.md#cancelworkflows).
 ### SetWorkflowAttributes
 
 ```go
-SetWorkflowAttributes(workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(c Client, workflowID string, attributes map[string]any) error
 ```
 
 Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
@@ -301,7 +320,7 @@ Similar to [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
 ### DeleteWorkflows
 
 ```go
-DeleteWorkflows(workflowIDs []string, opts ...DeleteWorkflowOption) error
+func DeleteWorkflows(c Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
 ```
 
 Permanently delete one or more workflows and all their associated data, regardless of their current status.
@@ -311,7 +330,7 @@ Similar to [`DeleteWorkflows`](./methods.md#deleteworkflows).
 ### SetWorkflowDelay
 
 ```go
-SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
+func SetWorkflowDelay(c Client, workflowID string, opts ...SetWorkflowDelayOption) error
 ```
 
 Set or update the delay on a `DELAYED` workflow.
@@ -321,8 +340,6 @@ Similar to [`SetWorkflowDelay`](./methods.md#setworkflowdelay).
 ### ResumeWorkflow
 
 ```go
-ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
-
 func ResumeWorkflow[R any](c Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[R], error)
 ```
 
@@ -337,8 +354,6 @@ Similar to [`ResumeWorkflow`](./methods.md#resumeworkflow).
 ### ResumeWorkflows
 
 ```go
-ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
-
 func ResumeWorkflows[R any](c Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
 ```
 
@@ -349,8 +364,6 @@ Similar to [`ResumeWorkflows`](./methods.md#resumeworkflows).
 ### ForkWorkflow
 
 ```go
-ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
-
 func ForkWorkflow[R any](c Client, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
@@ -361,8 +374,6 @@ Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
 ### ForkWorkflows
 
 ```go
-ForkWorkflows(input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
-
 func ForkWorkflows[R any](c Client, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
 ```
 
@@ -376,8 +387,10 @@ Similar to [`ForkWorkflows`](./methods.md#forkworkflows).
 #### NewDebouncerClient
 
 ```go
-func NewDebouncerClient[P any, R any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[P, R]
+func NewDebouncerClient[R any, P any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[R, P]
 ```
+
+`R` is the workflow's result type and `P` its input type; neither can be inferred, so both must be named explicitly.
 
 Create a new debouncer client for use from outside a DBOS application.
 Similar to [`NewDebouncer`](./queues.md#newdebouncer) but uses a [Client](#constructor) instead of a Context and takes a workflow name string instead of a function reference.
@@ -395,6 +408,25 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
+
+#### WithDebouncerQueue
+
+```go
+func WithDebouncerQueue(queueName string) DebouncerOption
+```
+
+Run the debounced workflow on the named queue instead of the DBOS internal queue.
+Debounce keys are scoped to the queue.
+The queue is fixed per debouncer; `Debounce` calls cannot override it.
+
+#### WithDebouncerClassName
+
+```go
+func WithDebouncerClassName(className string) DebouncerOption
+```
+
+Set the class/namespace name recorded for the debounced workflow.
+Use with `NewDebouncerClient` when the target workflow is registered under a class name — for example by another language's runtime, which may resolve dequeued workflows by class name.
 
 #### WithDebouncerConfigName
 
@@ -414,7 +446,7 @@ dc := dbos.NewDebouncerClient[string, string]("Send", client,
 #### DebouncerClient.Debounce
 
 ```go
-func (dc *DebouncerClient[P, R]) Debounce(key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+func (dc *DebouncerClient[R, P]) Debounce(key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Debounce a workflow invocation from outside a DBOS application.
@@ -431,25 +463,29 @@ Behaves the same as [`Debouncer.Debounce`](./queues.md#debouncerdebounce) but do
 `Client` exposes the same [workflow scheduling](./methods.md#workflow-schedules) operations as the DBOS context, with the important difference that workflows are identified by name (string) rather than by function reference.
 See the [scheduled workflows tutorial](../tutorials/scheduled-workflows.md) for an overview.
 
-### ClientScheduleInput
+### ScheduleSpec
+
+Schedules are described by the same [`ScheduleSpec`](./methods.md#createschedule) struct used from a `Context`.
+From a client, set `WorkflowName` (the `Workflow` function-reference field can only be used with a `Context` that has the workflow registered):
 
 ```go
-type ClientScheduleInput struct {
+type ScheduleSpec struct {
     ScheduleName      string // Required: unique schedule name
-    WorkflowName      string // Required: target workflow name (FQN or custom name)
-    WorkflowClassName string // Optional: class/namespace name (required for Python/TS/Java targets that dispatch by class)
     Schedule          string // Required: cron expression
+    WorkflowName      string // Required from a client: target workflow name (FQN or custom name)
+    Workflow          any    // Registered Go workflow function (Context only; wins over WorkflowName)
+    WorkflowClassName string // Optional: class/namespace name (required for Python/TS/Java targets that dispatch by class)
     Context           any    // Optional: user-defined context (JSON-serialized)
     AutomaticBackfill bool   // Optional
     CronTimezone      string // Optional: IANA timezone name
-    QueueName         string // Optional: target queue
+    QueueName         string // Optional: target queue (defaults to the internal queue)
 }
 ```
 
-### Client.CreateSchedule
+### CreateSchedule
 
 ```go
-CreateSchedule(input ClientScheduleInput) error
+func CreateSchedule(c Client, spec ScheduleSpec) error
 ```
 
 Create a new schedule. Similar to [`CreateSchedule`](./methods.md#createschedule).
@@ -457,7 +493,7 @@ Create a new schedule. Similar to [`CreateSchedule`](./methods.md#createschedule
 **Example:**
 
 ```go
-err := client.CreateSchedule(dbos.ClientScheduleInput{
+err := dbos.CreateSchedule(client, dbos.ScheduleSpec{
     ScheduleName: "my-schedule",
     WorkflowName: "myPeriodicTask",
     Schedule:     "*/5 * * * *",
@@ -465,67 +501,65 @@ err := client.CreateSchedule(dbos.ClientScheduleInput{
 })
 ```
 
-### Client.ApplySchedules
+### ApplySchedules
 
 ```go
-ApplySchedules(schedules []ClientScheduleInput) error
+func ApplySchedules(c Client, schedules []ScheduleSpec) error
 ```
 
 Atomically create or replace the given schedules. Similar to [`ApplySchedules`](./methods.md#applyschedules).
 
-### Client.GetSchedule
+### GetSchedule
 
 ```go
-GetSchedule(scheduleName string) (*WorkflowSchedule, error)
+func GetSchedule(c Client, scheduleName string) (WorkflowSchedule, error)
 ```
 
-Retrieve a [`WorkflowSchedule`](./methods.md#workflowschedule) by name. Returns `(nil, nil)` if not found.
+Retrieve a [`WorkflowSchedule`](./methods.md#workflowschedule) by name. If no schedule with that name exists, the returned error matches `dbos.ErrScheduleNotFound`.
 
-### Client.ListSchedules
+### ListSchedules
 
 ```go
-ListSchedules(opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+func ListSchedules(c Client, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
 ```
 
 List schedules, optionally filtered. Accepts the same options as [`ListSchedules`](./methods.md#listschedules).
 
-### Client.PauseSchedule
+### PauseSchedule
 
 ```go
-PauseSchedule(scheduleName string) error
+func PauseSchedule(c Client, scheduleName string) error
 ```
 
 Pause a schedule so it stops firing.
 
-### Client.ResumeSchedule
+### ResumeSchedule
 
 ```go
-ResumeSchedule(scheduleName string) error
+func ResumeSchedule(c Client, scheduleName string) error
 ```
 
 Resume a paused schedule.
 
-### Client.DeleteSchedule
+### DeleteSchedule
 
 ```go
-DeleteSchedule(scheduleName string) error
+func DeleteSchedule(c Client, scheduleName string) error
 ```
 
 Delete a schedule.
 
-### Client.BackfillSchedule
+### BackfillSchedule
 
 ```go
-BackfillSchedule(scheduleName string, start, end time.Time) ([]string, error)
+func BackfillSchedule(c Client, scheduleName string, start, end time.Time) ([]string, error)
 ```
 
 Backfill missed executions for the range `[start, end]`, returning the IDs of the enqueued workflows. Similar to [`BackfillSchedule`](./methods.md#backfillschedule).
 
-### Client.TriggerSchedule
+### TriggerSchedule
 
 ```go
-TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
-
 func TriggerSchedule[R any](c Client, scheduleName string) (WorkflowHandle[R], error)
 ```
 
@@ -537,7 +571,7 @@ The generic `TriggerSchedule` returns a typed handle whose `GetResult` decodes t
 ### ListApplicationVersions
 
 ```go
-ListApplicationVersions() ([]VersionInfo, error)
+func ListApplicationVersions(c Client) ([]VersionInfo, error)
 ```
 
 Return every application version registered in the system database, ordered by timestamp (newest first).
@@ -546,16 +580,17 @@ Similar to [`ListApplicationVersions`](./methods.md#listapplicationversions).
 ### GetLatestApplicationVersion
 
 ```go
-GetLatestApplicationVersion() (*VersionInfo, error)
+func GetLatestApplicationVersion(c Client) (VersionInfo, error)
 ```
 
 Return the application version with the most recent timestamp.
+If no versions are registered, the returned error matches `dbos.ErrNoApplicationVersions`.
 Similar to [`GetLatestApplicationVersion`](./methods.md#getlatestapplicationversion).
 
 ### SetLatestApplicationVersion
 
 ```go
-SetLatestApplicationVersion(versionName string) error
+func SetLatestApplicationVersion(c Client, versionName string) error
 ```
 
 Mark the named application version as latest by updating its timestamp to the current time.

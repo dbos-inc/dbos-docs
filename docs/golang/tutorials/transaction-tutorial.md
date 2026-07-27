@@ -30,7 +30,7 @@ if err != nil {
 It provisions a `transaction_completion` durability table in your database (in the `dbos` schema by default, configurable with [`WithDataSourceSchema`](../reference/datasources.md#withdatasourceschema)) unless the table already exists.
 If you prefer to manage DDL yourself, pre-create the table in your own migrations and connect with a role that only needs `SELECT, INSERT` on it.
 
-If you pass the same engine handle you gave DBOS as its system database (via [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](../reference/dbos-context.md#initialization)), no `transaction_completion` table is created or managed at all: your application writes and the DBOS checkpoint commit together in a single transaction.
+If you pass the same engine handle you gave DBOS as its system database (via [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](../reference/configuration.md)), no `transaction_completion` table is created or managed at all: your application writes and the DBOS checkpoint commit together in a single transaction.
 See [Sharing the System Database Engine](../reference/datasources.md#sharing-the-system-database-engine).
 
 ## Running Transactions

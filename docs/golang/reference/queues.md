@@ -306,13 +306,14 @@ See the [debouncing tutorial](../tutorials/workflow-tutorial.md#debouncing) for 
 ### NewDebouncer
 
 ```go
-func NewDebouncer[P any, R any](ctx Context, workflow Workflow[P, R], opts ...DebouncerOption) *Debouncer[P, R]
+func NewDebouncer[R any, P any](ctx Context, workflow Workflow[P, R], opts ...DebouncerOption) (*Debouncer[R, P], error)
 ```
 
 Create a new debouncer for the specified workflow.
 The workflow must be registered before creating the debouncer.
-Debouncers must be created before `Launch()`.
+Debouncers can be created at any time, including after `Launch()`.
 Multiple debouncers can be created for the same workflow.
+Both type parameters are inferred from the workflow function.
 
 **Parameters:**
 - **ctx**: The Context.
@@ -328,6 +329,16 @@ func WithDebouncerTimeout(timeout time.Duration) DebouncerOption
 Set the maximum time before starting the workflow, measured from the first debounce call for a given key.
 If the timeout is zero (the default), there is no maximum time limit and calling the workflow can be pushed back indefinitely.
 
+### WithDebouncerQueue
+
+```go
+func WithDebouncerQueue(queueName string) DebouncerOption
+```
+
+Run the debounced workflow on the named queue instead of the DBOS internal queue.
+Debounce keys are scoped to the queue.
+The queue is fixed per debouncer and must be registered (see [`RegisterQueue`](#registerqueue)); `Debounce` calls cannot override it.
+
 ### WithDebouncerInstance
 
 ```go
@@ -338,13 +349,13 @@ Target the workflow registration bound to the given configured instance (see [`W
 Required when the debounced workflow is a method of a configured instance.
 
 ```go
-debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
+debouncer, err := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
 ```
 
 ### Debouncer.Debounce
 
 ```go
-func (d *Debouncer[P, R]) Debounce(ctx Context, key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+func (d *Debouncer[R, P]) Debounce(ctx Context, key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Debounce a workflow invocation.
@@ -357,7 +368,7 @@ When the delay expires _or_ the debouncer preconfigured timeout is reached, the 
 - **key**: A unique key to group debounce calls. Calls with the same key are debounced together.
 - **delay**: Time by which to delay workflow execution from this call.
 - **input**: Input parameters to pass to the workflow.
-- **opts**: Optional workflow options (e.g., `WithWorkflowID`).
+- **opts**: Optional workflow options (e.g., `WithWorkflowID`). Options the debounce owns or cannot support (`WithQueue`, `WithDeduplicationID`, `WithDelay`, `WithPriority`, `WithQueuePartitionKey`, `WithDeduplicationPolicy`) are rejected with an error matching `dbos.ErrInvalidOption`.
 
 **Returns:**
 - A [WorkflowHandle](./workflows-steps.md#workflowhandle) for the target workflow.

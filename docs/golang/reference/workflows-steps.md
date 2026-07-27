@@ -525,7 +525,7 @@ func WithHandleTimeout(timeout time.Duration) GetResultOption
 ```
 
 Specify a timeout for obtaining a workflow result.
-On expiry, the error matches `context.DeadlineExceeded`; see [Timeout errors and handle flavors](#timeout-errors-and-handle-flavors) for how the error shape differs between handle flavors.
+On expiry, the error matches `context.DeadlineExceeded`.
 
 ##### WithHandlePollingInterval
 
@@ -672,6 +672,7 @@ if errors.As(err, &dbosErr) {
 
 DBOS errors caused by context cancellation or an expired deadline also wrap the standard library cause, so `errors.Is(err, context.Canceled)` and `errors.Is(err, context.DeadlineExceeded)` match as well.
 These causes survive serialization: they still match after the error is read back from the system database, for example when awaiting a workflow from another process.
+Sentinel matching also survives the [portable JSON format](../../explanations/portable-workflows.md): a DBOS error recorded portably keeps its symbolic code, so `errors.Is` against the sentinels still holds when reading it from another process or language runtime.
 
 #### Error codes
 
@@ -692,7 +693,7 @@ These causes survive serialization: they still match after the error is read bac
 | `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | A step exhausted its configured retries. The error wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
 | `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. |
 | `ErrorCodePatchingNotEnabled` | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
-| `ErrorCodeTimeout` | `ErrTimeout` | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Deadline-driven timeouts also match `context.DeadlineExceeded`. See the note below. |
+| `ErrorCodeTimeout` | `ErrTimeout` | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Deadline-driven timeouts also match `context.DeadlineExceeded`; for handle waits, prefer matching `context.DeadlineExceeded`, which covers all handle flavors. |
 | `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | An operation required a registered application version, but none exists in the system database. |
 | `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | The referenced queue does not exist (e.g., `RetrieveQueue`). |
 | `ErrorCodeScheduleNotFound` | `ErrScheduleNotFound` | The referenced schedule does not exist (e.g., `GetSchedule`). |

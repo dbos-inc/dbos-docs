@@ -172,7 +172,7 @@ client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 })
 
-err = client.CreateSchedule(dbos.ClientScheduleInput{
+err = dbos.CreateSchedule(client, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule",
     WorkflowName: "myPeriodicTask",
     Schedule:     "*/5 * * * *",
