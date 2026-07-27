@@ -20,7 +20,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```go
-func Send[P any](ctx DBOSContext, destinationID string, message P, topic string, opts ...SendOption) error
+func Send[P any](ctx Context, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 
 You can call `Send()` to send a message to a workflow.
@@ -30,7 +30,7 @@ Pass [`WithIdempotencyKey`](../reference/methods.md#withidempotencykey) to make 
 #### Recv
 
 ```go
-func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error)
+func Recv[R any](ctx Context, topic string, timeout time.Duration) (R, error)
 ```
 
 Workflows can call `Recv()` to receive messages sent to them, optionally for a particular topic.
@@ -47,7 +47,7 @@ To wait for this notification, the payments workflow uses `Recv()`, executing fa
 ```go
 const PaymentStatusTopic = "payment_status"
 
-func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+func checkoutWorkflow(ctx dbos.Context, orderData OrderData) (string, error) {
     // Process initial checkout steps...
 
     // Wait for payment notification with a 5-minute timeout
@@ -98,7 +98,7 @@ They are useful for publishing information about the status of a workflow or to 
 #### SetEvent
 
 ```go
-func SetEvent[P any](ctx DBOSContext, key string, message P) error
+func SetEvent[P any](ctx Context, key string, message P) error
 ```
 
 Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if has already been published.
@@ -106,7 +106,7 @@ Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish 
 #### GetEvent
 
 ```go
-func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](ctx Context, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
@@ -123,7 +123,7 @@ The checkout workflow emits the payments URL using `SetEvent()`:
 ```go
 const PaymentURLKey = "payment_url"
 
-func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error) {
+func checkoutWorkflow(ctx dbos.Context, orderData OrderData) (string, error) {
     // Process order validation...
 
     paymentsURL := ...
@@ -139,7 +139,7 @@ func checkoutWorkflow(ctx dbos.DBOSContext, orderData OrderData) (string, error)
 The HTTP handler that originally started the workflow uses `GetEvent()` to await this URL, then redirects the customer to it:
 
 ```go
-func webCheckoutHandler(dbosContext dbos.DBOSContext, w http.ResponseWriter, r *http.Request) {
+func webCheckoutHandler(dbosContext dbos.Context, w http.ResponseWriter, r *http.Request) {
     orderData := parseOrderData(r) // Parse order from request
 
     handle, err := dbos.RunWorkflow(dbosContext, checkoutWorkflow, orderData)
@@ -173,7 +173,7 @@ This is useful for streaming results from a long-running workflow or LLM call, o
 #### Writing to Streams
 
 ```go
-func WriteStream[P any](ctx DBOSContext, key string, value P) error
+func WriteStream[P any](ctx Context, key string, value P) error
 ```
 
 You can write values to a stream from a workflow or its steps using [`WriteStream`](../reference/methods.md#writestream).
@@ -183,7 +183,7 @@ When you are done writing to a stream, you should close it with [`CloseStream`](
 Otherwise, streams are automatically closed when the workflow terminates.
 
 ```go
-func CloseStream(ctx DBOSContext, key string) error
+func CloseStream(ctx Context, key string) error
 ```
 
 DBOS streams are immutable and append-only.
@@ -194,7 +194,7 @@ Readers will see all values written to the stream from all tries of the step in 
 **Example syntax:**
 
 ```go
-func producerWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func producerWorkflow(ctx dbos.Context, _ string) (string, error) {
     err := dbos.WriteStream(ctx, "progress", "step 1 complete")
     if err != nil {
         return "", err
@@ -214,7 +214,7 @@ func producerWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
 #### Reading from Streams
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](ctx Context, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 You can read values from a stream from anywhere using [`ReadStream`](../reference/methods.md#readstream).
@@ -222,17 +222,17 @@ This function reads all values from a stream identified by a workflow ID and key
 It blocks until the stream is closed or the workflow becomes inactive (status is not `PENDING` or `ENQUEUED`).
 It returns the values, whether the stream is closed, and any error.
 
-To read without blocking, pass [`WithReadStreamSnapshot`](../reference/methods.md#withreadstreamsnapshot), which returns as soon as all currently-available values have been drained. Its `fromOffset` argument sets the offset to start reading from, so you can poll a stream incrementally:
+To read without blocking, pass [`WithReadStreamSnapshot`](../reference/methods.md#withreadstreamsnapshot), which returns as soon as all currently-available values have been drained. Pair it with [`WithReadStreamFromOffset`](../reference/methods.md#withreadstreamfromoffset) to set the offset to start reading from, so you can poll a stream incrementally:
 
 ```go
 // Read whatever is available right now, starting from offset 0, without blocking.
-values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress", dbos.WithReadStreamSnapshot(0))
+values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress", dbos.WithReadStreamSnapshot())
 ```
 
 You can also read from a stream asynchronously using [`ReadStreamAsync`](../reference/methods.md#readstreamasync), which returns a channel:
 
 ```go
-func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](ctx Context, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 ```go

@@ -38,7 +38,7 @@ workflows, err := dbos.ListWorkflows(ctx,
 )
 ```
 
-You can replace a workflow's attributes at any time with [`UpdateWorkflowAttributes`](../reference/methods.md#updateworkflowattributes).
+You can replace a workflow's attributes at any time with [`SetWorkflowAttributes`](../reference/methods.md#setworkflowattributes).
 
 ## Cancelling Workflows
 

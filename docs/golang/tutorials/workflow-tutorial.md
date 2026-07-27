@@ -13,7 +13,7 @@ Workflow registration must happen before launching the DBOS context with `dbos.L
 The function's signature must match:
 
 ```go
-type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
+type Workflow[P any, R any] func(ctx Context, input P) (R, error)
 ```
 
 In other words, a workflow must take in a DBOS context and one other input of any serializable ([json-encodable](https://pkg.go.dev/encoding/json)) type and must return one output of any serializable type and error.
@@ -31,7 +31,7 @@ func stepTwo(ctx context.Context) (string, error) {
     return "success", nil
 }
 
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     _, err := dbos.RunAsStep(ctx, stepOne)
     if err != nil {
         return "failure", err
@@ -56,7 +56,7 @@ This starts the workflow in the background and returns a [workflow handle](../re
 Here's an example:
 
 ```go
-func runWorkflowExample(dbosContext dbos.DBOSContext, input string) error {
+func runWorkflowExample(dbosContext dbos.Context, input string) error {
     handle, err := dbos.RunWorkflow(dbosContext, workflow, input)
     if err != nil {
         return err
@@ -83,7 +83,7 @@ This is useful if your operations have side effects like making a payment or sen
 For example:
 
 ```go
-func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+func exampleWorkflow(ctx dbos.Context, input string) (string, error) {
     workflowID, err := dbos.GetWorkflowID(ctx)
     if err != nil {
         return "", err
@@ -93,7 +93,7 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
     return "success", nil
 }
 
-func example(dbosContext dbos.DBOSContext, input string) error {    
+func example(dbosContext dbos.Context, input string) error {    
     myID := "unique-workflow-id-123"
     handle, err := dbos.RunWorkflow(dbosContext, exampleWorkflow, input, dbos.WithWorkflowID(myID))
     if err != nil {
@@ -135,7 +135,7 @@ for _, k := range keys {
 For example, **don't do this**:
 
 ```go
-func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+func exampleWorkflow(ctx dbos.Context, input string) (string, error) {
     randomChoice := rand.Intn(2)
     if randomChoice == 0 {
         return dbos.RunAsStep(ctx, stepOne)
@@ -152,7 +152,7 @@ func generateChoice(ctx context.Context) (int, error) {
     return rand.Intn(2), nil
 }
 
-func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
+func exampleWorkflow(ctx dbos.Context, input string) (string, error) {
     randomChoice, err := dbos.RunAsStep(ctx, generateChoice)
     if err != nil {
         return "", err
@@ -167,14 +167,14 @@ func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 
 ## Workflow Timeouts
 
-You can set a timeout for a workflow using its input [`DBOSContext`](../reference/dbos-context.md). Use [`WithTimeout`](../reference/dbos-context#withtimeout) to obtain a cancellable `DBOSContext`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
+You can set a timeout for a workflow using its input [`Context`](../reference/dbos-context.md). Use [`WithTimeout`](../reference/dbos-context#withtimeout) to obtain a cancellable `Context`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
 
 When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](../reference/dbos-context#withoutcancel).
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 
 ```go
-func exampleWorkflow(ctx dbos.DBOSContext, input string) (string, error) {}
+func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
 
 timeoutCtx, cancelFunc := dbos.WithTimeout(dbosCtx, 12*time.Hour)
 handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
@@ -192,12 +192,12 @@ Sleeping is useful for scheduling a workflow to run in the future (even days, we
 For example:
 
 ```go
-func runTask(ctx dbos.DBOSContext, task string) (string, error) {
+func runTask(ctx dbos.Context, task string) (string, error) {
 	// Execute the task...
 	return "task completed", nil
 }
 
-func exampleWorkflow(ctx dbos.DBOSContext, input struct {
+func exampleWorkflow(ctx dbos.Context, input struct {
 	TimeToSleep time.Duration
 	Task        string
 }) (string, error) {
@@ -238,13 +238,13 @@ For example, if a user is editing a text field, you may want to start a processi
 To debounce a workflow, define the workflow and queue, then create a [`Debouncer`](../reference/queues.md#debouncer) for it:
 
 ```go
-func processInput(ctx dbos.DBOSContext, input string) (string, error) {
+func processInput(ctx dbos.Context, input string) (string, error) {
     fmt.Printf("Processing input: %s\n", input)
     return "processed", nil
 }
 
 func main() {
-    dbosContext, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, _ := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "debounce-example",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -297,7 +297,7 @@ client, err := dbos.NewClient(context.Background(), config)
 if err != nil {
     log.Fatal(err)
 }
-defer client.Shutdown(5 * time.Second)
+defer dbos.Shutdown(client, 5*time.Second)
 
 dc := dbos.NewDebouncerClient[string, string]("processInput", client,
     dbos.WithDebouncerTimeout(30*time.Second))
@@ -325,7 +325,7 @@ Use [`Go`](../reference/workflows-steps.md#go) to launch a step that runs in the
 The function returns immediately with a channel that will receive the step's result when it completes.
 
 ```go
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     // Launch a step asynchronously
     resultChan, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
         // Perform some work...
@@ -349,7 +349,7 @@ func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
 You can launch multiple steps concurrently:
 
 ```go
-func workflow(ctx dbos.DBOSContext, urls []string) ([]string, error) {
+func workflow(ctx dbos.Context, urls []string) ([]string, error) {
     // Launch multiple steps concurrently
     var channels []<-chan dbos.StepOutcome[string]
     for _, url := range urls {
@@ -382,7 +382,7 @@ Use [`Select`](../reference/workflows-steps.md#select) to wait for the first res
 This is useful for racing multiple operations or implementing timeout patterns.
 
 ```go
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     // Launch two concurrent steps
     ch1, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
         // Query primary database
@@ -438,7 +438,7 @@ By default, application version is automatically computed from a hash of workflo
 However, you can set your own version through configuration.
 
 ```go
-dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     AppName:            "dbos-app",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     ApplicationVersion: "1.0.0",

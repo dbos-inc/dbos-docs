@@ -9,7 +9,7 @@ toc_max_heading_level: 3
 ### GetEvent
 
 ```go
-func GetEvent[R any](ctx DBOSContext, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](ctx Context, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
@@ -25,7 +25,7 @@ If the event does not yet exist, wait for it to be published, returning an error
 ### SetEvent
 
 ```go
-func SetEvent[P any](ctx DBOSContext, key string, message P, opts ...SetEventOption) error
+func SetEvent[P any](ctx Context, key string, message P, opts ...SetEventOption) error
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
@@ -41,7 +41,7 @@ Can only be called from within a workflow.
 ### Send
 
 ```go
-func Send[P any](ctx DBOSContext, destinationID string, message P, topic string, opts ...SendOption) error
+func Send[P any](ctx Context, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 Send a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
@@ -71,7 +71,7 @@ err := dbos.Send(ctx, destinationID, payload, "payments", dbos.WithIdempotencyKe
 ### Recv
 
 ```go
-func Recv[R any](ctx DBOSContext, topic string, timeout time.Duration) (R, error)
+func Recv[R any](ctx Context, topic string, timeout time.Duration) (R, error)
 ```
 
 Receive and return a message sent to this workflow.
@@ -93,7 +93,7 @@ See the [streaming tutorial](../tutorials/workflow-communication.md#workflow-str
 ### WriteStream
 
 ```go
-func WriteStream[P any](ctx DBOSContext, key string, value P, opts ...WriteStreamOption) error
+func WriteStream[P any](ctx Context, key string, value P, opts ...WriteStreamOption) error
 ```
 
 Write a value to a durable stream.
@@ -109,7 +109,7 @@ Writes from a workflow are exactly-once; writes from a step are at-least-once.
 ### CloseStream
 
 ```go
-func CloseStream(ctx DBOSContext, key string) error
+func CloseStream(ctx Context, key string) error
 ```
 
 Close a durable stream.
@@ -124,7 +124,7 @@ Streams are also automatically closed when the workflow terminates.
 ### ReadStream
 
 ```go
-func ReadStream[R any](ctx DBOSContext, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](ctx Context, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 Read all values from a durable stream.
@@ -145,7 +145,7 @@ Pass [`WithReadStreamSnapshot`](#withreadstreamsnapshot) to instead return immed
 ### ReadStreamAsync
 
 ```go
-func ReadStreamAsync[R any](ctx DBOSContext, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](ctx Context, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 Read values from a durable stream asynchronously.
@@ -179,7 +179,7 @@ When reading from the channel returned by `ReadStreamAsync`, check `Err` and `Cl
 ### Sleep
 
 ```go
-func Sleep(ctx DBOSContext, duration time.Duration) (time.Duration, error)
+func Sleep(ctx Context, duration time.Duration) (time.Duration, error)
 ```
 
 Sleep for the given duration.
@@ -195,7 +195,7 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 ### RetrieveWorkflow
 
 ```go
-func RetrieveWorkflow[R any](ctx DBOSContext, workflowID string) (*workflowPollingHandle[R], error)
+func RetrieveWorkflow[R any](ctx Context, workflowID string) (*workflowPollingHandle[R], error)
 ```
 
 Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
@@ -207,7 +207,7 @@ Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow.
 ### ListWorkflows
 
 ```go
-func ListWorkflows(ctx DBOSContext, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+func ListWorkflows(ctx Context, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
 ```
 
 Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
@@ -217,36 +217,36 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 ```go
 // List all successful workflows from the last 24 hours
 workflows, err := dbos.ListWorkflows(ctx,
-    dbos.WithStatus([]dbos.WorkflowStatusType{dbos.WorkflowStatusSuccess}),
-    dbos.WithStartTime(time.Now().Add(-24*time.Hour)),
-    dbos.WithLimit(100))
+    dbos.WithFilterStatus(dbos.WorkflowStatusSuccess),
+    dbos.WithFilterCreatedAfter(time.Now().Add(-24*time.Hour)),
+    dbos.WithFilterLimit(100))
 if err != nil {
     log.Fatal(err)
 }
 
 // List workflows by specific IDs without loading input/output data
 workflows, err := dbos.ListWorkflows(ctx,
-    dbos.WithWorkflowIDs([]string{"workflow1", "workflow2"}),
-    dbos.WithLoadInput(false),
-    dbos.WithLoadOutput(false))
+    dbos.WithFilterWorkflowIDs("workflow1", "workflow2"),
+    dbos.WithFilterLoadInput(false),
+    dbos.WithFilterLoadOutput(false))
 if err != nil {
     log.Fatal(err)
 }
 ```
 
-#### WithAppVersion
+#### WithFilterAppVersion
 
 ```go
-func WithAppVersion(appVersion string) ListWorkflowsOption
+func WithFilterAppVersion(appVersion string) ListWorkflowsOption
 ```
 
 Retrieve workflows tagged with this application version.
 
 
-#### WithEndTime
+#### WithFilterCreatedBefore
 
 ```go
-func WithEndTime(endTime time.Time) ListWorkflowsOption
+func WithFilterCreatedBefore(endTime time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows started before this timestamp.
@@ -260,146 +260,146 @@ func WithFilterAttributes(attributes map[string]any) ListWorkflowsOption
 Retrieve workflows whose [attributes](./workflows-steps.md#withworkflowattributes) contain all the given key-value pairs (JSONB containment).
 Requires a Postgres system database; listing fails with an error on SQLite.
 
-#### WithLimit
+#### WithFilterLimit
 
 ```go
-func WithLimit(limit int) ListWorkflowsOption
+func WithFilterLimit(limit int) ListWorkflowsOption
 ```
 
 Retrieve up to this many workflows.
 
-#### WithLoadInput
+#### WithFilterLoadInput
 
 ```go
-func WithLoadInput(loadInput bool) ListWorkflowsOption
+func WithFilterLoadInput(loadInput bool) ListWorkflowsOption
 ```
 
-WithLoadInput controls whether to load workflow input data (default: true).
+WithFilterLoadInput controls whether to load workflow input data (default: true).
 
-#### WithLoadOutput
+#### WithFilterLoadOutput
 
 ```go
-func WithLoadOutput(loadOutput bool) ListWorkflowsOption
+func WithFilterLoadOutput(loadOutput bool) ListWorkflowsOption
 ```
 
-WithLoadOutput controls whether to load workflow output data (default: true).
+WithFilterLoadOutput controls whether to load workflow output data (default: true).
 
-#### WithName
+#### WithFilterName
 
 ```go
-func WithName(name string) ListWorkflowsOption
+func WithFilterName(names ...string) ListWorkflowsOption
 ```
 
 Filter workflows by the specified workflow function name.
 
-#### WithOffset
+#### WithFilterOffset
 
 ```go
-func WithOffset(offset int) ListWorkflowsOption
+func WithFilterOffset(offset int) ListWorkflowsOption
 ```
 
 Skip this many workflows from the results returned (for pagination).
 
-#### WithSortDesc
+#### WithFilterSortDesc
 
 ```go
-func WithSortDesc(sortDesc bool) ListWorkflowsOption
+func WithFilterSortDesc(sortDesc bool) ListWorkflowsOption
 ```
 
 Sort the results in descending (true) or ascending (false) order by workflow start time.
 
-#### WithStartTime
+#### WithFilterCreatedAfter
 
 ```go
-func WithStartTime(startTime time.Time) ListWorkflowsOption
+func WithFilterCreatedAfter(startTime time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows started after this timestamp.
 
-#### WithStatus
+#### WithFilterStatus
 
 ```go
-func WithStatus(status []WorkflowStatusType) ListWorkflowsOption
+func WithFilterStatus(status ...WorkflowStatusType) ListWorkflowsOption
 ```
 
 Filter workflows by [status](#workflowstatustype). Multiple statuses can be specified.
 
-#### WithUser
+#### WithFilterUser
 
 ```go
-func WithUser(user string) ListWorkflowsOption
+func WithFilterUser(user string) ListWorkflowsOption
 ```
 
 Filter workflows run by this authenticated user.
 
-#### WithWorkflowIDs
+#### WithFilterWorkflowIDs
 
 ```go
-func WithWorkflowIDs(workflowIDs []string) ListWorkflowsOption
+func WithFilterWorkflowIDs(workflowIDs ...string) ListWorkflowsOption
 ```
 
 Filter workflows by specific workflow IDs.
 
-#### WithWorkflowIDPrefix
+#### WithFilterWorkflowIDPrefix
 
 ```go
-func WithWorkflowIDPrefix(prefix string) ListWorkflowsOption
+func WithFilterWorkflowIDPrefix(prefix string) ListWorkflowsOption
 ```
 
 Filter workflows whose IDs start with the specified prefix.
 
-#### WithQueuesOnly
+#### WithFilterQueuesOnly
 
 ```go
-func WithQueuesOnly() ListWorkflowsOption
+func WithFilterQueuesOnly() ListWorkflowsOption
 ```
 
 Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
 
-#### WithCompletedAfter
+#### WithFilterCompletedAfter
 
 ```go
-func WithCompletedAfter(completedAfter time.Time) ListWorkflowsOption
+func WithFilterCompletedAfter(completedAfter time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or after this timestamp.
 
-#### WithCompletedBefore
+#### WithFilterCompletedBefore
 
 ```go
-func WithCompletedBefore(completedBefore time.Time) ListWorkflowsOption
+func WithFilterCompletedBefore(completedBefore time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows that reached a terminal state (`SUCCESS`, `ERROR`, or `CANCELLED`) at or before this timestamp.
 
-#### WithDequeuedAfter
+#### WithFilterDequeuedAfter
 
 ```go
-func WithDequeuedAfter(dequeuedAfter time.Time) ListWorkflowsOption
+func WithFilterDequeuedAfter(dequeuedAfter time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows that started executing at or after this timestamp.
 
-#### WithDequeuedBefore
+#### WithFilterDequeuedBefore
 
 ```go
-func WithDequeuedBefore(dequeuedBefore time.Time) ListWorkflowsOption
+func WithFilterDequeuedBefore(dequeuedBefore time.Time) ListWorkflowsOption
 ```
 
 Retrieve workflows that started executing at or before this timestamp.
 
-#### WithWasForkedFrom
+#### WithFilterWasForkedFrom
 
 ```go
-func WithWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
+func WithFilterWasForkedFrom(wasForkedFrom bool) ListWorkflowsOption
 ```
 
 Filter workflows by whether they have been forked from (true) or not (false).
 
-#### WithHasParent
+#### WithFilterHasParent
 
 ```go
-func WithHasParent(hasParent bool) ListWorkflowsOption
+func WithFilterHasParent(hasParent bool) ListWorkflowsOption
 ```
 
 Filter workflows by whether they have a parent workflow (true) or not (false).
@@ -416,7 +416,7 @@ Only workflows enqueued by a named schedule match.
 ### GetWorkflowSteps
 
 ```go
-func GetWorkflowSteps(ctx DBOSContext, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
+func GetWorkflowSteps(ctx Context, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 GetWorkflowSteps retrieves the execution steps of a workflow.
@@ -465,7 +465,7 @@ Skip the given number of steps before returning results. Combine with `WithSteps
 ### GetWorkflowAggregates
 
 ```go
-func GetWorkflowAggregates(ctx DBOSContext, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
+func GetWorkflowAggregates(ctx Context, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
 ```
 
 Return aggregates of workflows grouped by one or more columns and/or by `created_at` time bucket.
@@ -545,7 +545,7 @@ type WorkflowAggregateRow struct {
 ### GetStepAggregates
 
 ```go
-func GetStepAggregates(ctx DBOSContext, input GetStepAggregatesInput) ([]StepAggregateRow, error)
+func GetStepAggregates(ctx Context, input GetStepAggregatesInput) ([]StepAggregateRow, error)
 ```
 
 Return aggregate counts and/or max durations of steps grouped by function name and/or status, optionally bucketed by `completed_at` time.
@@ -611,7 +611,7 @@ type StepAggregateRow struct {
 ### CancelWorkflow
 
 ```go
-func CancelWorkflow(ctx DBOSContext, workflowID string, opts ...CancelWorkflowOptions) error
+func CancelWorkflow(ctx Context, workflowID string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
@@ -625,7 +625,7 @@ Cancellation also interrupts a durable [`Sleep`](#sleep): a cancelled workflow's
 #### WithCancelChildren
 
 ```go
-func WithCancelChildren() CancelWorkflowOptions
+func WithCancelChildren() CancelWorkflowOption
 ```
 
 Also cancel all the workflow's child workflows, recursively.
@@ -637,7 +637,7 @@ err := dbos.CancelWorkflow(ctx, workflowID, dbos.WithCancelChildren())
 ### CancelWorkflows
 
 ```go
-func CancelWorkflows(ctx DBOSContext, workflowIDs []string, opts ...CancelWorkflowOptions) error
+func CancelWorkflows(ctx Context, workflowIDs []string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel multiple workflows in a single database round-trip.
@@ -654,7 +654,7 @@ Accepts the same options as [`CancelWorkflow`](#cancelworkflow) (e.g., [`WithCan
 ### ResumeWorkflow
 
 ```go
-func ResumeWorkflow[R any](ctx DBOSContext, workflowID string, opts ...ResumeWorkflowOption) (*WorkflowHandle[R], error)
+func ResumeWorkflow[R any](ctx Context, workflowID string, opts ...ResumeWorkflowOption) (*WorkflowHandle[R], error)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -675,7 +675,7 @@ Re-enqueue the resumed workflow on the specified queue instead of starting it im
 ### ResumeWorkflows
 
 ```go
-func ResumeWorkflows[R any](ctx DBOSContext, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
+func ResumeWorkflows[R any](ctx Context, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
 ```
 
 Resume multiple workflows in a single database round-trip.
@@ -692,7 +692,7 @@ Accepts the same options as [`ResumeWorkflow`](#resumeworkflow) (e.g., [`WithRes
 ### ForkWorkflow
 
 ```go
-func ForkWorkflow[R any](ctx DBOSContext, input ForkWorkflowInput) (WorkflowHandle[R], error)
+func ForkWorkflow[R any](ctx Context, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
 Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
@@ -718,7 +718,7 @@ Set `QueuePartitionKey` together with `QueueName` to enqueue the forked workflow
 ### ForkWorkflows
 
 ```go
-func ForkWorkflows[R any](ctx DBOSContext, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
+func ForkWorkflows[R any](ctx Context, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
 ```
 
 Fork a batch of workflows in a single database round-trip.
@@ -761,7 +761,7 @@ handles, err := dbos.ForkWorkflows[any](ctx, dbos.ForkWorkflowsInput{
 ### SetWorkflowDelay
 
 ```go
-func SetWorkflowDelay(ctx DBOSContext, workflowID string, opts ...SetWorkflowDelayOption) error
+func SetWorkflowDelay(ctx Context, workflowID string, opts ...SetWorkflowDelayOption) error
 ```
 
 Set or update the delay on a [`DELAYED`](#workflowstatustype) workflow.
@@ -799,10 +799,10 @@ func WithDelayUntil(t time.Time) SetWorkflowDelayOption
 
 Set an absolute time until which the workflow should remain delayed.
 
-### UpdateWorkflowAttributes
+### SetWorkflowAttributes
 
 ```go
-func UpdateWorkflowAttributes(ctx DBOSContext, workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(ctx Context, workflowID string, attributes map[string]any) error
 ```
 
 Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
@@ -813,13 +813,13 @@ Returns an error if the workflow does not exist.
 **Example:**
 
 ```go
-err := dbos.UpdateWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"customer": "acme"})
+err := dbos.SetWorkflowAttributes(ctx, "my-workflow-id", map[string]any{"customer": "acme"})
 ```
 
 ### DeleteWorkflows
 
 ```go
-func DeleteWorkflows(ctx DBOSContext, workflowIDs []string, opts ...DeleteWorkflowOption) error
+func DeleteWorkflows(ctx Context, workflowIDs []string, opts ...DeleteWorkflowOption) error
 ```
 
 Permanently delete one or more workflows and all their associated data (status, step outputs, events, messages, and streams) from the system database, regardless of their current status, including active (`PENDING`, `ENQUEUED`) workflows.
@@ -952,7 +952,7 @@ const (
 ### CreateSchedule
 
 ```go
-func CreateSchedule(ctx DBOSContext, fn ScheduledWorkflowFunc, input CreateScheduleRequest, opts ...CreateScheduleOption) error
+func CreateSchedule(ctx Context, fn ScheduledWorkflowFunc, input CreateScheduleRequest, opts ...CreateScheduleOption) error
 ```
 
 Create a new schedule for a registered workflow.
@@ -962,7 +962,7 @@ The reconciler loop picks the new schedule up on its next tick and installs it i
 The workflow function `fn` must be already registered via [`RegisterWorkflow`](./workflows-steps.md#registerworkflow) and must conform to:
 
 ```go
-type ScheduledWorkflowFunc func(ctx DBOSContext, input ScheduledWorkflowInput) (any, error)
+type ScheduledWorkflowFunc func(ctx Context, input ScheduledWorkflowInput) (any, error)
 ```
 
 **Parameters:**
@@ -1039,7 +1039,7 @@ err := dbos.CreateSchedule(ctx, myPeriodicTask, dbos.CreateScheduleRequest{
 ### ApplySchedules
 
 ```go
-func ApplySchedules(ctx DBOSContext, schedules []ApplySchedulesRequest) error
+func ApplySchedules(ctx Context, schedules []ApplySchedulesRequest) error
 ```
 
 Atomically create or update a list of schedules in a single transaction.
@@ -1077,7 +1077,7 @@ err := dbos.ApplySchedules(ctx, []dbos.ApplySchedulesRequest{
 ### GetSchedule
 
 ```go
-func GetSchedule(ctx DBOSContext, scheduleName string) (*WorkflowSchedule, error)
+func GetSchedule(ctx Context, scheduleName string) (*WorkflowSchedule, error)
 ```
 
 Retrieve a [`WorkflowSchedule`](#workflowschedule) by name. Returns `(nil, nil)` if no schedule with that name exists.
@@ -1085,7 +1085,7 @@ Retrieve a [`WorkflowSchedule`](#workflowschedule) by name. Returns `(nil, nil)`
 ### ListSchedules
 
 ```go
-func ListSchedules(ctx DBOSContext, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+func ListSchedules(ctx Context, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
 ```
 
 List schedules, optionally filtered. Pass no options to return all schedules.
@@ -1117,7 +1117,7 @@ Filter by schedule name prefix(es).
 ### PauseSchedule
 
 ```go
-func PauseSchedule(ctx DBOSContext, scheduleName string) error
+func PauseSchedule(ctx Context, scheduleName string) error
 ```
 
 Pause a schedule so it stops firing. The schedule's cron entry is removed on the next reconciler tick.
@@ -1125,7 +1125,7 @@ Pause a schedule so it stops firing. The schedule's cron entry is removed on the
 ### ResumeSchedule
 
 ```go
-func ResumeSchedule(ctx DBOSContext, scheduleName string) error
+func ResumeSchedule(ctx Context, scheduleName string) error
 ```
 
 Resume a paused schedule. If the schedule was created with [`WithAutomaticBackfill(true)`](#withautomaticbackfill), missed ticks during the pause are backfilled.
@@ -1133,7 +1133,7 @@ Resume a paused schedule. If the schedule was created with [`WithAutomaticBackfi
 ### DeleteSchedule
 
 ```go
-func DeleteSchedule(ctx DBOSContext, scheduleName string) error
+func DeleteSchedule(ctx Context, scheduleName string) error
 ```
 
 Delete a schedule. The schedule's cron entry is removed on the next reconciler tick.
@@ -1141,7 +1141,7 @@ Delete a schedule. The schedule's cron entry is removed on the next reconciler t
 ### BackfillSchedule
 
 ```go
-func BackfillSchedule(ctx DBOSContext, scheduleName string, start, end time.Time) ([]string, error)
+func BackfillSchedule(ctx Context, scheduleName string, start, end time.Time) ([]string, error)
 ```
 
 Backfill missed executions for the range `[start, end]`, returning the IDs of the enqueued workflows.
@@ -1160,7 +1160,7 @@ ids, err := dbos.BackfillSchedule(ctx, "my-schedule",
 ### TriggerSchedule
 
 ```go
-func TriggerSchedule(ctx DBOSContext, scheduleName string) (WorkflowHandle[any], error)
+func TriggerSchedule(ctx Context, scheduleName string) (WorkflowHandle[any], error)
 ```
 
 Trigger a schedule to fire immediately and return a [`WorkflowHandle`](./workflows-steps.md#workflowhandle) for the enqueued workflow.
@@ -1185,7 +1185,7 @@ type VersionInfo struct {
 ### ListApplicationVersions
 
 ```go
-func ListApplicationVersions(ctx DBOSContext) ([]VersionInfo, error)
+func ListApplicationVersions(ctx Context) ([]VersionInfo, error)
 ```
 
 Return every application version registered in the system database, ordered by timestamp (newest first).
@@ -1196,7 +1196,7 @@ Return every application version registered in the system database, ordered by t
 ### GetLatestApplicationVersion
 
 ```go
-func GetLatestApplicationVersion(ctx DBOSContext) (*VersionInfo, error)
+func GetLatestApplicationVersion(ctx Context) (*VersionInfo, error)
 ```
 
 Return the application version with the most recent timestamp, or `nil` if no versions are registered.
@@ -1207,7 +1207,7 @@ Return the application version with the most recent timestamp, or `nil` if no ve
 ### SetLatestApplicationVersion
 
 ```go
-func SetLatestApplicationVersion(ctx DBOSContext, versionName string) error
+func SetLatestApplicationVersion(ctx Context, versionName string) error
 ```
 
 Mark the named application version as latest by updating its timestamp to the current time.
@@ -1221,7 +1221,7 @@ Mark the named application version as latest by updating its timestamp to the cu
 ### GetWorkflowID
 
 ```go
-func GetWorkflowID(ctx DBOSContext) (string, error)
+func GetWorkflowID(ctx Context) (string, error)
 ```
 
 Return the ID of the current workflow, if in a workflow. Returns an error if not called from within a workflow context.
@@ -1232,7 +1232,7 @@ Return the ID of the current workflow, if in a workflow. Returns an error if not
 ### GetStepID
 
 ```go
-func GetStepID(ctx DBOSContext) (int, error)
+func GetStepID(ctx Context) (int, error)
 ```
 
 Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.
@@ -1271,10 +1271,18 @@ Configure [`WriteStream`](#writestream) to use the portable JSON serializer, ena
 ### WithReadStreamSnapshot
 
 ```go
-func WithReadStreamSnapshot(fromOffset int) ReadStreamOption
+func WithReadStreamSnapshot() ReadStreamOption
 ```
 
-Configure [`ReadStream`](#readstream) to return as soon as all currently-available values have been drained, instead of blocking until the stream is closed or the workflow becomes inactive. `fromOffset` sets the base offset (zero-indexed) to start reading from, allowing you to poll a stream incrementally.
+Configure [`ReadStream`](#readstream) to return as soon as all currently-available values have been drained, instead of blocking until the stream is closed or the workflow becomes inactive.
+
+### WithReadStreamFromOffset
+
+```go
+func WithReadStreamFromOffset(offset int) ReadStreamOption
+```
+
+Configure [`ReadStream`](#readstream) to start reading from the given base offset (zero-indexed). Combined with [`WithReadStreamSnapshot`](#withreadstreamsnapshot), this allows you to poll a stream incrementally.
 
 ### PortableWorkflowError
 
@@ -1325,7 +1333,7 @@ handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
 ### SetAlertHandler
 
 ```go
-func SetAlertHandler(ctx DBOSContext, handler AlertHandler)
+func SetAlertHandler(ctx Context, handler AlertHandler)
 ```
 
 ```go

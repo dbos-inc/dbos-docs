@@ -6,23 +6,23 @@ pagination_prev: null
 
 A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](../tutorials/workflow-tutorial.md), [queues](../tutorials/queue-tutorial.md) and perform [workflow management](../tutorials/workflow-management.md) tasks.
 
-`DBOSContext` extends Go's [`context.Context`](https://pkg.go.dev/context#Context) interface and carries essential state across workflow execution. Workflows and steps receive a new `DBOSContext` spun out of the root `DBOSContext` you manage. In addition, a `DBOSContext` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
+`Context` extends Go's [`context.Context`](https://pkg.go.dev/context#Context) interface and carries essential state across workflow execution. Workflows and steps receive a new `Context` spun out of the root `Context` you manage. In addition, a `Context` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
 
 ## Lifecycle
 ### Initialization
 
-You can create a DBOS context using `NewDBOSContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SqliteSystemDB` are mandatory.
+You can create a DBOS context using `NewContext`, which takes a `Config` object where `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SQLiteSystemDB` are mandatory.
 
 ```go
-func NewDBOSContext(ctx context.Context, inputConfig Config) (DBOSContext, error)
+func NewContext(ctx context.Context, inputConfig Config) (Context, error)
 ```
 
 ```go
 type Config struct {
     AppName                   string         // Application name for identification (required)
-    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
-    SystemDBPool              *pgxpool.Pool  // A custom Postgres/CockroachDB connection pool DBOS can use to access your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
-    SqliteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) DBOS can use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    SystemDBPool              *pgxpool.Pool  // A custom Postgres/CockroachDB connection pool DBOS can use to access your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) DBOS can use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
     DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
     Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
     AdminServer               bool           // Enable Transact admin HTTP server (disabled by default)
@@ -38,7 +38,7 @@ type Config struct {
 
 For example:
 ```go
-dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
     AppName:            "dbos-starter",
     ApplicationVersion: "0.1.0",
     DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -48,15 +48,15 @@ if err != nil {
 }
 ```
 
-The newly created DBOSContext must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
+The newly created Context must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
 
 ### launch
 
 ```go
-dbos.Launch(ctx DBOSContext) error
+dbos.Launch(ctx Context) error
 ```
 
-Launch the following resources managed by a `DBOSContext`:
+Launch the following resources managed by a `Context`:
 - A [system database connection pool](../../explanations/system-tables.md)
 - A [workflow scheduler](../tutorials/scheduled-workflows.md)
 - A [workflow queue runner](../tutorials/queue-tutorial.md)
@@ -68,10 +68,10 @@ In addition, `Launch()` may perform [workflow recovery](../../architecture.md#ho
 
 ### Shutdown
 ```go
-dbos.Shutdown(ctx DBOSContext, timeout time.Duration)
+dbos.Shutdown(ctx Context, timeout time.Duration) error
 ```
 
-Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. When you shutdown a `DBOSContext`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
+Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. Returns a non-nil error if the timeout expired before all resources stopped. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
 
 **Parameters:**
 - **timeout**: The time to wait for DBOS resources to gracefully terminate.
@@ -81,7 +81,7 @@ Gracefully shutdown the DBOS runtime, waiting for workflows to complete and clea
 ### WithTimeout
 
 ```go
-func WithTimeout(ctx DBOSContext, timeout time.Duration) (DBOSContext, context.CancelFunc)
+func WithTimeout(ctx Context, timeout time.Duration) (Context, context.CancelFunc)
 ```
 
 `WithTimeout` returns a copy of the DBOS context with a timeout. The returned context will be canceled after the specified duration. See [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts) for usage.
@@ -89,7 +89,7 @@ func WithTimeout(ctx DBOSContext, timeout time.Duration) (DBOSContext, context.C
 ### WithoutCancel
 
 ```go
-func WithoutCancel(ctx DBOSContext) DBOSContext
+func WithoutCancel(ctx Context) Context
 ```
 
 `WithoutCancel` returns a copy of the DBOS context that is not canceled when the parent context is canceled. This is useful to detach child workflows from their parent's timeout.
@@ -97,7 +97,7 @@ func WithoutCancel(ctx DBOSContext) DBOSContext
 ### WithCancel
 
 ```go
-func WithCancel(ctx DBOSContext) (DBOSContext, context.CancelFunc)
+func WithCancel(ctx Context) (Context, context.CancelFunc)
 ```
 
 `WithCancel` returns a copy of the DBOS context that can be manually canceled, along with a `CancelFunc`. Cancelling propagates to workflows and steps running under the returned context. You must call the returned `CancelFunc` (e.g. with `defer`) when the derived context is no longer needed to release its resources.
@@ -105,7 +105,7 @@ func WithCancel(ctx DBOSContext) (DBOSContext, context.CancelFunc)
 ### WithCancelCause
 
 ```go
-func WithCancelCause(ctx DBOSContext) (DBOSContext, context.CancelCauseFunc)
+func WithCancelCause(ctx Context) (Context, context.CancelCauseFunc)
 ```
 
 `WithCancelCause` behaves like [`WithCancel`](#withcancel) but returns a [`context.CancelCauseFunc`](https://pkg.go.dev/context#CancelCauseFunc), letting you supply an error describing why the context was canceled. The cause can later be retrieved with [`context.Cause`](https://pkg.go.dev/context#Cause).
@@ -130,40 +130,17 @@ func GetExecutorID() string
 ### ListRegisteredWorkflows
 
 ```go
-func ListRegisteredWorkflows(ctx DBOSContext, opts ...ListRegisteredWorkflowsOption) ([]WorkflowRegistryEntry, error)
+func ListRegisteredWorkflows(ctx Context) []WorkflowRegistryEntry
 ```
 
 ```go
 type WorkflowRegistryEntry struct {
-	MaxRetries      int
+	MaxRetries      int    // Maximum recovery attempts before dead-lettering (set via WithMaxRecoveryAttempts); not step retries
 	Name            string
-	FQN             string // Fully qualified name of the workflow function
-	CronSchedule    string // Empty string for non-scheduled workflows
+	FQN             string // Fully qualified name of the workflow function. For configured instances, qualified with the config name.
+	ClassName       string // Receiver type name for configured instance workflows
+	ConfigName      string // Config name for configured instance workflows
 }
 ```
 
 `ListRegisteredWorkflows` Lists the context's workflow registry.
-
-### ListRegisteredQueues
-
-```go
-func ListRegisteredQueues(ctx DBOSContext) ([]WorkflowQueue, error)
-```
-
-`ListRegisteredQueues` returns a list of all in-memory queues registered in the DBOSContext.
-
-:::warning
-This API is deprecated, along with in-memory queues. Use [`ListQueues`](./queues.md#listqueues) to list queues registered with [`RegisterQueue`](./queues.md#registerqueue).
-:::
-
-```go
-type WorkflowQueue struct {
-	Name                 string
-	WorkerConcurrency    *int
-	GlobalConcurrency    *int
-	PriorityEnabled      bool
-	RateLimit            *RateLimiter
-	MaxTasksPerIteration int
-	PartitionQueue       bool
-}
-```

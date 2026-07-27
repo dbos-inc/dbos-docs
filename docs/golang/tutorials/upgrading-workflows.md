@@ -19,7 +19,7 @@ Therefore, if `dbos.Patch()` returns `true`, the workflow should follow the new 
 To use patching, you must enable it in the configuration:
 
 ```go
-dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
     DatabaseURL:    os.Getenv("DBOS_DATABASE_URL"),
     AppName:        "my-app",
     EnablePatching: true,
@@ -29,7 +29,7 @@ dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
 For example, let's say our original workflow is:
 
 ```go
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     _, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
         return foo(stepCtx)
     })
@@ -51,7 +51,7 @@ This is a breaking change because it changes what steps run.
 We can make this breaking change safely using a patch:
 
 ```go
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     patched, err := dbos.Patch(ctx, "use-baz")
     if err != nil {
         return "", err
@@ -103,7 +103,7 @@ First, you must deprecate the patch with [`dbos.DeprecatePatch()`](../reference/
 For example, here's how to deprecate the patch above:
 
 ```go
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     _, err := dbos.DeprecatePatch(ctx, "use-baz") // always returns true
     if err != nil {
         return "", err
@@ -127,7 +127,7 @@ func workflow(ctx dbos.DBOSContext, input string) (string, error) {
 Then, when all workflows that started before you deprecated the patch are complete, you can remove the patch entirely:
 
 ```go
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     _, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (string, error) {
         return baz(stepCtx)
     })
@@ -164,7 +164,7 @@ By default, application version is automatically computed from a hash of workflo
 However, you can set your own version through configuration.
 
 ```go
-dbosCtx, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
     DatabaseURL:        os.Getenv("DBOS_DATABASE_URL"),
     AppName:            "my-app",
     ApplicationVersion: "1.0.0",

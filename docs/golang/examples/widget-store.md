@@ -38,7 +38,7 @@ On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an o
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
 
 ```go
-func checkoutWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func checkoutWorkflow(ctx dbos.Context, _ string) (string, error) {
     workflowID, err := ctx.GetWorkflowID()
     if err != nil {
         logger.Error("workflow ID retrieval failed", "error", err)
@@ -111,7 +111,7 @@ It then returns the payment ID so the browser can redirect the user to the payme
 The endpoint accepts an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) so that even if the customer presses "buy now" multiple times, only one checkout workflow is started.
 
 ```go
-func checkoutEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Logger) {
+func checkoutEndpoint(c *gin.Context, dbosCtx dbos.Context, logger *slog.Logger) {
     idempotencyKey := c.Param("idempotency_key")
 
     // Start the checkout workflow with the idempotency key
@@ -138,7 +138,7 @@ It uses the payment ID to signal the checkout workflow whether the payment succe
 It then retrieves the order ID from the checkout workflow so the browser can redirect the customer to the order status page.
 
 ```go
-func paymentEndpoint(c *gin.Context, dbosCtx dbos.DBOSContext, logger *slog.Logger) {
+func paymentEndpoint(c *gin.Context, dbosCtx dbos.Context, logger *slog.Logger) {
     paymentID := c.Param("payment_id")
     paymentStatus := c.Param("payment_status")
 
@@ -328,7 +328,7 @@ func main() {
         os.Exit(1)
     }
 
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "widget-store",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),

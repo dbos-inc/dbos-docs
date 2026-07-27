@@ -6,7 +6,7 @@ title: Workflows & Steps
 ### RegisterWorkflow
 
 ```go
-func RegisterWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], opts ...WorkflowRegistrationOption)
+func RegisterWorkflow[P any, R any](ctx Context, fn Workflow[P, R], opts ...WorkflowRegistrationOption)
 ```
 
 Register a function as a DBOS workflow.
@@ -15,7 +15,7 @@ All workflows must be registered before the context is launched.
 Workflow functions must be compatible with the following signature:
 
 ```go
-type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
+type Workflow[P any, R any] func(ctx Context, input P) (R, error)
 ```
 
 Returned errors are persisted with [gob](https://pkg.go.dev/encoding/gob), preserving their concrete type when read back (e.g., from a workflow handle in another process).
@@ -23,25 +23,25 @@ An error that cannot be gob-encoded—including those created by `errors.New` or
 To preserve a custom error type, give it exported fields and register it with [`gob.Register`](https://pkg.go.dev/encoding/gob#Register).
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **fn**: The workflow function to register.
 - **opts**: Functional options for workflow registration, documented below.
 
-#### WithMaxRetries
+#### WithMaxRecoveryAttempts
 
 ```go
-func WithMaxRetries(maxRetries int) WorkflowRegistrationOption
+func WithMaxRecoveryAttempts(maxRetries int) WorkflowRegistrationOption
 ```
 
 Configure the maximum number of times execution of a workflow may be attempted.
-If `WithMaxRetries(n)` is set, the workflow may be attempted at most `n + 1` times (one initial execution plus `n` retries).
+If `WithMaxRecoveryAttempts(n)` is set, the workflow may be attempted at most `n + 1` times (one initial execution plus `n` retries).
 If this limit is exceeded, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it will no longer be recovered automatically.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue), preventing a buggy workflow that crashes its application from doing so infinitely.
 Use [`ResumeWorkflow`](./methods.md#resumeworkflow) to manually resume a workflow that has exceeded its limit after fixing the underlying issue.
 
 ```go
 // Register a workflow that can be attempted at most 4 times (1 initial + 3 retries)
-dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRetries(3))
+dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRecoveryAttempts(3))
 ```
 
 :::info Workflow Attempts
@@ -90,7 +90,7 @@ func (m *Messenger) ConfigName() string {
     return m.name
 }
 
-func (m *Messenger) Send(ctx dbos.DBOSContext, message string) (string, error) {
+func (m *Messenger) Send(ctx dbos.Context, message string) (string, error) {
     // Workflow implementation using m...
     return "sent", nil
 }
@@ -105,7 +105,7 @@ dbos.RegisterWorkflow(ctx, email.Send, dbos.WithInstance(email))
 ### RunWorkflow
 
 ```go
-func RunWorkflow[P any, R any](ctx DBOSContext, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+func RunWorkflow[P any, R any](ctx Context, fn Workflow[P, R], input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Execute a workflow function.
@@ -113,7 +113,7 @@ The workflow may execute immediately or be enqueued for later execution based on
 Returns a [WorkflowHandle](#workflowhandle) that can be used to check the workflow's status or wait for its completion and retrieve its results.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **fn**: The workflow function to execute.
 - **input** The input to the workflow function.
 - **opts**: Functional options for workflow execution, documented below.
@@ -121,7 +121,7 @@ Returns a [WorkflowHandle](#workflowhandle) that can be used to check the workfl
 **Example Syntax**:
 
 ```go
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     return "success", err
 }
 
@@ -194,7 +194,7 @@ Must be used alongside `WithQueue` and `WithDeduplicationID`.
 type DeduplicationPolicy int
 
 const (
-    // DeduplicationPolicyReject (default) returns a QueueDeduplicated error if another workflow
+    // DeduplicationPolicyReject (default) returns a ErrorCodeQueueDeduplicated error if another workflow
     // already holds the deduplication ID on the queue.
     DeduplicationPolicyReject DeduplicationPolicy = iota
     // DeduplicationPolicyReturnExisting returns a handle to the existing workflow instead of an error.
@@ -298,7 +298,7 @@ handle, err := dbos.RunWorkflow(dbosContext, processOrder, "order-123",
 func WithApplicationVersion(version string) WorkflowOption
 ```
 
-Set the application version for this workflow, overriding the version in DBOSContext.
+Set the application version for this workflow, overriding the version in Context.
 
 #### WithAuthenticatedUser
 
@@ -318,7 +318,7 @@ func WithWorkflowAttributes(attributes map[string]any) WorkflowOption
 Attach custom key-value attributes to the workflow.
 Attributes are recorded in the [workflow status](./methods.md#workflow-status) at creation, must be JSON-serializable, and are not inherited by child workflows.
 On Postgres they are stored as GIN-indexed JSONB and can be searched with [`WithFilterAttributes`](./methods.md#withfilterattributes).
-Attributes can later be replaced with [`UpdateWorkflowAttributes`](./methods.md#updateworkflowattributes).
+Attributes can later be replaced with [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, processOrder, order,
@@ -329,13 +329,13 @@ handle, err := dbos.RunWorkflow(ctx, processOrder, order,
 ### RunAsStep
 
 ```go
-func RunAsStep[R any](ctx DBOSContext, fn Step[R], opts ...StepOption) (R, error)
+func RunAsStep[R any](ctx Context, fn Step[R], opts ...StepOption) (R, error)
 ```
 
 Execute a function as a step in a durable workflow.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **fn**: The step to execute, typically wrapped in an anonymous function. Syntax shown below.
 - **opts**: Functional options for step execution, documented below.
 
@@ -350,7 +350,7 @@ func step(ctx context.Context, input string) (string, error) {
     return output
 }
 
-func workflow(ctx dbos.DBOSContext, input string) (string, error) {
+func workflow(ctx dbos.Context, input string) (string, error) {
     output, err := dbos.RunAsStep(
         ctx, 
         func(stepCtx context.Context) (string, error) {
@@ -377,36 +377,36 @@ func WithStepMaxRetries(maxRetries int) StepOption
 Set the maximum number of times this step is automatically retired on failure.
 A value of 0 (the default) indicates no retries.
 
-#### WithMaxInterval
+#### WithStepMaxInterval
 
 ```go
-func WithMaxInterval(interval time.Duration) StepOption
+func WithStepMaxInterval(interval time.Duration) StepOption
 ```
 
-WithMaxInterval sets the maximum delay between retries. Default value is 5s.
+WithStepMaxInterval sets the maximum delay between retries. Default value is 5s.
 
-#### WithBackoffFactor
+#### WithStepBackoffFactor
 
 ```go
-func WithBackoffFactor(factor float64) StepOption
+func WithStepBackoffFactor(factor float64) StepOption
 ```
 
-WithBackoffFactor sets the exponential backoff multiplier between retries. Default value is 2.0. 
+WithStepBackoffFactor sets the exponential backoff multiplier between retries. Default value is 2.0. 
 
-#### WithBaseInterval
+#### WithStepBaseInterval
 
 ```go
-func WithBaseInterval(interval time.Duration) StepOption
+func WithStepBaseInterval(interval time.Duration) StepOption
 ```
 
-WithBaseInterval sets the initial delay between retries. Default value is 100ms.
+WithStepBaseInterval sets the initial delay between retries. Default value is 100ms.
 
 ### Concurrent steps
 
 #### Go
 
 ```go
-func Go[R any](ctx DBOSContext, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
+func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
 ```
 
 Launch a step asynchronously and return a channel that will receive the result when the step completes.
@@ -414,7 +414,7 @@ This is a durable alternative to Go's native goroutines that checkpoints results
 Can only be called from within a workflow.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **fn**: The step function to execute asynchronously.
 - **opts**: Functional options for step execution (same options as [`RunAsStep`](#runasstep)).
 
@@ -432,7 +432,7 @@ type StepOutcome[R any] struct {
 **Example Syntax:**
 
 ```go
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     // Launch step asynchronously
     resultChan, err := dbos.Go(ctx, func(ctx context.Context) (string, error) {
         return performWork(ctx)
@@ -455,7 +455,7 @@ func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
 #### Select
 
 ```go
-func Select[R any](ctx DBOSContext, channels []<-chan StepOutcome[R]) (R, error)
+func Select[R any](ctx Context, channels []<-chan StepOutcome[R]) (R, error)
 ```
 
 Wait for and return the first result from multiple channels obtained from [`Go`](#go).
@@ -464,7 +464,7 @@ Can only be called from within a workflow.
 All channels must be of the same type `R`.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **channels**: A slice of receive-only channels from [`Go`](#go) calls.
 
 **Returns:**
@@ -479,7 +479,7 @@ All channels must be of the same type `R`.
 **Example Syntax:**
 
 ```go
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     ch1, _ := dbos.Go(ctx, func(ctx context.Context) (string, error) {
         return queryServiceA(ctx)
     })
@@ -556,14 +556,14 @@ Retrieve the ID of the workflow.
 #### Patch
 
 ```go
-func Patch(ctx DBOSContext, patchName string) (bool, error)
+func Patch(ctx Context, patchName string) (bool, error)
 ```
 
 Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **patchName**: The name to give the patch marker that will be inserted into workflow history.
 
 :::info
@@ -573,7 +573,7 @@ Patching must be enabled in your configuration by setting `EnablePatching: true`
 #### DeprecatePatch
 
 ```go
-func DeprecatePatch(ctx DBOSContext, patchName string) (bool, error)
+func DeprecatePatch(ctx Context, patchName string) (bool, error)
 ```
 
 Safely bypass a patch marker at the current point in workflow history if present.
@@ -581,7 +581,7 @@ Always returns `true`.
 Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **patchName**: The name of the patch marker to be bypassed.
 
 :::info

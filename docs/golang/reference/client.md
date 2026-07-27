@@ -4,11 +4,11 @@ title: DBOS Client
 ---
 
 `Client` provides a programmatic way to interact with your DBOS application from external code.
-`Client` includes methods similar to [`DBOSContext`](./dbos-context.md) that can be used outside of a DBOS application.
+`Client` includes methods similar to [`Context`](./dbos-context.md) that can be used outside of a DBOS application.
 
 :::note 
 `Client` is included in the `dbos` package, the same package that is used by DBOS applications.
-Where DBOS applications use the [`DBOSContext` methods](./dbos-context.md),
+Where DBOS applications use the [`Context` methods](./dbos-context.md),
 external applications use `Client` methods instead.
 :::
 
@@ -19,9 +19,9 @@ type Client interface {
     Send(destinationID string, message any, topic string, opts ...SendOption) error
     GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
     RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
-    CancelWorkflow(workflowID string, opts ...CancelWorkflowOptions) error
-    CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOptions) error
-    UpdateWorkflowAttributes(workflowID string, attributes map[string]any) error
+    CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
+    CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOption) error
+    SetWorkflowAttributes(workflowID string, attributes map[string]any) error
     SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
     DeleteWorkflows(workflowIDs []string, opts ...DeleteWorkflowOption) error
     ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
@@ -32,8 +32,8 @@ type Client interface {
     GetLatestApplicationVersion() (*VersionInfo, error)
     SetLatestApplicationVersion(versionName string) error
     GetWorkflowSteps(workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
-    ClientReadStream(workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
-    ClientReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
+    ReadStream(workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
+    ReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
     CreateSchedule(input ClientScheduleInput) error
     ApplySchedules(schedules []ClientScheduleInput) error
     GetSchedule(scheduleName string) (*WorkflowSchedule, error)
@@ -47,7 +47,7 @@ type Client interface {
 }
 ```
 
-Several methods returning `WorkflowHandle[any]` have generic package-level counterparts (`ClientRetrieveWorkflow`, `ClientResumeWorkflow`, `ClientResumeWorkflows`, `ClientForkWorkflow`, `ClientForkWorkflows`, `ClientTriggerSchedule`, `ClientGetEvent`) that return typed handles or values, documented alongside each method below.
+Several methods returning `WorkflowHandle[any]` have generic package-level counterparts (`RetrieveWorkflow`, `ResumeWorkflow`, `ResumeWorkflows`, `ForkWorkflow`, `ForkWorkflows`, `TriggerSchedule`, `GetEvent`) that return typed handles or values, documented alongside each method below.
 
 ### Constructor
 
@@ -61,9 +61,9 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SqliteSystemDB is required.
-    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SqliteSystemDB.
-    SqliteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
     DatabaseSchema string        // Database schema name (defaults to "dbos"; Postgres only)
     Logger         *slog.Logger  // Optional custom logger
 }
@@ -84,7 +84,7 @@ client, err := dbos.NewClient(context.Background(), config)
 if err != nil {
     log.Fatal(err)
 }
-defer client.Shutdown(5 * time.Second)
+defer dbos.Shutdown(client, 5*time.Second)
 ```
 
 A client manages a connection pool to the [DBOS system database](../../explanations/system-tables.md). Calling `Shutdown` on a client will release the connection pool.
@@ -136,7 +136,7 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#work
 If left undefined, it will use the current application version.
 * `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#withoutcancel)). The timeout does not begin until the workflow is dequeued and starts execution.
 * `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
-* `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `QueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow. See [`WithDeduplicationPolicy`](./workflows-steps.md#withdeduplicationpolicy).
+* `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow. See [`WithDeduplicationPolicy`](./workflows-steps.md#withdeduplicationpolicy).
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
 * `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to a workflow registered on a configured instance: a Go workflow registered with [`WithInstance`](./workflows-steps.md#withinstance), or a Python, TypeScript, or Java class instance workflow (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
@@ -144,7 +144,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueQueuePartitionKey(partitionKey string)`: The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). Each partition has its own concurrency limits.
 * `WithEnqueueAttributes(attributes map[string]any)`: Attach custom key-value [attributes](./workflows-steps.md#withworkflowattributes) to the enqueued workflow. Attributes are recorded in the workflow status at creation, must be JSON-serializable, and can be searched with [`WithFilterAttributes`](./methods.md#withfilterattributes) on Postgres.
 * `WithEnqueueAuthenticatedUser(user string)`: Associate the enqueued workflow with a user name.
-* `WithEnqueueAuthenticatedRoles(roles []string)`: Set the authenticated roles for the enqueued workflow.
+* `WithEnqueueAuthenticatedRoles(roles ...string)`: Set the authenticated roles for the enqueued workflow.
 
 :::tip Cross-Language Enqueue
 To enqueue a workflow on a target application written in another language, pass a [`PortableWorkflowArgs`](./methods.md#portableworkflowargs) as the input.
@@ -190,12 +190,12 @@ if err != nil {
 ```go
 RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
 
-func ClientRetrieveWorkflow[R any](c Client, workflowID string) (WorkflowHandle[R], error)
+func RetrieveWorkflow[R any](c Client, workflowID string) (WorkflowHandle[R], error)
 ```
 
 Retrieve the [handle](./workflows-steps.md#workflowhandle) of a workflow with identity `workflowID`.
 Similar to [`RetrieveWorkflow`](./methods.md#retrieveworkflow).
-The generic `ClientRetrieveWorkflow` returns a typed handle whose `GetResult` decodes the workflow output into type `R`.
+The generic `RetrieveWorkflow` returns a typed handle whose `GetResult` decodes the workflow output into type `R`.
 
 **Parameters:**
 - `workflowID`: The identifier of the workflow whose handle to retrieve
@@ -222,13 +222,13 @@ Sends a message to a specified workflow. Similar to [`Send`](../tutorials/workfl
 ```go
 GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
 
-func ClientGetEvent[R any](c Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](c Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
 Similar to [`GetEvent`](../tutorials/workflow-communication.md#getevent).
-The generic `ClientGetEvent` decodes the event value into type `R`.
+The generic `GetEvent` decodes the event value into type `R`.
 
 **Parameters:**
 - `targetWorkflowID`: The identifier of the workflow whose events to retrieve
@@ -254,7 +254,7 @@ Options are provided via `ListWorkflowsOption` functions. See [`ListWorkflows`](
 
 :::warning
 Workflow inputs and outputs are not loaded or decoded by default.
-Pass [`WithLoadInput(true)`](./methods.md#withloadinput) / [`WithLoadOutput(true)`](./methods.md#withloadoutput) to opt in.
+Pass [`WithFilterLoadInput(true)`](./methods.md#withfilterloadinput) / [`WithFilterLoadOutput(true)`](./methods.md#withfilterloadoutput) to opt in.
 :::
 
 ### GetWorkflowSteps
@@ -270,7 +270,7 @@ Also accepts [`WithStepsLimit`](./methods.md#withstepslimit) and [`WithStepsOffs
 ### CancelWorkflow
 
 ```go
-CancelWorkflow(workflowID string, opts ...CancelWorkflowOptions) error
+CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel a workflow.
@@ -281,22 +281,22 @@ Similar to [`CancelWorkflow`](./methods.md#cancelworkflow).
 ### CancelWorkflows
 
 ```go
-CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOptions) error
+CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel multiple workflows in a single database round-trip.
 Missing or already-terminal IDs are silently skipped.
 Similar to [`CancelWorkflows`](./methods.md#cancelworkflows).
 
-### UpdateWorkflowAttributes
+### SetWorkflowAttributes
 
 ```go
-UpdateWorkflowAttributes(workflowID string, attributes map[string]any) error
+SetWorkflowAttributes(workflowID string, attributes map[string]any) error
 ```
 
 Replace the custom [attributes](./workflows-steps.md#withworkflowattributes) attached to an existing workflow.
 Pass a `nil` attributes map to clear all attributes.
-Similar to [`UpdateWorkflowAttributes`](./methods.md#updateworkflowattributes).
+Similar to [`SetWorkflowAttributes`](./methods.md#setworkflowattributes).
 
 ### DeleteWorkflows
 
@@ -323,7 +323,7 @@ Similar to [`SetWorkflowDelay`](./methods.md#setworkflowdelay).
 ```go
 ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
 
-func ClientResumeWorkflow[R any](c Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[R], error)
+func ResumeWorkflow[R any](c Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Resume a workflow.
@@ -331,7 +331,7 @@ This immediately starts it from its last completed step.
 You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
 Pass [`WithResumeQueue`](./methods.md#withresumequeue) to re-enqueue the resumed workflow on a named queue instead of starting it immediately.
-The generic `ClientResumeWorkflow` returns a typed handle whose `GetResult` decodes the workflow output into type `R`.
+The generic `ResumeWorkflow` returns a typed handle whose `GetResult` decodes the workflow output into type `R`.
 Similar to [`ResumeWorkflow`](./methods.md#resumeworkflow).
 
 ### ResumeWorkflows
@@ -339,7 +339,7 @@ Similar to [`ResumeWorkflow`](./methods.md#resumeworkflow).
 ```go
 ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
 
-func ClientResumeWorkflows[R any](c Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
+func ResumeWorkflows[R any](c Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
 ```
 
 Resume multiple workflows in a single database round-trip.
@@ -351,11 +351,11 @@ Similar to [`ResumeWorkflows`](./methods.md#resumeworkflows).
 ```go
 ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
 
-func ClientForkWorkflow[R any](c Client, input ForkWorkflowInput) (WorkflowHandle[R], error)
+func ForkWorkflow[R any](c Client, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
 Set `QueueName` on the input to enqueue the forked workflow on a named queue instead of starting it immediately.
-The generic `ClientForkWorkflow` returns a typed handle whose `GetResult` decodes the forked workflow's output into type `R`.
+The generic `ForkWorkflow` returns a typed handle whose `GetResult` decodes the forked workflow's output into type `R`.
 Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
 
 ### ForkWorkflows
@@ -363,12 +363,12 @@ Similar to [`ForkWorkflow`](./methods.md#forkworkflow).
 ```go
 ForkWorkflows(input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
 
-func ClientForkWorkflows[R any](c Client, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
+func ForkWorkflows[R any](c Client, input ForkWorkflowsInput) ([]WorkflowHandle[R], error)
 ```
 
 Fork a batch of workflows in a single database round-trip.
 The returned handles are in the same order as `input.Workflows`.
-The generic `ClientForkWorkflows` returns typed handles whose `GetResult` decodes each forked workflow's output into type `R`.
+The generic `ForkWorkflows` returns typed handles whose `GetResult` decodes each forked workflow's output into type `R`.
 Similar to [`ForkWorkflows`](./methods.md#forkworkflows).
 
 ### Debouncer
@@ -380,7 +380,7 @@ func NewDebouncerClient[P any, R any](workflowName string, client Client, opts .
 ```
 
 Create a new debouncer client for use from outside a DBOS application.
-Similar to [`NewDebouncer`](./queues.md#newdebouncer) but uses a [Client](#constructor) instead of a DBOSContext and takes a workflow name string instead of a function reference.
+Similar to [`NewDebouncer`](./queues.md#newdebouncer) but uses a [Client](#constructor) instead of a Context and takes a workflow name string instead of a function reference.
 
 **Parameters:**
 - `workflowName`: The name of the workflow to debounce.
@@ -418,7 +418,7 @@ func (dc *DebouncerClient[P, R]) Debounce(key string, delay time.Duration, input
 ```
 
 Debounce a workflow invocation from outside a DBOS application.
-Behaves the same as [`Debouncer.Debounce`](./queues.md#debouncerdebounce) but does not require a DBOSContext.
+Behaves the same as [`Debouncer.Debounce`](./queues.md#debouncerdebounce) but does not require a Context.
 
 **Parameters:**
 - `key`: A unique key to group debounce calls.
@@ -526,11 +526,11 @@ Backfill missed executions for the range `[start, end]`, returning the IDs of th
 ```go
 TriggerSchedule(scheduleName string) (WorkflowHandle[any], error)
 
-func ClientTriggerSchedule[R any](c Client, scheduleName string) (WorkflowHandle[R], error)
+func TriggerSchedule[R any](c Client, scheduleName string) (WorkflowHandle[R], error)
 ```
 
 Trigger a schedule to fire immediately, returning a handle for the enqueued workflow.
-The generic `ClientTriggerSchedule` returns a typed handle whose `GetResult` decodes the triggered workflow's output into type `R`.
+The generic `TriggerSchedule` returns a typed handle whose `GetResult` decodes the triggered workflow's output into type `R`.
 
 ## Application Version Management
 
@@ -563,10 +563,10 @@ Similar to [`SetLatestApplicationVersion`](./methods.md#setlatestapplicationvers
 
 ## Stream Methods
 
-### ClientReadStream
+### ReadStream
 
 ```go
-func ClientReadStream[R any](c Client, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](c Client, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 Read all values from a durable [stream](../tutorials/workflow-communication.md#workflow-streaming) produced by a workflow.
@@ -585,10 +585,10 @@ Similar to [`ReadStream`](./methods.md#readstream).
 - Whether the stream is closed.
 - Any error that occurred.
 
-### ClientReadStreamAsync
+### ReadStreamAsync
 
 ```go
-func ClientReadStreamAsync[R any](c Client, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](c Client, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 Read values from a durable [stream](../tutorials/workflow-communication.md#workflow-streaming) asynchronously.

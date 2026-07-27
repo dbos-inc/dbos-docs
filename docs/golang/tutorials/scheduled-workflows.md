@@ -11,7 +11,7 @@ To schedule a workflow, first define a workflow whose input is a [`ScheduledWork
 This struct carries the cron tick time (`ScheduledTime`) and a user-defined `Context` value attached to the schedule:
 
 ```go
-func myPeriodicTask(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
+func myPeriodicTask(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (any, error) {
     logger.Info("running scheduled task",
         "scheduled_time", input.ScheduledTime,
         "context", input.Context)
@@ -76,7 +76,7 @@ You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
 
 ```go
-func customerWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
+func customerWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (any, error) {
     customerID := input.Context.(string)
     // ...
     return nil, nil
@@ -84,7 +84,7 @@ func customerWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (
 
 dbos.RegisterWorkflow(dbosContext, customerWorkflow)
 
-func onCustomerRegistration(ctx dbos.DBOSContext, customerID string) error {
+func onCustomerRegistration(ctx dbos.Context, customerID string) error {
     return dbos.CreateSchedule(ctx, customerWorkflow, dbos.CreateScheduleRequest{
         ScheduleName: fmt.Sprintf("customer-%s-sync", customerID),
         Schedule:     "0 * * * *", // Every hour

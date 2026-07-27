@@ -10,7 +10,7 @@ See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.
 ### NewDataSource
 
 ```go
-func NewDataSource[E Engine](ctx DBOSContext, engine E, opts ...DataSourceOption) (*DataSource, error)
+func NewDataSource[E Engine](ctx Context, engine E, opts ...DataSourceOption) (*DataSource, error)
 
 type Engine interface {
     *pgxpool.Pool | *sql.DB
@@ -23,11 +23,11 @@ The engine type is constrained at compile time to `*pgxpool.Pool` (Postgres/Cock
 The returned handle is ready to use immediately: `NewDataSource` detects whether the engine is the DBOS system database, resolves the dialect (CockroachDB is auto-detected), and creates the `transaction_completion` durability table in your database if it does not already exist.
 It may be called at any time, before or after `Launch()`, and there is no registry: create as many data sources as you need.
 
-If the engine is the **same handle** as the DBOS system database (the pool you passed as [`Config.SystemDBPool` or `Config.SqliteSystemDB`](./dbos-context.md#initialization)), DBOS does not create or manage a `transaction_completion` table at all: transactions on this data source commit your application writes and the DBOS checkpoint together in a single transaction against the system database.
+If the engine is the **same handle** as the DBOS system database (the pool you passed as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./dbos-context.md#initialization)), DBOS does not create or manage a `transaction_completion` table at all: transactions on this data source commit your application writes and the DBOS checkpoint together in a single transaction against the system database.
 See [Sharing the System Database Engine](#sharing-the-system-database-engine).
 
 **Parameters:**
-- **ctx**: The DBOSContext.
+- **ctx**: The Context.
 - **engine**: A `*pgxpool.Pool` or `*sql.DB` connecting to your database.
 - **opts**: Functional options, documented below.
 
@@ -81,7 +81,7 @@ Return the data source's name.
 ### RunAsTransaction
 
 ```go
-func RunAsTransaction[R any](ctx DBOSContext, ds *DataSource, fn Txn[R], opts ...StepOption) (R, error)
+func RunAsTransaction[R any](ctx Context, ds *DataSource, fn Txn[R], opts ...StepOption) (R, error)
 
 type Txn[R any] func(ctx context.Context, tx Tx) (R, error)
 ```
@@ -121,12 +121,12 @@ Recovery checks the system database first, then `transaction_completion`, and re
 
 #### Sharing the System Database Engine
 
-If the data source's engine is the very same handle as the DBOS system database (you passed your pool as [`Config.SystemDBPool` or `Config.SqliteSystemDB`](./dbos-context.md#initialization) and reuse it here), DBOS does not create or manage a `transaction_completion` table for it.
+If the data source's engine is the very same handle as the DBOS system database (you passed your pool as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./dbos-context.md#initialization) and reuse it here), DBOS does not create or manage a `transaction_completion` table for it.
 There is no need for one: `RunAsTransaction` collapses onto a single transaction in which application writes and the DBOS checkpoint commit together, and recovery replays from the system database alone.
 
 ```go
 pool, _ := pgxpool.New(context.Background(), databaseURL)
-ctx, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
+ctx, _ := dbos.NewContext(context.Background(), dbos.Config{
     AppName:      "my-app",
     SystemDBPool: pool,
 })

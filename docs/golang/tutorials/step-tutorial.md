@@ -23,7 +23,7 @@ func generateRandomNumber(ctx context.Context) (int, error) {
     return rand.Int(), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+func workflowFunction(ctx dbos.Context, n int) (int, error) {
     randomNumber, err := dbos.RunAsStep(
         ctx,
         generateRandomNumber,
@@ -43,7 +43,7 @@ func generateRandomNumber(ctx context.Context, n int) (int, error) {
     return rand.IntN(n), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+func workflowFunction(ctx dbos.Context, n int) (int, error) {
     randomNumber, err := dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (int, error) {
@@ -81,9 +81,9 @@ Retries are configurable through step options that can be passed to `RunAsStep`.
 Available retry configuration options include:
 - [`WithStepName`](../reference/workflows-steps#withstepname) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
 - [`WithStepMaxRetries`](../reference/workflows-steps#withstepmaxretries) - Maximum number of times this step is automatically retried on failure (default 0)
-- [`WithMaxInterval`](../reference/workflows-steps#withmaxinterval) - Maximum delay between retries (default 5s)
-- [`WithBackoffFactor`](../reference/workflows-steps#withbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
-- [`WithBaseInterval`](../reference/workflows-steps#withbaseinterval) - Initial delay between retries (default 100ms)
+- [`WithStepMaxInterval`](../reference/workflows-steps#withstepmaxinterval) - Maximum delay between retries (default 5s)
+- [`WithStepBackoffFactor`](../reference/workflows-steps#withstepbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
+- [`WithStepBaseInterval`](../reference/workflows-steps#withstepbaseinterval) - Initial delay between retries (default 100ms)
 
 For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
 
@@ -103,7 +103,7 @@ func fetchStep(ctx context.Context, url string) (string, error) {
     return string(body), nil
 }
 
-func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
+func fetchWorkflow(ctx dbos.Context, inputURL string) (string, error) {
     return dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (string, error) {
@@ -111,14 +111,39 @@ func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
         },
         dbos.WithStepName("fetchFunction"),
         dbos.WithStepMaxRetries(10),
-        dbos.WithMaxInterval(30*time.Second),
-        dbos.WithBackoffFactor(2.0),
-        dbos.WithBaseInterval(500*time.Millisecond),
+        dbos.WithStepMaxInterval(30*time.Second),
+        dbos.WithStepBackoffFactor(2.0),
+        dbos.WithStepBaseInterval(500*time.Millisecond),
     )
 }
 ```
 
 If a step exhausts all retry attempts, it returns an error to the calling workflow.
+
+### Concurrent Execution Conflicts
+
+When DBOS checkpoints a step's result, it may detect that a concurrent execution of the same workflow—for example, one started by recovery on another process—has already recorded a different result for that step.
+In that case, `RunAsStep` returns an error matching `dbos.ErrConflictingWorkflowID` (code `ErrorCodeConflictingID`).
+
+Always propagate this error out of your workflow function—do not swallow it or treat it as a step failure to retry or fall back from:
+
+```go
+result, err := dbos.RunAsStep(ctx, myStep)
+if err != nil {
+    return "", err // Propagate: DBOS handles the conflict at the workflow level
+}
+```
+
+When the workflow function returns this error, DBOS parks the losing execution and waits for the winning execution's result instead of racing it step by step.
+If you ignore the error and continue, both executions keep running concurrently: side effects are duplicated and the losing execution's results diverge from what was durably recorded.
+
+If your workflow needs to distinguish this error from application errors (e.g., in a shared error-handling path), check for it with `errors.Is`:
+
+```go
+if errors.Is(err, dbos.ErrConflictingWorkflowID) {
+    return "", err // Never handle this locally; return it to DBOS
+}
+```
 
 ### Step Timeouts
 
@@ -134,7 +159,7 @@ func waitStep(ctx context.Context) (string, error) {
     }
 }
 
-func exampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func exampleWorkflow(ctx dbos.Context, _ string) (string, error) {
     result, err := dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (string, error) {
@@ -156,6 +181,6 @@ A few important things to keep in mind:
 
 - **Timing out a step does not cancel the workflow.** When the step returns with an error (e.g. `context.DeadlineExceeded`), the workflow continues to run and is free to handle that error&mdash;retry, fall back to another step, or return. To formally transition a workflow into the `CANCELLED` terminal status, use a workflow-level timeout instead. See [Workflow Timeouts](./workflow-tutorial.md#workflow-timeouts).
 
-- **A step can inherit the workflow's cancellable context.** If you derive the step's context from a cancellable workflow's `DBOSContext`, then when the workflow's timeout fires the workflow will become `CANCELLED`, but the currently executing step will **not** be preempted&mdash;it keeps running and can still record its outcome (success or error) to the database when it returns. The workflow will not be able to enter the next step: the next call to `RunAsStep` will fail because the workflow is already cancelled.
+- **A step can inherit the workflow's cancellable context.** If you derive the step's context from a cancellable workflow's `Context`, then when the workflow's timeout fires the workflow will become `CANCELLED`, but the currently executing step will **not** be preempted&mdash;it keeps running and can still record its outcome (success or error) to the database when it returns. The workflow will not be able to enter the next step: the next call to `RunAsStep` will fail because the workflow is already cancelled.
 
 - **If you don't want that behavior**, Handle the resulting cancellation just as you would in any normal Go program&mdash;by selecting on `ctx.Done()` in long-running loops or by passing the context through to cancellation-aware APIs.
