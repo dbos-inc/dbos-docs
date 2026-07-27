@@ -46,8 +46,68 @@ You can cancel the execution of a workflow from the web UI or programmatically v
 To cancel many workflows at once, use [`CancelWorkflows`](../reference/methods#cancelworkflows), which cancels them in a single database round-trip.
 Pass [`WithCancelChildren`](../reference/methods#withcancelchildren) to also cancel all the workflow's children, recursively.
 
-If the workflow is currently executing, cancelling it preempts its execution (interrupting it at the beginning of its next step, or waking it immediately if it is in a durable sleep).
 If the workflow is enqueued, cancelling removes it from the queue.
+If the workflow is currently executing, cancelling sets its status to `CANCELLED`; the execution is not interrupted mid-step, but it stops at the start of its **next durable operation** (step, child workflow, sleep, `Send`/`Recv`, and so on).
+That operation returns an error matching [`dbos.ErrWorkflowCancelled`](../reference/workflows-steps.md#error-codes).
+A step that was already executing when the cancellation landed runs to completion, and its result is checkpointed.
+
+### Handling cancellation in workflow code
+
+Always propagate a cancellation error out of your workflow function.
+Match it with `errors.Is` — do not switch on the outermost error code, because step wrappers may enclose it:
+
+```go
+result, err := dbos.RunAsStep(ctx, myStep)
+if err != nil {
+    // On cancellation, errors.Is(err, dbos.ErrWorkflowCancelled) is true.
+    return "", err
+}
+```
+
+Ignoring a cancellation error cannot turn the workflow back into a success:
+
+- Every subsequent DBOS operation is refused before executing, so later steps' side effects do not run.
+- The workflow's final status write is guarded in the database. Even if your function swallows the error and returns a normal result, the workflow is recorded as `CANCELLED` and the returned output is discarded.
+
+### Cancellation via context or timeout
+
+A workflow is also cancelled when its [durable timeout](./workflow-tutorial.md#workflow-timeouts) expires, when the context it was started from is cancelled, or on shutdown.
+You can use this to cancel a workflow directly: start it under a cancellable context obtained with [`WithCancel`](../reference/dbos-context.md#withcancel), then call the cancel function.
+
+```go
+dbosCtx, cancel := dbos.WithCancel(ctx)
+handle, err := dbos.RunWorkflow(dbosCtx, myWorkflow, input)
+// ... later:
+cancel()
+```
+
+This form of cancellation additionally cancels the workflow's `Context`, which enables **cooperative cancellation**: an executing step receives the cancellation through its `context.Context` and can select on `ctx.Done()` to return early instead of running to completion.
+
+```go
+func longRunningStep(ctx context.Context) (string, error) {
+    for {
+        select {
+        case <-ctx.Done():
+            return "", ctx.Err() // Return early; this step is not checkpointed and re-executes on resume
+        default:
+            if done, result := doSomeWork(); done {
+                return result, nil
+            }
+        }
+    }
+}
+```
+A step interrupted this way returns an error matching `dbos.ErrWorkflowCancelled` that also wraps the standard-library cause — `errors.Is(err, context.Canceled)` or `errors.Is(err, context.DeadlineExceeded)` matches too.
+The interrupted step is deliberately **not** checkpointed, so if the workflow is later resumed, that step re-executes.
+(An API `CancelWorkflow`, by contrast, does not cancel the running execution's `Context`, and its cancellation errors carry no standard-library cause.)
+
+A durable [`Sleep`](../reference/methods.md#sleep) wakes immediately when the workflow's context is cancelled.
+An API `CancelWorkflow` does not wake an in-progress sleep: the workflow sleeps out the remaining time and stops at its next durable operation.
+
+### Awaiting a cancelled workflow
+
+Waiting on a cancelled workflow's handle returns an error matching [`dbos.ErrAwaitedWorkflowCancelled`](../reference/workflows-steps.md#error-codes) — a distinct code, so an awaiting workflow can tell "the workflow I awaited was cancelled" apart from "I was cancelled" and may choose to handle it and continue.
+When the awaiter is itself a workflow, this outcome is checkpointed like any other child error, so replay is deterministic: resuming the cancelled workflow later does not change what the awaiter observed.
 
 ## Resuming Workflows
 
@@ -55,6 +115,9 @@ You can resume a workflow from its last completed step from the web UI or progra
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
+
+Resuming restarts the workflow function from the beginning, but every checkpointed step replays its recorded result instead of re-executing, so only unfinished work runs again (including a step that was interrupted by cancellation, which is never checkpointed).
+Resuming also resets the workflow's recovery-attempt counter and clears any durable timeout the workflow carried before it was resumed.
 
 ## Forking Workflows
 

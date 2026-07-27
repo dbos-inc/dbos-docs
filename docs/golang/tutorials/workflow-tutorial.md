@@ -169,7 +169,7 @@ func exampleWorkflow(ctx dbos.Context, input string) (string, error) {
 
 You can set a timeout for a workflow using its input [`Context`](../reference/dbos-context.md). Use [`WithTimeout`](../reference/dbos-context#withtimeout) to obtain a cancellable `Context`, as you would with a normal [`context.Context`](https://pkg.go.dev/context#Context).
 
-When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](../reference/dbos-context#withoutcancel).
+When the timeout expires, the workflow and all its children are cancelled. Cancelling a workflow sets its status to CANCELLED and preempts its execution at the beginning of its next step; the workflow's `Context` is also cancelled, so an executing step can react to `ctx.Done()`. DBOS calls then return an error matching `dbos.ErrWorkflowCancelled` whose cause matches `context.DeadlineExceeded` — see [cancellation behavior](./workflow-management.md#cancelling-workflows) for details. You can detach a child workflow by passing it an uncancellable context, which you can obtain with [`WithoutCancel`](../reference/dbos-context#withoutcancel).
 
 Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutorial.md), the timeout does not begin until the workflow is dequeued and starts execution. Also, timeouts are durable: they are stored in the database and persist across restarts, so workflows can have very long timeouts.
 

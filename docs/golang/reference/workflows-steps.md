@@ -525,6 +525,7 @@ func WithHandleTimeout(timeout time.Duration) GetResultOption
 ```
 
 Specify a timeout for obtaining a workflow result.
+On expiry, the error matches `context.DeadlineExceeded`; see [Timeout errors and handle flavors](#timeout-errors-and-handle-flavors) for how the error shape differs between handle flavors.
 
 ##### WithHandlePollingInterval
 
@@ -587,3 +588,112 @@ Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgra
 :::info
 Patching must be enabled in your configuration by setting `EnablePatching: true`.
 :::
+### Serialization
+
+Workflow and step inputs, outputs, and errors are checkpointed in the system database.
+By default they are encoded with a JSON serializer; you can supply a custom serializer via `Config.Serializer`:
+
+```go
+type Serializer[T any] interface {
+    // Name returns the name of the serialization format (e.g., "DBOS_JSON", "DBOS_GOB").
+    Name() string
+    // Encode serializes a value to a string representation for database storage.
+    Encode(data T) (*string, error)
+    // Decode deserializes a string from the database back into a value.
+    Decode(data *string) (T, error)
+}
+```
+
+A built-in [gob](https://pkg.go.dev/encoding/gob) serializer is available with `dbos.NewGobSerializer()`, which handles arbitrary Go types (you must register your program's concrete types with `gob.Register`).
+
+#### Custom serializers must be total
+
+Every checkpoint written to the system database is encoded with the configured serializer — including engine-internal step outputs, not just your workflow inputs and outputs:
+
+- the `int64` wake-up deadline recorded by durable [`Sleep`](./methods.md#sleep) (also written by `Recv` and `GetEvent` timeouts),
+- the empty-string step output recorded by `WriteStream`,
+- the `ScheduledWorkflowInput` struct recorded for database-backed schedule firings.
+
+This keeps every row in the system database in one format, so it can be decoded uniformly by external tooling.
+A `Serializer[any]` must therefore encode and decode *arbitrary* Go values, and decoding must preserve concrete types: decoded step results are type-asserted, so an `int64` must round-trip as `int64`, not `float64`.
+See the [`protobuf-serializer` demo app](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/protobuf-serializer) for a detailed example.
+
+Additionally, every implementation must honor this contract:
+
+1. `Decode` can be called with a nil `*string`: some checkpoints record an error and never write an output, so the stored value is SQL `NULL`. `Decode` must tolerate nil input (typically returning the zero value).
+2. The nil round-trip must be lossless: `Decode(Encode(nil-value))` must yield that nil value back.
+3. The literal string `__DBOS_NIL` is reserved by the engine — a custom `Encode` must never emit it for non-nil data.
+4. `Encode` must not return a nil `*string`; to represent nil data, return a pointer to a sentinel string (the built-in gob serializer stores `__DBOS_NIL`; the portable JSON serializer stores `null`).
+
+One deliberate exception: `Recv` and `GetEvent` checkpoint the *sender's* encoded payload verbatim, under the sender's recorded format. The receiver's serializer is never asked to re-encode a message or event it did not produce.
+
+### Errors
+
+Errors produced by DBOS APIs are of type `*dbos.Error`:
+
+```go
+type Error struct {
+    Message string    // Human-readable error message
+    Code    ErrorCode // Error type code for programmatic handling
+
+    // Optional context fields — only set when relevant to the error
+    WorkflowID      string // Associated workflow identifier
+    DestinationID   string // Target workflow identifier (for communication errors)
+    StepName        string // Step function name (for step errors)
+    QueueName       string // Queue name (for queue-related errors)
+    DeduplicationID string // Deduplication identifier
+    StepID          int    // Step sequence number
+    ExpectedName    string // Expected function name (for determinism errors)
+    RecordedName    string // Actually recorded function name (for determinism errors)
+    MaxRetries      int    // Maximum retry limit (for retry-related errors)
+}
+```
+
+`Error` implements the standard error interface, formatting messages as `DBOS Error <Code>: <message>`.
+
+#### Matching errors
+
+Prefer matching with `errors.Is` against the package sentinels.
+Matching is by error code — a sentinel matches any DBOS error carrying the same code, regardless of its other fields:
+
+```go
+handle, err := dbos.RunWorkflow(ctx, wf, input, dbos.WithWorkflowID(id))
+if errors.Is(err, dbos.ErrConflictingWorkflowID) { ... }
+```
+
+To read the structured fields, use `errors.As`:
+
+```go
+var dbosErr *dbos.Error
+if errors.As(err, &dbosErr) {
+    logger.Error("workflow failed", "workflow_id", dbosErr.WorkflowID, "code", dbosErr.Code)
+}
+```
+
+DBOS errors caused by context cancellation or an expired deadline also wrap the standard library cause, so `errors.Is(err, context.Canceled)` and `errors.Is(err, context.DeadlineExceeded)` match as well.
+These causes survive serialization: they still match after the error is read back from the system database, for example when awaiting a workflow from another process.
+
+#### Error codes
+
+| Code | Sentinel | Meaning |
+|---|---|---|
+| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. Never swallow this inside a workflow — return it so DBOS can resolve the conflict. See [Concurrent Execution Conflicts](../tutorials/step-tutorial.md#concurrent-execution-conflicts). |
+| `ErrorCodeInitialization` | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
+| `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
+| `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. |
+| `ErrorCodeWorkflowCancelled` | `ErrWorkflowCancelled` | This workflow was cancelled during execution. Propagate it out of your workflow function. Match it with `errors.Is` (step wrappers may enclose it). When the cancellation came from a cancelled context or expired durable timeout, the wrapped cause also matches `context.Canceled` / `context.DeadlineExceeded`; an API `CancelWorkflow` carries no stdlib cause. See [workflow cancellation](../tutorials/workflow-management.md#cancelling-workflows). |
+| `ErrorCodeUnexpectedStep` | — | During replay, the step executing at a position differs from the step recorded there: the workflow function is non-deterministic or its code changed. See [Upgrading Workflow Code](../tutorials/upgrading-workflows.md). |
+| `ErrorCodeAwaitedWorkflowCancelled` | `ErrAwaitedWorkflowCancelled` | A workflow you were awaiting (via a handle, `GetEvent`, or a child workflow) was cancelled. Unlike `ErrorCodeWorkflowCancelled`, this is the *awaiter's* error — the caller may handle it and continue. |
+| `ErrorCodeConflictingRegistration` | — | A workflow, queue, or schedule was registered under a name that is already registered (or reserved). |
+| `ErrorCodeWorkflowUnexpectedType` | — | A recorded input or output could not be decoded into the requested type parameter (e.g., `RetrieveWorkflow[R]` with the wrong `R`). |
+| `ErrorCodeWorkflowExecution` | — | General workflow execution failure. |
+| `ErrorCodeStepExecution` | — | General step execution failure. |
+| `ErrorCodeDeadLetterQueue` | `ErrDeadLetterQueue` | The workflow exceeded its maximum recovery attempts (`WithMaxRecoveryAttempts`) and was dead-lettered. |
+| `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | A step exhausted its configured retries. The error wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
+| `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. |
+| `ErrorCodePatchingNotEnabled` | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
+| `ErrorCodeTimeout` | `ErrTimeout` | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Deadline-driven timeouts also match `context.DeadlineExceeded`. See the note below. |
+| `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | An operation required a registered application version, but none exists in the system database. |
+| `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | The referenced queue does not exist (e.g., `RetrieveQueue`). |
+| `ErrorCodeScheduleNotFound` | `ErrScheduleNotFound` | The referenced schedule does not exist (e.g., `GetSchedule`). |
+| `ErrorCodeInvalidOption` | `ErrInvalidOption` | Invalid or inconsistent options were passed to a DBOS API. |

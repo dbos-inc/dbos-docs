@@ -185,6 +185,7 @@ func Sleep(ctx Context, duration time.Duration) (time.Duration, error)
 Sleep for the given duration.
 May only be called from within a workflow.
 This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+If the workflow's context is cancelled (e.g., its [durable timeout](../tutorials/workflow-tutorial.md#workflow-timeouts) expires), the sleep wakes immediately, returning the elapsed duration and the context's error.
 
 **Parameters:**
 - **ctx**: The DBOS context.
@@ -614,8 +615,13 @@ type StepAggregateRow struct {
 func CancelWorkflow(ctx Context, workflowID string, opts ...CancelWorkflowOption) error
 ```
 
-Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
-Cancellation also interrupts a durable [`Sleep`](#sleep): a cancelled workflow's sleep wakes immediately instead of waiting out the timer.
+Cancel a workflow. This sets its status to `CANCELLED` and removes it from its queue (if it is enqueued).
+A running execution is not interrupted mid-step: it stops at the start of its next durable operation (step, sleep, `Send`/`Recv`, child workflow, …), which returns an error matching `dbos.ErrWorkflowCancelled`.
+
+You can also cancel a running workflow directly by cancelling its context: start it under [`WithCancel`](./dbos-context.md#withcancel) (or [`WithTimeout`](./dbos-context.md#withtimeout)) and call the returned cancel function.
+Calling this cancel function will trigger a durable cancel and enable cooperative cancellation: an executing step receives the cancellation through its `context.Context` and can select on `ctx.Done()` to return early instead of running to completion.
+
+See [cancellation behavior](../tutorials/workflow-management.md#cancelling-workflows) for how cancellation interacts with executing steps, durable sleeps, and awaiting workflows.
 
 **Parameters:**
 - **ctx**: The DBOS context.

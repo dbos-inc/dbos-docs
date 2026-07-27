@@ -33,6 +33,9 @@ type Config struct {
     ApplicationVersion        string         // Application version (optional)
     ExecutorID                string         // Executor ID (optional)
     EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
+    Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer). See the serialization reference.
+    SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
+    SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
 }
 ```
 
@@ -49,6 +52,23 @@ if err != nil {
 ```
 
 The newly created Context must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
+
+### System database startup
+
+`NewContext` is the call that connects to your system database: it creates and validates the connection pool, creates the database if it does not exist, runs any pending [schema migrations](../../explanations/system-tables.md), and pings the database.
+If the database is unreachable or migrations fail, `NewContext` returns an initialization error — a failed `NewContext` (like a failed `Launch`) is terminal; create a fresh context for each attempt.
+
+The entire startup window is bounded by `Config.SystemDBStartupTimeout` (default: 2 minutes).
+On expiry, the returned error names the startup phase that timed out (connecting, running migrations, pinging, …), wraps `context.DeadlineExceeded`, and includes a diagnostic hint.
+In particular, if the connection pool had no free connections when the timeout expired — common when passing a shared `SystemDBPool` whose connections are checked out by the application — the error reports the pool's acquired/max connection counts and suggests increasing pool capacity or releasing checked-out connections.
+
+By default, DBOS creates its own pool: for Postgres/CockroachDB, at most 20 connections (1 hour max connection lifetime, 5 minutes idle timeout, 10 seconds connect timeout); for SQLite, at most 8 open connections.
+To use different pool settings, construct the pool yourself and pass it via `Config.SystemDBPool` (Postgres/CockroachDB) or `Config.SQLiteSystemDB` (SQLite); DBOS uses it as-is.
+
+**Migrations** are versioned and recorded in the `dbos_migrations` table of your system database schema.
+`NewContext` applies only migrations newer than the recorded version, so startup against an up-to-date database performs no schema work, and re-running it is a no-op.
+
+After a successful `NewContext`, `Launch` and subsequent runtime operations do not fail fast on database outages: transient database errors are retried (indefinitely, until the context is cancelled or shut down).
 
 ### launch
 

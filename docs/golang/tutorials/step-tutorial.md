@@ -123,7 +123,8 @@ If a step exhausts all retry attempts, it returns an error to the calling workfl
 ### Concurrent Execution Conflicts
 
 When DBOS checkpoints a step's result, it may detect that a concurrent execution of the same workflow—for example, one started by recovery on another process—has already recorded a different result for that step.
-In that case, `RunAsStep` returns an error matching `dbos.ErrConflictingWorkflowID` (code `ErrorCodeConflictingID`).
+In that case, `RunAsStep` returns an error matching [`dbos.ErrConflictingWorkflowID`](../reference/workflows-steps.md#error-codes) (code `ErrorCodeConflictingID`).
+This is not an application bug: it is how DBOS detects that two executions of the same workflow are racing, which can legitimately happen when a workflow is recovered while its original executor is still running.
 
 Always propagate this error out of your workflow function—do not swallow it or treat it as a step failure to retry or fall back from:
 
@@ -134,7 +135,8 @@ if err != nil {
 }
 ```
 
-When the workflow function returns this error, DBOS parks the losing execution and waits for the winning execution's result instead of racing it step by step.
+When the workflow function returns this error, DBOS **parks** the losing execution: instead of racing the winner step by step, the loser stops executing its own code and durably waits for the winning execution's result.
+The workflow's final status and output are unaffected—callers and handles observe a single consistent outcome, recorded by the winner.
 If you ignore the error and continue, both executions keep running concurrently: side effects are duplicated and the losing execution's results diverge from what was durably recorded.
 
 If your workflow needs to distinguish this error from application errors (e.g., in a shared error-handling path), check for it with `errors.Is`:
