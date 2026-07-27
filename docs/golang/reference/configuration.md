@@ -5,7 +5,7 @@ title: Configuration
 
 ## Configuring DBOS
 
-To configure DBOS, pass a `Config` object to [`NewContext`](./dbos-context.md#initialization).
+To configure DBOS, pass a `Config` object to [`NewContext`](./dbos-context.md#newcontext).
 `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SQLiteSystemDB` are mandatory.
 
 ```go
@@ -43,6 +43,18 @@ if err != nil {
 ```
 
 To supply a custom serializer through `Config.Serializer`, see the [serialization reference](./workflows-steps.md#serialization).
+
+### Using SQLite
+
+SQLite support is not linked into your binary by default — Postgres-only applications do not compile or link a SQLite driver.
+To use a SQLite system database (a `sqlite:` URL or `SQLiteSystemDB`), register the driver with one blank import, anywhere in your binary:
+
+```go
+import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
+```
+
+Without it, `NewContext` (or `NewClient`) fails at startup with an error naming this import.
+The import registers [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite), a pure-Go driver requiring no cgo.
 
 ## System database startup
 

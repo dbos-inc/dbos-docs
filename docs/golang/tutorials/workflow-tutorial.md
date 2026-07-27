@@ -283,11 +283,11 @@ Key behaviors:
 - Different keys debounce independently, so you can debounce per-user, per-tenant, or per-resource.
 - You can create multiple debouncers per workflow, with different timeouts.
 - Debouncers must be created before `Launch()`.
-- To debounce a workflow method of a configured instance (registered with [`WithInstance`](../reference/workflows-steps.md#withinstance)), pass the instance with [`WithDebouncerInstance`](../reference/queues.md#withdebouncerinstance): `dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))`. From a [`DebouncerClient`](../reference/client.md#newdebouncerclient), pass the instance's config name with [`WithDebouncerConfigName`](../reference/client.md#withdebouncerconfigname) instead.
+- To debounce a workflow method of a configured instance (registered with [`WithInstance`](../reference/workflows-steps.md#withinstance)), pass the instance with [`WithDebouncerInstance`](../reference/queues.md#withdebouncerinstance): `dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))`. From a [`DebouncerClient`](../reference/queues.md#newdebouncerclient), pass the instance's config name with [`WithDebouncerConfigName`](../reference/queues.md#withdebouncerconfigname) instead.
 
 ### Debouncing from an External Application
 
-You can also debounce workflows from outside your DBOS application using a [`DebouncerClient`](../reference/client.md#newdebouncerclient):
+You can also debounce workflows from outside your DBOS application using a [`DebouncerClient`](../reference/queues.md#newdebouncerclient):
 
 ```go
 config := dbos.ClientConfig{

@@ -1,25 +1,32 @@
 ---
 sidebar_position: 10
-title: DBOS Context
+title: DBOS Context & Client
 pagination_prev: null
 ---
 
 A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](../tutorials/workflow-tutorial.md), [queues](../tutorials/queue-tutorial.md) and perform [workflow management](../tutorials/workflow-management.md) tasks.
 
-`Context` extends Go's [`context.Context`](https://pkg.go.dev/context#Context) interface and carries essential state across workflow execution. Workflows and steps receive a new `Context` spun out of the root `Context` you manage. In addition, a `Context` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
+DBOS defines two interfaces:
 
-`Context` satisfies [`Client`](./client.md), which owns every operation that does not require a launched runtime (enqueue, messaging, events, streams, workflow/queue/schedule/version management, `Shutdown`) — so a `Context` can be passed anywhere a `Client` is accepted. The remaining methods require a launched runtime or a workflow scope:
+- [`Client`](#client) owns every DBOS operation that only needs a connection to the system database: enqueue, messaging, events, streams, workflow management, queue management, schedule management, application-version management, and `Shutdown`. Create a standalone client with [`NewClient`](#newclient) to perform these operations from outside a DBOS application.
+- [`Context`](#context) **extends `Client`** and adds what requires a DBOS runtime: `Launch()`, workflow registration, and the workflow-scope operations (running workflows and steps, `Recv`, `SetEvent`, durable sleep, …). Create one with [`NewContext`](#newcontext). It also extends Go's [`context.Context`](https://pkg.go.dev/context#Context) and carries essential state across workflow execution: workflows and steps receive a new `Context` spun out of the root `Context` you manage, and a `Context` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
+
+Because every `Context` **is** a `Client`, anywhere a `Client` is accepted you can pass either a standalone client or a (launched or unlaunched) `Context`.
+
+## Client
 
 ```go
-type Context interface {
+type Client interface {
     context.Context
 
-    // Client methods — every operation below is also available before Launch() and from a standalone Client
+    // Workflow operations
     Enqueue(_ Client, queueName string, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
     Send(_ Client, destinationID string, message any, topic string, opts ...SendOption) error
     GetEvent(_ Client, targetWorkflowID string, key string, timeout time.Duration) (any, error)
     ReadStream(_ Client, workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
     ReadStreamAsync(_ Client, workflowID string, key string) (<-chan StreamValue[any], error)
+
+    // Workflow management
     RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
     CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
     CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
@@ -34,10 +41,14 @@ type Context interface {
     GetWorkflowAggregates(_ Client, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
     GetStepAggregates(_ Client, input GetStepAggregatesInput) ([]StepAggregateRow, error)
     DeleteWorkflows(_ Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
+
+    // Queue management
     RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
     RetrieveQueue(_ Client, name string) (Queue, error)
     ListQueues(_ Client) ([]Queue, error)
     DeleteQueue(_ Client, name string) error
+
+    // Schedule management
     CreateSchedule(_ Client, spec ScheduleSpec) error
     ApplySchedules(_ Client, schedules []ScheduleSpec) error
     PauseSchedule(_ Client, scheduleName string) error
@@ -47,10 +58,21 @@ type Context interface {
     ListSchedules(_ Client, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
     BackfillSchedule(_ Client, scheduleName string, start, end time.Time) ([]string, error)
     TriggerSchedule(_ Client, scheduleName string) (WorkflowHandle[any], error)
+
+    // Application version management
     ListApplicationVersions(_ Client) ([]VersionInfo, error)
     GetLatestApplicationVersion(_ Client) (VersionInfo, error)
     SetLatestApplicationVersion(_ Client, versionName string) error
+
     Shutdown(_ Client, timeout time.Duration) error
+}
+```
+
+## Context
+
+```go
+type Context interface {
+    Client
 
     // Context Lifecycle
     Launch() error
@@ -94,10 +116,20 @@ type Context interface {
 }
 ```
 
-Like `Client` methods, `Context` interface methods take a leading receiver-argument; in practice, call the package-level functions documented on this page and in [Workflows & Steps](./workflows-steps.md) and [DBOS Methods & Variables](./methods.md).
+## Who can do what
+
+- **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database.
+- **`Launch()`, workflow registration ([`RegisterWorkflow`](./workflows-steps.md#registerworkflow)), and `SetAlertHandler`** require a `Context`; registration and `SetAlertHandler` must happen before `Launch()`.
+- **Starting workflows ([`RunWorkflow`](./workflows-steps.md#runworkflow), [`Go`](./workflows-steps.md#go))** requires a launched `Context`.
+- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), `Patch`) can only be called on the `Context` a workflow function receives.
+
+Both interfaces take a leading receiver-argument; in practice, never call the interface methods directly — call the package-level functions instead.
+Because a `Client` operation is invoked through the exact same package-level function whether you pass it a standalone client or a `Context`, these functions are documented **once**, alongside the `Context` functions, in [DBOS Methods & Variables](./methods.md) (and in [Workflows & Steps](./workflows-steps.md) and [Workflow Queues](./queues.md)).
+The first parameter tells you who can call each function: a function taking a `Client` accepts a standalone client or any `Context`; a function taking a `Context` requires a DBOS context.
+The generic functions (`Enqueue[R]`, `RetrieveWorkflow[R]`, `GetEvent[R]`, `ReadStream[R]`, …) additionally return typed values instead of the `WorkflowHandle[any]` the interface methods return.
 
 ## Lifecycle
-### Initialization
+### NewContext
 
 You can create a DBOS context using `NewContext`, which takes a [`Config`](./configuration.md) object where `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SQLiteSystemDB` are mandatory.
 
@@ -118,9 +150,10 @@ if err != nil {
 ```
 
 `NewContext` connects to your system database and runs any pending schema migrations — see [System database startup](./configuration.md#system-database-startup).
-The newly created Context must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
+The newly created Context must be launched with `Launch()` before running workflows and should be shut down with `Shutdown()` at program termination.
+Before launch, a `Context` can already be used for every [`Client`](#client) operation.
 
-### launch
+### Launch
 
 ```go
 dbos.Launch(ctx Context) error
@@ -136,12 +169,58 @@ Launch the following resources managed by a `Context`:
 In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works).
 `Launch()` should be called by your program during startup before running any workflows.
 
-### Shutdown
+### NewClient
+
 ```go
-dbos.Shutdown(ctx Context, timeout time.Duration) error
+func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 ```
 
-Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. Returns a non-nil error if the timeout expired before all resources stopped. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
+Create a standalone `Client`, to interact with a DBOS application from external code — a process that registers no workflows and never calls `Launch()`.
+
+**Parameters:**
+- `ctx`: A context for initialization operations
+- `config`: A `ClientConfig` object with connection and application settings
+
+```go
+type ClientConfig struct {
+    DatabaseURL            string          // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    SystemDBPool           *pgxpool.Pool   // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB         *sql.DB         // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema         string          // Database schema name (defaults to "dbos")
+    Logger                 *slog.Logger    // Optional custom logger
+    Serializer             Serializer[any] // Optional custom serializer (defaults to JSON). See the serialization reference.
+    SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
+}
+```
+
+`NewClient` connects to the system database and starts a notification listener (or a poller on backends without listen/notify support), so every client operation — including blocking ones like `GetEvent` — works without launching the DBOS runtime.
+Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeout` — see [System database startup](./configuration.md#system-database-startup).
+Like `NewContext`, using a SQLite system database requires registering the SQLite driver with a blank import — see [Using SQLite](./configuration.md#using-sqlite).
+
+Because workflows are not registered with a client, operations that take a workflow function reference on a `Context` take a workflow **name** (string) from a client — for example [`Enqueue`](./methods.md#enqueue), or the `WorkflowName` field of [`ScheduleSpec`](./methods.md#schedulespec).
+
+**Example syntax:**
+
+```go
+config := dbos.ClientConfig{
+    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+}
+client, err := dbos.NewClient(context.Background(), config)
+if err != nil {
+    log.Fatal(err)
+}
+defer dbos.Shutdown(client, 5*time.Second)
+```
+
+### Shutdown
+```go
+dbos.Shutdown(c Client, timeout time.Duration) error
+```
+
+Gracefully shut down a `Context` or a standalone `Client`, waiting for resources to stop and cleaning up. Returns a non-nil error if the timeout expired before all resources stopped.
+
+When you shut down a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
+When you shut down a standalone `Client`, its system database connection pool and notification listener are released.
 
 **Parameters:**
 - **timeout**: The time to wait for DBOS resources to gracefully terminate.

@@ -243,7 +243,7 @@ type StreamValue[R any] struct {
 }
 ```
 
-You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/client.md#stream-methods).
+You can also read from a stream from outside a DBOS application with a [DBOS Client](../reference/methods.md#streams).
 
 **Example syntax:**
 

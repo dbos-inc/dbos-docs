@@ -168,7 +168,7 @@ For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the [DBOS Client](../reference/dbos-context.md#newclient) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
 For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with a `ProcessInput` argument:
@@ -193,7 +193,7 @@ if err != nil {
 }
 defer dbos.Shutdown(client, 5*time.Second)
 
-handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+handle, err := dbos.Enqueue[ProcessOutput](
     client, 
     "pipelineQueue",
     "dataPipeline",
@@ -430,7 +430,7 @@ handle, err := dbos.RunWorkflow(dbosContext, sendReminder, userID,
 )
 ```
 
-When [enqueueing from a Client](#enqueueing-from-another-application), use [`WithEnqueueDelay`](../reference/client.md#enqueue) instead.
+When [enqueueing from a Client](#enqueueing-from-another-application), use [`WithEnqueueDelay`](../reference/methods.md#enqueue) instead.
 
 You can also dynamically update or shorten the delay of a `DELAYED` workflow using [`SetWorkflowDelay`](../reference/methods.md#setworkflowdelay):
 

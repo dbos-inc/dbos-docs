@@ -646,8 +646,9 @@ func main() {
     }
 
     // Schedule the workflow to run daily at 2:00 AM
-    err = dbos.CreateSchedule(dbosContext, dailyBackup, dbos.CreateScheduleRequest{
+    err = dbos.CreateSchedule(dbosContext, dbos.ScheduleSpec{
         ScheduleName: "daily-backup",
+        Workflow:     dailyBackup,
         Schedule:     "0 0 2 * * *",
     })
     if err != nil {
@@ -656,7 +657,7 @@ func main() {
 }
 ```
 
-Schedules can also be paused, resumed, deleted, backfilled, and triggered at runtime with `dbos.PauseSchedule`, `dbos.ResumeSchedule`, `dbos.DeleteSchedule`, `dbos.BackfillSchedule`, and `dbos.TriggerSchedule`. By default, scheduled invocations are enqueued on an internal queue; pass `dbos.WithScheduleQueueName("...")` to route them to a declared queue for concurrency or rate-limit control.
+Schedules can also be paused, resumed, deleted, backfilled, and triggered at runtime with `dbos.PauseSchedule`, `dbos.ResumeSchedule`, `dbos.DeleteSchedule`, `dbos.BackfillSchedule`, and `dbos.TriggerSchedule`. By default, scheduled invocations are enqueued on an internal queue; set the `QueueName` field of `dbos.ScheduleSpec` to route them to a declared queue for concurrency or rate-limit control.
 
 ### Workflow Versioning and Recovery
 
@@ -1148,7 +1149,7 @@ To enqueue a workflow on an application written in another language from a Go cl
 args := dbos.PortableWorkflowArgs{
     PositionalArgs: []any{"order-123", 42},
 }
-handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
+handle, err := dbos.Enqueue[any](
     client, "orders", "process_order", args,
     dbos.WithEnqueueClassName("OrderProcessor"), // Required for Python/TS/Java targets
 )
@@ -1316,7 +1317,7 @@ if err != nil {
 }
 defer dbos.Shutdown(client, 5*time.Second)
 
-handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+handle, err := dbos.Enqueue[ProcessOutput](
     client,
     "pipelineQueue",
     "dataPipeline",
@@ -2914,7 +2915,7 @@ type ProcessOutput struct {
     Status string
 }
 
-handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+handle, err := dbos.Enqueue[ProcessOutput](
     client,
     "process_queue",
     "ProcessWorkflow",

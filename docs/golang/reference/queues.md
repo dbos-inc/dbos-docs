@@ -373,4 +373,59 @@ When the delay expires _or_ the debouncer preconfigured timeout is reached, the 
 **Returns:**
 - A [WorkflowHandle](./workflows-steps.md#workflowhandle) for the target workflow.
 
-You can also create a debouncer from outside a DBOS application using the [DBOS Client](./client.md#newdebouncerclient).
+You can also create a debouncer from outside a DBOS application using a [`DebouncerClient`](#newdebouncerclient).
+
+### NewDebouncerClient
+
+```go
+func NewDebouncerClient[R any, P any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[R, P]
+```
+
+`R` is the workflow's result type and `P` its input type; neither can be inferred, so both must be named explicitly.
+
+Create a new debouncer for use from outside a DBOS application.
+Similar to [`NewDebouncer`](#newdebouncer) but uses a [standalone client](./dbos-context.md#newclient) instead of a Context and takes a workflow name string instead of a function reference.
+
+**Parameters:**
+- **workflowName**: The name of the workflow to debounce.
+- **client**: The DBOS client to use for operations.
+- **opts**: Optional configuration — the same `DebouncerOption`s as [`NewDebouncer`](#newdebouncer), plus the client-specific options below.
+
+### WithDebouncerClassName
+
+```go
+func WithDebouncerClassName(className string) DebouncerOption
+```
+
+Set the class/namespace name recorded for the debounced workflow.
+Use with `NewDebouncerClient` when the target workflow is registered under a class name — for example by another language's runtime, which may resolve dequeued workflows by class name.
+
+### WithDebouncerConfigName
+
+```go
+func WithDebouncerConfigName(configName string) DebouncerOption
+```
+
+Target the workflow registration bound to the configured instance with the given config name (see [`WithInstance`](./workflows-steps.md#withinstance)).
+Required when the debounced workflow is a method of a configured instance.
+Use with `NewDebouncerClient`, where the instance object itself is not available (from a Context, use [`WithDebouncerInstance`](#withdebouncerinstance) instead).
+
+```go
+dc := dbos.NewDebouncerClient[string, string]("Send", client,
+    dbos.WithDebouncerConfigName("slack"))
+```
+
+### DebouncerClient.Debounce
+
+```go
+func (dc *DebouncerClient[R, P]) Debounce(key string, delay time.Duration, input P, opts ...WorkflowOption) (WorkflowHandle[R], error)
+```
+
+Debounce a workflow invocation from outside a DBOS application.
+Behaves the same as [`Debouncer.Debounce`](#debouncerdebounce) but does not require a Context.
+
+**Parameters:**
+- **key**: A unique key to group debounce calls.
+- **delay**: Time by which to delay workflow execution.
+- **input**: Input parameters to pass to the workflow.
+- **opts**: Optional workflow options, with the same restrictions as [`Debouncer.Debounce`](#debouncerdebounce).
