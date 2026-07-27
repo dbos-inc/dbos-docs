@@ -23,7 +23,7 @@ The engine type is constrained at compile time to `*pgxpool.Pool` (Postgres/Cock
 The returned handle is ready to use immediately: `NewDataSource` detects whether the engine is the DBOS system database, resolves the dialect (CockroachDB is auto-detected), and creates the `transaction_completion` durability table in your database if it does not already exist.
 It may be called at any time, before or after `Launch()`, and there is no registry: create as many data sources as you need.
 
-If the engine is the **same handle** as the DBOS system database (the pool you passed as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./dbos-context.md#initialization)), DBOS does not create or manage a `transaction_completion` table at all: transactions on this data source commit your application writes and the DBOS checkpoint together in a single transaction against the system database.
+If the engine is the **same handle** as the DBOS system database (the pool you passed as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./configuration.md)), DBOS does not create or manage a `transaction_completion` table at all: transactions on this data source commit your application writes and the DBOS checkpoint together in a single transaction against the system database.
 See [Sharing the System Database Engine](#sharing-the-system-database-engine).
 
 **Parameters:**
@@ -121,7 +121,7 @@ Recovery checks the system database first, then `transaction_completion`, and re
 
 #### Sharing the System Database Engine
 
-If the data source's engine is the very same handle as the DBOS system database (you passed your pool as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./dbos-context.md#initialization) and reuse it here), DBOS does not create or manage a `transaction_completion` table for it.
+If the data source's engine is the very same handle as the DBOS system database (you passed your pool as [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](./configuration.md) and reuse it here), DBOS does not create or manage a `transaction_completion` table for it.
 There is no need for one: `RunAsTransaction` collapses onto a single transaction in which application writes and the DBOS checkpoint commit together, and recovery replays from the system database alone.
 
 ```go
