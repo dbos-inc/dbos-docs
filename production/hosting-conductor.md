@@ -109,7 +109,7 @@ services:
     networks:
       - dbos-network
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost/health']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
       interval: 30s
       timeout: 3s
       retries: 3
@@ -229,7 +229,7 @@ To deploy the DBOS Console to production, it must connect to your Conductor serv
 You can provide the URL of this service by setting the `DBOS_CONDUCTOR_URL` environment variable in your Console container.
 
 When deploying to production, we recommend placing the Console container behind a reverse proxy (e.g., Nginx) for web traffic ingress and TLS termination.
-All traffic should be forwarded to the Console service container on port 80.
+All traffic should be forwarded to the Console service container on port 8080.
 You should also configure [authentication](#security).
 Without OAuth authentication, there is no user or organization management.
 In order to enable these features, you must set up Conductor with an OAuth-compatible single-sign on solution.
