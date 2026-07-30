@@ -11,7 +11,8 @@ This guide covers migrating an application from the last v0.x release to v1.0:
 go get github.com/dbos-inc/dbos-transact-golang@latest
 ```
 
-v1 is a breaking release. The sections below cover every breaking change; [§9](#9-suggested-migration-order-per-app) suggests an order to apply them in.
+v1 is a breaking release. The sections below cover every breaking change; [§10](#10-suggested-migration-order-per-app) suggests an order to apply them in.
+
 ---
 
 ### 1. Core renames: `DBOSContext` → `Context`
@@ -179,7 +180,7 @@ type ScheduleSpec struct {
 ```
 
 - `CreateSchedule(ctx, fn, req, opts...)` → `CreateSchedule(ctx, spec)`; `ApplySchedules` takes `[]ScheduleSpec`.
-- Field rename: `ApplySchedulesRequest.WorkflowFn` → `ScheduleSpec.Workflow`. Renaming the *type* alone leaves `WorkflowFn:` behind at every schedule literal — rename the field too (included in the §9 sed list).
+- Field rename: `ApplySchedulesRequest.WorkflowFn` → `ScheduleSpec.Workflow`. Renaming the *type* alone leaves `WorkflowFn:` behind at every schedule literal — rename the field too (included in the §10 sed list).
 - `ScheduledWorkflowInput.Context` is now `json.RawMessage`; decode with the new `dbos.DecodeScheduleContext[T](input)`. *Creating* schedules is unaffected — `ScheduleSpec.Context` stays `any` and still takes your struct directly; the SDK serializes it. Only code that hand-constructs a `ScheduledWorkflowInput` (test harnesses, manual-trigger paths that invoke a scheduled workflow directly to simulate a tick) must now `json.Marshal` the context into the field.
 
 > **Gob-serializer apps: drain scheduled firings before upgrading.** `ScheduledWorkflowInput.Context` changed from `any` to `json.RawMessage` under the same gob registration, and gob cannot decode the old interface-encoded field into the new concrete type. Any schedule firing still ENQUEUED (or otherwise not yet dequeued) at upgrade time in an app using `NewGobSerializer` will fail input decoding and error when it runs — those workflows do not make it through the upgrade. Let pending firings drain (or cancel them) before deploying v1. Apps on the default JSON serializer are unaffected.
@@ -287,7 +288,7 @@ Slice-taking filters became variadic — call sites passing a literal slice need
 - `Config.DatabaseURL` accepts Postgres/CockroachDB URLs or key=value DSNs, and sqlite URLs (`sqlite:/path/to.db`, `sqlite:relative.db`, `sqlite::memory:`).
 - **SQLite now requires a driver import.** The SQLite driver moved out of the core package into `dbos/driver/sqlite`, registered database/sql-style. Apps using a sqlite URL or `Config.SQLiteSystemDB` must add `import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"` (one blank import, anywhere in the binary); without it, startup fails with an error naming this import. Postgres-only apps need no change and no longer compile or link `modernc.org/sqlite`.
 - **One additive system-database schema change.** The first v1 startup applies an additive migration that adds two defaulted columns to `workflow_status`. Existing workflows (including long-DELAYED ones), queues, and schedule rows carry over as-is, and v0.x and v1 executors can share a system database during a rolling upgrade: old executors ignore the new columns and skip migration versions they don't know.
-- **Debouncer changes.** `NewDebouncer` now returns `(*Debouncer[R, P], error)` — call sites gain error handling (type parameters are still inferred). Debouncers can be created at any time, including after `Launch()` (v0 required creation before launch). New options: `WithDebouncerQueue(name)` runs the debounced workflow on a named registered queue instead of the DBOS internal queue, and `WithDebouncerClassName(name)` (client-side) targets workflows registered under a class name. `Debounce` now rejects options a debounce owns or cannot support (`WithQueue`, `WithDeduplicationID`, `WithDelay`, `WithPriority`, `WithQueuePartitionKey`, `WithDeduplicationPolicy`) with an error matching `dbos.ErrInvalidOption`.
+- **Debouncer changes.** `NewDebouncer` now returns `(*Debouncer[R, P], error)` — call sites gain error handling (type parameters are still inferred). Debouncers can be created at any time, including after `Launch()` (v0 required creation before launch). New options: `WithDebouncerQueue(name)` runs the debounced workflow on a named registered queue instead of the DBOS internal queue, and `WithDebouncerClassName(name)` (client-side) targets workflows registered under a class name. `Debounce` now rejects options a debounce owns or cannot support (`WithQueue`, `WithDeduplicationID`, `WithDelay`, `WithPriority`, `WithQueuePartitionKey`, `WithDeduplicationPolicy`) with an error matching `dbos.ErrInvalidOption`. Pending debounced workflows are now visible to workflow management: they appear as `DELAYED` on their queue with `IsDebounced` set and can be listed with `dbos.WithFilterIsDebounced(true)`. The debounce timeout is captured by the call that enqueues the workflow — later calls coalescing on the same pending workflow extend the delay up to that fixed deadline but never move it — and a deadline on the `Debounce` context is recorded as the debounced workflow's execution timeout (the clock starts at dequeue), never as an absolute deadline.
 - **Drain debouncers before upgrading.** A debounce still pending when you deploy v1 will not fire under the new version. Before upgrading, stop calling `Debounce` and let in-flight debounces fire (this takes at most the debounce delay or timeout); cancel any stragglers left after the upgrade with `CancelWorkflow`.
 
 #### Custom serializers must handle non-user values
@@ -298,14 +299,35 @@ A `Serializer[any]` must therefore be total: it must encode and decode arbitrary
 
 One deliberate exception: `Recv` and `GetEvent` checkpoint the *sender's* encoded payload verbatim under the sender's recorded format — the receiver's serializer is never asked to re-encode a message or event it didn't produce.
 
-### 8. Mocks / tests
+### 8. DBOS calls are rejected inside step bodies
+
+v0 let most DBOS operations run inside a step body and silently dropped their durability guarantees: `SetEvent`, `CloseStream`, workflow-management writes, and `RunAsTransaction` invoked from inside a step executed in a real database transaction but recorded **no checkpoint**, so recovery could repeat them. v1 rejects them instead with an `ErrorCodeStepExecution` error (`cannot call <X> within a step`). Newly rejected inside a step (v0 already rejected `Send`, `Recv`, `GetEvent`, `Sleep`, `Patch`, `DeprecatePatch`, and spawning a child workflow with `RunWorkflow`):
+
+- `RunAsTransaction`
+- `Enqueue`
+- `Go`
+- `handle.GetResult()` — awaiting another workflow's result from inside a step
+- `SetEvent`, `CloseStream`
+- Workflow-management writes: `CancelWorkflow(s)`, `ResumeWorkflow(s)`, `ForkWorkflow(s)`, `DeleteWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`
+- Schedule writes: `CreateSchedule`, `PauseSchedule`, `ResumeSchedule`, `DeleteSchedule`
+- `Debounce`
+
+Still allowed inside a step:
+
+- [`WriteStream`](./tutorials/workflow-communication.md#workflow-streaming) — at-least-once, attributed to the enclosing step (a retried step may write duplicates).
+- Read/list operations — `ListWorkflows`, `GetWorkflowSteps`, `RetrieveWorkflow`, `ReadStream`, `GetWorkflowAggregates`, `GetStepAggregates`, `GetSchedule`, `ListSchedules`, queue reads, app-version reads. Called from a step they run directly with no checkpoint; called from workflow code they are checkpointed as steps, as before.
+- Nested [`RunAsStep`](./tutorials/step-tutorial.md) — the inner function runs inline as part of the enclosing step, without its own checkpoint (unchanged from v0).
+
+To migrate, hoist rejected calls out of step bodies into the surrounding workflow code. If a step needs another workflow's result, return from the step and await the handle in the workflow.
+
+### 9. Mocks / tests
 
 Mocks of the old `DBOSContext` must be regenerated from `dbos.Context` (which now embeds `Client`). With mockery, point the config at `Context` — see the [Testing & Mocking tutorial](./tutorials/testing.md) for a sample `.mockery.yml`. Assertions on error types/codes need the §5 renames.
 
-### 9. Suggested migration order per app
+### 10. Suggested migration order per app
 
 1. `go get github.com/dbos-inc/dbos-transact-golang@latest`; `go build ./...` to enumerate breakage.
 2. Mechanical renames (safe to sed, word-boundary matched):
    `DBOSContext`→`Context`, `NewDBOSContext`→`NewContext`, `DBOSError`→`Error`, `DBOSErrorCode`→`ErrorCode`, `SqliteSystemDB`→`SQLiteSystemDB`, `UpdateWorkflowAttributes`→`SetWorkflowAttributes`, `CancelWorkflowOptions`→`CancelWorkflowOption`, step-retry `With*`→`WithStep*`, list-filter `With*`→`WithFilter*` (per §6 table — names collide with unrelated options, so match exact identifiers), error-code constants per §5, `Client<Fn>`→`<Fn>` per §2, `WorkflowFn:`→`Workflow:` (schedule-spec literals, per §4).
-3. Structural fixes by hand: queue registration (`NewWorkflowQueue`→`RegisterQueue` + error handling + `WithQueue(queue)`), scheduled workflows (`WithSchedule`→`CreateSchedule`+`ScheduleSpec`, input signature), `Enqueue` type-param reorder, `RetrieveQueue`/`GetSchedule`/`GetLatestApplicationVersion` return-shape changes, `Shutdown` error handling.
+3. Structural fixes by hand: queue registration (`NewWorkflowQueue`→`RegisterQueue` + error handling + `WithQueue(queue)`), scheduled workflows (`WithSchedule`→`CreateSchedule`+`ScheduleSpec`, input signature), `Enqueue` type-param reorder, `RetrieveQueue`/`GetSchedule`/`GetLatestApplicationVersion`/`NewDebouncer` return-shape changes, `Shutdown` error handling, hoisting DBOS calls out of step bodies (§8).
 4. `go vet ./...` && `go build ./...` && run tests.

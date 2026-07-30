@@ -98,7 +98,7 @@ They are useful for publishing information about the status of a workflow or to 
 #### SetEvent
 
 ```go
-func SetEvent[P any](ctx Context, key string, message P) error
+func SetEvent[P any](ctx Context, key string, message P, opts ...SetEventOption) error
 ```
 
 Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish a key-value pair, or update its value if has already been published.
@@ -173,7 +173,7 @@ This is useful for streaming results from a long-running workflow or LLM call, o
 #### Writing to Streams
 
 ```go
-func WriteStream[P any](ctx Context, key string, value P) error
+func WriteStream[P any](ctx Context, key string, value P, opts ...WriteStreamOption) error
 ```
 
 You can write values to a stream from a workflow or its steps using [`WriteStream`](../reference/methods.md#writestream).

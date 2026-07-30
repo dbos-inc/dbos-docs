@@ -51,7 +51,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - Do NOT start goroutines from workflows or use select in workflows. Instead, use DBOS's durable `dbos.Go` and `dbos.Select` functions which provide deterministic replay. For more complex parallel execution, use DBOS.RunWorkflow and DBOS queues.
 - Do NOT range over a map to call steps or start workflows: Go map iteration order is random, which breaks determinism. Sort the keys first (e.g. `slices.Sorted(maps.Keys(m))`) and iterate over the sorted slice.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call any DBOS context method (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsStep, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent) from a step.
+- Do NOT call DBOS context methods (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsTransaction, DBOS.Enqueue, DBOS.Go, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent, DBOS.CloseStream, handle.GetResult, or workflow/schedule management writes) from a step — they return an error. Calling one step function from another is fine (it runs inline as part of the enclosing step), and DBOS.WriteStream and read/list operations are allowed from steps.
 
 ## DBOS Lifecycle Guidelines
 
@@ -855,8 +855,7 @@ n, err := dbos.RunAsTransaction(ctx, ds, func(txCtx context.Context, tx dbos.Tx)
 Rules:
 - `RunAsTransaction` must be called from within a workflow; it shares the workflow's step counter with `RunAsStep` and accepts the same step options.
 - Serialization/deadlock conflicts are retried automatically with a fresh transaction; application errors follow the step retry policy.
-- Nesting a `RunAsTransaction` inside another `RunAsTransaction` is rejected with an error.
-- A `RunAsTransaction` inside a `RunAsStep` is allowed but downgraded to the step's at-least-once guarantee.
+- Nesting a `RunAsTransaction` inside another `RunAsTransaction` or inside a `RunAsStep` is rejected with an error — run transactions from workflow code.
 
 ## Workflow Communication
 
@@ -1924,7 +1923,7 @@ if err != nil {
 #### WithFilterAppVersion
 
 ```go
-func WithFilterAppVersion(appVersion string) ListWorkflowsOption
+func WithFilterAppVersion(appVersion ...string) ListWorkflowsOption
 ```
 
 Retrieve workflows tagged with this application version.
@@ -1981,10 +1980,10 @@ Skip this many workflows from the results returned (for pagination).
 #### WithFilterSortDesc
 
 ```go
-func WithFilterSortDesc(sortDesc bool) ListWorkflowsOption
+func WithFilterSortDesc() ListWorkflowsOption
 ```
 
-Sort the results in descending (true) or ascending (false) order by workflow start time.
+Sort the results in descending order by workflow start time (ascending is the default).
 
 #### WithFilterCreatedAfter
 
@@ -2005,7 +2004,7 @@ Filter workflows by status. Multiple statuses can be specified.
 #### WithFilterUser
 
 ```go
-func WithFilterUser(user string) ListWorkflowsOption
+func WithFilterUser(user ...string) ListWorkflowsOption
 ```
 
 Filter workflows run by this authenticated user.
@@ -2021,7 +2020,7 @@ Filter workflows by specific workflow IDs.
 #### WithFilterWorkflowIDPrefix
 
 ```go
-func WithFilterWorkflowIDPrefix(prefix string) ListWorkflowsOption
+func WithFilterWorkflowIDPrefix(prefix ...string) ListWorkflowsOption
 ```
 
 Filter workflows whose IDs start with the specified prefix.
@@ -2423,15 +2422,6 @@ func WithGlobalConcurrency(concurrency int) QueueOption
 Set the maximum number of workflows from this queue that may run concurrently. Defaults to 0 (no limit).
 This concurrency limit is global across all DBOS processes using this queue.
 
-####  WithMaxTasksPerIteration
-
-```go
-func WithMaxTasksPerIteration(maxTasks int) QueueOption
-```
-
-Sets the maximum number of workflows that can be dequeued in a single iteration.
-This controls batch sizes for queue processing.
-
 ####  WithPriorityEnabled
 
 ```go
@@ -2757,11 +2747,11 @@ WithStepBaseInterval sets the initial delay between retries. Default value is 10
 ### Go
 
 ```go
-func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
+func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (<-chan StepOutcome[R], error)
 ```
 
-Launch a step asynchronously and return a channel that will receive the result when the step completes.
-This is a durable alternative to Go's native goroutines. Can only be called from within a workflow.
+Launch a step asynchronously and return a receive-only channel that will receive the result when the step completes.
+This is a durable alternative to Go's native goroutines. Can only be called from within a workflow (not from inside a step).
 
 ```go
 type StepOutcome[R any] struct {

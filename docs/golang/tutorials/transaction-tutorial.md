@@ -69,7 +69,6 @@ If your application tables live in the same database that hosts the DBOS system 
 ## Guarantees
 
 - A `RunAsTransaction` called at the top level of a workflow is **exactly-once**: the application writes and the durability record commit atomically, and recovery replays the recorded output instead of re-running the function.
-- A `RunAsTransaction` nested inside a `RunAsStep` is allowed but downgraded to the step's **at-least-once** guarantee, because the enclosing step owns the durability boundary.
-- Nesting a `RunAsTransaction` inside another `RunAsTransaction` is rejected with an error.
+- Nesting a `RunAsTransaction` inside a `RunAsStep` or inside another `RunAsTransaction` is rejected with an error: a nested transaction could not be checkpointed, so it would silently lose its exactly-once guarantee. Run transactions from workflow code.
 
 See the [datasources reference](../reference/datasources.md) for details on durability, recovery, and permissions.

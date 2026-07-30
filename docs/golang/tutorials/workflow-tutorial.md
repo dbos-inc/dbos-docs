@@ -114,7 +114,7 @@ Workflows are in most respects normal Go functions.
 They can have loops, branches, conditionals, and so on.
 However, a workflow function must be **deterministic**: if called multiple times with the same inputs, it should invoke the same steps with the same inputs in the same order (given the same return values from those steps).
 If you need to perform a non-deterministic operation like accessing the database, calling a third-party API, generating a random number, or getting the local time, you shouldn't do it directly in a workflow function.
-Instead, you should do all database operations in non-deterministic operations in [steps](./step-tutorial.md).
+Instead, you should perform all non-deterministic operations in [steps](./step-tutorial.md).
 
 :::warning
 Go's goroutine scheduler and `select` operation are non-deterministic. You should use them only inside steps, or use the durable [`Go`](#concurrent-steps) and [`Select`](#selecting-the-first-result) functions instead.
@@ -177,7 +177,7 @@ Timeouts are **start-to-completion**: if a workflow is [enqueued](./queue-tutori
 func exampleWorkflow(ctx dbos.Context, input string) (string, error) {}
 
 timeoutCtx, cancelFunc := dbos.WithTimeout(dbosCtx, 12*time.Hour)
-handle, err := RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
+handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 ```
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling [CancelWorkflow](./workflow-management.md#cancelling-workflows)).
@@ -192,7 +192,7 @@ Sleeping is useful for scheduling a workflow to run in the future (even days, we
 For example:
 
 ```go
-func runTask(ctx dbos.Context, task string) (string, error) {
+func runTask(ctx context.Context, task string) (string, error) {
 	// Execute the task...
 	return "task completed", nil
 }
@@ -211,7 +211,7 @@ func exampleWorkflow(ctx dbos.Context, input struct {
 	result, err := dbos.RunAsStep(
 		ctx,
 		func(stepCtx context.Context) (string, error) {
-			return runTask(ctx, input.Task)
+			return runTask(stepCtx, input.Task)
 		},
 	)
 	if err != nil {
@@ -253,8 +253,11 @@ func main() {
     dbos.RegisterWorkflow(dbosContext, processInput)
 
     // Create a debouncer with a maximum timeout of 30 seconds
-    debouncer := dbos.NewDebouncer(dbosContext, processInput,
+    debouncer, err := dbos.NewDebouncer(dbosContext, processInput,
         dbos.WithDebouncerTimeout(30*time.Second))
+    if err != nil {
+        log.Fatal(err)
+    }
 
     dbos.Launch(dbosContext)
     defer dbos.Shutdown(dbosContext, 5*time.Second)
@@ -282,7 +285,7 @@ Key behaviors:
 - The optional [`WithDebouncerTimeout`](../reference/queues.md#withdebouncertimeout) caps the maximum wait time from the first call. If the timeout is zero (the default), the delay can be pushed back indefinitely.
 - Different keys debounce independently, so you can debounce per-user, per-tenant, or per-resource.
 - You can create multiple debouncers per workflow, with different timeouts.
-- Debouncers must be created before `Launch()`.
+- Debouncers can be created at any time, before or after `Launch()`.
 - To debounce a workflow method of a configured instance (registered with [`WithInstance`](../reference/workflows-steps.md#withinstance)), pass the instance with [`WithDebouncerInstance`](../reference/queues.md#withdebouncerinstance): `dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))`. From a [`DebouncerClient`](../reference/queues.md#newdebouncerclient), pass the instance's config name with [`WithDebouncerConfigName`](../reference/queues.md#withdebouncerconfigname) instead.
 
 ### Debouncing from an External Application

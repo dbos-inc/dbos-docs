@@ -31,7 +31,7 @@ Then, create a schedule for it using [`CreateSchedule`](../reference/methods.md#
 err := dbos.CreateSchedule(dbosContext, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule", // The schedule name is a unique identifier of the schedule
     Workflow:     myPeriodicTask,     // A registered workflow function
-    Schedule:     "*/5 * * * *",      // Every 5 minutes
+    Schedule:     "0 */5 * * * *",    // Every 5 minutes
     Context:      "my context",       // Passed into every iteration of the workflow
 })
 ```
@@ -44,13 +44,13 @@ err := dbos.ApplySchedules(dbosContext, []dbos.ScheduleSpec{
     {
         ScheduleName: "schedule-a",
         Workflow:     workflowA,
-        Schedule:     "*/10 * * * *", // Every 10 minutes
+        Schedule:     "0 */10 * * * *", // Every 10 minutes
         Context:      "context-a",
     },
     {
         ScheduleName: "schedule-b",
         Workflow:     workflowB,
-        Schedule:     "0 0 * * *",    // Every day at midnight
+        Schedule:     "0 0 0 * * *",  // Every day at midnight
         Context:      "context-b",
     },
 })
@@ -61,11 +61,11 @@ For example, if a schedule was routed to a named queue and you re-apply it witho
 The schedule's status and last-fired time are preserved.
 
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-DBOS Go uses [robfig/cron](https://pkg.go.dev/github.com/robfig/cron/v3) to parse cron schedules, with seconds as an optional first field.
-Valid cron schedules contain 5 or 6 items, separated by spaces:
+DBOS Go uses [robfig/cron](https://pkg.go.dev/github.com/robfig/cron/v3) to parse cron schedules, with seconds as the first field.
+Valid cron schedules contain exactly 6 items, separated by spaces:
 
 ```
- ┌────────────── second (optional)
+ ┌────────────── second
  │ ┌──────────── minute
  │ │ ┌────────── hour
  │ │ │ ┌──────── day of month
@@ -97,7 +97,7 @@ func onCustomerRegistration(ctx dbos.Context, customerID string) error {
     return dbos.CreateSchedule(ctx, dbos.ScheduleSpec{
         ScheduleName: fmt.Sprintf("customer-%s-sync", customerID),
         Workflow:     customerWorkflow,
-        Schedule:     "0 * * * *", // Every hour
+        Schedule:     "0 0 * * * *", // Every hour
         Context:      customerID,
     })
 }
@@ -168,7 +168,7 @@ dbos.RegisterQueue(dbosContext, "scheduled_queue",
 err := dbos.CreateSchedule(dbosContext, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule",
     Workflow:     myPeriodicTask,
-    Schedule:     "*/5 * * * *",
+    Schedule:     "0 */5 * * * *",
     QueueName:    "scheduled_queue",
 })
 ```
@@ -188,7 +188,7 @@ client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
 err = dbos.CreateSchedule(client, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule",
     WorkflowName: "myPeriodicTask",
-    Schedule:     "*/5 * * * *",
+    Schedule:     "0 */5 * * * *",
     Context:      "my context",
 })
 ```

@@ -118,7 +118,7 @@ type Context interface {
 
 ## Who can do what
 
-- **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database.
+- **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database. One exception: on the `Context` a step body receives, mutating operations (`Enqueue`, `Send`, `SetEvent`, `CloseStream`, workflow-management and schedule writes) return an error — see [Calling DBOS operations from steps](./workflows-steps.md#calling-dbos-operations-from-steps). When called from workflow code, these operations are checkpointed as steps (`DBOS.*` step names in the workflow's step list).
 - **`Launch()`, workflow registration ([`RegisterWorkflow`](./workflows-steps.md#registerworkflow)), and `SetAlertHandler`** require a `Context`; registration and `SetAlertHandler` must happen before `Launch()`.
 - **Starting workflows ([`RunWorkflow`](./workflows-steps.md#runworkflow), [`Go`](./workflows-steps.md#go))** requires a launched `Context`.
 - **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), `Patch`) can only be called on the `Context` a workflow function receives.
@@ -258,11 +258,30 @@ func WithCancelCause(ctx Context) (Context, context.CancelCauseFunc)
 
 `WithCancelCause` behaves like [`WithCancel`](#withcancel) but returns a [`context.CancelCauseFunc`](https://pkg.go.dev/context#CancelCauseFunc), letting you supply an error describing why the context was canceled. The cause can later be retrieved with [`context.Cause`](https://pkg.go.dev/context#Cause).
 
+### WithValue
+
+```go
+func WithValue(ctx Context, key, val any) Context
+```
+
+`WithValue` returns a copy of the DBOS context with the given key-value pair, like [`context.WithValue`](https://pkg.go.dev/context#WithValue) but preserving DBOS context capabilities.
+
+### From
+
+```go
+func From(dbosCtx Context, ctx context.Context) Context
+```
+
+`From` returns a copy of `dbosCtx` whose embedded `context.Context` is replaced by `ctx`.
+The returned Context takes its deadline, cancellation, and values entirely from `ctx`; `dbosCtx` contributes only the DBOS runtime state (system database, registries, configuration, logger).
+`ctx` must descend from a `context.Context` provided by DBOS (e.g., the first argument of a workflow or step function), because DBOS metadata such as the current workflow state travels in context values.
+Returns nil if either argument is nil.
+
 ## Context metadata
 ### GetApplicationVersion
 
 ```go
-func GetApplicationVersion() string
+func GetApplicationVersion(ctx Context) string
 ```
 
 `GetApplicationVersion` returns the application version for this context.
@@ -270,10 +289,18 @@ func GetApplicationVersion() string
 ### GetExecutorID
 
 ```go
-func GetExecutorID() string
+func GetExecutorID(ctx Context) string
 ```
 
 `GetExecutorID` returns the executor ID for this context.
+
+### GetApplicationID
+
+```go
+func GetApplicationID(ctx Context) string
+```
+
+`GetApplicationID` returns the application ID for this context (set in DBOS Cloud; empty otherwise).
 
 ### ListRegisteredWorkflows
 

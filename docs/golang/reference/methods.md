@@ -54,6 +54,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueQueuePartitionKey(partitionKey string)`: The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). Each partition has its own concurrency limits.
 * `WithEnqueueAttributes(attributes map[string]any)`: Attach custom key-value [attributes](./workflows-steps.md#withworkflowattributes) to the enqueued workflow. Attributes are recorded in the workflow status at creation, must be JSON-serializable, and can be searched with [`WithFilterAttributes`](#withfilterattributes) on Postgres.
 * `WithEnqueueAuthenticatedUser(user string)`: Associate the enqueued workflow with a user name.
+* `WithEnqueueAssumedRole(role string)`: Set the assumed role for the enqueued workflow.
 * `WithEnqueueAuthenticatedRoles(roles ...string)`: Set the authenticated roles for the enqueued workflow.
 
 :::tip Cross-Language Enqueue
@@ -173,7 +174,7 @@ Calls to `recv` wait for the next message in the queue, returning an error if th
 **Parameters:**
 - **ctx**: The DBOS context.
 - **topic**: A topic queue on which to wait.
-- **timeoutSeconds**: A timeout in seconds. If the wait times out, return an error.
+- **timeout**: A `time.Duration` to wait. If the wait times out, return an error.
 
 ## Streams
 
@@ -204,7 +205,7 @@ func CloseStream(ctx Context, key string) error
 ```
 
 Close a durable stream.
-May only be called from within a workflow or step.
+May only be called from within a workflow (not from inside a step).
 After closing, no more values can be written to the stream.
 Streams are also automatically closed when the workflow terminates.
 
@@ -330,10 +331,10 @@ if err != nil {
 #### WithFilterAppVersion
 
 ```go
-func WithFilterAppVersion(appVersion string) ListWorkflowsOption
+func WithFilterAppVersion(appVersion ...string) ListWorkflowsOption
 ```
 
-Retrieve workflows tagged with this application version.
+Retrieve workflows tagged with any of these application versions.
 
 
 #### WithFilterCreatedBefore
@@ -367,7 +368,7 @@ Retrieve up to this many workflows.
 func WithFilterLoadInput(loadInput bool) ListWorkflowsOption
 ```
 
-WithFilterLoadInput controls whether to load workflow input data (default: true).
+WithFilterLoadInput controls whether to load workflow input data (default: true on a launched `Context`, false on an unlaunched context or standalone client).
 
 #### WithFilterLoadOutput
 
@@ -375,7 +376,7 @@ WithFilterLoadInput controls whether to load workflow input data (default: true)
 func WithFilterLoadOutput(loadOutput bool) ListWorkflowsOption
 ```
 
-WithFilterLoadOutput controls whether to load workflow output data (default: true).
+WithFilterLoadOutput controls whether to load workflow output data (default: true on a launched `Context`, false on an unlaunched context or standalone client).
 
 #### WithFilterName
 
@@ -396,10 +397,10 @@ Skip this many workflows from the results returned (for pagination).
 #### WithFilterSortDesc
 
 ```go
-func WithFilterSortDesc(sortDesc bool) ListWorkflowsOption
+func WithFilterSortDesc() ListWorkflowsOption
 ```
 
-Sort the results in descending (true) or ascending (false) order by workflow start time.
+Sort the results in descending order by workflow start time (ascending is the default).
 
 #### WithFilterCreatedAfter
 
@@ -420,10 +421,10 @@ Filter workflows by [status](#workflowstatustype). Multiple statuses can be spec
 #### WithFilterUser
 
 ```go
-func WithFilterUser(user string) ListWorkflowsOption
+func WithFilterUser(user ...string) ListWorkflowsOption
 ```
 
-Filter workflows run by this authenticated user.
+Filter workflows run by any of these authenticated users.
 
 #### WithFilterWorkflowIDs
 
@@ -436,10 +437,10 @@ Filter workflows by specific workflow IDs.
 #### WithFilterWorkflowIDPrefix
 
 ```go
-func WithFilterWorkflowIDPrefix(prefix string) ListWorkflowsOption
+func WithFilterWorkflowIDPrefix(prefix ...string) ListWorkflowsOption
 ```
 
-Filter workflows whose IDs start with the specified prefix.
+Filter workflows whose IDs start with any of the specified prefixes.
 
 #### WithFilterQueuesOnly
 
@@ -447,7 +448,47 @@ Filter workflows whose IDs start with the specified prefix.
 func WithFilterQueuesOnly() ListWorkflowsOption
 ```
 
-Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED` or `PENDING`).
+Return only workflows that are currently in a queue (queue name is not null, status is `ENQUEUED`, `PENDING`, or `DELAYED`).
+
+#### WithFilterQueueName
+
+```go
+func WithFilterQueueName(queueName ...string) ListWorkflowsOption
+```
+
+Filter workflows enqueued on any of these queues.
+
+#### WithFilterExecutorIDs
+
+```go
+func WithFilterExecutorIDs(executorIDs ...string) ListWorkflowsOption
+```
+
+Filter workflows by the executor IDs that ran them.
+
+#### WithFilterForkedFrom
+
+```go
+func WithFilterForkedFrom(forkedFrom ...string) ListWorkflowsOption
+```
+
+Filter workflows forked from any of these workflow IDs.
+
+#### WithFilterParentWorkflowID
+
+```go
+func WithFilterParentWorkflowID(parentWorkflowID ...string) ListWorkflowsOption
+```
+
+Filter child workflows spawned by any of these parent workflow IDs.
+
+#### WithFilterDeduplicationID
+
+```go
+func WithFilterDeduplicationID(deduplicationID ...string) ListWorkflowsOption
+```
+
+Filter workflows by their queue deduplication IDs.
 
 #### WithFilterCompletedAfter
 
@@ -525,11 +566,13 @@ This is a list of `StepInfo` objects, with the following structure:
 
 ```go
 type StepInfo struct {
-    StepID          int    // The sequential ID of the step within the workflow
-    StepName        string // The name of the step function
-    Output          any    // The output returned by the step (if any)
-    Error           error  // The error returned by the step (if any)
-    ChildWorkflowID string  // If the step starts or retrieves the result of a workflow, its ID
+    StepID          int       // The sequential ID of the step within the workflow
+    StepName        string    // The name of the step function
+    Output          any       // The output returned by the step (if any)
+    Error           error     // The error returned by the step (if any)
+    ChildWorkflowID string    // If the step starts or retrieves the result of a workflow, its ID
+    StartedAt       time.Time // When the step execution started
+    CompletedAt     time.Time // When the step execution completed
 }
 ```
 
@@ -604,6 +647,13 @@ type GetWorkflowAggregatesInput struct {
     ExecutorID         []string
     QueueName          []string
     WorkflowIDPrefix   []string
+    WorkflowIDs        []string
+    AuthenticatedUser  []string
+    ForkedFrom         []string
+    ParentWorkflowID   []string
+    WasForkedFrom      *bool
+    HasParent          *bool
+    Attributes         map[string]any
 }
 ```
 
@@ -958,34 +1008,40 @@ This object has the following definition:
 
 ```go
 type WorkflowStatus struct {
-    ID                 string             `json:"workflow_uuid"`       // Unique identifier for the workflow
-    Status             WorkflowStatusType `json:"status"`              // Current execution status
-    Name               string             `json:"name"`                // Function name of the workflow
-    AuthenticatedUser  *string            `json:"authenticated_user"`  // User who initiated the workflow (if applicable)
-    AssumedRole        *string            `json:"assumed_role"`        // Role assumed during execution (if applicable)
-    AuthenticatedRoles *string            `json:"authenticated_roles"` // Roles available to the user (if applicable)
-    Output             any                `json:"output"`              // Workflow output (available after completion)
-    Error              error              `json:"error"`               // Error information (if status is ERROR)
-    ExecutorID         string             `json:"executor_id"`         // ID of the executor running this workflow
-    CreatedAt          time.Time          `json:"created_at"`          // When the workflow was created
-    UpdatedAt          time.Time          `json:"updated_at"`          // When the workflow status was last updated
-    ApplicationVersion string             `json:"application_version"` // Version of the application that created this workflow
-    ApplicationID      string             `json:"application_id"`      // Application identifier
-    Attempts           int                `json:"attempts"`            // Number of execution attempts
-    QueueName          string             `json:"queue_name"`          // Queue name (if workflow was enqueued)
-    Timeout            time.Duration      `json:"timeout"`             // Workflow timeout duration
-    Deadline           time.Time          `json:"deadline"`            // Absolute deadline for workflow completion
-    StartedAt          time.Time          `json:"started_at"`          // When the workflow execution actually started
-    CompletedAt        time.Time          `json:"completed_at"`        // When the workflow reached a terminal state (SUCCESS, ERROR, or CANCELLED)
-    ForkedFrom         string             `json:"forked_from"`         // ID of the original workflow if this is a fork
-    WasForkedFrom      bool               `json:"was_forked_from"`     // Whether this workflow has been forked from
-    ParentWorkflowID   string             `json:"parent_workflow_id"`  // ID of the parent workflow if this is a child
-    DeduplicationID    string             `json:"deduplication_id"`    // Deduplication identifier (if applicable)
-    Input              any                `json:"input"`               // Input parameters passed to the workflow
-    Priority           int                `json:"priority"`            // Execution priority (lower numbers have higher priority)
-    DelayUntil         time.Time          `json:"delay_until"`         // Time before which a DELAYED workflow should not be dequeued
-    Attributes         map[string]any     `json:"attributes"`          // Custom key-value attributes attached to the workflow
-    ScheduleName       string             `json:"schedule_name"`       // Name of the schedule that enqueued this workflow (if any)
+    ID                 string             `json:"workflow_uuid"`        // Unique identifier for the workflow
+    Status             WorkflowStatusType `json:"status"`               // Current execution status
+    Name               string             `json:"name"`                 // Function name of the workflow
+    AuthenticatedUser  string             `json:"authenticated_user"`   // User who initiated the workflow (if applicable)
+    AssumedRole        string             `json:"assumed_role"`         // Role assumed during execution (if applicable)
+    AuthenticatedRoles []string           `json:"authenticated_roles"`  // Roles available to the user (if applicable)
+    Output             any                `json:"output"`               // Workflow output (available after completion)
+    Error              error              `json:"error"`                // Error information (if status is ERROR)
+    ExecutorID         string             `json:"executor_id"`          // ID of the executor running this workflow
+    CreatedAt          time.Time          `json:"created_at"`           // When the workflow was created
+    UpdatedAt          time.Time          `json:"updated_at"`           // When the workflow status was last updated
+    ApplicationVersion string             `json:"application_version"`  // Version of the application that created this workflow
+    ApplicationID      string             `json:"application_id"`       // Application identifier
+    Attempts           int                `json:"attempts"`             // Number of execution attempts
+    QueueName          string             `json:"queue_name"`           // Queue name (if workflow was enqueued)
+    Timeout            time.Duration      `json:"-"`                    // Workflow timeout duration; rendered as timeout_ms (integer milliseconds) in JSON
+    Deadline           time.Time          `json:"deadline"`             // Absolute deadline for workflow completion
+    StartedAt          time.Time          `json:"started_at"`           // When the workflow execution actually started
+    CompletedAt        time.Time          `json:"completed_at"`         // When the workflow reached a terminal state (SUCCESS, ERROR, or CANCELLED)
+    ForkedFrom         string             `json:"forked_from"`          // ID of the original workflow if this is a fork
+    WasForkedFrom      bool               `json:"was_forked_from"`      // Whether this workflow has been forked from
+    ParentWorkflowID   string             `json:"parent_workflow_id"`   // ID of the parent workflow if this is a child
+    DeduplicationID    string             `json:"deduplication_id"`     // Queue deduplication identifier (if applicable)
+    Input              any                `json:"input"`                // Input parameters passed to the workflow
+    Priority           int                `json:"priority"`             // Execution priority (lower numbers have higher priority)
+    QueuePartitionKey  string             `json:"queue_partition_key"`  // Queue partition key for partitioned queues
+    ClassName          string             `json:"class_name"`           // Class/namespace name for cross-language dispatch
+    ConfigName         *string            `json:"config_name"`          // Instance/config name for cross-language dispatch
+    Serialization      string             `json:"serialization"`        // Serialization format used for inputs/outputs (e.g., "portable_json")
+    DelayUntil         time.Time          `json:"delay_until"`          // Time before which a DELAYED workflow should not be dequeued
+    Attributes         map[string]any     `json:"attributes"`           // Custom key-value attributes attached to the workflow
+    ScheduleName       string             `json:"schedule_name"`        // Name of the schedule that enqueued this workflow (if any)
+    DebounceDeadline   time.Time          `json:"debounce_deadline"`    // Absolute cap beyond which debounce calls may not extend the delay
+    IsDebounced        bool               `json:"is_debounced"`         // Whether this workflow was created by a debouncer
 }
 ```
 
@@ -1130,7 +1186,7 @@ The reconciler loop picks the new schedule up on its next tick and installs it i
 err := dbos.CreateSchedule(ctx, dbos.ScheduleSpec{
     ScheduleName:      "my-schedule",
     Workflow:          myPeriodicTask,
-    Schedule:          "*/5 * * * *",
+    Schedule:          "0 */5 * * * *",
     Context:           "my context",
     AutomaticBackfill: true,
 })
@@ -1139,7 +1195,7 @@ err := dbos.CreateSchedule(ctx, dbos.ScheduleSpec{
 err = dbos.CreateSchedule(client, dbos.ScheduleSpec{
     ScheduleName: "my-schedule",
     WorkflowName: "myPeriodicTask",
-    Schedule:     "*/5 * * * *",
+    Schedule:     "0 */5 * * * *",
 })
 ```
 
@@ -1164,8 +1220,8 @@ In particular, a schedule previously routed to a named queue reverts to the inte
 
 ```go
 err := dbos.ApplySchedules(ctx, []dbos.ScheduleSpec{
-    {ScheduleName: "a", Workflow: workflowA, Schedule: "*/10 * * * *"},
-    {ScheduleName: "b", Workflow: workflowB, Schedule: "0 0 * * *"},
+    {ScheduleName: "a", Workflow: workflowA, Schedule: "0 */10 * * * *"},
+    {ScheduleName: "b", Workflow: workflowB, Schedule: "0 0 0 * * *"},
 })
 ```
 
@@ -1332,7 +1388,7 @@ Return the ID of the current workflow, if in a workflow. Returns an error if not
 func GetStepID(ctx Context) (int, error)
 ```
 
-Return the unique ID of the current step within a workflow. Returns an error if not called from within a step context.
+Return the current value of the step counter within a workflow (the ID of the most recently started step). Returns an error if not called from within a workflow context.
 
 **Parameters:**
 - **ctx**: The DBOS context.
@@ -1407,8 +1463,8 @@ return nil, &dbos.PortableWorkflowError{
 
 ```go
 type PortableWorkflowArgs struct {
-    PositionalArgs []any          `json:"positional_args,omitempty"`
-    NamedArgs      map[string]any `json:"named_args,omitempty"`
+    PositionalArgs []any          `json:"positionalArgs"`
+    NamedArgs      map[string]any `json:"namedArgs"`
 }
 ```
 

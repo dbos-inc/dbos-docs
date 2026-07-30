@@ -189,7 +189,7 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, workflow, "")
+        _, err := dbos.RunWorkflow(dbosContext, workflow, "")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
@@ -313,7 +313,7 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, queueWorkflow, "queue")
+        _, err := dbos.RunWorkflow(dbosContext, queueWorkflow, "queue")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return

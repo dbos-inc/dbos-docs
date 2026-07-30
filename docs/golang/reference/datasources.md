@@ -94,6 +94,14 @@ It shares the per-workflow step counter with [`RunAsStep`](./workflows-steps.md#
 Standard [step options](./workflows-steps.md#withstepname) apply (`WithStepName`, `WithStepMaxRetries`, retry intervals, retry predicate).
 Serialization and deadlock conflicts are retried internally with a fresh transaction; application errors follow your step retry policy.
 
+Additionally, `WithTxIsolation` sets the transaction's isolation level (default `ReadCommitted`):
+
+```go
+func WithTxIsolation(level IsoLevel) StepOption
+```
+
+`IsoLevel` is one of `dbos.IsoLevelDefault`, `dbos.IsoLevelReadCommitted`, `dbos.IsoLevelRepeatableRead`, or `dbos.IsoLevelSerializable`.
+
 **Example Syntax:**
 
 ```go
@@ -112,7 +120,7 @@ n, err := dbos.RunAsTransaction(ctx, ds, func(ctx context.Context, tx dbos.Tx) (
 |---|---|
 | Top level in a workflow | Exactly-once. Full two-layer durability and recovery. |
 | Inside another `RunAsTransaction` | Rejected with an error before any database work. |
-| Inside a `RunAsStep` | Allowed, but the enclosing step owns the durability boundary, so the transaction gets the step's **at-least-once** guarantee: if the process crashes after the transaction commits but before the step checkpoints, recovery re-runs the step and re-commits the write. Use a top-level `RunAsTransaction` when you need exactly-once. |
+| Inside a `RunAsStep` | Rejected with an error before any database work: the enclosing step owns the durability boundary, so a nested transaction could not be checkpointed and would silently lose its exactly-once guarantee. Run transactions from workflow code. |
 
 #### Durability and Recovery
 

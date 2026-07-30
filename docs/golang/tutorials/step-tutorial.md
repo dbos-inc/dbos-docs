@@ -49,7 +49,7 @@ func workflowFunction(ctx dbos.Context, n int) (int, error) {
         func(stepCtx context.Context) (int, error) {
             return generateRandomNumber(stepCtx, n)
         },
-        dbos.WithStepName("generateRandomNumber")
+        dbos.WithStepName("generateRandomNumber"),
     )
     if err != nil {
         return 0, err
@@ -68,9 +68,10 @@ Common nondeterministic operations include:
 - Getting the current time.
 
 You **cannot** call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like `Send` or `SetEvent` from within steps.
+You also cannot call DBOS methods like `Send`, `SetEvent`, or `RunAsTransaction` from within steps — they return an error (see the [full list](../reference/workflows-steps.md#calling-dbos-operations-from-steps)).
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+[`WriteStream`](../reference/methods.md#writestream) and read operations like `ListWorkflows` are allowed from steps.
 
 ### Configurable Retries
 

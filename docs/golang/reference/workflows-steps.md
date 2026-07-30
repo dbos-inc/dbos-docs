@@ -313,6 +313,22 @@ func WithAuthenticatedUser(user string) WorkflowOption
 Associate the workflow execution with a user name. Useful to define workflow identity.
 Child workflows automatically inherit their parent's authentication information (authenticated user, assumed role, and authenticated roles) unless explicitly overridden.
 
+#### WithAssumedRole
+
+```go
+func WithAssumedRole(role string) WorkflowOption
+```
+
+Set the assumed role recorded on the workflow.
+
+#### WithAuthenticatedRoles
+
+```go
+func WithAuthenticatedRoles(roles ...string) WorkflowOption
+```
+
+Set the authenticated roles recorded on the workflow.
+
 #### WithWorkflowAttributes
 
 ```go
@@ -378,7 +394,7 @@ Set a custom name for a step.
 func WithStepMaxRetries(maxRetries int) StepOption
 ```
 
-Set the maximum number of times this step is automatically retired on failure.
+Set the maximum number of times this step is automatically retried on failure.
 A value of 0 (the default) indicates no retries.
 
 #### WithStepMaxInterval
@@ -405,17 +421,37 @@ func WithStepBaseInterval(interval time.Duration) StepOption
 
 WithStepBaseInterval sets the initial delay between retries. Default value is 100ms.
 
+#### WithStepRetryPredicate
+
+```go
+func WithStepRetryPredicate(predicate func(error) bool) StepOption
+```
+
+Set a predicate deciding whether a step error is retried.
+When set, a failed step is retried only if the predicate returns true for the error; otherwise the error is returned immediately, regardless of the remaining retry budget.
+
+### Calling DBOS operations from steps
+
+A step body is a strict scope: DBOS operations that write a checkpoint cannot run inside one.
+Calling any of the following from inside a step returns an `ErrorCodeStepExecution` error: [`RunWorkflow`](#runworkflow) (spawning a child workflow), [`RunAsTransaction`](./datasources.md#runastransaction), [`Go`](#go), [`Enqueue`](./methods.md#enqueue), `Send`, `Recv`, `SetEvent`, `GetEvent`, `Sleep`, `CloseStream`, [`GetResult`](#workflowhandlegetresult) on a workflow handle, `Patch`, `DeprecatePatch`, `Debounce`, workflow-management writes (`CancelWorkflow(s)`, `ResumeWorkflow(s)`, `ForkWorkflow(s)`, `DeleteWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`), and schedule writes (`CreateSchedule`, `PauseSchedule`, `ResumeSchedule`, `DeleteSchedule`).
+
+Allowed from inside a step:
+
+- Calling another step function — it runs inline as part of the enclosing step, without its own checkpoint.
+- [`WriteStream`](./methods.md#writestream) — at-least-once, attributed to the enclosing step.
+- Read and list operations (`ListWorkflows`, `GetWorkflowSteps`, `RetrieveWorkflow`, `ReadStream`, aggregates, schedule and queue reads) — they run directly, without a checkpoint.
+
 ### Concurrent steps
 
 #### Go
 
 ```go
-func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (chan StepOutcome[R], error)
+func Go[R any](ctx Context, fn Step[R], opts ...StepOption) (<-chan StepOutcome[R], error)
 ```
 
 Launch a step asynchronously and return a channel that will receive the result when the step completes.
 This is a durable alternative to Go's native goroutines that checkpoints results to the database for deterministic replay.
-Can only be called from within a workflow.
+Can only be called from within a workflow (not from inside a step).
 
 **Parameters:**
 - **ctx**: The Context.
@@ -578,11 +614,10 @@ Patching must be enabled in your configuration by setting `EnablePatching: true`
 #### DeprecatePatch
 
 ```go
-func DeprecatePatch(ctx Context, patchName string) (bool, error)
+func DeprecatePatch(ctx Context, patchName string) error
 ```
 
 Safely bypass a patch marker at the current point in workflow history if present.
-Always returns `true`.
 Used to safely deprecate patches; see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
 
 **Parameters:**

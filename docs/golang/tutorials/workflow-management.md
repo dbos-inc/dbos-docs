@@ -124,7 +124,7 @@ Resuming also resets the workflow's recovery-attempt counter and clears any dura
 You can start a new execution of a workflow by **forking** it from a specific step.
 When you fork a workflow, DBOS generates a new workflow with a new workflow ID, copies to that workflow the original workflow's inputs and all its steps up to the selected step, then begins executing the new workflow from the selected step.
 
-Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
+Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an application version on which the bug is fixed).
 
 You can fork a workflow programmatically using [`ForkWorkflow`](../reference/methods#forkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:

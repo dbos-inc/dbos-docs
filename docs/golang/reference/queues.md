@@ -57,17 +57,8 @@ Set the maximum number of workflows from this queue that may run concurrently wi
 func WithGlobalConcurrency(concurrency int) QueueOption
 ```
 
-Set the maximum number of workflows from this queue that may run concurrently. Defaults to 0 (no limit).
+Set the maximum number of workflows from this queue that may run concurrently. Unset by default (no limit).
 This concurrency limit is global across all DBOS processes using this queue.
-
-####  WithMaxTasksPerIteration
-
-```go
-func WithMaxTasksPerIteration(maxTasks int) QueueOption
-```
-
-Sets the maximum number of workflows that can be dequeued in a single iteration.
-This controls batch sizes for queue processing.
 
 ####  WithPriorityEnabled
 
@@ -147,10 +138,8 @@ queue, err := dbos.RegisterQueue(ctx, "email-queue", dbos.WithQueueBasePollingIn
 func WithQueueMaxPollingInterval(interval time.Duration) QueueOption
 ```
 
-Set the maximum (slowest) polling interval for this queue. Polling intervals are subject to base 2 exponential backoff.
-
-The queue will never poll slower than this value, even when backing off due to errors.
-If not set, the maximum polling interval is derived from the base polling interval.
+Deprecated: this option is ignored for database-backed queues (all queues registered with `RegisterQueue`) — passing it logs a warning.
+The maximum (slowest) polling interval is always derived from the base polling interval: `max(base, 120s)`.
 
 #### WithQueueOnConflict
 
@@ -336,6 +325,7 @@ func WithDebouncerQueue(queueName string) DebouncerOption
 Run the debounced workflow on the named queue instead of the DBOS internal queue.
 Debounce keys are scoped to the queue.
 The queue is fixed per debouncer and must be registered (see [`RegisterQueue`](#registerqueue)); `Debounce` calls cannot override it.
+`NewDebouncer` validates at creation time that the queue is registered; `NewDebouncerClient` does not.
 
 ### WithDebouncerInstance
 

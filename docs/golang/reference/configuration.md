@@ -11,10 +11,10 @@ To configure DBOS, pass a `Config` object to [`NewContext`](./dbos-context.md#ne
 ```go
 type Config struct {
     AppName                   string         // Application name for identification (required)
-    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL/CockroachDB URL (postgres://...), a key=value DSN, or a SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
     SystemDBPool              *pgxpool.Pool  // A custom Postgres/CockroachDB connection pool DBOS can use to access your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
     SQLiteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) DBOS can use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
-    DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
+    DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres/CockroachDB only, ignored by SQLite)
     Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
     ConductorURL              string         // DBOS conductor service URL (optional)
     ConductorAPIKey           string         // DBOS conductor API key (optional)
@@ -25,8 +25,12 @@ type Config struct {
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer). See the serialization reference.
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
     SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
+    AdminServer               bool           // Run the HTTP admin server for workflow management operations (default: false)
+    AdminServerPort           int            // Port for the admin server (default: 3001)
 }
 ```
+
+`ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
 
 For example:
 ```go

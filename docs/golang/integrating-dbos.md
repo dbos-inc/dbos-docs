@@ -56,7 +56,7 @@ func main() {
 ### 3. Start Your Application
 
 Try starting your application.
-If everything is set up correctly, your app should run normally and log `DBOS initialized` on startup.
+If everything is set up correctly, your app should run normally and log `DBOS launched` on startup.
 Congratulations! You've integrated DBOS into your application.
 
 

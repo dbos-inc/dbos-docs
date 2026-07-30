@@ -104,7 +104,7 @@ For example, here's how to deprecate the patch above:
 
 ```go
 func workflow(ctx dbos.Context, input string) (string, error) {
-    _, err := dbos.DeprecatePatch(ctx, "use-baz") // always returns true
+    err := dbos.DeprecatePatch(ctx, "use-baz")
     if err != nil {
         return "", err
     }

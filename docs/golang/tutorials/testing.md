@@ -49,21 +49,21 @@ func childWorkflow(ctx dbos.Context, i int) (int, error) {
     return i + 1, nil
 }
 
-func workflow(ctx dbos.Context, i int) (int, error) {
+func workflow(ctx dbos.Context, i int) ([]dbos.WorkflowStatus, error) {
     // Test RunAsStep
-    a, err := dbos.RunAsStep(ctx, step)
+    _, err := dbos.RunAsStep(ctx, step)
     if err != nil {
-        return 0, err
+        return nil, err
     }
 
     // Child wf
     ch, err := dbos.RunWorkflow(ctx, childWorkflow, i)
     if err != nil {
-        return 0, err
+        return nil, err
     }
-    b, err := ch.GetResult()
+    _, err = ch.GetResult()
     if err != nil {
-        return 0, err
+        return nil, err
     }
 
     return dbos.ListWorkflows(ctx)
@@ -81,7 +81,7 @@ import (
     "fmt"
     "testing"
 
-    "mocks" // Replace with the location of your generatd mocks
+    "mocks" // Replace with the location of your generated mocks
 
     "github.com/dbos-inc/dbos-transact-golang/dbos"
     "github.com/stretchr/testify/mock"
