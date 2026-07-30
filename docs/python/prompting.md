@@ -1760,8 +1760,8 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
-- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
-- **admin_port**: The port on which the admin server runs. Defaults to 3001.
+- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to False.
+- **admin_port**: The port on which the admin server runs. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to 3001. Has no effect unless `run_admin_server` is set.
 - **serializer**: A custom serializer for the system database.
 
 #### Custom Serialization
