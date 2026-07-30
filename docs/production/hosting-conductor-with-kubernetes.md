@@ -563,7 +563,7 @@ kubectl patch svc ingress-nginx-controller -n ingress-nginx -p \
 
 :::note
 The DBOS SDK sends periodic ping frames that keep the connection active under normal conditions.
-Albeit the SDK will reconnect automatically, increasing the ELB idle timeout will prevent network hiccups to drop the connection.
+Albeit the SDK will reconnect automatically, increasing the ELB idle timeout will prevent network hiccups from dropping the connection.
 :::
 
 ### Deployments
@@ -745,24 +745,29 @@ At this point, your self-hosted Conductor deployment is fully operational! Open 
 
 ### Cleanup
 
-To tear down all AWS resources when done:
+To tear down all AWS resources when done, delete them in this order.
+The RDS instance and its security group live in the VPC that `eksctl` created, so deleting the cluster first leaves the VPC undeletable and `eksctl delete cluster` fails on the leftover dependencies.
 
 ```bash
-# Delete the EKS cluster (includes VPC, security groups, and node group)
-eksctl delete cluster --name dbos-conductor --region $AWS_REGION
-
-# Delete the RDS instance
+# 1. Delete the RDS instance and wait for it to be gone
 aws rds delete-db-instance --db-instance-identifier dbos-conductor-pg \
   --skip-final-snapshot --region $AWS_REGION
 
-# Delete the RDS security group
+aws rds wait db-instance-deleted \
+  --db-instance-identifier dbos-conductor-pg \
+  --region $AWS_REGION
+
+# 2. Delete the DB subnet group (must be empty)
+aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region $AWS_REGION
+
+# 3. Delete the RDS security group (no longer attached to any instance)
 RDS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=group-name,Values=dbos-conductor-rds" \
   --query "SecurityGroups[0].GroupId" --output text --region $AWS_REGION)
 aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 
-# Delete the DB subnet group
-aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region $AWS_REGION
+# 4. Delete the EKS cluster (includes VPC, security groups, and node group)
+eksctl delete cluster --name dbos-conductor --region $AWS_REGION
 ```
 
 </TabItem>
