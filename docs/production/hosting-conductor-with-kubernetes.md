@@ -156,7 +156,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 eksctl create cluster \
   --name dbos-conductor \
   --region $AWS_REGION \
-  --version 1.31 \
+  --version 1.32 \
   --nodegroup-name default \
   --node-type t3.medium \
   --nodes 2 \
@@ -178,8 +178,8 @@ You should see two nodes in `Ready` status:
 
 ```
 NAME                                           STATUS   ROLES    AGE   VERSION
-ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.31.x
-ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.31.x
+ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.32.x
+ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.32.x
 ```
 
 </details>
