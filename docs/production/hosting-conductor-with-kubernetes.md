@@ -28,8 +28,9 @@ Required environment variables:
 
 Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
 
-**Console** — A stateless, single-container Deployment listening on port 80.
-It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`.
+**Console** — A stateless, single-container Deployment listening on port 8080 (the Service in front of it publishes port 80.)
+It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`, set to a bare `host:port` (for example `conductor.dbos.svc.cluster.local:8090`).
+Note that your *applications* also use a variable named `DBOS_CONDUCTOR_URL`, but it takes a full WebSocket URL (see *Register applications* below.)
 
 :::info Updating Conductor
 
@@ -41,6 +42,13 @@ Applications seamlessly reconnect to the new Conductor version with no impact on
 :::info Register applications
 After deploying Conductor and Console, [register your application, and generate an API key](./conductor.md#connecting-to-conductor).
 The application connects to Conductor via WebSocket using this API key and the Conductor URL.
+
+With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `/conductor/v1alpha1` prefix:
+
+```bash
+DBOS_CONDUCTOR_KEY=<the API key you generated in the Console>
+DBOS_CONDUCTOR_URL=wss://<your-elb-hostname>/conductor/v1alpha1
+```
 :::
 
 ## Authentication
@@ -49,9 +57,11 @@ Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authenti
 
 ## Ingress
 
-We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**. You must configure your DBOS applications to point at your load balancer or reverse proxy URL, which should redirect to Conductor.
+In this guide, all external traffic enters through a reverse proxy that performs **TLS termination**, supports **WebSockets**, and routes by path: `/conductor/v1alpha1/...` to Conductor, everything else to the Console.
 
-The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (e.g., 300s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
+This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), but any reverse proxy meeting those requirements will work. The `ingress.yaml` below defines the routing it must implement.
+
+The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (this guide uses 3600s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
 
 
 ## Security Best Practices
@@ -60,7 +70,7 @@ The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both t
 Store these as Kubernetes Secrets and inject them via `secretKeyRef`.
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager (AWS Secrets Manager, [Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/vso), etc.).
 
-**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow HTTPS traffic from the Console to Conductor.
+**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow traffic from the Console to Conductor on port 8090.
 
 **RBAC** — Restrict which ServiceAccounts can read Secrets in the namespace. Conductor credentials (database URLs, license key, API key) should only be accessible to the pods that need them.
 
@@ -454,8 +464,8 @@ For production, use [cert-manager](https://cert-manager.io/) with a real domain.
 
 <summary><strong>ingress.yaml</strong></summary>
 
-The Ingress routes `/conductor/...` to the Conductor service and everything else to the Console.
-A regex rewrite strips the `/conductor` prefix so Conductor sees requests at `/`.
+The Ingress routes `/conductor/v1alpha1/...` to the Conductor service and everything else to the Console.
+A regex rewrite strips the `/conductor/v1alpha1` prefix so Conductor sees requests at `/`.
 Replace `<your-elb-hostname>` with the `$ELB_HOSTNAME` value you retrieved above.
 
 ```yaml
@@ -479,7 +489,7 @@ spec:
     - host: <your-elb-hostname>
       http:
         paths:
-          - path: /conductor(/|$)(.*)
+          - path: /conductor/v1alpha1(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
@@ -499,14 +509,14 @@ The `host` in both `tls` and `rules` must match — without it, Nginx serves its
 
 | Request path | Backend |
 |---|---|
-| `/conductor/` | conductor:8090 → `/` |
-| `/conductor/v1/workflows` | conductor:8090 → `/v1/workflows` |
+| `/conductor/v1alpha1/websocket/<app>/<key>` | conductor:8090 → `/websocket/<app>/<key>` |
+| `/conductor/v1alpha1/healthz` | conductor:8090 → `/healthz` |
+| `/conductor/v1alpha1/v1/metrics` | conductor:8090 → `/v1/metrics` |
 | `/` | console:80 |
-| `/health` | console:80 |
+| `/conductor/applications` | console:80 (UI page) |
 
-- **`rewrite-target: /$2`** — strips the `/conductor` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
+- **`rewrite-target: /$2`** — strips the `/conductor/v1alpha1` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
 - **`proxy-read-timeout` / `proxy-send-timeout`** — set to 3600s to keep Conductor's long-lived WebSocket connections alive.
-
 </details>
 
 **Apply the Ingress**
@@ -651,17 +661,17 @@ spec:
             - name: DBOS_CONDUCTOR_URL
               value: "conductor.dbos.svc.cluster.local:8090"
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:
@@ -682,7 +692,7 @@ spec:
     app: console
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
 ```
 
 </details>
