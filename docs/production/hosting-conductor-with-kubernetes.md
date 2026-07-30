@@ -515,8 +515,7 @@ spec:
         paths:
           # Both paths are regexes, so ordering matters: ingress-nginx sorts
           # locations longest-path-first, which puts /conductor-api ahead of
-          # the Console catch-all. Keep the Conductor path the longer of the
-          # two so it is never shadowed.
+          # the Console catch-all.
           - path: /conductor-api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -609,8 +608,7 @@ spec:
       containers:
         - name: conductor
           # Untagged resolves to :latest. For production, pin an explicit
-          # version (and pin the Console to the same one) so rollouts are
-          # reproducible: dbosdev/conductor:<version>
+          # version so rollouts are reproducible: dbosdev/conductor:<version>
           image: dbosdev/conductor
           env:
             - name: DBOS__CONDUCTOR_DB_URL
@@ -766,7 +764,6 @@ At this point, your self-hosted Conductor deployment is fully operational! Open 
 ### Cleanup
 
 To tear down all AWS resources when done, delete them in this order.
-The RDS instance and its security group live in the VPC that `eksctl` created, so deleting the cluster first leaves the VPC undeletable and `eksctl delete cluster` fails on the leftover dependencies.
 
 ```bash
 # 1. Delete the RDS instance and wait for it to be gone
