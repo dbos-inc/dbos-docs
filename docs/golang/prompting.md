@@ -60,7 +60,8 @@ DBOS should be installed and imported from the `github.com/dbos-inc/dbos-transac
 DBOS programs MUST have a main file (typically 'main.go') that creates all objects and workflow functions during startup.
 
 Any DBOS program MUST create and launch a DBOS context in their main function.
-All workflows must be registered and queues created BEFORE DBOS is launched
+All workflows must be registered BEFORE DBOS is launched.
+Queues may be registered at any time, including after launch.
 
 ```go
 func main() {
@@ -307,9 +308,13 @@ func taskWorkflow(ctx dbos.Context, i int) (int, error) {
 
 func queueWorkflow(ctx dbos.Context, queueName string) (int, error) {
     fmt.Println("Enqueuing tasks")
+    queue, err := dbos.RetrieveQueue(ctx, queueName)
+    if err != nil {
+        return 0, err
+    }
     handles := make([]dbos.WorkflowHandle[int], 10)
     for i := range 10 {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queueName))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue))
         if err != nil {
             return 0, err
         }
@@ -621,9 +626,15 @@ Scheduled workflows must accept a `dbos.ScheduledWorkflowInput`, which carries t
 
 ```go
 type ScheduledWorkflowInput struct {
-    ScheduledTime time.Time
-    Context       any
+    ScheduledTime time.Time       `json:"scheduled_time"`
+    Context       json.RawMessage `json:"context,omitempty"`
 }
+```
+
+The `Context` field holds the raw JSON of the value set on the schedule; decode it inside the workflow with `dbos.DecodeScheduleContext[T](input)`:
+
+```go
+func DecodeScheduleContext[T any](input ScheduledWorkflowInput) (T, error)
 ```
 
 Register the workflow normally, then create a schedule for it using `dbos.CreateSchedule` (or `dbos.ApplySchedules` to declaratively apply a set of schedules on start):
@@ -866,7 +877,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 ### Send
 
 ```go
-func Send[P any](ctx Context, destinationID string, message P, topic string, opts ...SendOption) error
+func Send[P any](ctx Client, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 
 You can call `Send()` to send a message to a workflow.
@@ -952,7 +963,7 @@ Any workflow can call `SetEvent` to publish a key-value pair, or update its valu
 ### GetEvent
 
 ```go
-func GetEvent[R any](ctx Context, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](ctx Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 You can call `GetEvent` to retrieve the value published by a particular workflow ID for a particular key.
@@ -1037,7 +1048,7 @@ Writes to a stream from a step happen at-least-once; if a step fails and is retr
 #### Reading from Streams
 
 ```go
-func ReadStream[R any](ctx Context, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](ctx Client, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 You can read values from a stream from anywhere.
@@ -1049,7 +1060,7 @@ To read without blocking, pass `WithReadStreamSnapshot()`, which returns as soon
 You can also read from a stream asynchronously, which returns a channel:
 
 ```go
-func ReadStreamAsync[R any](ctx Context, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](ctx Client, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 ```go
@@ -1203,7 +1214,11 @@ queue, err := dbos.RegisterQueue(dbosContext, "example_queue")
 `RegisterQueue` persists the queue's configuration to the system database.
 It can be called at any time, including after `Launch()`, and the queue's configuration can be changed at runtime.
 
-You can then enqueue any workflow using `WithQueue` when calling `RunWorkflow`.
+`RegisterQueue` returns a `Queue` handle.
+Keep it somewhere your code can reach it (for example, a package-level variable)—enqueueing a workflow requires the handle, not the queue name.
+If you only have the name, fetch the handle with `RetrieveQueue`.
+
+You can then enqueue any workflow by passing the handle to `WithQueue` when calling `RunWorkflow`.
 Enqueuing a function submits it for execution and returns a handle to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -1213,10 +1228,10 @@ func processTask(ctx dbos.Context, task string) (string, error) {
     return fmt.Sprintf("Processed: %s", task), nil
 }
 
-func example(dbosContext dbos.Context) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     // Enqueue a workflow
     task := "example_task"
-    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue("example_queue"))
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue(queue))
     if err != nil {
         return err
     }
@@ -1242,12 +1257,18 @@ func taskWorkflow(ctx dbos.Context, task string) (string, error) {
 }
 
 func queueWorkflow(ctx dbos.Context, queueName string) ([]string, error) {
+    // Look up the queue handle by name
+    queue, err := dbos.RetrieveQueue(ctx, queueName)
+    if err != nil {
+        return nil, err
+    }
+
     // Enqueue each task so all tasks are processed concurrently
     tasks := []string{"task1", "task2", "task3", "task4", "task5"}
 
     var handles []dbos.WorkflowHandle[string]
     for _, task := range tasks {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queueName))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queue))
         if err != nil {
             return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
         }
@@ -1409,13 +1430,13 @@ func taskWorkflow(ctx dbos.Context, task string) (string, error) {
     return "completed", nil
 }
 
-func example(dbosContext dbos.Context) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
 
     handle, err := dbos.RunWorkflow(
         dbosContext, taskWorkflow, task,
-        dbos.WithQueue("example_queue"),
+        dbos.WithQueue(queue),
         dbos.WithDeduplicationID(deduplicationID))
     if err != nil {
         // Handle deduplication error or other failures
@@ -1456,12 +1477,12 @@ func taskWorkflow(ctx dbos.Context, task string) (string, error) {
     return "completed", nil
 }
 
-func example(dbosContext dbos.Context) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     task := "example_task"
     priority := uint(10) // Lower number = higher priority
 
     handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
-        dbos.WithQueue("example_queue"),
+        dbos.WithQueue(queue),
         dbos.WithPriority(priority))
     if err != nil {
         return err
@@ -1494,7 +1515,7 @@ partitionedQueue, err := dbos.RegisterQueue(dbosContext, "user-tasks",
 // Enqueue workflows with partition keys
 // Each user's tasks run with separate concurrency limits
 handle, err := dbos.RunWorkflow(dbosContext, processTask, taskData,
-    dbos.WithQueue("user-tasks"),
+    dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey(userID),
 )
 ```
@@ -1506,9 +1527,14 @@ The workflow is initially placed in `DELAYED` status and does not execute.
 After the delay expires, it transitions to `ENQUEUED` status and may be dequeued and executed.
 
 ```go
+remindersQueue, err := dbos.RegisterQueue(dbosContext, "reminders")
+if err != nil {
+    return err
+}
+
 // Send a reminder in one hour
 handle, err := dbos.RunWorkflow(dbosContext, sendReminder, userID,
-    dbos.WithQueue("reminders"),
+    dbos.WithQueue(remindersQueue),
     dbos.WithDelay(1 * time.Hour),
 )
 ```
@@ -1546,8 +1572,11 @@ func main() {
     dbos.RegisterWorkflow(dbosContext, processInput)
 
     // Create a debouncer with a maximum timeout of 30 seconds
-    debouncer := dbos.NewDebouncer(dbosContext, processInput,
+    debouncer, err := dbos.NewDebouncer(dbosContext, processInput,
         dbos.WithDebouncerTimeout(30*time.Second))
+    if err != nil {
+        log.Fatal(err)
+    }
 
     dbos.Launch(dbosContext)
     defer dbos.Shutdown(dbosContext, 5*time.Second)
@@ -1572,8 +1601,10 @@ func main() {
 To debounce a workflow method of a configured instance (registered with `WithInstance`), pass the instance with `WithDebouncerInstance`:
 
 ```go
-debouncer := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
+debouncer, err := dbos.NewDebouncer(ctx, slack.Send, dbos.WithDebouncerInstance(slack))
 ```
+
+Debouncers can be created at any time, including after `Launch()`.
 
 ### ListenQueues
 
@@ -1597,9 +1628,15 @@ Queues are identified by name; each call to `ListenQueues` replaces the whole li
 
 # Reference
 
-A DBOS Context is at the center of a DBOS-enabled application. Use it to register workflows, queues and perform workflow management tasks.
+DBOS has two interfaces: `Client` and `Context`, where `Context` embeds (extends) `Client`.
+A `Client` connects to your application's system database and can enqueue and manage workflows, queues, and schedules from any process, including from outside a DBOS application (create one with `NewClient`).
+A `Context` is at the center of a DBOS-enabled application: it is everything a `Client` is, plus workflow registration and durable execution (create one with `NewContext`).
 
 `Context` extends Go's `context.Context` interface and carries essential state across workflow execution. Workflows and steps receive a new `Context` spun out of the root `Context` you manage. In addition, a `Context` can be used to set workflow timeouts.
+
+DBOS operations are package-level functions whose first parameter tells you who can call them:
+- A function taking a **`Client`** (e.g. `Enqueue`, `Send`, `ListWorkflows`, `RegisterQueue`, `CreateSchedule`) accepts a standalone client or any `Context`, because every `Context` **is** a `Client`.
+- A function taking a **`Context`** (e.g. `RunWorkflow`, `RunAsStep`, `Recv`, `SetEvent`, `Sleep`) requires a DBOS context; workflow-scoped functions must receive the `Context` passed into the workflow function.
 
 ## Lifecycle
 ### Initialization
@@ -1612,17 +1649,21 @@ func NewContext(ctx context.Context, inputConfig Config) (Context, error)
 
 ```go
 type Config struct {
-    AppName            string        // Application name for identification (required)
-    DatabaseURL        string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
-    SystemDBPool       *pgxpool.Pool // A custom Postgres/CockroachDB connection pool for your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
-    SQLiteSystemDB     *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite) to use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
-    DatabaseSchema     string        // Database schema name (defaults to "dbos"; Postgres only)
-    Logger             *slog.Logger  // Custom logger instance (defaults to a new slog logger)
-    ConductorURL       string        // DBOS conductor service URL (optional)
-    ConductorAPIKey    string        // DBOS conductor API key (optional)
-    ApplicationVersion string        // Application version (optional)
-    ExecutorID         string        // Executor ID (optional)
-    EnablePatching     bool          // Enable the patching system for Patch/DeprecatePatch (default: false)
+    AppName                   string         // Application name for identification (required)
+    DatabaseURL               string         // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    SystemDBPool              *pgxpool.Pool  // A custom Postgres/CockroachDB connection pool for your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) to use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
+    Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
+    ConductorURL              string         // DBOS conductor service URL (optional)
+    ConductorAPIKey           string         // DBOS conductor API key (optional)
+    ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
+    ApplicationVersion        string         // Application version (optional)
+    ExecutorID                string         // Executor ID (optional)
+    EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
+    Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer)
+    SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
+    SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
 }
 ```
 
@@ -1640,7 +1681,7 @@ if err != nil {
 
 The newly created Context must be launched with `Launch()` before use and should be shut down with Shutdown() at program termination.
 
-DBOS can back its system database with either Postgres (recommended for production; pass a `postgres://` `DatabaseURL` or a `*pgxpool.Pool` as `SystemDBPool`) or SQLite (useful for local development, testing, and single-node deployments; pass a `sqlite:` `DatabaseURL` or a `*sql.DB` as `SQLiteSystemDB`). SQLite support is built in through the pure-Go `modernc.org/sqlite` driver, so no extra dependencies or cgo are required. SQLite `DatabaseURL` examples: `"sqlite:dbos.db"` (relative file) or `"sqlite:/var/lib/dbos.db"` (absolute file). `DatabaseSchema` applies to Postgres only.
+DBOS can back its system database with either Postgres (recommended for production; pass a `postgres://` `DatabaseURL` or a `*pgxpool.Pool` as `SystemDBPool`) or SQLite (useful for local development, testing, and single-node deployments; pass a `sqlite:` `DatabaseURL` or a `*sql.DB` as `SQLiteSystemDB`). SQLite support is not linked into your binary by default: to use SQLite, register the driver with one blank import anywhere in your binary: `import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"`. Without it, `NewContext` (or `NewClient`) fails at startup with an error naming this import. The import registers `modernc.org/sqlite`, a pure-Go driver requiring no cgo. SQLite `DatabaseURL` examples: `"sqlite:dbos.db"` (relative file) or `"sqlite:/var/lib/dbos.db"` (absolute file). `DatabaseSchema` applies to Postgres only.
 
 ### launch
 
@@ -1659,10 +1700,10 @@ In addition, `Launch()` may perform workflow recovery.
 
 ### Shutdown
 ```go
-dbos.Shutdown(ctx Context, timeout time.Duration)
+func Shutdown(c Client, timeout time.Duration) error
 ```
 
-Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps.
+Gracefully shutdown the DBOS runtime, waiting for workflows to complete and cleaning up resources. Accepts either a `Context` or a standalone `Client`. When you shutdown a `Context`, the underlying `context.Context` will be cancelled, which signals all DBOS resources they should stop executing, including workflows and steps. Shutting down a standalone client releases its system database connection pool.
 
 **Parameters:**
 - **timeout**: The time to wait for DBOS resources to gracefully terminate.
@@ -1697,7 +1738,7 @@ func WithCancel(ctx Context) (Context, context.CancelFunc)
 ### GetApplicationVersion
 
 ```go
-func GetApplicationVersion() string
+func GetApplicationVersion(ctx Context) string
 ```
 
 `GetApplicationVersion` returns the application version for this context.
@@ -1705,7 +1746,7 @@ func GetApplicationVersion() string
 ### GetExecutorID
 
 ```go
-func GetExecutorID() string
+func GetExecutorID(ctx Context) string
 ```
 
 `GetExecutorID` returns the executor ID for this context.
@@ -1716,14 +1757,14 @@ func GetExecutorID() string
 ### GetEvent
 
 ```go
-func GetEvent[R any](ctx Context, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](ctx Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
 If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **targetWorkflowID**: The identifier of the workflow whose events to retrieve.
 - **key**: The key of the event to retrieve.
 - **timeout**: A timeout. If the wait times out, return an error.
@@ -1749,14 +1790,14 @@ Use `WithPortableSetEvent()` for cross-language event consumption.
 ### Send
 
 ```go
-func Send[P any](ctx Context, destinationID string, message P, topic string, opts ...SendOption) error
+func Send[P any](ctx Client, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 Send a message to the workflow identified by `destinationID`.
 Messages can optionally be associated with a topic.
 Use `WithPortableSend()` for cross-language messaging.
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
@@ -1806,7 +1847,7 @@ Streams are also automatically closed when the workflow terminates.
 ### ReadStream
 
 ```go
-func ReadStream[R any](ctx Context, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](ctx Client, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 Read all values from a durable stream.
@@ -1816,7 +1857,7 @@ Pass `WithReadStreamSnapshot()` to instead return immediately once all currently
 ### ReadStreamAsync
 
 ```go
-func ReadStreamAsync[R any](ctx Context, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](ctx Client, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 Read values from a durable stream asynchronously.
@@ -1839,13 +1880,13 @@ This sleep is durable&mdash;it records its intended wake-up time in the database
 ### RetrieveWorkflow
 
 ```go
-func RetrieveWorkflow[R any](ctx Context, workflowID string) (*workflowPollingHandle[R], error)
+func RetrieveWorkflow[R any](ctx Client, workflowID string) (WorkflowHandle[R], error)
 ```
 
 Retrieve the handle of a workflow.
 
 **Parameters**:
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **workflowID**: The ID of the workflow whose handle to retrieve.
 
 ## Workflow Management Methods
@@ -1853,7 +1894,7 @@ Retrieve the handle of a workflow.
 ### ListWorkflows
 
 ```go
-func ListWorkflows(ctx Context, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+func ListWorkflows(ctx Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
 ```
 
 Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria.
@@ -2044,7 +2085,7 @@ Filter workflows by whether they have a parent workflow (true) or not (false).
 ### GetWorkflowSteps
 
 ```go
-func GetWorkflowSteps(ctx Context, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
+func GetWorkflowSteps(ctx Client, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
 ```
 
 GetWorkflowSteps retrieves the execution steps of a workflow.
@@ -2061,7 +2102,7 @@ type StepInfo struct {
 ```
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **workflowID**: The ID of the workflow whose steps to retrieve.
 - **opts**: Optional configuration, documented below.
 
@@ -2093,7 +2134,7 @@ Skip the given number of steps before returning results. Combine with `WithSteps
 ### CancelWorkflow
 
 ```go
-func CancelWorkflow(ctx Context, workflowID string, opts ...CancelWorkflowOption) error
+func CancelWorkflow(ctx Client, workflowID string, opts ...CancelWorkflowOption) error
 ```
 
 Cancel a workflow. This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step, or waking it immediately if it is in a durable sleep).
@@ -2101,14 +2142,14 @@ Pass `WithCancelChildren()` to also cancel all the workflow's child workflows, r
 To cancel many workflows in a single database round-trip, use `CancelWorkflows(ctx, workflowIDs []string, opts ...CancelWorkflowOption)`.
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **workflowID**: The ID of the workflow to cancel.
 - **opts**: Optional configuration (e.g., `WithCancelChildren()`).
 
 ### SetWorkflowAttributes
 
 ```go
-func SetWorkflowAttributes(ctx Context, workflowID string, attributes map[string]any) error
+func SetWorkflowAttributes(ctx Client, workflowID string, attributes map[string]any) error
 ```
 
 Replace the custom attributes attached to an existing workflow. Pass a `nil` attributes map to clear all attributes.
@@ -2117,13 +2158,13 @@ Attach attributes at creation with the `WithWorkflowAttributes(map[string]any)` 
 ### ResumeWorkflow
 
 ```go
-func ResumeWorkflow[R any](ctx Context, workflowID string, opts ...ResumeWorkflowOption) (*WorkflowHandle[R], error)
+func ResumeWorkflow[R any](ctx Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[R], error)
 ```
 
 Resume a workflow. This immediately starts it from its last completed step. You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts. You can also use this to start an enqueued workflow immediately, bypassing its queue.
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **workflowID**: The ID of the workflow to resume.
 - **opts**: Optional configuration.
 
@@ -2138,7 +2179,7 @@ Re-enqueue the resumed workflow on the specified queue instead of starting it im
 ### ResumeWorkflows
 
 ```go
-func ResumeWorkflows[R any](ctx Context, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
+func ResumeWorkflows[R any](ctx Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[R], error)
 ```
 
 Resume multiple workflows in a single database round-trip.
@@ -2149,13 +2190,13 @@ Accepts the same options as `ResumeWorkflow` (e.g., `WithResumeQueue`).
 ### ForkWorkflow
 
 ```go
-func ForkWorkflow[R any](ctx Context, input ForkWorkflowInput) (WorkflowHandle[R], error)
+func ForkWorkflow[R any](ctx Client, input ForkWorkflowInput) (WorkflowHandle[R], error)
 ```
 
 Start a new execution of a workflow from a specific step. The input step ID (`startStep`) must match the step number of the step returned by workflow introspection. The specified `startStep` is the step from which the new workflow will start, so any steps whose ID is less than `startStep` will not be re-executed.
 
 **Parameters:**
-- **ctx**: The DBOS context.
+- **ctx**: The DBOS client or context.
 - **input**: A `ForkWorkflowInput` struct where `OriginalWorkflowID` is mandatory.
 
 ```go
@@ -2171,7 +2212,7 @@ type ForkWorkflowInput struct {
 ### SetWorkflowDelay
 
 ```go
-func SetWorkflowDelay(ctx Context, workflowID string, opts ...SetWorkflowDelayOption) error
+func SetWorkflowDelay(ctx Client, workflowID string, opts ...SetWorkflowDelayOption) error
 ```
 
 Set or update the delay on a `DELAYED` workflow.
@@ -2271,17 +2312,17 @@ Queue configuration is persisted to the system database, so any DBOS process con
 ### RegisterQueue
 
 ```go
-func RegisterQueue(ctx Context, name string, options ...QueueOption) (Queue, error)
+func RegisterQueue(ctx Client, name string, options ...QueueOption) (Queue, error)
 ```
 
 Register a queue and persist its configuration to the system database, returning a `Queue`.
 If a queue with the same name already exists in the database, the `WithQueueOnConflict` option controls whether its configuration is overwritten.
 Queues may be registered at any time, including after `Launch()`; live workers periodically reload queue configuration, so changes take effect without a restart.
 
-You can enqueue a workflow using the `WithQueue` parameter of `RunWorkflow`.
+You can enqueue a workflow by passing the returned `Queue` handle to the `WithQueue` option of `RunWorkflow`.
 
 **Parameters:**
-- **ctx**: The Context.
+- **ctx**: The DBOS client or context.
 - **name**: The name of the queue.  Must be unique among all queues in the application.
 - **options**: Functional options for the queue, documented below.
 
@@ -2297,8 +2338,8 @@ queue, err := dbos.RegisterQueue(ctx, "email-queue",
     dbos.WithPriorityEnabled(),
 )
 
-// Enqueue workflows to this queue:
-handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
+// Enqueue workflows to this queue by passing its handle to WithQueue:
+handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue(queue))
 ```
 
 The returned `Queue` interface has `Get*` methods reflecting the queue's configuration as of the most recent read from the database, and `Set*` methods that update the configuration in the database at runtime:
@@ -2313,12 +2354,12 @@ type Queue interface {
     GetPartitionQueue() bool
     GetPollingInterval() time.Duration
 
-    SetGlobalConcurrency(ctx Context, value *int) error
-    SetWorkerConcurrency(ctx Context, value *int) error
-    SetRateLimit(ctx Context, value *RateLimiter) error
-    SetPriorityEnabled(ctx Context, value bool) error
-    SetPartitionQueue(ctx Context, value bool) error
-    SetPollingInterval(ctx Context, value time.Duration) error
+    SetGlobalConcurrency(ctx Client, value *int) error
+    SetWorkerConcurrency(ctx Client, value *int) error
+    SetRateLimit(ctx Client, value *RateLimiter) error
+    SetPriorityEnabled(ctx Client, value bool) error
+    SetPartitionQueue(ctx Client, value bool) error
+    SetPollingInterval(ctx Client, value time.Duration) error
 }
 ```
 
@@ -2342,15 +2383,15 @@ Set how `RegisterQueue` behaves when a queue with the same name already exists i
 ### RetrieveQueue
 
 ```go
-func RetrieveQueue(ctx Context, name string) (Queue, error)
+func RetrieveQueue(ctx Client, name string) (Queue, error)
 ```
 
-Retrieve a queue by name from the system database. Returns `nil` if no queue with that name has been registered.
+Retrieve a queue by name from the system database. If no queue with that name has been registered, returns an error matching `dbos.ErrQueueNotFound`.
 
 ### ListQueues
 
 ```go
-func ListQueues(ctx Context) ([]Queue, error)
+func ListQueues(ctx Client) ([]Queue, error)
 ```
 
 Return all queues registered in the system database.
@@ -2358,7 +2399,7 @@ Return all queues registered in the system database.
 ### DeleteQueue
 
 ```go
-func DeleteQueue(ctx Context, name string) error
+func DeleteQueue(ctx Client, name string) error
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
@@ -2551,11 +2592,13 @@ handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(sla
 #### WithQueue
 
 ```go
-func WithQueue(queueName string) WorkflowOption
+func WithQueue(queue Queue) WorkflowOption
 ```
 
-Enqueue the workflow to the specified queue instead of executing it immediately.
+Enqueue the workflow to the given queue instead of executing it immediately.
 Queued workflows will be dequeued and executed according to the queue's configuration.
+The queue must be a non-nil `Queue` handle returned by `RegisterQueue`, `RetrieveQueue`, or `ListQueues`; passing `nil` makes the enclosing `RunWorkflow` call return an error.
+To enqueue by name instead (for example, from a standalone client), use `Enqueue`.
 
 #### WithDeduplicationID
 
@@ -2776,37 +2819,65 @@ Retrieve the ID of the workflow.
 
 
 `Client` provides a programmatic way to interact with your DBOS application from external code.
-`Client` includes methods similar to `Context` that can be used outside of a DBOS application.
+Because every `Context` **is** a `Client` (the `Context` interface embeds `Client`), all the package-level functions documented above whose first parameter is a `Client` work identically with a standalone client.
+Use them by passing your client where you would pass a DBOS context; only functions requiring a `Context` (workflow registration and execution, workflow-scoped operations) are unavailable on a standalone client.
 
-:::note
-`Client` is included in the `dbos` package, the same package that is used by DBOS applications.
-Where DBOS applications use the `Context` methods,
-external applications use `Client` methods instead.
-:::
+This is the `Client` interface:
 
 ```go
 type Client interface {
-    Enqueue(queueName, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
-    ListWorkflows(opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
-    Send(destinationID string, message any, topic string, opts ...SendOption) error
-    GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
-    RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
-    CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
-    CancelWorkflows(workflowIDs []string, opts ...CancelWorkflowOption) error
-    SetWorkflowAttributes(workflowID string, attributes map[string]any) error
-    SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
-    DeleteWorkflows(workflowIDs []string, opts ...DeleteWorkflowOption) error
-    ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
-    ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
-    ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
-    GetWorkflowSteps(workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
-    ReadStream(workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
-    ReadStreamAsync(workflowID string, key string) (<-chan StreamValue[any], error)
-    Shutdown(timeout time.Duration)
+    context.Context
+
+    // Workflow operations
+    Enqueue(_ Client, queueName string, workflowName string, input any, opts ...EnqueueOption) (WorkflowHandle[any], error)
+    Send(_ Client, destinationID string, message any, topic string, opts ...SendOption) error
+    GetEvent(_ Client, targetWorkflowID string, key string, timeout time.Duration) (any, error)
+    ReadStream(_ Client, workflowID string, key string, opts ...ReadStreamOption) ([]any, bool, error)
+    ReadStreamAsync(_ Client, workflowID string, key string) (<-chan StreamValue[any], error)
+
+    // Workflow management
+    RetrieveWorkflow(_ Client, workflowID string) (WorkflowHandle[any], error)
+    CancelWorkflow(_ Client, workflowID string, opts ...CancelWorkflowOption) error
+    CancelWorkflows(_ Client, workflowIDs []string, opts ...CancelWorkflowOption) error
+    SetWorkflowAttributes(_ Client, workflowID string, attributes map[string]any) error
+    SetWorkflowDelay(_ Client, workflowID string, opts ...SetWorkflowDelayOption) error
+    ResumeWorkflow(_ Client, workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
+    ResumeWorkflows(_ Client, workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
+    ForkWorkflow(_ Client, input ForkWorkflowInput) (WorkflowHandle[any], error)
+    ForkWorkflows(_ Client, input ForkWorkflowsInput) ([]WorkflowHandle[any], error)
+    ListWorkflows(_ Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
+    GetWorkflowSteps(_ Client, workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
+    GetWorkflowAggregates(_ Client, input GetWorkflowAggregatesInput) ([]WorkflowAggregateRow, error)
+    GetStepAggregates(_ Client, input GetStepAggregatesInput) ([]StepAggregateRow, error)
+    DeleteWorkflows(_ Client, workflowIDs []string, opts ...DeleteWorkflowOption) error
+
+    // Queue management
+    RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
+    RetrieveQueue(_ Client, name string) (Queue, error)
+    ListQueues(_ Client) ([]Queue, error)
+    DeleteQueue(_ Client, name string) error
+
+    // Schedule management
+    CreateSchedule(_ Client, spec ScheduleSpec) error
+    ApplySchedules(_ Client, schedules []ScheduleSpec) error
+    PauseSchedule(_ Client, scheduleName string) error
+    ResumeSchedule(_ Client, scheduleName string) error
+    DeleteSchedule(_ Client, scheduleName string) error
+    GetSchedule(_ Client, scheduleName string) (WorkflowSchedule, error)
+    ListSchedules(_ Client, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
+    BackfillSchedule(_ Client, scheduleName string, start, end time.Time) ([]string, error)
+    TriggerSchedule(_ Client, scheduleName string) (WorkflowHandle[any], error)
+
+    // Application version management
+    ListApplicationVersions(_ Client) ([]VersionInfo, error)
+    GetLatestApplicationVersion(_ Client) (VersionInfo, error)
+    SetLatestApplicationVersion(_ Client, versionName string) error
+
+    Shutdown(_ Client, timeout time.Duration) error
 }
 ```
 
-Generic package-level counterparts return typed handles or values: `RetrieveWorkflow[R]`, `ResumeWorkflow[R]`, `ResumeWorkflows[R]`, `ForkWorkflow[R]`, `TriggerSchedule[R]`, `GetEvent[R]`.
+Prefer the generic package-level functions over calling interface methods directly: they return typed handles or values (`RetrieveWorkflow[R]`, `ResumeWorkflow[R]`, `ResumeWorkflows[R]`, `ForkWorkflow[R]`, `TriggerSchedule[R]`, `GetEvent[R]`, `ReadStream[R]`, `ReadStreamAsync[R]`, `Enqueue[R]`), while the interface methods return `any`.
 
 ### Constructor
 
@@ -2820,11 +2891,13 @@ func NewClient(ctx context.Context, config ClientConfig) (Client, error)
 
 ```go
 type ClientConfig struct {
-    DatabaseURL    string        // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
-    SystemDBPool   *pgxpool.Pool // A custom Postgres/CockroachDB pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
-    SQLiteSystemDB *sql.DB       // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
-    DatabaseSchema string        // Database schema name (defaults to "dbos"; Postgres only)
-    Logger         *slog.Logger  // Optional custom logger
+    DatabaseURL            string          // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required. SQLite URLs additionally require the driver import: import _ "github.com/dbos-inc/dbos-transact-golang/dbos/driver/sqlite"
+    SystemDBPool           *pgxpool.Pool   // A custom Postgres/CockroachDB pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
+    SQLiteSystemDB         *sql.DB         // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
+    DatabaseSchema         string          // Database schema name (defaults to "dbos"; Postgres only)
+    Logger                 *slog.Logger    // Optional custom logger
+    Serializer             Serializer[any] // Optional custom serializer (defaults to JSON)
+    SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
 }
 ```
 
@@ -2846,33 +2919,23 @@ if err != nil {
 defer dbos.Shutdown(client, 5*time.Second)
 ```
 
-A client manages a connection pool to the DBOS system database. Calling `Shutdown` on a client will release the connection pool.
-
-
-### Shutdown
-
-```go
-Shutdown(timeout time.Duration)
-```
-
-Gracefully shuts down the client and releases the system database connection pool.
-
-**Parameters:**
-- `timeout`: Maximum time to wait for graceful shutdown
+A client manages a connection pool to the DBOS system database. Shut it down with the same unified `dbos.Shutdown(client, timeout)` function documented above, which releases the connection pool.
 
 ## Workflow Interaction Methods
 
 ### Enqueue
 
 ```go
-func Enqueue[P any, R any](
-    c Client,
+func Enqueue[R any, P any](
+    ctx Client,
     queueName string,
     workflowName string,
     input P,
     opts ...EnqueueOption
 ) (WorkflowHandle[R], error)
 ```
+
+The result type parameter `R` comes first so you can name only it and let the input type be inferred: `dbos.Enqueue[MyOutput](client, ...)`.
 
 Enqueue a workflow for processing and return a handle to it, similar to RunWorkflow with the WithQueue option.
 Returns a WorkflowHandle.
@@ -2881,7 +2944,7 @@ When enqueuing a workflow from the DBOS client, you must specify the name of the
 
 Required parameters:
 
-* `c`: The DBOS client instance
+* `ctx`: The DBOS client (or context)
 * `queueName`: The name of the queue on which to enqueue the workflow
 * `workflowName`: The name of the workflow function being enqueued
 * `input`: The input to pass to the workflow
@@ -2898,6 +2961,7 @@ If left undefined, it will use the current application version.
 * `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
 * `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 * `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via `SetWorkflowDelay`.
+* `WithEnqueueQueuePartitionKey(partitionKey string)`: Set the queue partition key. Required if and only if the target queue is partitioned (created with `WithPartitionQueue`).
 
 **Example syntax:**
 
@@ -2932,169 +2996,21 @@ if err != nil {
 }
 ```
 
-### RetrieveWorkflow
+All other workflow interaction, management, streaming, queue, and schedule functions are the same package-level functions documented above (`Send`, `GetEvent`, `RetrieveWorkflow`, `ListWorkflows`, `GetWorkflowSteps`, `CancelWorkflow`/`CancelWorkflows`, `ResumeWorkflow`/`ResumeWorkflows`, `ForkWorkflow`/`ForkWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`, `DeleteWorkflows`, `ReadStream`, `ReadStreamAsync`, `RegisterQueue`, `RetrieveQueue`, `ListQueues`, `DeleteQueue`, `CreateSchedule`, `ApplySchedules`, and the rest): they take `ctx Client` as their first parameter, so pass your client where a DBOS application would pass its context.
 
-```go
-RetrieveWorkflow(workflowID string) (WorkflowHandle[any], error)
-```
-
-Retrieve the handle of a workflow with identity `workflowID`.
-Similar to `RetrieveWorkflow`.
-
-**Parameters:**
-- `workflowID`: The identifier of the workflow whose handle to retrieve
-
-**Returns:**
-- The WorkflowHandle of the workflow whose ID is `workflowID`
-
-### Send
-
-```go
-Send(destinationID string, message any, topic string) error
-```
-
-Sends a message to a specified workflow. Similar to `Send`.
-
-**Parameters:**
-- `destinationID`: The workflow to which to send the message
-- `message`: The message to send. Must be serializable
-- `topic`: A topic with which to associate the message. Messages are enqueued per-topic on the receiver
-
-### GetEvent
-
-```go
-GetEvent(targetWorkflowID, key string, timeout time.Duration) (any, error)
-```
-
-Retrieve the latest value of an event published by the workflow identified by `targetWorkflowID` to the key `key`.
-If the event does not yet exist, wait for it to be published, returning an error if the wait times out.
-Similar to `GetEvent`.
-
-**Parameters:**
-- `targetWorkflowID`: The identifier of the workflow whose events to retrieve
-- `key`: The key of the event to retrieve
-- `timeout`: A timeout duration. If the wait times out, return an error
-
-**Returns:**
-- The value of the event published by `targetWorkflowID` with name `key`, or an error if the wait times out
-
-## Workflow Management Methods
-
-### ListWorkflows
-
-```go
-ListWorkflows(opts ...ListWorkflowsOption) ([]WorkflowStatus, error)
-```
-
-Retrieve a list of `WorkflowStatus` of all workflows matching specified criteria.
-Similar to `ListWorkflows`.
-
-**Options:**
-Options are provided via `ListWorkflowsOption` functions. See `ListWorkflows` for available options.
-
-:::warning
-Workflow inputs and outputs are not loaded or decoded by default.
-Pass `WithFilterLoadInput(true)` / `WithFilterLoadOutput(true)` to opt in.
-:::
-
-### GetWorkflowSteps
-
-```go
-GetWorkflowSteps(workflowID string, opts ...GetWorkflowStepsOption) ([]StepInfo, error)
-```
-
-List the steps of a given workflow.
-Step outputs are not loaded or decoded by default; pass `WithStepsLoadOutput(true)` to opt in.
-
-### CancelWorkflow
-
-```go
-CancelWorkflow(workflowID string, opts ...CancelWorkflowOption) error
-```
-
-Cancel a workflow.
-This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step).
-Pass `WithCancelChildren()` to also cancel the workflow's children, recursively.
-Similar to `CancelWorkflow`.
-
-### SetWorkflowAttributes
-
-```go
-SetWorkflowAttributes(workflowID string, attributes map[string]any) error
-```
-
-Replace the custom attributes attached to an existing workflow. Pass a `nil` attributes map to clear all attributes.
-
-### SetWorkflowDelay
-
-```go
-SetWorkflowDelay(workflowID string, opts ...SetWorkflowDelayOption) error
-```
-
-Set or update the delay on a `DELAYED` workflow.
-Provide exactly one of `WithDelayDuration` (relative) or `WithDelayUntil` (absolute).
-Similar to `SetWorkflowDelay`.
-
-### ResumeWorkflow
-
-```go
-ResumeWorkflow(workflowID string, opts ...ResumeWorkflowOption) (WorkflowHandle[any], error)
-```
-
-Resume a workflow.
-This immediately starts it from its last completed step.
-You can use this to resume workflows that are cancelled or have exceeded their maximum recovery attempts.
-You can also use this to start an enqueued workflow immediately, bypassing its queue.
-Pass `WithResumeQueue` to re-enqueue the resumed workflow on a named queue instead of starting it immediately.
-Similar to `ResumeWorkflow`.
-
-### ResumeWorkflows
-
-```go
-ResumeWorkflows(workflowIDs []string, opts ...ResumeWorkflowOption) ([]WorkflowHandle[any], error)
-```
-
-Resume multiple workflows in a single database round-trip.
-Accepts the same options as `ResumeWorkflow`.
-
-### ForkWorkflow
-
-```go
-ForkWorkflow(input ForkWorkflowInput) (WorkflowHandle[any], error)
-```
-
-Set `QueueName` on the input to enqueue the forked workflow on a named queue instead of starting it immediately.
-Similar to `ForkWorkflow`.
+Note that with `ListWorkflows` and `GetWorkflowSteps` from a standalone client, workflow inputs, outputs, and step outputs are not loaded or decoded by default; pass `WithFilterLoadInput(true)` / `WithFilterLoadOutput(true)` / `WithStepsLoadOutput(true)` to opt in.
 
 ### NewDebouncerClient
 
 ```go
-func NewDebouncerClient[P any, R any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[P, R]
+func NewDebouncerClient[R any, P any](workflowName string, client Client, opts ...DebouncerOption) *DebouncerClient[R, P]
 ```
+
+Both type parameters must be named explicitly (the workflow is referenced by name, so neither can be inferred): `dbos.NewDebouncerClient[MyOutput, MyInput]("workflowName", client)`.
 
 Create a new debouncer client for use from outside a DBOS application.
 Similar to `NewDebouncer` but uses a Client instead of a Context and takes a workflow name string instead of a function reference.
 To debounce a workflow registered on a configured instance, pass the instance's config name with `WithDebouncerConfigName(configName string)`.
-
-### ReadStream
-
-```go
-func ReadStream[R any](c Client, workflowID string, key string) ([]R, bool, error)
-```
-
-Read all values from a durable stream produced by a workflow.
-Blocks until the stream is closed or the workflow becomes inactive.
-Similar to `ReadStream`.
-
-### ReadStreamAsync
-
-```go
-func ReadStreamAsync[R any](c Client, workflowID string, key string) (<-chan StreamValue[R], error)
-```
-
-Read values from a durable stream asynchronously.
-Returns immediately with a channel that receives values as they are written to the stream.
-Similar to `ReadStreamAsync`.
 
 ## Cross-Language Portable Types
 
