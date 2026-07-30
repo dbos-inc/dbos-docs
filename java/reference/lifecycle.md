@@ -227,6 +227,7 @@ Configure DBOS to use a custom serializer:
 
 ```java
 DBOSConfig config = DBOSConfig.defaultsFromEnv("myApp")
+    .withAppVersion("0.1.0")
     .withSerializer(new MyCustomSerializer());
 DBOS dbos = new DBOS(config);
 // register workflows and queues...

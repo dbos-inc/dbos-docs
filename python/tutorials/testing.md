@@ -14,6 +14,7 @@ def reset_dbos():
     DBOS.destroy()
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -30,6 +31,7 @@ def reset_dbos():
     DBOS.destroy()
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": "sqlite:///my_test_db.sqlite",
     }
     DBOS(config=config)
@@ -56,6 +58,7 @@ def reset_dbos():
     DBOS.destroy()
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)

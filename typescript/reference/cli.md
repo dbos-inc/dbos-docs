@@ -150,7 +150,19 @@ Use the `-r` flag to grant a role access to that schema.
 **Arguments:**
 
 - `systemDatabaseUrl`:  A connection string for your DBOS [system database](../../explanations/system-tables.md), in which DBOS stores its internal state. This command will create that database if it does not exist and create or update the DBOS system tables within it.
-- `-r, --app-role`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
+- `-r, --app-role <string>`: The role with which you will run your DBOS app. This role is granted the minimum permissions needed to access the DBOS schema in your system database.
+- `-s, --schema <string>`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `--print-migrations <all|NUMBER>`: Instead of running the migrations, print their SQL to standard output, either all of them (for a fresh database) or starting from a migration number (to upgrade an existing database). Postgres only.
+- `--print-user-role`: Instead of executing them, print the SQL statements granting `--app-role` access to the DBOS system tables.
+
+Use these last two flags to emit SQL you can apply yourself, for example if your database is managed by a DBA.
+They never connect to a database, so the `systemDatabaseUrl` argument is optional when using them (if supplied, it is only used to annotate the output).
+The output is only SQL and comments, but it contains `CREATE INDEX CONCURRENTLY`, so it must run outside a transaction block.
+
+```shell
+npx dbos schema --print-migrations all ${DBOS_SYSTEM_DATABASE_URL} > migrations.sql
+npx dbos schema --print-user-role -r my_app_role ${DBOS_SYSTEM_DATABASE_URL} > grants.sql
+```
 
 ### npx dbos reset
 

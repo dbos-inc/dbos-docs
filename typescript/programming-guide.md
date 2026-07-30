@@ -58,6 +58,7 @@ const exampleWorkflow = DBOS.registerWorkflow(exampleFunction);
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -118,6 +119,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();
@@ -206,6 +208,7 @@ app.get("/", async (req, res) => {
 async function main() {
   DBOS.setConfig({
     "name": "dbos-node-starter",
+    "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
   });
   await DBOS.launch();

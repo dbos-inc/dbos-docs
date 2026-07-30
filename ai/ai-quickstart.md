@@ -40,6 +40,7 @@ from dbos import DBOS, DBOSConfig
 
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
 }
 DBOS(config=config)
@@ -109,6 +110,7 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 
 DBOS.setConfig({
   "name": "my-app",
+  "applicationVersion": "0.1.0",
   "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();
@@ -178,6 +180,7 @@ from pydantic_ai.durable_exec.dbos import DBOSAgent
 # highlight-start
 dbos_config: DBOSConfig = {
     'name': 'pydantic_dbos_agent',
+    'application_version': '0.1.0',
     'system_database_url': 'sqlite:///dbostest.sqlite',
 }
 DBOS(config=dbos_config)
@@ -236,6 +239,7 @@ from workflows.events import Event, StartEvent, StopEvent
 # highlight-start
 config: DBOSConfig = {
     "name": "llamaindex-example",
+    "application_version": "0.1.0",
     "system_database_url": "sqlite:///example.sqlite",
 }
 DBOS(config=config)
@@ -313,6 +317,7 @@ async def main():
     # highlight-start
     config: DBOSConfig = {
         "name": "my-agent",
+        "application_version": "0.1.0",
         "system_database_url": 'sqlite:///my_agent.sqlite',
     }
     DBOS(config=config)
@@ -388,7 +393,7 @@ async def run_agent(user_id: str, session_id: str, message: str) -> str:
 async def main():
     # highlight-start
     # DBOS checkpoints to SQLite by default. Postgres is recommended for production.
-    config: DBOSConfig = {"name": "my-agent", "system_database_url": "sqlite:///dbostest.sqlite"}
+    config: DBOSConfig = {"name": "my-agent", "application_version": "0.1.0", "system_database_url": "sqlite:///dbostest.sqlite"}
     DBOS(config=config)
     DBOS.launch()
     # highlight-end

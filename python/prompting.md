@@ -74,6 +74,7 @@ A DBOS application MUST always be configured like so, unless otherwise specified
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -86,6 +87,7 @@ In a FastAPI application, the server should ALWAYS be started explicitly after a
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -99,6 +101,7 @@ If an app contains scheduled workflows and NOTHING ELSE (no HTTP server), then t
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -114,7 +117,8 @@ from dbos import DBOS, DBOSConfig
 
 async def main():
     config: DBOSConfig = {
-        "name": "dbos-app"
+        "name": "dbos-app",
+        "application_version": "0.1.0",
     }
     DBOS(config=config)
     DBOS.launch()
@@ -150,6 +154,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -184,6 +189,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -221,6 +227,7 @@ def dbos_workflow():
 if __name__ == "__main__":
     config: DBOSConfig = {
         "name": "dbos-starter",
+        "application_version": "0.1.0",
         "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -1266,6 +1273,7 @@ def reset_dbos():
     DBOS.destroy()
     config: DBOSConfig = {
         "name": "my-app",
+        "application_version": "0.1.0",
         "database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
@@ -1292,6 +1300,7 @@ To use patching, you must enable it in configuration:
 ```python
 config: DBOSConfig = {
     "name": "dbos-app",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "enable_patching": True,
 }
@@ -1667,6 +1676,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
+    "application_version": "0.1.0",
     "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
@@ -1750,8 +1760,8 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
-- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
-- **admin_port**: The port on which the admin server runs. Defaults to 3001.
+- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to False.
+- **admin_port**: The port on which the admin server runs. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to 3001. Has no effect unless `run_admin_server` is set.
 - **serializer**: A custom serializer for the system database.
 
 #### Custom Serialization
@@ -1794,6 +1804,7 @@ class JsonSerializer(Serializer):
 serializer = JsonSerializer()
 config: DBOSConfig = {
     "name": "dbos-starter",
+    "application_version": "0.1.0",
     "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "serializer": serializer
 }

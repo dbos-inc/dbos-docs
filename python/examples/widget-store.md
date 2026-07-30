@@ -39,6 +39,7 @@ if database_url is None:
 app = FastAPI()
 config: DBOSConfig = {
     "name": "widget-store",
+    "application_version": "0.1.0",
     "system_database_url": database_url,
 }
 DBOS(fastapi=app, config=config)

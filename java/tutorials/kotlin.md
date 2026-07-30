@@ -106,6 +106,7 @@ Registration and lifecycle are identical to Java:
 
 ```kotlin
 val config = DBOSConfig.defaultsFromEnv("my-app")
+    .withAppVersion("0.1.0")
 val dbos = DBOS(config)
 
 val service = dbos.registerProxy(OrderService::class.java, OrderServiceImpl(dbos).also {

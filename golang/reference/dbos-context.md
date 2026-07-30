@@ -39,8 +39,9 @@ type Config struct {
 For example:
 ```go
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:     "dbos-starter",
-    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 })
 if err != nil {
     panic(err)

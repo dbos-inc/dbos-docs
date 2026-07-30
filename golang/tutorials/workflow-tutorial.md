@@ -245,8 +245,9 @@ func processInput(ctx dbos.DBOSContext, input string) (string, error) {
 
 func main() {
     dbosContext, _ := dbos.NewDBOSContext(context.Background(), dbos.Config{
-        AppName:     "debounce-example",
-        DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+        AppName:            "debounce-example",
+        ApplicationVersion: "0.1.0",
+        DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
     })
 
     dbos.RegisterWorkflow(dbosContext, processInput)

@@ -226,14 +226,16 @@ Furthermore, a `DBOS` instance API fits better into Dependency Injection based J
 Prior to v0.8, you would configure DBOS via the static `configure` method:
 
 ```java
-DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("my-app");
+DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("my-app")
+    .withAppVersion("0.1.0");
 DBOS.configure(dbosConfig);
 ```
 
 Now, you pass the DBOSConfig instance to directly to the DBOS constructor:
 
 ```java
-DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("my-app");
+DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("my-app")
+    .withAppVersion("0.1.0");
 DBOS dbos = new DBOS(dbosConfig);
 ```
 
@@ -242,7 +244,8 @@ This allows `DBOS` to work with the [try-with-resources](https://docs.oracle.com
 or with JUnit's [@AutoClose annotation](https://docs.junit.org/6.0.3/api/org.junit.jupiter.api/org/junit/jupiter/api/AutoClose.html).
 
 ```java
-var dbosConfig = DBOSConfig.defaultsFromEnv("my-app");
+var dbosConfig = DBOSConfig.defaultsFromEnv("my-app")
+    .withAppVersion("0.1.0");
 try (var dbos = new DBOS(dbosConfig)) {
   Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
   dbos.launch();

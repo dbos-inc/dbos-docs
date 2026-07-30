@@ -13,7 +13,7 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.852ab39a.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b1ec4964.js" defer="defer"></script>
 <script src="/assets/js/main.b1a0cb83.js" defer="defer"></script>
 </head>
 <body>
@@ -96,6 +96,11 @@ Each row represents a different workflow execution.</p>
 <li class=""><strong>application_id</strong>: Internal field used only in DBOS Cloud.</li>
 <li class=""><strong>serialization</strong>: The name of the serialization format used for this workflow&#x27;s inputs, output, and error (e.g. <code>java_jackson</code>, <code>py_pickle</code>, <code>portable_json</code>). Null if the default serializer was used.</li>
 <li class=""><strong>rate_limited</strong>: Whether this workflow was dequeued from a rate-limited queue.</li>
+<li class=""><strong>completed_at</strong>: The epoch timestamp (in milliseconds) at which this workflow reached a terminal state (<code>SUCCESS</code>, <code>ERROR</code>, or <code>CANCELLED</code>). Null while the workflow is still active.</li>
+<li class=""><strong>attributes</strong>: Custom key-value attributes attached to this workflow, if any. Stored in Postgres as GIN-indexed JSONB, so workflows can be efficiently searched by attribute.</li>
+<li class=""><strong>schedule_name</strong>: If this workflow was started by a <a href="#dbosworkflow_schedules" class="">scheduled workflow</a>, the name of its schedule.</li>
+<li class=""><strong>debounce_deadline_epoch_ms</strong>: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.</li>
+<li class=""><strong>is_debounced</strong>: Whether this workflow was created by a debouncer.</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="dbosoperation_outputs">dbos.operation_outputs<a href="#dbosoperation_outputs" class="hash-link" aria-label="Direct link to dbos.operation_outputs" title="Direct link to dbos.operation_outputs" translate="no">​</a></h3>
 <p>This table stores the outputs of workflow steps.
