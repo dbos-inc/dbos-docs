@@ -500,6 +500,10 @@ spec:
     - host: <your-elb-hostname>
       http:
         paths:
+          # Both paths are regexes, so ordering matters: ingress-nginx sorts
+          # locations longest-path-first, which puts /conductor-api ahead of
+          # the Console catch-all. Keep the Conductor path the longer of the
+          # two so it is never shadowed.
           - path: /conductor-api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
