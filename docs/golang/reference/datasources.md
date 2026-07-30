@@ -90,7 +90,8 @@ Durably execute `fn` as a transaction against the data source `ds`.
 `fn` receives a portable [`Tx`](#the-tx-interface); within it your application can write its own tables, and DBOS atomically records a durability row in the same transaction, so the function runs exactly once even across crashes and recovery.
 
 `RunAsTransaction` must be called from within a workflow; calling it at top level returns an error.
-It shares the per-workflow step counter with [`RunAsStep`](./workflows-steps.md#runasstep), so transactions and steps can be freely interleaved.
+It cannot be nested: calling it inside another `RunAsTransaction` or inside a [`RunAsStep`](./workflows-steps.md#runasstep) is rejected with an error.
+It shares the per-workflow step counter with `RunAsStep`, so transactions and steps can be freely interleaved.
 Standard [step options](./workflows-steps.md#withstepname) apply (`WithStepName`, `WithStepMaxRetries`, retry intervals, retry predicate).
 Serialization and deadlock conflicts are retried internally with a fresh transaction; application errors follow your step retry policy.
 
@@ -113,14 +114,6 @@ n, err := dbos.RunAsTransaction(ctx, ds, func(ctx context.Context, tx dbos.Tx) (
     return res.RowsAffected()
 }, dbos.WithStepMaxRetries(3))
 ```
-
-#### Nesting Rules
-
-| Where `RunAsTransaction` is called | Behavior |
-|---|---|
-| Top level in a workflow | Exactly-once. Full two-layer durability and recovery. |
-| Inside another `RunAsTransaction` | Rejected with an error before any database work. |
-| Inside a `RunAsStep` | Rejected with an error before any database work: the enclosing step owns the durability boundary, so a nested transaction could not be checkpointed and would silently lose its exactly-once guarantee. Run transactions from workflow code. |
 
 #### Durability and Recovery
 

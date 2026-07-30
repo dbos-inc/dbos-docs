@@ -51,7 +51,7 @@ If a workflow is interrupted for any reason (e.g., an executor restarts or crash
 - Do NOT start goroutines from workflows or use select in workflows. Instead, use DBOS's durable `dbos.Go` and `dbos.Select` functions which provide deterministic replay. For more complex parallel execution, use DBOS.RunWorkflow and DBOS queues.
 - Do NOT range over a map to call steps or start workflows: Go map iteration order is random, which breaks determinism. Sort the keys first (e.g. `slices.Sorted(maps.Keys(m))`) and iterate over the sorted slice.
 - DBOS workflows and steps should NOT have side effects in memory outside of their own scope. They can access global variables, but they should NOT create or update global variables or variables outside their scope.
-- Do NOT call DBOS context methods (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsTransaction, DBOS.Enqueue, DBOS.Go, DBOS.Sleep, DBOS.SetEvent, DBOS.GetEvent, DBOS.CloseStream, handle.GetResult, or workflow/schedule management writes) from a step — they return an error. Calling one step function from another is fine (it runs inline as part of the enclosing step), and DBOS.WriteStream and read/list operations are allowed from steps.
+- Do NOT call DBOS context methods (DBOS.Send, DBOS.Recv, DBOS.RunWorkflow, DBOS.RunAsTransaction, DBOS.Enqueue, DBOS.Go, DBOS.Sleep, DBOS.GetEvent, DBOS.CloseStream, handle.GetResult, or workflow/schedule management writes) from a step — they return an error. Calling one step function from another is fine (it runs inline as part of the enclosing step), and DBOS.SetEvent, DBOS.WriteStream, and read/list operations are allowed from steps.
 
 ## DBOS Lifecycle Guidelines
 
@@ -766,7 +766,7 @@ Common nondeterministic operations include:
 - Getting the current time.
 
 You **cannot** call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like `Send` or `SetEvent` from within steps.
+You also cannot call DBOS methods like `Send` or `Recv` from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
 

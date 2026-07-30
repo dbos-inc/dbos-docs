@@ -68,16 +68,16 @@ Common nondeterministic operations include:
 - Getting the current time.
 
 You **cannot** call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like `Send`, `SetEvent`, or `RunAsTransaction` from within steps — they return an error (see the [full list](../reference/workflows-steps.md#calling-dbos-operations-from-steps)).
+You also cannot call DBOS methods like [`Send`](../reference/methods.md#send), [`Recv`](../reference/methods.md#recv), or [`RunAsTransaction`](../reference/datasources.md#runastransaction) from within steps — they return an error (see the [full list](../reference/workflows-steps.md#calling-dbos-operations-from-steps)).
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
-[`WriteStream`](../reference/methods.md#writestream) and read operations like `ListWorkflows` are allowed from steps.
+[`SetEvent`](../reference/methods.md#setevent), [`WriteStream`](../reference/methods.md#writestream), and read operations like [`ListWorkflows`](../reference/methods.md#listworkflows) are allowed from steps.
 
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any error a set number of times with exponential backoff.
 This is useful for automatically handling transient failures, like making requests to unreliable APIs.
-Retries are configurable through step options that can be passed to `RunAsStep`.
+Retries are configurable through step options that can be passed to [`RunAsStep`](../reference/workflows-steps.md#runasstep).
 
 Available retry configuration options include:
 - [`WithStepName`](../reference/workflows-steps#withstepname) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
@@ -85,6 +85,7 @@ Available retry configuration options include:
 - [`WithStepMaxInterval`](../reference/workflows-steps#withstepmaxinterval) - Maximum delay between retries (default 5s)
 - [`WithStepBackoffFactor`](../reference/workflows-steps#withstepbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
 - [`WithStepBaseInterval`](../reference/workflows-steps#withstepbaseinterval) - Initial delay between retries (default 100ms)
+- [`WithStepRetryPredicate`](../reference/workflows-steps#withstepretrypredicate) - Predicate deciding whether a step error is retried; errors it rejects are returned immediately regardless of the remaining retry budget
 
 For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
 
@@ -138,7 +139,7 @@ if err != nil {
 
 When the workflow function returns this error, DBOS **parks** the losing execution: instead of racing the winner step by step, the loser stops executing its own code and durably waits for the winning execution's result.
 The workflow's final status and output are unaffected—callers and handles observe a single consistent outcome, recorded by the winner.
-If you ignore the error and continue, both executions keep running concurrently: side effects are duplicated and the losing execution's results diverge from what was durably recorded.
+If you ignore the error and continue, both executions keep running concurrently: side effects are duplicated and the losing execution's result may diverge from what was durably recorded.
 
 If your workflow needs to distinguish this error from application errors (e.g., in a shared error-handling path), check for it with `errors.Is`:
 

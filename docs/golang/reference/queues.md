@@ -132,15 +132,6 @@ Set the base polling interval for this queue. This also acts as the minimum (fas
 queue, err := dbos.RegisterQueue(ctx, "email-queue", dbos.WithQueueBasePollingInterval(100*time.Millisecond))
 ```
 
-#### WithQueueMaxPollingInterval
-
-```go
-func WithQueueMaxPollingInterval(interval time.Duration) QueueOption
-```
-
-Deprecated: this option is ignored for database-backed queues (all queues registered with `RegisterQueue`) — passing it logs a warning.
-The maximum (slowest) polling interval is always derived from the base polling interval: `max(base, 120s)`.
-
 #### WithQueueOnConflict
 
 ```go

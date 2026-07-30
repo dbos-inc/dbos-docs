@@ -433,13 +433,13 @@ When set, a failed step is retried only if the predicate returns true for the er
 ### Calling DBOS operations from steps
 
 A step body is a strict scope: DBOS operations that write a checkpoint cannot run inside one.
-Calling any of the following from inside a step returns an `ErrorCodeStepExecution` error: [`RunWorkflow`](#runworkflow) (spawning a child workflow), [`RunAsTransaction`](./datasources.md#runastransaction), [`Go`](#go), [`Enqueue`](./methods.md#enqueue), `Send`, `Recv`, `SetEvent`, `GetEvent`, `Sleep`, `CloseStream`, [`GetResult`](#workflowhandlegetresult) on a workflow handle, `Patch`, `DeprecatePatch`, `Debounce`, workflow-management writes (`CancelWorkflow(s)`, `ResumeWorkflow(s)`, `ForkWorkflow(s)`, `DeleteWorkflows`, `SetWorkflowAttributes`, `SetWorkflowDelay`), and schedule writes (`CreateSchedule`, `PauseSchedule`, `ResumeSchedule`, `DeleteSchedule`).
+Calling any of the following from inside a step returns an `ErrorCodeStepExecution` error: [`RunWorkflow`](#runworkflow) (spawning a child workflow), [`RunAsTransaction`](./datasources.md#runastransaction), [`Go`](#go), [`Enqueue`](./methods.md#enqueue), [`Send`](./methods.md#send), [`Recv`](./methods.md#recv), [`GetEvent`](./methods.md#getevent), [`Sleep`](./methods.md#sleep), [`CloseStream`](./methods.md#closestream), [`GetResult`](#workflowhandlegetresult) on a workflow handle, [`Patch`](#patch), [`DeprecatePatch`](#deprecatepatch), [`Debounce`](./queues.md#debouncerdebounce), workflow-management writes ([`CancelWorkflow(s)`](./methods.md#cancelworkflow), [`ResumeWorkflow(s)`](./methods.md#resumeworkflow), [`ForkWorkflow(s)`](./methods.md#forkworkflow), [`DeleteWorkflows`](./methods.md#deleteworkflows), [`SetWorkflowAttributes`](./methods.md#setworkflowattributes), [`SetWorkflowDelay`](./methods.md#setworkflowdelay)), and schedule writes ([`CreateSchedule`](./methods.md#createschedule), [`PauseSchedule`](./methods.md#pauseschedule), [`ResumeSchedule`](./methods.md#resumeschedule), [`DeleteSchedule`](./methods.md#deleteschedule)).
 
 Allowed from inside a step:
 
 - Calling another step function — it runs inline as part of the enclosing step, without its own checkpoint.
-- [`WriteStream`](./methods.md#writestream) — at-least-once, attributed to the enclosing step.
-- Read and list operations (`ListWorkflows`, `GetWorkflowSteps`, `RetrieveWorkflow`, `ReadStream`, aggregates, schedule and queue reads) — they run directly, without a checkpoint.
+- [`SetEvent`](./methods.md#setevent) and [`WriteStream`](./methods.md#writestream) — at-least-once, attributed to the enclosing step.
+- Read and list operations ([`ListWorkflows`](./methods.md#listworkflows), [`GetWorkflowSteps`](./methods.md#getworkflowsteps), [`RetrieveWorkflow`](./methods.md#retrieveworkflow), [`ReadStream`](./methods.md#readstream), [aggregates](./methods.md#getworkflowaggregates), [schedule](./methods.md#getschedule) and [queue](./queues.md#listqueues) reads) — they run within the enclosing step's durability scope, without their own checkpoint.
 
 ### Concurrent steps
 

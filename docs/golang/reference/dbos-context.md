@@ -8,8 +8,8 @@ A DBOS Context is at the center of a DBOS-enabled application. Use it to registe
 
 DBOS defines two interfaces:
 
-- [`Client`](#client) owns every DBOS operation that only needs a connection to the system database: enqueue, messaging, events, streams, workflow management, queue management, schedule management, application-version management, and `Shutdown`. Create a standalone client with [`NewClient`](#newclient) to perform these operations from outside a DBOS application.
-- [`Context`](#context) **extends `Client`** and adds what requires a DBOS runtime: `Launch()`, workflow registration, and the workflow-scope operations (running workflows and steps, `Recv`, `SetEvent`, durable sleep, …). Create one with [`NewContext`](#newcontext). It also extends Go's [`context.Context`](https://pkg.go.dev/context#Context) and carries essential state across workflow execution: workflows and steps receive a new `Context` spun out of the root `Context` you manage, and a `Context` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
+- [`Client`](#client) owns every DBOS operation that only needs a connection to the system database, for instance listing workflows. Create a standalone client with [`NewClient`](#newclient) to perform these operations from outside a DBOS application.
+- [`Context`](#context) **extends `Client`** and adds what requires a DBOS runtime, like running workflows and steps. Launching `Context` starts all background resources a DBOS process needs, like the queue runner. Create one with [`NewContext`](#newcontext). It also extends Go's [`context.Context`](https://pkg.go.dev/context#Context) and carries essential state across workflow execution: workflows and steps receive a new `Context` spun out of the root `Context` you manage, and a `Context` can be used to set [workflow timeouts](../tutorials/workflow-tutorial.md#workflow-timeouts).
 
 Because every `Context` **is** a `Client`, anywhere a `Client` is accepted you can pass either a standalone client or a (launched or unlaunched) `Context`.
 
@@ -118,15 +118,12 @@ type Context interface {
 
 ## Who can do what
 
-- **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database. One exception: on the `Context` a step body receives, mutating operations (`Enqueue`, `Send`, `SetEvent`, `CloseStream`, workflow-management and schedule writes) return an error — see [Calling DBOS operations from steps](./workflows-steps.md#calling-dbos-operations-from-steps). When called from workflow code, these operations are checkpointed as steps (`DBOS.*` step names in the workflow's step list).
+- **Every method in the `Client` interface** works from a standalone client and from any `Context`, before or after `Launch()`. These operations talk directly to the system database. One exception: on the `Context` a step body receives, mutating operations return an error — see [Calling DBOS operations from steps](./workflows-steps.md#calling-dbos-operations-from-steps). When called from workflow code, these operations are checkpointed as steps (`DBOS.*` step names in the workflow's step list).
 - **`Launch()`, workflow registration ([`RegisterWorkflow`](./workflows-steps.md#registerworkflow)), and `SetAlertHandler`** require a `Context`; registration and `SetAlertHandler` must happen before `Launch()`.
-- **Starting workflows ([`RunWorkflow`](./workflows-steps.md#runworkflow), [`Go`](./workflows-steps.md#go))** requires a launched `Context`.
-- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), `Patch`) can only be called on the `Context` a workflow function receives.
+- **Starting workflows (with [`RunWorkflow`](./workflows-steps.md#runworkflow))** requires a launched `Context`.
+- **Workflow-scope methods** ([`RunAsStep`](./workflows-steps.md#runasstep), [`Recv`](./methods.md#recv), [`SetEvent`](./methods.md#setevent), [`WriteStream`](./methods.md#writestream), [`CloseStream`](./methods.md#closestream), [`Sleep`](./methods.md#sleep), [`GetWorkflowID`](./methods.md#getworkflowid), [`GetStepID`](./methods.md#getstepid), [`Patch`](./workflows-steps.md#patch)) can only be called on the `Context` a workflow function receives.
 
-Both interfaces take a leading receiver-argument; in practice, never call the interface methods directly — call the package-level functions instead.
-Because a `Client` operation is invoked through the exact same package-level function whether you pass it a standalone client or a `Context`, these functions are documented **once**, alongside the `Context` functions, in [DBOS Methods & Variables](./methods.md) (and in [Workflows & Steps](./workflows-steps.md) and [Workflow Queues](./queues.md)).
-The first parameter tells you who can call each function: a function taking a `Client` accepts a standalone client or any `Context`; a function taking a `Context` requires a DBOS context.
-The generic functions (`Enqueue[R]`, `RetrieveWorkflow[R]`, `GetEvent[R]`, `ReadStream[R]`, …) additionally return typed values instead of the `WorkflowHandle[any]` the interface methods return.
+In practice, never call the interface methods directly — call their mirror package-level functions instead. These are strongly typed (generic) and the interface methods are not.
 
 ## Lifecycle
 ### NewContext

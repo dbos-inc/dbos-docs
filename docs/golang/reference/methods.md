@@ -24,8 +24,6 @@ func Enqueue[R any, P any](
 ) (WorkflowHandle[R], error)
 ```
 
-The input type `P` is inferred from the `input` argument — name only the result type `R`.
-
 Enqueue a workflow for processing and return a [WorkflowHandle](./workflows-steps.md#workflowhandle) to it, similar to [RunWorkflow with the WithQueue option](./workflows-steps.md#withqueue).
 
 The workflow is identified by **name** rather than by function reference, so the enqueueing process does not need to have the workflow registered — this is how you enqueue workflows from a [standalone client](./dbos-context.md#newclient).
@@ -37,25 +35,7 @@ Required parameters:
 * `workflowName`: The name of the workflow function being enqueued
 * `input`: The input to pass to the workflow
 
-Optional configuration via `EnqueueOption`:
-
-* `WithEnqueueWorkflowID(id string)`: The unique ID for the enqueued workflow. 
-If left undefined, DBOS will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier). 
-Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for more information.
-* `WithEnqueueApplicationVersion(version string)`: The version of your application that should process this workflow. 
-If left undefined, it will use the current application version.
-* `WithEnqueueTimeout(timeout time.Duration)`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#withoutcancel)). The timeout does not begin until the workflow is dequeued and starts execution.
-* `WithEnqueueDeduplicationID(id string)`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
-* `WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy)`: Set how a colliding deduplication ID is handled. Requires `WithEnqueueDeduplicationID`. With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow. See [`WithDeduplicationPolicy`](./workflows-steps.md#withdeduplicationpolicy).
-* `WithEnqueuePriority(priority uint)`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-* `WithEnqueueClassName(className string)`: The class/namespace name for the target workflow. Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
-* `WithEnqueueConfigName(configName string)`: The config/instance name for the target workflow. Required when enqueueing to a workflow registered on a configured instance: a Go workflow registered with [`WithInstance`](./workflows-steps.md#withinstance), or a Python, TypeScript, or Java class instance workflow (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)). The value must match the instance name used by the target application.
-* `WithEnqueueDelay(delay time.Duration)`: Delay execution of the enqueued workflow by the specified duration. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. The delay can later be updated via [`SetWorkflowDelay`](#setworkflowdelay).
-* `WithEnqueueQueuePartitionKey(partitionKey string)`: The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). Each partition has its own concurrency limits.
-* `WithEnqueueAttributes(attributes map[string]any)`: Attach custom key-value [attributes](./workflows-steps.md#withworkflowattributes) to the enqueued workflow. Attributes are recorded in the workflow status at creation, must be JSON-serializable, and can be searched with [`WithFilterAttributes`](#withfilterattributes) on Postgres.
-* `WithEnqueueAuthenticatedUser(user string)`: Associate the enqueued workflow with a user name.
-* `WithEnqueueAssumedRole(role string)`: Set the assumed role for the enqueued workflow.
-* `WithEnqueueAuthenticatedRoles(roles ...string)`: Set the authenticated roles for the enqueued workflow.
+Optional configuration via `EnqueueOption`, documented below.
 
 :::tip Cross-Language Enqueue
 To enqueue a workflow on a target application written in another language, pass a [`PortableWorkflowArgs`](#portableworkflowargs) as the input.
@@ -96,6 +76,138 @@ if err != nil {
 }
 ```
 
+#### WithEnqueueWorkflowID
+
+```go
+func WithEnqueueWorkflowID(id string) EnqueueOption
+```
+
+The unique ID for the enqueued workflow.
+If left undefined, DBOS will generate a [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for more information.
+
+#### WithEnqueueApplicationVersion
+
+```go
+func WithEnqueueApplicationVersion(version string) EnqueueOption
+```
+
+The version of your application that should process this workflow.
+If left undefined, it will use the current application version.
+
+#### WithEnqueueTimeout
+
+```go
+func WithEnqueueTimeout(timeout time.Duration) EnqueueOption
+```
+
+Set a timeout for the enqueued workflow.
+When the timeout expires, the workflow **and all its children** are cancelled (except if the child's context has been made uncancellable using [`WithoutCancel`](./dbos-context.md#withoutcancel)).
+The timeout does not begin until the workflow is dequeued and starts execution.
+
+#### WithEnqueueDeduplicationID
+
+```go
+func WithEnqueueDeduplicationID(id string) EnqueueOption
+```
+
+At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempts with the same deduplication ID in the same queue will fail.
+This behavior can be changed with [`WithEnqueueDeduplicationPolicy`](#withenqueuededuplicationpolicy).
+
+#### WithEnqueueDeduplicationPolicy
+
+```go
+func WithEnqueueDeduplicationPolicy(policy DeduplicationPolicy) EnqueueOption
+```
+
+Set how a colliding deduplication ID is handled.
+Requires [`WithEnqueueDeduplicationID`](#withenqueuededuplicationid).
+With the default `DeduplicationPolicyReject`, a colliding enqueue fails with a `ErrorCodeQueueDeduplicated` error; with `DeduplicationPolicyReturnExisting`, it instead returns a handle to the existing workflow.
+See [`WithDeduplicationPolicy`](./workflows-steps.md#withdeduplicationpolicy).
+
+#### WithEnqueuePriority
+
+```go
+func WithEnqueuePriority(priority uint) EnqueueOption
+```
+
+The priority of the enqueued workflow in the specified queue.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order.
+Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+
+#### WithEnqueueClassName
+
+```go
+func WithEnqueueClassName(className string) EnqueueOption
+```
+
+The class/namespace name for the target workflow.
+Required when enqueueing to Python, TypeScript, or Java targets, which dispatch workflows by (class_name, workflow_name) pair.
+
+#### WithEnqueueConfigName
+
+```go
+func WithEnqueueConfigName(configName string) EnqueueOption
+```
+
+The config/instance name for the target workflow.
+Required when enqueueing to a workflow registered on a configured instance: a Go workflow registered with [`WithInstance`](./workflows-steps.md#withinstance), or a Python, TypeScript, or Java class instance workflow (e.g., Python's [`DBOSConfiguredInstance`](../../python/tutorials/classes.md), TypeScript's [`ConfiguredInstance`](../../typescript/tutorials/instantiated-objects.md)).
+The value must match the instance name used by the target application.
+
+#### WithEnqueueDelay
+
+```go
+func WithEnqueueDelay(delay time.Duration) EnqueueOption
+```
+
+Delay execution of the enqueued workflow by the specified duration.
+The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
+The delay can later be updated via [`SetWorkflowDelay`](#setworkflowdelay).
+
+#### WithEnqueueQueuePartitionKey
+
+```go
+func WithEnqueueQueuePartitionKey(partitionKey string) EnqueueOption
+```
+
+The partition key to enqueue under when the target queue is a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
+Each partition has its own concurrency limits.
+
+#### WithEnqueueAttributes
+
+```go
+func WithEnqueueAttributes(attributes map[string]any) EnqueueOption
+```
+
+Attach custom key-value [attributes](./workflows-steps.md#withworkflowattributes) to the enqueued workflow.
+Attributes are recorded in the workflow status at creation, must be JSON-serializable, and can be searched with [`WithFilterAttributes`](#withfilterattributes) on Postgres.
+
+#### WithEnqueueAuthenticatedUser
+
+```go
+func WithEnqueueAuthenticatedUser(user string) EnqueueOption
+```
+
+Associate the enqueued workflow with a user name.
+
+#### WithEnqueueAssumedRole
+
+```go
+func WithEnqueueAssumedRole(role string) EnqueueOption
+```
+
+Set the assumed role for the enqueued workflow.
+
+#### WithEnqueueAuthenticatedRoles
+
+```go
+func WithEnqueueAuthenticatedRoles(roles ...string) EnqueueOption
+```
+
+Set the authenticated roles for the enqueued workflow.
+
 ## Workflow Communication
 
 ### GetEvent
@@ -121,7 +233,8 @@ func SetEvent[P any](ctx Context, key string, message P, opts ...SetEventOption)
 ```
 Create and associate with this workflow an event with key `key` and value `value`.
 If the event already exists, update its value.
-Can only be called from within a workflow.
+May only be called from within a workflow or step.
+Writes from a workflow are exactly-once; writes from a step are at-least-once, attributed to the enclosing step.
 
 **Parameters:**
 - **ctx**: The DBOS context.
