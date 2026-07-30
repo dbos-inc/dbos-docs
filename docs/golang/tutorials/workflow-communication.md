@@ -20,7 +20,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```go
-func Send[P any](ctx Context, destinationID string, message P, topic string, opts ...SendOption) error
+func Send[P any](ctx Client, destinationID string, message P, topic string, opts ...SendOption) error
 ```
 
 You can call `Send()` to send a message to a workflow.
@@ -106,7 +106,7 @@ Any workflow can call [`SetEvent`](../reference/methods.md#setevent) to publish 
 #### GetEvent
 
 ```go
-func GetEvent[R any](ctx Context, targetWorkflowID, key string, timeout time.Duration) (R, error)
+func GetEvent[R any](ctx Client, targetWorkflowID, key string, timeout time.Duration) (R, error)
 ```
 
 You can call [`GetEvent`](../reference/methods.md#getevent) to retrieve the value published by a particular workflow ID for a particular key.
@@ -214,7 +214,7 @@ func producerWorkflow(ctx dbos.Context, _ string) (string, error) {
 #### Reading from Streams
 
 ```go
-func ReadStream[R any](ctx Context, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
+func ReadStream[R any](ctx Client, workflowID string, key string, opts ...ReadStreamOption) ([]R, bool, error)
 ```
 
 You can read values from a stream from anywhere using [`ReadStream`](../reference/methods.md#readstream).
@@ -232,7 +232,7 @@ values, closed, err := dbos.ReadStream[string](ctx, workflowID, "progress", dbos
 You can also read from a stream asynchronously using [`ReadStreamAsync`](../reference/methods.md#readstreamasync), which returns a channel:
 
 ```go
-func ReadStreamAsync[R any](ctx Context, workflowID string, key string) (<-chan StreamValue[R], error)
+func ReadStreamAsync[R any](ctx Client, workflowID string, key string) (<-chan StreamValue[R], error)
 ```
 
 ```go
