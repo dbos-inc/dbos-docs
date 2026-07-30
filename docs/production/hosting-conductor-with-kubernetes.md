@@ -49,6 +49,8 @@ With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `
 DBOS_CONDUCTOR_KEY=<the API key you generated in the Console>
 DBOS_CONDUCTOR_URL=wss://<your-elb-hostname>/conductor/v1alpha1
 ```
+
+Because this is a `wss://` connection, your application verifies the Ingress TLS certificate.
 :::
 
 ## Authentication
@@ -455,7 +457,16 @@ kubectl create secret tls dbos-tls \
 :::note
 The CN is kept short because OpenSSL's CN field has a 64-character limit — the actual hostname is covered by the SAN extension.
 Your browser will show a certificate warning for the self-signed cert — accept it to proceed.
-For production, use [cert-manager](https://cert-manager.io/) with a real domain.
+:::
+
+:::warning Applications must trust this certificate
+Applications connect to Conductor over `wss://`, so they verify the Ingress certificate and will fail the TLS handshake against one they do not trust.
+
+**For production**, issue a certificate for a domain you control, for example with [cert-manager](https://cert-manager.io/).
+Note that no public CA will issue a certificate for an `*.elb.amazonaws.com` hostname, so this requires your own domain pointed at the load balancer.
+
+**To evaluate with the self-signed certificate**, your applications must be configured to trust it.
+Distribute it using a ConfigMap and configure `SSL_CERT_FILE` (Go, Python) / `NODE_EXTRA_CA_CERTS` (TypeScript) or the JDK `javax.net.ssl.trustStore` (Java) accordingly.
 :::
 
 </details>
