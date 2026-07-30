@@ -27,6 +27,7 @@ Required environment variables:
 - `DBOS_CONDUCTOR_LICENSE_KEY` ([obtain a license key](./hosting-conductor.md#licensing))
 
 Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
+You can still run multiple replicas for [high availability](./hosting-conductor.md#high-availability); each pod must then advertise its own address, which `conductor.yaml` below does from the pod IP.
 
 **Console** — A stateless, single-container Deployment listening on port 8080 (the Service in front of it publishes port 80.)
 It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`, set to a bare `host:port` (for example `conductor.dbos.svc.cluster.local:8090`).
@@ -56,6 +57,17 @@ Because this is a `wss://` connection, your application verifies the Ingress TLS
 ## Authentication
 
 Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authentication setup guide](./hosting-conductor.md#security).
+
+:::warning
+Conductor performs **no authentication** unless OAuth is enabled. Without it, all
+API requests run as a built-in `local` organization admin, and Conductor does not
+verify API keys on incoming WebSocket connections. Anyone who can reach the Ingress
+can register applications, cancel, resume, fork, or delete workflows, and create API
+tokens. Configure OAuth before exposing this deployment to any untrusted network.
+:::
+
+When configuring your OAuth provider, the callback URL and allowed web origin are your Ingress hostname (`https://<your-elb-hostname>/oauth/callback` and `https://<your-elb-hostname>`).
+The OAuth settings are not secrets, so they can be set directly in the Deployment manifests — Conductor and the Console each need their own set.
 
 ## Ingress
 
@@ -610,6 +622,13 @@ spec:
                 secretKeyRef:
                   name: conductor-license
                   key: license-key
+            # Peers forward tasks to each other at this address. It defaults to
+            # 127.0.0.1, which only works for a single replica — set it to the
+            # pod IP before scaling up.
+            - name: DBOS__ADVERTISE_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - containerPort: 8090
           readinessProbe:
