@@ -13,7 +13,7 @@ Queue configuration is persisted to the system database, so any DBOS process con
 ### RegisterQueue
 
 ```go
-func RegisterQueue(ctx Context, name string, options ...QueueOption) (Queue, error)
+func RegisterQueue(ctx Client, name string, options ...QueueOption) (Queue, error)
 ```
 
 Register a queue and persist its configuration to the system database, returning a [`Queue`](#queue-interface).
@@ -23,7 +23,7 @@ Queues may be registered at any time, including after `Launch()`; live workers p
 You can enqueue a workflow using the [`WithQueue`](./workflows-steps.md#withqueue) parameter of [`RunWorkflow`](./workflows-steps.md#runworkflow).
 
 **Parameters:**
-- **ctx**: The Context.
+- **ctx**: The DBOS client or context.
 - **name**: The name of the queue.  Must be unique among all queues in the application.
 - **options**: Functional options for the queue, documented below.
 
@@ -39,8 +39,8 @@ queue, err := dbos.RegisterQueue(ctx, "email-queue",
     dbos.WithPriorityEnabled(),
 )
 
-// Enqueue workflows to this queue:
-handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue("email-queue"))
+// Enqueue workflows to this queue by passing its handle to WithQueue:
+handle, err := dbos.RunWorkflow(ctx, SendEmailWorkflow, emailData, dbos.WithQueue(queue))
 ```
 
 #### WithWorkerConcurrency
@@ -117,12 +117,12 @@ partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
 // Enqueue workflows with different partition keys
 // At most one workflow per user can run at once, but workflows from different users can run concurrently
 handle1, _ := dbos.RunWorkflow(ctx, ProcessTask, task1,
-    dbos.WithQueue("user-tasks"),
+    dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey("user-123"),
 )
 
 handle2, _ := dbos.RunWorkflow(ctx, ProcessTask, task2,
-    dbos.WithQueue("user-tasks"),
+    dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey("user-456"),
 )
 ```
@@ -175,7 +175,7 @@ Set how `RegisterQueue` behaves when a queue with the same name already exists i
 ### RetrieveQueue
 
 ```go
-func RetrieveQueue(ctx Context, name string) (Queue, error)
+func RetrieveQueue(ctx Client, name string) (Queue, error)
 ```
 
 Retrieve a queue by name from the system database. If no queue with that name has been registered, returns an error matching `dbos.ErrQueueNotFound`:
@@ -192,15 +192,13 @@ queue, err := dbos.RetrieveQueue(ctx, "email-queue")
 if err != nil {
     return err
 }
-if queue != nil {
-    fmt.Println("Priority enabled:", queue.GetPriorityEnabled())
-}
+fmt.Println("Priority enabled:", queue.GetPriorityEnabled())
 ```
 
 ### ListQueues
 
 ```go
-func ListQueues(ctx Context) ([]Queue, error)
+func ListQueues(ctx Client) ([]Queue, error)
 ```
 
 Return all queues registered in the system database.
@@ -208,7 +206,7 @@ Return all queues registered in the system database.
 ### DeleteQueue
 
 ```go
-func DeleteQueue(ctx Context, name string) error
+func DeleteQueue(ctx Client, name string) error
 ```
 
 Delete a queue from the system database. No-op if no queue with that name exists.
@@ -235,12 +233,12 @@ type Queue interface {
     GetPartitionQueue() bool
     GetPollingInterval() time.Duration
 
-    SetGlobalConcurrency(ctx Context, value *int) error
-    SetWorkerConcurrency(ctx Context, value *int) error
-    SetRateLimit(ctx Context, value *RateLimiter) error
-    SetPriorityEnabled(ctx Context, value bool) error
-    SetPartitionQueue(ctx Context, value bool) error
-    SetPollingInterval(ctx Context, value time.Duration) error
+    SetGlobalConcurrency(ctx Client, value *int) error
+    SetWorkerConcurrency(ctx Client, value *int) error
+    SetRateLimit(ctx Client, value *RateLimiter) error
+    SetPriorityEnabled(ctx Client, value bool) error
+    SetPartitionQueue(ctx Client, value bool) error
+    SetPollingInterval(ctx Client, value time.Duration) error
 }
 ```
 

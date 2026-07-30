@@ -163,11 +163,13 @@ handle, err := dbos.RunWorkflow(ctx, slack.Send, input, dbos.WithRunInstance(sla
 #### WithQueue
 
 ```go
-func WithQueue(queueName string) WorkflowOption
+func WithQueue(queue Queue) WorkflowOption
 ```
 
-Enqueue the workflow to the specified queue instead of executing it immediately.
+Enqueue the workflow to the given queue instead of executing it immediately.
 Queued workflows will be dequeued and executed according to the queue's configuration.
+The queue must be a non-nil [`Queue`](./queues.md#queue-interface) handle returned by [`RegisterQueue`](./queues.md#registerqueue), [`RetrieveQueue`](./queues.md#retrievequeue), or [`ListQueues`](./queues.md#listqueues); passing `nil` makes the enclosing `RunWorkflow` call return an error.
+To enqueue by name instead (for example, from a standalone client), use [`Enqueue`](./methods.md#enqueue).
 
 #### WithDeduplicationID
 
@@ -204,7 +206,7 @@ const (
 
 ```go
 handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task,
-    dbos.WithQueue(queue.Name),
+    dbos.WithQueue(queue),
     dbos.WithDeduplicationID("user_12345"),
     dbos.WithDeduplicationPolicy(dbos.DeduplicationPolicyReturnExisting),
 )
@@ -243,7 +245,7 @@ partitionedQueue, err := dbos.RegisterQueue(ctx, "user-tasks",
 // Enqueue workflows with partition keys
 // Each user's tasks run with separate concurrency limits
 handle, err := dbos.RunWorkflow(ctx, ProcessUserTask, taskData,
-    dbos.WithQueue("user-tasks"),
+    dbos.WithQueue(partitionedQueue),
     dbos.WithQueuePartitionKey(userID),
 )
 ```
@@ -269,9 +271,11 @@ This is useful for scheduling a workflow to run at a future time.
 You can dynamically update or shorten the delay of a `DELAYED` workflow with [`SetWorkflowDelay`](./methods.md#setworkflowdelay).
 
 ```go
+remindersQueue, err := dbos.RegisterQueue(ctx, "reminders")
+
 // Run the reminder workflow one hour from now.
 handle, err := dbos.RunWorkflow(ctx, sendReminder, userID,
-    dbos.WithQueue("reminders"),
+    dbos.WithQueue(remindersQueue),
     dbos.WithDelay(1 * time.Hour),
 )
 ```
