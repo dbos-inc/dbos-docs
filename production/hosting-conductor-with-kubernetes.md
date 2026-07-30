@@ -27,9 +27,11 @@ Required environment variables:
 - `DBOS_CONDUCTOR_LICENSE_KEY` ([obtain a license key](./hosting-conductor.md#licensing))
 
 Conductor is out of the critical path and a single Conductor instance can serve tens of thousands of application servers.
+You can still run multiple replicas for [high availability](./hosting-conductor.md#high-availability); each pod must then advertise its own address, which `conductor.yaml` below does from the pod IP.
 
-**Console** — A stateless, single-container Deployment listening on port 80.
-It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`.
+**Console** — A stateless, single-container Deployment listening on port 8080 (the Service in front of it publishes port 80.)
+It connects to Conductor using the environment variable `DBOS_CONDUCTOR_URL`, set to a bare `host:port` (for example `conductor.dbos.svc.cluster.local:8090`).
+Note that your *applications* also use a variable named `DBOS_CONDUCTOR_URL`, but it takes a full WebSocket URL (see *Register applications* below.)
 
 :::info Updating Conductor
 
@@ -41,17 +43,39 @@ Applications seamlessly reconnect to the new Conductor version with no impact on
 :::info Register applications
 After deploying Conductor and Console, [register your application, and generate an API key](./conductor.md#connecting-to-conductor).
 The application connects to Conductor via WebSocket using this API key and the Conductor URL.
+
+With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `/conductor-api` prefix:
+
+```bash
+DBOS_CONDUCTOR_KEY=<the API key you generated in the Console>
+DBOS_CONDUCTOR_URL=wss://<your-elb-hostname>/conductor-api
+```
+
+Because this is a `wss://` connection, your application verifies the Ingress TLS certificate.
 :::
 
 ## Authentication
 
 Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authentication setup guide](./hosting-conductor.md#security).
 
+:::warning
+Conductor performs **no authentication** unless OAuth is enabled. Without it, all
+API requests run as a built-in `local` organization admin, and Conductor does not
+verify API keys on incoming WebSocket connections. Anyone who can reach the Ingress
+can register applications, cancel, resume, fork, or delete workflows, and create API
+tokens. Configure OAuth before exposing this deployment to any untrusted network.
+:::
+
+When configuring your OAuth provider, the callback URL and allowed web origin are your Ingress hostname (`https://<your-elb-hostname>/oauth/callback` and `https://<your-elb-hostname>`).
+The OAuth settings are not secrets, so they can be set directly in the Deployment manifests — Conductor and the Console each need their own set.
+
 ## Ingress
 
-We recommend setting up a reverse proxy (e.g., [Nginx](https://nginx.org/)) in front of all services. The reverse proxy should perform **TLS termination** and support **WebSockets**. You must configure your DBOS applications to point at your load balancer or reverse proxy URL, which should redirect to Conductor.
+In this guide, all external traffic enters through a reverse proxy that performs **TLS termination**, supports **WebSockets**, and routes by path: `/conductor-api/...` to Conductor, everything else to the Console.
 
-The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (e.g., 300s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
+This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), but any reverse proxy meeting those requirements will work. The `ingress.yaml` below defines the routing it must implement.
+
+The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (this guide uses 3600s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
 
 
 ## Security Best Practices
@@ -60,7 +84,8 @@ The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both t
 Store these as Kubernetes Secrets and inject them via `secretKeyRef`.
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager (AWS Secrets Manager, [Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/vso), etc.).
 
-**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow HTTPS traffic from the Console to Conductor.
+**Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow traffic from the Console to Conductor on port 8090.
+Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it, so keep outbound HTTPS open from the Conductor pod (this also means its nodes need a route to the internet, such as a NAT gateway for private subnets).
 
 **RBAC** — Restrict which ServiceAccounts can read Secrets in the namespace. Conductor credentials (database URLs, license key, API key) should only be accessible to the pods that need them.
 
@@ -144,7 +169,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 eksctl create cluster \
   --name dbos-conductor \
   --region $AWS_REGION \
-  --version 1.31 \
+  --version 1.32 \
   --nodegroup-name default \
   --node-type t3.medium \
   --nodes 2 \
@@ -166,8 +191,8 @@ You should see two nodes in `Ready` status:
 
 ```
 NAME                                           STATUS   ROLES    AGE   VERSION
-ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.31.x
-ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.31.x
+ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.32.x
+ip-192-168-xx-xx.us-west-2.compute.internal    Ready    <none>   2m    v1.32.x
 ```
 
 </details>
@@ -445,7 +470,16 @@ kubectl create secret tls dbos-tls \
 :::note
 The CN is kept short because OpenSSL's CN field has a 64-character limit — the actual hostname is covered by the SAN extension.
 Your browser will show a certificate warning for the self-signed cert — accept it to proceed.
-For production, use [cert-manager](https://cert-manager.io/) with a real domain.
+:::
+
+:::warning Applications must trust this certificate
+Applications connect to Conductor over `wss://`, so they verify the Ingress certificate and will fail the TLS handshake against one they do not trust.
+
+**For production**, issue a certificate for a domain you control, for example with [cert-manager](https://cert-manager.io/).
+Note that no public CA will issue a certificate for an `*.elb.amazonaws.com` hostname, so this requires your own domain pointed at the load balancer.
+
+**To evaluate with the self-signed certificate**, your applications must be configured to trust it.
+Distribute it using a ConfigMap and configure `SSL_CERT_FILE` (Go, Python) / `NODE_EXTRA_CA_CERTS` (TypeScript) or the JDK `javax.net.ssl.trustStore` (Java) accordingly.
 :::
 
 </details>
@@ -454,8 +488,8 @@ For production, use [cert-manager](https://cert-manager.io/) with a real domain.
 
 <summary><strong>ingress.yaml</strong></summary>
 
-The Ingress routes `/conductor/...` to the Conductor service and everything else to the Console.
-A regex rewrite strips the `/conductor` prefix so Conductor sees requests at `/`.
+The Ingress routes `/conductor-api/...` to the Conductor service and everything else to the Console.
+A regex rewrite strips the `/conductor-api` prefix so Conductor sees requests at `/`.
 Replace `<your-elb-hostname>` with the `$ELB_HOSTNAME` value you retrieved above.
 
 ```yaml
@@ -479,7 +513,10 @@ spec:
     - host: <your-elb-hostname>
       http:
         paths:
-          - path: /conductor(/|$)(.*)
+          # Both paths are regexes, so ordering matters: ingress-nginx sorts
+          # locations longest-path-first, which puts /conductor-api ahead of
+          # the Console catch-all.
+          - path: /conductor-api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
@@ -499,14 +536,14 @@ The `host` in both `tls` and `rules` must match — without it, Nginx serves its
 
 | Request path | Backend |
 |---|---|
-| `/conductor/` | conductor:8090 → `/` |
-| `/conductor/v1/workflows` | conductor:8090 → `/v1/workflows` |
+| `/conductor-api/websocket/<app>/<key>` | conductor:8090 → `/websocket/<app>/<key>` |
+| `/conductor-api/healthz` | conductor:8090 → `/healthz` |
+| `/conductor-api/v1/metrics` | conductor:8090 → `/v1/metrics` |
 | `/` | console:80 |
-| `/health` | console:80 |
+| `/conductor/applications` | console:80 (UI page) |
 
-- **`rewrite-target: /$2`** — strips the `/conductor` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
+- **`rewrite-target: /$2`** — strips the `/conductor-api` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
 - **`proxy-read-timeout` / `proxy-send-timeout`** — set to 3600s to keep Conductor's long-lived WebSocket connections alive.
-
 </details>
 
 **Apply the Ingress**
@@ -538,7 +575,7 @@ kubectl patch svc ingress-nginx-controller -n ingress-nginx -p \
 
 :::note
 The DBOS SDK sends periodic ping frames that keep the connection active under normal conditions.
-Albeit the SDK will reconnect automatically, increasing the ELB idle timeout will prevent network hiccups to drop the connection.
+Albeit the SDK will reconnect automatically, increasing the ELB idle timeout will prevent network hiccups from dropping the connection.
 :::
 
 ### Deployments
@@ -570,6 +607,8 @@ spec:
     spec:
       containers:
         - name: conductor
+          # Untagged resolves to :latest. For production, pin an explicit
+          # version so rollouts are reproducible: dbosdev/conductor:<version>
           image: dbosdev/conductor
           env:
             - name: DBOS__CONDUCTOR_DB_URL
@@ -582,6 +621,13 @@ spec:
                 secretKeyRef:
                   name: conductor-license
                   key: license-key
+            # Peers forward tasks to each other at this address. It defaults to
+            # 127.0.0.1, which only works for a single replica — set it to the
+            # pod IP before scaling up.
+            - name: DBOS__ADVERTISE_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
             - containerPort: 8090
           readinessProbe:
@@ -646,22 +692,24 @@ spec:
     spec:
       containers:
         - name: console
+          # As with Conductor, pin an explicit version in production and keep
+          # the two in step: dbosdev/console:<version>
           image: dbosdev/console
           env:
             - name: DBOS_CONDUCTOR_URL
               value: "conductor.dbos.svc.cluster.local:8090"
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:
@@ -682,7 +730,7 @@ spec:
     app: console
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
 ```
 
 </details>
@@ -715,24 +763,28 @@ At this point, your self-hosted Conductor deployment is fully operational! Open 
 
 ### Cleanup
 
-To tear down all AWS resources when done:
+To tear down all AWS resources when done, delete them in this order.
 
 ```bash
-# Delete the EKS cluster (includes VPC, security groups, and node group)
-eksctl delete cluster --name dbos-conductor --region $AWS_REGION
-
-# Delete the RDS instance
+# 1. Delete the RDS instance and wait for it to be gone
 aws rds delete-db-instance --db-instance-identifier dbos-conductor-pg \
   --skip-final-snapshot --region $AWS_REGION
 
-# Delete the RDS security group
+aws rds wait db-instance-deleted \
+  --db-instance-identifier dbos-conductor-pg \
+  --region $AWS_REGION
+
+# 2. Delete the DB subnet group (must be empty)
+aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region $AWS_REGION
+
+# 3. Delete the RDS security group (no longer attached to any instance)
 RDS_SG=$(aws ec2 describe-security-groups \
   --filters "Name=group-name,Values=dbos-conductor-rds" \
   --query "SecurityGroups[0].GroupId" --output text --region $AWS_REGION)
 aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 
-# Delete the DB subnet group
-aws rds delete-db-subnet-group --db-subnet-group-name dbos-conductor-db --region $AWS_REGION
+# 4. Delete the EKS cluster (includes VPC, security groups, and node group)
+eksctl delete cluster --name dbos-conductor --region $AWS_REGION
 ```
 
 </TabItem>
