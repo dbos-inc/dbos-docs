@@ -85,6 +85,7 @@ Store these as Kubernetes Secrets and inject them via `secretKeyRef`.
 For Git-safe storage, encrypt with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets), [SOPS](https://github.com/getsops/sops), or a cloud-native secrets manager (AWS Secrets Manager, [Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/vso), etc.).
 
 **Network policies** — Apply a default-deny ingress policy to the namespace, then add explicit allow rules for each pod. If Conductor and Console are co-located, allow traffic from the Console to Conductor on port 8090.
+Conductor validates its license key against `https://cloud.dbos.dev` at startup and exits if it cannot reach it, so keep outbound HTTPS open from the Conductor pod (this also means its nodes need a route to the internet, such as a NAT gateway for private subnets).
 
 **RBAC** — Restrict which ServiceAccounts can read Secrets in the namespace. Conductor credentials (database URLs, license key, API key) should only be accessible to the pods that need them.
 
