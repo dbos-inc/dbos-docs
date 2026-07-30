@@ -163,7 +163,6 @@ Launch the following resources managed by a `Context`:
 - A [system database connection pool](../../explanations/system-tables.md)
 - A [workflow scheduler](../tutorials/scheduled-workflows.md)
 - A [workflow queue runner](../tutorials/queue-tutorial.md)
-- (Optionally) an admin server
 - (Optionally) a Conductor connection
 
 In addition, `Launch()` may perform [workflow recovery](../../architecture.md#how-workflow-recovery-works).

@@ -332,7 +332,6 @@ func main() {
         AppName:            "widget-store",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-        AdminServer:        true,
         Logger:             logger,
         ConductorAPIKey:    os.Getenv("DBOS_CONDUCTOR_API_KEY"),
     })

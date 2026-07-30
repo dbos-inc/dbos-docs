@@ -112,6 +112,10 @@ const config = {
             to: '/quickstart',
           },
           {
+            from: '/golang/reference/client',
+            to: '/golang/reference/dbos-context',
+          },
+          {
             from: '/typescript/upgrading',
             to: '/typescript/programming-guide',
           },

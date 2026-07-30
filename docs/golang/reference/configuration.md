@@ -16,8 +16,6 @@ type Config struct {
     SQLiteSystemDB            *sql.DB        // A custom SQLite handle (e.g. from modernc.org/sqlite) DBOS can use as your system database. Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
     DatabaseSchema            string         // Database schema name (defaults to "dbos"; Postgres only)
     Logger                    *slog.Logger   // Custom logger instance (defaults to a new slog logger)
-    AdminServer               bool           // Enable Transact admin HTTP server (disabled by default)
-    AdminServerPort           int            // Port for the admin HTTP server (default: 3001)
     ConductorURL              string         // DBOS conductor service URL (optional)
     ConductorAPIKey           string         // DBOS conductor API key (optional)
     ConductorExecutorMetadata map[string]any // Metadata used to identify this executor on the Conductor dashboard (optional, must be JSON-serializable)
