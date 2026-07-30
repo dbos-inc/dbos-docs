@@ -591,6 +591,9 @@ spec:
     spec:
       containers:
         - name: conductor
+          # Untagged resolves to :latest. For production, pin an explicit
+          # version (and pin the Console to the same one) so rollouts are
+          # reproducible: dbosdev/conductor:<version>
           image: dbosdev/conductor
           env:
             - name: DBOS__CONDUCTOR_DB_URL
@@ -667,6 +670,8 @@ spec:
     spec:
       containers:
         - name: console
+          # As with Conductor, pin an explicit version in production and keep
+          # the two in step: dbosdev/console:<version>
           image: dbosdev/console
           env:
             - name: DBOS_CONDUCTOR_URL
