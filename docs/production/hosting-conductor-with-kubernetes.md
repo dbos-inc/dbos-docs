@@ -43,11 +43,11 @@ Applications seamlessly reconnect to the new Conductor version with no impact on
 After deploying Conductor and Console, [register your application, and generate an API key](./conductor.md#connecting-to-conductor).
 The application connects to Conductor via WebSocket using this API key and the Conductor URL.
 
-With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `/conductor/v1alpha1` prefix:
+With the [Ingress](#ingress) below, that URL is your Ingress hostname plus the `/conductor-api` prefix:
 
 ```bash
 DBOS_CONDUCTOR_KEY=<the API key you generated in the Console>
-DBOS_CONDUCTOR_URL=wss://<your-elb-hostname>/conductor/v1alpha1
+DBOS_CONDUCTOR_URL=wss://<your-elb-hostname>/conductor-api
 ```
 
 Because this is a `wss://` connection, your application verifies the Ingress TLS certificate.
@@ -59,7 +59,7 @@ Conductor supports OAuth 2.0 with any OIDC-compliant provider. See the [authenti
 
 ## Ingress
 
-In this guide, all external traffic enters through a reverse proxy that performs **TLS termination**, supports **WebSockets**, and routes by path: `/conductor/v1alpha1/...` to Conductor, everything else to the Console.
+In this guide, all external traffic enters through a reverse proxy that performs **TLS termination**, supports **WebSockets**, and routes by path: `/conductor-api/...` to Conductor, everything else to the Console.
 
 This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), but any reverse proxy meeting those requirements will work. The `ingress.yaml` below defines the routing it must implement.
 
@@ -475,8 +475,8 @@ Distribute it using a ConfigMap and configure `SSL_CERT_FILE` (Go, Python) / `NO
 
 <summary><strong>ingress.yaml</strong></summary>
 
-The Ingress routes `/conductor/v1alpha1/...` to the Conductor service and everything else to the Console.
-A regex rewrite strips the `/conductor/v1alpha1` prefix so Conductor sees requests at `/`.
+The Ingress routes `/conductor-api/...` to the Conductor service and everything else to the Console.
+A regex rewrite strips the `/conductor-api` prefix so Conductor sees requests at `/`.
 Replace `<your-elb-hostname>` with the `$ELB_HOSTNAME` value you retrieved above.
 
 ```yaml
@@ -500,7 +500,7 @@ spec:
     - host: <your-elb-hostname>
       http:
         paths:
-          - path: /conductor/v1alpha1(/|$)(.*)
+          - path: /conductor-api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
@@ -520,13 +520,13 @@ The `host` in both `tls` and `rules` must match — without it, Nginx serves its
 
 | Request path | Backend |
 |---|---|
-| `/conductor/v1alpha1/websocket/<app>/<key>` | conductor:8090 → `/websocket/<app>/<key>` |
-| `/conductor/v1alpha1/healthz` | conductor:8090 → `/healthz` |
-| `/conductor/v1alpha1/v1/metrics` | conductor:8090 → `/v1/metrics` |
+| `/conductor-api/websocket/<app>/<key>` | conductor:8090 → `/websocket/<app>/<key>` |
+| `/conductor-api/healthz` | conductor:8090 → `/healthz` |
+| `/conductor-api/v1/metrics` | conductor:8090 → `/v1/metrics` |
 | `/` | console:80 |
 | `/conductor/applications` | console:80 (UI page) |
 
-- **`rewrite-target: /$2`** — strips the `/conductor/v1alpha1` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
+- **`rewrite-target: /$2`** — strips the `/conductor-api` prefix using the second capture group. The Console catch-all uses `/()(.*)`  so `$2` passes the full path through unchanged.
 - **`proxy-read-timeout` / `proxy-send-timeout`** — set to 3600s to keep Conductor's long-lived WebSocket connections alive.
 </details>
 
