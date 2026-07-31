@@ -715,25 +715,41 @@ Sentinel matching also survives the [portable JSON format](../../explanations/po
 
 #### Error codes
 
-| Code | Sentinel | Meaning |
-|---|---|---|
-| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. Never swallow this inside a workflow — return it so DBOS can resolve the conflict. See [Concurrent Execution Conflicts](../tutorials/step-tutorial.md#concurrent-execution-conflicts). |
-| `ErrorCodeInitialization` | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
-| `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
-| `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. |
-| `ErrorCodeWorkflowCancelled` | `ErrWorkflowCancelled` | This workflow was cancelled during execution. Propagate it out of your workflow function. Match it with `errors.Is` (step wrappers may enclose it). When the cancellation came from a cancelled context or expired durable timeout, the wrapped cause also matches `context.Canceled` / `context.DeadlineExceeded`; an API `CancelWorkflow` carries no stdlib cause. See [workflow cancellation](../tutorials/workflow-management.md#cancelling-workflows). |
-| `ErrorCodeUnexpectedStep` | — | During replay, the step executing at a position differs from the step recorded there: the workflow function is non-deterministic or its code changed. See [Upgrading Workflow Code](../tutorials/upgrading-workflows.md). |
-| `ErrorCodeAwaitedWorkflowCancelled` | `ErrAwaitedWorkflowCancelled` | A workflow you were awaiting (via a handle, `GetEvent`, or a child workflow) was cancelled. Unlike `ErrorCodeWorkflowCancelled`, this is the *awaiter's* error — the caller may handle it and continue. |
-| `ErrorCodeConflictingRegistration` | — | A workflow, queue, or schedule was registered under a name that is already registered (or reserved). |
-| `ErrorCodeWorkflowUnexpectedType` | — | A recorded input or output could not be decoded into the requested type parameter (e.g., `RetrieveWorkflow[R]` with the wrong `R`). |
-| `ErrorCodeWorkflowExecution` | — | General workflow execution failure. |
-| `ErrorCodeStepExecution` | — | General step execution failure. |
-| `ErrorCodeDeadLetterQueue` | `ErrDeadLetterQueue` | The workflow exceeded its maximum recovery attempts (`WithMaxRecoveryAttempts`) and was dead-lettered. |
-| `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | A step exhausted its configured retries. The error wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
-| `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. |
-| `ErrorCodePatchingNotEnabled` | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
-| `ErrorCodeTimeout` | `ErrTimeout` | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Deadline-driven timeouts also match `context.DeadlineExceeded`; for handle waits, prefer matching `context.DeadlineExceeded`, which covers all handle flavors. |
-| `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | An operation required a registered application version, but none exists in the system database. |
-| `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | The referenced queue does not exist (e.g., `RetrieveQueue`). |
-| `ErrorCodeScheduleNotFound` | `ErrScheduleNotFound` | The referenced schedule does not exist (e.g., `GetSchedule`). |
-| `ErrorCodeInvalidOption` | `ErrInvalidOption` | Invalid or inconsistent options were passed to a DBOS API. |
+:::warning
+Never swallow a DBOS error inside a workflow without knowing which kind you have.
+The rule is: **handle an error only if DBOS already checkpointed its outcome.**
+A checkpointed outcome is replayed verbatim, so a branch you take on it is deterministic.
+An error that signals this execution has lost ownership of the workflow, or has diverged from its recorded history, must be returned from the workflow function.
+:::
+
+The **In a workflow** column classifies each code:
+
+- **Return** — propagate it out of your workflow function. Either DBOS's own handler needs the error to resolve the situation, or the workflow's recorded history can no longer be trusted.
+- **Handle** — you may catch it and continue. Where the Meaning column notes that the failure left no checkpoint, see [Handling non-checkpointed errors](#handling-non-checkpointed-errors) first.
+- **Check the cause** — a wrapper code; classify by the error it wraps.
+- **—** — a configuration, registration, or management error that does not arise from workflow execution.
+
+Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wraps some causes, so a failed child start surfaces as `ErrorCodeWorkflowExecution` while still matching `ErrQueueDeduplicated` or `ErrDeadLetterQueue`.
+
+| Code | Sentinel | In a workflow | Meaning |
+|---|---|---|---|
+| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Execution Conflicts](../tutorials/step-tutorial.md#concurrent-execution-conflicts). |
+| `ErrorCodeInitialization` | — | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
+| `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | Handle | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
+| `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | Return | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. Continuing would write your checkpoints into another workflow's history. |
+| `ErrorCodeWorkflowCancelled` | `ErrWorkflowCancelled` | Return | This workflow was cancelled during execution. Once cancelled, nothing more is checkpointed: steps are interrupted without recording an outcome, so anything you run after swallowing this error is a non-durable side effect that re-executes on resume. Match it with `errors.Is` (step wrappers may enclose it). When the cancellation came from a cancelled context or expired durable timeout, the wrapped cause also matches `context.Canceled` / `context.DeadlineExceeded`; an API `CancelWorkflow` carries no stdlib cause. See [workflow cancellation](../tutorials/workflow-management.md#cancelling-workflows). |
+| `ErrorCodeUnexpectedStep` | — | Return | During replay, the step executing at a position differs from the step recorded there: the workflow function is non-deterministic or its code changed. See [Upgrading Workflow Code](../tutorials/upgrading-workflows.md). |
+| `ErrorCodeAwaitedWorkflowCancelled` | `ErrAwaitedWorkflowCancelled` | Handle | A workflow you were awaiting (via a handle, `GetEvent`, or a child workflow) was cancelled. Unlike `ErrorCodeWorkflowCancelled`, this is the *awaiter's* error: it is checkpointed as the await's outcome, so the caller may handle it and continue. |
+| `ErrorCodeConflictingRegistration` | — | — | A workflow, queue, or schedule was registered under a name that is already registered (or reserved). |
+| `ErrorCodeWorkflowUnexpectedType` | — | Return | A recorded input or output could not be decoded into the requested type parameter (e.g., `RetrieveWorkflow[R]` with the wrong `R`). The recorded history does not match the code reading it. |
+| `ErrorCodeWorkflowExecution` | — | Check the cause | General workflow execution failure, and the wrapper DBOS uses for failures while starting a child workflow. Classify by its wrapped cause with `errors.Is`, not by this code. |
+| `ErrorCodeStepExecution` | — | Handle | General step execution failure. The step's error is checkpointed and returned verbatim on replay. |
+| `ErrorCodeDeadLetterQueue` | `ErrDeadLetterQueue` | Handle | The workflow exceeded its maximum recovery attempts (`WithMaxRecoveryAttempts`) and was dead-lettered. Awaiting a dead-lettered workflow checkpoints the error as the await's outcome and is safe to handle; *starting* one does not checkpoint, so treat that case like a rejected enqueue. |
+| `ErrorCodeMaxStepRetriesExceeded` | `ErrMaxStepRetriesExceeded` | Handle | A step exhausted its configured retries. The error is checkpointed as the step's outcome and wraps the joined errors of all attempts, so `errors.Is`/`errors.As` can reach the underlying failures. |
+| `ErrorCodeQueueDeduplicated` | `ErrQueueDeduplicated` | Handle | An enqueue was rejected because another workflow with the same deduplication ID is already pending on the queue. The rejected enqueue is rolled back, so no checkpoint records it. |
+| `ErrorCodePatchingNotEnabled` | — | — | `Patch` or `DeprecatePatch` was called but `Config.EnablePatching` is false. |
+| `ErrorCodeTimeout` | `ErrTimeout` | Handle | A DBOS wait timed out (e.g., `Recv`, `GetEvent`, or an in-memory handle's `GetResult`). Inside a workflow, `Recv` and `GetEvent` timeouts are checkpointed as the operation's outcome. Deadline-driven timeouts also match `context.DeadlineExceeded`; for handle waits, prefer matching `context.DeadlineExceeded`, which covers all handle flavors. |
+| `ErrorCodeNoApplicationVersions` | `ErrNoApplicationVersions` | — | An operation required a registered application version, but none exists in the system database. |
+| `ErrorCodeQueueNotFound` | `ErrQueueNotFound` | Handle | The referenced queue does not exist (e.g., `RetrieveQueue`). |
+| `ErrorCodeScheduleNotFound` | `ErrScheduleNotFound` | Handle | The referenced schedule does not exist (e.g., `GetSchedule`). |
+| `ErrorCodeInvalidOption` | `ErrInvalidOption` | — | Invalid or inconsistent options were passed to a DBOS API. |

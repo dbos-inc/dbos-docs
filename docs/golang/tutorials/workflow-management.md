@@ -47,27 +47,9 @@ To cancel many workflows at once, use [`CancelWorkflows`](../reference/methods#c
 Pass [`WithCancelChildren`](../reference/methods#withcancelchildren) to also cancel all the workflow's children, recursively.
 
 If the workflow is enqueued, cancelling removes it from the queue.
-If the workflow is currently executing, cancelling sets its status to `CANCELLED`; the execution is not interrupted mid-step, but it stops at the start of its **next durable operation** (step, child workflow, sleep, `Send`/`Recv`, and so on).
+If the workflow is currently executing, cancelling sets its status to `CANCELLED`; the execution is not interrupted mid-step and its output is checkpointed, but the execution stops at the start of its **next durable operation** (step, child workflow, sleep, `Send`/`Recv`, and so on).
 That operation returns an error matching [`dbos.ErrWorkflowCancelled`](../reference/workflows-steps.md#error-codes).
-A step that was already executing when the cancellation landed runs to completion, and its result is checkpointed.
-
-### Handling cancellation in workflow code
-
-Always propagate a cancellation error out of your workflow function.
-Match it with `errors.Is` — do not switch on the outermost error code, because step wrappers may enclose it:
-
-```go
-result, err := dbos.RunAsStep(ctx, myStep)
-if err != nil {
-    // On cancellation, errors.Is(err, dbos.ErrWorkflowCancelled) is true.
-    return "", err
-}
-```
-
-Ignoring a cancellation error cannot turn the workflow back into a success:
-
-- Every subsequent DBOS operation is refused before executing, so later steps' side effects do not run.
-- The workflow's final status write is guarded in the database. Even if your function swallows the error and returns a normal result, the workflow is recorded as `CANCELLED` and the returned output is discarded.
+Do not ignore that error to continue execution. Ignoring a cancellation error cannot turn the workflow back into a success.
 
 ### Cancellation via context or timeout
 
@@ -81,7 +63,7 @@ handle, err := dbos.RunWorkflow(dbosCtx, myWorkflow, input)
 cancel()
 ```
 
-This form of cancellation additionally cancels the workflow's `Context`, which enables **cooperative cancellation**: an executing step receives the cancellation through its `context.Context` and can select on `ctx.Done()` to return early instead of running to completion.
+This form of cancellation enables **cooperative cancellation**: an executing step receives the cancellation through its `context.Context` and can select on `ctx.Done()` to return early instead of running to completion.
 
 ```go
 func longRunningStep(ctx context.Context) (string, error) {
