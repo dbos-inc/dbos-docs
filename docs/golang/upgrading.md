@@ -3,9 +3,9 @@ sidebar_position: 200
 title: Upgrading
 ---
 
-## Upgrading to v1.0
+## Upgrading to v1.0.0
 
-This guide covers migrating an application from the last v0.x release to v1.0:
+This guide covers migrating an application from the last v0.x release to v1.0.0:
 
 ```shell
 go get github.com/dbos-inc/dbos-transact-golang@latest
