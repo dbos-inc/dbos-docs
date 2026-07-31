@@ -57,7 +57,7 @@ import (
     "github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     _, err := dbos.RunAsStep(ctx, stepOne)
     if err != nil {
         return "failure", err
@@ -80,7 +80,7 @@ func stepTwo(ctx context.Context) (string, error) {
 }
 
 func main() {
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -142,7 +142,7 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     _, err := dbos.RunAsStep(ctx, stepOne)
     if err != nil {
         return "failure", err
@@ -169,7 +169,7 @@ func stepTwo(ctx context.Context) (string, error) {
 }
 
 func main() {
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -189,7 +189,7 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, workflow, "")
+        _, err := dbos.RunWorkflow(dbosContext, workflow, "")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
@@ -254,17 +254,21 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-func taskWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
+func taskWorkflow(ctx dbos.Context, i int) (int, error) {
     dbos.Sleep(ctx, 5*time.Second)
     fmt.Printf("Task %d completed\n", i)
     return i, nil
 }
 
-func queueWorkflow(ctx dbos.DBOSContext, queueName string) (int, error) {
+func queueWorkflow(ctx dbos.Context, queueName string) (int, error) {
     fmt.Println("Enqueuing tasks")
+    queue, err := dbos.RetrieveQueue(ctx, queueName)
+    if err != nil {
+        return 0, err
+    }
     handles := make([]dbos.WorkflowHandle[int], 10)
     for i := range 10 {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queueName))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, i, dbos.WithQueue(queue))
         if err != nil {
             return 0, err
         }
@@ -283,7 +287,7 @@ func queueWorkflow(ctx dbos.DBOSContext, queueName string) (int, error) {
 }
 
 func main() {
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -309,7 +313,7 @@ func main() {
     r := gin.Default()
 
     r.GET("/", func(c *gin.Context) {
-        dbos.RunWorkflow(dbosContext, queueWorkflow, "queue")
+        _, err := dbos.RunWorkflow(dbosContext, queueWorkflow, "queue")
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error in DBOS workflow: %v", err)})
             return
@@ -321,7 +325,7 @@ func main() {
 }
 ```
 
-When you enqueue a function by passing `dbos.WithQueue(queueName)` into `dbos.RunWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
+When you enqueue a function by passing `dbos.WithQueue(queue)` into `dbos.RunWorkflow` (where `queue` is the handle returned by `dbos.RegisterQueue` or `dbos.RetrieveQueue`), DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `dbos.RunWorkflow` returns a handle representing the state of the enqueued function.
 This example enqueues ten functions, then waits for them all to finish using `.GetResult()` to wait for each of their handles.
 
@@ -363,10 +367,10 @@ To connect your app to Conductor, first register it on the [DBOS console](https:
 Then, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
 
 Next, supply your API key to your app through the `ConductorAPIKey` configuration option.
-Update the call to `dbos.NewDBOSContext` in `main` to read the key from an environment variable:
+Update the call to `dbos.NewContext` in `main` to read the key from an environment variable:
 
 ```go
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),

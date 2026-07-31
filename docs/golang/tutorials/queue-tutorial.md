@@ -16,20 +16,23 @@ queue, err := dbos.RegisterQueue(dbosContext, "example_queue")
 `RegisterQueue` persists the queue's configuration to the system database.
 It can be called at any time, including after [`Launch`](../reference/dbos-context.md#launch), and the queue's configuration can be [changed at runtime](#reconfiguring-queues).
 
-You can then enqueue any workflow using [`WithQueue`](../reference/workflows-steps#withqueue) when calling `RunWorkflow`.
+`RegisterQueue` returns a `Queue` handle. You can then enqueue any workflow by passing the handle to [`WithQueue`](../reference/workflows-steps#withqueue) when calling `RunWorkflow`.
+
+You can fetch a queue handle with [`RetrieveQueue`](../reference/queues.md#retrievequeue).
+
 Enqueuing a function submits it for execution and returns a [handle](../reference/workflows-steps#workflowhandle) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
 ```go
-func processTask(ctx dbos.DBOSContext, task string) (string, error) {
+func processTask(ctx dbos.Context, task string) (string, error) {
     // Process the task...
     return fmt.Sprintf("Processed: %s", task), nil
 }
 
-func example(dbosContext dbos.DBOSContext) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     // Enqueue a workflow
     task := "example_task"
-    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue("example_queue"))
+    handle, err := dbos.RunWorkflow(dbosContext, processTask, task, dbos.WithQueue(queue))
     if err != nil {
         return err
     }
@@ -49,18 +52,24 @@ func example(dbosContext dbos.DBOSContext) error {
 Here's an example of a workflow using a queue to process tasks concurrently:
 
 ```go
-func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
+func taskWorkflow(ctx dbos.Context, task string) (string, error) {
     // Process the task...
     return fmt.Sprintf("Processed: %s", task), nil
 }
 
-func queueWorkflow(ctx dbos.DBOSContext, queueName string) ([]string, error) {
+func queueWorkflow(ctx dbos.Context, queueName string) ([]string, error) {
+    // Look up the queue handle by name
+    queue, err := dbos.RetrieveQueue(ctx, queueName)
+    if err != nil {
+        return nil, err
+    }
+
     // Enqueue each task so all tasks are processed concurrently
     tasks := []string{"task1", "task2", "task3", "task4", "task5"}
 
     var handles []dbos.WorkflowHandle[string]
     for _, task := range tasks {
-        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queueName))
+        handle, err := dbos.RunWorkflow(ctx, taskWorkflow, task, dbos.WithQueue(queue))
         if err != nil {
             return nil, fmt.Errorf("failed to enqueue task %s: %w", task, err)
         }
@@ -80,7 +89,7 @@ func queueWorkflow(ctx dbos.DBOSContext, queueName string) ([]string, error) {
     return results, nil
 }
 
-func example(dbosContext dbos.DBOSContext) error {
+func example(dbosContext dbos.Context) error {
     handle, err := dbos.RunWorkflow(dbosContext, queueWorkflow, "example_queue")
     if err != nil {
         return err
@@ -106,13 +115,16 @@ The main workflow awaits those messages, retrieving the result of each task as s
 ```go
 const TaskCompleteTopic = "task_complete"
 
+// The queue handle returned by RegisterQueue, e.g. stored in a package-level variable
+var queue dbos.Queue
+
 type TaskInput struct {
     ParentWorkflowID string
     TaskID           int
     Task             string
 }
 
-func processTask(ctx dbos.DBOSContext, input TaskInput) (string, error) {
+func processTask(ctx dbos.Context, input TaskInput) (string, error) {
     result := ... // Process the task
 
     // Notify the main workflow this task is complete
@@ -123,7 +135,7 @@ func processTask(ctx dbos.DBOSContext, input TaskInput) (string, error) {
     return result, nil
 }
 
-func processTasks(ctx dbos.DBOSContext, tasks []string) ([]string, error) {
+func processTasks(ctx dbos.Context, tasks []string) ([]string, error) {
     parentWorkflowID, err := dbos.GetWorkflowID(ctx)
     if err != nil {
         return nil, fmt.Errorf("failed to get workflow ID: %w", err)
@@ -133,7 +145,7 @@ func processTasks(ctx dbos.DBOSContext, tasks []string) ([]string, error) {
     for i, task := range tasks {
         handle, err := dbos.RunWorkflow(ctx, processTask,
             TaskInput{ParentWorkflowID: parentWorkflowID, TaskID: i, Task: task},
-            dbos.WithQueue("example_queue"),
+            dbos.WithQueue(queue),
         )
         if err != nil {
             return nil, fmt.Errorf("failed to enqueue task %d: %w", i, err)
@@ -168,7 +180,7 @@ For example, let's say you have an API server and a data processing service.
 You're using DBOS to build a durable data pipeline in the data processing service.
 When the API server receives a request, it should enqueue the data pipeline for execution on the data processing service.
 
-You can use the [DBOS Client](../reference/client.md) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
+You can use the [DBOS Client](../reference/dbos-context.md#newclient) to enqueue workflows from outside your DBOS application by connecting directly to your DBOS application's system database.
 Since the DBOS Client is designed to be used from outside your DBOS application, workflow and queue metadata must be specified explicitly.
 
 For example, this code enqueues the `dataPipeline` workflow on the `pipelineQueue` queue with a `ProcessInput` argument:
@@ -191,9 +203,9 @@ client, err := dbos.NewClient(context.Background(), config)
 if err != nil {
     log.Fatal(err)
 }
-defer client.Shutdown(5 * time.Second)
+defer dbos.Shutdown(client, 5*time.Second)
 
-handle, err := dbos.Enqueue[ProcessInput, ProcessOutput](
+handle, err := dbos.Enqueue[ProcessOutput](
     client, 
     "pipelineQueue",
     "dataPipeline",
@@ -282,18 +294,18 @@ For example, this is useful if you only want to have one workflow active at a ti
 **Example syntax:**
 
 ```go
-func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
+func taskWorkflow(ctx dbos.Context, task string) (string, error) {
     // Process the task...
     return "completed", nil
 }
 
-func example(dbosContext dbos.DBOSContext) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     task := "example_task"
     deduplicationID := "user_12345" // Use user ID for deduplication
     
     handle, err := dbos.RunWorkflow(
         dbosContext, taskWorkflow, task,
-        dbos.WithQueue("example_queue"),
+        dbos.WithQueue(queue),
         dbos.WithDeduplicationID(deduplicationID))
     if err != nil {
         // Handle deduplication error or other failures
@@ -329,17 +341,17 @@ queue, err := dbos.RegisterQueue(dbosContext, "example_queue", dbos.WithPriority
 **Example syntax:**
 
 ```go
-func taskWorkflow(ctx dbos.DBOSContext, task string) (string, error) {
+func taskWorkflow(ctx dbos.Context, task string) (string, error) {
     // Process the task...
     return "completed", nil
 }
 
-func example(dbosContext dbos.DBOSContext) error {
+func example(dbosContext dbos.Context, queue dbos.Queue) error {
     task := "example_task"
     priority := uint(10) // Lower number = higher priority
     
     handle, err := dbos.RunWorkflow(dbosContext, taskWorkflow, task,
-        dbos.WithQueue("example_queue"),
+        dbos.WithQueue(queue),
         dbos.WithPriority(priority))
     if err != nil {
         return err
@@ -379,18 +391,18 @@ type Task struct {
     Data   string
 }
 
-func processTask(ctx dbos.DBOSContext, task Task) (string, error) {
+func processTask(ctx dbos.Context, task Task) (string, error) {
     // Process the task...
     return fmt.Sprintf("Processed task %s", task.TaskID), nil
 }
 
-func onUserTaskSubmission(dbosContext dbos.DBOSContext, userID string, task Task) error {
+func onUserTaskSubmission(dbosContext dbos.Context, userID string, task Task) error {
     // Partition the task queue by user ID. As the queue has a
     // maximum concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
     handle, err := dbos.RunWorkflow(dbosContext, processTask, task,
-        dbos.WithQueue("user-tasks"),
+        dbos.WithQueue(partitionedQueue),
         dbos.WithQueuePartitionKey(userID),
     )
     if err != nil {
@@ -423,14 +435,19 @@ This is useful for scheduling workflows to run at a future time.
 **Example syntax:**
 
 ```go
+remindersQueue, err := dbos.RegisterQueue(dbosContext, "reminders")
+if err != nil {
+    return err
+}
+
 // Send a reminder in one hour
 handle, err := dbos.RunWorkflow(dbosContext, sendReminder, userID,
-    dbos.WithQueue("reminders"),
+    dbos.WithQueue(remindersQueue),
     dbos.WithDelay(1 * time.Hour),
 )
 ```
 
-When [enqueueing from a Client](#enqueueing-from-another-application), use [`WithEnqueueDelay`](../reference/client.md#enqueue) instead.
+When [enqueueing from a Client](#enqueueing-from-another-application), use [`WithEnqueueDelay`](../reference/methods.md#enqueue) instead.
 
 You can also dynamically update or shorten the delay of a `DELAYED` workflow using [`SetWorkflowDelay`](../reference/methods.md#setworkflowdelay):
 
@@ -453,7 +470,7 @@ dbos.RegisterQueue(dbosContext, "email-queue")
 dbos.RegisterQueue(dbosContext, "data-queue")
 
 // This process will only dequeue workflows from the email queue
-dbos.ListenQueues(dbosContext, dbos.WorkflowQueue{Name: "email-queue"})
+dbos.ListenQueues(dbosContext, "email-queue")
 
 dbos.Launch(dbosContext)
 ```
