@@ -13,8 +13,8 @@
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.0831566c.js" defer="defer"></script>
-<script src="/assets/js/main.b1a0cb83.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.6956fc49.js" defer="defer"></script>
+<script src="/assets/js/main.b8f8d1e1.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -39,7 +39,7 @@ Distributed applications should also connect to <a href="#operating-dbos-in-prod
 For example, if one of your workers crashes or fails, Conductor detects the failure and automatically recovers its workflows to a compatible live worker.</p>
 <p>When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
-You can use the DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>, <a class="" href="/java/reference/client">Java</a>) to programmatically interact with your application from external code.
+You can use the DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/dbos-context#newclient">Go</a>, <a class="" href="/java/reference/client">Java</a>) to programmatically interact with your application from external code.
 Your API server can create a client connected to your data processing service&#x27;s system database and use it to enqueue a job, monitor the job&#x27;s status, and retrieve its result when complete.
 Here&#x27;s a diagram of what that might look like:</p>
 <img src="/assets/images/api-worker-c191e6a8e517fdff66e07ea0aa368c9e.png" alt="DBOS Architecture" width="750" class="custom-img">
@@ -101,7 +101,7 @@ When using versioning, DBOS versions applications and workflows so workflows onl
 Learn more about both strategies in the workflow upgrade tutorial (<a class="" href="/python/tutorials/upgrading-workflows">Python</a>, <a class="" href="/typescript/tutorials/upgrading-workflows">TypeScript</a>, <a class="" href="/golang/tutorials/upgrading-workflows">Go</a>, <a class="" href="/java/tutorials/upgrading-workflows">Java</a>).</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="durable-queues">Durable Queues<a href="#durable-queues" class="hash-link" aria-label="Direct link to Durable Queues" title="Direct link to Durable Queues" translate="no">​</a></h2>
 <p>One powerful feature of DBOS is that you can <strong>enqueue</strong> workflows for distributed execution with flow control.
-You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/client">Go</a>, <a class="" href="/java/reference/client">Java</a>).</p>
+You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client (<a class="" href="/python/reference/client">Python</a>, <a class="" href="/typescript/reference/client">TypeScript</a>, <a class="" href="/golang/reference/dbos-context#newclient">Go</a>, <a class="" href="/java/reference/client">Java</a>).</p>
 <p>An enqueued workflow may be dequeued and executed by your application&#x27;s servers.
 All processes running DBOS periodically poll queues to find and execute new work.
 You can configure which processes listen to which queues.</p>

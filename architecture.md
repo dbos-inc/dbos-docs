@@ -31,7 +31,7 @@ For example, if one of your workers crashes or fails, Conductor detects the fail
 
 When using DBOS in a distributed setting, you often want to implement durable workflows in one service, but manage them from another service.
 For example, you may want your API server to enqueue and monitor durable jobs on your data processing service.
-You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
+You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
 Your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
 
@@ -100,7 +100,7 @@ Learn more about both strategies in the workflow upgrade tutorial ([Python](./py
 ## Durable Queues
 
 One powerful feature of DBOS is that you can **enqueue** workflows for distributed execution with flow control.
-You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)).
+You can enqueue a workflow from within your DBOS application using the DBOS library or from another application using a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)).
 
 An enqueued workflow may be dequeued and executed by your application's servers.
 All processes running DBOS periodically poll queues to find and execute new work.

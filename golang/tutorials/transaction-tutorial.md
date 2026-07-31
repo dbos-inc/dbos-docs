@@ -30,7 +30,7 @@ if err != nil {
 It provisions a `transaction_completion` durability table in your database (in the `dbos` schema by default, configurable with [`WithDataSourceSchema`](../reference/datasources.md#withdatasourceschema)) unless the table already exists.
 If you prefer to manage DDL yourself, pre-create the table in your own migrations and connect with a role that only needs `SELECT, INSERT` on it.
 
-If you pass the same engine handle you gave DBOS as its system database (via [`Config.SystemDBPool` or `Config.SqliteSystemDB`](../reference/dbos-context.md#initialization)), no `transaction_completion` table is created or managed at all: your application writes and the DBOS checkpoint commit together in a single transaction.
+If you pass the same engine handle you gave DBOS as its system database (via [`Config.SystemDBPool` or `Config.SQLiteSystemDB`](../reference/configuration.md)), no `transaction_completion` table is created or managed at all: your application writes and the DBOS checkpoint commit together in a single transaction.
 See [Sharing the System Database Engine](../reference/datasources.md#sharing-the-system-database-engine).
 
 ## Running Transactions
@@ -39,7 +39,7 @@ Inside a workflow, run a transaction with [`RunAsTransaction`](../reference/data
 Your function receives a [`Tx`](../reference/datasources.md#the-tx-interface) on which to run queries; DBOS commits the transaction if the function returns successfully and rolls it back if it returns an error.
 
 ```go
-func checkoutWorkflow(ctx dbos.DBOSContext, item string) (int64, error) {
+func checkoutWorkflow(ctx dbos.Context, item string) (int64, error) {
     // This transaction runs exactly once, even across crashes and recovery.
     orderID, err := dbos.RunAsTransaction(ctx, ds, func(txCtx context.Context, tx dbos.Tx) (int64, error) {
         var id int64
@@ -69,7 +69,6 @@ If your application tables live in the same database that hosts the DBOS system 
 ## Guarantees
 
 - A `RunAsTransaction` called at the top level of a workflow is **exactly-once**: the application writes and the durability record commit atomically, and recovery replays the recorded output instead of re-running the function.
-- A `RunAsTransaction` nested inside a `RunAsStep` is allowed but downgraded to the step's **at-least-once** guarantee, because the enclosing step owns the durability boundary.
-- Nesting a `RunAsTransaction` inside another `RunAsTransaction` is rejected with an error.
+- Nesting a `RunAsTransaction` inside a `RunAsStep` or inside another `RunAsTransaction` is rejected with an error: a nested transaction could not be checkpointed, so it would silently lose its exactly-once guarantee. Run transactions from workflow code.
 
 See the [datasources reference](../reference/datasources.md) for details on durability, recovery, and permissions.

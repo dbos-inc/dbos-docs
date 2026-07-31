@@ -4,7 +4,7 @@ title: Testing & Mocking
 ---
 
 
-[`DBOSContext`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
+[`Context`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
 
 <details>
 <summary>Sample .mockery.yml v3 configuration</summary>
@@ -28,7 +28,7 @@ template-schema: '{{.Template}}.schema.json'
 packages:
   github.com/dbos-inc/dbos-transact-golang/dbos:
     interfaces:
-      DBOSContext:
+      Context:
       WorkflowHandle:
 ```
 
@@ -45,32 +45,32 @@ func step(ctx context.Context) (int, error) {
     return 1, nil
 }
 
-func childWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
+func childWorkflow(ctx dbos.Context, i int) (int, error) {
     return i + 1, nil
 }
 
-func workflow(ctx dbos.DBOSContext, i int) (int, error) {
+func workflow(ctx dbos.Context, i int) ([]dbos.WorkflowStatus, error) {
     // Test RunAsStep
-    a, err := dbos.RunAsStep(ctx, step)
+    _, err := dbos.RunAsStep(ctx, step)
     if err != nil {
-        return 0, err
+        return nil, err
     }
 
     // Child wf
     ch, err := dbos.RunWorkflow(ctx, childWorkflow, i)
     if err != nil {
-        return 0, err
+        return nil, err
     }
-    b, err := ch.GetResult()
+    _, err = ch.GetResult()
     if err != nil {
-        return 0, err
+        return nil, err
     }
 
     return dbos.ListWorkflows(ctx)
 }
 ```
 
-Here is how you can test this workflow, assuming mocks generated with [mockery](https://github.com/vektra/mockery). The idea is that you can mock any package-level DBOS method, because it has a mirror on the `DBOSContext` interface.
+Here is how you can test this workflow, assuming mocks generated with [mockery](https://github.com/vektra/mockery). The idea is that you can mock any package-level DBOS method, because it has a mirror on the `Context` interface.
 
 ```go
 // test file
@@ -81,7 +81,7 @@ import (
     "fmt"
     "testing"
 
-    "mocks" // Replace with the location of your generatd mocks
+    "mocks" // Replace with the location of your generated mocks
 
     "github.com/dbos-inc/dbos-transact-golang/dbos"
     "github.com/stretchr/testify/mock"
@@ -91,11 +91,11 @@ func step(ctx context.Context) (int, error) {
     return 1, nil
 }
 
-func childWorkflow(ctx dbos.DBOSContext, i int) (int, error) {
+func childWorkflow(ctx dbos.Context, i int) (int, error) {
     return i + 1, nil
 }
 
-func workflow(ctx dbos.DBOSContext, i int) ([]dbos.WorkflowStatus, error) {
+func workflow(ctx dbos.Context, i int) ([]dbos.WorkflowStatus, error) {
     // Test RunAsStep
     _, err := dbos.RunAsStep(ctx, step)
     if err != nil {
@@ -117,8 +117,8 @@ func workflow(ctx dbos.DBOSContext, i int) ([]dbos.WorkflowStatus, error) {
 }
 
 func TestMocks(t *testing.T) {
-    // Create a mock DBOSContext
-    mockCtx := mocks.NewMockDBOSContext(t)
+    // Create a mock Context
+    mockCtx := mocks.NewMockContext(t)
 
     // Step
     mockCtx.On("RunAsStep", mockCtx, mock.Anything, mock.Anything).Return(1, nil)

@@ -23,7 +23,7 @@ func generateRandomNumber(ctx context.Context) (int, error) {
     return rand.Int(), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+func workflowFunction(ctx dbos.Context, n int) (int, error) {
     randomNumber, err := dbos.RunAsStep(
         ctx,
         generateRandomNumber,
@@ -43,13 +43,13 @@ func generateRandomNumber(ctx context.Context, n int) (int, error) {
     return rand.IntN(n), nil
 }
 
-func workflowFunction(ctx dbos.DBOSContext, n int) (int, error) {
+func workflowFunction(ctx dbos.Context, n int) (int, error) {
     randomNumber, err := dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (int, error) {
             return generateRandomNumber(stepCtx, n)
         },
-        dbos.WithStepName("generateRandomNumber")
+        dbos.WithStepName("generateRandomNumber"),
     )
     if err != nil {
         return 0, err
@@ -68,22 +68,24 @@ Common nondeterministic operations include:
 - Getting the current time.
 
 You **cannot** call, start, or enqueue workflows from within steps.
-You also cannot call DBOS methods like `Send` or `SetEvent` from within steps.
+You also cannot call DBOS methods like [`Send`](../reference/methods.md#send), [`Recv`](../reference/methods.md#recv), or [`RunAsTransaction`](../reference/datasources.md#runastransaction) from within steps — they return an error (see the [full list](../reference/workflows-steps.md#calling-dbos-operations-from-steps)).
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+[`SetEvent`](../reference/methods.md#setevent), [`WriteStream`](../reference/methods.md#writestream), and read operations like [`ListWorkflows`](../reference/methods.md#listworkflows) are allowed from steps.
 
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any error a set number of times with exponential backoff.
 This is useful for automatically handling transient failures, like making requests to unreliable APIs.
-Retries are configurable through step options that can be passed to `RunAsStep`.
+Retries are configurable through step options that can be passed to [`RunAsStep`](../reference/workflows-steps.md#runasstep).
 
 Available retry configuration options include:
 - [`WithStepName`](../reference/workflows-steps#withstepname) - Custom name for the step (default to the [Go runtime reflection value](https://pkg.go.dev/runtime#FuncForPC))
 - [`WithStepMaxRetries`](../reference/workflows-steps#withstepmaxretries) - Maximum number of times this step is automatically retried on failure (default 0)
-- [`WithMaxInterval`](../reference/workflows-steps#withmaxinterval) - Maximum delay between retries (default 5s)
-- [`WithBackoffFactor`](../reference/workflows-steps#withbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
-- [`WithBaseInterval`](../reference/workflows-steps#withbaseinterval) - Initial delay between retries (default 100ms)
+- [`WithStepMaxInterval`](../reference/workflows-steps#withstepmaxinterval) - Maximum delay between retries (default 5s)
+- [`WithStepBackoffFactor`](../reference/workflows-steps#withstepbackofffactor) - Exponential backoff multiplier between retries (default 2.0)
+- [`WithStepBaseInterval`](../reference/workflows-steps#withstepbaseinterval) - Initial delay between retries (default 100ms)
+- [`WithStepRetryPredicate`](../reference/workflows-steps#withstepretrypredicate) - Predicate deciding whether a step error is retried; errors it rejects are returned immediately regardless of the remaining retry budget
 
 For example, let's configure this step to retry failures (such as if the site to be fetched is temporarily down) up to 10 times:
 
@@ -103,7 +105,7 @@ func fetchStep(ctx context.Context, url string) (string, error) {
     return string(body), nil
 }
 
-func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
+func fetchWorkflow(ctx dbos.Context, inputURL string) (string, error) {
     return dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (string, error) {
@@ -111,9 +113,9 @@ func fetchWorkflow(ctx dbos.DBOSContext, inputURL string) (string, error) {
         },
         dbos.WithStepName("fetchFunction"),
         dbos.WithStepMaxRetries(10),
-        dbos.WithMaxInterval(30*time.Second),
-        dbos.WithBackoffFactor(2.0),
-        dbos.WithBaseInterval(500*time.Millisecond),
+        dbos.WithStepMaxInterval(30*time.Second),
+        dbos.WithStepBackoffFactor(2.0),
+        dbos.WithStepBaseInterval(500*time.Millisecond),
     )
 }
 ```
@@ -134,7 +136,7 @@ func waitStep(ctx context.Context) (string, error) {
     }
 }
 
-func exampleWorkflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func exampleWorkflow(ctx dbos.Context, _ string) (string, error) {
     result, err := dbos.RunAsStep(
         ctx,
         func(stepCtx context.Context) (string, error) {
@@ -156,6 +158,6 @@ A few important things to keep in mind:
 
 - **Timing out a step does not cancel the workflow.** When the step returns with an error (e.g. `context.DeadlineExceeded`), the workflow continues to run and is free to handle that error&mdash;retry, fall back to another step, or return. To formally transition a workflow into the `CANCELLED` terminal status, use a workflow-level timeout instead. See [Workflow Timeouts](./workflow-tutorial.md#workflow-timeouts).
 
-- **A step can inherit the workflow's cancellable context.** If you derive the step's context from a cancellable workflow's `DBOSContext`, then when the workflow's timeout fires the workflow will become `CANCELLED`, but the currently executing step will **not** be preempted&mdash;it keeps running and can still record its outcome (success or error) to the database when it returns. The workflow will not be able to enter the next step: the next call to `RunAsStep` will fail because the workflow is already cancelled.
+- **A step can inherit the workflow's cancellable context.** If you derive the step's context from a cancellable workflow's `Context`, then when the workflow's timeout fires the workflow will become `CANCELLED`, but the currently executing step will **not** be preempted&mdash;it keeps running and can still record its outcome (success or error) to the database when it returns. The workflow will not be able to enter the next step: the next call to `RunAsStep` will fail because the workflow is already cancelled.
 
 - **If you don't want that behavior**, Handle the resulting cancellation just as you would in any normal Go program&mdash;by selecting on `ctx.Done()` in long-running loops or by passing the context through to cancellation-aware APIs.

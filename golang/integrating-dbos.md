@@ -36,7 +36,7 @@ They initialize a DBOS context when your program starts.
 
 ```go
 func main() {
-    dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+    dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
         AppName:            "dbos-starter",
         ApplicationVersion: "0.1.0",
         DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
@@ -56,7 +56,7 @@ func main() {
 ### 3. Start Your Application
 
 Try starting your application.
-If everything is set up correctly, your app should run normally and log `DBOS initialized` on startup.
+If everything is set up correctly, your app should run normally and log `DBOS launched` on startup.
 Congratulations! You've integrated DBOS into your application.
 
 
@@ -71,7 +71,7 @@ dbos.RegisterWorkflow(dbosContext, workflow)
 A workflow function must have the following signature:
 
 ```go
-type Workflow[P any, R any] func(ctx DBOSContext, input P) (R, error)
+type Workflow[P any, R any] func(ctx Context, input P) (R, error)
 ```
 
 And a step this signature:
@@ -88,7 +88,7 @@ To learn more about programming with DBOS, check out [the guide](./programming-g
 
 
 ```go
-func workflow(ctx dbos.DBOSContext, _ string) (string, error) {
+func workflow(ctx dbos.Context, _ string) (string, error) {
     _, err := dbos.RunAsStep(ctx, stepOne)
     if err != nil {
         return "failure", err

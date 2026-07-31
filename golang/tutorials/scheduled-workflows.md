@@ -8,43 +8,49 @@ Schedules are stored in the database and can be created, paused, resumed, and de
 Each time a schedule fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow whose input is a [`ScheduledWorkflowInput`](../reference/methods.md#scheduledworkflowinput).
-This struct carries the cron tick time (`ScheduledTime`) and a user-defined `Context` value attached to the schedule:
+This struct carries the cron tick time (`ScheduledTime`) and a user-defined `Context` value attached to the schedule, which you can decode with [`DecodeScheduleContext`](../reference/methods.md#decodeschedulecontext):
 
 ```go
-func myPeriodicTask(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
+func myPeriodicTask(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (any, error) {
+    scheduleCtx, err := dbos.DecodeScheduleContext[string](input)
+    if err != nil {
+        return nil, err
+    }
     logger.Info("running scheduled task",
         "scheduled_time", input.ScheduledTime,
-        "context", input.Context)
+        "context", scheduleCtx)
     return nil, nil
 }
 
 dbos.RegisterWorkflow(dbosContext, myPeriodicTask)
 ```
 
-Then, create a schedule for it using [`CreateSchedule`](../reference/methods.md#createschedule) with a [crontab](https://en.wikipedia.org/wiki/Cron) expression:
+Then, create a schedule for it using [`CreateSchedule`](../reference/methods.md#createschedule) with a [`ScheduleSpec`](../reference/methods.md#schedulespec) containing a [crontab](https://en.wikipedia.org/wiki/Cron) expression:
 
 ```go
-err := dbos.CreateSchedule(dbosContext, myPeriodicTask, dbos.CreateScheduleRequest{
+err := dbos.CreateSchedule(dbosContext, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule", // The schedule name is a unique identifier of the schedule
-    Schedule:     "*/5 * * * *",      // Every 5 minutes
-}, dbos.WithScheduleContext("my context")) // The context is passed into every iteration of the workflow
+    Workflow:     myPeriodicTask,     // A registered workflow function
+    Schedule:     "0 */5 * * * *",    // Every 5 minutes
+    Context:      "my context",       // Passed into every iteration of the workflow
+})
 ```
 
 Note that `CreateSchedule` will fail if the schedule already exists.
 If you're defining a set of static schedules to be created on program start, you can instead use [`ApplySchedules`](../reference/methods.md#applyschedules) to create them atomically, updating them if they already exist:
 
 ```go
-err := dbos.ApplySchedules(dbosContext, []dbos.ApplySchedulesRequest{
+err := dbos.ApplySchedules(dbosContext, []dbos.ScheduleSpec{
     {
         ScheduleName: "schedule-a",
-        WorkflowFn:   workflowA,
-        Schedule:     "*/10 * * * *", // Every 10 minutes
+        Workflow:     workflowA,
+        Schedule:     "0 */10 * * * *", // Every 10 minutes
         Context:      "context-a",
     },
     {
         ScheduleName: "schedule-b",
-        WorkflowFn:   workflowB,
-        Schedule:     "0 0 * * *",    // Every day at midnight
+        Workflow:     workflowB,
+        Schedule:     "0 0 0 * * *",  // Every day at midnight
         Context:      "context-b",
     },
 })
@@ -55,11 +61,11 @@ For example, if a schedule was routed to a named queue and you re-apply it witho
 The schedule's status and last-fired time are preserved.
 
 To learn more about crontab syntax, see [this guide](https://docs.gitlab.com/ee/topics/cron/) or [this crontab editor](https://crontab.guru/).
-DBOS Go uses [robfig/cron](https://pkg.go.dev/github.com/robfig/cron/v3) to parse cron schedules, with seconds as an optional first field.
-Valid cron schedules contain 5 or 6 items, separated by spaces:
+DBOS Go uses [robfig/cron](https://pkg.go.dev/github.com/robfig/cron/v3) to parse cron schedules, with seconds as the first field.
+Valid cron schedules contain exactly 6 items, separated by spaces:
 
 ```
- ┌────────────── second (optional)
+ ┌────────────── second
  │ ┌──────────── minute
  │ │ ┌────────── hour
  │ │ │ ┌──────── day of month
@@ -70,30 +76,35 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
-Cron expressions are evaluated in UTC by default. Pass [`WithCronTimezone`](../reference/methods.md#withcrontimezone) with an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a different timezone.
+Cron expressions are evaluated in UTC by default. Set the `CronTimezone` field of [`ScheduleSpec`](../reference/methods.md#schedulespec) to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a different timezone.
 
 You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
 
 ```go
-func customerWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {
-    customerID := input.Context.(string)
+func customerWorkflow(ctx dbos.Context, input dbos.ScheduledWorkflowInput) (any, error) {
+    customerID, err := dbos.DecodeScheduleContext[string](input)
+    if err != nil {
+        return nil, err
+    }
     // ...
     return nil, nil
 }
 
 dbos.RegisterWorkflow(dbosContext, customerWorkflow)
 
-func onCustomerRegistration(ctx dbos.DBOSContext, customerID string) error {
-    return dbos.CreateSchedule(ctx, customerWorkflow, dbos.CreateScheduleRequest{
+func onCustomerRegistration(ctx dbos.Context, customerID string) error {
+    return dbos.CreateSchedule(ctx, dbos.ScheduleSpec{
         ScheduleName: fmt.Sprintf("customer-%s-sync", customerID),
-        Schedule:     "0 * * * *", // Every hour
-    }, dbos.WithScheduleContext(customerID))
+        Workflow:     customerWorkflow,
+        Schedule:     "0 0 * * * *", // Every hour
+        Context:      customerID,
+    })
 }
 ```
 
-The `Context` field on `ScheduledWorkflowInput` is typed as `any` and is serialized as JSON.
-Type-assert or unmarshal it inside the workflow to recover the original value.
+The `Context` field on `ScheduleSpec` is typed as `any` and is serialized as JSON when the schedule is stored.
+Inside the workflow, recover the original value with [`DecodeScheduleContext`](../reference/methods.md#decodeschedulecontext).
 
 ### Managing Schedules
 
@@ -132,7 +143,7 @@ end := time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC)
 ids, err := dbos.BackfillSchedule(dbosContext, "my-task-schedule", start, end)
 ```
 
-Alternatively, pass [`WithAutomaticBackfill(true)`](../reference/methods.md#withautomaticbackfill) when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
+Alternatively, set `AutomaticBackfill: true` on the [`ScheduleSpec`](../reference/methods.md#schedulespec) when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
 
 Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
 If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.
@@ -141,41 +152,43 @@ For example, changing a daily schedule to an hourly one and then backfilling yes
 You can also immediately trigger a schedule using [`TriggerSchedule`](../reference/methods.md#triggerschedule):
 
 ```go
-handle, err := dbos.TriggerSchedule(dbosContext, "my-task-schedule")
+handle, err := dbos.TriggerSchedule[any](dbosContext, "my-task-schedule")
 ```
 
 ### Scheduling to Queues
 
 By default, scheduled workflows are enqueued on an internal queue.
 You can instead enqueue them on a declared [queue](./queue-tutorial.md) to manage their concurrency or rate limits.
-Pass [`WithScheduleQueueName`](../reference/methods.md#withschedulequeuename) when creating the schedule:
+Set the `QueueName` field of [`ScheduleSpec`](../reference/methods.md#schedulespec) when creating the schedule:
 
 ```go
 dbos.RegisterQueue(dbosContext, "scheduled_queue",
     dbos.WithGlobalConcurrency(1))
 
-err := dbos.CreateSchedule(dbosContext, myPeriodicTask, dbos.CreateScheduleRequest{
+err := dbos.CreateSchedule(dbosContext, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule",
-    Schedule:     "*/5 * * * *",
-}, dbos.WithScheduleQueueName("scheduled_queue"))
+    Workflow:     myPeriodicTask,
+    Schedule:     "0 */5 * * * *",
+    QueueName:    "scheduled_queue",
+})
 ```
 
 This ensures that scheduled workflow executions respect the queue's flow control settings.
 
 ### Managing Schedules from Another Application
 
-You can manage schedules from outside your DBOS application using the [DBOS Client](../reference/client.md#schedule-management).
-The client accepts workflow names as strings instead of function references:
+You can manage schedules from outside your DBOS application using a [standalone client](../reference/dbos-context.md#newclient).
+Because workflows are not registered with a client, set the `WorkflowName` field (a string) instead of the `Workflow` function reference:
 
 ```go
 client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 })
 
-err = client.CreateSchedule(dbos.ClientScheduleInput{
+err = dbos.CreateSchedule(client, dbos.ScheduleSpec{
     ScheduleName: "my-task-schedule",
     WorkflowName: "myPeriodicTask",
-    Schedule:     "*/5 * * * *",
+    Schedule:     "0 */5 * * * *",
     Context:      "my context",
 })
 ```
