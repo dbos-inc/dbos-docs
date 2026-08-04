@@ -44,6 +44,7 @@ Then, configure your DBOS application to enable OpenTelemetry traces and export 
 ```python
 dbos_config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
 # highlight-start
     "otlp_traces_endpoints": ["https://logfire-us.pydantic.dev/v1/traces"],
     "otlp_logs_endpoints": ["https://logfire-us.pydantic.dev/v1/logs"],
@@ -60,6 +61,7 @@ DBOS(config=dbos_config)
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
 // highlight-start
   otlpTracesEndpoints: ["https://logfire-us.pydantic.dev/v1/traces"],
   otlpLogsEndpoints: ["https://logfire-us.pydantic.dev/v1/logs"],
@@ -107,6 +109,7 @@ logfire.instrument_pydantic_ai()
 
 dbos_config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
 # highlight-start
     "enable_otlp": True,
 # highlight-end

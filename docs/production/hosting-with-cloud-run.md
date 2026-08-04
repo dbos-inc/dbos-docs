@@ -31,7 +31,7 @@ A [Cloud Run worker pool](https://cloud.google.com/run/docs/overview/what-is-clo
 
 Worker pools suit DBOS applications that rely heavily on queues. Every instance actively dequeues and processes workflows, and the pool can be resized via the [Cloud Run REST API](https://docs.cloud.google.com/run/docs/reference/rest).
 
-Worker pools don't auto-scale, but you can implement an **external scaler** from within the pool. Use a DBOS [scheduled workflow](../golang/tutorials/scheduled-workflows.md) that periodically checks queue length with [`ListWorkflows`](../golang/reference/client.md) and calls the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools) to resize the pool based on load.
+Worker pools don't auto-scale, but you can implement an **external scaler** from within the pool. Use a DBOS [scheduled workflow](../golang/tutorials/scheduled-workflows.md) that periodically checks queue length with [`ListWorkflows`](../golang/reference/methods.md#listworkflows) and calls the [Cloud Run Admin API](https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools) to resize the pool based on load.
 This works _even from within the pool_ because DBOS guarantees only one process runs a scheduled function at a time, even across multiple instances. This prevents a thundering herd of conflicting resize requests.
 
 See [Scaling a worker pool](#scaling-a-worker-pool) below for a full walkthrough.
@@ -452,11 +452,11 @@ For **worker pools**, a new deployment replaces all running instances. Old insta
 
 #### Versioning
 
-Set [`ApplicationVersion`](../golang/reference/dbos-context.md#initialization) to `K_REVISION` so each Cloud Run revision gets a distinct DBOS version. Workflows started on a revision are tagged with that revision's version. A DBOS process only recovers workflows matching its own version, so old workflows won't be replayed with new code. To drain old workflows, keep the previous revision active (with a share of traffic or `--min-instances=1`) until all its workflows complete. You can check with [`ListWorkflows`](../golang/reference/methods.md#listworkflows).
+Set [`ApplicationVersion`](../golang/reference/dbos-context.md#newcontext) to `K_REVISION` so each Cloud Run revision gets a distinct DBOS version. Workflows started on a revision are tagged with that revision's version. A DBOS process only recovers workflows matching its own version, so old workflows won't be replayed with new code. To drain old workflows, keep the previous revision active (with a share of traffic or `--min-instances=1`) until all its workflows complete. You can check with [`ListWorkflows`](../golang/reference/methods.md#listworkflows).
 
 #### Patching
 
-With [patching](../golang/tutorials/upgrading-workflows.md#patching), fix the application version to a constant and enable patching in the [DBOS configuration](../golang/reference/dbos-context.md#initialization). Since all revisions share the same version, new containers automatically recover in-progress workflows from previous deployments. Cloud Run routes traffic to the latest revision by default, so new requests go to the new code while the patching logic in your workflow handles the transition for recovered workflows.
+With [patching](../golang/tutorials/upgrading-workflows.md#patching), fix the application version to a constant and enable patching in the [DBOS configuration](../golang/reference/dbos-context.md#newcontext). Since all revisions share the same version, new containers automatically recover in-progress workflows from previous deployments. Cloud Run routes traffic to the latest revision by default, so new requests go to the new code while the patching logic in your workflow handles the transition for recovered workflows.
 
 ### Worker pool mode
 

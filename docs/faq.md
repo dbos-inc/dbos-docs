@@ -39,7 +39,7 @@ If you are using versioning, check that your app version matches the version of 
 ### How can I cancel or fork a large number of workflows in a batch?
 
 On the [DBOS Console](./production/workflow-management.md), filter for all workflows that meet your criteria, then select them all and apply a batch operation.
-Alternatively, write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) to list all the workflows that fit your criteria, then process them.
+Alternatively, write a script using the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)) to list all the workflows that fit your criteria, then process them.
 
 ### Why am I seeing errors that objects cannot be deserialized?
 
@@ -76,7 +76,7 @@ However, the called step becomes part of the calling step's execution rather tha
 
 ### Can I start, monitor, or cancel DBOS workflows from a non-DBOS application?
 
-Yes, your non-DBOS application can create a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/client.md), [Java](./java/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
+Yes, your non-DBOS application can create a DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)) and use it to enqueue a workflow in your DBOS application and interact with it or check its status.
 
 ### What happens if you start two workflows with the same workflow ID?
 

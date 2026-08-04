@@ -22,6 +22,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
+    "application_version": "0.1.0",
     "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
@@ -91,6 +92,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
+    "application_version": "0.1.0",
     "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
     "application_database_url": os.environ["APP_DATABASE_URL"],
 }

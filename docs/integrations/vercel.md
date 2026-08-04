@@ -84,6 +84,7 @@ If some workflows are still executing when the worker times out, don't worry&mda
 // Configure and launch DBOS. It will automatically dequeue and execute workflows.
 DBOS.setConfig({
   name: 'dbos-vercel-integration',
+  applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   runAdminServer: false,
 });

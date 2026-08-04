@@ -18,6 +18,7 @@ This also configures the log level of the DBOS library.
 ```python
 config: DBOSConfig = {
   "name": "my-app",
+  "application_version": "0.1.0",
   "log_level": "INFO",
 }
 DBOS(config=config)
@@ -43,6 +44,7 @@ You must also enable tracing through the `enable_otlp` flag (this is what tells 
 ```python
 config: DBOSConfig = {
   "name": "my-app",
+  "application_version": "0.1.0",
   "enable_otlp": True,            # DBOS creates spans; your provider exports them
   "otel_attribute_format": "semconv",  # emit dbos.* attribute names (recommended)
 }
@@ -84,6 +86,7 @@ trace.set_tracer_provider(provider)
 # Configure and launch DBOS
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "enable_otlp": True,            # DBOS creates spans; your provider exports them
     "otel_attribute_format": "semconv",  # emit dbos.* attribute names (recommended)
 }
@@ -107,6 +110,7 @@ trace.set_tracer_provider(TracerProvider())
 # Configure and launch DBOS
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "enable_otlp": True,            # DBOS creates spans; your provider exports them
     "otel_attribute_format": "semconv",  # emit dbos.* attribute names (recommended)
 }
@@ -148,6 +152,7 @@ trace.set_tracer_provider(provider)
 # Configure and launch DBOS
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "enable_otlp": True,            # DBOS creates spans; your provider exports them
     "otel_attribute_format": "semconv",  # emit dbos.* attribute names (recommended)
 }
@@ -202,6 +207,7 @@ Set `enable_otlp: True` and [configure](../reference/configuration.md) your expo
 ```python
 config: DBOSConfig = {
     "name": "my-app",
+    "application_version": "0.1.0",
     "enable_otlp": True,
     "otlp_traces_endpoints": ["http://localhost:4318/v1/traces"],
     "otlp_logs_endpoints": ["http://localhost:4318/v1/logs"],

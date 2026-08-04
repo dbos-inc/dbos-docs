@@ -11,6 +11,7 @@ For example:
 ```python
 config: DBOSConfig = {
     "name": "dbos-example",
+    "application_version": "0.1.0",
     "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
 }
 DBOS(config=config)
@@ -51,6 +52,7 @@ class DBOSConfig(TypedDict):
 
     run_admin_server: Optional[bool]
     admin_port: Optional[int]
+
     max_executor_threads: Optional[int]
 
     scheduler_polling_interval_sec: Optional[float]
@@ -127,8 +129,15 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 
 ### Admin Server Settings
 
-- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
-- **admin_port**: The port on which the admin server runs. Defaults to 3001.
+:::warning
+The admin server is deprecated and will be removed in a future version of DBOS.
+:::
+
+- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Defaults to False.
+- **admin_port**: The port on which the admin server runs. Defaults to 3001. Has no effect unless `run_admin_server` is set.
+
+### Execution Settings
+
 - **max_executor_threads**: The maximum number of threads in the executor thread pool used for running synchronous workflow and step functions.
 
 ### Scheduler Settings

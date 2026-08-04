@@ -212,9 +212,10 @@ Your DBOSContext [Config](../../golang/reference/dbos-context.md) must be set wi
 <article className="col col--6">
 ```go
 dbos.Config{
-    AppName:     "dbos-starter",
-    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
-    AdminServer: true,
+    AppName:            "dbos-starter",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    AdminServer:        true,
 }
 ```
 </article>

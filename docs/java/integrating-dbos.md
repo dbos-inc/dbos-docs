@@ -42,7 +42,8 @@ import dev.dbos.transact.config.DBOSConfig;
 public class MyApp {
   public static void main(String[] args) throws Exception {
     // Configure DBOS
-    DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    DBOSConfig dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
+        .withAppVersion("0.1.0");
     DBOS dbos = new DBOS(config);
 
     // Register your workflows and queues (see step 4)

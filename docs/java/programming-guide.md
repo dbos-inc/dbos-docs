@@ -100,7 +100,8 @@ class ExampleImpl implements Example {
 
 public class App {
   public static void main(String[] args) {
-    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
+        .withAppVersion("0.1.0");
     try (var dbos = new DBOS(dbosConfig)) {
       Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
       dbos.launch();
@@ -183,7 +184,8 @@ class ExampleImpl implements Example {
 
 public class App {
   public static void main(String[] args) {
-    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
+        .withAppVersion("0.1.0");
     var dbos = new DBOS(dbosConfig);
     Example proxy = dbos.registerProxy(Example.class, new ExampleImpl(dbos));
 
@@ -298,7 +300,8 @@ class ExampleImpl implements Example {
 
 public class App {
   public static void main(String[] args) {
-    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter");
+    var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
+        .withAppVersion("0.1.0");
     var dbos = new DBOS(dbosConfig);
 
     ExampleImpl impl = new ExampleImpl(dbos);
@@ -364,6 +367,7 @@ Update the configuration in `main` to read the key from an environment variable:
 
 ```java
     var dbosConfig = DBOSConfig.defaultsFromEnv("dbos-java-starter")
+        .withAppVersion("0.1.0")
         .withConductorKey(System.getenv("DBOS_CONDUCTOR_KEY"));
 ```
 

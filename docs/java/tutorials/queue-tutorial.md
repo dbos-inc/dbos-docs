@@ -547,7 +547,8 @@ You can create separate queues for CPU and GPU tasks and configure each type of 
 
 ```java
 var workerType = System.getenv("WORKER_TYPE"); // "cpu" or "gpu"
-var config = DBOSConfig.defaults("my-dbos-app");
+var config = DBOSConfig.defaults("my-dbos-app")
+    .withAppVersion("0.1.0");
 if (workerType.equals("gpu")) {
     config = config.withListenQueues("gpuQueue");
 } else if (workerType.equals("cpu")) {

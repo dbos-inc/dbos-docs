@@ -11,6 +11,7 @@ For example:
 ```javascript
 DBOS.setConfig({
   name: 'my-app',
+  applicationVersion: '0.1.0',
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
 });
 await DBOS.launch();
@@ -87,8 +88,12 @@ If the Postgres database referenced by this connection string does not exist, DB
 
 ### Admin Server Settings
 
-- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to True.
-- **adminPort**: The port on which the admin server runs. Defaults to 3001.
+:::warning
+The admin server is deprecated and will be removed in a future version of DBOS.
+:::
+
+- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to False.
+- **adminPort**: The port on which the admin server runs. Defaults to 3001. Has no effect unless `runAdminServer` is set.
 
 ### Queue Settings
 

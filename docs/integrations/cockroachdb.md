@@ -51,6 +51,7 @@ database_url = os.environ.get("DBOS_COCKROACHDB_URL")
 engine = create_engine(database_url)
 config: DBOSConfig = {
     "name": "dbos-app",
+    "application_version": "0.1.0",
     "system_database_url": database_url,
     # Create a custom SQLAlchemy engine to utilize the CockroachDB drivers
     "system_database_engine": engine,
@@ -93,6 +94,7 @@ Now, configure your DBOS application to connect to CockroachDB as follows:
 ```typescript
 DBOS.setConfig({
     name: 'my-application',
+    applicationVersion: '0.1.0',
     // Your CockroachDB connection string.
     systemDatabaseUrl: process.env.DBOS_COCKROACHDB_URL,
     // CockroachDB does not support LISTEN/NOTIFY
@@ -133,8 +135,9 @@ No special configuration or drivers are needed&mdash;just provide your Cockroach
 
 ```go
 dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
-    AppName:     "dbos-app",
-    DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    AppName:            "dbos-app",
+    ApplicationVersion: "0.1.0",
+    DatabaseURL:        os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
 })
 if err != nil {
     log.Fatal(err)

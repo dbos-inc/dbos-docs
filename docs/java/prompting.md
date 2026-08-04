@@ -122,6 +122,7 @@ public class DBOSConfig {
     @Bean
     public DBOS dbos(DBOSAppService appService) {
         var config = dev.dbos.transact.config.DBOSConfig.defaults("dbos-starter")
+                .withAppVersion("0.1.0")
                 .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
                 .withDbUser(Objects.requireNonNullElse(System.getenv("PGUSER"), "postgres"))
                 .withDbPassword(Objects.requireNonNullElse(System.getenv("PGPASSWORD"), "dbos"));
@@ -201,6 +202,7 @@ You MUST use this default configuration (changing the name 'dbos-java-starter' t
         Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);
         DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
+            .withAppVersion("0.1.0")
             .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
             .withDbUser(System.getenv("PGUSER"))
             .withDbPassword(System.getenv("PGPASSWORD"));
