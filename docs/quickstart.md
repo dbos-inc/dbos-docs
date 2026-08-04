@@ -104,7 +104,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 <article className="col col--6">
 <BrowserWindow url="http://localhost:8000/">
-<img src={require('@site/static/img/quickstart/python-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+<img src={require('@site/static/img/quickstart/python-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
 </BrowserWindow>
 </article>
 
@@ -235,7 +235,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 <article className="col col--6">
 <BrowserWindow url="http://localhost:3000/">
-<img src={require('@site/static/img/quickstart/node-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+<img src={require('@site/static/img/quickstart/node-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
 </BrowserWindow>
 </article>
 
@@ -300,7 +300,7 @@ DBOS requires Go 1.23.0 or higher.
 ```shell
 go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
 dbos init
-cd dbos-toolbox
+cd dbos-go-starter
 ```
 </article>
 </section>
@@ -319,7 +319,7 @@ Otherwise, you can start Postgres in a Docker container with this command:
 
 ```shell
 dbos postgres start
-export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_toolbox_go
+export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_go_starter
 ```
 </article>
 </section>
@@ -341,9 +341,21 @@ go run main.go
 </article>
 </section>
 
+<section className="row list">
+<article className="col col--6">
 To see that your app is working, visit this URL in your browser: http://localhost:8080/
 
+This app lets you test the reliability of DBOS for yourself. Launch a durable workflow and watch it execute its three steps. At any point, crash the app. Then, restart it with `go run main.go` and watch it seamlessly recover from where it left off.
+
 Congratulations, you've run your first durable workflow with DBOS!
+</article>
+
+<article className="col col--6">
+<BrowserWindow url="http://localhost:8080/">
+<img src={require('@site/static/img/quickstart/go-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
+</BrowserWindow>
+</article>
+</section>
 
 #### 4. Connect to DBOS Conductor
 
@@ -352,7 +364,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 <article className="col col--6">
 [Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-toolbox`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-go-starter`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
 Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
 </article>
 
@@ -456,7 +468,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 
 <article className="col col--6">
 <BrowserWindow url="http://localhost:7070/">
-<img src={require('@site/static/img/quickstart/java-app-starter.png').default} alt="Cloud Console Templates" width="800" className="custom-img"/>
+<img src={require('@site/static/img/quickstart/java-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
 </BrowserWindow>
 </article>
 
