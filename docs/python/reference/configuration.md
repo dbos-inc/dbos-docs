@@ -65,7 +65,7 @@ class DBOSConfig(TypedDict):
 ### Application Settings
 
 - **name**: Your application's name.
-Multiple applications (potentially in different languages) may share a system database, in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
+Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
 - **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.

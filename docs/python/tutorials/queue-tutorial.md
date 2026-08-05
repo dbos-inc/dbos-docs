@@ -16,7 +16,7 @@ DBOS.register_queue("example_queue")
 ```
 
 Queues are persisted to the system database, so they are visible to every DBOS process and [client](../reference/client.md) connected to that database.
-If multiple applications share a system database, each queue is owned by the application that registers it, and only that application dequeues workflows from it.
+If multiple applications [share a system database](../../explanations/sharing-a-system-database.md), each queue is owned by the application that registers it, and only that application dequeues workflows from it.
 Register your queues after [`DBOS.launch()`](../reference/dbos-class.md#launch).
 
 You can then enqueue any DBOS workflow or step.
