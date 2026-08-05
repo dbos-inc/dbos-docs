@@ -37,6 +37,7 @@ class QueueRateLimit(TypedDict):
 - `priority_enabled`: Whether priority is enabled for workflows on this queue.
 - `partition_queue`: Whether [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) is enabled for this queue.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
+- `application_name`: The application that owns this queue and dequeues workflows from it, or `None` if the queue is owned by no application. Unlike the other properties, ownership cannot be reconfigured.
 
 Reading any property returns the latest value from the database, so changes made by other processes are reflected.
 

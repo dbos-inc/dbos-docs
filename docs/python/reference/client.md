@@ -25,6 +25,7 @@ DBOSClient(
     system_database_pool_size: Optional[int] = None,
     system_database_polling_concurrency: Optional[int] = None,
     use_listen_notify: bool = False,
+    application_name: Optional[str] = None,
 )
 ```
 **Parameters:**
@@ -35,6 +36,7 @@ DBOSClient(
 - `system_database_pool_size`: The maximum size of the client's system database connection pool. Defaults to 5.
 - `system_database_polling_concurrency`: The maximum number of concurrent database-backed polling reads from wait operations. See [`sys_db_polling_concurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 - `use_listen_notify`: Whether the client runs a background listener thread that uses PostgreSQL LISTEN, so wait operations such as [`get_event`](#get_event) and [`read_stream`](#read_stream) are woken by notifications instead of polling the database. Defaults to `False`. Only enable this if your DBOS application's system database is Postgres and was created with [`use_listen_notify`](./configuration.md#database-connection-settings) enabled (the Postgres default).
+- `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application. Always set this if multiple applications share a system database.
 
 **Example syntax:**
 
@@ -72,6 +74,7 @@ class EnqueueOptions(TypedDict):
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
     attributes: NotRequired[Dict[str, Any]]
+    application_name: NotRequired[str]
 
 client.enqueue(
     options: EnqueueOptions, 
@@ -108,6 +111,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
+- `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
 
 :::warning
 At this time, DBOS Client cannot enqueue workflows that are methods on [Python classes](../tutorials/classes.md).
@@ -621,17 +625,19 @@ client.register_queue(
     partition_queue: bool = False,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "always_update",
+    application_name: Optional[str] = None,
 ) -> Queue
 ```
 
 Register a [queue](./queues.md) and persist its configuration to the system database, returning the [`Queue`](./queues.md#class-dbosqueue).
 Similar to [`DBOS.register_queue`](./contexts.md#register_queue).
-Parameters have the same meaning as on `DBOS.register_queue` except for `on_conflict`:
+Parameters have the same meaning as on `DBOS.register_queue` except for `on_conflict` and `application_name`:
 
-- `"always_update"` (default): always overwrite the existing configuration.
-- `"never_update"`: leave any existing configuration unchanged.
-
-`"update_if_latest_version"` is **not** supported on the client because clients are not associated with an application version. Passing it raises `DBOSException`.
+- `on_conflict`:
+  - `"always_update"` (default): always overwrite the existing configuration.
+  - `"never_update"`: leave any existing configuration unchanged.
+  - `"update_if_latest_version"` is **not** supported on the client because clients are not associated with an application version. Passing it raises `DBOSException`.
+- `application_name`: The application that owns this queue and dequeues workflows from it. Defaults to the client's own [`application_name`](#constructor). Registering a queue already owned by a different application raises an error.
 
 **Example syntax:**
 
@@ -654,6 +660,7 @@ client.register_queue_async(
     partition_queue: bool = False,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "always_update",
+    application_name: Optional[str] = None,
 ) -> Coroutine[Any, Any, Queue]
 ```
 
@@ -679,17 +686,23 @@ Asynchronous version of [`retrieve_queue`](#retrieve_queue).
 ### list_queues
 
 ```python
-client.list_queues() -> List[Queue]
+client.list_queues(
+    *,
+    application_name: Optional[Union[str, List[str]]] = None,
+) -> List[Queue]
 ```
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
-Similar to [`DBOS.list_queues`](./contexts.md#list_queues).
+Similar to [`DBOS.list_queues`](./contexts.md#list_queues), including the `application_name` filter.
 
 ### list_queues_async
 
 ```python
-client.list_queues_async() -> Coroutine[Any, Any, List[Queue]]
+client.list_queues_async(
+    *,
+    application_name: Optional[Union[str, List[str]]] = None,
+) -> Coroutine[Any, Any, List[Queue]]
 ```
 
 Asynchronous version of [`list_queues`](#list_queues).
@@ -751,6 +764,7 @@ client.list_workflows(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -784,6 +798,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
 
 ### list_workflows_async
 
@@ -815,6 +830,7 @@ client.list_workflows_async(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -848,6 +864,7 @@ client.list_queued_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -878,6 +895,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
 
 ### list_queued_workflows_async
 
@@ -907,6 +925,7 @@ client.list_queued_workflows_async(
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -1148,10 +1167,12 @@ DebouncerClient(
     *,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[queue] = None,
+    application_name: Optional[str] = None,
 )
 ```
 
 Similar to [`Debouncer.create`](./contexts.md#debouncercreate) but takes in a DBOSClient and `EnqueueOptions` instead of a workflow function.
+`application_name` debounces on behalf of that application; it defaults to the `application_name` in `workflow_options`, then to the client's own.
 
 ### debounce
 
@@ -1216,6 +1237,7 @@ client.create_schedule(
     automatic_backfill: bool = False,
     cron_timezone: Optional[str] = None,
     queue_name: Optional[str] = None,
+    application_name: Optional[str] = None,
 ) -> None
 ```
 
@@ -1231,6 +1253,7 @@ Similar to [`DBOS.create_schedule`](./contexts.md#create_schedule), but takes a 
 - **automatic_backfill**: If `True`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `False`.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. Defaults to `None`.
+- **application_name**: The application that owns this schedule and runs its workflows. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
 
 ### create_schedule_async
 
@@ -1244,6 +1267,7 @@ client.list_schedules(
     status: Optional[Union[str, List[str]]] = None,
     workflow_name: Optional[Union[str, List[str]]] = None,
     schedule_name_prefix: Optional[Union[str, List[str]]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowSchedule]
 ```
 
@@ -1254,6 +1278,7 @@ Similar to [`DBOS.list_schedules`](./contexts.md#list_schedules).
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflow_name**: Filter by workflow name or a list of names.
 - **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
+- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
 
 ### list_schedules_async
 
@@ -1319,6 +1344,7 @@ class ClientScheduleInput(TypedDict):
     automatic_backfill: bool  # Optional, defaults to False
     cron_timezone: Optional[str]  # Optional, defaults to None (UTC)
     queue_name: Optional[str]  # Optional, defaults to None (internal queue)
+    application_name: Optional[str]  # Optional, defaults to the client's application_name
 ```
 
 Atomically apply a set of schedules.
@@ -1361,6 +1387,7 @@ client.list_application_versions() -> List[VersionInfo]
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Similar to [`DBOS.list_application_versions`](./contexts.md#list_application_versions).
+If the client has an [`application_name`](#constructor), only versions registered by that application (plus versions owned by no application) are returned; otherwise, every application's versions are returned.
 
 ### list_application_versions_async
 
@@ -1391,7 +1418,11 @@ Coroutine version of [`get_latest_application_version`](#get_latest_application_
 ### set_latest_application_version
 
 ```python
-client.set_latest_application_version(version_name: str) -> None
+client.set_latest_application_version(
+    version_name: str,
+    *,
+    application_name: Optional[str] = None,
+) -> None
 ```
 
 Promote a version to latest by updating its timestamp to the current time.
@@ -1400,11 +1431,59 @@ Similar to [`DBOS.set_latest_application_version`](./contexts.md#set_latest_appl
 
 **Parameters:**
 - `version_name`: The name of the version to promote.
+- `application_name`: The application to act as. Defaults to the client's own [`application_name`](#constructor). Promoting a version registered by a different application raises an error.
 
 ### set_latest_application_version_async
 
 ```python
-await client.set_latest_application_version_async(version_name: str) -> None
+await client.set_latest_application_version_async(
+    version_name: str,
+    *,
+    application_name: Optional[str] = None,
+) -> None
 ```
 
 Coroutine version of [`set_latest_application_version`](#set_latest_application_version).
+
+## Application Rename
+
+### rename_application
+
+```python
+client.rename_application(
+    old_name: Optional[str],
+    new_name: str,
+    *,
+    batch_size: Optional[int] = 10_000,
+    adopt_unclaimed_rows: bool = False,
+) -> ApplicationRowCounts
+
+class ApplicationRowCounts(TypedDict):
+    queues: int
+    schedules: int
+    versions: int
+    workflows: int
+    steps: int
+```
+
+Every workflow, step, queue, schedule, and application version is owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that created it.
+After renaming an application, use this method (or the [`dbos rename-application`](./cli.md#dbos-rename-application) CLI command) to transfer everything owned by the old name to the new name.
+Returns the number of rows transferred, by table.
+
+Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and their steps are then transferred in batches of `batch_size`.
+The operation is idempotent: if interrupted, running it again resumes where it left off.
+
+:::warning
+Stop the application being renamed before running this.
+A running application would race the rename, creating new work under its old name.
+:::
+
+**Parameters:**
+- `old_name`: The application's previous name. If `None`, nothing is transferred except rows owned by no application, so `adopt_unclaimed_rows` must be set.
+- `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- `batch_size`: The number of completed workflows and steps transferred per transaction. Pass `None` to transfer everything in a single transaction.
+- `adopt_unclaimed_rows`: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `False`.
+
+### rename_application_async
+
+Coroutine version of [`rename_application`](#rename_application).
