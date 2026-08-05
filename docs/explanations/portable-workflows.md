@@ -61,7 +61,7 @@ Workflows started with portable serialization also write their events and stream
 
 ### Per-Workflow (Enqueue)
 
-When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
+When enqueuing or starting a workflow from a `DBOSClient`, or when enqueueing a workflow to another application [sharing the same system database](./sharing-a-system-database.md), set the serialization format in the enqueue options.
 This ensures the workflow's arguments are serialized in portable format that can be read by the target language.
 If multiple applications [share the system database](./sharing-a-system-database.md), also name the application that owns the workflow, so that application runs it.
 
