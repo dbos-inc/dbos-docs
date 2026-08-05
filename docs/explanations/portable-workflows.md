@@ -63,6 +63,7 @@ Workflows started with portable serialization also write their events and stream
 
 When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
 This ensures the workflow's arguments are serialized in portable format that can be read by the target language.
+If multiple applications [share the system database](./sharing-a-system-database.md), also name the application that owns the workflow, so that application runs it.
 
 You can also enqueue a workflow using the PL/pgSQL function [`dbos.enqueue_workflow`](system-tables.md#dbosenqueue_workflow).
 Only portable serialization is allowed when enqueing using PL/pgSQL.
@@ -73,7 +74,11 @@ Only portable serialization is allowed when enqueing using PL/pgSQL.
 ```python
 from dbos import DBOSClient, WorkflowSerializationFormat
 
-client = DBOSClient(system_database_url=db_url)
+client = DBOSClient(
+    system_database_url=db_url,
+    # The name of the application that implements process_order
+    application_name="order-service",
+)
 handle = client.enqueue(
     {
         "workflow_name": "process_order",
@@ -90,7 +95,11 @@ handle = client.enqueue(
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    // The name of the application that implements process_order
+    applicationName: "order-service",
+});
 const handle = await client.enqueue(
     {
         workflowName: "process_order",
