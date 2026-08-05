@@ -25,6 +25,8 @@ DBOSClient(
     system_database_pool_size: Optional[int] = None,
     system_database_polling_concurrency: Optional[int] = None,
     use_listen_notify: bool = False,
+    lazy: bool = False,
+    retry_connection_errors: bool = True,
     application_name: Optional[str] = None,
 )
 ```
@@ -36,6 +38,8 @@ DBOSClient(
 - `system_database_pool_size`: The maximum size of the client's system database connection pool. Defaults to 5.
 - `system_database_polling_concurrency`: The maximum number of concurrent database-backed polling reads from wait operations. See [`sys_db_polling_concurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 - `use_listen_notify`: Whether the client runs a background listener thread that uses PostgreSQL LISTEN, so wait operations such as [`get_event`](#get_event) and [`read_stream`](#read_stream) are woken by notifications instead of polling the database. Defaults to `False`. Only enable this if your DBOS application's system database is Postgres and was created with [`use_listen_notify`](./configuration.md#database-connection-settings) enabled (the Postgres default).
+- `lazy`: Whether to defer connecting to the system database until the client is first used. Defaults to `False`, meaning the connection is checked on construction and the constructor raises if the system database is unreachable. If `True`, the constructor does not connect; use [`check_connection`](#check_connection) to check the connection explicitly. Cannot be combined with `use_listen_notify`, whose listener thread connects immediately (raises `DBOSException` if both are set).
+- `retry_connection_errors`: Whether a client operation that loses its database connection blocks and retries until the connection recovers. Defaults to `True`. Set to `False` to raise connection errors instead, so an unreachable database surfaces as an error rather than a wait.
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application. Always set this if multiple applications share a system database.
 
 **Example syntax:**
@@ -45,6 +49,23 @@ This DBOS client connects to the system database specified in the `DBOS_SYSTEM_D
 ```python
 client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
 ```
+
+### check_connection
+
+```python
+client.check_connection() -> None
+```
+
+Verify that the client can reach the system database, raising an exception if it cannot.
+Useful for checking the connection of a client constructed with [`lazy=True`](#constructor), or for verifying at any time that the connection is still healthy.
+
+### check_connection_async
+
+```python
+await client.check_connection_async() -> None
+```
+
+Asynchronous version of [`check_connection`](#check_connection).
 
 ### destroy
 
@@ -74,6 +95,7 @@ class EnqueueOptions(TypedDict):
     authenticated_roles: NotRequired[list[str]]
     serialization_type: NotRequired[WorkflowSerializationFormat]
     attributes: NotRequired[Dict[str, Any]]
+    otel_context: NotRequired[opentelemetry.context.Context]
     application_name: NotRequired[str]
 
 client.enqueue(
@@ -111,6 +133,7 @@ If left undefined, it will be updated to the current version when the workflow i
 - `authenticated_roles`: Authenticated roles to associate with the workflow.
 - `serialization_type`: The [serialization strategy](./contexts.md#serialization-strategy) for the workflow arguments.
 - `attributes`: A dictionary of custom, JSON-serializable key-value [attributes](./contexts.md#setworkflowattributes) to attach to the workflow. Recorded in the workflow's [status](./contexts.md#workflow-status) and searchable via the `attributes` filter on [`list_workflows`](#list_workflows).
+- `otel_context`: An OpenTelemetry context to propagate to the enqueued workflow, so that when the workflow runs, its span joins that context's trace. The client-side equivalent of [`PropagateOtelContext`](./contexts.md#propagateotelcontext). Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage. See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for details.
 - `application_name`: The application that owns and runs the enqueued workflow. Defaults to the client's own [`application_name`](#constructor). Always set `application_name` either here or in the client constructor if multiple applications share a system database.
 
 :::warning

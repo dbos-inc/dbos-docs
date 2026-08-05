@@ -28,6 +28,7 @@ DBOS(config=config)
 
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for every workflow and step.
 Spans are hierarchical: a step's span is a child of its workflow's span. If the workflow was started from an already-traced operation, such as an instrumented HTTP request, the workflow span is a child of that operation's span and shares its trace. Otherwise, DBOS starts a new trace.
+Enqueued workflows start a new trace by default; to keep them on the caller's trace, see [Keeping enqueued workflows on the caller's trace](#keeping-enqueued-workflows-on-the-callers-trace).
 
 DBOS emits spans on the **global OpenTelemetry tracer**.
 This means that if your application already sends telemetry to an observability provider through OpenTelemetry, DBOS spans automatically join your existing traces. You don't need to set up a separate export pipeline just for DBOS.
@@ -198,6 +199,24 @@ def llm_workflow(prompt: str) -> str:
 ```
 
 Your provider exports these attributes on the span alongside DBOS's own, so they appear together in your dashboards.
+
+#### Keeping enqueued workflows on the caller's trace
+
+A workflow called or started directly from a traced operation joins that operation's trace automatically.
+An enqueued workflow, however, may be dequeued much later, potentially by a different process, so by default it starts a new trace.
+To keep it on the caller's trace, enqueue it inside a [`PropagateOtelContext`](../reference/contexts.md#propagateotelcontext) block:
+
+```python
+from dbos import PropagateOtelContext
+
+with PropagateOtelContext():
+    handle = queue.enqueue(workflow_function, ...)
+```
+
+`PropagateOtelContext` durably records the current trace context (or optionally, a passed-in OpenTelemetry context) with every workflow started or enqueued in the block, so each workflow's span joins the caller's trace no matter when or where the workflow runs, even on recovery.
+The propagated context is not inherited by child workflows; use `PropagateOtelContext` again inside a workflow to keep its children on the same trace.
+
+When enqueuing from outside a DBOS application with [DBOS Client](../reference/client.md), pass an OpenTelemetry context through the `otel_context` field of [`EnqueueOptions`](../reference/client.md#enqueue) instead.
 
 #### Letting DBOS export traces directly
 

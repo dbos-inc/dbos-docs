@@ -1927,6 +1927,33 @@ with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
     example_workflow()
 ```
 
+### PropagateOtelContext
+
+```python
+PropagateOtelContext(
+    context: Optional[opentelemetry.context.Context] = None
+)
+```
+
+Propagate the current OpenTelemetry context (or optionally, a passed-in context) to all workflows started or enqueued within the block, so their spans join the caller's trace.
+See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for an overview.
+
+The propagated trace context is durably recorded in the workflow's [attributes](#setworkflowattributes) (under the reserved `dbos.otelContext` key), so the workflow's span parents to the caller's trace no matter when or where the workflow runs: immediately, after a queue handoff (possibly in another process), or on recovery.
+Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage.
+If there is no active span, nothing is recorded.
+
+The propagated context is **not inherited** by child workflows; use `PropagateOtelContext` again inside a workflow to keep its children on the same trace.
+
+Requires the DBOS OpenTelemetry dependencies (`pip install dbos[otel]`); [tracing](../tutorials/logging-and-tracing.md#tracing) must be enabled for the propagated context to take effect.
+To propagate a trace context when enqueuing from outside a DBOS application, use the `otel_context` field of DBOS Client's [`EnqueueOptions`](./client.md#enqueue) instead.
+
+Example syntax:
+
+```python
+with PropagateOtelContext():
+    handle = queue.enqueue(workflow_function, ...)
+```
+
 ### DBOSContextEnsure
 
 ```python
