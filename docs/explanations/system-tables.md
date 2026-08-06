@@ -14,6 +14,13 @@ A PostgreSQL system database also includes PL/pgSQL functions that you can call 
 PL/pgSQL functions can only be called from code running in the same database.
 :::
 
+:::info
+Releases of DBOS Transact periodically update the system database functions, typically to add new parameters.
+All changes are backwards-compatible.
+Updates are applied by atomically dropping and recreating the functions.
+ Therefore, it is not recommended to create database objects whose dependency on these functions [is tracked by Postgres](https://www.postgresql.org/docs/current/ddl-depend.html), such as views or SQL-standard-body (`BEGIN ATOMIC`) functions.
+:::
+
 ### dbos.enqueue_workflow
 
 ```sql
