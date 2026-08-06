@@ -22,6 +22,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 - `-e, --end-time <string>`             Retrieve workflows starting before this timestamp (ISO 8601 format)
 - `-S, --status <string>`               Retrieve workflows with this status (`PENDING`, `SUCCESS`, `ERROR`, `MAX_RECOVERY_ATTEMPTS_EXCEEDED`, `ENQUEUED`, `DELAYED`, or `CANCELLED`)
 - `-v, --application-version <string>`  Retrieve workflows with this application version
+- `-a, --application-name <string>`     Retrieve workflows owned by this application (workflows owned by no application are always included)
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
@@ -117,6 +118,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 - `-S, --status <string>`      Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
+- `-a, --application-name <string>`  Retrieve functions owned by this application (functions owned by no application are always included)
 
 **Output:**
 For each retrieved workflow, emit a JSON whose fields are:
@@ -172,6 +174,22 @@ Reset your DBOS [system database](../../explanations//system-tables.md), deletin
 **Arguments:**
 - `--sys-db-url, -s <string>`: Your DBOS system database URL
 - `--yes, -y`: Skip confirmation prompt.
+
+### npx dbos rename-application
+
+After renaming an application, transfer ownership of everything in the system database (workflows, steps, queues, schedules, and application versions) from its old name to its new name.
+Equivalent to [`DBOSClient.renameApplication`](./client.md#renameapplication); see there for details.
+Prints the number of rows transferred, by table.
+**Stop the application being renamed before running this.**
+
+**Arguments:**
+- `-s, --sys-db-url <string>`: Your DBOS system database URL
+- `-f, --from <string>`: The application's previous name. Omit to only adopt rows owned by no application (requires `--adopt-unclaimed-rows`).
+- `-t, --to <string>`: The application that ends up owning the rows. Required.
+- `--adopt-unclaimed-rows`: Also transfer rows owned by no application.
+- `--batch-size <number>`: The number of completed workflows and steps transferred per transaction (default: 10000)
+- `--schema <string>`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `-y, --yes`: Skip confirmation prompt.
 
 ### npx @dbos-inc/create
 

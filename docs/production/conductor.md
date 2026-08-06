@@ -35,6 +35,7 @@ This initiates a websocket connection with Conductor:
 
 :::tip
 The application name in your DBOS configuration must match the name with which you registered your app in Conductor.
+The name also identifies the application's data in its system database; see [sharing a system database](../explanations/sharing-a-system-database.md) for more information.
 :::
 
 <Tabs groupId="language" queryString="language">

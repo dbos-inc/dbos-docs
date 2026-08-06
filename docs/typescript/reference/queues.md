@@ -58,6 +58,8 @@ If the queue already exists in the database, the `onConflict` option controls wh
   - `'always_update'`: always overwrite the existing configuration.
   - `'never_update'`: leave the existing configuration unchanged. The returned queue reflects the persisted configuration, not the supplied parameters.
 
+Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database: if the queue is already registered by a **different** application, `registerQueue` throws an error regardless of `onConflict`.
+
 **Example syntax:**
 
 ```typescript
@@ -225,6 +227,34 @@ class Tasks {
   }
 }
 ```
+
+### DBOS.enqueueWorkflowWithOptions
+
+```typescript
+DBOS.enqueueWorkflowWithOptions<T = unknown>(
+  options: EnqueueWorkflowOptions,
+  ...args: unknown[]
+): Promise<WorkflowHandle<T>>
+```
+
+Enqueue a workflow by name, without a reference to its function.
+Takes the same options as [`DBOSClient.enqueue`](./client.md#enqueue) (except `duplicationPolicy`), so the workflow may be implemented by another process or another application, as long as it shares this system database.
+Can safely be called from inside a workflow: the enqueued workflow is recorded as a child of the calling workflow.
+
+Unlike [`DBOS.startWorkflow`](./methods.md#dbosstartworkflow), options are not validated against the local registry, and `appVersion` is left unset unless given (an unset `appVersion` is only dequeued by an executor running the latest registered application version).
+The enqueued workflow is owned by this application unless the `applicationName` option names another one, in which case that application dequeues and runs it.
+
+### DBOS.enqueueWorkflowWithOptionsPortable
+
+```typescript
+DBOS.enqueueWorkflowWithOptionsPortable<T = unknown>(
+  options: EnqueueWorkflowOptions,
+  positionalArgs: unknown[],
+  namedArgs?: Record<string, unknown>,
+): Promise<WorkflowHandle<T>>
+```
+
+Like [`enqueueWorkflowWithOptions`](#dbosenqueueworkflowwithoptions), but serializes arguments in [portable format](../../explanations/portable-workflows.md) for target workflows that take named arguments (for example, a Python workflow with keyword arguments).
 
 ## Legacy: In-Memory Queues
 

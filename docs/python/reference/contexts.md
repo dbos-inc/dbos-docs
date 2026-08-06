@@ -711,6 +711,8 @@ If the queue already exists in the database, the `on_conflict` parameter control
   - `"always_update"`: always overwrite the existing configuration.
   - `"never_update"`: leave the existing configuration unchanged.
 
+Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database.
+
 **Example syntax:**
 
 ```python
@@ -762,11 +764,17 @@ Coroutine version of [`retrieve_queue`](#retrieve_queue).
 ### list_queues
 
 ```python
-DBOS.list_queues() -> List[Queue]
+DBOS.list_queues(
+    *,
+    application_name: Optional[Union[str, List[str]]] = None,
+) -> List[Queue]
 ```
 
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
+
+**Parameters:**
+- `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list every application's queues.
 
 **Example syntax:**
 
@@ -778,7 +786,10 @@ for queue in DBOS.list_queues():
 ### list_queues_async
 
 ```python
-DBOS.list_queues_async() -> Coroutine[Any, Any, List[Queue]]
+DBOS.list_queues_async(
+    *,
+    application_name: Optional[Union[str, List[str]]] = None,
+) -> Coroutine[Any, Any, List[Queue]]
 ```
 
 Coroutine version of [`list_queues`](#list_queues).
@@ -822,6 +833,35 @@ DBOS.enqueue_workflow_async(
 ```
 
 Coroutine version of [`enqueue_workflow`](#enqueue_workflow).
+
+### enqueue_workflow_with_options
+
+```python
+DBOS.enqueue_workflow_with_options(
+    options: EnqueueOptions,
+    *args: Any,
+    **kwargs: Any,
+) -> WorkflowHandle[Any]
+```
+
+Enqueue a workflow by name, without a reference to its function.
+Takes the same [`EnqueueOptions`](./client.md#enqueue) as `DBOSClient.enqueue`, so the workflow may be implemented by another process or another application, as long as it shares this system database.
+Can safely be called from inside a workflow: the enqueued workflow is recorded as a child of the calling workflow.
+
+Unlike [`enqueue_workflow`](#enqueue_workflow), options are not validated against the local registry, and `app_version` is left unset unless given (an unset `app_version` is only dequeued by an executor running the latest registered application version).
+The enqueued workflow is owned by this application unless the `application_name` option names another one, in which case that application dequeues and runs it.
+
+### enqueue_workflow_with_options_async
+
+```python
+DBOS.enqueue_workflow_with_options_async(
+    options: EnqueueOptions,
+    *args: Any,
+    **kwargs: Any,
+) -> Coroutine[Any, Any, WorkflowHandleAsync[Any]]
+```
+
+Coroutine version of [`enqueue_workflow_with_options`](#enqueue_workflow_with_options).
 
 ### delete_queue
 
@@ -878,6 +918,7 @@ def list_workflows(
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
     schedule_name: Optional[Union[str, List[str]]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -910,6 +951,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
 
 ### list_workflows_async
 
@@ -942,6 +984,7 @@ def list_queued_workflows(
     executor_id: Optional[Union[str, List[str]]] = None,
     has_parent: Optional[bool] = None,
     attributes: Optional[Dict[str, Any]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowStatus]:
 ```
 
@@ -971,6 +1014,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
 
 ### list_queued_workflows_async
 
@@ -1241,6 +1285,9 @@ Create a cron schedule that periodically invokes a workflow function.
 - **cron_timezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to `None` (UTC).
 - **queue_name**: Optional name of a declared queue to enqueue scheduled workflows to. If `None`, uses an internal queue. This is useful for managing the concurrency of scheduled workflows. Defaults to `None`.
 
+Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
+Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name is owned by a different application raises an error.
+
 DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, using seconds as an optional first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)).
 Valid cron schedules contain 5 or 6 items, separated by spaces:
 
@@ -1287,6 +1334,7 @@ DBOS.list_schedules(
     status: Optional[Union[str, List[str]]] = None,
     workflow_name: Optional[Union[str, List[str]]] = None,
     schedule_name_prefix: Optional[Union[str, List[str]]] = None,
+    application_name: Optional[Union[str, List[str]]] = None,
 ) -> List[WorkflowSchedule]
 ```
 
@@ -1296,6 +1344,7 @@ Return all registered workflow schedules, optionally filtered. Returns a list of
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflow_name**: Filter by workflow name or a list of names.
 - **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
+- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
 
 ### list_schedules_async
 
@@ -1428,6 +1477,8 @@ class WorkflowSchedule(TypedDict):
     cron_timezone: Optional[str]
     # The name of the queue scheduled workflows are enqueued to, or None for the internal queue
     queue_name: Optional[str]
+    # The application that owns this schedule, or None if it is owned by no application
+    application_name: Optional[str]
 ```
 
 ### Workflow Status
@@ -1494,6 +1545,8 @@ class WorkflowStatus:
     attributes: Optional[Dict[str, Any]]
     # If this workflow was enqueued by a scheduled workflow, that schedule's name
     schedule_name: Optional[str]
+    # The application that owns this workflow, or None if it is owned by no application
+    application_name: Optional[str]
 ```
 
 ## Context Variables
@@ -1597,9 +1650,12 @@ class VersionInfo(TypedDict):
     version_timestamp: int
     # The epoch timestamp (in milliseconds) when this version was first registered.
     created_at: int
+    # The application that registered this version, or None if it is owned by no application
+    application_name: Optional[str]
 ```
 
 Return all registered application versions, ordered by timestamp descending (newest first).
+Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
 
 ### list_application_versions_async
 
@@ -1615,7 +1671,7 @@ Coroutine version of [`list_application_versions`](#list_application_versions).
 DBOS.get_latest_application_version() -> VersionInfo
 ```
 
-Return the latest application version (the one with the highest timestamp).
+Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Raises `DBOSException` if no versions are registered.
 
 ### get_latest_application_version_async
@@ -1629,7 +1685,11 @@ Coroutine version of [`get_latest_application_version`](#get_latest_application_
 ### set_latest_application_version
 
 ```python
-DBOS.set_latest_application_version(version_name: str) -> None
+DBOS.set_latest_application_version(
+    version_name: str,
+    *,
+    application_name: Optional[str] = None,
+) -> None
 ```
 
 Promote a version to latest by updating its timestamp to the current time.
@@ -1637,11 +1697,16 @@ This is useful when rolling back to a previous application version.
 
 **Parameters:**
 - `version_name`: The name of the version to promote.
+- `application_name`: The application to act as. Defaults to this application. Version names are globally unique across applications sharing a system database, so promoting a version registered by a different application raises an error.
 
 ### set_latest_application_version_async
 
 ```python
-await DBOS.set_latest_application_version_async(version_name: str) -> None
+await DBOS.set_latest_application_version_async(
+    version_name: str,
+    *,
+    application_name: Optional[str] = None,
+) -> None
 ```
 
 Coroutine version of [`set_latest_application_version`](#set_latest_application_version).
@@ -1661,6 +1726,7 @@ Debouncer.create(
     *,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
+    application_name: Optional[str] = None,
 ) -> Debouncer[P, R]
 ```
 
@@ -1669,6 +1735,7 @@ Debouncer.create(
 - `debounce_key`: The debounce key for this debouncer. Used to group workflow executions that will be debounced. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
 - `debounce_timeout_sec`: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
 - `queue`: When starting a workflow after debouncing, enqueue it on this queue instead of executing it directly.
+- `application_name`: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application.
 
 ### debounce
 
@@ -1719,6 +1786,7 @@ Debouncer.create_async(
     *,
     debounce_timeout_sec: Optional[float] = None,
     queue: Optional[Queue] = None,
+    application_name: Optional[str] = None,
 ) -> Debouncer[P, R]
 ```
 Async version of `Debouncer.create`.
@@ -1857,6 +1925,33 @@ def example_workflow():
 # example_workflow is recorded with these attributes
 with SetWorkflowAttributes({"customer": "acme", "region": "us-east-1"}):
     example_workflow()
+```
+
+### PropagateOtelContext
+
+```python
+PropagateOtelContext(
+    context: Optional[opentelemetry.context.Context] = None
+)
+```
+
+Propagate the current OpenTelemetry context (or optionally, a passed-in context) to all workflows started or enqueued within the block, so their spans join the caller's trace.
+See [the tracing tutorial](../tutorials/logging-and-tracing.md#keeping-enqueued-workflows-on-the-callers-trace) for an overview.
+
+The propagated trace context is durably recorded in the workflow's [attributes](#setworkflowattributes) (under the reserved `dbos.otelContext` key), so the workflow's span parents to the caller's trace no matter when or where the workflow runs: immediately, after a queue handoff (possibly in another process), or on recovery.
+Only the W3C trace context (`traceparent`/`tracestate`) is propagated, not baggage.
+If there is no active span, nothing is recorded.
+
+The propagated context is **not inherited** by child workflows; use `PropagateOtelContext` again inside a workflow to keep its children on the same trace.
+
+Requires the DBOS OpenTelemetry dependencies (`pip install dbos[otel]`); [tracing](../tutorials/logging-and-tracing.md#tracing) must be enabled for the propagated context to take effect.
+To propagate a trace context when enqueuing from outside a DBOS application, use the `otel_context` field of DBOS Client's [`EnqueueOptions`](./client.md#enqueue) instead.
+
+Example syntax:
+
+```python
+with PropagateOtelContext():
+    handle = queue.enqueue(workflow_function, ...)
 ```
 
 ### DBOSContextEnsure

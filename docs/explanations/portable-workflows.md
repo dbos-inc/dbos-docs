@@ -6,6 +6,7 @@ description: DBOS applications and clients in different languages can interopera
 
 DBOS supports multiple languages&mdash;Python, TypeScript, Go, and Java&mdash;each with its own SDK.
 A client in one language can connect to the [system database](./system-tables.md) of an application written in another language to exchange data through workflows, messages, events, and streams.
+Applications in different languages can also [share a single system database](./sharing-a-system-database.md).
 However, each language has a native serialization format that the other languages can't read.
 The **portable JSON** serialization format solves this by providing a common data representation that all SDKs can read and write, and can even be read and written from the database without any DBOS code at all.
 
@@ -60,8 +61,9 @@ Workflows started with portable serialization also write their events and stream
 
 ### Per-Workflow (Enqueue)
 
-When enqueuing or starting a workflow from a `DBOSClient`, set the serialization format in the enqueue options.
+When enqueuing or starting a workflow from a `DBOSClient`, or when enqueueing a workflow to another application [sharing the same system database](./sharing-a-system-database.md), set the serialization format in the enqueue options.
 This ensures the workflow's arguments are serialized in portable format that can be read by the target language.
+If multiple applications [share the system database](./sharing-a-system-database.md), also name the application that owns the workflow, so that application runs it.
 
 You can also enqueue a workflow using the PL/pgSQL function [`dbos.enqueue_workflow`](system-tables.md#dbosenqueue_workflow).
 Only portable serialization is allowed when enqueing using PL/pgSQL.
@@ -72,7 +74,11 @@ Only portable serialization is allowed when enqueing using PL/pgSQL.
 ```python
 from dbos import DBOSClient, WorkflowSerializationFormat
 
-client = DBOSClient(system_database_url=db_url)
+client = DBOSClient(
+    system_database_url=db_url,
+    # The name of the application that implements process_order
+    application_name="order-service",
+)
 handle = client.enqueue(
     {
         "workflow_name": "process_order",
@@ -89,7 +95,11 @@ handle = client.enqueue(
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    // The name of the application that implements process_order
+    applicationName: "order-service",
+});
 const handle = await client.enqueue(
     {
         workflowName: "process_order",

@@ -129,7 +129,10 @@ Or using [`DBOSClient`](../reference/client.md#version-management):
 ```python
 from dbos import DBOSClient, EnqueueOptions
 
-client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+client = DBOSClient(
+    system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"],
+    application_name="my-app",
+)
 
 latest_version = client.get_latest_application_version()
 options: EnqueueOptions = {
@@ -140,7 +143,7 @@ options: EnqueueOptions = {
 handle = client.enqueue(options, arg1, arg2)
 ```
 
-Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to your latest application version.
+Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to their owning application's latest version.
 
 Then, once all workflows of the old version are complete, you can retire the old code version.
 You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to check if any workflows are still active for a given version:

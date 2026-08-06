@@ -30,11 +30,13 @@ interface EnqueueOptions {
     queuePartitionKey?: string;
     duplicationPolicy?: 'reject' | 'return-existing';
     attributes?: Record<string, unknown>;
+    applicationName?: string;
 }
 
 class DBOSClient {
-    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger}): Promise<DBOSClient>
+    static create({systemDatabaseUrl, systemDatabasePool, serializer, systemDatabaseSchemaName, systemDatabasePoolSize, systemDatabasePollingConcurrency, logger, applicationName}: {systemDatabaseUrl: string, systemDatabasePool?: Pool, serializer?: DBOSSerializer, systemDatabaseSchemaName?: string, systemDatabasePoolSize?: number, systemDatabasePollingConcurrency?: number, logger?: DLogger, applicationName?: string}): Promise<DBOSClient>
     destroy(): Promise<void>;
+    get applicationName(): string | undefined;
 
     enqueue<T extends (...args: any[]) => Promise<any>>(
         options: ClientEnqueueOptions,
@@ -60,24 +62,26 @@ class DBOSClient {
     forkWorkflow(workflowID: string, startStep: number,
         options?: { newWorkflowID?: string; applicationVersion?: string; timeoutMS?: number; queueName?: string; queuePartitionKey?: string; replacementChildren?: Record<string, string> }): Promise<string>;
 
-    registerQueue(name: string, options?: RegisterQueueOptions): Promise<WorkflowQueue>;
+    registerQueue(name: string, options?: RegisterQueueOptions & { applicationName?: string }): Promise<WorkflowQueue>;
     retrieveQueue(name: string): Promise<WorkflowQueue | null>;
     deleteQueue(name: string): Promise<void>;
 
-    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string } }): Promise<void>;
+    createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }; applicationName?: string }): Promise<void>;
     updateSchedule(name: string, updates: { schedule?: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string | null; queueName?: string | null }): Promise<void>;
-    listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[] }): Promise<WorkflowSchedule[]>;
+    listSchedules(filters?: { status?: string | string[]; workflowName?: string | string[]; scheduleNamePrefix?: string | string[]; applicationName?: string | string[] }): Promise<WorkflowSchedule[]>;
     getSchedule(name: string): Promise<WorkflowSchedule | null>;
     deleteSchedule(name: string): Promise<void>;
     pauseSchedule(name: string): Promise<void>;
     resumeSchedule(name: string): Promise<void>;
-    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }>): Promise<void>;
+    applySchedules(schedules: Array<{ scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; automaticBackfill?: boolean; cronTimezone?: string; queueName?: string; applicationName?: string }>): Promise<void>;
     backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]>;
     triggerSchedule(name: string): Promise<WorkflowHandle<unknown>>;
 
     listApplicationVersions(): Promise<VersionInfo[]>;
     getLatestApplicationVersion(): Promise<VersionInfo>;
-    setLatestApplicationVersion(versionName: string): Promise<void>;
+    setLatestApplicationVersion(versionName: string, options?: { applicationName?: string }): Promise<void>;
+
+    renameApplication(oldName: string | undefined, newName: string, options?: { batchSize?: number | null; adoptUnclaimedRows?: boolean }): Promise<ApplicationRowCounts>;
 }
 ```
 
@@ -93,6 +97,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabasePoolSize**: An optional maximum size for the system database connection pool. Defaults to 10.
 - **systemDatabasePollingConcurrency**: An optional maximum number of concurrent database-backed polling reads from wait operations. See [`systemDatabasePollingConcurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 - **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
+- **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application. Always set this if multiple applications share a system database.
 
 Example:
 
@@ -138,6 +143,7 @@ Additional but optional metadata includes:
   * `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 * **serializationType**: The [serialization strategy](./methods.md#serialization-strategy) for the workflow arguments.
 * **attributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](./methods.md#workflow-status) and are searchable via the `attributes` filter of [`listWorkflows`](./methods.md#dboslistworkflows).
+* **applicationName**: The application that owns and runs the enqueued workflow. Defaults to the client's own [`applicationName`](#create). Always set `applicationName` either here or in the client constructor if multiple applications share a system database.
 
 In addition to the `EnqueueOptions` described above, you must also provide the workflow arguments to `enqueue`. 
 These are passed to `enqueue` after the initial `EnqueueOptions` parameter.
@@ -373,18 +379,19 @@ Please see [`DBOS.deleteWorkflows`](./methods.md#dbosdeleteworkflows) for more i
 ```typescript
 client.registerQueue(
   name: string,
-  options?: RegisterQueueOptions,
+  options?: RegisterQueueOptions & { applicationName?: string },
 ): Promise<WorkflowQueue>
 ```
 
 Register a [queue](./queues.md) and persist its configuration to the system database, returning a [`WorkflowQueue`](./queues.md#class-workflowqueue).
 Similar to [`DBOS.registerQueue`](./queues.md#dbosregisterqueue).
-Options have the same meaning as on `DBOS.registerQueue` except for `onConflict`:
+Options have the same meaning as on `DBOS.registerQueue` except for `onConflict` and `applicationName`:
 
-- `'always_update'` (default): always overwrite the existing configuration.
-- `'never_update'`: leave any existing configuration unchanged.
-
-`'update_if_latest_version'` is **not** supported on the client because clients are not associated with an application version. Passing it throws an error.
+- `onConflict`:
+  - `'always_update'` (default): always overwrite the existing configuration.
+  - `'never_update'`: leave any existing configuration unchanged.
+  - `'update_if_latest_version'` is **not** supported on the client because clients are not associated with an application version. Passing it throws an error.
+- `applicationName`: The application that owns this queue and dequeues workflows from it. Defaults to the client's own [`applicationName`](#create). Registering a queue already owned by a different application throws an error.
 
 **Example syntax:**
 
@@ -443,6 +450,7 @@ client.createSchedule(options: {
     cronTimezone?: string;
     queueName?: string;
   };
+  applicationName?: string;
 }): Promise<void>
 ```
 
@@ -458,6 +466,7 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue.
+- **applicationName**: The application that owns this schedule and runs its workflows. Defaults to the client's own [`applicationName`](#create). Always set `applicationName` either here or in the client constructor if multiple applications share a system database: a schedule owned by no application is run by **every** application.
 
 #### `updateSchedule`
 
@@ -485,6 +494,7 @@ client.listSchedules(filters?: {
   status?: string | string[];
   workflowName?: string | string[];
   scheduleNamePrefix?: string | string[];
+  applicationName?: string | string[];
 }): Promise<WorkflowSchedule[]>
 ```
 
@@ -495,6 +505,7 @@ Similar to [`DBOS.listSchedules`](./methods.md#dboslistschedules).
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflowName**: Filter by workflow name or a list of names.
 - **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
+- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
 
 #### `getSchedule`
 
@@ -545,6 +556,7 @@ client.applySchedules(
     automaticBackfill?: boolean;
     cronTimezone?: string;
     queueName?: string;
+    applicationName?: string; // Defaults to the client's own applicationName
   }>,
 ): Promise<void>
 ```
@@ -586,6 +598,7 @@ client.listApplicationVersions(): Promise<VersionInfo[]>
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Similar to [`DBOS.listApplicationVersions`](./methods.md#dboslistapplicationversions).
+If the client has an [`applicationName`](#create), only versions registered by that application (plus versions owned by no application) are returned; otherwise, every application's versions are returned.
 
 ### getLatestApplicationVersion
 
@@ -600,7 +613,10 @@ Similar to [`DBOS.getLatestApplicationVersion`](./methods.md#dbosgetlatestapplic
 ### setLatestApplicationVersion
 
 ```typescript
-client.setLatestApplicationVersion(versionName: string): Promise<void>
+client.setLatestApplicationVersion(
+  versionName: string,
+  options?: { applicationName?: string },
+): Promise<void>
 ```
 
 Promote a version to latest by updating its timestamp to the current time.
@@ -609,6 +625,45 @@ Similar to [`DBOS.setLatestApplicationVersion`](./methods.md#dbossetlatestapplic
 
 **Parameters:**
 - `versionName`: The name of the version to promote.
+- `options.applicationName`: The application to act as. Defaults to the client's own [`applicationName`](#create). Promoting a version registered by a different application throws an error.
+
+## Application Rename
+
+### renameApplication
+
+```typescript
+client.renameApplication(
+  oldName: string | undefined,
+  newName: string,
+  options?: { batchSize?: number | null; adoptUnclaimedRows?: boolean },
+): Promise<ApplicationRowCounts>
+
+interface ApplicationRowCounts {
+  queues: number;
+  schedules: number;
+  versions: number;
+  workflows: number;
+  steps: number;
+}
+```
+
+Every workflow, step, queue, schedule, and application version is owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that created it.
+After renaming an application, use this method (or the [`npx dbos rename-application`](./cli.md#npx-dbos-rename-application) CLI command) to transfer everything owned by the old name to the new name.
+Returns the number of rows transferred, by table.
+
+Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and their steps are then transferred in batches of `batchSize`.
+The operation is idempotent: if interrupted, running it again resumes where it left off.
+
+:::warning
+Stop the application being renamed before running this.
+A running application would race the rename, creating new work under its old name.
+:::
+
+**Parameters:**
+- **oldName**: The application's previous name. If undefined, nothing is transferred except rows owned by no application, so `adoptUnclaimedRows` must be set.
+- **newName**: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- **options.batchSize**: The number of completed workflows and steps transferred per transaction. Defaults to 10,000. Pass `null` to transfer everything in a single transaction.
+- **options.adoptUnclaimedRows**: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `false`.
 
 ## Debouncing
 
@@ -629,6 +684,7 @@ interface DebouncerClientConfig {
   workflowClassName?: string;
   startWorkflowParams?: StartWorkflowParams;
   debounceTimeoutMs?: number;
+  applicationName?: string;
 }
 ```
 
@@ -641,6 +697,7 @@ Similar to [`Debouncer`](./methods.md#debouncer) but takes in a DBOSClient and w
   - **workflowClassName**: The name of the class the workflow method is a member of, if any.
   - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](./methods.md#dbosstartworkflow). Applied to all workflows started from this debouncer.
   - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+  - **applicationName**: Debounce on behalf of this application. Defaults to the `applicationName` in `startWorkflowParams.enqueueOptions`, then to the client's own.
 
 ### debouncerClient.debounce
 
