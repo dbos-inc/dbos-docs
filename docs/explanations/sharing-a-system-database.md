@@ -18,12 +18,9 @@ Ownership determines which application runs what:
 - A schedule is fired only by the application that created it, and its workflows run on that application.
 - Application versions are tracked per application, so one application's deployments do not affect which version its peers consider latest.
 
-Queue, schedule, and version names remain globally unique across all applications sharing a system database.
-Registering a name that a different application already owns raises an error.
-
-Observability is scoped to the application by default.
-Listing operations such as `list_workflows`, `list_queues`, and `list_schedules` return only the caller's own rows (plus unowned ones) unless their application name filter names other applications; a client with no application name sees everything.
-Workflow IDs are unique across the entire system database, so ID-addressed operations (retrieving a workflow's handle, status, or result by ID, and sending messages or reading events and streams) work across applications regardless of ownership.
+Queue, schedule, and version names remain globally unique across all applications sharing a system database; registering a name that a different application already owns raises an error.
+Workflow IDs are also unique across the entire system database, so ID-addressed operations (retrieving a workflow's handle, status, or result by ID, and sending messages or reading events and streams) work across applications regardless of ownership.
+Observability queries (`list_workflows`, `list_queues`, `list_schedules`) are scoped to the calling application by default.
 
 ## Calling Another Application's Workflows
 
