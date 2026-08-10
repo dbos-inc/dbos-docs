@@ -86,6 +86,26 @@ if (queue !== null) {
 }
 ```
 
+### DBOS.listQueues
+
+```typescript
+DBOS.listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>
+```
+
+List all database-backed queues registered in the system database.
+Returns an empty list if no queues have been registered.
+
+**Parameters:**
+- **applicationName**: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
+
+**Example syntax:**
+
+```typescript
+for (const queue of await DBOS.listQueues()) {
+  console.log(queue.name, queue.concurrency);
+}
+```
+
 ### DBOS.deleteQueue
 
 ```typescript
@@ -103,7 +123,7 @@ Instead, cancel or drain pending workflows on the queue before deleting it.
 
 ## class WorkflowQueue
 
-A `WorkflowQueue` is returned from [`DBOS.registerQueue`](#dbosregisterqueue) or [`DBOS.retrieveQueue`](#dbosretrievequeue).
+A `WorkflowQueue` is returned from [`DBOS.registerQueue`](#dbosregisterqueue), [`DBOS.retrieveQueue`](#dbosretrievequeue), or [`DBOS.listQueues`](#dboslistqueues).
 Its cached fields reflect the queue's configuration as of the most recent read from the database; use the `get` methods to refresh from the database, and the `set` methods to update.
 
 ```typescript
@@ -118,6 +138,9 @@ class WorkflowQueue {
   priorityEnabled: boolean;
   partitionQueue: boolean;
   minPollingIntervalMs?: number;
+
+  // The application that owns this queue; undefined for in-memory and unowned queues.
+  applicationName?: string;
 
   // Read the latest values from the database.
   getConcurrency(): Promise<number | undefined>;
@@ -150,7 +173,7 @@ if (queue !== null) {
 }
 ```
 
-The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, or the equivalent [`DBOSClient`](./client.md) methods.
+The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, `DBOS.listQueues`, or the equivalent [`DBOSClient`](./client.md) methods.
 
 :::warning
 If your application calls [`DBOS.registerQueue`](#dbosregisterqueue) on startup, the next process to start can overwrite settings you applied at runtime via `set` methods.

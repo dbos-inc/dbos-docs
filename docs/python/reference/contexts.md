@@ -774,7 +774,7 @@ List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
 
 **Parameters:**
-- `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list every application's queues.
+- `application_name`: List only queues owned by this application (or one of these applications). Queues owned by no application are always included. If unset, list only this application's queues.
 
 **Example syntax:**
 
@@ -951,7 +951,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matchin
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows.
 
 ### list_workflows_async
 
@@ -1014,7 +1014,7 @@ Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **queued** workfl
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve only this application's workflows.
 
 ### list_queued_workflows_async
 
@@ -1344,7 +1344,7 @@ Return all registered workflow schedules, optionally filtered. Returns a list of
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflow_name**: Filter by workflow name or a list of names.
 - **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
-- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
+- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list only this application's schedules.
 
 ### list_schedules_async
 

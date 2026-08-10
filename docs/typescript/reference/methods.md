@@ -389,7 +389,7 @@ interface GetWorkflowsInput {
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
-  applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve every application's workflows.
+  applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -795,7 +795,7 @@ Return all registered workflow schedules, optionally filtered. Returns a list of
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflowName**: Filter by workflow name or a list of names.
 - **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
-- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
+- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list only this application's schedules.
 
 ### DBOS.getSchedule
 
@@ -944,7 +944,7 @@ interface DebouncerConfig<Args extends unknown[], Return> {
 - **workflow**: The workflow to debounce. Note that workflows from [configured instances](./workflows-steps.md#instance-method-workflows) cannot be debounced.
 - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](#dbosstartworkflow). Applied to all workflows started from this debouncer.
 - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
-- **applicationName**: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application.
+- **applicationName**: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application. This option is the only way to name a target application: setting `applicationName` in `startWorkflowParams.enqueueOptions` throws an error.
 
 ### debouncer.debounce
 

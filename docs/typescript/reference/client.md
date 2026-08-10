@@ -64,6 +64,7 @@ class DBOSClient {
 
     registerQueue(name: string, options?: RegisterQueueOptions & { applicationName?: string }): Promise<WorkflowQueue>;
     retrieveQueue(name: string): Promise<WorkflowQueue | null>;
+    listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>;
     deleteQueue(name: string): Promise<void>;
 
     createSchedule(options: { scheduleName: string; workflowName: string; workflowClassName?: string; schedule: string; context?: unknown; options?: { automaticBackfill?: boolean; cronTimezone?: string; queueName?: string }; applicationName?: string }): Promise<void>;
@@ -97,7 +98,7 @@ You construct a `DBOSClient` with the static `create` function.
 - **systemDatabasePoolSize**: An optional maximum size for the system database connection pool. Defaults to 10.
 - **systemDatabasePollingConcurrency**: An optional maximum number of concurrent database-backed polling reads from wait operations. See [`systemDatabasePollingConcurrency`](./configuration.md#database-connection-settings) in the configuration reference. Defaults to half the pool size (minimum 1).
 - **logger**: An optional [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which the client directs all its logging, replacing the built-in console logger.
-- **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application. Always set this if multiple applications share a system database.
+- **applicationName**: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 
 Example:
 
@@ -312,11 +313,13 @@ Please see [`DBOS.getWorkflowStatus`](./methods.md#dbosgetworkflowstatus) for mo
 
 Retrieves information about workflow execution history. 
 Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more for more information.
+If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create); a client with no application name retrieves every application's workflows.
 
 #### `listQueuedWorkflows`
 
 Retrieves information about workflow execution history for a given workflow queue. 
 Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more for more information.
+If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create); a client with no application name retrieves every application's workflows.
 
 #### `listWorkflowSteps`
 
@@ -415,6 +418,17 @@ Similar to [`DBOS.retrieveQueue`](./queues.md#dbosretrievequeue).
 
 The returned queue is bound to this client's system database; you can read its configuration and call its [`setX`](./queues.md#reconfiguring-queues) methods, but you cannot enqueue on it directly (use [`client.enqueue`](#enqueue) instead).
 
+#### `listQueues`
+
+```typescript
+client.listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]>
+```
+
+List all database-backed queues registered in the system database.
+Similar to [`DBOS.listQueues`](./queues.md#dboslistqueues).
+If `applicationName` is unset, lists only queues owned by the client's own [`applicationName`](#create); a client with no application name lists every application's queues.
+The returned queues are bound to this client's system database, as with [`retrieveQueue`](#retrievequeue).
+
 #### `deleteQueue`
 
 ```typescript
@@ -505,7 +519,7 @@ Similar to [`DBOS.listSchedules`](./methods.md#dboslistschedules).
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflowName**: Filter by workflow name or a list of names.
 - **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
-- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
+- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, defaults to the client's own [`applicationName`](#create); a client with no application name lists every application's schedules.
 
 #### `getSchedule`
 

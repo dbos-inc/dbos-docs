@@ -40,7 +40,7 @@ DBOSClient(
 - `use_listen_notify`: Whether the client runs a background listener thread that uses PostgreSQL LISTEN, so wait operations such as [`get_event`](#get_event) and [`read_stream`](#read_stream) are woken by notifications instead of polling the database. Defaults to `False`. Only enable this if your DBOS application's system database is Postgres and was created with [`use_listen_notify`](./configuration.md#database-connection-settings) enabled (the Postgres default).
 - `lazy`: Whether to defer connecting to the system database until the client is first used. Defaults to `False`, meaning the connection is checked on construction and the constructor raises if the system database is unreachable. If `True`, the constructor does not connect; use [`check_connection`](#check_connection) to check the connection explicitly. Cannot be combined with `use_listen_notify`, whose listener thread connects immediately (raises `DBOSException` if both are set).
 - `retry_connection_errors`: Whether a client operation that loses its database connection blocks and retries until the connection recovers. Defaults to `True`. Set to `False` to raise connection errors instead, so an unreachable database surfaces as an error rather than a wait.
-- `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application. Always set this if multiple applications share a system database.
+- `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
 
 **Example syntax:**
 
@@ -718,6 +718,7 @@ client.list_queues(
 List all database-backed queues registered in the system database.
 Returns an empty list if no queues have been registered.
 Similar to [`DBOS.list_queues`](./contexts.md#list_queues), including the `application_name` filter.
+If the filter is unset, it defaults to the client's own [`application_name`](#constructor); a client with no application name lists every application's queues.
 
 ### list_queues_async
 
@@ -821,7 +822,7 @@ Similar to [`DBOS.list_workflows`](./contexts#list_workflows).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
 - **schedule_name**: Retrieve workflows that were enqueued by this [scheduled workflow](../tutorials/scheduled-workflows.md) (or one of these schedule names).
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor); a client with no application name retrieves every application's workflows.
 
 ### list_workflows_async
 
@@ -918,7 +919,7 @@ Similar to [`DBOS.list_queued_workflows`](./contexts.md#list_queued_workflows).
 - **executor_id**: Retrieve workflows with this executor ID (or one of these IDs).
 - **has_parent**: If `True`, only retrieve workflows that have a parent workflow. If `False`, only retrieve workflows without a parent.
 - **attributes**: Retrieve workflows whose [custom attributes](./contexts.md#setworkflowattributes) contain all the given key-value pairs (nested values are matched exactly). Only supported when using a Postgres system database; raises `DBOSException` on SQLite.
-- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, retrieve every application's workflows.
+- **application_name**: Retrieve workflows owned by this application (or one of these applications). Workflows owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor); a client with no application name retrieves every application's workflows.
 
 ### list_queued_workflows_async
 
@@ -1301,7 +1302,7 @@ Similar to [`DBOS.list_schedules`](./contexts.md#list_schedules).
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflow_name**: Filter by workflow name or a list of names.
 - **schedule_name_prefix**: Filter by schedule name prefix or a list of prefixes.
-- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list every application's schedules.
+- **application_name**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, defaults to the client's own [`application_name`](#constructor); a client with no application name lists every application's schedules.
 
 ### list_schedules_async
 
