@@ -97,10 +97,21 @@ Useful for testing.
 ### reset_system_database
 
 ```python
-DBOS.reset_system_database()
+DBOS.reset_system_database(
+    *,
+    system_database_url: Optional[str] = None,
+    schema: Optional[str] = None,
+    truncate: bool = False,
+)
 ```
 
-Destroy the DBOS [system database](../../explanations/system-tables.md), resetting DBOS's internal state in Postgres.
+Reset the DBOS [system database](../../explanations/system-tables.md), clearing DBOS's internal state.
+By default, this destroys the system database entirely; pass `truncate=True` to instead empty its tables, which is substantially faster.
 Useful when testing a DBOS application to reset the internal state of DBOS between tests.
 For example, see its use in the [testing tutorial](../tutorials/testing.md).
 **This is a destructive operation and should only be used in a test environment.**
+
+**Parameters:**
+- `system_database_url`: The system database to reset. Defaults to the system database of the current DBOS instance. If no DBOS instance has been constructed, this must be supplied.
+- `schema`: The Postgres schema containing the DBOS system tables. Defaults to the configured [`dbos_system_schema`](./configuration.md#database-connection-settings), or `dbos`. Only used when truncating.
+- `truncate`: If `True`, empty the system tables instead of dropping the system database. **This is recommended**, as it is substantially faster. Because the migrated schema is left in place, DBOS does not need to re-create the system database on its next launch.
