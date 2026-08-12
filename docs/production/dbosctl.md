@@ -526,7 +526,7 @@ Deletes an API key, revoking it immediately.
 ### `dbosctl permission list`
 
 **Description:**
-Lists the permissions that can be granted to an API key or a role. Available against DBOS-managed Conductor and self-hosted Conductor with OIDC enabled; not against a no-auth deployment.
+Lists the permissions that can be granted to an API key or a role.
 
 ---
 
