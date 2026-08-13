@@ -5,7 +5,7 @@ title: Conductor API
 
 Everything you can do from the [DBOS console](https://console.dbos.dev) you can also do over Conductor's HTTP API: list and manage applications, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
 
-The API is versioned. This page documents **v2**, which is described by an OpenAPI 3.1 specification generated directly from the running server, so the spec is never out of date with the deployment serving it. The console and the [`dbosctl` CLI](./dbosctl.md) are both built on this API and on clients generated from that spec.
+The API is described by an OpenAPI 3.1 specification generated directly from the running server, so it is never out of date with the deployment serving it. The console and the [`dbosctl` CLI](./dbosctl.md) are both built on this API, using clients generated from that spec.
 
 ## Base URL
 
@@ -14,7 +14,7 @@ The API is versioned. This page documents **v2**, which is described by an OpenA
 | DBOS-managed Conductor | `https://cloud.dbos.dev/conductor` |
 | [Self-hosted Conductor](./hosting-conductor.md) | `http://<your-conductor-host>:8090` (port `8090` by default) |
 
-Every v2 path is relative to that base, so the full URL of an operation is, for example:
+Every path is relative to that base, so the full URL of an operation is, for example:
 
 ```
 https://cloud.dbos.dev/conductor/v2/orgs/my_org/apps/my-app/workflows
@@ -151,7 +151,7 @@ Listing is always scoped to the application in the path, so an application only 
 
 ## Endpoint Reference
 
-The tables below are a map of the v2 surface. The generated spec is the authoritative reference for request and response schemas of each operation.
+The tables below are a map of the whole API. The generated spec is the authoritative reference for request and response schemas of each operation.
 
 ### Users and organizations
 
