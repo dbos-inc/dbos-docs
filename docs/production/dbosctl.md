@@ -11,24 +11,30 @@ The binary is named `dbosctl`, not `dbos`. The DBOS language SDKs ship their own
 
 ## Installation
 
-Download the archive for your platform from the [releases page](https://github.com/dbos-inc/dbos-cli/releases).
-Builds are published for Linux, macOS, and Windows on both amd64 and arm64, alongside a `checksums.txt`.
-The binaries are statically linked, so they run on any Linux distribution, Alpine included.
-
-Unpack it and put `dbosctl` on your `PATH`:
+The install script detects your platform, verifies the download against the release checksums, and installs `dbosctl` to the first writable of `/usr/local/bin`, `~/.local/bin`, or the current directory:
 
 ```shell
-tar xzf dbosctl_0.1.0_darwin_arm64.tar.gz
-sudo mv dbosctl /usr/local/bin/
+curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh | sh
 ```
+
+Set `VERSION` to pin a release, or `BIN_DIR` to choose where it lands:
+
+```shell
+curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh \
+  | VERSION=v0.1.0 BIN_DIR=~/.local/bin sh
+```
+
+You can also [download an archive directly](https://github.com/dbos-inc/dbos-ctl/releases).
+Builds are published for Linux, macOS, and Windows on both amd64 and arm64, alongside a `checksums.txt`.
+The binaries are statically linked, so they run on any Linux distribution, Alpine included.
 
 If you already have a Go toolchain (1.24 or later), you can install from source instead:
 
 ```shell
-go install github.com/dbos-inc/dbos-cli/cmd/dbosctl@latest
+go install github.com/dbos-inc/dbos-ctl/cmd/dbosctl@latest
 ```
 
-Either way, `dbosctl version` tells you what you have — a downloaded release reports its tag, and a `go install` reports the module version it was built from.
+However you install it, `dbosctl version` reports what you have — a downloaded release prints its tag, and a `go install` prints the module version it was built from.
 
 ## Quick Start
 
