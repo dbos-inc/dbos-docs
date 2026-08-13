@@ -110,6 +110,8 @@ dbosctl app list -o json            # raw JSON array
 dbosctl whoami -o json              # raw user profile
 ```
 
+Detail views — `workflow get`, `queue get`, and `schedule get` — include an `applicationName` row naming the application that owns the object, when it has one. That only differs from `--app` where [several applications share a system database](./conductor-api.md#listing-and-filtering); otherwise the row is omitted.
+
 Commands with a natural identifier also accept `-o ids`, which prints one ID per line for piping. A literal `-` in place of arguments reads IDs from stdin:
 
 ```shell
