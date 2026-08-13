@@ -6,26 +6,29 @@ title: dbosctl CLI Reference
 `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
 
 :::info
-`dbosctl` is in early access. Its command surface may change between releases.
-:::
-
-:::info
 The binary is named `dbosctl`, not `dbos`. The DBOS language SDKs ship their own `dbos` entrypoints (the Python SDK, for example, installs a `dbos` console script), so the `ctl` suffix keeps this CLI unambiguous alongside any of them. `dbosctl` is also distinct from [`dbos-cloud`](./dbos-cloud/cloud-cli.md), which manages applications and databases hosted on DBOS Cloud.
 :::
 
 ## Installation
 
-Build from source with Go 1.24 or later:
+Download the archive for your platform from the [releases page](https://github.com/dbos-inc/dbos-cli/releases).
+Builds are published for Linux, macOS, and Windows on both amd64 and arm64, alongside a `checksums.txt`.
+The binaries are statically linked, so they run on any Linux distribution, Alpine included.
+
+Unpack it and put `dbosctl` on your `PATH`:
+
+```shell
+tar xzf dbosctl_0.1.0_darwin_arm64.tar.gz
+sudo mv dbosctl /usr/local/bin/
+```
+
+If you already have a Go toolchain (1.24 or later), you can install from source instead:
 
 ```shell
 go install github.com/dbos-inc/dbos-cli/cmd/dbosctl@latest
 ```
 
-Or, from a checkout of the repository:
-
-```shell
-make build     # produces ./dbosctl
-```
+Either way, `dbosctl version` tells you what you have — a downloaded release reports its tag, and a `go install` reports the module version it was built from.
 
 ## Quick Start
 
