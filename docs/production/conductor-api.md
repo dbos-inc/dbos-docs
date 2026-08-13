@@ -54,15 +54,20 @@ The spec served here is Conductor's own, with only its `servers` entry repointed
 
 For example, with the Docker Compose setup from [Self-Hosting Conductor](./hosting-conductor.md), open `http://localhost:8090/docs` to explore the API in your browser.
 
-**From the Conductor binary.** The `openapi` subcommand prints the spec to stdout without connecting to a database or requiring any runtime configuration, which is convenient in CI and code generation pipelines:
+**From the Conductor image.** Conductor's `openapi` subcommand prints the spec to stdout without connecting to a database or requiring any runtime configuration, which is convenient in CI and code generation pipelines. The image's entrypoint starts the server, so override it to reach the subcommand:
 
 ```shell
-conductor openapi > openapi.json
-conductor openapi -spec-version 3.0 > openapi-3.0.json
+docker run --rm --entrypoint ./dbos-conductor dbosdev/conductor:latest \
+  openapi > openapi.json
+
+docker run --rm --entrypoint ./dbos-conductor dbosdev/conductor:latest \
+  openapi -spec-version 3.0 > openapi-3.0.json
 ```
 
+Pin a version tag rather than `latest` when the spec feeds code generation, so a regenerated client changes only when you choose to bump it.
+
 :::info
-The binary emits the *complete* route surface, including operations that a no-auth deployment does not register. See [Self-hosted differences](#self-hosted-differences) below.
+This emits the *complete* route surface, including operations that a no-auth deployment does not register. See [Self-hosted differences](#self-hosted-differences) below.
 :::
 
 ## Authentication
