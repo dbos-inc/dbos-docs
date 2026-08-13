@@ -144,7 +144,9 @@ Workflow listing comes in two flavors:
 Workflow inputs and outputs can be large, so they are omitted unless you ask for them with `loadInput` and `loadOutput`.
 
 :::tip
-When several applications share one system database, workflow listing and search accept an `applicationName` filter that restricts results to workflows owned by that application (plus workflows recorded before DBOS Transact tracked application names). It defaults to the application in the path.
+Several applications can share one system database. When they do, each workflow, queue, and schedule reports the application that owns it in an `applicationName` field, so you can tell whose objects you are looking at. The field is null for objects recorded before DBOS Transact tracked application names, and for in-memory queues.
+
+Listing is always scoped to the application in the path, so an application only ever sees its own objects (plus unowned ones). There is no filter for reading a co-tenant's objects — address that application directly instead.
 :::
 
 ## Endpoint Reference
@@ -255,7 +257,11 @@ The mutating workflow operations — cancel, resume, restart, fork, and delete �
 | Set autoscaling policy | `PUT /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
 | Delete autoscaling policy | `DELETE /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
 
-An **autoscaling policy** names the queue whose backlog drives the desired executor count, plus an optional rollout policy governing how non-latest application versions are sized. `GET .../autoscale` then returns, per application version, the number of executors needed to keep up with that queue's load — the number to feed to your Kubernetes HPA, Cloud Run scaler, or equivalent. The named queue must exist, must not be partitioned, and must have `worker_concurrency` set.
+:::info
+The four autoscaling operations require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan. On any other plan they return `403`.
+:::
+
+An **autoscaling policy** names the queue whose backlog drives the desired executor count, plus an optional rollout policy governing how non-latest application versions are sized. `GET .../autoscale` then returns, per application version, the number of executors needed to keep up with that queue's load — the number to feed to your Kubernetes HPA, KEDA scaler, Cloud Run scaler, or equivalent. The named queue must exist, must not be partitioned, and must have `worker_concurrency` set. With no policy installed, both `GET` operations return `404`.
 
 ### Schedules
 
@@ -285,7 +291,7 @@ Alerting rules are described in [Alerting](./alerting.md). Audit log listing acc
 
 A self-hosted Conductor can run with OIDC authentication enabled or with authentication disabled entirely (see [Self-Hosting Conductor](./hosting-conductor.md)). In no-auth mode there is no user identity and no multi-organization concept, so the operations that depend on them are **not registered at all** and respond `404`:
 
-- every organization operation: `getOrg`, `updateOrg`, `joinOrg`, `generateSecret`, `listMembers`, `removeMember`, and the domain-claim operations;
+- every organization operation: `getOrg`, `updateOrg`, `joinOrg`, `generateSecret`, `listMembers`, `removeMember`, `listDomainClaims`, `requestDomainClaim`, and `releaseDomainClaim`;
 - every role operation: `listRoles`, `createRole`, `deleteRole`, `grantRole`;
 - the user operations `registerUser` and `getCurrentUser`;
 - audit log listing, `listAuditLogs`.
