@@ -147,6 +147,17 @@ dbosctl workflow list -a myapp --status PENDING -o ids | dbosctl workflow cancel
 | `4` | Not found (HTTP 404) |
 | `130` | Interrupted (Ctrl-C) |
 
+## Commands That Need a Running Application
+
+Conductor answers some commands itself and forwards the rest to your application over the websocket its executors hold open, as described in [How Operations Are Served](./conductor-api.md#how-operations-are-served). The split follows the resource, not the verb, so it cuts across the reference below:
+
+| | Commands |
+| --- | --- |
+| Forwarded to your application | All `workflow`, `queue`, and `schedule` commands — reads as much as mutations — plus `app versions` and `app set-version` |
+| Answered by Conductor | Everything else: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+
+Commands in the first group fail if the application has no healthy executor connected, so a failure there usually means your application is not running rather than that nothing matched.
+
 ## Authentication Commands
 
 ### `dbosctl login`
@@ -318,10 +329,8 @@ Lists an application's metrics over a time window.
 
 Workflow commands are application-scoped: pass `-a/--app`, or set `DBOS_APP`, or give the profile a default application. The `wf` alias is accepted in place of `workflow`.
 
-Every workflow command is served by your application rather than by Conductor, reads included, so all of them need a healthy executor connected — see [How Operations Are Served](./conductor-api.md#how-operations-are-served).
-
 :::info
-`resume` is stricter than the rest: it needs an executor running the application's **latest** version, not merely a healthy one. A deployment that is connected but still rolling out can therefore resume nothing, while every other workflow command works.
+`resume` is stricter than every other command here: it needs an executor running the application's **latest** version, not merely a healthy one. A deployment that is connected but still rolling out can therefore resume nothing, while everything else works.
 :::
 
 ### `dbosctl workflow list`
