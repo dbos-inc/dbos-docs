@@ -104,6 +104,19 @@ Almost every operation is scoped to an organization, and most are additionally s
 
 Only two operations sit outside an organization: `POST /v2/users` and `GET /v2/users/me`.
 
+## How Operations Are Served
+
+Conductor answers some requests from its own database and delegates the rest to your running application. Which one applies is a property of the resource, not of whether the operation reads or writes:
+
+| Served from | Operations |
+| --- | --- |
+| Conductor's database | Users, organizations, roles, permissions, and API keys; application registration, settings, and executor listing; alerting rules, audit logs, and metrics |
+| Your application | Everything under workflows, queues, and schedules — reads as much as mutations — plus listing application versions and setting the latest one |
+
+Conductor dispatches the second group over the websocket each executor holds open, waits for the reply, and returns it. Those operations therefore need a healthy executor connected for the target application, and they read whatever that executor's system database holds — Conductor neither caches nor mirrors it.
+
+They fail with `503` when the application has no healthy executor connected, and `502` when every healthy executor fails to answer. A `503` from `GET .../workflows` means your application is not connected, not that it has no workflows.
+
 ## Errors
 
 Errors are returned as [RFC 9457 problem details](https://www.rfc-editor.org/rfc/rfc9457) with content type `application/problem+json`:
@@ -138,6 +151,7 @@ Common statuses:
 | `401` | Missing, expired, or invalid credentials |
 | `403` | Authenticated, but lacking the required permission |
 | `404` | No such organization, application, or resource — or an operation not registered in this deployment mode |
+| `502` / `503` | The application serving this resource failed to answer, or has no healthy executor connected — see [How Operations Are Served](#how-operations-are-served) |
 
 ## Listing and Filtering
 
@@ -241,10 +255,6 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
 The semantics of cancelling, resuming, and forking are described in [Workflow Management](./workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
-
-:::info
-Workflow operations are carried out by your application, not by Conductor's database. Conductor dispatches them over the websocket to a healthy connected executor. If an application has no healthy executor connected, the call fails.
-:::
 
 ### Queues
 
