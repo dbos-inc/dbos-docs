@@ -69,9 +69,11 @@ A profile must target either DBOS-managed Conductor (`--managed`) or a self-host
 
 | Shape | How to create it | Authentication | Identity |
 | --- | --- | --- | --- |
-| DBOS-managed | `dbosctl config set <name> --managed` | OIDC-issued user JWT | Your real user |
-| Self-hosted with OIDC | `dbosctl config set <name> --url <url> --issuer <url> --client-id <id>` | User JWT or `dbos_` API key | Your real user |
+| DBOS-managed | `dbosctl config set <name> --managed` | User JWT or `dbos_` API key | Your real user, or none for an API key |
+| Self-hosted with OIDC | `dbosctl config set <name> --url <url> --issuer <url> --client-id <id>` | User JWT or `dbos_` API key | Your real user, or none for an API key |
 | Self-hosted, no auth | `dbosctl config set <name> --url <url>` | None | Always `local` |
+
+The two authenticated shapes accept the same credentials: Conductor tells a user JWT from an API key by the key's `dbos_` prefix, not by how it is deployed. What differs is where the OIDC settings come from — `--managed` derives them, self-hosted needs them spelled out.
 
 `--managed` points the profile at `cloud.dbos.dev` and derives everything else — the `/conductor` base URL, bearer authentication, and the OIDC tenant — automatically.
 
