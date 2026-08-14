@@ -99,6 +99,21 @@ const config = {
     locales: ['en'],
   },
 
+  // docusaurus-plugin-matomo's route tracker pushes to the bare global _paq on
+  // every navigation, but the snippet that defines it is a separate inline
+  // script. Content blockers recognize and strip that snippet, leaving the
+  // tracker to throw "_paq is not defined" into React, which the error boundary
+  // renders as "This page crashed". Seed the queue here so a blocked tracker
+  // costs us analytics instead of the page. Only production builds load either
+  // half, so this is inert in `npm start`.
+  headTags: [
+    {
+      tagName: 'script',
+      attributes: {},
+      innerHTML: 'window._paq = window._paq || [];',
+    },
+  ],
+
   plugins: [
     CopyMarkdownPlugin,
     pluginLlmsTxt,
