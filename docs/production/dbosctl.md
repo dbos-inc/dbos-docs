@@ -318,8 +318,10 @@ Lists an application's metrics over a time window.
 
 Workflow commands are application-scoped: pass `-a/--app`, or set `DBOS_APP`, or give the profile a default application. The `wf` alias is accepted in place of `workflow`.
 
+Every workflow command is served by your application rather than by Conductor, reads included, so all of them need a healthy executor connected — see [How Operations Are Served](./conductor-api.md#how-operations-are-served).
+
 :::info
-Cancel, resume, restart, fork, and delete are carried out by your application rather than by Conductor: the command is dispatched to a healthy connected executor. If the application has no healthy executor connected (resume and restart additionally require one running the latest version), the command fails rather than taking effect later.
+`resume` is stricter than the rest: it needs an executor running the application's **latest** version, not merely a healthy one. A deployment that is connected but still rolling out can therefore resume nothing, while every other workflow command works.
 :::
 
 ### `dbosctl workflow list`
@@ -392,16 +394,6 @@ Resumes one or more workflows from their last completed step. If a workflow is e
 **Arguments:**
 - `<workflow-id>...`: One or more workflow IDs. A literal `-` reads IDs from stdin.
 - `--queue <string>`: Resume onto this queue.
-
----
-
-### `dbosctl workflow restart`
-
-**Description:**
-Restarts one or more workflows. Restarting starts a new execution with the same inputs and a new workflow ID, running from the first step; the original workflow is left as it was.
-
-**Arguments:**
-- `<workflow-id>...`: One or more workflow IDs. A literal `-` reads IDs from stdin.
 
 ---
 
