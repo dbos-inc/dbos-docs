@@ -5,10 +5,6 @@ title: dbosctl CLI Reference
 
 `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
 
-:::info
-The binary is named `dbosctl`, not `dbos`. The DBOS language SDKs ship their own `dbos` entrypoints (the Python SDK, for example, installs a `dbos` console script), so the `ctl` suffix keeps this CLI unambiguous alongside any of them. `dbosctl` is also distinct from [`dbos-cloud`](./dbos-cloud/cloud-cli.md), which manages applications and databases hosted on DBOS Cloud.
-:::
-
 ## Installation
 
 The install script detects your platform, verifies the download against the release checksums, and installs `dbosctl` to the first writable of `/usr/local/bin`, `~/.local/bin`, or the current directory:
@@ -45,6 +41,17 @@ dbosctl config set managed --managed   # create a profile pointing at cloud.dbos
 dbosctl login                          # log in through the device-authorization flow
 dbosctl whoami                         # confirm who you are logged in as
 dbosctl app list
+```
+
+Against a self-hosted Conductor with OIDC authentication, name the issuer and client
+ID the deployment is configured with, then log in as you would against the managed
+service:
+
+```shell
+dbosctl config set selfhosted --url https://conductor.example.com \
+  --issuer https://auth.example.com/realms/dbos --client-id dbos-cli
+dbosctl login --profile selfhosted
+dbosctl app list --profile selfhosted
 ```
 
 Against a self-hosted Conductor running without authentication:
@@ -119,7 +126,7 @@ dbosctl app list -o json            # raw JSON array
 dbosctl whoami -o json              # raw user profile
 ```
 
-Detail views — `workflow get`, `queue get`, and `schedule get` — include an `applicationName` row naming the application that owns the object, when it has one. That only differs from `--app` where [several applications share a system database](./conductor-api.md#listing-and-filtering); otherwise the row is omitted.
+Detail views — `workflow get`, `queue get`, and `schedule get` — include an `applicationName` row naming the application that owns the object, when it has one.
 
 Commands with a natural identifier also accept `-o ids`, which prints one ID per line for piping. A literal `-` in place of arguments reads IDs from stdin:
 

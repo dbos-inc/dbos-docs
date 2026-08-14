@@ -22,7 +22,7 @@ Every path is relative to that base, so the full URL of an operation is, for exa
 https://cloud.dbos.dev/conductor/v2/orgs/my_org/apps/my-app/workflows
 ```
 
-The paths themselves are identical in both deployments — only the base differs. This is deliberate: a single generated client works against DBOS-managed and self-hosted Conductor with nothing but the base URL changed.
+The paths themselves are identical in both deployments; only the base differs.
 
 ## The OpenAPI Specification
 
@@ -40,7 +40,7 @@ If your toolchain does not yet support OpenAPI 3.1, request the 3.0 downgrade in
 curl -O https://cloud.dbos.dev/conductor/v2/openapi-3.0.json
 ```
 
-The spec served here is Conductor's own, with only its `servers` entry repointed at `/conductor` so that generated clients resolve paths correctly through DBOS Cloud. Nothing else — no path, schema, or security scheme — is rewritten or filtered.
+The spec served here is Conductor's own, with only its `servers` entry repointed at `/conductor` so that generated clients resolve paths correctly through DBOS Cloud.
 
 **From a self-hosted Conductor.** The server mounts the spec and an interactive browser at its root, all unauthenticated:
 
@@ -150,12 +150,6 @@ Workflow listing comes in two flavors:
 
 Workflow inputs and outputs can be large, so they are omitted unless you ask for them with `loadInput` and `loadOutput`.
 
-:::tip
-Several applications can share one system database. When they do, each workflow, queue, and schedule reports the application that owns it in an `applicationName` field, so you can tell whose objects you are looking at. The field is null for objects recorded before DBOS Transact tracked application names, and for in-memory queues.
-
-Listing is always scoped to the application in the path, so an application only ever sees its own objects (plus unowned ones). There is no filter for reading a co-tenant's objects — address that application directly instead.
-:::
-
 ## Endpoint Reference
 
 The tables below are a map of the whole API. The generated spec is the authoritative reference for request and response schemas of each operation.
@@ -237,7 +231,6 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | List streams | `GET .../workflows/{workflowId}/streams` |
 | Cancel workflow | `POST .../workflows/{workflowId}/cancel` |
 | Resume workflow | `POST .../workflows/{workflowId}/resume` |
-| Restart workflow | `POST .../workflows/{workflowId}/restart` |
 | Fork workflow | `POST .../workflows/{workflowId}/fork` |
 | Delete workflow | `DELETE .../workflows/{workflowId}` |
 | Export workflow | `GET .../workflows/{workflowId}/export` |
@@ -247,28 +240,18 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | Bulk delete | `POST .../workflows/bulk-delete` |
 | Bulk fork from failure | `POST .../workflows/bulk-fork-from-failure` |
 
-The semantics of cancelling, resuming, and forking are described in [Workflow Management](./workflow-management.md). **Restart** starts a new execution of a workflow, with a new ID and the same inputs, from its first step; the original workflow is left untouched. The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
+The semantics of cancelling, resuming, and forking are described in [Workflow Management](./workflow-management.md). The bulk variants take an array of workflow IDs and apply the same operation to each, which is far cheaper than issuing the calls one at a time. **Export** and **import** move a workflow and its steps between deployments as a JSON document — useful for reproducing a production failure in a development environment.
 
 :::info
-The mutating workflow operations — cancel, resume, restart, fork, and delete — are carried out by your application, not by Conductor's database. Conductor dispatches them over the websocket to a healthy connected executor. If an application has no healthy executor connected (resume and restart additionally require one running the application's latest version), the call fails rather than being queued for later.
+Workflow operations are carried out by your application, not by Conductor's database. Conductor dispatches them over the websocket to a healthy connected executor. If an application has no healthy executor connected, the call fails.
 :::
 
-### Queues and autoscaling
+### Queues
 
 | Operation | Endpoint |
 | --- | --- |
 | List queues | `GET /v2/orgs/{orgName}/apps/{appName}/queues` |
 | Get queue | `GET /v2/orgs/{orgName}/apps/{appName}/queues/{queueName}` |
-| Get autoscaling recommendation | `GET /v2/orgs/{orgName}/apps/{appName}/autoscale` |
-| Get autoscaling policy | `GET /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
-| Set autoscaling policy | `PUT /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
-| Delete autoscaling policy | `DELETE /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
-
-:::info
-The four autoscaling operations require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan. On any other plan they return `403`.
-:::
-
-An **autoscaling policy** names the queue whose backlog drives the desired executor count, plus an optional rollout policy governing how non-latest application versions are sized. `GET .../autoscale` then returns, per application version, the number of executors needed to keep up with that queue's load — the number to feed to your Kubernetes HPA, KEDA scaler, Cloud Run scaler, or equivalent. The named queue must exist, must not be partitioned, and must have `worker_concurrency` set. With no policy installed, both `GET` operations return `404`.
 
 ### Schedules
 
