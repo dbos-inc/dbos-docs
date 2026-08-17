@@ -31,6 +31,7 @@ export interface DBOSConfig {
   systemDatabasePollingConcurrency?: number;
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
+  runMigrations?: boolean;
 
   tracingEnabled?: boolean;
   otelAttributeFormat?: 'legacy' | 'semconv';
@@ -76,7 +77,11 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabasePoolSize**: The size of the connection pool used for the [DBOS system database](../../explanations/system-tables). Defaults to 10.
 - **systemDatabasePollingConcurrency**: The maximum number of database-backed polling reads from wait operations (such as [`getResult`](./methods.md#handlegetresult), [`waitAll`](./methods.md#dboswaitall), [`waitFirst`](./methods.md#dboswaitfirst), [`recv`](./methods.md#dbosrecv), and [`getEvent`](./methods.md#dbosgetevent)) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `systemDatabasePoolSize` (minimum 1). Set to a non-positive value to disable the limit.
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
-- **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
+- **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead. The pool remains yours: its configuration is your responsibility (we recommend attaching an `error` handler to it so connection failures are handled), and `DBOS.shutdown` does not close it.
+- **runMigrations**: Whether to create and migrate the system database on launch. Defaults to true.
+Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema).
+Launch then verifies the schema instead of changing it: a system database that is missing, or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
+A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 
 ### Logging and Tracing Settings
 

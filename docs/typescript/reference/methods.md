@@ -306,7 +306,8 @@ Can only be called from within a workflow.
 ```typescript
 DBOS.readStream<T>(
   workflowID: string, 
-  key: string
+  key: string,
+  options?: { offset?: number }
 ): AsyncGenerator<T, void, unknown>
 ```
 
@@ -317,6 +318,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - **workflowID**: The workflow instance ID that owns the stream.
 - **key**: The stream key/name within the workflow.
+- **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream. Must be a non-negative integer.
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.

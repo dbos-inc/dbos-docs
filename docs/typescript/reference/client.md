@@ -42,12 +42,18 @@ class DBOSClient {
         options: ClientEnqueueOptions,
         ...args: Parameters<T>
     ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
+    enqueueInTransaction<T extends (...args: any[]) => Promise<any>>(
+        client: ClientBase,
+        options: ClientEnqueueOptions,
+        ...args: Parameters<T>
+    ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>;
     send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
+    sendInTransaction<T>(client: ClientBase, destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
-    readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>;
+    readStream<T>(workflowID: string, key: string, options?: { offset?: number }): AsyncGenerator<T, void, unknown>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -92,7 +98,7 @@ You construct a `DBOSClient` with the static `create` function.
 
 **Parameters:**
 - **systemDatabaseUrl**: A connection string to your Postgres database. See the [configuration docs](./configuration.md) for more detail.
-- **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations, and `systemDatabasePoolSize` is ignored.
+- **systemDatabasePool**: An optional custom `node-postgres` connection pool to use instead of creating a new one. If provided, the client will use this pool for all database operations, and `systemDatabasePoolSize` is ignored. The pool remains yours: its configuration is your responsibility (we recommend attaching an `error` handler to it so connection failures are handled), and [`destroy`](#destroy) does not close it.
 - **serializer**: An optional custom serializer. If your DBOS application uses [custom serialization](./configuration.md#custom-serialization), you must provide the same serializer to the client to correctly deserialize workflow results and events.
 - **systemDatabaseSchemaName**: An optional Postgres schema name for DBOS system tables. Defaults to `dbos`. If your DBOS application uses a [custom schema name](./configuration.md#database-connection-settings), you must provide the same schema name to the client.
 - **systemDatabasePoolSize**: An optional maximum size for the system database connection pool. Defaults to 10.
@@ -110,7 +116,8 @@ const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYST
 
 #### `destroy`
 
-Asynchronously destroys a `DBOSClient` instance.
+Asynchronously destroys a `DBOSClient` instance, releasing the resources it holds.
+A custom connection pool passed in through [`systemDatabasePool`](#create) is left open for you to close.
 
 ### Workflow Interaction
 
@@ -200,6 +207,55 @@ You can copy or import the function type declaration from your application's
 [generated declaration file (aka.d.ts file)](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html).
 ::: 
 
+#### `enqueueInTransaction`
+
+```typescript
+enqueueInTransaction<T extends (...args: any[]) => Promise<any>>(
+  client: ClientBase,
+  options: ClientEnqueueOptions,
+  ...args: Parameters<T>
+): Promise<WorkflowHandle<Awaited<ReturnType<T>>>>
+```
+
+Similar to [`enqueue`](#enqueue), but performs the enqueue write inside a caller-owned transaction instead of in its own transaction.
+This lets you enqueue a workflow **atomically** with your own database writes: either both are committed or both are rolled back.
+Pass a `node-postgres` [`Client`](https://node-postgres.com/apis/client) or [`PoolClient`](https://node-postgres.com/apis/pool) with an open transaction as `client`.
+The remaining parameters are the same as [`enqueue`](#enqueue).
+
+You own the transaction: `enqueueInTransaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
+You must commit (or roll back) the transaction yourself.
+The returned [`WorkflowHandle`](./methods.md#workflow-handles) is created immediately, but the workflow is not enqueued until you commit, so do not call `getResult` on the handle until after the transaction commits.
+
+:::warning
+`client` must be connected to your DBOS system database.
+:::
+
+**Example syntax:**
+
+```ts
+import { Client } from "pg";
+
+const pg = new Client({ connectionString: process.env.DBOS_SYSTEM_DATABASE_URL });
+await pg.connect();
+
+await pg.query("BEGIN");
+// Perform your own writes on pg here, in the same transaction...
+const handle = await client.enqueueInTransaction<typeof DocumentDetective.indexDocument>(
+    pg,
+    {
+        workflowName: "indexDocument",
+        workflowClassName: "DocumentDetective",
+        queueName: "indexingQueue",
+    },
+    "https://arxiv.org/pdf/2208.13068");
+// Until this commits, the workflow does not exist. If you roll back instead, it never does.
+await pg.query("COMMIT");
+
+const result = await handle.getResult();
+```
+
+For a workflow that takes named arguments (for example, a Python workflow with keyword arguments), use `enqueuePortableInTransaction(client, options, positionalArgs, namedArgs?)`, which is the same operation but serializes arguments in [portable format](../../explanations/portable-workflows.md).
+
 #### `send`
 
 ```typescript
@@ -219,6 +275,43 @@ The optional `ClientSendOptions` parameter allows specifying a [serialization st
 Since DBOS Client is running outside of a DBOS application,
 it is highly recommended that you use the `idempotencyKey` parameter in order to get exactly-once behavior.
 :::
+
+#### `sendInTransaction`
+
+```typescript
+sendInTransaction<T>(
+  client: ClientBase,
+  destinationID: string,
+  message: T,
+  topic?: string,
+  idempotencyKey?: string,
+  options?: ClientSendOptions
+): Promise<void>
+```
+
+Similar to [`send`](#send), but performs the send inside a caller-owned transaction instead of in its own transaction.
+This lets you send a message **atomically** with your own database writes: either both are committed or both are rolled back.
+Pass a `node-postgres` [`Client`](https://node-postgres.com/apis/client) or [`PoolClient`](https://node-postgres.com/apis/pool) with an open transaction as `client`.
+The remaining parameters are the same as [`send`](#send).
+
+You own the transaction: `sendInTransaction` does not begin, commit, or roll back the transaction, and does not retry on database errors.
+You must commit (or roll back) the transaction yourself.
+The message is not visible to the destination workflow until the transaction commits.
+
+:::warning
+`client` must be connected to your DBOS system database.
+:::
+
+**Example syntax:**
+
+```ts
+// pg is a node-postgres Client connected to the system database, as in enqueueInTransaction above.
+await pg.query("BEGIN");
+// Perform your own writes on pg here, in the same transaction...
+await client.sendInTransaction(pg, destinationID, message, "my-topic", "my-idempotency-key");
+// Until this commits, the message is not sent. If you roll back instead, it never is.
+await pg.query("COMMIT");
+```
 
 #### `getEvent`
 
@@ -278,7 +371,11 @@ Similar to [`DBOS.waitAll`](./methods.md#dboswaitall), including the optional `p
 #### `readStream`
 
 ```typescript
-readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+readStream<T>(
+  workflowID: string,
+  key: string,
+  options?: { offset?: number }
+): AsyncGenerator<T, void, unknown>
 ```
 
 Read values from a stream as an async generator from outside the DBOS application.
@@ -289,6 +386,7 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream).
 **Parameters:**
 - **workflowID**: The workflow instance ID that owns the stream.
 - **key**: The stream key/name within the workflow.
+- **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream, so a reader that was disconnected after consuming _N_ values can resume with `offset: N` instead of replaying the whole stream. Must be a non-negative integer.
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
