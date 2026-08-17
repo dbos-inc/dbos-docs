@@ -15,7 +15,7 @@ Ownership determines which application runs what:
 
 - A workflow is dequeued, run, and recovered only by the application that owns it.
 - A queue is polled only by the application that registered it, even if another application enqueues workflows on it.
-- A schedule is fired only by the application that created it, and its workflows run on that application.
+- A schedule is fired only by the application that created it, and its workflows are owned by that application.
 - Application versions are tracked per application, so one application's deployments do not affect which version its peers consider latest.
 
 Queue, schedule, and version names remain globally unique across all applications sharing a system database; registering a name that a different application already owns raises an error.
