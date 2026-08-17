@@ -171,7 +171,7 @@ const handle = await client.enqueue(
         workflowClassName: 'DocumentDetective',
         queueName: 'indexingQueue',
     }, 
-    "https://arxiv.org/pdf/2208.13068");
+    "https://example.com");
 
 // Explicitly specify the result type since we did not provide a 
 // function type declaration to enqueue.
@@ -194,7 +194,7 @@ const handle = await client.enqueue<typeof DocumentDetective.indexDocument>(
         workflowClassName: 'DocumentDetective',
         queueName: 'indexingQueue',
     }, 
-    "https://arxiv.org/pdf/2208.13068");
+    "https://example.com");
 
 // TypeScript can also infer the result type because 
 // we provided the function type declaration to enqueue
@@ -247,7 +247,7 @@ const handle = await client.enqueueInTransaction<typeof DocumentDetective.indexD
         workflowClassName: "DocumentDetective",
         queueName: "indexingQueue",
     },
-    "https://arxiv.org/pdf/2208.13068");
+    "https://example.com");
 // Until this commits, the workflow does not exist. If you roll back instead, it never does.
 await pg.query("COMMIT");
 
