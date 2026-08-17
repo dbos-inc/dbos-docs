@@ -393,6 +393,7 @@ When a workflow with the same `deduplicationID` is already enqueued or executing
 The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
 
 This requires both a `queueName` and an `enqueueOptions.deduplicationID`.
+Once the original workflow completes, it releases its deduplication ID, so the next caller starts a new workflow.
 
 Example syntax:
 

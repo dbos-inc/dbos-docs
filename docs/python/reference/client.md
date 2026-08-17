@@ -87,6 +87,7 @@ class EnqueueOptions(TypedDict):
     app_version: NotRequired[str]
     workflow_timeout: NotRequired[float]
     deduplication_id: NotRequired[str]
+    duplication_policy: NotRequired[DuplicationPolicy]
     priority: NotRequired[int]
     delay_seconds: NotRequired[float]
     max_recovery_attempts: NotRequired[int]
@@ -125,6 +126,9 @@ Please see [Workflow IDs and Idempotency](../tutorials/workflow-tutorial#workflo
 If left undefined, it will be updated to the current version when the workflow is first dequeued.
 - `workflow_timeout`: Set a timeout for the enqueued workflow. When the timeout expires, the workflow **and all its children** are cancelled. The timeout does not begin until the workflow is dequeued and starts execution.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+- `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
+  - `"reject"`: raise `DBOSQueueDeduplicatedError`.
+  - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
 - `max_recovery_attempts`: The maximum number of times the workflow will be retried on recovery before its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED`. Defaults to 100.

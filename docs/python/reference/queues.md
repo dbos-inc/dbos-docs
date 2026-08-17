@@ -216,6 +216,7 @@ queue.set_polling_interval_sec_async(value: float) -> Coroutine[Any, Any, None]
 SetEnqueueOptions(
     *,
     deduplication_id: Optional[str] = None,
+    duplication_policy: Optional[DuplicationPolicy] = None,
     priority: Optional[int] = None,
     delay_seconds: Optional[float] = None,
     app_version: Optional[str] = None,
@@ -229,6 +230,9 @@ These options are **not propagated** to child workflows.
 **Parameters:**
 
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
+- `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
+  - `"reject"`: raise `DBOSQueueDeduplicatedError`.
+  - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires a queue and a `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Defaults to `None`. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. Defaults to `None` (no delay).
 - `app_version`: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
@@ -248,6 +252,22 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+```
+
+**Singleton Workflow Example**
+
+```python
+from dbos import DBOS, SetEnqueueOptions
+
+DBOS.register_queue("example_queue")
+
+# Only one workflow with deduplication ID "singleton" can be active on this queue
+# at a time. Subsequent callers attach to it and receive its result.
+with SetEnqueueOptions(
+    deduplication_id="singleton", duplication_policy="return-existing"
+):
+    handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
+result = handle.get_result()
 ```
 
 **Priority Example**

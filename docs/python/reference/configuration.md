@@ -35,6 +35,7 @@ class DBOSConfig(TypedDict):
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
+    run_migrations: Optional[bool]
     notification_listener_polling_interval_sec: Optional[float]
 
     conductor_key: Optional[str]
@@ -109,6 +110,10 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be `False` in SQLite.
+- **run_migrations**: Whether to create and migrate the system database on launch. Defaults to `True`.
+Set to `False` for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`dbos migrate`](./cli.md#dbos-migrate).
+Launch then verifies the schema instead of changing it: a system database that is missing (including a SQLite file that does not exist), or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
+A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 - **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`. Only used when `use_listen_notify` is `False`.
 
 ### Conductor Settings
