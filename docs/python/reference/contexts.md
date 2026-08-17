@@ -1191,6 +1191,7 @@ DBOS.fork_workflow(
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -1204,6 +1205,8 @@ It is possible to specify the application version on which the forked workflow w
 If `queue_name` is provided, the forked workflow is enqueued on the specified queue instead of starting immediately. If the queue is partitioned, you can also specify `queue_partition_key`.
 
 If `replacement_children` is provided, it maps original child workflow IDs to replacement child workflow IDs. When the forked workflow encounters a step that started a child workflow matching an original ID, it substitutes the replacement ID instead. This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked.
+
+If `timeout_seconds` is provided, it sets a [timeout](#setworkflowtimeout) for the forked workflow, in seconds.
 
 ### fork_workflow_async
 

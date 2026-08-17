@@ -1119,6 +1119,7 @@ client.fork_workflow(
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> WorkflowHandle[R]
 ```
 
@@ -1135,6 +1136,7 @@ client.fork_workflow_async(
     queue_name: Optional[str] = None,
     queue_partition_key: Optional[str] = None,
     replacement_children: Optional[dict[str, str]] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> WorkflowHandleAsync[R]
 ```
 
