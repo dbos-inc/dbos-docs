@@ -17,10 +17,12 @@ All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-a
 
 ![Widget store UI](./assets/widget_store_ui.png)
 
-## Import and Initialize the App
+## Import and Set Up the App
 
-Let's begin with imports and initializing DBOS and FastAPI.
-We'll also define some constants.
+Let's begin with imports and creating a FastAPI app.
+We also declare a [SQLAlchemy datasource](../tutorials/transaction-tutorial.md), which the app uses to run its database operations.
+We configure DBOS and the datasource at startup, so here we only declare `ds`.
+Finally, we define some constants.
 
 ```python
 import os
@@ -32,18 +34,9 @@ from fastapi.responses import HTMLResponse
 
 from .schema import OrderStatus, orders, products
 
-database_url = os.environ.get("DBOS_DATABASE_URL")
-if database_url is None:
-    raise Exception("DBOS_DATABASE_URL not set")
-
 app = FastAPI()
-config: DBOSConfig = {
-    "name": "widget-store",
-    "application_version": "0.1.0",
-    "system_database_url": database_url,
-}
-DBOS(fastapi=app, config=config)
-ds = SQLAlchemyDatasource.create(database_url)
+
+ds: SQLAlchemyDatasource
 
 WIDGET_ID = 1
 PAYMENT_STATUS = "payment_status"
@@ -74,13 +67,20 @@ Within seconds, your app will recover to exactly the state it was in before the 
 @DBOS.workflow()
 def checkout_workflow():
     # Create a new order
-    order_id = create_order()
+    order_id = ds.run_tx_step({"name": "create_order"}, create_order)
 
     # Attempt to reserve inventory, cancelling the order if no inventory remains.
-    inventory_reserved = reserve_inventory()
+    inventory_reserved = ds.run_tx_step(
+        {"name": "reserve_inventory"}, reserve_inventory
+    )
     if not inventory_reserved:
         DBOS.logger.error(f"Failed to reserve inventory for order {order_id}")
-        update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.CANCELLED.value,
+        )
         DBOS.set_event(PAYMENT_ID, None)
         return
 
@@ -95,12 +95,22 @@ def checkout_workflow():
     # Otherwise, return reserved inventory and cancel the order.
     if payment_status == "paid":
         DBOS.logger.info(f"Payment successful for order {order_id}")
-        update_order_status(order_id=order_id, status=OrderStatus.PAID.value)
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.PAID.value,
+        )
         DBOS.start_workflow(dispatch_order_workflow, order_id)
     else:
-        DBOS.logger.warn(f"Payment failed for order {order_id}")
-        undo_reserve_inventory()
-        update_order_status(order_id=order_id, status=OrderStatus.CANCELLED.value)
+        DBOS.logger.warning(f"Payment failed for order {order_id}")
+        ds.run_tx_step({"name": "undo_reserve_inventory"}, undo_reserve_inventory)
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.CANCELLED.value,
+        )
 
     # Finally, send the order ID to the payment endpoint so it
     # can redirect the customer to the order status page.
@@ -149,14 +159,14 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 ## Database Operations
 
 Now, let's implement the checkout workflow's steps.
-Each step performs a database operation, like updating inventory or order status.
-Because these steps access the database, they are implemented as [transactions](../tutorials/transaction-tutorial.md).
+Each step performs a simple CRUD operation, like updating inventory or order status.
+Each is an ordinary Python function that the workflow runs through [`ds.run_tx_step`](../tutorials/transaction-tutorial.md#inline-with-run_tx_step--run_tx_step_async), so it executes as a durable, exactly-once [database transaction](../tutorials/transaction-tutorial.md).
+We also expose some of them as HTTP endpoints with FastAPI so the frontend can access them.
 
 <details>
 <summary><strong>Database Operations</strong></summary>
 
 ```python
-@ds.transaction()
 def reserve_inventory() -> bool:
     rows_affected = ds.sql_session().execute(
         products.update()
@@ -167,7 +177,6 @@ def reserve_inventory() -> bool:
     return rows_affected > 0
 
 
-@ds.transaction()
 def undo_reserve_inventory() -> None:
     ds.sql_session().execute(
         products.update()
@@ -176,7 +185,6 @@ def undo_reserve_inventory() -> None:
     )
 
 
-@ds.transaction()
 def create_order() -> int:
     result = ds.sql_session().execute(
         orders.insert().values(order_status=OrderStatus.PENDING.value)
@@ -184,8 +192,6 @@ def create_order() -> int:
     return result.inserted_primary_key[0]
 
 
-@app.get("/order/{order_id}")
-@ds.transaction()
 def get_order(order_id: int):
     return (
         ds.sql_session().execute(orders.select().where(orders.c.order_id == order_id))
@@ -194,38 +200,54 @@ def get_order(order_id: int):
     )
 
 
-@ds.transaction()
+@app.get("/order/{order_id}")
+def order_endpoint(order_id: int):
+    return ds.run_tx_step({"name": "get_order"}, get_order, order_id)
+
+
 def update_order_status(order_id: int, status: int) -> None:
     ds.sql_session().execute(
         orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
 
 
-@app.get("/product")
-@ds.transaction()
 def get_product():
     return ds.sql_session().execute(products.select()).mappings().first()
 
 
-@app.get("/orders")
-@ds.transaction()
+@app.get("/product")
+def product_endpoint():
+    return ds.run_tx_step({"name": "get_product"}, get_product)
+
+
 def get_orders():
     rows = ds.sql_session().execute(orders.select())
     return [dict(row) for row in rows.mappings()]
 
 
-@app.post("/restock")
-@ds.transaction()
+@app.get("/orders")
+def orders_endpoint():
+    return ds.run_tx_step({"name": "get_orders"}, get_orders)
+
+
 def restock():
     ds.sql_session().execute(products.update().values(inventory=100))
+
+
+@app.post("/restock")
+def restock_endpoint():
+    return ds.run_tx_step({"name": "restock"}, restock)
+
 
 @DBOS.workflow()
 def dispatch_order_workflow(order_id):
     for _ in range(10):
         DBOS.sleep(1)
-        update_order_progress(order_id)
+        ds.run_tx_step(
+            {"name": "update_order_progress"}, update_order_progress, order_id
+        )
 
-@ds.transaction()
+
 def update_order_progress(order_id):
     # Update the progress of paid orders.
     progress_remaining = ds.sql_session().execute(
@@ -266,10 +288,21 @@ def crash_application():
     os._exit(1)
 ```
 
-Finally, launch DBOS and the FastAPI server.
+Finally, configure and launch DBOS, then launch the FastAPI server.
+This is where we create the datasource and initialize DBOS with the app's database connection.
 
 ```python
 if __name__ == "__main__":
+    database_url = os.environ.get("DBOS_DATABASE_URL")
+    if database_url is None:
+        raise Exception("DBOS_DATABASE_URL not set")
+    ds = SQLAlchemyDatasource.create(database_url)
+    config: DBOSConfig = {
+        "name": "widget-store",
+        "application_version": "0.1.0",
+        "system_database_url": database_url,
+    }
+    DBOS(config=config)
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
