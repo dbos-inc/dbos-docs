@@ -184,7 +184,11 @@ The client accepts workflow names as strings instead of function references:
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+const client = await DBOSClient.create({
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+    // The name of the application that owns and runs the schedule
+    applicationName: "my-app",
+});
 
 await client.createSchedule({
     scheduleName: "my-task-schedule",

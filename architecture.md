@@ -39,11 +39,12 @@ Here's a diagram of what that might look like:
 
 You may also have multiple applications or services that need durable workflows.
 For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
-You can separately add DBOS to each of these applications. 
-Each application should have a separate system database and a unique Conductor application name.
-This doesn't require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases, with each database serving a separate DBOS application.
+You can separately add DBOS to each of these applications.
+Each application must have a unique name.
+You can give each application its own system database (this doesn't require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases), or multiple applications can [share a single system database](./explanations/sharing-a-system-database.md).
+Applications sharing a system database are isolated from one another, each running only its own workflows, queues, and schedules, but can interoperate: for example, one application can enqueue another's workflows and wait for their results.
 
-Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client. For example a Typescript application can enqueue workflows onto a separate Python application, monitor their progress and gather results.
+Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client, or by sharing a system database between applications in different languages. For example, a TypeScript application can enqueue workflows onto a separate Python application, monitor their progress, and gather results.
 Cross-language operations are documented [here](./explanations/portable-workflows.md).
 
 ## How DBOS Scales

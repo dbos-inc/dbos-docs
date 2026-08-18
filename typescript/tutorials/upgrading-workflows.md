@@ -133,7 +133,10 @@ Or using [`DBOSClient`](../reference/client.md#version-management):
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+const client = await DBOSClient.create({
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  applicationName: "my-app",
+});
 
 const latestVersion = await client.getLatestApplicationVersion();
 const handle = await client.enqueue({
@@ -143,7 +146,7 @@ const handle = await client.enqueue({
 }, arg1, arg2);
 ```
 
-Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to your latest application version.
+Note that [scheduled workflows](./scheduled-workflows.md) are automatically enqueued to their owning application's latest version.
 
 Then, once all workflows of the old version are complete, you can retire the old code version.
 You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to check if any workflows are still active for a given version:

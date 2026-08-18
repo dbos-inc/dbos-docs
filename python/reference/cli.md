@@ -23,6 +23,7 @@ List workflows run by your application in JSON format ordered by recency (most r
 * `-S, --status TEXT`: Retrieve workflows with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
 * `-n, --name TEXT`: Retrieve workflows with this name
+* `-a, --application-name TEXT`: Retrieve workflows owned by this application (workflows owned by no application are always included)
 * `-d, --sort-desc`: Sort the results in descending order (older first)
 * `-o, --offset INTEGER`: Offset for pagination
 
@@ -109,6 +110,7 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 * `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
 * `-n, --name TEXT`: Retrieve functions on this queue
+* `-a, --application-name TEXT`: Retrieve functions owned by this application (functions owned by no application are always included)
 * `-d, --sort-desc`: Sort the results in descending order (older first)
 * `-o, --offset INTEGER`: Offset for pagination
 
@@ -126,6 +128,7 @@ In that case, this command can be run with a privileged user to create all DBOS 
 
 After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
 Use the `-r` flag to grant a role access to that schema.
+Such an application should also be configured with [`run_migrations=False`](./configuration.md#database-connection-settings), so it never attempts to alter the schema and instead verifies at launch that this command has brought the system database up to date.
 
 **Arguments:**
 
@@ -174,3 +177,19 @@ No application data is affected by this.
 **Arguments:**
 * `--yes, -y`: Skip confirmation prompt.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
+
+### dbos rename-application
+
+After renaming an application, transfer ownership of everything in the system database (workflows, steps, queues, schedules, and application versions) from its old name to its new name.
+Equivalent to [`DBOSClient.rename_application`](./client.md#rename_application); see there for details.
+Prints the number of rows transferred, by table.
+**Stop the application being renamed before running this.**
+
+**Arguments:**
+- `-s, --sys-db-url URL`: Your DBOS system database URL.
+- `-f, --from TEXT`: The application's previous name. Omit to only adopt rows owned by no application (requires `--adopt-unclaimed-rows`).
+- `-t, --to TEXT`: The application that ends up owning the rows. Required.
+- `--adopt-unclaimed-rows`: Also transfer rows owned by no application.
+- `--batch-size INTEGER`: The number of completed workflows and steps transferred per transaction [default: 10000]
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
+- `-y, --yes`: Skip confirmation prompt.

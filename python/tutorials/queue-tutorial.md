@@ -16,6 +16,7 @@ DBOS.register_queue("example_queue")
 ```
 
 Queues are persisted to the system database, so they are visible to every DBOS process and [client](../reference/client.md) connected to that database.
+If multiple applications [share a system database](../../explanations/sharing-a-system-database.md), each queue is owned by the application that registers it, and only that application dequeues workflows from it.
 Register your queues after [`DBOS.launch()`](../reference/dbos-class.md#launch).
 
 You can then enqueue any DBOS workflow or step.
@@ -96,7 +97,11 @@ Since the DBOS Client is designed to be used from outside your DBOS application,
 ```python
 from dbos import DBOSClient, EnqueueOptions
 
-client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+client = DBOSClient(
+    system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"],
+    # The name of the application that runs the data pipeline
+    application_name="data-processing-service",
+)
 
 # Register the queue from the client.
 client.register_queue("pipeline_queue")
@@ -322,6 +327,31 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+```
+
+## Singleton Workflows
+
+If you want only one instance of a workflow to be active at a time, you can set `duplication_policy="return-existing"` on [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
+When a workflow with the same `deduplication_id` is already enqueued or executing on the queue, this returns a handle to that existing workflow instead of raising `DBOSQueueDeduplicatedError`.
+The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
+
+This requires both a queue and a `deduplication_id`.
+Once the original workflow completes, it releases its deduplication ID, so the next caller starts a new workflow.
+
+Example syntax:
+
+```python
+from dbos import DBOS, SetEnqueueOptions
+
+DBOS.register_queue("example_queue")
+
+# Only one workflow with deduplication ID "singleton" can be active on this queue
+# at a time. Subsequent callers attach to it and receive its result.
+with SetEnqueueOptions(
+    deduplication_id="singleton", duplication_policy="return-existing"
+):
+    handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
+result = handle.get_result()
 ```
 
 ## Priority

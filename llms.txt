@@ -13,6 +13,7 @@
 - [DBOSify: Drop-in Temporal Replacement](https://docs.dbos.dev/explanations/dbosify.md): You can run your existing Temporal code on DBOS with DBOSify.
 - [Migrating From Temporal](https://docs.dbos.dev/explanations/migrating-from-temporal.md): This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
 - [Cross-Language Interaction](https://docs.dbos.dev/explanations/portable-workflows.md): DBOS applications and clients in different languages can interoperate using portable JSON serialization
+- [Sharing a System Database](https://docs.dbos.dev/explanations/sharing-a-system-database.md): Multiple DBOS applications, potentially in different languages, can share a single system database.
 - [DBOS System Database](https://docs.dbos.dev/explanations/system-tables.md): DBOS system database reference
 - [Troubleshooting & FAQ](https://docs.dbos.dev/faq.md): Where do I find the DBOS tables?
 - [Fault-Tolerant Checkout](https://docs.dbos.dev/golang/examples/widget-store.md): This example is also available in TypeScript, Java, and Python.
@@ -83,6 +84,7 @@
 - [Audit Logs](https://docs.dbos.dev/production/audit-logs.md): If you are using Conductor, you can retrieve an audit log of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
 - [Production Checklist](https://docs.dbos.dev/production/checklist.md): This page describes best practices you should follow when operating a DBOS application in production.
 - [DBOS Conductor](https://docs.dbos.dev/production/conductor.md): When operating DBOS durable workflows in production, we strongly recommend connecting your application to Conductor.
+- [Conductor API](https://docs.dbos.dev/production/conductor-api.md): Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Conductor and tune their settings, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
 - [Account Management](https://docs.dbos.dev/production/dbos-cloud/account-management.md): Learn how to manage DBOS Cloud users
 - [Application Management](https://docs.dbos.dev/production/dbos-cloud/application-management.md): Deploying Applications
 - [Bringing Your Own Database](https://docs.dbos.dev/production/dbos-cloud/byod-management.md): In this guide, you'll learn how to bring your own Postgres database instance to DBOS Cloud and deploy your applications to it.
@@ -95,7 +97,8 @@
 - [Workflow Retention Policies](https://docs.dbos.dev/production/dbos-cloud/retention.md): You can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
 - [Secrets and Environment Variables](https://docs.dbos.dev/production/dbos-cloud/secrets.md): We recommend using secrets to securely manage your application's secrets and environment variables in DBOS Cloud.
 - [Workflow Management](https://docs.dbos.dev/production/dbos-cloud/workflow-management.md): Viewing Workflows
-- [Self-Hosting Conductor](https://docs.dbos.dev/production/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license.
+- [dbosctl CLI Reference](https://docs.dbos.dev/production/dbosctl.md): dbosctl is a command-line client for the Conductor API. It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a self-hosted Conductor, with the target selected by a named profile.
+- [Self-Hosting Conductor](https://docs.dbos.dev/production/hosting-conductor.md): Self-hosted Conductor is released under a proprietary license and requires a license key.
 - [Self-Hosting Conductor With Kubernetes](https://docs.dbos.dev/production/hosting-conductor-with-kubernetes.md): Self-hosted Conductor is released under a proprietary license.
 - [Deploying With Google Cloud Run](https://docs.dbos.dev/production/hosting-with-cloud-run.md): This guide covers deploying a DBOS application to Google Cloud Run with a Cloud SQL for PostgreSQL database. It includes best practices for security, availability, and scalability. This guide assumes DBOS Conductor is hosted separately.
 - [Deploying With Kubernetes](https://docs.dbos.dev/production/hosting-with-kubernetes.md): This guide covers deploying a DBOS application on Kubernetes.

@@ -140,6 +140,7 @@ https://cloud.dbos.dev/v1/metrics?applications=my-app&applications=my-other-app
 ## Available Metrics
 
 Every metric this endpoint emits is an OpenMetrics **gauge**. All metric names are prefixed with `dbos_conductor_v1_`, and every series carries an `application` label.
+If multiple applications [share a system database](../explanations/sharing-a-system-database.md), each application's metrics count only the workflows and steps it owns.
 
 ### Aggregation window
 

@@ -14,6 +14,13 @@ A PostgreSQL system database also includes PL/pgSQL functions that you can call 
 PL/pgSQL functions can only be called from code running in the same database.
 :::
 
+:::info
+Releases of DBOS Transact periodically update the system database functions, typically to add new parameters.
+All changes are backwards-compatible.
+Updates are applied by atomically dropping and recreating the functions.
+ Therefore, it is not recommended to create database objects whose dependency on these functions [is tracked by Postgres](https://www.postgresql.org/docs/current/ddl-depend.html), such as views or SQL-standard-body (`BEGIN ATOMIC`) functions.
+:::
+
 ### dbos.enqueue_workflow
 
 ```sql
@@ -33,7 +40,8 @@ CREATE FUNCTION dbos.enqueue_workflow(
     queue_partition_key TEXT DEFAULT NULL,
     authenticated_user TEXT DEFAULT NULL,
     authenticated_roles TEXT DEFAULT NULL,
-    delay_until_epoch_ms BIGINT DEFAULT NULL
+    delay_until_epoch_ms BIGINT DEFAULT NULL,
+    application_name TEXT DEFAULT NULL
 ) RETURNS TEXT
 ```
 
@@ -56,6 +64,7 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
 - `authenticated_roles`: The authenticated roles to associate with the enqueued workflow, as a JSON-encoded array of strings (e.g. `'["admin", "reader"]'`). Defaults to null.
 - `delay_until_epoch_ms`: A Unix epoch timestamp (in milliseconds) before which the workflow should not be dequeued. The workflow is enqueued with `DELAYED` status until this time arrives, after which it becomes `ENQUEUED` and eligible to run. Must be `>= 0`. Defaults to null (the workflow is enqueued immediately).
+- `application_name`: The application that owns and runs the enqueued workflow.
 
 ### dbos.send_message
 
@@ -122,6 +131,7 @@ Each row represents a different workflow execution.
 - **schedule_name**: If this workflow was started by a [scheduled workflow](#dbosworkflow_schedules), the name of its schedule.
 - **debounce_deadline_epoch_ms**: If this workflow is debounced with a debounce timeout, the epoch timestamp past which its execution can no longer be delayed.
 - **is_debounced**: Whether this workflow was created by a debouncer.
+- **application_name**: The application that owns this workflow.
 
 ### dbos.operation_outputs
 This table stores the outputs of workflow steps.
@@ -138,6 +148,7 @@ Executions of DBOS methods like `DBOS.sleep` and `DBOS.send` are also recorded h
 - **started_at_epoch_ms**: The epoch timestamp of when this step started execution.
 - **completed_at_epoch_ms**: The epoch timestamp of when this step completed.
 - **serialization**: The name of the serialization format used for this step's output and error. Null if the workflow's default serializer was used.
+- **application_name**: The application that ran this step.
 
 ### dbos.notifications
 This table stores workflow messages/notifications.
@@ -195,6 +206,7 @@ The latest version is determined by the highest timestamp.
 - **version_name**: The unique name of this version.
 - **version_timestamp**: The epoch timestamp (in milliseconds) of this version. Used to determine the latest version.
 - **created_at**: The epoch timestamp (in milliseconds) when this version was first registered.
+- **application_name**: The application that registered this version. Version names remain unique across all applications sharing a system database.
 
 ### dbos.workflow_schedules
 This table stores scheduled workflow definitions.
@@ -212,6 +224,7 @@ Each entry represents a different scheduled workflow.
 - **automatic_backfill**: Whether the schedule should automatically backfill missed executions on startup.
 - **cron_timezone**: The IANA timezone name in which the cron expression is evaluated.
 - **queue_name**: The name of the durable queue on which scheduled workflow invocations are enqueued, if any.
+- **application_name**: The application that owns this schedule and runs its workflows.
 
 ### dbos.queues
 This table stores [durable queue](../architecture.md#durable-queues) definitions.
@@ -229,6 +242,7 @@ Each row represents a different queue.
 - **polling_interval_sec**: The interval at which workers poll the database for new workflows on this queue.
 - **created_at**: The epoch timestamp (in milliseconds) when this queue was first registered.
 - **updated_at**: The epoch timestamp (in milliseconds) when this queue's configuration was last updated.
+- **application_name**: The application that owns this queue and dequeues workflows from it.
 
 ### dbos.dbos_migrations
 This table tracks which DBOS system database schema migrations have been applied.

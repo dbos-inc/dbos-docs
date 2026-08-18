@@ -133,6 +133,10 @@ The [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, 
 
 The [architecture page](./architecture.md) describes how to architect a distributed DBOS application and how DBOS scales.
 
+### When should I use the DBOS Conductor?
+
+Conductor is required for correct workflow recovery in applications that use more than one process. Additionally, Conductor offers data retention, observability, cluster-wide metrics, alerts, and organization management with RBAC. These features are designed to help engineering teams maintain long-term app health and reliability. We recommend using Conductor whenever you are running in a production environment.
+
 ### Why is my application not connecting to Conductor?
 
 The most common reason an application fails to connect to Conductor is that the name the application is registered with in its DBOS configuration does not match the name it was registered with in Conductor.

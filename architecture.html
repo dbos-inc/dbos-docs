@@ -12,9 +12,10 @@
 <link rel="preconnect" href="https://d2j9bas80r5yfz.cloudfront.net">
 <script>!function(t,e){var o,r,s,a;e.__SV||(window.posthog=e,e._i=[],e.init=function(n,i,p){function c(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(s=t.createElement("script")).type="text/javascript",s.async=!0,s.src=i.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(a=t.getElementsByTagName("script")[0]).parentNode.insertBefore(s,a);var g=e;for(void 0!==p?g=e[p]=[]:p="posthog",g.people=g.people||[],g.toString=function(t){var e="posthog";return"posthog"!==p&&(e+="."+p),t||(e+=" (stub)"),e},g.people.toString=function(){return g.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),r=0;r<o.length;r++)c(g,o[r]);e._i.push([n,i,p])},e.__SV=1)}(document,window.posthog||[]),posthog.init("phc_vKGgPmFevFB3QVyqZdIZeNqcWAPqk3i3mDhwGqwk6nP",{api_host:"https://d2j9bas80r5yfz.cloudfront.net",id:"default"})</script>
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
+<script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.9f962a1f.js" defer="defer"></script>
-<script src="/assets/js/main.b8f8d1e1.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.b2904b43.js" defer="defer"></script>
+<script src="/assets/js/main.63d3ee2a.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -46,9 +47,10 @@ Here&#x27;s a diagram of what that might look like:</p>
 <p>You may also have multiple applications or services that need durable workflows.
 For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
 You can separately add DBOS to each of these applications.
-Each application should have a separate system database and a unique Conductor application name.
-This doesn&#x27;t require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases, with each database serving a separate DBOS application.</p>
-<p>Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client. For example a Typescript application can enqueue workflows onto a separate Python application, monitor their progress and gather results.
+Each application must have a unique name.
+You can give each application its own system database (this doesn&#x27;t require multiple Postgres servers: a single physical Postgres server can host multiple logical system databases), or multiple applications can <a class="" href="/explanations/sharing-a-system-database">share a single system database</a>.
+Applications sharing a system database are isolated from one another, each running only its own workflows, queues, and schedules, but can interoperate: for example, one application can enqueue another&#x27;s workflows and wait for their results.</p>
+<p>Within an application, all servers must use the same programming language. However, cross-language interaction is possible via the DBOS Client, or by sharing a system database between applications in different languages. For example, a TypeScript application can enqueue workflows onto a separate Python application, monitor their progress, and gather results.
 Cross-language operations are documented <a class="" href="/explanations/portable-workflows">here</a>.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-dbos-scales">How DBOS Scales<a href="#how-dbos-scales" class="hash-link" aria-label="Direct link to How DBOS Scales" title="Direct link to How DBOS Scales" translate="no">​</a></h2>
 <p>You can easily scale a DBOS application by adding more servers to it, so the scalability of DBOS is fundamentally determined by the database it is connected to.
