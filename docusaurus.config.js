@@ -99,18 +99,28 @@ const config = {
     locales: ['en'],
   },
 
-  // docusaurus-plugin-matomo's route tracker pushes to the bare global _paq on
-  // every navigation, but the snippet that defines it is a separate inline
-  // script. Content blockers recognize and strip that snippet, leaving the
-  // tracker to throw "_paq is not defined" into React, which the error boundary
-  // renders as "This page crashed". Seed the queue here so a blocked tracker
-  // costs us analytics instead of the page. Only production builds load either
-  // half, so this is inert in `npm start`.
+  // Both analytics plugins split themselves the same way: an inline head
+  // snippet defines the global, and a separate client module dereferences it on
+  // every navigation without a guard. Content blockers recognize and strip the
+  // snippets, so the trackers throw into React and the error boundary renders
+  // "This page crashed" -- "_paq is not defined" for Matomo, "Cannot read
+  // properties of undefined (reading 'capture')" for PostHog. Seed both globals
+  // so a blocked tracker costs us analytics instead of the page.
+  //
+  // The shapes here are what each vendor snippet expects to find, so seeding is
+  // invisible when the snippet does run: it augments the same array in place.
+  // PostHog additionally needs a callable `capture`, which its snippet then
+  // replaces with the real queueing stub. Only production builds load either
+  // plugin, so all of this is inert in `npm start`.
   headTags: [
     {
       tagName: 'script',
       attributes: {},
-      innerHTML: 'window._paq = window._paq || [];',
+      innerHTML: [
+        'window._paq = window._paq || [];',
+        'window.posthog = window.posthog || [];',
+        'if (!window.posthog.capture) { window.posthog.capture = function () {}; }',
+      ].join('\n'),
     },
   ],
 

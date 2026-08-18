@@ -4,8 +4,7 @@ title: Self-Hosting Conductor
 ---
 
 :::info
-Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-Self-hosting Conductor for commercial or production use requires a paid [license key](#licensing).
+Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license) and requires a [license key](#licensing).
 :::
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
@@ -13,7 +12,7 @@ There are many ways to self-host Conductor and the DBOS Console on your own infr
 ## Getting Started with Docker Compose
 
 For development and trial purposes, you can self-host Conductor and the DBOS Console on your development machine using Docker Compose.
-To do this, you need a development license key, which can be freely obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key).
+To do this, you need a development license key, which can be obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key).
 See [licensing](#licensing) for more information.
 You should export this license key as an environment variable:
 
@@ -200,12 +199,9 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
 
 ## Licensing
 
-Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-You can use the Conductor container distribution with a free license key for development, trial, or hobby projects (a free license key can be obtained from the DBOS Console [here](https://console.dbos.dev/settings/license-key)), but self-hosting Conductor in production or for commercial use requires a paid license.
-Using a free license key, usage is limited&mdash;you will not be able to connect more than one executor to a Conductor application.
-To obtain a paid license key, please [contact sales](https://www.dbos.dev/contact).
+For development, testing, or evaluation purposes, you can obtain a trial Conductor key from the [DBOS Console](https://console.dbos.dev/settings/license-key). A license agreement is required for production use. To obtain a production license, please [contact sales](https://www.dbos.dev/contact).
 
-Once you have a paid license key, you can provide it to Conductor by setting the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable in the Conductor container to your license key.
+You can provide your key to Conductor using the `DBOS_CONDUCTOR_LICENSE_KEY` environment variable.
 
 ## Hosting Conductor in Production
 
