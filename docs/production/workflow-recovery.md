@@ -18,7 +18,7 @@ If hosting an application on a single server without Conductor, each time you re
 When self-hosting in a distributed setting without Conductor, it is important to manage workflow recovery so that when an executor crashes, restarts, or is shut down, its workflows are recovered.
 You should assign each executor running a DBOS application an executor ID through DBOS configuration.
 Each workflow is tagged with the ID of the executor that started it.
-When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID.
+When an application with an executor ID restarts, it only recovers pending workflows assigned to that executor ID and owned by that application, so applications [sharing a system database](../explanations/sharing-a-system-database.md) never recover each other's workflows.
 
 ### Recovery With Conductor
 

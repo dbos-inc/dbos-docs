@@ -183,7 +183,11 @@ The client accepts workflow names as strings instead of function references:
 ```python
 from dbos import DBOSClient
 
-client = DBOSClient(system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"])
+client = DBOSClient(
+    system_database_url=os.environ["DBOS_SYSTEM_DATABASE_URL"],
+    # The name of the application that owns and runs the schedule
+    application_name="my-app",
+)
 
 client.create_schedule(
     schedule_name="my-task-schedule",

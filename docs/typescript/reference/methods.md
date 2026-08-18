@@ -30,6 +30,7 @@ export interface EnqueueOptions {
   delaySeconds?: number;
   queuePartitionKey?: string;
   applicationVersion?: string;
+  applicationName?: string;
 }
 ```
 
@@ -78,6 +79,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partitionQueue: true`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
+  - **applicationName**: The application that owns and runs the enqueued workflow. Defaults to this application. Set to enqueue the workflow on behalf of another application sharing the system database. To enqueue another application's workflow without a reference to its function, use [`DBOS.enqueueWorkflowWithOptions`](./queues.md#dbosenqueueworkflowwithoptions) instead.
 - **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
 
 ### DBOS.waitFirst
@@ -304,7 +306,8 @@ Can only be called from within a workflow.
 ```typescript
 DBOS.readStream<T>(
   workflowID: string, 
-  key: string
+  key: string,
+  options?: { offset?: number }
 ): AsyncGenerator<T, void, unknown>
 ```
 
@@ -315,6 +318,7 @@ yielding each value in order until the stream is closed or the workflow terminat
 **Parameters:**
 - **workflowID**: The workflow instance ID that owns the stream.
 - **key**: The stream key/name within the workflow.
+- **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream. Must be a non-negative integer.
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
@@ -387,6 +391,7 @@ interface GetWorkflowsInput {
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
+  applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -676,6 +681,9 @@ export interface WorkflowStatus {
 
   // If this workflow was enqueued by a scheduled workflow, that schedule's name.
   readonly scheduleName?: string;
+
+  // The application that owns this workflow, or undefined if it is owned by no application.
+  readonly applicationName?: string;
 }
 ```
 
@@ -715,6 +723,9 @@ If called from within a workflow, the operation is recorded as a step.
 - **options.automaticBackfill**: If `true`, on startup the scheduler will automatically backfill missed executions since the last time the schedule fired. Defaults to `false`.
 - **options.cronTimezone**: [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) in which to evaluate the cron expression. Defaults to the system's local timezone.
 - **options.queueName**: Optional name of a declared queue to enqueue scheduled workflows to. If not provided, uses an internal queue. This is useful for managing the concurrency of scheduled workflows.
+
+Schedules are owned by the application that creates them: only that application's processes fire the schedule, and its workflows run on that application.
+Schedule names are globally unique across all applications sharing a system database, so creating a schedule whose name is owned by a different application throws an error.
 
 **Example:**
 
@@ -776,6 +787,7 @@ DBOS.listSchedules(filters?: {
   status?: string | string[];
   workflowName?: string | string[];
   scheduleNamePrefix?: string | string[];
+  applicationName?: string | string[];
 }): Promise<WorkflowSchedule[]>
 ```
 
@@ -785,6 +797,7 @@ Return all registered workflow schedules, optionally filtered. Returns a list of
 - **status**: Filter by status (e.g. `"ACTIVE"`) or a list of statuses.
 - **workflowName**: Filter by workflow name or a list of names.
 - **scheduleNamePrefix**: Filter by schedule name prefix or a list of prefixes.
+- **applicationName**: List only schedules owned by this application (or one of these applications). Schedules owned by no application are always included. If unset, list only this application's schedules.
 
 ### DBOS.getSchedule
 
@@ -900,6 +913,8 @@ interface WorkflowSchedule {
     cronTimezone: string | null;
     // The name of the queue scheduled workflows are enqueued to, or null for the internal queue
     queueName: string | null;
+    // The application that owns this schedule, or undefined if it is owned by no application
+    applicationName?: string;
 }
 ```
 
@@ -923,6 +938,7 @@ interface DebouncerConfig<Args extends unknown[], Return> {
   workflow: (...args: Args) => Promise<Return>;
   startWorkflowParams?: StartWorkflowParams;
   debounceTimeoutMs?: number;
+  applicationName?: string;
 }
 ```
 
@@ -930,6 +946,7 @@ interface DebouncerConfig<Args extends unknown[], Return> {
 - **workflow**: The workflow to debounce. Note that workflows from [configured instances](./workflows-steps.md#instance-method-workflows) cannot be debounced.
 - **startWorkflowParams**: Optional workflow parameters, as in [`startWorkflow`](#dbosstartworkflow). Applied to all workflows started from this debouncer.
 - **debounceTimeoutMs**: After this time elapses since the first time a workflow is submitted from this debouncer, the workflow is started regardless of the debounce period.
+- **applicationName**: Debounce on behalf of this application instead of your own: the debounced workflow is owned and run by that application. This option is the only way to name a target application: setting `applicationName` in `startWorkflowParams.enqueueOptions` throws an error.
 
 ### debouncer.debounce
 
@@ -1084,10 +1101,13 @@ interface VersionInfo {
   versionTimestamp: number;
   // The epoch timestamp (in milliseconds) when this version was first registered.
   createdAt: number;
+  // The application that registered this version, or undefined if it is owned by no application
+  applicationName?: string;
 }
 ```
 
 Return all registered application versions, ordered by timestamp descending (newest first).
+Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
 
 ### DBOS.getLatestApplicationVersion
 
@@ -1095,13 +1115,16 @@ Return all registered application versions, ordered by timestamp descending (new
 static async DBOS.getLatestApplicationVersion(): Promise<VersionInfo>
 ```
 
-Return the latest application version (the one with the highest timestamp).
+Return the latest application version (the one with the highest timestamp) among versions registered by this application, plus versions owned by no application.
 Throws if no versions are registered.
 
 ### DBOS.setLatestApplicationVersion
 
 ```typescript
-static async DBOS.setLatestApplicationVersion(versionName: string): Promise<void>
+static async DBOS.setLatestApplicationVersion(
+  versionName: string,
+  options?: { applicationName?: string },
+): Promise<void>
 ```
 
 Promote a version to latest by updating its timestamp to the current time.
@@ -1109,6 +1132,7 @@ This is useful when rolling back to a previous application version.
 
 **Parameters:**
 - `versionName`: The name of the version to promote.
+- `options.applicationName`: The application to act as. Defaults to this application. Version names are globally unique across applications sharing a system database, so promoting a version registered by a different application throws an error.
 
 ## Workflow Handles
 
