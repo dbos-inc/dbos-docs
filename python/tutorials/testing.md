@@ -18,7 +18,7 @@ def reset_dbos():
         "system_database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
-    DBOS.reset_system_database()
+    DBOS.reset_system_database(truncate=True)
     DBOS.launch()
 ```
 
@@ -35,7 +35,7 @@ def reset_dbos():
         "system_database_url": "sqlite:///my_test_db.sqlite",
     }
     DBOS(config=config)
-    DBOS.reset_system_database()
+    DBOS.reset_system_database(truncate=True)
     DBOS.launch()
 ```
 
@@ -43,7 +43,8 @@ def reset_dbos():
 
 First, destroy any existing DBOS instance.
 Then, create and configure a new DBOS instance (you may want to use a different database for testing).
-Next, reset the internal state of DBOS in Postgres, cleaning up any state left over from previous tests.
+Next, reset the internal state of DBOS, cleaning up any state left over from previous tests.
+We recommend passing [`truncate=True`](../reference/dbos-class.md#reset_system_database), which empties the DBOS system tables instead of dropping and re-creating the system database, as this is substantially faster.
 Finally, launch a new DBOS instance.
 
 For example, if using pytest, declare `reset_dbos` as a fixture and require it from every test of a DBOS function:
@@ -62,7 +63,7 @@ def reset_dbos():
         "system_database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
-    DBOS.reset_system_database()
+    DBOS.reset_system_database(truncate=True)
     DBOS.launch()
 ```
 
@@ -80,55 +81,119 @@ def test_example_workflow(reset_dbos):
 
 It is often useful in testing to mock your workflows and steps.
 Because workflows and steps are just Python functions, they can be mocked using popular mocking libraries like [unittest.mock](https://docs.python.org/3/library/unittest.mock.html).
-For example, say we have a workflow `record_recent_earthquakes` that calls two steps (`get_earthquake_data` and `record_earthquake_data`):
+For example, the [widget store](../examples/widget-store.md) app has a `checkout_workflow` that creates an order, reserves inventory, waits for a payment notification, then either marks the order paid and starts a dispatch workflow or returns the reserved inventory and cancels the order:
 
 ```python
 @DBOS.workflow()
-def record_recent_earthquakes(current_time: datetime):
-    end_time = current_time
-    start_time = current_time - timedelta(hours=1)
-    earthquakes = get_earthquake_data(start_time, end_time)
-    if len(earthquakes) == 0:
-        DBOS.logger.info(f"No earthquakes found between {start_time} and {end_time}")
-    for earthquake in earthquakes:
-        new_earthquake = ds.run_tx_step(
-            {"name": "record_earthquake_data"}, record_earthquake_data, earthquake
+def checkout_workflow():
+    # Create a new order
+    order_id = ds.run_tx_step({"name": "create_order"}, create_order)
+
+    # Attempt to reserve inventory, cancelling the order if no inventory remains.
+    inventory_reserved = ds.run_tx_step(
+        {"name": "reserve_inventory"}, reserve_inventory
+    )
+    if not inventory_reserved:
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.CANCELLED.value,
         )
-        if new_earthquake:
-            DBOS.logger.info(f"Recorded earthquake: {earthquake}")
+        DBOS.set_event(PAYMENT_ID, None)
+        return
+
+    # Send a unique payment ID to the checkout endpoint, then wait for
+    # a message that the customer has completed payment.
+    DBOS.set_event(PAYMENT_ID, DBOS.workflow_id)
+    payment_status = DBOS.recv(PAYMENT_STATUS)
+
+    if payment_status == "paid":
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.PAID.value,
+        )
+        DBOS.start_workflow(dispatch_order_workflow, order_id)
+    else:
+        ds.run_tx_step({"name": "undo_reserve_inventory"}, undo_reserve_inventory)
+        ds.run_tx_step(
+            {"name": "update_order_status"},
+            update_order_status,
+            order_id=order_id,
+            status=OrderStatus.CANCELLED.value,
+        )
+
+    DBOS.set_event(ORDER_ID, str(order_id))
 ```
 
-We can test the workflow in isolation by mocking its two steps:
+We can test the workflow in isolation by mocking its database operations, the payment message it waits for, and the workflow it starts:
 
 ```python
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-def test_record_recent_earthquakes(reset_dbos):
-    now = datetime.now()
-    earthquake: EarthquakeData = {
-        "id": "ci40171730",
-        "place": "15 km SW of Searles Valley, CA",
-        "magnitude": 2.21,
-        "timestamp": 1738136375670,
+from dbos import DBOS
+
+import widget_store.main as widget_store
+from widget_store.schema import OrderStatus
+
+
+def test_checkout_workflow(reset_dbos):
+    """
+    Use mocks to test that the main workflow function (checkout_workflow)
+    correctly handles a checkout whose payment succeeds.
+    """
+    order_id = 123
+
+    # Create a mock for each of the workflow's database transactions
+    mock_create_order = MagicMock(return_value=order_id)
+    mock_reserve_inventory = MagicMock(return_value=True)
+    mock_undo_reserve_inventory = MagicMock()
+    mock_update_order_status = MagicMock()
+    mocks = {
+        widget_store.create_order: mock_create_order,
+        widget_store.reserve_inventory: mock_reserve_inventory,
+        widget_store.undo_reserve_inventory: mock_undo_reserve_inventory,
+        widget_store.update_order_status: mock_update_order_status,
     }
-    # Create a mock for get_earthquake_data that returns one earthquake
-    with patch("earthquake_tracker.main.get_earthquake_data") as mock_get_data:
-        mock_get_data.return_value = [earthquake]
-        # Create a mock for record_earthquake_data
-        with patch("earthquake_tracker.main.record_earthquake_data") as mock_record_data:
-            mock_record_data.return_value = True
 
-            # Call the workflow
-            record_recent_earthquakes(now)
+    # Run each transaction against its mock instead of against the database.
+    # The app assigns `ds` at startup, so the test supplies its own datasource.
+    def run_mocked_tx_step(ds_options, func, *args, **kwargs):
+        return mocks[func](*args, **kwargs)
 
-            # Verify get_earthquake_data was called once with correct parameters
-            start_time = now - timedelta(hours=1)
-            mock_get_data.assert_called_once_with(start_time, now)
+    mock_ds = MagicMock()
+    mock_ds.run_tx_step.side_effect = run_mocked_tx_step
 
-            # Verify record_earthquake_data was called once with correct parameters
-            mock_record_data.assert_called_once_with(earthquake)
+    # Also mock the payment message the workflow waits for and the
+    # dispatch workflow it starts, then run the workflow.
+    with (
+        patch.object(widget_store, "ds", mock_ds, create=True),
+        patch.object(DBOS, "recv", return_value="paid") as mock_recv,
+        patch.object(DBOS, "start_workflow") as mock_start_workflow,
+    ):
+        widget_store.checkout_workflow()
+
+    # Verify an order was created and inventory was reserved for it
+    mock_create_order.assert_called_once_with()
+    mock_reserve_inventory.assert_called_once_with()
+
+    # Verify the workflow waited for the payment webhook
+    mock_recv.assert_called_once_with(widget_store.PAYMENT_STATUS)
+
+    # Verify the paid order was marked paid and handed to the dispatch workflow
+    mock_update_order_status.assert_called_once_with(
+        order_id=order_id, status=OrderStatus.PAID.value
+    )
+    mock_start_workflow.assert_called_once_with(
+        widget_store.dispatch_order_workflow, order_id
+    )
+
+    # Verify that because payment succeeded, inventory was never returned
+    mock_undo_reserve_inventory.assert_not_called()
 ```
 
 ### Example Test Suite
 
-To see a DBOS app tested using pytest, check out the [Earthquake Tracker](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/earthquake-tracker) example on GitHub.
+To see a DBOS app tested using pytest, check out the [widget store](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store) example on GitHub.
