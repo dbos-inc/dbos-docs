@@ -1277,7 +1277,7 @@ def reset_dbos():
         "database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
-    DBOS.reset_system_database()
+    DBOS.reset_system_database(truncate=True)
     DBOS.launch()
 ```
 
