@@ -733,7 +733,7 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 
 | Code | Sentinel | In a workflow | Meaning |
 |---|---|---|---|
-| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Execution Conflicts](../tutorials/step-tutorial.md#concurrent-execution-conflicts). |
+| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Executions](../../explanations/concurrent-executions.md). |
 | `ErrorCodeInitialization` | — | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
 | `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | Handle | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
 | `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | Return | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. Continuing would write your checkpoints into another workflow's history. |
