@@ -551,21 +551,28 @@ client.read_stream(
     key: str,
     *,
     offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> Generator[Any, Any, None]
 ```
 
 Read values from a stream as a generator.
 This function reads values from a stream identified by the workflow_id and key,
 yielding each value in order until the stream is closed or the workflow terminates.
-Similar to [`DBOS.read_stream`](contexts.md#read_stream).
+Similar to [`DBOS.read_stream`](contexts.md#read_stream), except that client reads are never checkpointed.
 
 **Parameters:**
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
 
 **Yields:**
 - Each value in the stream until the stream is closed
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
 
 **Example syntax:**
 ```python
@@ -581,27 +588,67 @@ client.read_stream_async(
     key: str,
     *,
     offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[Any, None]
 ```
 
-Read values from a stream as an async generator.
-This function reads values from a stream identified by the workflow_id and key,
-yielding each value in order until the stream is closed or the workflow terminates.
-Similar to [`DBOS.read_stream_async`](contexts.md#read_stream_async).
-
-**Parameters:**
-- `workflow_id`: The workflow instance ID that owns the stream
-- `key`: The stream key / name within the workflow
-- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
-
-**Yields:**
-- Each value in the stream until the stream is closed
+Coroutine version of [`read_stream`](#read_stream), returning an async generator.
 
 **Example syntax:**
 ```python
 async for value in client.read_stream_async(workflow_id, "results"):
     print(f"Received: {value}")
 ```
+
+### read_stream_offset
+
+```python
+client.read_stream_offset(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Any
+```
+
+Read the single value at one offset of a stream, waiting for it to be written.
+Similar to [`DBOS.read_stream_offset`](contexts.md#read_stream_offset).
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+- `offset`: The offset to read
+- `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+
+**Returns:**
+- The value at the offset
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+
+**Example syntax:**
+```python
+value = client.read_stream_offset(workflow_id, "results", 5, timeout_seconds=30)
+```
+
+### read_stream_offset_async
+
+```python
+client.read_stream_offset_async(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Coroutine[Any, Any, Any]
+```
+
+Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
 ### set_workflow_delay
 

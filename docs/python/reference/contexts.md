@@ -542,7 +542,7 @@ DBOS.close_stream(
 
 Close a stream identified by a key.
 After this is called, no more values can be written to the stream.
-Can only be called from within a workflow.
+Can only be called from within a workflow or its steps.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
 
 **Parameters:**
@@ -566,6 +566,8 @@ DBOS.read_stream(
     key: str,
     *,
     offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -578,9 +580,14 @@ yielding each value in order until the stream is closed or the workflow terminat
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
 
 **Yields:**
 - Each value in the stream until the stream is closed
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
 
 **Example syntax:**
 
@@ -588,6 +595,8 @@ yielding each value in order until the stream is closed or the workflow terminat
 for value in DBOS.read_stream(workflow_id, example_key):
     print(f"Received: {value}")
 ```
+
+When called from workflow code, each value read is checkpointed to the database as a step, so a replayed workflow re-yields the values it originally read instead of re-reading a stream that may have advanced since.
 
 ### read_stream_async
 
@@ -598,19 +607,11 @@ DBOS.read_stream_async(
     *,
     offset: int = 0,
     polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[Any, None]
 ```
 
-Read values from a stream as an async generator.
-
-This function reads values from a stream identified by the workflow_id and key,
-yielding each value in order until the stream is closed or the workflow terminates.
-
-**Parameters:**
-- `workflow_id`: The workflow instance ID that owns the stream
-- `key`: The stream key / name within the workflow
-- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
-- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+Coroutine version of [`read_stream`](#read_stream), returning an async generator.
 
 **Example syntax:**
 
@@ -619,8 +620,62 @@ async for value in DBOS.read_stream_async(workflow_id, example_key):
     print(f"Received: {value}")
 ```
 
-**Yields:**
-- Each value in the stream until the stream is closed
+### read_stream_offset
+
+```python
+DBOS.read_stream_offset(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Any
+```
+
+Read the single value at one offset of a stream, waiting for it to be written.
+Use this when you want one specific value instead of iterating the whole stream&mdash;for example, to resume from where a previous reader left off.
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+- `offset`: The offset to read
+- `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+
+**Returns:**
+- The value at the offset
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+
+**Example syntax:**
+
+```python
+from dbos import error as dboserror
+
+try:
+    value = DBOS.read_stream_offset(workflow_id, example_key, 5, timeout_seconds=30)
+except dboserror.DBOSStreamTimeoutError:
+    ...
+```
+
+Like [`read_stream`](#read_stream), a value read from workflow code is checkpointed to the database as a step.
+
+### read_stream_offset_async
+
+```python
+DBOS.read_stream_offset_async(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Coroutine[Any, Any, Any]
+```
+
+Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
 ### patch
 

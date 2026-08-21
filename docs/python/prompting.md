@@ -798,7 +798,7 @@ DBOS.write_stream(
 You can write values to a stream from a workflow or its steps using `DBOS.write_stream`.
 A workflow may have any number of streams, each identified by a unique key.
 
-When you are done writing to a stream, you should close it with `DBOS.close_stream`.
+When you are done writing to a stream, you should close it with `DBOS.close_stream`, which you can call from a workflow or its steps.
 Otherwise, streams are automatically closed when the workflow terminates.
 
 ```python
@@ -827,7 +827,11 @@ def producer_workflow():
 ```python
 DBOS.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -836,11 +840,52 @@ This function reads values from a stream identified by a workflow ID and key, yi
 
 You can also read from a stream from outside a DBOS application with a DBOS Client.
 
+**Parameters:**
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
+
 **Example syntax:**
 
 ```python
 for value in DBOS.read_stream(workflow_id, example_key):
     print(f"Received: {value}")
+```
+
+```python
+from dbos import error as dboserror
+
+try:
+    for value in DBOS.read_stream(workflow_id, example_key, timeout_seconds=30):
+        print(f"Received: {value}")
+except dboserror.DBOSStreamTimeoutError:
+    print("The producer stopped sending values")
+```
+
+### Reading a Single Stream Value
+
+If you want one specific value instead of the whole stream, use `DBOS.read_stream_offset`.
+It waits for the value at that offset to be written and returns it.
+This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
+
+```python
+DBOS.read_stream_offset(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Any
+```
+
+Raises `DBOSStreamTimeoutError` if `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive there).
+
+**Example syntax:**
+
+```python
+# Wait for the third value written to the stream
+value = DBOS.read_stream_offset(workflow_id, example_key, 2)
 ```
 
 ### Configurable Retries
