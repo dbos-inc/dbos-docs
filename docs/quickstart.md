@@ -138,7 +138,7 @@ curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh |
 </article>
 
 <article className="col col--6">
-Next, configure `dbosctl` profile and log in.
+Next, configure a `dbosctl` profile and log in.
 `dbosctl login` prints a URL and a code for you to approve in your browser.
 </article>
 
@@ -309,7 +309,7 @@ curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh |
 </article>
 
 <article className="col col--6">
-Next, configure `dbosctl` profile and log in.
+Next, configure a `dbosctl` profile and log in.
 `dbosctl login` prints a URL and a code for you to approve in your browser.
 </article>
 
@@ -466,7 +466,7 @@ curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh |
 </article>
 
 <article className="col col--6">
-Next, configure `dbosctl` profile and log in.
+Next, configure a `dbosctl` profile and log in.
 `dbosctl login` prints a URL and a code for you to approve in your browser.
 </article>
 
@@ -628,7 +628,7 @@ curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh |
 </article>
 
 <article className="col col--6">
-Next, configure `dbosctl` profile and log in.
+Next, configure a `dbosctl` profile and log in.
 `dbosctl login` prints a URL and a code for you to approve in your browser.
 </article>
 
