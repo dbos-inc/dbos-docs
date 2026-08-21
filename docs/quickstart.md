@@ -151,7 +151,7 @@ dbosctl login
 
 <article className="col col--6">
 Then, register your application with Conductor and create an API key.
-The name you register must match your app's name in its DBOS configuration, which is `dbos-app-starter`.
+The name you register must match your app's name in its DBOS configuration.
 The key's secret is printed once and cannot be retrieved afterwards, so copy it now.
 </article>
 
