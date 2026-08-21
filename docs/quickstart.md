@@ -138,13 +138,13 @@ curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh |
 </article>
 
 <article className="col col--6">
-Next, create a `dbosctl` profile pointing at DBOS-managed Conductor and log in with your DBOS account.
+Next, configure `dbosctl` profile and log in.
 `dbosctl login` prints a URL and a code for you to approve in your browser.
 </article>
 
 <article className="col col--6">
 ```bash
-dbosctl config set managed --managed
+dbosctl config set dbos --managed
 dbosctl login
 ```
 </article>
