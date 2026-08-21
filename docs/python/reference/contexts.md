@@ -402,6 +402,16 @@ class StepOptions(TypedDict, total=False):
             an awaitable resolving to False), the exception is re-raised
             immediately without further retries. Async predicates are
             only supported when used with `run_step_async`.
+
+        preemptible:
+            If True, cancel the step if its workflow is cancelled.
+            Only supported when used with `run_step_async`.
+
+        timeout_seconds:
+            If set, cancel the step and raise DBOSStepTimeoutError if it
+            runs for longer than this many seconds. Only supported when
+            used with `run_step_async`. Each retry attempt gets a fresh
+            timeout.
     """
 
     name: Optional[str]
@@ -410,6 +420,8 @@ class StepOptions(TypedDict, total=False):
     max_attempts: int
     backoff_rate: float
     should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]]
+    preemptible: bool
+    timeout_seconds: Optional[float]
 ```
 
 ### run_step_async

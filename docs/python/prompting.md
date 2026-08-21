@@ -911,6 +911,28 @@ def example_step():
     return requests.get("https://example.com").text
 ```
 
+### Step Timeouts
+
+You can set a timeout for an async step with `timeout_seconds`.
+If the step runs longer than that, it is cancelled and `DBOSStepTimeoutError` is raised to the calling workflow.
+
+```python
+@DBOS.step(timeout_seconds=30)
+async def example_step():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://example.com") as response:
+            return await response.text()
+```
+
+Step timeouts are only supported for async steps, because Python provides no way to preempt a running synchronous function.
+Setting `timeout_seconds` on a sync step raises an exception.
+The timeout must be positive and finite.
+
+If the step also has retries enabled, each attempt gets its own timeout, and time spent waiting between retries is not counted against it.
+If every attempt times out, the workflow sees `DBOSMaxStepRetriesExceeded` rather than `DBOSStepTimeoutError`.
+Like any other step failure, the timeout is checkpointed as the step's outcome, so a workflow that recovers after one re-raises the same error instead of re-running the step.
+The timeout is enforced only when the step runs as part of a workflow; calling the function directly outside a workflow runs it as an ordinary function call, with no timeout.
+
 ## DBOS Queues
 
 You can use queues to run many workflows at once with managed concurrency.
