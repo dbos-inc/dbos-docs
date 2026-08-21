@@ -53,7 +53,8 @@ class DBOSClient {
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
     waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
-    readStream<T>(workflowID: string, key: string, options?: { offset?: number }): AsyncGenerator<T, void, unknown>;
+    readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
+    readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
 
     getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined>;
     listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]>;
@@ -374,22 +375,33 @@ Similar to [`DBOS.waitAll`](./methods.md#dboswaitall), including the optional `p
 readStream<T>(
   workflowID: string,
   key: string,
-  options?: { offset?: number }
+  options?: ReadStreamOptions
 ): AsyncGenerator<T, void, unknown>
+
+interface ReadStreamOptions {
+  offset?: number;
+  pollingIntervalMs?: number;
+  timeoutSeconds?: number;
+}
 ```
 
 Read values from a stream as an async generator from outside the DBOS application.
 This function reads values from a stream identified by the workflowID and key,
 yielding each value in order until the stream is closed or the workflow terminates.
-Similar to [`DBOS.readStream`](./methods.md#dbosreadstream).
+Similar to [`DBOS.readStream`](./methods.md#dbosreadstream), except that client reads are never checkpointed.
 
 **Parameters:**
 - **workflowID**: The workflow instance ID that owns the stream.
 - **key**: The stream key/name within the workflow.
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream, so a reader that was disconnected after consuming _N_ values can resume with `offset: N` instead of replaying the whole stream. Must be a non-negative integer.
+- **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
+- **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
+
+**Throws:**
+- `DBOSStreamTimeoutError`: If `timeoutSeconds` passes without a value arriving.
 
 **Example:**
 
@@ -397,6 +409,41 @@ Similar to [`DBOS.readStream`](./methods.md#dbosreadstream).
 for await (const value of client.readStream(workflowID, "example_key")) {
   console.log(`Received: ${JSON.stringify(value)}`);
 }
+```
+
+#### `readStreamOffset`
+
+```typescript
+readStreamOffset<T>(
+  workflowID: string,
+  key: string,
+  offset: number,
+  options?: ReadStreamOffsetOptions
+): Promise<T>
+
+type ReadStreamOffsetOptions = Omit<ReadStreamOptions, 'offset'>;
+```
+
+Read the single value at one offset of a stream, waiting for it to be written.
+Similar to [`DBOS.readStreamOffset`](./methods.md#dbosreadstreamoffset).
+
+**Parameters:**
+- **workflowID**: The workflow instance ID that owns the stream.
+- **key**: The stream key/name within the workflow.
+- **offset**: The offset to read. Must be a non-negative integer.
+- **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for the value. Must be at least `1`.
+- **options.timeoutSeconds**: How long to wait for the value before throwing `DBOSStreamTimeoutError`. Defaults to waiting indefinitely.
+
+**Returns:**
+- The value at the offset.
+
+**Throws:**
+- `DBOSStreamTimeoutError`: If `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+
+**Example:**
+
+```ts
+const value = await client.readStreamOffset(workflowID, "example_key", 5, { timeoutSeconds: 30 });
 ```
 
 ### Workflow Inspection

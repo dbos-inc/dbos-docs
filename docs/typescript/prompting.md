@@ -740,7 +740,7 @@ DBOS.writeStream<T>(key: string, value: T): Promise<void>
 You can write values to a stream from a workflow or its steps using `DBOS.writeStream`.
 A workflow may have any number of streams, each identified by a unique key.
 
-When you are done writing to a stream, you should close it with `DBOS.closeStream`.
+When you are done writing to a stream, you should close it with `DBOS.closeStream`, which you can call from a workflow or its steps.
 Otherwise, streams are automatically closed when the workflow terminates.
 
 ```typescript
@@ -767,7 +767,17 @@ const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 ### Reading from Streams
 
 ```typescript
-DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+DBOS.readStream<T>(
+  workflowID: string,
+  key: string,
+  options?: ReadStreamOptions
+): AsyncGenerator<T, void, unknown>
+
+interface ReadStreamOptions {
+  offset?: number;
+  pollingIntervalMs?: number;
+  timeoutSeconds?: number;
+}
 ```
 
 You can read values from a stream from anywhere using `DBOS.readStream`.
@@ -775,12 +785,61 @@ This function reads values from a stream identified by a workflow ID and key, yi
 
 You can also read from a stream from outside a DBOS application with a DBOS Client.
 
+**Parameters:**
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream.
+- `pollingIntervalMs`: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
+- `timeoutSeconds`: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
+
 **Example syntax:**
 
 ```typescript
 for await (const value of DBOS.readStream(workflowID, "example_key")) {
   console.log(`Received: ${JSON.stringify(value)}`);
 }
+```
+
+```typescript
+import { DBOS, Error as DBOSErrors } from "@dbos-inc/dbos-sdk";
+
+try {
+  for await (const value of DBOS.readStream(workflowID, "example_key", { timeoutSeconds: 30 })) {
+    console.log(`Received: ${JSON.stringify(value)}`);
+  }
+} catch (e) {
+  if (DBOSErrors.isStreamTimeoutError(e)) {
+    console.log("The producer stopped sending values");
+  } else {
+    throw e;
+  }
+}
+```
+
+Match a stream timeout with `isStreamTimeoutError` rather than `instanceof DBOSStreamTimeoutError`: when a workflow replays a checkpointed timeout, the error is revived as a plain `Error`, so `instanceof` does not hold.
+
+### Reading a Single Stream Value
+
+If you want one specific value instead of the whole stream, use `DBOS.readStreamOffset`.
+It waits for the value at that offset to be written and returns it.
+This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
+
+```typescript
+DBOS.readStreamOffset<T>(
+  workflowID: string,
+  key: string,
+  offset: number,
+  options?: ReadStreamOffsetOptions
+): Promise<T>
+
+type ReadStreamOffsetOptions = Omit<ReadStreamOptions, 'offset'>;
+```
+
+Throws `DBOSStreamTimeoutError` if `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive there).
+
+**Example syntax:**
+
+```typescript
+// Wait for the third value written to the stream
+const value = await DBOS.readStreamOffset(workflowID, "example_key", 2);
 ```
 
 ## Steps

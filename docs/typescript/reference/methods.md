@@ -296,7 +296,7 @@ DBOS.closeStream(
 
 Close a stream identified by a key.
 After this is called, no more values can be written to the stream.
-Can only be called from within a workflow.
+Can only be called from within a workflow or step.
 
 **Parameters:**
 - **key**: The stream key/name within the workflow.
@@ -307,8 +307,14 @@ Can only be called from within a workflow.
 DBOS.readStream<T>(
   workflowID: string, 
   key: string,
-  options?: { offset?: number }
+  options?: ReadStreamOptions
 ): AsyncGenerator<T, void, unknown>
+
+interface ReadStreamOptions {
+  offset?: number;
+  pollingIntervalMs?: number;
+  timeoutSeconds?: number;
+}
 ```
 
 Read values from a stream as an async generator.
@@ -319,9 +325,14 @@ yielding each value in order until the stream is closed or the workflow terminat
 - **workflowID**: The workflow instance ID that owns the stream.
 - **key**: The stream key/name within the workflow.
 - **options.offset**: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream. Must be a non-negative integer.
+- **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
+- **options.timeoutSeconds**: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
 
 **Returns:**
 - An async generator that yields each value in the stream until the stream is closed.
+
+**Throws:**
+- `DBOSStreamTimeoutError`: If `timeoutSeconds` passes without a value arriving.
 
 **Example syntax:**
 
@@ -330,6 +341,50 @@ for await (const value of DBOS.readStream(workflowID, "example_key")) {
   console.log(`Received: ${JSON.stringify(value)}`);
 }
 ```
+
+When called from workflow code, each value read is checkpointed to the database as a step, so a replayed workflow re-yields the values it originally read instead of re-reading a stream that may have advanced since.
+
+### DBOS.readStreamOffset
+
+```typescript
+DBOS.readStreamOffset<T>(
+  workflowID: string,
+  key: string,
+  offset: number,
+  options?: ReadStreamOffsetOptions
+): Promise<T>
+
+type ReadStreamOffsetOptions = Omit<ReadStreamOptions, 'offset'>;
+```
+
+Read the single value at one offset of a stream, waiting for it to be written.
+Use this when you want one specific value instead of iterating the whole stream&mdash;for example, to resume from where a previous reader left off.
+
+**Parameters:**
+- **workflowID**: The workflow instance ID that owns the stream.
+- **key**: The stream key/name within the workflow.
+- **offset**: The offset to read. Must be a non-negative integer.
+- **options.pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting for the value. Must be at least `1`.
+- **options.timeoutSeconds**: How long to wait for the value before throwing `DBOSStreamTimeoutError`. Defaults to waiting indefinitely.
+
+**Returns:**
+- The value at the offset.
+
+**Throws:**
+- `DBOSStreamTimeoutError`: If `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+
+**Example syntax:**
+
+```typescript
+const value = await DBOS.readStreamOffset(workflowID, "example_key", 5, { timeoutSeconds: 30 });
+```
+
+Like [`DBOS.readStream`](#dbosreadstream), a value read from workflow code is checkpointed to the database as a step.
+
+:::note
+When a checkpointed timeout is replayed, it is revived as a plain `Error` rather than a `DBOSStreamTimeoutError`, so `instanceof` does not hold.
+Use the exported `isStreamTimeoutError` helper to match it in either case.
+:::
 
 ### DBOS.retrieveWorkflow
 
