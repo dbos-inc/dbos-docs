@@ -15,6 +15,7 @@ queue, err := dbos.RegisterQueue(dbosContext, "example_queue")
 
 `RegisterQueue` persists the queue's configuration to the system database.
 It can be called at any time, including after [`Launch`](../reference/dbos-context.md#launch), and the queue's configuration can be [changed at runtime](#reconfiguring-queues).
+If multiple applications [share a system database](../../explanations/sharing-a-system-database.md), each queue is owned by the application that registers it, and only that application dequeues workflows from it.
 
 `RegisterQueue` returns a `Queue` handle. You can then enqueue any workflow by passing the handle to [`WithQueue`](../reference/workflows-steps#withqueue) when calling `RunWorkflow`.
 
@@ -198,6 +199,8 @@ type ProcessOutput struct {
 
 config := dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    // The name of the application that runs the data pipeline
+    AppName:     "data-processing-service",
 }
 client, err := dbos.NewClient(context.Background(), config)
 if err != nil {

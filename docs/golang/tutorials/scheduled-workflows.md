@@ -183,6 +183,8 @@ Because workflows are not registered with a client, set the `WorkflowName` field
 ```go
 client, err := dbos.NewClient(context.Background(), dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    // The name of the application that owns and runs the schedule
+    AppName:     "my-app",
 })
 
 err = dbos.CreateSchedule(client, dbos.ScheduleSpec{
@@ -200,7 +202,7 @@ The key is the concatenation of `sched-`, the schedule name, and the scheduled t
 
 When a schedule fires, its workflow is enqueued by name rather than invoked directly, so the process hosting the schedule does not need to have the workflow registered.
 Name resolution happens at dequeue time on a worker that has the function, letting any process connected to the system database drive schedules for workflows owned by other processes or languages.
-Scheduled workflows always run against the latest registered application version, so a stale executor does not pick them up after a new deploy.
+Scheduled workflows always run against their owning application's latest registered version, so a stale executor does not pick them up after a new deploy.
 
 You can list the workflows started by a schedule by passing [`WithFilterScheduleName`](../reference/methods.md#withfilterschedulename) to [`ListWorkflows`](../reference/methods.md#listworkflows).
 

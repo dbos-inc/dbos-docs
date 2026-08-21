@@ -45,7 +45,7 @@ type Client interface {
     // Queue management
     RegisterQueue(_ Client, name string, options ...QueueOption) (Queue, error)
     RetrieveQueue(_ Client, name string) (Queue, error)
-    ListQueues(_ Client) ([]Queue, error)
+    ListQueues(_ Client, opts ...ListQueuesOption) ([]Queue, error)
     DeleteQueue(_ Client, name string) error
 
     // Schedule management
@@ -59,10 +59,11 @@ type Client interface {
     BackfillSchedule(_ Client, scheduleName string, start, end time.Time) ([]string, error)
     TriggerSchedule(_ Client, scheduleName string) (WorkflowHandle[any], error)
 
-    // Application version management
+    // Application management
     ListApplicationVersions(_ Client) ([]VersionInfo, error)
     GetLatestApplicationVersion(_ Client) (VersionInfo, error)
     SetLatestApplicationVersion(_ Client, versionName string) error
+    RenameApplication(_ Client, input RenameApplicationInput) (ApplicationRowCounts, error)
 
     Shutdown(_ Client, timeout time.Duration) error
 }
@@ -150,6 +151,8 @@ if err != nil {
 The newly created Context must be launched with `Launch()` before running workflows and should be shut down with `Shutdown()` at program termination.
 Before launch, a `Context` can already be used for every [`Client`](#client) operation.
 
+`AppName` is the application on whose behalf this context acts. Always set `AppName` if multiple applications [share a system database](../../explanations/sharing-a-system-database.md).
+
 ### Launch
 
 ```go
@@ -180,6 +183,7 @@ Create a standalone `Client`, to interact with a DBOS application from external 
 ```go
 type ClientConfig struct {
     DatabaseURL            string          // Connection string to your system database. May be a PostgreSQL (postgres://...) or SQLite (sqlite:...) URL. Exactly one of DatabaseURL, SystemDBPool, or SQLiteSystemDB is required.
+    AppName                string          // The application this client acts on behalf of (optional)
     SystemDBPool           *pgxpool.Pool   // A custom Postgres/CockroachDB connection pool. Optional; takes precedence over DatabaseURL. Mutually exclusive with SQLiteSystemDB.
     SQLiteSystemDB         *sql.DB         // A custom SQLite handle (e.g. from modernc.org/sqlite). Optional; takes precedence over DatabaseURL. Mutually exclusive with SystemDBPool.
     DatabaseSchema         string          // Database schema name (defaults to "dbos")
@@ -194,6 +198,10 @@ Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeou
 Like `NewContext`, using a SQLite system database requires registering the SQLite driver with a blank import — see [Using SQLite](./configuration.md#using-sqlite).
 
 Because workflows are not registered with a client, operations that take a workflow function reference on a `Context` take a workflow **name** (string) from a client — for example [`Enqueue`](./methods.md#enqueue), or the `WorkflowName` field of [`ScheduleSpec`](./methods.md#schedulespec).
+
+`AppName` is the application on whose behalf this client acts: workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows.
+A client with no `AppName` sees every application's rows, but everything it creates is owned by no application.
+Always set `AppName` if multiple applications [share a system database](../../explanations/sharing-a-system-database.md).
 
 **Example syntax:**
 

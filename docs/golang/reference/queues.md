@@ -7,6 +7,7 @@ Workflow queues allow you to ensure that workflow functions will be run, without
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
 
 Queue configuration is persisted to the system database, so any DBOS process connected to the same system database can register, retrieve, and reconfigure queues.
+If multiple applications [share a system database](../../explanations/sharing-a-system-database.md), each queue is owned by the application that registers it, and only that application dequeues workflows from it.
 
 ## Queue Management
 
@@ -132,6 +133,16 @@ Set the base polling interval for this queue. This also acts as the minimum (fas
 queue, err := dbos.RegisterQueue(ctx, "email-queue", dbos.WithQueueBasePollingInterval(100*time.Millisecond))
 ```
 
+#### WithQueueApplicationName
+
+```go
+func WithQueueApplicationName(name string) QueueOption
+```
+
+Set the application that owns the queue and dequeues workflows from it.
+Defaults to the registering context's own application (for a [standalone client](./dbos-context.md#newclient), its `AppName`).
+Registering a queue already owned by a different application returns an error.
+
 #### WithQueueOnConflict
 
 ```go
@@ -178,10 +189,19 @@ fmt.Println("Priority enabled:", queue.GetPriorityEnabled())
 ### ListQueues
 
 ```go
-func ListQueues(ctx Client) ([]Queue, error)
+func ListQueues(ctx Client, opts ...ListQueuesOption) ([]Queue, error)
 ```
 
-Return all queues registered in the system database.
+Return queues registered in the system database.
+By default, only queues owned by the calling context's application (plus queues owned by no application) are returned; a [standalone client](./dbos-context.md#newclient) with no `AppName` returns every application's queues.
+
+#### WithListQueuesApplicationNames
+
+```go
+func WithListQueuesApplicationNames(names ...string) ListQueuesOption
+```
+
+List queues owned by these applications instead (queues owned by no application are always included).
 
 ### DeleteQueue
 
@@ -202,6 +222,7 @@ Instead, cancel or drain pending workflows on the queue before deleting it.
 
 A `Queue` is returned from [`RegisterQueue`](#registerqueue), [`RetrieveQueue`](#retrievequeue), and [`ListQueues`](#listqueues).
 Its `Get*` methods reflect the queue's configuration as of the most recent read from the database; the `Set*` methods update the configuration in the database.
+Unlike the other properties, ownership cannot be reconfigured: there is no `SetApplicationName`. Ownership is only transferred by [`RenameApplication`](./methods.md#renameapplication).
 
 ```go
 type Queue interface {
@@ -212,6 +233,7 @@ type Queue interface {
     GetPriorityEnabled() bool
     GetPartitionQueue() bool
     GetPollingInterval() time.Duration
+    GetApplicationName() string
 
     SetGlobalConcurrency(ctx Client, value *int) error
     SetWorkerConcurrency(ctx Client, value *int) error
