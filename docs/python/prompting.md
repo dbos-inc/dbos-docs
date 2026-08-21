@@ -877,11 +877,14 @@ Register a queue with `DBOS.register_queue`, specifying its name and optional fl
 DBOS.register_queue(
     name: str,
     *,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
+    # Applied to the queue as a whole
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    # Applied to each partition separately
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "update_if_latest_version",
 ) -> Queue
@@ -893,13 +896,16 @@ class QueueRateLimit(TypedDict):
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the application.
-- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a given DBOS process. Must be less than or equal to `concurrency`.
-- `priority_enabled`: Enable setting priority for workflows on this queue.
-- `partition_queue`: Enable partitioning for this queue.
+- `partition_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `global_concurrency`.
+- `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a given DBOS process. Must be at least 1 and less than or equal to `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
+- `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
 - `on_conflict`: How to behave when a queue with this name already exists in the system database. Defaults to `"update_if_latest_version"` (only overwrite if the running app is the latest version) to keep older workers in a rolling deploy from clobbering newer config. Other options: `"always_update"`, `"never_update"`.
+
+Setting any `partition_*` limit makes the queue partitioned: every enqueue must supply a `queue_partition_key`, and deduplication is not supported. The queue-wide limits still apply across all partitions.
 
 Queues are persisted to the system database, so they are visible to every DBOS process and client connected to that database.
 Register your queues after `DBOS.launch()`.
@@ -1006,12 +1012,12 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 :::
 
 ```python
-DBOS.register_queue("example_queue", concurrency=10)
+DBOS.register_queue("example_queue", global_concurrency=10)
 ```
 
 #### In-Order Processing
 
-You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+You can use a queue with `global_concurrency=1` to guarantee sequential, in-order processing of events.
 Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
@@ -1019,7 +1025,7 @@ For example, this app processes events sequentially in the order of their arriva
 from fastapi import FastAPI
 from dbos import DBOS
 
-DBOS.register_queue("in_order_queue", concurrency=1)
+DBOS.register_queue("in_order_queue", global_concurrency=1)
 
 @DBOS.step()
 def process_event(event: str):
@@ -1047,13 +1053,13 @@ Because queue configuration lives in the system database, you can change a queue
 Use `DBOS.retrieve_queue` to fetch a queue, then call its `set_*` methods.
 Workers pick up the new configuration on their next polling iteration.
 
-Available mutators: `set_concurrency`, `set_worker_concurrency`, `set_limiter`, `set_priority_enabled`, `set_partition_queue`, `set_polling_interval_sec`. Pass `None` to a setter to remove the limit (where applicable).
+Available mutators: `set_global_concurrency`, `set_worker_concurrency`, `set_limiter`, `set_partition_concurrency`, `set_partition_worker_concurrency`, `set_partition_limiter`, `set_polling_interval_sec`. Pass `None` to a setter to remove the limit (where applicable).
 
 ```python
 queue = DBOS.retrieve_queue("example_queue")
 
-# Double the queue's concurrency.
-queue.set_concurrency(20)
+# Double the queue's global concurrency.
+queue.set_global_concurrency(20)
 
 # Tighten its rate limit.
 queue.set_limiter({"limit": 25, "period": 30})
@@ -1088,17 +1094,22 @@ with SetWorkflowTimeout(10):
 ## Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
+A queue is partitioned if you register it with any per-partition flow control limit:
+
+- `partition_concurrency`: Maximum workflows from any one partition running at once across all processes.
+- `partition_worker_concurrency`: Maximum workflows from any one partition running at once on a single process.
+- `partition_limiter`: Maximum workflows that may be started from any one partition in a given period.
+
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+You can do this with a queue whose `partition_concurrency` is 1, where the partition key is user ID.
 
 **Example Syntax**
 
 ```python
-DBOS.register_queue("partitioned_queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 
 @DBOS.workflow()
 def process_task(task: Task):
@@ -1107,45 +1118,40 @@ def process_task(task: Task):
 
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a
-    # maximum concurrency of 1, this means that at most one
+    # per-partition concurrency of 1, this means that at most one
     # task can run at once per user (but tasks from different
     # users can run concurrently).
     with SetEnqueueOptions(queue_partition_key=user_id):
         DBOS.enqueue_workflow("partitioned_queue", process_task, task)
 ```
 
-Sometimes, you want to apply global or per-worker limits to a partitioned queue.
-You can do this with **multiple levels of queueing**.
-Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
-Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
-to the non-partitioned queue and awaits its result.
-This ensures both queues' flow control limits are enforced on your workflow.
-For example:
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits (`global_concurrency`, `worker_concurrency`, and `limiter`) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
 
 ```python
-# By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-# and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
-# across all partitions (and at most one task per partition).
-DBOS.register_queue("concurrency-queue", worker_concurrency=5)
-DBOS.register_queue("partitioned-queue", partition_queue=True, concurrency=1)
-
-def on_user_task_submission(user_id: str, task: Task):
-    # First, enqueue a "concurrency manager" workflow to the partitioned
-    # queue to enforce per-partition limits.
-    with SetEnqueueOptions(queue_partition_key=user_id):
-        DBOS.enqueue_workflow("partitioned-queue", concurrency_manager, task)
-
-@DBOS.workflow()
-def concurrency_manager(task):
-    # The "concurrency manager" workflow enqueues the process_task
-    # workflow on the non-partitioned queue and awaits its results
-    # to enforce global flow control limits.
-    return DBOS.enqueue_workflow("concurrency-queue", process_task, task).get_result()
-
-@DBOS.workflow()
-def process_task(task):
-    ...
+DBOS.register_queue("fair_queue", partition_concurrency=1, worker_concurrency=10)
 ```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```python
+# At most 100 tasks running globally and 25 running per tenant,
+# at most 10 tasks running per process and 2 per tenant per process,
+# and at most 1000 tasks started per minute globally and 50 per tenant.
+DBOS.register_queue(
+    "tenant_queue",
+    global_concurrency=100,
+    worker_concurrency=10,
+    limiter={"limit": 1000, "period": 60},
+    partition_concurrency=25,
+    partition_worker_concurrency=2,
+    partition_limiter={"limit": 50, "period": 60},
+)
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partition_worker_concurrency` must be less than or equal to `partition_concurrency`.
+Deduplication is not supported on partitioned queues.
 
 ## Deduplication
 
@@ -1174,7 +1180,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
 
 You can set a priority for an enqueued workflow with `SetEnqueueOptions`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `priority_enabled=True` on your queue.
+Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -1183,7 +1189,7 @@ Workflows without assigned priorities have the highest priority and are dequeued
 Example syntax:
 
 ```python
-DBOS.register_queue("priority_queue", priority_enabled=True)
+DBOS.register_queue("priority_queue")
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10

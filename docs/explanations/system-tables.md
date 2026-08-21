@@ -60,7 +60,7 @@ PL/pgSQL function for enqueuing a workflow on a [durable queue](../architecture.
 - `deadline_epoch_ms`: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.
 - `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status ENQUEUED or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 1 to 2,147,483,647, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
-- `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- `queue_partition_key`: Set a queue partition key for the workflow. Use if and only if the queue is partitioned. Partitioned queues apply their per-partition flow control limits (concurrency and rate limits) to each partition separately.
 - `authenticated_user`: The authenticated user to associate with the enqueued workflow. Defaults to null.
 - `authenticated_roles`: The authenticated roles to associate with the enqueued workflow, as a JSON-encoded array of strings (e.g. `'["admin", "reader"]'`). Defaults to null.
 - `delay_until_epoch_ms`: A Unix epoch timestamp (in milliseconds) before which the workflow should not be dequeued. The workflow is enqueued with `DELAYED` status until this time arrives, after which it becomes `ENQUEUED` and eligible to run. Must be `>= 0`. Defaults to null (the workflow is enqueued immediately).
@@ -238,7 +238,11 @@ Each row represents a different queue.
 - **rate_limit_max**: If a rate limit is set, the maximum number of workflows that may be started in a period.
 - **rate_limit_period_sec**: If a rate limit is set, the length of the period in seconds.
 - **priority_enabled**: Whether priority is enabled for this queue.
-- **partition_queue**: Whether this queue is partitioned.
+- **partition_queue**: Whether this queue is partitioned. Set automatically when any of the `partition_*` limits below is set.
+- **partition_concurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes. `NULL` means unlimited.
+- **partition_worker_concurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently on a single DBOS process. `NULL` means unlimited.
+- **partition_rate_limit_max**: If a per-partition rate limit is set, the maximum number of workflows that may be started from any one partition in a period.
+- **partition_rate_limit_period_sec**: If a per-partition rate limit is set, the length of the period in seconds.
 - **polling_interval_sec**: The interval at which workers poll the database for new workflows on this queue.
 - **created_at**: The epoch timestamp (in milliseconds) when this queue was first registered.
 - **updated_at**: The epoch timestamp (in milliseconds) when this queue's configuration was last updated.

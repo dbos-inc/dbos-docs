@@ -680,11 +680,14 @@ Queues are persisted to the system database, so any DBOS process or [`DBOSClient
 DBOS.register_queue(
     name: str,
     *,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
+    # Applied to the queue as a whole
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    # Applied to each partition separately
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "update_if_latest_version",
 ) -> Queue
@@ -700,23 +703,27 @@ If the queue already exists in the database, the `on_conflict` parameter control
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the application.
-- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `concurrency`.
-- `priority_enabled`: Enable setting priority for workflows on this queue.
-- `partition_queue`: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) for this queue.
+- `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `global_concurrency`.
+- `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process. Must be at least 1 and less than or equal to `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
+- `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
 - `on_conflict`: How to behave when a queue with this name already exists in the system database:
   - `"update_if_latest_version"` (default): overwrite the existing configuration only if the running application is the latest registered [application version](#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
   - `"always_update"`: always overwrite the existing configuration.
   - `"never_update"`: leave the existing configuration unchanged.
 
+Setting any `partition_*` limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queue_partition_key`](./queues.md#setenqueueoptions), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
+The queue-wide limits (`global_concurrency`, `worker_concurrency`, and `limiter`) continue to apply across all partitions.
+
 Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database.
 
 **Example syntax:**
 
 ```python
-DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
+DBOS.register_queue("email", global_concurrency=10, limiter={"limit": 100, "period": 60})
 ```
 
 ### register_queue_async
@@ -725,11 +732,12 @@ DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60
 DBOS.register_queue_async(
     name: str,
     *,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "update_if_latest_version",
 ) -> Coroutine[Any, Any, Queue]
@@ -750,7 +758,7 @@ Retrieve a queue by name from the system database, or `None` if no queue with th
 ```python
 queue = DBOS.retrieve_queue("email")
 if queue is not None:
-    print(queue.concurrency)
+    print(queue.global_concurrency)
 ```
 
 ### retrieve_queue_async
@@ -780,7 +788,7 @@ Returns an empty list if no queues have been registered.
 
 ```python
 for queue in DBOS.list_queues():
-    print(queue.name, queue.concurrency)
+    print(queue.name, queue.global_concurrency)
 ```
 
 ### list_queues_async
@@ -816,7 +824,7 @@ The queue does not need to be registered at the time of the call: if no queue wi
 def send_email(to: str) -> None:
     ...
 
-DBOS.register_queue("email", concurrency=10)
+DBOS.register_queue("email", global_concurrency=10)
 handle = DBOS.enqueue_workflow("email", send_email, "alice@example.com")
 handle.get_result()
 ```
