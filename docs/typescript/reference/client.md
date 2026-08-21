@@ -499,7 +499,7 @@ Options have the same meaning as on `DBOS.registerQueue` except for `onConflict`
 ```ts
 const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
 await client.registerQueue("email", {
-  concurrency: 10,
+  globalConcurrency: 10,
   rateLimit: { limitPerPeriod: 100, periodSec: 60 },
 });
 await client.enqueue({queueName: "email", workflowName: "sendEmail"}, "alice@example.com");

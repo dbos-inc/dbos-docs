@@ -164,7 +164,7 @@ Pass the `queueName` option when creating the schedule:
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-await DBOS.registerQueue("scheduled_queue", { concurrency: 1 });
+await DBOS.registerQueue("scheduled_queue", { globalConcurrency: 1 });
 
 await DBOS.createSchedule({
     scheduleName: "my-task-schedule",

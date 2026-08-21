@@ -798,7 +798,7 @@ Learn more in the [queues tutorial](../python/tutorials/queue-tutorial.md).
 
 ```typescript
 // Register a queue with concurrency limits
-await DBOS.registerQueue("order-processing", { concurrency: 10 });
+await DBOS.registerQueue("order-processing", { globalConcurrency: 10 });
 
 // Enqueue a workflow
 const handle = await DBOS.startWorkflow(orderWorkflowFn, { queueName: "order-processing" })(order);

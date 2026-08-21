@@ -280,6 +280,10 @@ def on_user_task_submission(user_id: str, task: Task):
         DBOS.enqueue_workflow("partitioned_queue", process_task, task)
 ```
 
+:::warning
+Every enqueue on a partitioned queue must supply a partition key.
+:::
+
 ### Combining Queue-Wide and Per-Partition Limits
 
 A partitioned queue enforces its per-partition limits **and** its queue-wide limits ([`global_concurrency`](#global-concurrency), [`worker_concurrency`](#worker-concurrency), and [`limiter`](#rate-limiting)) at the same time.
