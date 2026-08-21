@@ -226,32 +226,6 @@ for value in DBOS.read_stream(workflow_id, example_key):
     print(f"Received: {value}")
 ```
 
-#### Reading a Single Value
-
-If you want one specific value instead of the whole stream, use [`DBOS.read_stream_offset`](../reference/contexts.md#read_stream_offset).
-It waits for the value at that offset to be written and returns it.
-This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
-
-```python
-DBOS.read_stream_offset(
-    workflow_id: str,
-    key: str,
-    offset: int,
-    *,
-    polling_interval_sec: Optional[float] = None,
-    timeout_seconds: Optional[float] = None,
-) -> Any
-```
-
-**Example syntax:**
-
-```python
-# Wait for the third value written to the stream
-value = DBOS.read_stream_offset(workflow_id, example_key, 2)
-```
-
-If the stream ends before reaching the requested offset, no value will ever arrive there, so the call raises `DBOSStreamTimeoutError` rather than waiting forever.
-
 #### Stream Timeouts
 
 By default, a read waits indefinitely for the next value.

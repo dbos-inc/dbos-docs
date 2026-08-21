@@ -201,30 +201,6 @@ for await (const value of DBOS.readStream(workflowID, "example_key")) {
 }
 ```
 
-#### Reading a Single Value
-
-If you want one specific value instead of the whole stream, use [`DBOS.readStreamOffset`](../reference/methods.md#dbosreadstreamoffset).
-It waits for the value at that offset to be written and returns it.
-This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
-
-```typescript
-DBOS.readStreamOffset<T>(
-  workflowID: string,
-  key: string,
-  offset: number,
-  options?: ReadStreamOffsetOptions
-): Promise<T>
-```
-
-**Example syntax:**
-
-```typescript
-// Wait for the third value written to the stream
-const value = await DBOS.readStreamOffset(workflowID, "example_key", 2);
-```
-
-If the stream ends before reaching the requested offset, no value will ever arrive there, so the call throws `DBOSStreamTimeoutError` rather than waiting forever.
-
 #### Stream Timeouts
 
 By default, a read waits indefinitely for the next value.

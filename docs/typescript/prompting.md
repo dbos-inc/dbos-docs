@@ -816,32 +816,6 @@ try {
 
 Match a stream timeout with `isStreamTimeoutError` rather than `instanceof DBOSStreamTimeoutError`: when a workflow replays a checkpointed timeout, the error is revived as a plain `Error`, so `instanceof` does not hold.
 
-### Reading a Single Stream Value
-
-If you want one specific value instead of the whole stream, use `DBOS.readStreamOffset`.
-It waits for the value at that offset to be written and returns it.
-This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
-
-```typescript
-DBOS.readStreamOffset<T>(
-  workflowID: string,
-  key: string,
-  offset: number,
-  options?: ReadStreamOffsetOptions
-): Promise<T>
-
-type ReadStreamOffsetOptions = Omit<ReadStreamOptions, 'offset'>;
-```
-
-Throws `DBOSStreamTimeoutError` if `timeoutSeconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive there).
-
-**Example syntax:**
-
-```typescript
-// Wait for the third value written to the stream
-const value = await DBOS.readStreamOffset(workflowID, "example_key", 2);
-```
-
 ## Steps
 
 

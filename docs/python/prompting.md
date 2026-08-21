@@ -862,32 +862,6 @@ except dboserror.DBOSStreamTimeoutError:
     print("The producer stopped sending values")
 ```
 
-### Reading a Single Stream Value
-
-If you want one specific value instead of the whole stream, use `DBOS.read_stream_offset`.
-It waits for the value at that offset to be written and returns it.
-This is useful for resuming where a previous reader left off, or for consuming a stream one value at a time from separate requests.
-
-```python
-DBOS.read_stream_offset(
-    workflow_id: str,
-    key: str,
-    offset: int,
-    *,
-    polling_interval_sec: Optional[float] = None,
-    timeout_seconds: Optional[float] = None,
-) -> Any
-```
-
-Raises `DBOSStreamTimeoutError` if `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive there).
-
-**Example syntax:**
-
-```python
-# Wait for the third value written to the stream
-value = DBOS.read_stream_offset(workflow_id, example_key, 2)
-```
-
 ### Configurable Retries
 
 You can optionally configure a step to automatically retry any exception a set number of times with exponential backoff.
