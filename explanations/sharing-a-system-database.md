@@ -58,6 +58,21 @@ const result = await handle.getResult();
 ```
 
 </TabItem>
+<TabItem value="golang" label="Go">
+
+```go
+handle, err := dbos.Enqueue[any](ctx, "orders", "process_order",
+    "order-123",
+    // The name of the application that implements process_order
+    dbos.WithEnqueueApplicationName("order-service"),
+)
+if err != nil {
+    return err
+}
+result, err := handle.GetResult()
+```
+
+</TabItem>
 </Tabs>
 
 If the applications are written in different languages, also set the serialization type to portable so the target application can read the arguments.
@@ -85,7 +100,7 @@ dbos rename-application --to my-app --adopt-unclaimed-rows
 ## Renaming an Application
 
 Because ownership is recorded under the application's name, renaming an application requires transferring ownership of its rows.
-To rename an application, first stop it, then run `dbos rename-application` ([Python](../python/reference/cli.md#dbos-rename-application), [TypeScript](../typescript/reference/cli.md#npx-dbos-rename-application)), then restart it under its new name:
+To rename an application, first stop it, then run `dbos rename-application` ([Python](../python/reference/cli.md#dbos-rename-application), [TypeScript](../typescript/reference/cli.md#npx-dbos-rename-application), [Go](../golang/reference/methods.md#renameapplication)), then restart it under its new name:
 
 ```shell
 dbos rename-application --from old-name --to new-name

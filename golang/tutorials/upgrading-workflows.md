@@ -174,7 +174,7 @@ dbosCtx, err := dbos.NewContext(context.Background(), dbos.Config{
 When DBOS tries to recover workflows, it only recovers workflows whose version matches the current application version.
 This prevents recovery of workflows that depend on different code.
 
-Enqueued workflows with no application version (for example, enqueued from a [DBOS Client](../reference/dbos-context.md#newclient) without specifying a version) are only dequeued by processes running the **latest** registered application version.
+Enqueued workflows with no application version (for example, enqueued from a [DBOS Client](../reference/dbos-context.md#newclient) without specifying a version) are only dequeued by processes running their owning application's **latest** registered version.
 This ensures version-less work is picked up by the newest code during a rolling deploy.
 
 When using versioning, we recommend **blue-green** code upgrades:

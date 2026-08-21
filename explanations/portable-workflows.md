@@ -132,12 +132,14 @@ import "github.com/dbos-inc/dbos-transact-golang/dbos"
 
 client, _ := dbos.NewClient(context.Background(), dbos.ClientConfig{
     DatabaseURL: os.Getenv("DBOS_SYSTEM_DATABASE_URL"),
+    // The name of the application that implements process_order
+    AppName:     "order-service",
 })
 // In Go, use dbos.PortableWorkflowArgs to request a portable enqueue
 args := dbos.PortableWorkflowArgs{
     PositionalArgs: []any{"order-123"},
 }
-handle, err := dbos.Enqueue[dbos.PortableWorkflowArgs, any](
+handle, err := dbos.Enqueue[any](
     client, "orders", "process_order", args,
 )
 ```

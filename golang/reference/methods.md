@@ -93,7 +93,17 @@ func WithEnqueueApplicationVersion(version string) EnqueueOption
 ```
 
 The version of your application that should process this workflow.
-If left undefined, it will use the current application version.
+If left undefined, a `Context` enqueueing to its own application uses its current application version; otherwise (from a [standalone client](./dbos-context.md#newclient), or when enqueueing to another application with [`WithEnqueueApplicationName`](#withenqueueapplicationname)) the version is left unset and the workflow is dequeued at the owning application's latest registered version.
+
+#### WithEnqueueApplicationName
+
+```go
+func WithEnqueueApplicationName(name string) EnqueueOption
+```
+
+The application that owns the enqueued workflow, which dequeues and runs it.
+Defaults to the enqueueing context's own application.
+Use this to run another application's workflows when multiple applications [share a system database](../../explanations/sharing-a-system-database.md); if the applications are written in different languages, also pass a [`PortableWorkflowArgs`](#portableworkflowargs) as the input so the target application can read the arguments.
 
 #### WithEnqueueTimeout
 
@@ -419,6 +429,9 @@ func ListWorkflows(ctx Client, opts ...ListWorkflowsOption) ([]WorkflowStatus, e
 
 Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
 
+If multiple applications [share a system database](../../explanations/sharing-a-system-database.md), only workflows owned by the calling context's application (plus workflows owned by no application) are listed by default; use [`WithFilterApplicationName`](#withfilterapplicationname) to list other applications' workflows.
+A [standalone client](./dbos-context.md#newclient) with no `AppName` lists every application's workflows.
+
 **Example usage:**
 
 ```go
@@ -440,6 +453,14 @@ if err != nil {
     log.Fatal(err)
 }
 ```
+
+#### WithFilterApplicationName
+
+```go
+func WithFilterApplicationName(applicationName ...string) ListWorkflowsOption
+```
+
+List workflows owned by these applications (workflows owned by no application are always included).
 
 #### WithFilterAppVersion
 
@@ -737,6 +758,7 @@ type GetWorkflowAggregatesInput struct {
     GroupByQueueName          bool
     GroupByExecutorID         bool
     GroupByApplicationVersion bool
+    GroupByApplicationName    bool
 
     // Select* flags choose which aggregates to compute. At least one must be true.
     SelectCount             bool
@@ -764,6 +786,7 @@ type GetWorkflowAggregatesInput struct {
     AuthenticatedUser  []string
     ForkedFrom         []string
     ParentWorkflowID   []string
+    ApplicationName    []string
     WasForkedFrom      *bool
     HasParent          *bool
     Attributes         map[string]any
@@ -771,7 +794,8 @@ type GetWorkflowAggregatesInput struct {
 ```
 
 The result is one [`WorkflowAggregateRow`](#workflowaggregaterow) per non-empty group.
-The `Group` map contains an entry per enabled grouping column (`"status"`, `"name"`, `"queue_name"`, `"executor_id"`, `"application_version"`, `"time_bucket"`).
+The `Group` map contains an entry per enabled grouping column (`"status"`, `"name"`, `"queue_name"`, `"executor_id"`, `"application_version"`, `"application_name"`, `"time_bucket"`).
+Like [`ListWorkflows`](#listworkflows), when the `ApplicationName` filter is unset, only workflows owned by the calling context's application (plus workflows owned by no application) are aggregated.
 `Count`, `MinCreatedAt`, `MaxQueueWaitMs`, and `MaxTotalLatencyMs` are populated only for the corresponding enabled `Select*` flag.
 
 **Parameters:**
@@ -834,11 +858,13 @@ type GetStepAggregatesInput struct {
     WorkflowIDPrefix []string
     CompletedAfter   time.Time
     CompletedBefore  time.Time
+    ApplicationName  []string
 }
 ```
 
 The result is one [`StepAggregateRow`](#stepaggregaterow) per non-empty group.
 The `Group` map contains an entry per enabled grouping column (`"function_name"`, `"status"`, `"time_bucket"`).
+Like [`ListWorkflows`](#listworkflows), when the `ApplicationName` filter is unset, only steps owned by the calling context's application (plus steps owned by no application) are aggregated.
 `Count` and `MaxDurationMs` are populated only for the corresponding enabled `Select*` flag.
 
 **Parameters:**
@@ -1134,6 +1160,7 @@ type WorkflowStatus struct {
     UpdatedAt          time.Time          `json:"updated_at"`           // When the workflow status was last updated
     ApplicationVersion string             `json:"application_version"`  // Version of the application that created this workflow
     ApplicationID      string             `json:"application_id"`       // Application identifier
+    ApplicationName    string             `json:"application_name"`     // Owning application; empty if the workflow is owned by no application
     Attempts           int                `json:"attempts"`             // Number of execution attempts
     QueueName          string             `json:"queue_name"`           // Queue name (if workflow was enqueued)
     Timeout            time.Duration      `json:"-"`                    // Workflow timeout duration; rendered as timeout_ms (integer milliseconds) in JSON
@@ -1231,6 +1258,7 @@ type WorkflowSchedule struct {
     AutomaticBackfill bool            // Whether to backfill missed ticks on application start
     CronTimezone      string          // IANA timezone name (empty for UTC)
     QueueName         string          // Queue on which scheduled workflows are enqueued
+    ApplicationName   string          // Owning application; empty if the schedule is owned by no application
 }
 ```
 
@@ -1260,6 +1288,7 @@ type ScheduleSpec struct {
     AutomaticBackfill bool   // Backfill missed ticks when the schedule is reloaded after downtime
     CronTimezone      string // Optional IANA timezone used to interpret the cron expression
     QueueName         string // Optional queue to route scheduled invocations to (defaults to the internal queue)
+    ApplicationName   string // Optional application that owns the schedule and runs its workflows (defaults to the caller's application)
 }
 ```
 
@@ -1271,6 +1300,7 @@ Field notes:
 - **AutomaticBackfill**: backfill missed ticks whenever the schedule is reloaded after downtime, or when a paused schedule is resumed. Missed ticks are computed with the schedule's **current** cron expression, over the window from the last fire to now. If you change a schedule's cron expression (e.g. with [`ApplySchedules`](#applyschedules)) while it is not running, the backfill generates one execution per tick of the *new* expression across that entire window—including times the old expression would never have matched.
 - **CronTimezone**: an [IANA timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) name (e.g. `"America/New_York"`) in which to interpret the cron expression. Defaults to UTC.
 - **QueueName**: route each scheduled invocation to the named [queue](./queues.md) instead of the default internal queue.
+- **ApplicationName**: the application that owns this schedule and runs its workflows. Defaults to the creating context's own application (for a [standalone client](./dbos-context.md#newclient), its `AppName`). Always set an application name either here or in the client's configuration if multiple applications [share a system database](../../explanations/sharing-a-system-database.md).
 
 The workflow function must conform to:
 
@@ -1352,7 +1382,8 @@ Retrieve a [`WorkflowSchedule`](#workflowschedule) by name. If no schedule with 
 func ListSchedules(ctx Client, opts ...ListSchedulesOption) ([]WorkflowSchedule, error)
 ```
 
-List schedules, optionally filtered. Pass no options to return all schedules.
+List schedules, optionally filtered.
+By default, only schedules owned by the calling context's application (plus schedules owned by no application) are listed; a [standalone client](./dbos-context.md#newclient) with no `AppName` lists every application's schedules.
 
 #### WithScheduleStatuses
 
@@ -1377,6 +1408,22 @@ func WithScheduleNamePrefixes(prefixes ...string) ListSchedulesOption
 ```
 
 Filter by schedule name prefix(es).
+
+#### WithScheduleNames
+
+```go
+func WithScheduleNames(names ...string) ListSchedulesOption
+```
+
+Filter by exact schedule name(s).
+
+#### WithScheduleApplicationNames
+
+```go
+func WithScheduleApplicationNames(names ...string) ListSchedulesOption
+```
+
+List schedules owned by these applications (schedules owned by no application are always included).
 
 ### PauseSchedule
 
@@ -1436,14 +1483,18 @@ Cannot be called from within a workflow.
 DBOS tracks each application version that has launched against the system database.
 You can use these methods to inspect the registered versions and control which one is treated as latest&mdash;for example, to recover workflows onto a specific version after a rollout.
 
+Versions are tracked per application: if multiple applications [share a system database](../../explanations/sharing-a-system-database.md), these methods only see versions registered by the calling handle's application (plus versions owned by no application), so one application's deployments do not affect which version its peers consider latest.
+A [standalone client](./dbos-context.md#newclient) with no `AppName` sees every application's versions.
+
 ### VersionInfo
 
 ```go
 type VersionInfo struct {
-    ID        string // Internal version ID
-    Name      string // Application version name
-    Timestamp int64  // Epoch milliseconds; the most recent timestamp identifies the latest version
-    CreatedAt int64  // Epoch milliseconds at which the version was first registered
+    ID              string // Internal version ID
+    Name            string // Application version name
+    Timestamp       int64  // Epoch milliseconds; the most recent timestamp identifies the latest version
+    CreatedAt       int64  // Epoch milliseconds at which the version was first registered
+    ApplicationName string // Owning application; empty if the version is owned by no application
 }
 ```
 
@@ -1477,10 +1528,50 @@ func SetLatestApplicationVersion(ctx Client, versionName string) error
 ```
 
 Mark the named application version as latest by updating its timestamp to the current time.
+Promoting a version registered by a different application returns an error.
 
 **Parameters:**
 - **ctx**: The DBOS client or context.
 - **versionName**: The name of the registered application version to mark as latest.
+
+## Application Rename
+
+### RenameApplication
+
+```go
+func RenameApplication(ctx Client, input RenameApplicationInput) (ApplicationRowCounts, error)
+```
+
+```go
+type RenameApplicationInput struct {
+    OldName            string // The application's previous name. Empty moves nothing but the unclaimed rows, so it requires AdoptUnclaimedRows.
+    NewName            string // The application that ends up owning the rows. Required.
+    BatchSize          int    // Completed workflows and steps re-owned per transaction. Zero defaults to DefaultRenameBatchSize (10,000).
+    AdoptUnclaimedRows bool   // Also transfer rows no application owns.
+}
+
+type ApplicationRowCounts struct {
+    Queues    int64 `json:"queues"`
+    Schedules int64 `json:"schedules"`
+    Versions  int64 `json:"versions"`
+    Workflows int64 `json:"workflows"`
+    Steps     int64 `json:"steps"`
+}
+```
+
+Every workflow, step, queue, schedule, and application version is owned by the application (identified by its configured [`AppName`](./configuration.md)) that created it.
+After renaming an application, use this method (or the `dbos rename-application` [CLI command](./cli.md)) to transfer everything owned by the old name to the new name.
+Returns the number of rows transferred, by table.
+
+Queues, schedules, versions, and in-flight workflows are transferred in a single transaction; completed workflows and their steps are then transferred in batches of `BatchSize`.
+The operation is idempotent: if interrupted, running it again resumes where it left off.
+
+Set `AdoptUnclaimedRows` to also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership.
+
+:::warning
+Stop the application being renamed before running this.
+A running application would race the rename, creating new work under its old name.
+:::
 
 ## DBOS Variables
 

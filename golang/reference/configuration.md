@@ -32,6 +32,10 @@ type Config struct {
 
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
 
+`AppName` identifies your application.
+Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
+If you rename an application, transfer ownership of its data with [`RenameApplication`](./methods.md#renameapplication) or the `dbos rename-application` CLI command.
+
 For example:
 ```go
 dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
@@ -68,6 +72,7 @@ On expiry, the returned error names the startup phase that timed out (connecting
 In particular, if the connection pool had no free connections when the timeout expired — common when passing a shared `SystemDBPool` whose connections are checked out by the application — the error reports the pool's acquired/max connection counts and suggests increasing pool capacity or releasing checked-out connections.
 
 By default, DBOS creates its own pool: for Postgres/CockroachDB, at most 20 connections (1 hour max connection lifetime, 5 minutes idle timeout, 10 seconds connect timeout); for SQLite, at most 8 open connections.
+For Postgres/CockroachDB, a `pool_max_conns` parameter in `DatabaseURL` (e.g. `postgres://...?pool_max_conns=7`) overrides the default maximum pool size.
 To use different pool settings, construct the pool yourself and pass it via `Config.SystemDBPool` (Postgres/CockroachDB) or `Config.SQLiteSystemDB` (SQLite); DBOS uses it as-is.
 
 **Migrations** are versioned and recorded in the `dbos_migrations` table of your system database schema.

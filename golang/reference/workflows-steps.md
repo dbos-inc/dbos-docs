@@ -661,8 +661,7 @@ Additionally, every implementation must honor this contract:
 
 1. `Decode` can be called with a nil `*string`: some checkpoints record an error and never write an output, so the stored value is SQL `NULL`. `Decode` must tolerate nil input (typically returning the zero value).
 2. The nil round-trip must be lossless: `Decode(Encode(nil-value))` must yield that nil value back.
-3. The literal string `__DBOS_NIL` is reserved by the engine — a custom `Encode` must never emit it for non-nil data.
-4. `Encode` must not return a nil `*string`; to represent nil data, return a pointer to a sentinel string (the built-in gob serializer stores `__DBOS_NIL`; the portable JSON serializer stores `null`).
+3. `Encode` must not return a nil `*string`; to represent nil data, return a pointer to a sentinel string of the serializer's choosing (the built-in gob serializer stores `__DBOS_NIL`; the portable JSON serializer stores `null`). The engine never interprets the sentinel: nil detection always goes through the serializer that wrote the row, so no string is reserved across formats.
 
 One deliberate exception: `Recv` and `GetEvent` checkpoint the *sender's* encoded payload verbatim, under the sender's recorded format. The receiver's serializer is never asked to re-encode a message or event it did not produce.
 
@@ -733,7 +732,7 @@ Classify with `errors.Is`, not the `Code` field of the outermost error: DBOS wra
 
 | Code | Sentinel | In a workflow | Meaning |
 |---|---|---|---|
-| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Execution Conflicts](../tutorials/step-tutorial.md#concurrent-execution-conflicts). |
+| `ErrorCodeConflictingID` | `ErrConflictingWorkflowID` | Return | A concurrent execution of the same workflow recorded a conflicting step checkpoint, or an operation reused a workflow ID already in use. DBOS handles this error at the workflow level: returning it parks your execution until the winning one settles, and it adopts that outcome. Swallowing it makes the two executions race step by step. See [Concurrent Executions](../../explanations/concurrent-executions.md). |
 | `ErrorCodeInitialization` | — | — | The DBOS context could not be initialized (invalid configuration, system database unreachable, or migrations failed). |
 | `ErrorCodeNonExistentWorkflow` | `ErrNonExistentWorkflow` | Handle | The referenced workflow does not exist (e.g., `RetrieveWorkflow` or a management method with an unknown ID). |
 | `ErrorCodeUnexpectedWorkflow` | `ErrUnexpectedWorkflow` | Return | A workflow ID was reused by a different workflow function or on a different queue, indicating non-determinism or conflicting ID reuse. Continuing would write your checkpoints into another workflow's history. |

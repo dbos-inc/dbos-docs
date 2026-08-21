@@ -83,6 +83,12 @@ A step interrupted this way returns an error matching `dbos.ErrWorkflowCancelled
 The interrupted step is deliberately **not** checkpointed, so if the workflow is later resumed, that step re-executes.
 (An API `CancelWorkflow`, by contrast, does not cancel the running execution's `Context`, and its cancellation errors carry no standard-library cause.)
 
+:::note
+Cancelling the context durably cancels the workflow: DBOS immediately marks it `CANCELLED` in the database, exactly as [`CancelWorkflow`](#cancelling-workflows) would.
+The cancellation is then enforced at the step boundary: a step that does not watch `ctx.Done()` keeps running, but when it returns, its result — success or error — is discarded rather than checkpointed, and the step call reports the cancellation instead.
+Handle cooperative cancellation in long-running steps and return early: any work done after the context is cancelled only computes a result DBOS will throw away.
+:::
+
 A durable [`Sleep`](../reference/methods.md#sleep) wakes immediately when the workflow's context is cancelled.
 An API `CancelWorkflow` does not wake an in-progress sleep: the workflow sleeps out the remaining time and stops at its next durable operation.
 
