@@ -120,8 +120,50 @@ Congratulations, you've run your first durable workflow with DBOS!
 <article className="col col--6">
 [Conductor](./production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 
-To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-app-starter`, then generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
-Provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
+To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+</article>
+
+<article className="col col--6">
+</article>
+
+<article className="col col--6">
+Then, install [`dbosctl`](./production/dbosctl.md), the Conductor command-line client.
+On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
+</article>
+
+<article className="col col--6">
+```bash
+curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh | sh
+```
+</article>
+
+<article className="col col--6">
+Next, create a `dbosctl` profile pointing at DBOS-managed Conductor and log in with your DBOS account.
+`dbosctl login` prints a URL and a code for you to approve in your browser.
+</article>
+
+<article className="col col--6">
+```bash
+dbosctl config set managed --managed
+dbosctl login
+```
+</article>
+
+<article className="col col--6">
+Then, register your application with Conductor and create an API key.
+The name you register must match your app's name in its DBOS configuration, which is `dbos-app-starter`.
+The key's secret is printed once and cannot be retrieved afterwards, so copy it now.
+</article>
+
+<article className="col col--6">
+```bash
+dbosctl app register dbos-app-starter
+dbosctl api-key create dbos-app-starter-key
+```
+</article>
+
+<article className="col col--6">
+Finally, provide your API key to your app through the `DBOS_CONDUCTOR_KEY` environment variable, then restart it to connect it to Conductor.
 </article>
 
 <article className="col col--6">
