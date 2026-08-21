@@ -248,8 +248,31 @@ Learn more about DBOS queues [here](./tutorials/queue-tutorial.md).
 [Conductor](../production/conductor.md) is the control plane for your durable workflows, providing distributed workflow recovery, observability, and management.
 Once you connect your app to Conductor, you can view and manage all its workflows and queued tasks from the [DBOS console](https://console.dbos.dev).
 
-To connect your app to Conductor, first register it on the [DBOS console](https://console.dbos.dev) using the name `dbos-starter` (the name must match the `name` in your DBOS configuration).
-Then, generate an API key from the [key settings page](https://console.dbos.dev/settings/apikey).
+To connect your app to Conductor, first sign up for an account on the [DBOS console](https://console.dbos.dev/login-redirect).
+
+Then, install [`dbosctl`](../production/dbosctl.md), the Conductor command-line client.
+On Windows, [download a release binary](https://github.com/dbos-inc/dbos-ctl/releases) instead.
+
+```shell
+curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh | sh
+```
+
+Next, configure a `dbosctl` profile and log in.
+`dbosctl login` prints a URL and a code for you to approve in your browser.
+
+```shell
+dbosctl config set dbos --managed
+dbosctl login
+```
+
+Then, register your application with Conductor and create an API key.
+The name you register must match the `name` in your DBOS configuration.
+The key's secret is printed once and cannot be retrieved afterwards, so copy it now.
+
+```shell
+dbosctl app register dbos-starter
+dbosctl api-key create dbos-starter-key
+```
 
 Next, supply your API key to your app through the `conductor_key` configuration option.
 Update the configuration in `main.py` to read the key from an environment variable:
@@ -263,7 +286,7 @@ Update the configuration in `main.py` to read the key from an environment variab
     }
 ```
 
-Finally, set the `DBOS_CONDUCTOR_KEY` environment variable to the key you generated and restart your app:
+Finally, set the `DBOS_CONDUCTOR_KEY` environment variable to the key you created and restart your app:
 
 ```shell
 export DBOS_CONDUCTOR_KEY=<your-api-key>
