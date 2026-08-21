@@ -192,12 +192,12 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-await DBOS.registerQueue("example_queue", { concurrency: 10 });
+await DBOS.registerQueue("example_queue", { globalConcurrency: 10 });
 ```
 
 #### In-Order Processing
 
-You can use a queue with `concurrency=1` to guarantee sequential, in-order processing of events.
+You can use a queue with `globalConcurrency: 1` to guarantee sequential, in-order processing of events.
 Only a single event will be processed at a time.
 For example, this app processes events sequentially in the order of their arrival:
 
@@ -222,7 +222,7 @@ app.get("/events/:event", async (req, res) => {
 // Launch DBOS, register the queue, and start the server
 async function main() {
   await DBOS.launch();
-  await DBOS.registerQueue("in_order_queue", { concurrency: 1 });
+  await DBOS.registerQueue("in_order_queue", { globalConcurrency: 1 });
   app.listen(3000, () => {});
 }
 
@@ -251,8 +251,8 @@ Workers pick up the new configuration on their next polling iteration.
 ```javascript
 const queue = await DBOS.retrieveQueue("example_queue");
 if (queue !== null) {
-  // Change the queue's concurrency.
-  await queue.setConcurrency(20);
+  // Change the queue's global concurrency.
+  await queue.setGlobalConcurrency(20);
 
   // Change its rate limit.
   await queue.setRateLimit({ limitPerPeriod: 25, periodSec: 30 });
@@ -296,65 +296,70 @@ async function main() {
 ### Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
+A queue is partitioned if you register it with any per-partition flow control limit:
+
+| Option | Meaning |
+| --- | --- |
+| `partitionConcurrency` | Maximum workflows from any one partition running at once across all processes. |
+| `partitionWorkerConcurrency` | Maximum workflows from any one partition running at once on a single process. |
+| `partitionRateLimit` | Maximum workflows that may be started from any one partition in a given period. |
+
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+You can do this with a queue whose `partitionConcurrency` is 1, where the partition key is user ID.
 
 **Example Syntax**
 
 ```ts
-await DBOS.registerQueue("example_queue", { partitionQueue: true, concurrency: 1 });
+await DBOS.registerQueue("example_queue", { partitionConcurrency: 1 });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
     // Partition the task queue by user ID. As the queue has a
-    // maximum concurrency of 1, this means that at most one
+    // per-partition concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
     await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", enqueueOptions: { queuePartitionKey: userID } })(task);
 }
 ```
 
-Sometimes, you want to apply global or per-worker limits to a partitioned queue.
-You can do this with **multiple levels of queueing**.
-Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
-Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
-to the non-partitioned queue and awaits its result.
-This ensures both queues' flow control limits are enforced on your workflow.
-For example:
+:::warning
+Every enqueue on a partitioned queue must supply a partition key.
+:::
+
+#### Combining Queue-Wide and Per-Partition Limits
+
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits ([`globalConcurrency`](#global-concurrency), [`workerConcurrency`](#worker-concurrency), and [`rateLimit`](#rate-limiting)) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
 
 ```ts
-// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-// and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
-// across all partitions (and at most one task per partition).
-await DBOS.registerQueue("concurrency-queue", { workerConcurrency: 5 });
-await DBOS.registerQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
-
-async function onUserTaskSubmission(userID: string, task: Task) {
-    // First, enqueue a "concurrency manager" workflow to the partitioned
-    // queue to enforce per-partition limits.
-    await DBOS.startWorkflow(concurrencyManager, {
-        queueName: "partitioned-queue",
-        enqueueOptions: { queuePartitionKey: userID }
-    })(task);
-}
-
-async function concurrencyManagerFunc(task: Task) {
-    // The "concurrency manager" workflow enqueues the processTask
-    // workflow on the non-partitioned queue and awaits its results
-    // to enforce global flow control limits.
-    const handle = await DBOS.startWorkflow(processTask, { queueName: "concurrency-queue" })(task);
-    return await handle.getResult();
-}
-const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
-
-async function processTaskFunc(task: Task) {
-    // ...
-}
-const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
+await DBOS.registerQueue("fair_queue", { partitionConcurrency: 1, workerConcurrency: 10 });
 ```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```ts
+// At most 100 tasks running globally and 25 running per tenant,
+// at most 10 tasks running per process and 2 per tenant per process,
+// and at most 1000 tasks started per minute globally and 50 per tenant.
+await DBOS.registerQueue("tenant_queue", {
+    globalConcurrency: 100,
+    workerConcurrency: 10,
+    rateLimit: { limitPerPeriod: 1000, periodSec: 60 },
+    partitionConcurrency: 25,
+    partitionWorkerConcurrency: 2,
+    partitionRateLimit: { limitPerPeriod: 50, periodSec: 60 },
+});
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+
+:::note
+[Deduplication](#deduplication) is not supported on partitioned queues.
+:::
 
 ### Deduplication
 
@@ -422,7 +427,7 @@ async function main() {
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `priorityEnabled: true` on your queue.
+Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -438,7 +443,7 @@ const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"
 
 async function main() {
   await DBOS.launch();
-  await DBOS.registerQueue("example_queue", { priorityEnabled: true });
+  await DBOS.registerQueue("example_queue");
 
   const task = ...
   const priority: number = ...

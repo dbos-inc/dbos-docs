@@ -740,7 +740,7 @@ DBOS.writeStream<T>(key: string, value: T): Promise<void>
 You can write values to a stream from a workflow or its steps using `DBOS.writeStream`.
 A workflow may have any number of streams, each identified by a unique key.
 
-When you are done writing to a stream, you should close it with `DBOS.closeStream`.
+When you are done writing to a stream, you should close it with `DBOS.closeStream`, which you can call from a workflow or its steps.
 Otherwise, streams are automatically closed when the workflow terminates.
 
 ```typescript
@@ -767,13 +767,28 @@ const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 ### Reading from Streams
 
 ```typescript
-DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+DBOS.readStream<T>(
+  workflowID: string,
+  key: string,
+  options?: ReadStreamOptions
+): AsyncGenerator<T, void, unknown>
+
+interface ReadStreamOptions {
+  offset?: number;
+  pollingIntervalMs?: number;
+  timeoutSeconds?: number;
+}
 ```
 
 You can read values from a stream from anywhere using `DBOS.readStream`.
 This function reads values from a stream identified by a workflow ID and key, yielding each value in order until the stream is closed or the workflow terminates.
 
 You can also read from a stream from outside a DBOS application with a DBOS Client.
+
+**Parameters:**
+- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream.
+- `pollingIntervalMs`: The interval, in milliseconds, between system database polls while waiting for new values. Must be at least `1`.
+- `timeoutSeconds`: How long to wait for **each** value before throwing `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to waiting indefinitely.
 
 **Example syntax:**
 
@@ -782,6 +797,24 @@ for await (const value of DBOS.readStream(workflowID, "example_key")) {
   console.log(`Received: ${JSON.stringify(value)}`);
 }
 ```
+
+```typescript
+import { DBOS, Error as DBOSErrors } from "@dbos-inc/dbos-sdk";
+
+try {
+  for await (const value of DBOS.readStream(workflowID, "example_key", { timeoutSeconds: 30 })) {
+    console.log(`Received: ${JSON.stringify(value)}`);
+  }
+} catch (e) {
+  if (DBOSErrors.isStreamTimeoutError(e)) {
+    console.log("The producer stopped sending values");
+  } else {
+    throw e;
+  }
+}
+```
+
+Match a stream timeout with `isStreamTimeoutError` rather than `instanceof DBOSStreamTimeoutError`: when a workflow replays a checkpointed timeout, the error is revived as a plain `Error`, so `instanceof` does not hold.
 
 ## Steps
 
@@ -933,15 +966,20 @@ DBOS.registerQueue(
 ): Promise<WorkflowQueue>
 
 interface RegisterQueueOptions {
-  concurrency?: number;
+  // Applied to the queue as a whole
+  globalConcurrency?: number;
   workerConcurrency?: number;
   rateLimit?: { limitPerPeriod: number; periodSec: number };
-  priorityEnabled?: boolean;
-  partitionQueue?: boolean;
+  // Applied to each partition separately
+  partitionConcurrency?: number;
+  partitionWorkerConcurrency?: number;
+  partitionRateLimit?: { limitPerPeriod: number; periodSec: number };
   minPollingIntervalMs?: number;
   onConflict?: 'update_if_latest_version' | 'always_update' | 'never_update';
 }
 ```
+
+Setting any partition limit makes the queue partitioned: every enqueue must supply a `queuePartitionKey`, and deduplication is not supported. The queue-wide limits still apply across all partitions.
 
 If a queue with this name already exists in the database, `onConflict` controls whether the configuration is overwritten:
 - `'update_if_latest_version'` (default): only overwrite when the running application is the latest registered version. Safe for rolling deploys.
@@ -977,14 +1015,14 @@ Use `DBOS.retrieveQueue` to fetch a queue, then call its `setX` methods. Workers
 ```javascript
 const queue = await DBOS.retrieveQueue("example_queue");
 if (queue !== null) {
-  await queue.setConcurrency(20);
+  await queue.setGlobalConcurrency(20);
   await queue.setRateLimit({ limitPerPeriod: 25, periodSec: 30 });
 }
 ```
 
 Available methods on the returned `WorkflowQueue`:
-- `setConcurrency(value)`, `setWorkerConcurrency(value)`, `setRateLimit(value)`, `setPriorityEnabled(value)`, `setPartitionQueue(value)`, `setMinPollingIntervalMs(value)` — write through to the database.
-- `getConcurrency()`, `getWorkerConcurrency()`, `getRateLimit()`, `getPriorityEnabled()`, `getPartitionQueue()`, `getMinPollingIntervalMs()` — re-read from the database.
+- `setGlobalConcurrency(value)`, `setWorkerConcurrency(value)`, `setRateLimit(value)`, `setPartitionConcurrency(value)`, `setPartitionWorkerConcurrency(value)`, `setPartitionRateLimit(value)`, `setMinPollingIntervalMs(value)` — write through to the database.
+- `getGlobalConcurrency()`, `getWorkerConcurrency()`, `getRateLimit()`, `getPartitionConcurrency()`, `getPartitionWorkerConcurrency()`, `getPartitionRateLimit()`, `getMinPollingIntervalMs()` — re-read from the database.
 
 To delete a queue, use `DBOS.deleteQueue("name")`. **Warning:** workflows already enqueued on a deleted queue can no longer be dequeued, executed, or recovered — unless a queue with the same name is later registered, in which case it will dequeue the leftover workflows. Do not rely on this behavior: cancel or drain pending workflows before deleting.
 
@@ -1086,7 +1124,7 @@ Take care when using a global concurrency limit as any `PENDING` workflow on the
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
-await DBOS.registerQueue("example_queue", { concurrency: 10 });
+await DBOS.registerQueue("example_queue", { globalConcurrency: 10 });
 ```
 
 #### In-Order Processing
@@ -1116,7 +1154,7 @@ app.get("/events/:event", async (req, res) => {
 // Launch DBOS, register the queue, and start the server
 async function main() {
   await DBOS.launch();
-  await DBOS.registerQueue("in_order_queue", { concurrency: 1 });
+  await DBOS.registerQueue("in_order_queue", { globalConcurrency: 1 });
   app.listen(3000, () => {});
 }
 
@@ -1166,65 +1204,58 @@ async function main() {
 ### Partitioning Queues
 
 You can **partition** queues to distribute work across dynamically created queue partitions.
+A queue is partitioned if you register it with any per-partition flow control limit:
+
+- `partitionConcurrency`: Maximum workflows from any one partition running at once across all processes.
+- `partitionWorkerConcurrency`: Maximum workflows from any one partition running at once on a single process.
+- `partitionRateLimit`: Maximum workflows that may be started from any one partition in a given period.
+
 When you enqueue a workflow on a partitioned queue, you must supply a queue partition key.
-Partitioned queues dequeue workflows and apply flow control limits for individual partitions, not for the entire queue.
 Essentially, you can think of each partition as a "subqueue" you dynamically create by enqueueing a workflow with a partition key.
 
 For example, suppose you want your users to each be able to run at most one task at a time.
-You can do this with a partitioned queue with a maximum concurrency limit of 1 where the partition key is user ID.
+You can do this with a queue whose `partitionConcurrency` is 1, where the partition key is user ID.
 
 **Example Syntax**
 
 ```ts
-await DBOS.registerQueue("example_queue", { partitionQueue: true, concurrency: 1 });
+await DBOS.registerQueue("example_queue", { partitionConcurrency: 1 });
 
 async function onUserTaskSubmission(userID: string, task: Task) {
     // Partition the task queue by user ID. As the queue has a
-    // maximum concurrency of 1, this means that at most one
+    // per-partition concurrency of 1, this means that at most one
     // task can run at once per user (but tasks from different
     // users can run concurrently).
     await DBOS.startWorkflow(taskWorkflow, { queueName: "example_queue", enqueueOptions: { queuePartitionKey: userID } })(task);
 }
 ```
 
-Sometimes, you want to apply global or per-worker limits to a partitioned queue.
-You can do this with **multiple levels of queueing**.
-Create two queues: a partitioned queue with per-partition limits and a non-partitioned queue with global limits.
-Enqueue a "concurrency manager" workflow to the partitioned queue, which then enqueues your actual workflow
-to the non-partitioned queue and awaits its result.
-This ensures both queues' flow control limits are enforced on your workflow.
-For example:
+A partitioned queue enforces its per-partition limits **and** its queue-wide limits (`globalConcurrency`, `workerConcurrency`, and `rateLimit`) at the same time.
+This lets you protect your workers from overload while still fairly distributing work between partitions.
+For example, this "fair queue" runs at most one task per user, but no more than 10 tasks on any single process:
 
 ```ts
-// By using two levels of queueing, we enforce both a concurrency limit of 1 on each partition
-// and a worker concurrency limit of 5, meaning that no more than 5 tasks can run per worker
-// across all partitions (and at most one task per partition).
-await DBOS.registerQueue("concurrency-queue", { workerConcurrency: 5 });
-await DBOS.registerQueue("partitioned-queue", { partitionQueue: true, concurrency: 1 });
-
-async function onUserTaskSubmission(userID: string, task: Task) {
-    // First, enqueue a "concurrency manager" workflow to the partitioned
-    // queue to enforce per-partition limits.
-    await DBOS.startWorkflow(concurrencyManager, {
-        queueName: "partitioned-queue",
-        enqueueOptions: { queuePartitionKey: userID }
-    })(task);
-}
-
-async function concurrencyManagerFunc(task: Task) {
-    // The "concurrency manager" workflow enqueues the processTask
-    // workflow on the non-partitioned queue and awaits its results
-    // to enforce global flow control limits.
-    const handle = await DBOS.startWorkflow(processTask, { queueName: "concurrency-queue" })(task);
-    return await handle.getResult();
-}
-const concurrencyManager = DBOS.registerWorkflow(concurrencyManagerFunc, { name: "concurrencyManager" });
-
-async function processTaskFunc(task: Task) {
-    // ...
-}
-const processTask = DBOS.registerWorkflow(processTaskFunc, { name: "processTask" });
+await DBOS.registerQueue("fair_queue", { partitionConcurrency: 1, workerConcurrency: 10 });
 ```
+
+Each queue-wide limit has a per-partition counterpart, so you can mix and match them freely:
+
+```ts
+// At most 100 tasks running globally and 25 running per tenant,
+// at most 10 tasks running per process and 2 per tenant per process,
+// and at most 1000 tasks started per minute globally and 50 per tenant.
+await DBOS.registerQueue("tenant_queue", {
+    globalConcurrency: 100,
+    workerConcurrency: 10,
+    rateLimit: { limitPerPeriod: 1000, periodSec: 60 },
+    partitionConcurrency: 25,
+    partitionWorkerConcurrency: 2,
+    partitionRateLimit: { limitPerPeriod: 50, periodSec: 60 },
+});
+```
+
+Each per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+Deduplication is not supported on partitioned queues.
 
 ### Deduplication
 
@@ -1260,7 +1291,7 @@ async function main() {
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
-If using priority, you must set `priorityEnabled: true` on your queue.
+Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
 Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
@@ -1276,7 +1307,7 @@ const taskWorkflow = DBOS.registerWorkflow(taskFunction, {"name": "taskWorkflow"
 
 async function main() {
   await DBOS.launch();
-  await DBOS.registerQueue("example_queue", { priorityEnabled: true });
+  await DBOS.registerQueue("example_queue");
 
   const task = ...
   const priority: number = ...

@@ -163,7 +163,7 @@ Pass the `queue_name` parameter when creating the schedule:
 ```python
 from dbos import DBOS
 
-DBOS.register_queue("scheduled_queue", concurrency=1)
+DBOS.register_queue("scheduled_queue", global_concurrency=1)
 
 DBOS.create_schedule(
     schedule_name="my-task-schedule",

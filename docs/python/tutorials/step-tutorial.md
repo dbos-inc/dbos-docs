@@ -101,6 +101,30 @@ async def example_step():
             return await response.text()
 ```
 
+### Step Timeouts
+
+You can set a timeout for an async step with `timeout_seconds`.
+If the step runs longer than that, it is cancelled and `DBOSStepTimeoutError` is raised to the calling workflow.
+This is useful for bounding a step that may hang, such as a request to an unresponsive service.
+
+```python
+@DBOS.step(timeout_seconds=30)
+async def example_step():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://example.com") as response:
+            return await response.text()
+```
+
+Step timeouts are only supported for [async steps](#coroutine-steps), because Python provides no way to preempt a running synchronous function.
+
+If the step also has [retries](#configurable-retries) enabled, **each attempt gets its own timeout**, and time spent waiting between retries is not counted against it.
+A step with `timeout_seconds=30, max_attempts=3` therefore allows up to three 30-second attempts, not 30 seconds total.
+You can configure this behavior with a `should_retry` predicate, not retrying `DBOSStepTimeoutError`.
+
+:::note
+The timeout is enforced only when the step runs as part of a workflow.
+:::
+
 ### Running Steps In-Line With `run_step`
 
 If a function is not decorated with `@DBOS.step` and you would prefer not to wrap it, you can call the code as a step using [`DBOS.run_step`](../reference/contexts.md#run_step) (or `DBOS.run_step_async`).

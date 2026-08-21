@@ -49,6 +49,7 @@ DBOS.step(
     backoff_rate: float = 2.0,
     should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]] = None,
     preemptible: bool = False,
+    timeout_seconds: Optional[float] = None,
 )
 ```
 
@@ -71,6 +72,7 @@ def example_step():
 - `backoff_rate`: How much to multiplicatively increase `interval_seconds` between retries.
 - `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
 - `preemptible`: If `True`, the step is cancelled immediately when its workflow is cancelled, rather than running to completion. Only supported for async steps.
+- `timeout_seconds`: If set, cancel the step and raise `DBOSStepTimeoutError` if it runs for longer than this many seconds. Only supported for async steps, and must be positive and finite. Each retry attempt gets a fresh timeout. See [Step Timeouts](../tutorials/step-tutorial.md#step-timeouts).
 
 
 ### transaction

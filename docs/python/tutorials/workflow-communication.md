@@ -206,7 +206,11 @@ def producer_workflow():
 ```python
 DBOS.read_stream(
     workflow_id: str,
-    key: str
+    key: str,
+    *,
+    offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -221,3 +225,21 @@ You can also read from a stream from outside a DBOS application with a [DBOS Cli
 for value in DBOS.read_stream(workflow_id, example_key):
     print(f"Received: {value}")
 ```
+
+#### Stream Timeouts
+
+By default, a read waits indefinitely for the next value.
+Pass `timeout_seconds` to bound that wait; if no value arrives in time, the read raises `DBOSStreamTimeoutError`.
+The timeout applies to **each value**, not to the read as a whole; the clock restarts every time a value is delivered.
+
+```python
+from dbos import DBOS
+from dbos import error as dboserror
+
+try:
+    for value in DBOS.read_stream(workflow_id, example_key, timeout_seconds=30):
+        print(f"Received: {value}")
+except dboserror.DBOSStreamTimeoutError:
+    print("The producer stopped sending values")
+```
+

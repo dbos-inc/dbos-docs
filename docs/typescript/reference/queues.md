@@ -19,11 +19,14 @@ DBOS.registerQueue(
 ): Promise<WorkflowQueue>
 
 interface RegisterQueueOptions {
-  concurrency?: number;
+  // Applied to the queue as a whole
+  globalConcurrency?: number;
   workerConcurrency?: number;
   rateLimit?: QueueRateLimit;
-  priorityEnabled?: boolean;
-  partitionQueue?: boolean;
+  // Applied to each partition separately
+  partitionConcurrency?: number;
+  partitionWorkerConcurrency?: number;
+  partitionRateLimit?: QueueRateLimit;
   minPollingIntervalMs?: number;
   onConflict?: QueueConflictResolution;
 }
@@ -45,18 +48,22 @@ If the queue already exists in the database, the `onConflict` option controls wh
 
 **Parameters:**
 - **name**: The name of the queue. Must be unique among all queues in the application.
-- **concurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Defaults to no limit.
-- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `concurrency`.
+- **globalConcurrency**: The maximum number of workflows from this queue that may run concurrently across all DBOS processes. Defaults to no limit.
+- **workerConcurrency**: The maximum number of workflows from this queue that may run concurrently within a single DBOS process. Must be less than or equal to `globalConcurrency`.
 - **rateLimit**: A limit on the maximum number of functions which may be started in a given period.
   - **rateLimit.limitPerPeriod**: The number of workflows that may be started within the specified time period.
   - **rateLimit.periodSec**: The time period across which `limitPerPeriod` applies.
-- **priorityEnabled**: Enable setting priority for workflows on this queue.
-- **partitionQueue**: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) for this queue.
+- **partitionConcurrency**: The maximum number of workflows from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `globalConcurrency`.
+- **partitionWorkerConcurrency**: The maximum number of workflows from any one partition of this queue that may run concurrently within a single DBOS process. Must be at least 1 and less than or equal to `partitionConcurrency`, `workerConcurrency`, and `globalConcurrency`.
+- **partitionRateLimit**: A limit on the maximum number of workflows which may be started from any one partition in a given period. Takes the same fields as `rateLimit`.
 - **minPollingIntervalMs**: The minimum interval, in milliseconds, between dequeue attempts for this queue. Defaults to 1000ms. The actual polling interval includes random jitter and increases with backoff under contention, then scales back down when contention clears.
 - **onConflict**: How to behave when a queue with this name already exists in the system database:
   - `'update_if_latest_version'` (default): overwrite the existing configuration only if the running application is the latest registered [application version](./methods.md#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
   - `'always_update'`: always overwrite the existing configuration.
   - `'never_update'`: leave the existing configuration unchanged. The returned queue reflects the persisted configuration, not the supplied parameters.
+
+Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queuePartitionKey`](./methods.md#dbosstartworkflow), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
+The queue-wide limits (`globalConcurrency`, `workerConcurrency`, and `rateLimit`) continue to apply across all partitions.
 
 Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database: if the queue is already registered by a **different** application, `registerQueue` throws an error regardless of `onConflict`.
 
@@ -64,7 +71,7 @@ Queues are owned by the application (identified by its configured [`name`](./con
 
 ```typescript
 const queue = await DBOS.registerQueue("email", {
-  concurrency: 10,
+  globalConcurrency: 10,
   rateLimit: { limitPerPeriod: 100, periodSec: 60 },
 });
 ```
@@ -82,7 +89,7 @@ Retrieve a queue by name from the system database, or `null` if no queue with th
 ```typescript
 const queue = await DBOS.retrieveQueue("email");
 if (queue !== null) {
-  console.log(await queue.getConcurrency());
+  console.log(await queue.getGlobalConcurrency());
 }
 ```
 
@@ -102,7 +109,7 @@ Returns an empty list if no queues have been registered.
 
 ```typescript
 for (const queue of await DBOS.listQueues()) {
-  console.log(queue.name, queue.concurrency);
+  console.log(queue.name, queue.concurrency, queue.partitionConcurrency);
 }
 ```
 
@@ -132,33 +139,40 @@ class WorkflowQueue {
 
   // Cached configuration. May be stale if another process has reconfigured
   // the queue. Use the get methods below to refresh from the database.
-  concurrency?: number;
+  concurrency?: number;  // The queue-wide (global) concurrency limit
   workerConcurrency?: number;
   rateLimit?: QueueRateLimit;
-  priorityEnabled: boolean;
-  partitionQueue: boolean;
+  partitionConcurrency?: number;
+  partitionWorkerConcurrency?: number;
+  partitionRateLimit?: QueueRateLimit;
   minPollingIntervalMs?: number;
 
   // The application that owns this queue; undefined for in-memory and unowned queues.
   applicationName?: string;
 
   // Read the latest values from the database.
-  getConcurrency(): Promise<number | undefined>;
+  getGlobalConcurrency(): Promise<number | undefined>;
   getWorkerConcurrency(): Promise<number | undefined>;
   getRateLimit(): Promise<QueueRateLimit | undefined>;
-  getPriorityEnabled(): Promise<boolean>;
-  getPartitionQueue(): Promise<boolean>;
+  getPartitionConcurrency(): Promise<number | undefined>;
+  getPartitionWorkerConcurrency(): Promise<number | undefined>;
+  getPartitionRateLimit(): Promise<QueueRateLimit | undefined>;
   getMinPollingIntervalMs(): Promise<number | undefined>;
 
   // Update the configuration in the database.
-  setConcurrency(value: number | undefined): Promise<void>;
+  setGlobalConcurrency(value: number | undefined): Promise<void>;
   setWorkerConcurrency(value: number | undefined): Promise<void>;
   setRateLimit(value: QueueRateLimit | undefined): Promise<void>;
-  setPriorityEnabled(value: boolean): Promise<void>;
-  setPartitionQueue(value: boolean): Promise<void>;
+  setPartitionConcurrency(value: number | undefined): Promise<void>;
+  setPartitionWorkerConcurrency(value: number | undefined): Promise<void>;
+  setPartitionRateLimit(value: QueueRateLimit | undefined): Promise<void>;
   setMinPollingIntervalMs(value: number): Promise<void>;
 }
 ```
+
+A queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) if any of its partition limits is set.
+Each `set` method validates the new value against the queue's other limits: a per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+Pass `undefined` to any `set` method to remove that limit.
 
 ### Reconfiguring Queues
 
@@ -168,10 +182,15 @@ Workers pick up the new configuration on their next polling iteration.
 ```typescript
 const queue = await DBOS.retrieveQueue("email");
 if (queue !== null) {
-  await queue.setConcurrency(50);
+  await queue.setGlobalConcurrency(50);
   await queue.setRateLimit({ limitPerPeriod: 500, periodSec: 60 });
 }
 ```
+
+:::info
+Setting any partition limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues); clearing all of them makes it unpartitioned again.
+Take care when partitioning a queue at runtime: workflows already enqueued on it have no partition key and will not be dequeued until the queue is unpartitioned.
+:::
 
 The `set` methods may only be called on a queue returned from `DBOS.registerQueue`, `DBOS.retrieveQueue`, `DBOS.listQueues`, or the equivalent [`DBOSClient`](./client.md) methods.
 
@@ -287,11 +306,12 @@ class WorkflowQueue {
 }
 
 interface QueueParameters {
+  globalConcurrency?: number;
   workerConcurrency?: number;
-  concurrency?: number;
   rateLimit?: QueueRateLimit;
-  priorityEnabled?: boolean;
-  partitionQueue?: boolean;
+  partitionConcurrency?: number;
+  partitionWorkerConcurrency?: number;
+  partitionRateLimit?: QueueRateLimit;
   minPollingIntervalMs?: number;
 }
 ```
