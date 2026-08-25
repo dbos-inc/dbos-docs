@@ -101,7 +101,7 @@ You can connect a DBOS application to its system database through a connection p
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
+In that case, the [`dbosctl migrate`](./production/dbosctl.md#dbosctl-migrate) command can be run with a privileged user to create all DBOS system tables.
 Then, a DBOS application can run without privilege (requiring only access to the system database).
 
 ### What database privileges does DBOS need, and how do I grant them manually?
@@ -127,7 +127,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT ALL ON SEQUENCES TO "your_app_ro
 ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT EXECUTE ON FUNCTIONS TO "your_app_role";
 ```
 
-The [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, and the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript do this automatically if you supply an application role.
+The [`dbosctl migrate`](./production/dbosctl.md#dbosctl-migrate) command does this automatically if you supply an application role with `-r`/`--app-role`.
 
 ### How does DBOS scale?
 
