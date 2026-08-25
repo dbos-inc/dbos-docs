@@ -562,21 +562,74 @@ Lists the permissions that can be granted to an API key or a role.
 ### `dbosctl migrate`
 
 **Description:**
-Creates or upgrades the DBOS [system database](../explanations/system-tables.md), applying every migration its schema is missing and creating the database and the schema if they do not exist yet.
+Creates or upgrades the DBOS [system database](../explanations/system-tables.md).
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, the `migrate` command can be run with a privileged user to create all DBOS database tables.
 
-By default a DBOS application creates and upgrades these tables itself on startup.
-In production it often cannot: the role it runs as has no privilege to create databases or tables.
-Run `migrate` with a privileged role first, and the application can then run with access to the DBOS schema alone — grant it with `-r/--app-role`, and configure the application not to run migrations itself, so that it verifies the schema at launch rather than altering it.
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the `-r/--app-role` flag to grant a role access to that schema.
 
-The migrations are built into the binary, and the system schema is shared by every DBOS SDK, so provisioning a database does not mean picking an SDK and installing its toolchain.
-This is the only `dbosctl` command that opens a database: it takes a database URL rather than a profile, and accepts none of the [common flags](#common-flags).
+The migrations are built into the `dbosctl` binary, and the system schema is shared by every DBOS SDK, so provisioning a database does not require picking an SDK and installing its toolchain.
+The `migrate` command includes an  flag to grant the specified role read/write access to the DBOS schema.
 
-It is safe to re-run. Migrations already recorded are skipped, so a database that is up to date is left alone.
+Note, this `dbosctl` command connects to your database instead of Conductor.
+It takes a database URL rather than a profile, and accepts none of the [common flags](#common-flags).
 
 ```shell
 dbosctl migrate -D postgres://user:password@host:5432/dbos_sys
 DBOS_SYSTEM_DATABASE_URL=postgres://user:password@host:5432/dbos_sys dbosctl migrate
 ```
+
+`migrate` is safe to re-run. Migrations already recorded are skipped, so a database that is up to date is left alone.
+
+:::info SDK migration config settings
+After running `dbosctl migrate`, configure your application not to alter the system schema on startup where that option exists:
+
+<Tabs groupId="language" queryString="language">
+<TabItem value="python" label="Python">
+
+```python
+config: DBOSConfig = {
+  "name": "my-app",
+  "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
+  "run_migrations": False,
+}
+```
+
+</TabItem>
+<TabItem value="typescript" label="TypeScript">
+
+```typescript
+await DBOS.launch({
+  name: "my-app",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  runMigrations: false,
+});
+```
+
+</TabItem>
+<TabItem value="golang" label="Go">
+
+DBOS Go does not expose a `runMigrations` toggle. `NewContext` always checks the DBOS schema and attempts to apply pending migrations. 
+
+If you run your DBOS Go application without DDL permissions against a missing or out-of-data system database,
+it will fail to launch due to denied DDL permissions.
+The application will launch correctly if the database exists and is up-to-date (which the `migrate` command ensures).
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+DBOSConfig config = DBOSConfig.defaults("my-app")
+  .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+  .withMigrate(false);
+```
+
+</TabItem>
+</Tabs>
+
+:::
 
 **Arguments:**
 - `-D, --db-url <url>`: The system database URL. Overrides `$DBOS_SYSTEM_DATABASE_URL`. Postgres and CockroachDB only — a SQLite system database is migrated by the application process that opens it.
