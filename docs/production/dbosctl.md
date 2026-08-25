@@ -5,6 +5,8 @@ title: dbosctl CLI Reference
 
 `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
 
+[`dbosctl migrate`](#dbosctl-migrate) is the exception: it opens a Postgres [system database](../explanations/system-tables.md) directly to create or upgrade the DBOS schema, so it takes a database URL rather than a profile.
+
 ## Installation
 
 The install script detects your platform, verifies the download against the release checksums, and installs `dbosctl` to the first writable of `/usr/local/bin`, `~/.local/bin`, or the current directory:
@@ -104,6 +106,7 @@ Each setting is resolved **flag → environment variable → profile**, so a fla
 | Organization | `--org` | `DBOS_ORG` |
 | Application | `-a`, `--app` | `DBOS_APP` |
 | Bearer token | — | `DBOS_TOKEN` |
+| System database ([`migrate`](#dbosctl-migrate) only) | `-D`, `--db-url` | `DBOS_SYSTEM_DATABASE_URL` |
 | Output format | `-o`, `--output` | — |
 
 Flags are scoped to the command that uses them, so pass them **after** the command name (`dbosctl app list --org acme`). Each command's `--help` lists only the flags it honors.
@@ -117,6 +120,8 @@ These flags are accepted by most commands and are not repeated in the reference 
 - `--org <name>`: Organization. Overrides `$DBOS_ORG` and the profile.
 - `-a, --app <name>`: Application name, for application-scoped commands. Overrides `$DBOS_APP` and the profile.
 - `-o, --output <format>`: Output format — `table` (default), `json`, or `ids`.
+
+[`dbosctl migrate`](#dbosctl-migrate) accepts none of them. It does not talk to Conductor, so there is no profile, organization, or application to name, and what it writes is progress text or SQL rather than a formatted result.
 
 ## Output
 
@@ -154,7 +159,8 @@ Conductor answers some commands itself and forwards the rest to your application
 | | Commands |
 | --- | --- |
 | Forwarded to your application | All `workflow`, `queue`, and `schedule` commands — reads as much as mutations — plus `app versions` and `app set-version` |
-| Answered by Conductor | Everything else: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by Conductor | Everything else except `migrate`: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by neither | [`migrate`](#dbosctl-migrate), which opens the system database itself |
 
 Commands in the first group fail if the application has no healthy executor connected, so a failure there usually means your application is not running rather than that nothing matched.
 
@@ -548,6 +554,79 @@ Deletes an API key, revoking it immediately.
 
 **Description:**
 Lists the permissions that can be granted to an API key or a role.
+
+---
+
+## System Database Commands
+
+### `dbosctl migrate`
+
+**Description:**
+Creates or upgrades the DBOS [system database](../explanations/system-tables.md), applying every migration its schema is missing and creating the database and the schema if they do not exist yet.
+
+By default a DBOS application creates and upgrades these tables itself on startup.
+In production it often cannot: the role it runs as has no privilege to create databases or tables.
+Run `migrate` with a privileged role first, and the application can then run with access to the DBOS schema alone — grant it with `-r/--app-role`, and configure the application not to run migrations itself, so that it verifies the schema at launch rather than altering it.
+
+The migrations are built into the binary, and the system schema is shared by every DBOS SDK, so provisioning a database does not mean picking an SDK and installing its toolchain.
+This is the only `dbosctl` command that opens a database: it takes a database URL rather than a profile, and accepts none of the [common flags](#common-flags).
+
+It is safe to re-run. Migrations already recorded are skipped, so a database that is up to date is left alone.
+
+```shell
+dbosctl migrate -D postgres://user:password@host:5432/dbos_sys
+DBOS_SYSTEM_DATABASE_URL=postgres://user:password@host:5432/dbos_sys dbosctl migrate
+```
+
+**Arguments:**
+- `-D, --db-url <url>`: The system database URL. Overrides `$DBOS_SYSTEM_DATABASE_URL`. Postgres and CockroachDB only — a SQLite system database is migrated by the application process that opens it.
+- `--schema <name>`: The schema holding the DBOS system tables. Defaults to `dbos`.
+- `-r, --app-role <role>`: The role your DBOS application runs as. It is granted the minimum permissions needed to use the DBOS schema.
+- `--no-listen-notify`: Leave out the triggers that fire `pg_notify`. See [LISTEN/NOTIFY](#listennotify) below.
+- `--print-migrations <all|NUMBER>`: Instead of running the migrations, print their SQL to standard output — `all` for a fresh database, or a migration number to upgrade an existing one.
+- `--print-user-role`: Instead of running them, print the SQL statements granting `--app-role` access to the DBOS system tables.
+- `--cockroach`: Render the printed SQL for CockroachDB. Print mode only — see [CockroachDB](#cockroachdb) below.
+
+#### Printing the SQL
+
+If your database is managed by a DBA, or its DDL goes through review, the print modes emit SQL for someone else to apply:
+
+```shell
+dbosctl migrate --print-migrations all > migrations.sql
+dbosctl migrate --print-user-role -r my_app_role > grants.sql
+```
+
+Neither mode opens the database, and standard output is nothing but SQL and comments, so it can be redirected straight into a `.sql` file.
+If a URL is available the header comment names the database, with the password masked.
+The migrations and the grants are separate scripts, usually run by different people at different times, so asking for both at once is a usage error rather than a concatenation.
+
+The generated SQL contains `CREATE INDEX CONCURRENTLY` and `DROP INDEX CONCURRENTLY`, so it must run outside a transaction block — plain `psql`, not `psql --single-transaction`.
+The header comment records that, along with the choices that shaped the script: whether it is for a fresh database, whether the `pg_notify` triggers are included, and whether it is for CockroachDB.
+Nothing downstream can tell those variants apart by reading the SQL, and applying the wrong one leaves a database that does not match what your applications expect.
+
+#### LISTEN/NOTIFY
+
+By default the system schema carries triggers that fire `pg_notify`, so an application waiting on a message is woken rather than left to poll.
+That does not work behind a connection pooler in transaction mode: the notification arrives on a session the application does not keep.
+Nothing can detect that, so pass `--no-listen-notify`:
+
+```shell
+dbosctl migrate -D postgres://user:password@host:5432/dbos_sys --no-listen-notify
+```
+
+The database is complete either way and reports the same migration version. Only the triggers differ, and applications fall back to polling.
+A pooler in session mode needs no flag — see the [production checklist](./checklist.md).
+
+#### CockroachDB
+
+A live migration asks the server what it is, so CockroachDB needs no flag; passing `--cockroach` to one is an error rather than an override.
+A printed script has no server to ask, so it has to be told:
+
+```shell
+dbosctl migrate --print-migrations all --cockroach > migrations.sql
+```
+
+CockroachDB's script differs in more than the triggers — it has no LISTEN/NOTIFY at all, and several statements are spelled differently or left out — and a script generated for the wrong engine fails partway through, leaving a half-migrated database.
 
 ---
 
