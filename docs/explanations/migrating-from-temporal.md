@@ -784,7 +784,7 @@ handle = await client.start_workflow(
 
 ```python
 # Register a queue with concurrency limits
-DBOS.register_queue("order-processing", concurrency=10)
+DBOS.register_queue("order-processing", global_concurrency=10)
 
 # Enqueue a workflow
 handle = DBOS.enqueue_workflow("order-processing", order_workflow, order)
@@ -798,7 +798,7 @@ Learn more in the [queues tutorial](../python/tutorials/queue-tutorial.md).
 
 ```typescript
 // Register a queue with concurrency limits
-await DBOS.registerQueue("order-processing", { concurrency: 10 });
+await DBOS.registerQueue("order-processing", { globalConcurrency: 10 });
 
 // Enqueue a workflow
 const handle = await DBOS.startWorkflow(orderWorkflowFn, { queueName: "order-processing" })(order);

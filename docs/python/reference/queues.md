@@ -14,7 +14,7 @@ Register a queue with [`DBOS.register_queue`](./contexts.md#register_queue) and 
 def send_email(to: str) -> None:
     ...
 
-DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
+DBOS.register_queue("email", global_concurrency=10, limiter={"limit": 100, "period": 60})
 handle = DBOS.enqueue_workflow("email", send_email, "alice@example.com")
 ```
 
@@ -31,17 +31,20 @@ class QueueRateLimit(TypedDict):
 
 **Properties:**
 - `name`: The name of the queue.
-- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If `None`, any number of functions may run concurrently.
+- `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If `None`, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](./configuration.md).
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `priority_enabled`: Whether priority is enabled for workflows on this queue.
-- `partition_queue`: Whether [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) is enabled for this queue.
+- `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes.
+- `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process.
+- `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
 - `application_name`: The application that owns this queue and dequeues workflows from it, or `None` if the queue is owned by no application. Unlike the other properties, ownership cannot be reconfigured.
 
+A queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) if any of its `partition_*` limits is set.
+
 Reading any property returns the latest value from the database, so changes made by other processes are reflected.
 
-In `async` code, use the [async getters](#async-property-accessors) (`get_concurrency_async`, `get_worker_concurrency_async`, etc.) instead of property access. Property access performs a synchronous database round-trip that blocks the event loop; reading a property from a running event loop logs a warning.
+In `async` code, use the [async getters](#async-property-accessors) (`get_global_concurrency_async`, `get_worker_concurrency_async`, etc.) instead of property access. Property access performs a synchronous database round-trip that blocks the event loop; reading a property from a running event loop logs a warning.
 
 ### enqueue
 
@@ -125,11 +128,12 @@ async def process_tasks(tasks):
 In `async` code, use these coroutine getters instead of reading the corresponding properties. Each one fetches the latest value from the database without blocking the event loop. Reading the synchronous property from a running event loop instead logs a warning.
 
 ```python
-queue.get_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
+queue.get_global_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
 queue.get_worker_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
 queue.get_limiter_async() -> Coroutine[Any, Any, Optional[QueueRateLimit]]
-queue.get_priority_enabled_async() -> Coroutine[Any, Any, bool]
-queue.get_partition_queue_async() -> Coroutine[Any, Any, bool]
+queue.get_partition_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
+queue.get_partition_worker_concurrency_async() -> Coroutine[Any, Any, Optional[int]]
+queue.get_partition_limiter_async() -> Coroutine[Any, Any, Optional[QueueRateLimit]]
 queue.get_polling_interval_sec_async() -> Coroutine[Any, Any, float]
 ```
 
@@ -144,13 +148,14 @@ If your application calls [`DBOS.register_queue`](./contexts.md#register_queue) 
 Either update the `register_queue` call to match the new configuration, or pass `on_conflict="never_update"` to preserve the runtime changes.
 :::
 
-#### set_concurrency
+#### set_global_concurrency
 
 ```python
-queue.set_concurrency(value: Optional[int]) -> None
+queue.set_global_concurrency(value: Optional[int]) -> None
 ```
 
 Update the queue's global concurrency limit.
+Must be greater than or equal to the queue's `worker_concurrency`, `partition_concurrency`, and `partition_worker_concurrency`.
 Pass `None` to remove the limit.
 
 #### set_worker_concurrency
@@ -160,7 +165,7 @@ queue.set_worker_concurrency(value: Optional[int]) -> None
 ```
 
 Update the queue's per-worker concurrency limit.
-Must be less than or equal to the queue's `concurrency`.
+Must be less than or equal to the queue's `global_concurrency`.
 Pass `None` to remove the limit.
 
 #### set_limiter
@@ -172,21 +177,39 @@ queue.set_limiter(value: Optional[QueueRateLimit]) -> None
 Update the queue's [rate limit](../tutorials/queue-tutorial.md#rate-limiting).
 Pass `None` to remove the limit.
 
-#### set_priority_enabled
+#### set_partition_concurrency
 
 ```python
-queue.set_priority_enabled(value: bool) -> None
+queue.set_partition_concurrency(value: Optional[int]) -> None
 ```
 
-Enable or disable [priority](../tutorials/queue-tutorial.md#priority) for this queue.
+Update the queue's per-partition concurrency limit.
+Must be at least 1 and less than or equal to the queue's `global_concurrency`.
+Pass `None` to remove the limit.
 
-#### set_partition_queue
+#### set_partition_worker_concurrency
 
 ```python
-queue.set_partition_queue(value: bool) -> None
+queue.set_partition_worker_concurrency(value: Optional[int]) -> None
 ```
 
-Enable or disable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) for this queue.
+Update the queue's per-partition, per-worker concurrency limit.
+Must be at least 1 and less than or equal to the queue's `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
+Pass `None` to remove the limit.
+
+#### set_partition_limiter
+
+```python
+queue.set_partition_limiter(value: Optional[QueueRateLimit]) -> None
+```
+
+Update the [rate limit](../tutorials/queue-tutorial.md#rate-limiting) applied to each partition separately.
+Pass `None` to remove the limit.
+
+:::info
+Setting any `partition_*` limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues); clearing all of them makes it unpartitioned again.
+Take care when partitioning a queue at runtime: workflows already enqueued on it have no partition key and will not be dequeued until the queue is unpartitioned.
+:::
 
 #### set_polling_interval_sec
 
@@ -201,11 +224,12 @@ Update the queue's polling interval. Must be positive.
 Each setter has an async counterpart with the same parameters and validation behavior. Use these from `async` code to write to the database without blocking the event loop.
 
 ```python
-queue.set_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
+queue.set_global_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
 queue.set_worker_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
 queue.set_limiter_async(value: Optional[QueueRateLimit]) -> Coroutine[Any, Any, None]
-queue.set_priority_enabled_async(value: bool) -> Coroutine[Any, Any, None]
-queue.set_partition_queue_async(value: bool) -> Coroutine[Any, Any, None]
+queue.set_partition_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
+queue.set_partition_worker_concurrency_async(value: Optional[int]) -> Coroutine[Any, Any, None]
+queue.set_partition_limiter_async(value: Optional[QueueRateLimit]) -> Coroutine[Any, Any, None]
 queue.set_polling_interval_sec_async(value: float) -> Coroutine[Any, Any, None]
 ```
 
@@ -236,7 +260,7 @@ These options are **not propagated** to child workflows.
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Defaults to `None`. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. Defaults to `None` (no delay).
 - `app_version`: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
-- `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is partitioned (`partition_queue=True`). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.
+- `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions.
 
 
 **Deduplication Example**
@@ -273,7 +297,7 @@ result = handle.get_result()
 **Priority Example**
 
 ```python
-DBOS.register_queue("priority_queue", priority_enabled=True)
+DBOS.register_queue("priority_queue")
 
 with SetEnqueueOptions(priority=10):
     # All workflows are enqueued with priority set to 10
@@ -289,7 +313,7 @@ with SetEnqueueOptions(priority=1):
 **Partitioned Queue Example**
 
 ```python
-DBOS.register_queue("partitioned_queue", partition_queue=True, concurrency=1)
+DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 
 @DBOS.workflow()
 def process_task(task: Task):
@@ -298,7 +322,7 @@ def process_task(task: Task):
 
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a
-    # maximum concurrency of 1, this means that at most one
+    # per-partition concurrency of 1, this means that at most one
     # task can run at once per user (but tasks from different
     # users can run concurrently).
     with SetEnqueueOptions(queue_partition_key=user_id):
@@ -315,12 +339,13 @@ Prefer [`DBOS.register_queue`](./contexts.md#register_queue), which persists the
 ```python
 Queue(
     name: str,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
     *,
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
 )
 ```

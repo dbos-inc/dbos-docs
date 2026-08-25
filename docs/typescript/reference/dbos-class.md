@@ -68,13 +68,20 @@ main().catch(console.log);
 
 ```typescript
 DBOS.shutdown(
-  options?: { deregister?: boolean }
+  options?: {
+    deregister?: boolean;
+    workflowCompletionTimeoutMS?: number;
+  }
 ): Promise<void>
 ```
 
 Shut down DBOS, terminating all active workflows and closing database disconnections.
 
-In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.  If `options.deregister` is set, all current function, queue, instance, data source, event receiver, and any other registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`.
+In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.
+
+**Parameters:**
+- **deregister**: If true, all current function, queue, instance, data source, event receiver, and any other registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Useful for testing.
+- **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
 
 ### DBOS.logRegisteredEndpoints
 

@@ -96,7 +96,7 @@ For unordered (`ordering="none"`) consumers, you can also name a custom [queue](
 ```python
 from dbos import DBOS, KafkaMessage
 
-DBOS.register_queue("kafka_processing_queue", concurrency=10)
+DBOS.register_queue("kafka_processing_queue", global_concurrency=10)
 
 @DBOS.kafka_consumer(
         config=config,

@@ -154,7 +154,7 @@ DBOS.writeStream<T>(key: string, value: T): Promise<void>
 You can write values to a stream from a workflow or its steps using [`DBOS.writeStream`](../reference/methods.md#dboswritestream).
 A workflow may have any number of streams, each identified by a unique key.
 
-When you are done writing to a stream, you should close it with [`DBOS.closeStream`](../reference/methods.md#dbosclosestream).
+When you are done writing to a stream, you should close it with [`DBOS.closeStream`](../reference/methods.md#dbosclosestream), which you can call from a workflow or its steps.
 Otherwise, streams are automatically closed when the workflow terminates.
 
 ```typescript
@@ -181,7 +181,11 @@ const producerWorkflow = DBOS.registerWorkflow(producerWorkflowFunction);
 #### Reading from Streams
 
 ```typescript
-DBOS.readStream<T>(workflowID: string, key: string): AsyncGenerator<T, void, unknown>
+DBOS.readStream<T>(
+  workflowID: string,
+  key: string,
+  options?: ReadStreamOptions
+): AsyncGenerator<T, void, unknown>
 ```
 
 You can read values from a stream from anywhere using [`DBOS.readStream`](../reference/methods.md#dbosreadstream).
@@ -196,3 +200,31 @@ for await (const value of DBOS.readStream(workflowID, "example_key")) {
   console.log(`Received: ${JSON.stringify(value)}`);
 }
 ```
+
+#### Stream Timeouts
+
+By default, a read waits indefinitely for the next value.
+Pass `timeoutSeconds` to bound that wait; if no value arrives in time, the read throws `DBOSStreamTimeoutError`.
+
+The timeout applies to **each value**, not to the read as a whole: the clock restarts every time a value is delivered.
+A `readStream` loop with `timeoutSeconds: 30` therefore times out when the producer goes quiet for 30 seconds, however long the stream itself runs.
+
+```typescript
+import { DBOS, Error as DBOSErrors } from "@dbos-inc/dbos-sdk";
+
+try {
+  for await (const value of DBOS.readStream(workflowID, "example_key", { timeoutSeconds: 30 })) {
+    console.log(`Received: ${JSON.stringify(value)}`);
+  }
+} catch (e) {
+  if (DBOSErrors.isStreamTimeoutError(e)) {
+    console.log("The producer stopped sending values");
+  } else {
+    throw e;
+  }
+}
+```
+
+:::note
+Match a stream timeout with `isStreamTimeoutError` rather than `instanceof DBOSStreamTimeoutError`, as in the example above.
+:::
