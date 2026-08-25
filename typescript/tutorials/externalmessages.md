@@ -154,7 +154,7 @@ Consumer workflows run on a DBOS [queue](./queue-tutorial.md).
 By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits:
 
 ```typescript
-await DBOS.registerQueue("kafka_processing_queue", { concurrency: 10 });
+await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
 
 @kafkaReceiver.consumer('example-topic', { queueName: 'kafka_processing_queue' })
 @DBOS.workflow()

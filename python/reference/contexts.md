@@ -402,6 +402,16 @@ class StepOptions(TypedDict, total=False):
             an awaitable resolving to False), the exception is re-raised
             immediately without further retries. Async predicates are
             only supported when used with `run_step_async`.
+
+        preemptible:
+            If True, cancel the step if its workflow is cancelled.
+            Only supported when used with `run_step_async`.
+
+        timeout_seconds:
+            If set, cancel the step and raise DBOSStepTimeoutError if it
+            runs for longer than this many seconds. Only supported when
+            used with `run_step_async`. Each retry attempt gets a fresh
+            timeout.
     """
 
     name: Optional[str]
@@ -410,6 +420,8 @@ class StepOptions(TypedDict, total=False):
     max_attempts: int
     backoff_rate: float
     should_retry: Optional[Callable[[BaseException], Union[bool, Awaitable[bool]]]]
+    preemptible: bool
+    timeout_seconds: Optional[float]
 ```
 
 ### run_step_async
@@ -542,7 +554,7 @@ DBOS.close_stream(
 
 Close a stream identified by a key.
 After this is called, no more values can be written to the stream.
-Can only be called from within a workflow.
+Can only be called from within a workflow or its steps.
 The `close_stream` function should not be used in [coroutine workflows](../tutorials/workflow-tutorial.md#coroutine-async-workflows), [`close_stream_async`](#close_stream_async) should be used instead.
 
 **Parameters:**
@@ -566,6 +578,8 @@ DBOS.read_stream(
     key: str,
     *,
     offset: int = 0,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> Generator[Any, Any, None]
 ```
 
@@ -578,9 +592,14 @@ yielding each value in order until the stream is closed or the workflow terminat
 - `workflow_id`: The workflow instance ID that owns the stream
 - `key`: The stream key / name within the workflow
 - `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
+- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for **each** value before raising `DBOSStreamTimeoutError`. The clock restarts every time a value is delivered, so this bounds the gap between values, not the total duration of the read. Defaults to `None`, waiting indefinitely.
 
 **Yields:**
 - Each value in the stream until the stream is closed
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes without a value arriving.
 
 **Example syntax:**
 
@@ -588,6 +607,8 @@ yielding each value in order until the stream is closed or the workflow terminat
 for value in DBOS.read_stream(workflow_id, example_key):
     print(f"Received: {value}")
 ```
+
+When called from workflow code, each value read is checkpointed to the database as a step, so a replayed workflow re-yields the values it originally read instead of re-reading a stream that may have advanced since.
 
 ### read_stream_async
 
@@ -598,19 +619,11 @@ DBOS.read_stream_async(
     *,
     offset: int = 0,
     polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
 ) -> AsyncGenerator[Any, None]
 ```
 
-Read values from a stream as an async generator.
-
-This function reads values from a stream identified by the workflow_id and key,
-yielding each value in order until the stream is closed or the workflow terminates.
-
-**Parameters:**
-- `workflow_id`: The workflow instance ID that owns the stream
-- `key`: The stream key / name within the workflow
-- `offset`: The offset to start reading from. Defaults to `0`, the start of the stream. A higher offset skips that many values from the beginning of the stream.
-- `polling_interval_sec`: Polling interval in seconds when waiting for new values when not using LISTEN/NOTIFY. Defaults to the configured `notification_listener_polling_interval_sec` (`1.0` if not configured).
+Coroutine version of [`read_stream`](#read_stream), returning an async generator.
 
 **Example syntax:**
 
@@ -619,8 +632,62 @@ async for value in DBOS.read_stream_async(workflow_id, example_key):
     print(f"Received: {value}")
 ```
 
-**Yields:**
-- Each value in the stream until the stream is closed
+### read_stream_offset
+
+```python
+DBOS.read_stream_offset(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Any
+```
+
+Read the single value at one offset of a stream, waiting for it to be written.
+Use this when you want one specific value instead of iterating the whole stream&mdash;for example, to resume from where a previous reader left off.
+
+**Parameters:**
+- `workflow_id`: The workflow instance ID that owns the stream
+- `key`: The stream key / name within the workflow
+- `offset`: The offset to read
+- `polling_interval_sec`: Polling interval in seconds when waiting for the value when not using LISTEN/NOTIFY. Must be at least `0.001`. Defaults to the configured [`notification_listener_polling_interval_sec`](./configuration.md#database-connection-settings) (`1.0` if not configured).
+- `timeout_seconds`: How long to wait for the value before raising `DBOSStreamTimeoutError`. Defaults to `None`, waiting indefinitely.
+
+**Returns:**
+- The value at the offset
+
+**Raises:**
+- `DBOSStreamTimeoutError`: If `timeout_seconds` passes, or if the stream ends before reaching `offset` (no value will ever arrive at that offset).
+
+**Example syntax:**
+
+```python
+from dbos import error as dboserror
+
+try:
+    value = DBOS.read_stream_offset(workflow_id, example_key, 5, timeout_seconds=30)
+except dboserror.DBOSStreamTimeoutError:
+    ...
+```
+
+Like [`read_stream`](#read_stream), a value read from workflow code is checkpointed to the database as a step.
+
+### read_stream_offset_async
+
+```python
+DBOS.read_stream_offset_async(
+    workflow_id: str,
+    key: str,
+    offset: int,
+    *,
+    polling_interval_sec: Optional[float] = None,
+    timeout_seconds: Optional[float] = None,
+) -> Coroutine[Any, Any, Any]
+```
+
+Coroutine version of [`read_stream_offset`](#read_stream_offset).
 
 ### patch
 
@@ -680,11 +747,14 @@ Queues are persisted to the system database, so any DBOS process or [`DBOSClient
 DBOS.register_queue(
     name: str,
     *,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
+    # Applied to the queue as a whole
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    # Applied to each partition separately
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "update_if_latest_version",
 ) -> Queue
@@ -700,23 +770,27 @@ If the queue already exists in the database, the `on_conflict` parameter control
 
 **Parameters:**
 - `name`: The name of the queue. Must be unique among all queues in the application.
-- `concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `concurrency`.
-- `priority_enabled`: Enable setting priority for workflows on this queue.
-- `partition_queue`: Enable [partitioning](../tutorials/queue-tutorial.md#partitioning-queues) for this queue.
+- `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes. Must be at least 1 and less than or equal to `global_concurrency`.
+- `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process. Must be at least 1 and less than or equal to `partition_concurrency`, `worker_concurrency`, and `global_concurrency`.
+- `partition_limiter`: A limit on the maximum number of functions which may be started from any one partition in a given period.
 - `polling_interval_sec`: The interval at which DBOS polls the database for new workflows on this queue.
 - `on_conflict`: How to behave when a queue with this name already exists in the system database:
   - `"update_if_latest_version"` (default): overwrite the existing configuration only if the running application is the latest registered [application version](#version-management). This prevents older versions in a rolling deploy from overwriting a newer configuration.
   - `"always_update"`: always overwrite the existing configuration.
   - `"never_update"`: leave the existing configuration unchanged.
 
+Setting any `partition_*` limit makes the queue [partitioned](../tutorials/queue-tutorial.md#partitioning-queues): every enqueue must supply a [`queue_partition_key`](./queues.md#setenqueueoptions), and [deduplication](../tutorials/queue-tutorial.md#deduplication) is not supported.
+The queue-wide limits (`global_concurrency`, `worker_concurrency`, and `limiter`) continue to apply across all partitions.
+
 Queues are owned by the application (identified by its configured [`name`](./configuration.md#application-settings)) that registers them, and queue names are globally unique across all applications sharing a system database.
 
 **Example syntax:**
 
 ```python
-DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60})
+DBOS.register_queue("email", global_concurrency=10, limiter={"limit": 100, "period": 60})
 ```
 
 ### register_queue_async
@@ -725,11 +799,12 @@ DBOS.register_queue("email", concurrency=10, limiter={"limit": 100, "period": 60
 DBOS.register_queue_async(
     name: str,
     *,
-    concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
+    global_concurrency: Optional[int] = None,
     worker_concurrency: Optional[int] = None,
-    priority_enabled: bool = False,
-    partition_queue: bool = False,
+    limiter: Optional[QueueRateLimit] = None,
+    partition_concurrency: Optional[int] = None,
+    partition_worker_concurrency: Optional[int] = None,
+    partition_limiter: Optional[QueueRateLimit] = None,
     polling_interval_sec: float = 1.0,
     on_conflict: QueueConflictResolution = "update_if_latest_version",
 ) -> Coroutine[Any, Any, Queue]
@@ -750,7 +825,7 @@ Retrieve a queue by name from the system database, or `None` if no queue with th
 ```python
 queue = DBOS.retrieve_queue("email")
 if queue is not None:
-    print(queue.concurrency)
+    print(queue.global_concurrency)
 ```
 
 ### retrieve_queue_async
@@ -780,7 +855,7 @@ Returns an empty list if no queues have been registered.
 
 ```python
 for queue in DBOS.list_queues():
-    print(queue.name, queue.concurrency)
+    print(queue.name, queue.global_concurrency)
 ```
 
 ### list_queues_async
@@ -816,7 +891,7 @@ The queue does not need to be registered at the time of the call: if no queue wi
 def send_email(to: str) -> None:
     ...
 
-DBOS.register_queue("email", concurrency=10)
+DBOS.register_queue("email", global_concurrency=10)
 handle = DBOS.enqueue_workflow("email", send_email, "alice@example.com")
 handle.get_result()
 ```

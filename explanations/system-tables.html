@@ -14,7 +14,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.65ac68ff.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.917898b4.js" defer="defer"></script>
 <script src="/assets/js/main.b80892c6.js" defer="defer"></script>
 </head>
 <body>
@@ -47,7 +47,7 @@ Therefore, it is not recommended to create database objects whose dependency on 
 <li class=""><code>deadline_epoch_ms</code>: Set a deadline for the enqueued workflow. If the workflow is executing when the deadline arrives, the workflow and all its children are cancelled.</li>
 <li class=""><code>deduplication_id</code>: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status ENQUEUED or PENDING), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise an exception.</li>
 <li class=""><code>priority</code>: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in FIFO (first in, first out) order. Priority values can range from 1 to 2,147,483,647, where a low number indicates a higher priority. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.</li>
-<li class=""><code>queue_partition_key</code>: Set a queue partition key for the workflow. Use if and only if the queue is partitioned (created with withPartitionedEnabled). In partitioned queues, all flow control (including concurrency and rate limits) is applied to individual partitions instead of the queue as a whole.</li>
+<li class=""><code>queue_partition_key</code>: Set a queue partition key for the workflow. Use if and only if the queue is partitioned. Partitioned queues apply their per-partition flow control limits (concurrency and rate limits) to each partition separately.</li>
 <li class=""><code>authenticated_user</code>: The authenticated user to associate with the enqueued workflow. Defaults to null.</li>
 <li class=""><code>authenticated_roles</code>: The authenticated roles to associate with the enqueued workflow, as a JSON-encoded array of strings (e.g. <code>&#x27;[&quot;admin&quot;, &quot;reader&quot;]&#x27;</code>). Defaults to null.</li>
 <li class=""><code>delay_until_epoch_ms</code>: A Unix epoch timestamp (in milliseconds) before which the workflow should not be dequeued. The workflow is enqueued with <code>DELAYED</code> status until this time arrives, after which it becomes <code>ENQUEUED</code> and eligible to run. Must be <code>&gt;= 0</code>. Defaults to null (the workflow is enqueued immediately).</li>
@@ -214,7 +214,11 @@ Each row represents a different queue.</p>
 <li class=""><strong>rate_limit_max</strong>: If a rate limit is set, the maximum number of workflows that may be started in a period.</li>
 <li class=""><strong>rate_limit_period_sec</strong>: If a rate limit is set, the length of the period in seconds.</li>
 <li class=""><strong>priority_enabled</strong>: Whether priority is enabled for this queue.</li>
-<li class=""><strong>partition_queue</strong>: Whether this queue is partitioned.</li>
+<li class=""><strong>partition_queue</strong>: Whether this queue is partitioned. Set automatically when any of the <code>partition_*</code> limits below is set.</li>
+<li class=""><strong>partition_concurrency</strong>: The maximum number of workflows from any one partition of this queue that may run concurrently across all DBOS processes. <code>NULL</code> means unlimited.</li>
+<li class=""><strong>partition_worker_concurrency</strong>: The maximum number of workflows from any one partition of this queue that may run concurrently on a single DBOS process. <code>NULL</code> means unlimited.</li>
+<li class=""><strong>partition_rate_limit_max</strong>: If a per-partition rate limit is set, the maximum number of workflows that may be started from any one partition in a period.</li>
+<li class=""><strong>partition_rate_limit_period_sec</strong>: If a per-partition rate limit is set, the length of the period in seconds.</li>
 <li class=""><strong>polling_interval_sec</strong>: The interval at which workers poll the database for new workflows on this queue.</li>
 <li class=""><strong>created_at</strong>: The epoch timestamp (in milliseconds) when this queue was first registered.</li>
 <li class=""><strong>updated_at</strong>: The epoch timestamp (in milliseconds) when this queue&#x27;s configuration was last updated.</li>
