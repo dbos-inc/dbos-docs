@@ -49,7 +49,7 @@ Deploying a DBOS application to Cloud Run is no different from deploying any oth
 The one DBOS-specific detail is the **database connection string**: it must be provided in `key=value` format (e.g., `user=postgres password=secret database=myappdb host=/cloudsql/...`). On Cloud Run, use the `--add-cloudsql-instances` flag to mount the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket, then pass the socket path as the `host` parameter. This gives your app a private, encrypted path to the database with no public IP.
 
 :::tip Schema migration
-By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbos migrate`](../golang/reference/cli.md) with a privileged user before deploying.
+By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbosctl migrate`](./dbosctl.md#dbosctl-migrate) with a privileged user before deploying.
 :::
 
 <details>
