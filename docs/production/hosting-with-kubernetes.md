@@ -33,9 +33,9 @@ When Conductor is in a different cluster, use `wss://` so the WebSocket connecti
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run [`dbosctl migrate`](./dbosctl.md#dbosctl-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
+Run [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
 
-`dbosctl migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline. It is a single static binary carrying the migrations, so the Job needs no SDK toolchain and no copy of your application.
+`dbosctl sysdb migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline. It is a single static binary carrying the migrations, so the Job needs no SDK toolchain and no copy of your application.
 
 ## Availability
 
@@ -299,7 +299,7 @@ sleep 15 && kubectl logs pg-setup -n dbos && kubectl delete pod pg-setup -n dbos
 
 This creates:
 - `dbos_app` — the application's system database for workflow state
-- `dbos_app_role` — a restricted role the application uses at runtime (granted permissions by `dbosctl migrate`)
+- `dbos_app_role` — a restricted role the application uses at runtime (granted permissions by `dbosctl sysdb migrate`)
 
 </details>
 
@@ -437,7 +437,7 @@ postgres-admin      Opaque   2      10s
 
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
-We use a separate Kubernetes Job that runs [`dbosctl migrate`](./dbosctl.md#dbosctl-migrate) with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
+We use a separate Kubernetes Job that runs [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
 
 This separation follows the principle of least privilege: the application never holds the keys to alter its own schema.
 
@@ -475,7 +475,7 @@ docker push ${ECR_MIGRATE}:latest
 
 </details>
 
-The Job runs `dbosctl migrate --app-role dbos_app_role`, which:
+The Job runs `dbosctl sysdb migrate --app-role dbos_app_role`, which:
 1. Creates the DBOS system tables in the `dbos_app` database (if they don't exist)
 2. Applies any pending schema migrations
 3. Grants the necessary permissions to `dbos_app_role` so the application can read and write workflow state
@@ -499,6 +499,7 @@ spec:
         - name: migrate
           image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-migrate:latest
           args:
+            - "sysdb"
             - "migrate"
             - "--app-role"
             - "dbos_app_role"
@@ -511,7 +512,7 @@ spec:
 ```
 
 The `postgres-admin` secret contains the admin connection string, which has the privileges needed to create tables and grant permissions.
-The `--app-role` flag tells `dbosctl migrate` to grant the specified role access to the system tables.
+The `--app-role` flag tells `dbosctl sysdb migrate` to grant the specified role access to the system tables.
 
 </details>
 
@@ -541,7 +542,7 @@ kubectl logs -n dbos job/dbos-migrate
 **Re-running Migrations**
 
 When a new `dbosctl` release adds migrations — usually alongside a DBOS SDK version that expects them — rebuild the migration image against that release and re-run the Job.
-Re-running a Job built from the same pinned release is harmless but does nothing: `dbosctl migrate` skips migrations that are already recorded.
+Re-running a Job built from the same pinned release is harmless but does nothing: `dbosctl sysdb migrate` skips migrations that are already recorded.
 Since Kubernetes Job names must be unique, delete the old job first:
 
 ```bash

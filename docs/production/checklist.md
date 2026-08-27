@@ -21,9 +21,9 @@ Here are some recommendations for configuring a Postgres database to best work w
 **Manage the DBOS schema** - DBOS creates tables for its internal state in its [system database](../explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbosctl migrate`](./dbosctl.md#dbosctl-migrate) command can be run with a privileged user to create all DBOS system tables or migrate them to the latest version.
+In that case, the [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables or migrate them to the latest version.
 Then, a DBOS application can run with lower privilege (requiring only access to the DBOS tables in the system database).
-If your database is managed by a DBA, `dbosctl migrate` can also print the SQL for them to apply instead of running it itself.
+If your database is managed by a DBA, `dbosctl sysdb migrate` can also print the SQL for them to apply instead of running it itself.
 
 ## Scalability
 
