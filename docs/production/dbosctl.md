@@ -260,6 +260,7 @@ Registers an application with Conductor. The name must match the application nam
 
 **Arguments:**
 - `<name>`: The application's name.
+- `--private-mode`: Register the application in private mode, so it does not send workflow payload data — inputs, outputs, and events — to Conductor. Omit the flag to take Conductor's default; it can be changed later with [`dbosctl app update`](#dbosctl-app-update).
 
 ---
 
@@ -274,7 +275,7 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
 - `--gc-rows-threshold <int>`: Workflow rows kept before garbage collection. See [Workflow Retention Policies](./retention.md).
 - `--gc-time-threshold-ms <int>`: Age, in milliseconds, before a workflow is garbage-collected.
-- `--private-mode`: Restrict the application to members of the organization.
+- `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
 ---
 

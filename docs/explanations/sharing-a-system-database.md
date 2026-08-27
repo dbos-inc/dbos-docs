@@ -94,14 +94,19 @@ To ensure no rows are unowned, always pass an application name to your clients w
 Before adding a second application to a system database, explicitly transfer ownership of any unowned rows to the first application:
 
 ```shell
-dbos rename-application --to my-app --adopt-unclaimed-rows
+dbosctl sysdb rename-application --to my-app --adopt-unclaimed-rows
 ```
 
 ## Renaming an Application
 
 Because ownership is recorded under the application's name, renaming an application requires transferring ownership of its rows.
-To rename an application, first stop it, then run `dbos rename-application` ([Python](../python/reference/cli.md#dbos-rename-application), [TypeScript](../typescript/reference/cli.md#npx-dbos-rename-application), [Go](../golang/reference/methods.md#renameapplication)), then restart it under its new name:
+To rename an application, first stop it, then run [`dbosctl sysdb rename-application`](../production/dbosctl.md#dbosctl-sysdb-rename-application), then restart it under its new name:
 
 ```shell
-dbos rename-application --from old-name --to new-name
+dbosctl sysdb rename-application --from old-name --to new-name
 ```
+
+[`dbosctl`](../production/dbosctl.md) is the recommended way to run this: a system database shared by applications in different languages is not any one language's to manage, and `dbosctl` is a single binary that works against all of them.
+It takes the database URL from `-D`/`--db-url` or `$DBOS_SYSTEM_DATABASE_URL` rather than from an application's configuration.
+
+Each SDK also ships the same command for its own language, reading the system database URL from that language's configuration: [Python](../python/reference/cli.md#dbos-rename-application), [TypeScript](../typescript/reference/cli.md#npx-dbos-rename-application), and, in Go, [`RenameApplication`](../golang/reference/methods.md#renameapplication).
