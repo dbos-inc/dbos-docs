@@ -732,10 +732,20 @@ Prompts for confirmation when run interactively.
 - `-t, --to <name>`: The application that ends up owning the rows. Required.
 - `--adopt-unclaimed-rows`: Also transfer rows no application owns (`application_name` is null).
 - `--batch-size <int>`: Completed workflows and steps transferred per transaction. Defaults to 10000.
-- `--force`: Skip the confirmation prompt. Required when running non-interactively.
+- `--force`: Skip the confirmation prompt and the `--to` name checks. Required when running non-interactively.
 - `-o, --output <format>`: Output format for the row counts — `table` (default) or `json`.
 
 Rows no application owns predate system-database sharing, so claiming them is a decision rather than a default: naming neither source is an error rather than a rename that reports moving nothing.
+
+`--to` is looked at before anything moves.
+A name that is only whitespace is refused outright — no application can be configured with it, so the rename would move a whole history somewhere nothing will look for it again.
+Two others are reported above the confirmation prompt and asked about rather than refused:
+
+- A name outside `^[a-z0-9-_]{3,30}$`. DBOS Transact places no limits on an application name, but DBOS Conductor and Cloud do: a name that does not match cannot be registered or used with either.
+- A name that already owns rows in the schema. Merging two applications is a real thing to want, and it is what `--to` alone with `--adopt-unclaimed-rows` does on purpose.
+
+Each is also exactly what the corresponding mistake looks like — a stray capital or space, and a `--to` naming the wrong existing application — and nothing here can tell the two apart, so the answer to the prompt decides them.
+`--force` skips that prompt and both questions with it, including the query that asks the database whether the name is already taken.
 
 Queues, schedules, versions, and in-flight workflows move in one transaction — a half-owned application would dequeue work whose version row it can no longer see.
 Completed workflows and their steps are unbounded, so they move in batches of `--batch-size` keys, and re-running an interrupted rename picks up where it stopped rather than starting over.
