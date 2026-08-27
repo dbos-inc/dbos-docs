@@ -85,7 +85,11 @@ If you enqueue a workflow with the ID of a workflow that already exists, it's a 
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
+You can reset your DBOS system database and all internal DBOS state with the [`dbosctl sysdb reset`](./production/dbosctl.md#dbosctl-sysdb-reset) command.
+It empties the DBOS tables and leaves the schema migrated, so nothing has to provision the database again between runs, and it works the same way whatever language your application is written in.
+Pass `--app` to reset just one application's state in a [shared system database](./explanations/sharing-a-system-database.md), or `--drop-database` to drop the database outright.
+
+Each SDK also ships a `dbos reset` command for its own language, which drops the database ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
 
 ### How can I reduce the number of Postgres connections DBOS uses?
 
