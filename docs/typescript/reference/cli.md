@@ -198,7 +198,7 @@ Prints the number of rows transferred, by table.
 This command initializes a new DBOS application from a template into a target directory.
 
 **Arguments:**
-- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 256 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 - `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
 
 

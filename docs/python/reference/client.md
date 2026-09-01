@@ -1561,7 +1561,7 @@ A running application would race the rename, creating new work under its old nam
 
 **Parameters:**
 - `old_name`: The application's previous name. If `None`, nothing is transferred except rows owned by no application, so `adopt_unclaimed_rows` must be set.
-- `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
 - `batch_size`: The number of completed workflows and steps transferred per transaction. Pass `None` to transfer everything in a single transaction.
 - `adopt_unclaimed_rows`: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `False`.
 
