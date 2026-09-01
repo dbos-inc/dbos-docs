@@ -1,12 +1,9 @@
----
-sidebar_position: 15
-title: Configuration
----
+# Configuration
+
+> To configure DBOS, pass a `Config` object to [`NewContext`](./dbos-context.md#newcontext).
+> `AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SQLiteSystemDB` are mandatory.
 
 ## Configuring DBOS
-
-To configure DBOS, pass a `Config` object to [`NewContext`](./dbos-context.md#newcontext).
-`AppName` and one of `DatabaseURL`, `SystemDBPool`, or `SQLiteSystemDB` are mandatory.
 
 ```go
 type Config struct {

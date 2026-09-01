@@ -1,10 +1,7 @@
----
-sidebar_position: 20
-title: Steps
----
+# Steps
 
-When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
-If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
+> When using DBOS workflows, you should annotate any function that performs complex operations or accesses external APIs or services as a _step_.
+> If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 You can turn **any** Python function into a step by annotating it with the [`@DBOS.step`](../reference/decorators.md#step) decorator.
 The only requirement is that its outputs should be serializable.

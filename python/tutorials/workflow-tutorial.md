@@ -1,11 +1,7 @@
----
-sidebar_position: 10
-title: Workflows
-toc_max_heading_level: 3
----
+# Workflows
 
-Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
+> Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+> Workflows help you write fault-tolerant background tasks, data processing pipelines, AI agents, and more.
 
 You can make a function a workflow by annotating it with [`@DBOS.workflow()`](../reference/decorators.md#workflow).
 Workflows call [steps](./step-tutorial.md), which are Python functions annotated with [`@DBOS.step()`](../reference/decorators.md#step).
@@ -110,7 +106,6 @@ def example_workflow(friend: str):
         step_two()
 ```
 
-
 ## Workflow Timeouts
 
 You can set a timeout for a workflow with [`SetWorkflowTimeout`](../reference/contexts.md#setworkflowtimeout).
@@ -172,7 +167,6 @@ def on_user_input_submit(user_id, user_input):
 
 See the [debouncing reference](../reference/contexts.md#debouncing) for more details.
 
-
 ## Coroutine (Async) Workflows
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
@@ -180,7 +174,6 @@ Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-st
 You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
 Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [communication](./workflow-communication.md) context methods.
-
 
 ```python
 @DBOS.step()

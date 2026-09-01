@@ -1,11 +1,7 @@
----
-sidebar_position: 32
-title: Audit Logs
-toc_max_heading_level: 3
----
+# Audit Logs
 
-If you are using [Conductor](./conductor.md), you can retrieve an **audit log** of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
-The audit log is append-only and records who did what, when, from where, and whether the operation succeeded.
+> If you are using [Conductor](./conductor.md), you can retrieve an **audit log** of the mutating operations performed against your organization: registering and deleting applications, managing workflows and schedules, creating and revoking API keys, changing roles and membership, and updating organization settings.
+> The audit log is append-only and records who did what, when, from where, and whether the operation succeeded.
 
 :::info
 Audit logs require a [DBOS Enterprise](https://www.dbos.dev/dbos-pricing) plan.

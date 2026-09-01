@@ -1,11 +1,7 @@
----
-sidebar_position: 30
-title: Queues & Concurrency
-toc_max_heading_level: 4
----
+# Queues & Concurrency
 
-You can use queues to run many workflows at once with managed concurrency.
-Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
+> You can use queues to run many workflows at once with managed concurrency.
+> Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 Register a queue with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue), specifying its name and options.
 Queues must be registered **after** [`dbos.launch()`](../reference/lifecycle.md).

@@ -1,10 +1,6 @@
----
-sidebar_position: 20
-title: Add DBOS To Your App
----
+# Add DBOS To Your App
 
-
-This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-golang) library to your existing application to **durably execute** it and make it resilient to any failure.
+> This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-golang) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
 `go get` DBOS into your application.
@@ -33,7 +29,6 @@ export DBOS_SYSTEM_DATABASE_URL=postgres://postgres:dbos@localhost:5432/dbos_sta
 Add these lines of code to your program's main function.
 They initialize a DBOS context when your program starts.
 
-
 ```go
 func main() {
     dbosContext, err := dbos.NewContext(context.Background(), dbos.Config{
@@ -58,7 +53,6 @@ func main() {
 Try starting your application.
 If everything is set up correctly, your app should run normally and log `DBOS launched` on startup.
 Congratulations! You've integrated DBOS into your application.
-
 
 ### 4. Start Building With DBOS
 
@@ -85,7 +79,6 @@ You can add DBOS to your application incrementally&mdash;it won't interfere with
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
 
 To learn more about programming with DBOS, check out [the guide](./programming-guide.md).
-
 
 ```go
 func workflow(ctx dbos.Context, _ string) (string, error) {

@@ -1,8 +1,6 @@
----
-sidebar_position: 30
-title: Transactions & Datasources
-description: Learn how to perform database operations
----
+# Transactions & Datasources
+
+> Learn how to perform database operations
 
 DBOS provides two ways to run database operations durably inside workflows: _datasources_ and the built-in `@DBOS.transaction` decorator.
 
@@ -92,7 +90,7 @@ async def greeting_workflow(name: str, note: str) -> None:
 Putting it together, a complete async program looks like this. The datasource is created at module scope so that `@ads.transaction()` can decorate `insert_greeting` and `insert_greeting` can call `ads.sql_session()`:
 
 <details>
-<summary><strong>Async Datasource Example</strong></summary>
+<summary>Async Datasource Example</summary>
 
 ```python
 import asyncio
@@ -129,7 +127,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 </details>
-
 
 The decorator accepts two optional keyword arguments:
 - `name` – a custom step name recorded in the workflow log (defaults to the function's qualified name)
@@ -185,8 +182,7 @@ Outside a workflow, datasource transactions execute normally as plain SQLAlchemy
 
 To make a function a transaction, annotate it with [`@DBOS.transaction`](../reference/decorators.md#transaction). Inside the function, use [`DBOS.sql_session`](../reference/contexts.md#sql_session), a [SQLAlchemy](https://www.sqlalchemy.org/) session that executes your operations atomically together with DBOS's checkpoint.
 
-<Tabs groupId="database-clients">
-<TabItem value="sqlalchemy" label="SQLAlchemy Core">
+**SQLAlchemy Core**
 
 ```python
 greetings = Table(
@@ -208,8 +204,7 @@ def get_greeting(name: str) -> Optional[str]:
     return row[0] if row else None
 ```
 
-</TabItem>
-<TabItem value="raw" label="Raw SQL">
+**Raw SQL**
 
 ```python
 @DBOS.transaction()
@@ -223,9 +218,6 @@ def get_greeting(name: str) -> Optional[str]:
     row = DBOS.sql_session.execute(sql, {"name": name}).first()
     return row[0] if row else None
 ```
-
-</TabItem>
-</Tabs>
 
 By default, transactions run against the DBOS system database. To use a separate application database, set `application_database_url` in your DBOS configuration:
 

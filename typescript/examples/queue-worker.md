@@ -1,11 +1,8 @@
----
-sidebar_position: 35
-title: Queue Worker
----
+# Queue Worker
 
-:::info
-This example is also available in [Python](../../python/examples/queue-worker.md).
-:::
+> :::info
+> This example is also available in [Python](../../python/examples/queue-worker.md).
+> :::
 
 This example demonstrates how to run DBOS workflows in their own "queue worker" service while enqueueing and managing them from other services.
 This design pattern lets you separate concerns and separately scale the workers that execute your durable workflows from your other services.
@@ -15,8 +12,6 @@ The web server uses the [DBOS Client](../reference/client.md) to enqueue workflo
 The worker service dequeues and executes workflows.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/queue-worker).
-
-<img src={require('@site/static/img/queue-worker/queue-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 ## Worker Service
 

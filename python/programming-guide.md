@@ -1,11 +1,6 @@
----
-sidebar_position: 10
-title: Learn DBOS Python
-pagination_next: python/tutorials/workflow-tutorial
-pagination_prev: quickstart
----
+# Learn DBOS Python
 
-This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
+> This guide shows you how to use DBOS to build Python apps that are **resilient to any failure**.
 
 :::tip
 To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
@@ -15,29 +10,29 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./prompti
 
 Create a folder for your app with a virtual environment, then enter the folder and activate the virtual environment.
 
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS or Linux">
+**macOS or Linux**
+
 ```shell
 python3 -m venv dbos-starter/.venv
 cd dbos-starter
 source .venv/bin/activate
 ```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
+
+**Windows (PowerShell)**
+
 ```shell
 python3 -m venv dbos-starter/.venv
 cd dbos-starter
 .venv\Scripts\activate.ps1
 ```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
+
+**Windows (cmd)**
+
 ```shell
 python3 -m venv dbos-starter/.venv
 cd dbos-starter
 .venv\Scripts\activate.bat
 ```
-</TabItem>
-</Tabs>
 
 Then, install DBOS:
 

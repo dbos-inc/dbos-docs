@@ -1,10 +1,6 @@
----
-sidebar_position: 60
-title: Spring Boot Starter
-toc_max_heading_level: 3
----
+# Spring Boot Starter
 
-The `transact-spring-boot-starter` provides Spring Boot auto-configuration for DBOS Transact.
+> The `transact-spring-boot-starter` provides Spring Boot auto-configuration for DBOS Transact.
 
 :::danger
 DBOS requires a PostgreSQL database. If a non-PostgreSQL `DataSource` is provided or auto-detected, startup will throw an `IllegalStateException`.

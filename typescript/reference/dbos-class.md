@@ -1,12 +1,8 @@
----
-sidebar_position: 10
-title: DBOS Lifecycle
-pagination_prev: null
----
+# DBOS Lifecycle
 
-The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
-Here, we document its lifecycle.
-Other methods and variables are documented [here](./methods.md).
+> The DBOS class is a singleton&mdash;it must be configured and launched exactly once in a program's lifetime, before running any DBOS workflows.
+> Here, we document its lifecycle.
+> Other methods and variables are documented [here](./methods.md).
 
 ### DBOS.setConfig
 

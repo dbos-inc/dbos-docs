@@ -1,15 +1,12 @@
----
-sidebar_position: 200
-title: Upgrading
----
+# Upgrading
+
+> The `updateTime` field on the `ExternalState` record changed from `BigDecimal` to `java.time.Instant`, and the `withUpdateTime` builder method updated accordingly.
 
 ## Upgrading to v1.0
 
 ### Breaking Changes
 
 #### ExternalState.updateTime: BigDecimal → Instant
-
-The `updateTime` field on the `ExternalState` record changed from `BigDecimal` to `java.time.Instant`, and the `withUpdateTime` builder method updated accordingly.
 
 This only affects custom plugin authors who directly construct or pattern-match on `ExternalState`.
 
@@ -205,7 +202,6 @@ Use [DBOS Conductor](https://docs.dbos.dev/conductor) instead.
 
 The related configuration APIs — `withAdminServer()`, `disableAdminServer()`, `enableAdminServer()`, and `withAdminServerPort()` on `DBOSConfig`, and the `dbos.admin-server.*` properties in Spring Boot — are deprecated alongside it.
 
-
 ---
 
 ## Upgrading to v0.8
@@ -340,8 +336,3 @@ For consistency with other DBOS APIs, these two parameters have swapped position
 Across the code base, when specifying the workflow name, class name, instance name of a registered workflow, we have the parameters in that order.
 
 Additionally, similar to DBOS changes detailed above, `DBOSClient.getWorkflowStatus` and `DBOS.getEvent` now return `Optional` instead of a `@Nullable` value;
-
-
-
-
-

@@ -1,12 +1,8 @@
----
-sidebar_position: 25
-title: Tiger Data
-hide_table_of_contents: true
----
+# Tiger Data
+
+> Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
 
 # Use DBOS With Tiger Data
-
-Here's how to connect your DBOS application running on your computer or cloud environment to a Postgres or TimescaleDB database running in Tiger Cloud (the makers of TimescaleDB).
 
 ### 1. Set up a Local Application
 
@@ -17,8 +13,6 @@ The rest of this guide will assume you have a local application.
 
 Next, open your [dashboard](https://console.cloud.timescale.com/dashboard/services) and select your service.
 You should see a screen that looks like this:
-
-<img src={require('@site/static/img/timescaledb/timescaledb-connect.png').default} alt="TimescaleDB Connection Information" width="1000" className="custom-img"/>
 
 Copy the connection string that appears on the right and set the `DBOS_SYSTEM_DATABASE_URL` environment variable to it:
 
@@ -46,5 +40,3 @@ SELECT * FROM dbos.workflow_status;
 ```
 
 You should see the durable checkpoints DBOS makes for your workflows:
-
-<img src={require('@site/static/img/timescaledb/timescaledb-query.png').default} alt="TimescaleDB Tables Dashboard" width="1000" className="custom-img"/>

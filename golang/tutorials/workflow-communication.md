@@ -1,21 +1,15 @@
----
-sidebar_position: 48
-title: Communicating with Workflows
----
+# Communicating with Workflows
 
-DBOS provides a few different ways to communicate with your workflows.
-You can:
+> DBOS provides a few different ways to communicate with your workflows.
+> You can:
 
 - [Send messages to workflows](#workflow-messaging-and-notifications)
 - [Publish events from workflows for clients to read](#workflow-events)
 - [Stream values from workflows to clients](#workflow-streaming)
 
-
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
-
-<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### Send
 
@@ -93,8 +87,6 @@ If you're sending a message from a workflow, DBOS guarantees exactly-once delive
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
-<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
-
 #### SetEvent
 
 ```go
@@ -168,8 +160,6 @@ Additionally, if `GetEvent` is called in a workflow, the retrieved value is pers
 
 Workflows can stream data in real time to clients.
 This is useful for streaming results from a long-running workflow or LLM call, or for monitoring and progress reporting.
-
-<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Streams" width="750" className="custom-img"/>
 
 #### Writing to Streams
 

@@ -1,9 +1,6 @@
----
-sidebar_position: 50
-title: Workflow Management
----
+# Workflow Management
 
-You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md), programmatically, or via command line.
+> You can view and manage your durable workflow executions via the [DBOS Console](../../production/workflow-management.md), programmatically, or via command line.
 
 ## Listing Workflows
 
@@ -11,16 +8,12 @@ You can list your application's workflows programmatically via [`DBOS.listWorkfl
 
 You can also view a searchable and expandable list of your application's workflows from its page on the [DBOS Console](../../production/workflow-management.md).
 
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 ## Listing Workflow Steps
 
 You can list the steps of a workflow programmatically via [`DBOS.listWorkflowSteps`](../reference/methods.md#dboslistworkflowsteps) or from the command line with [`npx dbos workflow steps`](../reference/cli.md#npx-dbos-workflow-steps).
 
 You can also visualize a workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps) from its page on the [DBOS Console](../../production/workflow-management.md).
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
 ## Workflow Attributes
 
@@ -65,5 +58,3 @@ Forking a workflow is useful for recovering from outages in downstream services 
 
 You can fork a workflow programmatically using [`DBOS.fork_workflow`](../reference/methods.md#dbosforkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
-
-<img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>

@@ -1,12 +1,8 @@
----
-sidebar_position: 10
-title: Workflows
-toc_max_heading_level: 3
----
+# Workflows
 
-Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Java methods.
-If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+> Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+> Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Java methods.
+> If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, annotate a method with [`@Workflow`](../reference/workflows-steps.md#workflow).
 All workflow methods must be registered before DBOS is launched.

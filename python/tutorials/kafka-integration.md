@@ -1,8 +1,6 @@
----
-sidebar_position: 90
-title: Integrating with Kafka
-description: Overview of using DBOS with Kafka
----
+# Integrating with Kafka
+
+> Overview of using DBOS with Kafka
 
 In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
 
@@ -28,7 +26,6 @@ Configuration setting details are available from the
 [official Kafka documentation](https://kafka.apache.org/documentation/#consumerconfigs).
 At a minimum, you must specify [`bootstrap.servers`](https://kafka.apache.org/documentation/#consumerconfigs_bootstrap.servers) and
 [`group.id`](https://kafka.apache.org/documentation/#consumerconfigs_group.id) configuration settings.
-
 
 ```python
 from dbos import DBOS, KafkaMessage

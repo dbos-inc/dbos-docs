@@ -1,10 +1,6 @@
----
-sidebar_position: 10
-title: Learn DBOS Go
-pagination_prev: quickstart
----
+# Learn DBOS Go
 
-This guide shows you how to use DBOS to build Go apps that are **resilient to any failure**.
+> This guide shows you how to use DBOS to build Go apps that are **resilient to any failure**.
 
 :::tip
 To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
@@ -126,7 +122,6 @@ Workflow result: success
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Gin.
 Replace the contents of `main.go` with:
-
 
 ```go showLineNumbers title="main.go"
 package main

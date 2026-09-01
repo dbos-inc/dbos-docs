@@ -1,11 +1,8 @@
----
-sidebar_position: 50
-title: DBOS Client
----
+# DBOS Client
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
-`DBOSClient` includes methods similar to `DBOS`.
-that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
+> `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+> `DBOSClient` includes methods similar to `DBOS`.
+> that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
 
 :::note 
 `DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
@@ -820,7 +817,7 @@ A running application would race the rename, creating new work under its old nam
 
 **Parameters:**
 - **oldName**: The application's previous name. If undefined, nothing is transferred except rows owned by no application, so `adoptUnclaimedRows` must be set.
-- **newName**: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- **newName**: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
 - **options.batchSize**: The number of completed workflows and steps transferred per transaction. Defaults to 10,000. Pass `null` to transfer everything in a single transaction.
 - **options.adoptUnclaimedRows**: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `false`.
 
@@ -893,5 +890,3 @@ async function onUserInputSubmit(userId: string, userInput: string) {
   await debouncer.debounce(debounceKey, debouncePeriodMs, userInput);
 }
 ```
-
-

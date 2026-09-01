@@ -1,10 +1,6 @@
----
-sidebar_position: 50
-title: DBOS Client
-toc_max_heading_level: 3
----
+# DBOS Client
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
+> `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
 
 ## DBOSClient
 

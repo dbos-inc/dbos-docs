@@ -1,12 +1,9 @@
----
-sidebar_position: 15
-title: DBOS CLI
----
+# DBOS CLI
+
+> These commands all require the URL of your DBOS system database (and optionally your application database, if you use legacy DBOS [transactions](../tutorials/transaction-tutorial.md#dbostransaction)).
+> You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ## Workflow Management Commands
-
-These commands all require the URL of your DBOS system database (and optionally your application database, if you use legacy DBOS [transactions](../tutorials/transaction-tutorial.md#dbostransaction)).
-You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ### dbos workflow list
 

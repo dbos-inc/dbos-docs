@@ -1,10 +1,7 @@
----
-sidebar_position: 70
-title: Deploying With Kubernetes
----
+# Deploying With Kubernetes
 
-This guide covers deploying a DBOS application on Kubernetes.
-It walks through DBOS-specific deployment concepts, then provides a full walkthrough covering infrastructure, secrets, database migrations, application deployment, and autoscaling.
+> This guide covers deploying a DBOS application on Kubernetes.
+> It walks through DBOS-specific deployment concepts, then provides a full walkthrough covering infrastructure, secrets, database migrations, application deployment, and autoscaling.
 
 The Kubernetes manifests are portable to any conformant cluster.
 
@@ -33,9 +30,9 @@ When Conductor is in a different cluster, use `wss://` so the WebSocket connecti
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
 
-Run `dbos migrate` ([Python](../python/reference/cli.md#dbos-migrate), [Go](../golang/reference/cli.md)) or `dbos schema` ([TypeScript](../typescript/reference/cli.md#npx-dbos-schema)) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
+Run [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with an **admin** role that can create schema and grant permissions, and run the application with a **restricted** role that can only read/write data. Use the `--app-role` flag to grant the necessary schema permissions to the restricted role.
 
-`dbos migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline.
+`dbosctl sysdb migrate` works well as a Kubernetes [Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) that you compose into your CI/CD pipeline. It is a single static binary carrying the migrations, so the Job needs no SDK toolchain and no copy of your application.
 
 ## Availability
 
@@ -71,14 +68,13 @@ Since the `metrics-api` trigger polls the application itself, `minReplicaCount` 
 
 ## Walkthrough (AWS EKS)
 
-<Tabs groupId="cloud-provider">
-<TabItem value="eks" label="EKS (AWS)">
+**EKS (AWS)**
 
 This walkthrough deploys a sample DBOS Go application on EKS with RDS PostgreSQL, Sealed Secrets, database migrations, and KEDA autoscaling.
 
 <details>
 
-<summary><strong>Set environment variables</strong></summary>
+<summary>Set environment variables</summary>
 
 Set these variables before proceeding — replace the placeholder values with your own:
 
@@ -111,7 +107,7 @@ CONDUCTOR_URL='wss://conductor.dbos.dev/'
 
 <details>
 
-<summary><strong>CLI tools required on your workstation</strong></summary>
+<summary>CLI tools required on your workstation</summary>
 
 | Tool | Purpose | Install |
 |------|---------|---------|
@@ -143,7 +139,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 
 <details>
 
-<summary><strong>Create EKS cluster</strong></summary>
+<summary>Create EKS cluster</summary>
 
 ```bash
 eksctl create cluster \
@@ -185,7 +181,7 @@ Your DBOS application needs a PostgreSQL database for its [system tables](../exp
 
 <details>
 
-<summary><strong>RDS provisioning commands</strong></summary>
+<summary>RDS provisioning commands</summary>
 
 Find the VPC and private subnets that `eksctl` created:
 
@@ -282,7 +278,7 @@ Create the database and application role from a pod inside the cluster (since th
 
 <details>
 
-<summary><strong>Create database and role</strong></summary>
+<summary>Create database and role</summary>
 
 ```bash
 kubectl run pg-setup --restart=Never \
@@ -299,7 +295,7 @@ sleep 15 && kubectl logs pg-setup -n dbos && kubectl delete pod pg-setup -n dbos
 
 This creates:
 - `dbos_app` — the application's system database for workflow state
-- `dbos_app_role` — a restricted role the application uses at runtime (granted permissions by `dbos migrate`)
+- `dbos_app_role` — a restricted role the application uses at runtime (granted permissions by `dbosctl sysdb migrate`)
 
 </details>
 
@@ -307,7 +303,7 @@ This creates:
 
 <details>
 
-<summary><strong>Helm installs (Sealed Secrets, KEDA)</strong></summary>
+<summary>Helm installs (Sealed Secrets, KEDA)</summary>
 
 **Sealed Secrets** — encrypt secrets for safe Git storage:
 
@@ -377,7 +373,7 @@ The encrypted form is safe to commit to Git.
 
 <details>
 
-<summary><strong>kubeseal commands for all 3 secrets</strong></summary>
+<summary>kubeseal commands for all 3 secrets</summary>
 
 Create each secret, pipe it through `kubeseal`, and save the encrypted form:
 
@@ -437,25 +433,28 @@ postgres-admin      Opaque   2      10s
 
 DBOS applications store workflow state in [system tables](../explanations/system-tables.md).
 These tables must be created before the application can start.
-We use a separate Kubernetes Job that runs `dbos migrate` with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
+We use a separate Kubernetes Job that runs [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with **admin** credentials, then the application itself runs with a **restricted** role that can only read/write data — not modify schema.
 
 This separation follows the principle of least privilege: the application never holds the keys to alter its own schema.
 
 <details>
 
-<summary><strong>Migration image and build</strong></summary>
+<summary>Migration image and build</summary>
 
-The migration image contains only the DBOS CLI — it doesn't include your application code.
+The migration image contains only `dbosctl` — it doesn't include your application code, or a toolchain for the language that code is written in.
+`dbosctl` ships as a statically linked release binary carrying the migrations, so the image is a download rather than a build:
 
 ```dockerfile title="Dockerfile.migrate"
-FROM golang:1.25-alpine AS builder
-RUN CGO_ENABLED=0 GOOS=linux go install github.com/dbos-inc/dbos-transact-golang/cmd/dbos@latest
-
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/bin/dbos /usr/local/bin/dbos
-ENTRYPOINT ["dbos"]
+# Pin this to the dbosctl release you have tested; leave it empty for the latest.
+ARG DBOSCTL_VERSION=""
+RUN apk --no-cache add ca-certificates curl
+RUN curl -sSfL https://raw.githubusercontent.com/dbos-inc/dbos-ctl/main/install.sh \
+  | VERSION="${DBOSCTL_VERSION}" BIN_DIR=/usr/local/bin sh
+ENTRYPOINT ["dbosctl"]
 ```
+
+Pin `DBOSCTL_VERSION` for a pipeline you want to be reproducible: an unpinned build takes whatever the latest release is on the day it runs, which is not what you tested.
 
 ```bash
 # Set your ECR repository URI
@@ -472,14 +471,14 @@ docker push ${ECR_MIGRATE}:latest
 
 </details>
 
-The Job runs `dbos migrate --app-role dbos_app_role`, which:
+The Job runs `dbosctl sysdb migrate --app-role dbos_app_role`, which:
 1. Creates the DBOS system tables in the `dbos_app` database (if they don't exist)
 2. Applies any pending schema migrations
 3. Grants the necessary permissions to `dbos_app_role` so the application can read and write workflow state
 
 <details>
 
-<summary><strong>manifests/migrate-job.yaml</strong></summary>
+<summary>manifests/migrate-job.yaml</summary>
 
 ```yaml
 apiVersion: batch/v1
@@ -496,6 +495,7 @@ spec:
         - name: migrate
           image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/dbos-migrate:latest
           args:
+            - "sysdb"
             - "migrate"
             - "--app-role"
             - "dbos_app_role"
@@ -508,7 +508,7 @@ spec:
 ```
 
 The `postgres-admin` secret contains the admin connection string, which has the privileges needed to create tables and grant permissions.
-The `--app-role` flag tells `dbos migrate` to grant the specified role access to the system tables.
+The `--app-role` flag tells `dbosctl sysdb migrate` to grant the specified role access to the system tables.
 
 </details>
 
@@ -537,7 +537,8 @@ kubectl logs -n dbos job/dbos-migrate
 
 **Re-running Migrations**
 
-When you deploy a new version of the DBOS SDK that includes schema changes, re-run the migration job.
+When a new `dbosctl` release adds migrations — usually alongside a DBOS SDK version that expects them — rebuild the migration image against that release and re-run the Job.
+Re-running a Job built from the same pinned release is harmless but does nothing: `dbosctl sysdb migrate` skips migrations that are already recorded.
 Since Kubernetes Job names must be unique, delete the old job first:
 
 ```bash
@@ -553,7 +554,7 @@ Build and push the application image to ECR, then apply the application manifest
 
 <details>
 
-<summary><strong>Dockerfile, manifest, and ECR push</strong></summary>
+<summary>Dockerfile, manifest, and ECR push</summary>
 
 ```dockerfile title="Dockerfile"
 FROM golang:1.25-alpine AS builder
@@ -658,7 +659,7 @@ The database URL and API key are pulled from the Sealed Secrets created in the [
 
 <details>
 
-<summary><strong>Trusting a self-signed TLS certificate</strong></summary>
+<summary>Trusting a self-signed TLS certificate</summary>
 
 If your self-hosted Conductor uses a **CA-signed certificate** (e.g., from [cert-manager](https://cert-manager.io/) with Let's Encrypt), no extra configuration is needed — the system CA bundle already trusts it.
 
@@ -759,7 +760,7 @@ For example, if 7 workflows are queued, KEDA scales to `ceil(7 / 2) = 4` pods.
 
 <details>
 
-<summary><strong>manifests/keda-scaledobject.yaml</strong></summary>
+<summary>manifests/keda-scaledobject.yaml</summary>
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -885,6 +886,3 @@ aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 # Delete the DB subnet group
 aws rds delete-db-subnet-group --db-subnet-group-name dbos-app-db --region $AWS_REGION
 ```
-
-</TabItem>
-</Tabs>

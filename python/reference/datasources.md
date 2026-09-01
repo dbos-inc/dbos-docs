@@ -1,9 +1,6 @@
----
-sidebar_position: 6
-title: Datasources
----
+# Datasources
 
-Datasources wrap a SQLAlchemy engine so that database transactions run inside DBOS workflows are tracked and replayed with exactly-once guarantees. See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.md) for a full walkthrough.
+> Datasources wrap a SQLAlchemy engine so that database transactions run inside DBOS workflows are tracked and replayed with exactly-once guarantees. See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.md) for a full walkthrough.
 
 ## SQLAlchemyDatasource
 

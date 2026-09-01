@@ -1,10 +1,7 @@
----
-sidebar_position: 30
-title: AI Model Prompting
----
+# AI Model Prompting
 
-You may want assistance from an AI model in building a DBOS application.
-To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
+> You may want assistance from an AI model in building a DBOS application.
+> To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
 
 You may also want to use the [DBOS MCP server](../integrations/mcp.md) so your model can directly access your application's workflows and steps.
 
@@ -106,7 +103,6 @@ Once some code hase been added to the project, the typical gradlew commands can 
 ./gradlew assemble
 ./gradlew run
 ```
-
 
 ## Use of Spring
 DBOS examples often use Spring boot, and there are examples of integrating it with the DBOS lifecycle, however DBOS is just a library and can be used by itself, or with other frameworks.
@@ -293,7 +289,6 @@ List<WorkflowHandle<Object, Exception>> handles =
     dbos.backfillSchedule("every-minute", Instant.parse("2025-01-01T00:00:00Z"), Instant.parse("2025-01-02T00:00:00Z"));
 ```
 
-
 ## Workflow Documentation
 
 Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
@@ -422,7 +417,6 @@ Create workflow options with all fields set to their defaults.
 - **`withDelay(Duration delay)`** - Delay the start of the workflow by the specified duration after it is dequeued.
 
 - **`withAppVersion(String appVersion)`** - Tag the workflow with a specific application version.
-
 
 One common use-case for workflows is building reliable background tasks that keep running even when your program is interrupted, restarted, or crashes.
 You can use startWorkflow to start a workflow in the background.
@@ -593,7 +587,6 @@ When DBOS tries to recover workflows, it only recovers workflows whose version m
 This prevents unsafe recovery of workflows that depend on different code.
 You cannot change the version of a workflow, but you can use `dbos.forkWorkflow` to restart a workflow from a specific step on a specific code version.
 
-
 ## Workflow Communication
 
 DBOS provides a few different ways to communicate with your workflows.
@@ -605,8 +598,6 @@ You can:
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
-
-<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 #### Send
 
@@ -681,8 +672,6 @@ If you're sending a message from normal Java code, you can use a unique workflow
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
-<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
-
 #### setEvent
 
 ```java
@@ -753,7 +742,6 @@ app.post("/checkout/{idempotency_key}", ctx -> {
 
 All events are persisted to the database, so the latest version of an event is always retrievable.
 Additionally, if `getEvent` is called in a workflow, the retrieved value is persisted in the database so workflow recovery can use that value, even if the event is later updated.
-
 
 ### Reliability Guarantees
 
@@ -959,7 +947,6 @@ var handle = client.enqueueWorkflow(options, new Object[]{"argumentOne", "argume
 
 `EnqueueOptions` is a with-based configuration record for parameterizing `client.enqueueWorkflow`.
 
-
 **Constructors:**
 
 ```java
@@ -981,7 +968,6 @@ Specify the workflow name and queue. `className` is optional — DBOS searches a
 - **`withDeduplicationId(String deduplicationId)`**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
 - **`withPriority(Integer priority)`**: Priority values range from `1` to `2,147,483,647`; lower numbers run first.
 - **`withQueuePartitionKey(String key)`**: Partition key for partitioned queues.
-
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
 This helps prevent resource exhaustion when workflows consume significant memory or processing power.
@@ -1228,7 +1214,6 @@ static boolean inStep();
 
 Return `true` if the current calling context is executing a workflow step, or `false` otherwise.
 
-
 ## Workflow Management Methods
 
 ### listWorkflows
@@ -1267,7 +1252,6 @@ Retrieve a list of WorkflowStatus of all workflows matching specified criteria.
 - `withParentWorkflowId(String id)` / `withParentWorkflowId(List<String>)` — filter to child workflows of these parents
 - `withWasForkedFrom(Boolean value)` — filter to workflows that have been forked from
 - `withHasParent(Boolean value)` — filter to child workflows
-
 
 ### listWorkflowSteps
 
@@ -1348,7 +1332,6 @@ Start a new execution of a workflow from a specific step. Steps before `startSte
   - **queueName**: Enqueue the forked workflow on this queue instead of starting immediately
   - **queuePartitionKey**: Partition key for partitioned queues
 
-
 ## Configuring DBOS
 
 Configure and create a DBOS instance.
@@ -1357,7 +1340,6 @@ Configure and create a DBOS instance.
 
 `DBOSConfig` is a with-based configuration record for configuring DBOS.
 The application name, database URL, database user, and database password are required.
-
 
 **Constructor:**
 

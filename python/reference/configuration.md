@@ -1,12 +1,9 @@
----
-sidebar_position: 12
-title: Configuration
----
+# Configuration
+
+> To configure DBOS, pass a `DBOSConfig` object to its constructor.
+> For example:
 
 ## Configuring DBOS
-
-To configure DBOS, pass a `DBOSConfig` object to its constructor.
-For example:
 
 ```python
 config: DBOSConfig = {
@@ -72,7 +69,6 @@ If you rename an application, transfer ownership of its data with [`dbos rename-
 - **application_version**: If using the [versioning](../tutorials/upgrading-workflows.md#versioning) strategy for safely upgrading workflow code, the code version for this application and its workflows.
 - **executor_id**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
 
-
 ### Database Connection Settings
 
 - **system_database_url**: A connection string to your system database.
@@ -121,7 +117,6 @@ A system database ahead of the required version is accepted, so a process with m
 - **conductor_key**: An API key for [DBOS Conductor](../../production/conductor.md). If provided, application connects to Conductor. API keys can be created from the [DBOS console](https://console.dbos.dev).
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **conductor_executor_metadata**: A JSON-serializable dictionary of metadata to associate with this executor. This metadata is sent to Conductor and displayed on the dashboard, making it easier to identify executors (e.g., by region, instance type, or deployment environment).
-
 
 ### Logging and Tracing Settings
 

@@ -1,8 +1,6 @@
----
-sidebar_position: 20
-title: Steps
-description: Learn how to communicate with external APIs and services
----
+# Steps
+
+> Learn how to communicate with external APIs and services
 
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
@@ -51,7 +49,6 @@ export class Example {
   }
 }
 ```
-
 
 You should make a function a step if you're using it in a DBOS workflow and it performs a [**nondeterministic**](../tutorials/workflow-tutorial.md#determinism) operation.
 A nondeterministic operation is one that may return different outputs given the same inputs.

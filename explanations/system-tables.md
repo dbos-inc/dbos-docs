@@ -1,8 +1,6 @@
----
-sidebar_position: 10
-title: DBOS System Database
-description: DBOS system database reference
----
+# DBOS System Database
+
+> DBOS system database reference
 
 DBOS records application execution history in several system tables.
 These tables are located in your system database, whose location you configure when you launch your application.

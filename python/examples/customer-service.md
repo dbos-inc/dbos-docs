@@ -1,9 +1,6 @@
----
-sidebar_position: 50
-title: Reliable Customer Service Agent
----
+# Reliable Customer Service Agent
 
-In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
+> In this example, you'll learn how to build a reliable AI-powered customer service agent with DBOS and [LangGraph](https://langchain-ai.github.io/langgraph/) and serverlessly deploy it to DBOS Cloud. This example demonstrates how **DBOS makes it easy to connect your AI agent to your existing production systems**, especially when integrating **human decision-making** into automated processes.
 
 You can chat with this LLM-powered AI agent to check the status of your purchase order, or request a refund for your order.
 Even if the agent is interrupted during refund processing, upon restart it automatically recovers, finishes processing the refund, then proceeds to the next step in its workflow.
@@ -95,13 +92,11 @@ def get_purchase_by_id(order_id: int) -> Optional[Purchase]:
     row = result.first()
     return Purchase.from_row(row) if row is not None else None
 
-
 # Define a wrapper function to make the output JSON serializable.
 @tool
 def tool_get_purchase_by_id(order_id: int) -> str:
     """Look up a purchase by its order id."""
     return asdict(get_purchase_by_id(order_id))
-
 
 # This tool processes a refund for an order. If the order exceeds a cost threshold,
 # it escalates to manual review.
@@ -183,7 +178,6 @@ def send_email(purchase: Purchase):
     email_client.send(message)
     DBOS.logger.info(f"Message sent from {from_email} to {admin_email}")
 
-
 # This function updates the status of a purchase.
 @ds.transaction()
 def update_purchase_status(order_id: int, status: OrderStatus):
@@ -253,10 +247,8 @@ def create_agent():
 
     return graph
 
-
 class ChatSchema(BaseModel):
     message: str
-
 
 # Currently supports only one chat thread
 chat_config = {"configurable": {"thread_id": "1"}}

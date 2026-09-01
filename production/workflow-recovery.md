@@ -1,11 +1,8 @@
----
-sidebar_position: 30
-title: Workflow Recovery
----
+# Workflow Recovery
 
-When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
-To prevent duplicate work, it is important to detect interruptions promptly and to recover each workflow only once.
-This guide describes how to manage workflow recovery in a production environment.
+> When the execution of a durable workflow is interrupted (for example, if its executor is restarted, interrupted, or crashes), another executor must recover the workflow and resume its execution.
+> To prevent duplicate work, it is important to detect interruptions promptly and to recover each workflow only once.
+> This guide describes how to manage workflow recovery in a production environment.
 
 ## Managing Recovery
 
@@ -31,5 +28,3 @@ After recovery is confirmed, Conductor deletes its record of the executor.
 
 By default, the executor timeout is 60 seconds, so Conductor waits 60 seconds after an executor disconnects before recovering its workflows.
 You can configure the executor timeout per application from the DBOS Console.
-
-<img src={require('@site/static/img/conductor/grace-period.png').default} alt="Workflow Timeout Configuration" width="800" className="custom-img"/>

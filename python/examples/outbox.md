@@ -1,11 +1,8 @@
----
-sidebar_position: 28
-title: Transactional Outbox
----
+# Transactional Outbox
 
-A **transactional outbox** is a common pattern that solves an important problem: how to reliably update a database record and send a message to another system.
-This is trickier than it sounds because the operations usually need to be **atomic**: they either both happen or neither do, even if there are failures (such as process crashes or network glitches) while performing them.
-Otherwise, the database might go out of sync with other systems, which could cause serious data integrity issues.
+> A **transactional outbox** is a common pattern that solves an important problem: how to reliably update a database record and send a message to another system.
+> This is trickier than it sounds because the operations usually need to be **atomic**: they either both happen or neither do, even if there are failures (such as process crashes or network glitches) while performing them.
+> Otherwise, the database might go out of sync with other systems, which could cause serious data integrity issues.
 
 A transactional outbox is typically implemented by adding a new "outbox" table to our database.
 When we need to perform an atomic update, we run a single database transaction that both:

@@ -1,9 +1,6 @@
----
-sidebar_position: 50
-title: Bringing Your Own Database
----
+# Bringing Your Own Database
 
-In this guide, you'll learn how to bring your own Postgres database instance to DBOS Cloud and deploy your applications to it.
+> In this guide, you'll learn how to bring your own Postgres database instance to DBOS Cloud and deploy your applications to it.
 
 ### Linking Your Database to DBOS Cloud
 

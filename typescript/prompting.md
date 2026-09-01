@@ -1,9 +1,6 @@
----
-sidebar_position: 30
-title: AI-Assisted Development
----
+# AI-Assisted Development
 
-If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
+> If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
 
 1. [Installing DBOS skills.](#dbos-agent-skills)
 2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
@@ -33,7 +30,7 @@ You can copy and paste it directly into your context, or follow these directions
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
 <details>
-<summary><strong>DBOS TypeScript Prompt</strong></summary>
+<summary>DBOS TypeScript Prompt</summary>
 
 ````markdown
 # Build Reliable Applications With DBOS
@@ -110,7 +107,6 @@ main().catch(console.log);
 ## Workflow and Steps Examples
 
 Simple example:
-
 
 ```javascript
 import { DBOS } from "@dbos-inc/dbos-sdk";
@@ -575,7 +571,6 @@ async function onUserInputSubmit(userId: string, userInput: string) {
 }
 ```
 
-
 ## Workflow Communication
 
 DBOS provides a few different ways to communicate with your workflows.
@@ -585,12 +580,9 @@ You can:
 - Publish events from workflows for clients to read
 - Stream values from workflows to clients
 
-
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
-
-<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ### Send
 
@@ -660,8 +652,6 @@ If you're sending a message from normal TypeScript code, you can specify an idem
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
 
-<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
-
 ### setEvent
 
 ```typescript
@@ -728,8 +718,6 @@ Additionally, if `getEvent` is called in a workflow, the retrieved value is pers
 
 Workflows can stream data in real time to clients.
 This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
-
-<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ### Writing to Streams
 
@@ -817,7 +805,6 @@ try {
 Match a stream timeout with `isStreamTimeoutError` rather than `instanceof DBOSStreamTimeoutError`: when a workflow replays a checkpointed timeout, the error is revived as a plain `Error`, so `instanceof` does not hold.
 
 ## Steps
-
 
 When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
 If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
@@ -1161,7 +1148,6 @@ async function main() {
 main().catch(console.log);
 ```
 
-
 ### Rate Limiting
 
 You can set _rate limits_ for a queue, limiting the number of functions that it can start in a given period.
@@ -1385,7 +1371,6 @@ Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.
 The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 You should AVOID using ConfiguredInstance if at all possible and instead use registerWorkflow on regular non-class functions.
 
-
 ### Testing DBOS Functions
 
 Unless otherwise specified, recommend testing DBOS applications with jest.
@@ -1446,7 +1431,6 @@ describe('example integration tests', () => {
   });
 });
 ```
-
 
 ### Logging
 

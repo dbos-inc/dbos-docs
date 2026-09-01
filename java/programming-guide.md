@@ -1,10 +1,6 @@
----
-sidebar_position: 10
-title: Learn DBOS Java
-pagination_prev: quickstart
----
+# Learn DBOS Java
 
-This guide shows you how to use DBOS to build Java apps that are **resilient to any failure**.
+> This guide shows you how to use DBOS to build Java apps that are **resilient to any failure**.
 
 :::tip
 To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).
@@ -200,7 +196,6 @@ public class App {
   }
 }
 ```
-
 
 Then, build and run this code with:
 

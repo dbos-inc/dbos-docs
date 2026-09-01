@@ -1,13 +1,10 @@
----
-sidebar_position: 90
-title: CI/CD Best Practices
----
+# CI/CD Best Practices
+
+> To make it easy to test changes to your application without affecting your production users, we recommend using separate staging and production environments.
+> You can do this by deploying your application with different names for staging and production.
+> For example, when deploying `my-app` to staging, deploy using:
 
 ## Staging and Production Environments
-
-To make it easy to test changes to your application without affecting your production users, we recommend using separate staging and production environments.
-You can do this by deploying your application with different names for staging and production.
-For example, when deploying `my-app` to staging, deploy using:
 
 ```shell
 dbos-cloud app deploy my-app-staging

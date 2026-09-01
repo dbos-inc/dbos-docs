@@ -1,10 +1,6 @@
----
-sidebar_position: 30
-title: DBOS Methods & Variables
-toc_max_heading_level: 3
----
+# DBOS Methods & Variables
 
-This page documents the package-level functions for interacting with workflows: communication, streams, management, schedules, and application versions.
+> This page documents the package-level functions for interacting with workflows: communication, streams, management, schedules, and application versions.
 
 The first parameter of each function tells you who can call it — see [Who can do what](./dbos-context.md#who-can-do-what):
 - A function taking a **`Client`** accepts a [standalone client](./dbos-context.md#newclient) or any [`Context`](./dbos-context.md#context) (launched or not).
@@ -235,7 +231,6 @@ If the event does not yet exist, wait for it to be published, returning an error
 - **key**: The key of the event to retrieve.
 - **timeout**: A timeout. If the wait times out, return an error.
 
-
 ### SetEvent
 
 ```go
@@ -251,7 +246,6 @@ Writes from a workflow are exactly-once; writes from a step are at-least-once, a
 - **key**: The key of the event.
 - **message**: The value of the event. Must be serializable.
 - **opts**: Optional [SetEventOption](#withportablesetevent) functions.
-
 
 ### Send
 
@@ -469,7 +463,6 @@ func WithFilterAppVersion(appVersion ...string) ListWorkflowsOption
 ```
 
 Retrieve workflows tagged with any of these application versions.
-
 
 #### WithFilterCreatedBefore
 

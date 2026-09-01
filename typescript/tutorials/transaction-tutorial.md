@@ -1,8 +1,6 @@
----
-sidebar_position: 30
-title: Transactions & Datasources
-description: Learn how to perform database operations
----
+# Transactions & Datasources
+
+> Learn how to perform database operations
 
 DBOS Transactions are a special kind of step intended for database access.  They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction), atomically committing both user-defined changes and a DBOS checkpoint.
 
@@ -12,94 +10,74 @@ You can perform transactions using datasources, which wrap database clients with
 
 Each datasource is implemented in its own package, which must be installed before use.
 
-<Tabs groupId="database-clients">
-<TabItem value="knex" label="Knex">
+**Knex**
 
 ```shell
 npm i @dbos-inc/knex-datasource
 ```
 
-</TabItem>
-<TabItem value="kysely" label="Kysely">
+**Kysely**
 
 ```shell
 npm i @dbos-inc/kysely-datasource
 ```
 
-</TabItem>
-<TabItem value="drizzle" label="Drizzle">
+**Drizzle**
 
 ```shell
 npm i @dbos-inc/drizzle-datasource
 ```
 
-</TabItem>
-<TabItem value="typeorm" label="TypeORM">
+**TypeORM**
 
 ```shell
 npm i @dbos-inc/typeorm-datasource
 ```
 
-
-</TabItem>
-<TabItem value="prisma" label="Prisma">
+**Prisma**
 
 ```shell
 npm i @dbos-inc/prisma-datasource
 ```
 
-
-</TabItem>
-<TabItem value="node-postgres" label="node-postgres">
+**node-postgres**
 
 ```shell
 npm i @dbos-inc/nodepg-datasource
 ```
 
-
-</TabItem>
-<TabItem value="pg" label="Postgres.js">
+**Postgres.js**
 
 ```shell
 npm i @dbos-inc/postgres-datasource
 ```
 
-
-</TabItem>
-</Tabs>
-
 ## Using Datasources
 
 Before using a datasource, you must configure and construct it:
 
-<Tabs groupId="database-clients">
-<TabItem value="knex" label="Knex">
-
+**Knex**
 
 ```typescript
 const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('app-db', config);
 ```
 
-</TabItem>
-<TabItem value="kysely" label="Kysely">
-
+**Kysely**
 
 ```typescript
 const config = { connectionString: process.env.DBOS_DATABASE_URL };
 const dataSource = new KyselyDataSource<Database>('app-db', config);
 ```
 
-</TabItem>
-<TabItem value="drizzle" label="Drizzle">
+**Drizzle**
 
 ```typescript
 export const config = { connectionString: process.env.DBOS_DATABASE_URL };
 const dataSource = new DrizzleDataSource<NodePgDatabase>('app-db', config);
 ```
 
-</TabItem>
-<TabItem value="typeorm" label="TypeORM">
+**TypeORM**
 
 ```typescript
 const config = { connectionString: process.env.DBOS_DATABASE_URL };
@@ -107,8 +85,7 @@ const dataSource1 = TypeORMDataSource.createFromConfig('app-db', config, [/*enti
 const dataSource2 = TypeORMDataSource.createFromDataSource('app-db-2', existingTypeOrmDS);
 ```
 
-</TabItem>
-<TabItem value="prisma" label="Prisma">
+**Prisma**
 
 ```typescript
 process.env['DATABASE_URL'] = process.env['DBOS_DATABASE_URL'];
@@ -116,22 +93,17 @@ const prismaClient = new PrismaClient();
 const dataSource = new PrismaDataSource<PrismaClient>('app-db', prismaClient);
 ```
 
-</TabItem>
-<TabItem value="node-postgres" label="node-postgres">
+**node-postgres**
 
 ```typescript
 const dataSource = new NodePostgresDataSource('app-db', {connectionString: process.env.DBOS_DATABASE_URL});
 ```
 
-</TabItem>
-<TabItem value="pg" label="Postgres.js">
+**Postgres.js**
 
 ```typescript
 const dataSource = new PostgresDataSource('app-db', {connection: {url: process.env.DBOS_DATABASE_URL}});
 ```
-
-</TabItem>
-</Tabs>
 
 Note that the names `dataSource` and `app-db` are used throughout this page, but were chosen arbitrarily.  It is possible to use several datasource instances, with different names.
 
@@ -139,8 +111,7 @@ You can run a function as a transaction using `dataSource.runTransaction`.  The 
 
 Examples:
 
-<Tabs groupId="database-clients">
-<TabItem value="knex" label="Knex">
+**Knex**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -158,9 +129,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-
-<TabItem value="kysely" label="Kysely">
+**Kysely**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -185,8 +154,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-<TabItem value="drizzle" label="Drizzle">
+**Drizzle**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -208,8 +176,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-<TabItem value="typeorm" label="TypeORM">
+**TypeORM**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -226,8 +193,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-<TabItem value="prisma" label="Prisma">
+**Prisma**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -263,8 +229,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-<TabItem value="node-postgres" label="node-postgres">
+**node-postgres**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -283,8 +248,7 @@ async function insertFunction(user: string) {
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
 
-</TabItem>
-<TabItem value="pg" label="Postgres.js">
+**Postgres.js**
 
 ```typescript
 async function insertFunction(user: string) {
@@ -300,9 +264,6 @@ async function insertFunction(user: string) {
 
 await dataSource.runTransaction(() => insertFunction(user), { name: 'insertFunction' /*Transaction options go here*/ });
 ```
-
-</TabItem>
-</Tabs>
 
 ## Registering Functions
 

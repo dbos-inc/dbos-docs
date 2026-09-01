@@ -1,11 +1,8 @@
----
-sidebar_position: 10
-title: DBOS Client
----
+# DBOS Client
 
-`DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
-`DBOSClient` includes methods similar to [`DBOS`](./contexts.md) that can be used outside of a DBOS application, 
-such as [`enqueue`](./queues.md#enqueue) or [`getEvent`](./contexts.md#get_event).
+> `DBOSClient` provides a programmatic way to interact with your DBOS application from external code or from another DBOS application.
+> `DBOSClient` includes methods similar to [`DBOS`](./contexts.md) that can be used outside of a DBOS application, 
+> such as [`enqueue`](./queues.md#enqueue) or [`getEvent`](./contexts.md#get_event).
 
 :::note 
 `DBOSClient` is included in the `dbos` package, the same package that used by DBOS applications.
@@ -810,7 +807,6 @@ client.delete_queue_async(name: str) -> Coroutine[Any, Any, None]
 
 Asynchronous version of [`delete_queue`](#delete_queue).
 
-
 ## Workflow Management Methods
 
 ### list_workflows
@@ -1561,7 +1557,7 @@ A running application would race the rename, creating new work under its old nam
 
 **Parameters:**
 - `old_name`: The application's previous name. If `None`, nothing is transferred except rows owned by no application, so `adopt_unclaimed_rows` must be set.
-- `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- `new_name`: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
 - `batch_size`: The number of completed workflows and steps transferred per transaction. Pass `None` to transfer everything in a single transaction.
 - `adopt_unclaimed_rows`: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `False`.
 

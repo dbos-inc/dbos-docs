@@ -1,11 +1,7 @@
----
-sidebar_position: 25
-title: Transactional Steps
-toc_max_heading_level: 4
----
+# Transactional Steps
 
-Regular DBOS steps checkpoint their output _after_ the step body completes.
-If the application crashes after your database write but before the checkpoint is saved, the step runs again on recovery — potentially writing to the database twice.
+> Regular DBOS steps checkpoint their output _after_ the step body completes.
+> If the application crashes after your database write but before the checkpoint is saved, the step runs again on recovery — potentially writing to the database twice.
 
 **Transactional step factories** solve this by committing the step output and your database work in the **same transaction**.
 On retry, DBOS finds the recorded output and returns it without re-executing, making the step exactly-once even for database writes.

@@ -1,12 +1,9 @@
----
-sidebar_position: 15
-title: Vercel
----
+# Vercel
+
+> You can use DBOS to add durable workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
+> We recommend the following architecture:
 
 #  Use DBOS On Vercel
-
-You can use DBOS to add durable workflows, background jobs, or AI agents to your Next.js app hosted on Vercel.
-We recommend the following architecture:
 
 1. In your Next.js app, enqueue workflows for execution using the [DBOS client](../typescript/reference/client.md).
 2. Create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functions) to serverlessly dequeue and execute your workflows.
@@ -14,13 +11,10 @@ We recommend the following architecture:
 
 Your DBOS client and worker should both connect to a Postgres database&mdash;for example a Supabase or Neon database configured through [Vercel Postgres](https://vercel.com/docs/postgres).
 
-<img src={require('@site/static/img/vercel/vercel-architecture.png').default} alt="Vercel Architecture" width="800" className="custom-img"/>
-
 :::info
 
 You can check out a working example of this integration [on GitHub](https://github.com/dbos-inc/dbos-vercel-integration).
 :::
-
 
 ## 1. Enqueue Workflows From Server Actions
 

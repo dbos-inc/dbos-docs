@@ -1,10 +1,7 @@
----
-sidebar_position: 20
-title: Steps
----
+# Steps
 
-When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
-If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
+> When using DBOS workflows, you should call any function that performs complex operations or accesses external APIs or services as a _step_.
+> If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 Steps execute **at least once**: if a process crashes after a step's side effects but before the step is checkpointed, the step re-executes on recovery.
 For exactly-once database writes, use a [datasource transaction](./transaction-tutorial.md) instead.

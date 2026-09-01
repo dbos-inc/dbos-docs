@@ -1,11 +1,8 @@
----
-sidebar_position: 15
-title: Self-Hosting Conductor
----
+# Self-Hosting Conductor
 
-:::info
-Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license) and requires a [license key](#licensing).
-:::
+> :::info
+> Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license) and requires a [license key](#licensing).
+> :::
 
 There are many ways to self-host Conductor and the DBOS Console on your own infrastructure.
 
@@ -23,7 +20,7 @@ export DBOS_CONDUCTOR_LICENSE_KEY=<my-key>
 You can trial self-hosted Conductor with this `docker-compose.yml`:
 
 <details>
-<summary><strong>docker-compose.yml</strong></summary>
+<summary>docker-compose.yml</summary>
 
 ```yml title="docker-compose.yml"
 # Docker Compose configuration for self-hosting DBOS Conductor and the DBOS Console.
@@ -145,8 +142,7 @@ When self-hosting Conductor, make sure you register your application and generat
 Then, provide your application with a websockets URL to your self-hosted Conductor server.
 For example, for the Docker compose setup above, this URL is `ws://localhost:8090/`.
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 config: DBOSConfig = {
@@ -158,16 +154,16 @@ config: DBOSConfig = {
 }
 DBOS(config=config)
 ```
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+
+**TypeScript**
 
 ```javascript
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY;
 const conductorURL = process.env.DBOS_CONDUCTOR_URL;
 await DBOS.launch({conductorKey, conductorURL});
 ```
-</TabItem>
-<TabItem value="golang" label="Go">
+
+**Go**
 
 ```go
 conductorKey := os.Getenv("DBOS_CONDUCTOR_KEY")
@@ -180,9 +176,8 @@ dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
     ConductorAPIKey:    conductorKey,
 })
 ```
-</TabItem>
 
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 String conductorKey = System.getenv("DBOS_CONDUCTOR_KEY");
@@ -194,8 +189,6 @@ DBOSConfig config = DBOSConfig.defaults("dbos-java-starter")
     .withConductorKey(conductorKey)
     .withConductorDomain(conductorDomain);
 ```
-</TabItem>
-</Tabs>
 
 ## Licensing
 

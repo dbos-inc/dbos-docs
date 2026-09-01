@@ -1,9 +1,6 @@
----
-sidebar_position: 30
-title: AI-Assisted Development
----
+# AI-Assisted Development
 
-If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
+> If you're using an AI coding agent to build a DBOS application, make sure it has the latest information on DBOS by either:
 
 1. [Installing DBOS skills.](#dbos-agent-skills)
 2. [Providing your agent with a DBOS prompt.](#dbos-prompt)
@@ -33,7 +30,7 @@ You can copy and paste it directly into your context, or follow these directions
 - GitHub Copilot: Create a [`.github/copilot-instructions.md`](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot) file in your repository and add the prompt to it.
 
 <details>
-<summary><strong>DBOS Python Prompt</strong></summary>
+<summary>DBOS Python Prompt</summary>
 
 ````markdown
 # Build Reliable Applications With DBOS
@@ -128,11 +125,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-
 ## Workflow and Steps Examples
 
 Simple example:
-
 
 ```python
 import os
@@ -267,7 +262,6 @@ DBOS.create_schedule(
 - Use `DBOS.trigger_schedule` to immediately trigger a schedule.
 - Each workflow enqueued by a schedule is tagged with its schedule's name (recorded in the workflow's status). Retrieve all runs of a schedule with `DBOS.list_workflows(schedule_name="my-task-schedule")`.
 
-
 ## Workflow Documentation:
 
 ---
@@ -381,7 +375,6 @@ def example_workflow(friend: str):
     else:
         step_two()
 ```
-
 
 ## Workflow Timeouts
 
@@ -548,7 +541,6 @@ You should start coroutine workflows using `DBOS.start_workflow_async` and enque
 Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
 Additionally, coroutine workflows should use the asynchronous versions of the workflow communication context methods.
 
-
 :::tip
 
 For async database operations, use an `AsyncSQLAlchemyDatasource`, which supports `async def` transaction functions (see Datasources below).
@@ -634,7 +626,6 @@ You can:
 - Send messages to workflows
 - Publish events from workflows for clients to read
 - Stream values from workflows to clients
-
 
 ## Workflow Messaging and Notifications
 You can send messages to a specific workflow.
@@ -783,8 +774,6 @@ Additionally, if `get_event` is called in a workflow, the retrieved value is per
 
 Workflows can stream data in real time to clients.
 This is useful for streaming results from a long-running workflow or LLM call or for monitoring or progress reporting.
-
-<img src={require('@site/static/img/workflow-communication/workflow-streams.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ### Writing to Streams
 
@@ -1108,7 +1097,6 @@ queue.set_limiter({"limit": 25, "period": 30})
 
 You can also do this from a `DBOSClient`.
 
-
 ## Setting Timeouts
 
 You can set a timeout for an enqueued workflow with `SetWorkflowTimeout`.
@@ -1155,7 +1143,6 @@ DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 @DBOS.workflow()
 def process_task(task: Task):
   ...
-
 
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a
@@ -1272,7 +1259,6 @@ if __name__ == "__main__":
 
 Note that `DBOS.listen_queues` only controls what workflows are dequeued, not what workflows can be enqueued, so you can freely enqueue tasks onto the GPU queue from a CPU worker for execution on a GPU worker, and vice versa.
 
-
 ## Python Classes
 
 You can add DBOS decorators to your Python class instance methods.
@@ -1306,7 +1292,6 @@ The reason for these requirements is to enable workflow recovery.
 When you create a new instance of a DBOS class, DBOS stores it in a global registry indexed by `instance_name`.
 When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `instance_name` so it can run the workflow using the right instance of its class.
 If `instance_name` is not supplied, or if DBOS classes are dynamically instantiated after `DBOS.launch()`, then DBOS may not find the class instance it needs to recover a workflow.
-
 
 ### Testing DBOS Functions
 
@@ -1713,7 +1698,6 @@ class WorkflowStatus:
 ```
 
 Retrieve the workflow status:
-
 
 ### Configuring DBOS
 

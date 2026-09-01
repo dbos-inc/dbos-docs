@@ -1,9 +1,6 @@
----
-sidebar_position: 104
-title: Testing & Mocking
----
+# Testing & Mocking
 
-You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like [Jest](https://jestjs.io/) or [Vitest](https://vitest.dev/).
+> You can test DBOS workflows and steps using any JavaScript or TypeScript testing framework, like [Jest](https://jestjs.io/) or [Vitest](https://vitest.dev/).
 
 Steps are ordinary functions that can be tested without any DBOS-specific infrastructure.
 Thus, this guide will focus on testing workflows.
@@ -20,7 +17,7 @@ This can be done with popular tools such as `jest.mock`.
 For example, say we want to test the checkout workflow from the [Fault-Tolerant Checkout example](../examples/checkout-tutorial.md):
 
 <details>
-<summary><strong>Checkout Workflow</strong></summary>
+<summary>Checkout Workflow</summary>
 
 ```ts
 export const checkoutWorkflow = DBOS.registerWorkflow(

@@ -1,10 +1,6 @@
----
-sidebar_position: 20
-title: Add DBOS To Your App
----
+# Add DBOS To Your App
 
-
-This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
+> This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
 `pip install` DBOS into your application.
@@ -44,7 +40,6 @@ Try starting your application.
 If everything is set up correctly, your app should run normally, but log `Initializing DBOS` and `DBOS launched!` on startup.
 Congratulations!  You've integrated DBOS into your application.
 
-
 ### 4. Start Building With DBOS
 
 At this point, you can add any DBOS decorator or method to your application.
@@ -55,7 +50,6 @@ You can add DBOS to your application incrementally&mdash;it won't interfere with
 It's totally okay for your application to have one DBOS workflow alongside thousands of lines of non-DBOS code.
 
 To learn more about programming with DBOS, check out [the guide](./programming-guide.md).
-
 
 ```python
 @DBOS.step()

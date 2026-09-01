@@ -1,12 +1,9 @@
----
-sidebar_position: 70
-title: Logging & Tracing
----
+# Logging & Tracing
+
+> For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger).
+> For example:
 
 ### Logging
-
-For convenience, DBOS provides a logging facility accessed via [`DBOS.logger`](../reference/methods.md#dboslogger).
-For example:
 
 ```javascript
 DBOS.logger.info("Welcome to DBOS!");
@@ -72,7 +69,6 @@ Keep the following contract in mind when implementing `DLogger`:
 - **The logger's lifecycle is yours.** DBOS never flushes or closes it.
 - **Do not log back through `DBOS.logger`** from within your implementation, as this could cause infinite recursion.
 
-
 ### Tracing
 
 DBOS automatically constructs [OpenTelemetry](https://opentelemetry.io/) [spans](https://opentelemetry.io/docs/concepts/signals/traces/#spans) for every workflow and step.
@@ -101,8 +97,7 @@ There are two steps:
 
 Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
 
-<Tabs groupId="provider" className="small-tabs">
-<TabItem value="otlp" label="OpenTelemetry (OTLP)">
+**OpenTelemetry (OTLP)**
 
 Most observability platforms—Honeycomb, Grafana, Logfire, a self-hosted [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/), or local [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/)—accept the OpenTelemetry Protocol (OTLP). Point an OTLP exporter at your endpoint:
 
@@ -130,8 +125,7 @@ DBOS.setConfig({
 await DBOS.launch();
 ```
 
-</TabItem>
-<TabItem value="datadog" label="Datadog">
+**Datadog**
 
 [`dd-trace`](https://docs.datadoghq.com/tracing/trace_collection/automatic_instrumentation/dd_libraries/nodejs/) exposes an OpenTelemetry-compatible `TracerProvider`. Initialize it and register the provider:
 
@@ -156,8 +150,7 @@ await DBOS.launch();
 
 `dd-trace` then forwards all spans—including DBOS workflow and step spans—to your Datadog agent.
 
-</TabItem>
-<TabItem value="langfuse" label="Langfuse">
+**Langfuse**
 
 [Langfuse](https://langfuse.com/) is an LLM-observability platform that ingests OpenTelemetry. Point an OTLP exporter at its endpoint, authenticated with your project keys:
 
@@ -189,9 +182,6 @@ await DBOS.launch();
 Each DBOS workflow becomes a Langfuse trace and each step a nested observation.
 To record LLM-specific data—model, token usage, prompts—attach attributes to the current span from inside your steps (see [Adding custom attributes and events](#adding-custom-attributes-and-events) below).
 For the current endpoint and credentials, see the [Langfuse OpenTelemetry docs](https://langfuse.com/docs/opentelemetry/get-started).
-
-</TabItem>
-</Tabs>
 
 :::tip
 Set up your provider before calling `DBOS.launch()`: DBOS adopts whichever global provider exists at launch (importing DBOS or registering workflows beforehand is fine).

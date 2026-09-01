@@ -1,12 +1,9 @@
----
-sidebar_position: 55
-title: Next.js
----
+# Next.js
+
+> :::info
+> To learn how to run DBOS with Next.js on Vercel, see the [Vercel integration guide](./vercel.md).
 
 # DBOS + Next.js
-
-:::info
-To learn how to run DBOS with Next.js on Vercel, see the [Vercel integration guide](./vercel.md).
 
 :::
 
@@ -141,4 +138,3 @@ export default function Home() {
   );
 }
 ```
-

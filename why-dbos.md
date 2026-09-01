@@ -1,10 +1,6 @@
----
-hide_table_of_contents: false
-hide_title: false
-title: Why DBOS?
----
+# Why DBOS?
 
-:::info
+> :::info
 
 If you're building AI agents, also check out the [AI Quickstart](./ai/ai-quickstart.md).
 
@@ -29,8 +25,6 @@ If your program ever fails, when it restarts all your workflows will automatical
 
 For example, let's say you're running an e-commerce platform where an order goes through multiple steps:
 
-<img src={require('@site/static/img/why-dbos/workflow-example.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
-
 This program looks simple, but making it _reliable_ is deceptively difficult.
 For example, the program may crash (or its server may be restarted) after validating payment but before shipping an order.
 Alternatively, the shipping service may experience an outage, leaving the shipping step impossible to complete.
@@ -38,7 +32,6 @@ In either case, the customer has been charged, but their order is never shipped.
 
 DBOS makes these failures easier to recover from.
 All you have to do is annotate your program with decorators like `@DBOS.workflow()` and `@DBOS.step()`:
-
 
 ```python
 @DBOS.step()
@@ -55,21 +48,17 @@ def checkout_workflow()
 
 These decorators **durably execute** your program, persisting its state to a Postgres database:
 
-<img src={require('@site/static/img/why-dbos/dbos-pg.png').default} alt="Durable Workflow" width="750" className="custom-img"/>
-
 You can think of this stored state as a checkpoint for your program.
 If your program is ever interrupted or crashes, DBOS uses this saved state to recover it from the last completed step.
 For example, if your checkout workflow crashes right after validating payment, instead of the order being lost forever, DBOS recovers from a checkpoint and goes on to ship the order.
 Thus, DBOS makes your application **resilient to any failure**.
 
-
 ## Use Cases
 
 DBOS helps you write complex distributed programs in remarkably few lines of code. For example:
 
-<Tabs groupId="examples" className="medium-tabs">
+**AI Agents**
 
-<TabItem value="agents" label="AI Agents">
 <section className="row list">
 <article className="col col--5">
 
@@ -105,9 +94,9 @@ def research_query(topic):
 
 </article>
 </section>
-</TabItem>
 
-<TabItem value="pipelines" label="Data Pipelines">
+**Data Pipelines**
+
 <section className="row list">
 <article className="col col--5">
 
@@ -135,9 +124,9 @@ def indexing_workflow(urls):
 
 </article>
 </section>
-</TabItem>
 
-<TabItem value="background" label="Background Tasks">
+**Background Tasks**
+
 <section className="row list">
 <article className="col col--5">
 
@@ -161,9 +150,9 @@ def schedule_task(task, time_to_wait):
 
 </article>
 </section>
-</TabItem>
 
-<TabItem value="workflow" label="Business Workflows">
+**Business Workflows**
+
 <section className="row list">
 <article className="col col--5">
 
@@ -192,8 +181,6 @@ def checkout_workflow()
 
 </article>
 </section>
-</TabItem>
-</Tabs>
 
 ## DBOS vs. Other Systems
 

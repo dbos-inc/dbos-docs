@@ -1,8 +1,6 @@
----
-sidebar_position: 100
-title: Authentication and Authorization
-description: Use declarative security and authentication middleware in DBOS
----
+# Authentication and Authorization
+
+> Use declarative security and authentication middleware in DBOS
 
 DBOS Python supports modular, declarative security.  This is a cooperative effort between the request framework (such as FastAPI) and DBOS Transact; the server framework performs authentication and forwards the authenticated user and roles on to DBOS functions, which then check for authorization.  Authentication information is forwarded via the [DBOS context](../reference/contexts.md#set_authentication).
 

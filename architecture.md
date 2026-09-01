@@ -1,10 +1,6 @@
----
-hide_table_of_contents: false
-title: DBOS Architecture
-pagination_next: null
----
+# DBOS Architecture
 
-DBOS provides a high-performance, easy-to-use library for durable workflows built on top of Postgres.
+> DBOS provides a high-performance, easy-to-use library for durable workflows built on top of Postgres.
 
 You use DBOS by installing the open-source library into your application and annotating workflows and steps.
 While your application runs, DBOS checkpoints those workflows and steps to a Postgres database.
@@ -15,10 +11,7 @@ The open-source DBOS library uses Postgres to orchestrate durable workflows and 
 There's no separate orchestration server and no infrastructure required besides Postgres.
 When running in production, we also recommend connecting your DBOS applications to [Conductor](#operating-dbos-in-production-with-conductor), a "control plane" for your durable workflows that coordinates workflow recovery to guarantee high availability and provides operational tooling such as an admin UI and dashboard, observability integrations, and managed workflow retention policies.
 
-<img src={require('@site/static/img/architecture/dbos-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
-
 To learn more about how to add DBOS to your application, check out the language-specific integration guides ([Python](./python/integrating-dbos.md), [TypeScript](./typescript/integrating-dbos.md), [Go](./golang/integrating-dbos.md), [Java](./java/integrating-dbos.md)).
-
 
 ## Using DBOS in a Distributed Setting
 
@@ -34,8 +27,6 @@ For example, you may want your API server to enqueue and monitor durable jobs on
 You can use the DBOS Client ([Python](./python/reference/client.md), [TypeScript](./typescript/reference/client.md), [Go](./golang/reference/dbos-context.md#newclient), [Java](./java/reference/client.md)) to programmatically interact with your application from external code.
 Your API server can create a client connected to your data processing service's system database and use it to enqueue a job, monitor the job's status, and retrieve its result when complete.
 Here's a diagram of what that might look like:
-
-<img src={require('@site/static/img/architecture/api-worker.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 You may also have multiple applications or services that need durable workflows.
 For example, you might have a service that runs business workflows, a service that handles data ingestion, and a service that runs an AI agent.
@@ -107,8 +98,6 @@ An enqueued workflow may be dequeued and executed by your application's servers.
 All processes running DBOS periodically poll queues to find and execute new work.
 You can configure which processes listen to which queues.
 
-<img src={require('@site/static/img/architecture/dbos-queues.png').default} alt="DBOS Queues" width="750" className="custom-img"/>
-
 To help you operate at scale, DBOS queues provide **flow control**.
 You can customize the rate and concurrency at which workflows are dequeued and executed.
 For example, you can set a **worker concurrency** for each of your queues on each of your servers, limiting how many workflows from that queue may execute concurrently on that server.
@@ -126,8 +115,6 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Observability Integrations**](./production/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 
 Architecturally, Conductor looks like this:
-
-<img src={require('@site/static/img/architecture/dbos-conductor-architecture.png').default} alt="DBOS Conductor Architecture" width="750" className="custom-img"/>
 
 Each of your application servers opens a secure websocket connection to Conductor.
 All of Conductor's capabilities are powered by these websocket connections.

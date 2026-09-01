@@ -1,8 +1,6 @@
----
-sidebar_position: 90
-title: Spring Boot Integration
-description: Add DBOS durable workflows to a Spring Boot application.
----
+# Spring Boot Integration
+
+> Add DBOS durable workflows to a Spring Boot application.
 
 The `transact-spring-boot-starter` package integrates DBOS into a Spring Boot application with zero boilerplate: add the dependency, configure a datasource, annotate your beans, and DBOS launches automatically alongside the Spring context.
 
@@ -13,15 +11,16 @@ that illustrates the features described in this documentation.
 
 ## Adding the Dependency
 
-<Tabs groupId="build-tool">
-<TabItem value="gradle" label="Gradle">
+**Gradle**
+
 ```kotlin
 dependencies {
   implementation("dev.dbos:transact-spring-boot-starter:0.8.0")
 }
 ```
-</TabItem>
-<TabItem value="maven" label="Maven">
+
+**Maven**
+
 ```xml
 <dependencies>
   <dependency>
@@ -31,8 +30,6 @@ dependencies {
   </dependency>
 </dependencies>
 ```
-</TabItem>
-</Tabs>
 
 ## Configuration
 
@@ -85,7 +82,6 @@ public DBOSConfigCustomizer myCustomizer() {
 ```
 
 Multiple `DBOSConfigCustomizer` beans are applied in `@Order` / `Ordered` order. To replace the config entirely, declare your own `@Bean DBOSConfig`.
-
 
 ## Defining Workflows and Steps
 

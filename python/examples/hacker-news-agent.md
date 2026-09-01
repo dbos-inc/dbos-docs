@@ -1,11 +1,8 @@
----
-sidebar_position: 10
-title: Hacker News Research Agent
----
+# Hacker News Research Agent
 
-:::info
-This example is also available in [TypeScript](../../typescript/examples/hacker-news-agent).
-:::
+> :::info
+> This example is also available in [TypeScript](../../typescript/examples/hacker-news-agent).
+> :::
 
 In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
 
@@ -18,8 +15,6 @@ Adding DBOS to this agent required changing **&lt;20 lines of code**.
 All you have to do is annotate workflows and steps.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/hacker-news-agent).
-
-<img src={require('@site/static/img/examples/hn-agent.png').default} alt="Agent Inbox" width="800" className="custom-img"/>
 
 ## Main Research Workflow
 
@@ -118,7 +113,7 @@ def research_topic(topic: str, query: str) -> EvaluationResult:
 The agent's intelligence comes from three key step functions that handle decision-making:
 
 <details>
-<summary><strong>Agent Evaluation Step</strong></summary>
+<summary>Agent Evaluation Step</summary>
 
 ```python
 @DBOS.step()
@@ -228,7 +223,7 @@ def evaluate_results_step(
 </details>
 
 <details>
-<summary><strong>Follow-up Query Generation Step</strong></summary>
+<summary>Follow-up Query Generation Step</summary>
 
 ```python
 @DBOS.step()
@@ -295,7 +290,7 @@ def generate_follow_ups_step(
 </details>
 
 <details>
-<summary><strong>Continuation Decision Step</strong></summary>
+<summary>Continuation Decision Step</summary>
 
 ```python
 @DBOS.step()
@@ -371,7 +366,7 @@ def should_continue_step(
 After deciding what terms to search for, the agent calls these steps to retrieve stories and comments from Hacker News.
 
 <details>
-<summary><strong>Hacker News API Steps</strong></summary>
+<summary>Hacker News API Steps</summary>
 
 ```python
 @DBOS.step()
@@ -402,7 +397,7 @@ def get_comments_step(story_id: str, max_comments: int = 50) -> List[Dict[str, A
 Finally, after concluding its research, the agentic workflow calls this step to synthesize its findings into a report.
 
 <details>
-<summary><strong>Synthesize Findings Step</strong></summary>
+<summary>Synthesize Findings Step</summary>
 
 ```python
 @DBOS.step()
@@ -565,7 +560,6 @@ async def list_agents():
         status.agent_id = workflow.workflow_id
     return statuses
 ```
-
 
 ## Try it Yourself!
 

@@ -1,11 +1,7 @@
----
-sidebar_position: 33
-title: Google ADK
-hide_table_of_contents: false
----
+# Google ADK
 
-You can use DBOS to add durable execution to an agent built with [Google ADK](https://adk.dev/).
-With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
+> You can use DBOS to add durable execution to an agent built with [Google ADK](https://adk.dev/).
+> With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
 
 ## Installation
 
@@ -16,7 +12,6 @@ pip install dbos dbos-google-adk
 ```
 
 You may also need a [Gemini API key](https://aistudio.google.com/app/api-keys) (or any [supported model](https://adk.dev/agents/models/)).
-
 
 ## Building Reliable Agents
 
@@ -70,7 +65,6 @@ async def run_agent(user_id: str, session_id: str, message: str) -> str:
             return event.content.parts[0].text
     return ""
 
-
 async def main():
     # highlight-start
     # DBOS checkpoints to SQLite by default. Postgres is recommended for production.
@@ -84,7 +78,6 @@ async def main():
     )
     print(await run_agent("u", "s", "How is the weather in San Francisco?"))
 
-
 if __name__ == "__main__":
     asyncio.run(main())
 ```
@@ -93,7 +86,6 @@ if __name__ == "__main__":
 
 1. Workflows and agents must be defined before [`DBOS.launch()`](../python/reference/dbos-class.md#launch).
 2. This example uses SQLite for ease of getting started. Postgres is recommended for production.
-
 
 ## Learn More
 For more details on building agents, see the [Google ADK documentation](https://adk.dev/). For information about durable execution and workflow design, see the [DBOS programming guide](../python/programming-guide). Together, these resources cover everything from getting started with simple agents to designing production-ready, fault-tolerant applications.

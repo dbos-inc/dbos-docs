@@ -1,12 +1,9 @@
----
-sidebar_position: 12
-title: Sharing a System Database
----
+# Sharing a System Database
 
-Multiple DBOS applications, potentially in different languages, can share a single system database.
-Each application is identified by its configured name and owns everything it creates: workflows, steps, queues, schedules, and application versions.
-Applications sharing a system database are isolated from one another by default, but can freely interoperate by naming each other.
-For example, one application can enqueue another's workflows and wait for their results.
+> Multiple DBOS applications, potentially in different languages, can share a single system database.
+> Each application is identified by its configured name and owns everything it creates: workflows, steps, queues, schedules, and application versions.
+> Applications sharing a system database are isolated from one another by default, but can freely interoperate by naming each other.
+> For example, one application can enqueue another's workflows and wait for their results.
 
 ## Application Names and Ownership
 
@@ -28,8 +25,7 @@ To run another application's workflow, enqueue it by name, naming the applicatio
 The enqueued workflow is owned by the target application, which dequeues and runs it on its latest application version.
 Because workflow IDs are global, you can then wait for the result from the returned handle.
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 from dbos import DBOS, EnqueueOptions
@@ -44,8 +40,7 @@ handle = DBOS.enqueue_workflow_with_options(options, "order-123")
 result = handle.get_result()
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 const handle = await DBOS.enqueueWorkflowWithOptions({
@@ -57,8 +52,7 @@ const handle = await DBOS.enqueueWorkflowWithOptions({
 const result = await handle.getResult();
 ```
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 ```go
 handle, err := dbos.Enqueue[any](ctx, "orders", "process_order",
@@ -71,9 +65,6 @@ if err != nil {
 }
 result, err := handle.GetResult()
 ```
-
-</TabItem>
-</Tabs>
 
 If the applications are written in different languages, also set the serialization type to portable so the target application can read the arguments.
 See [Cross-Language Interaction](./portable-workflows.md) for details.
@@ -94,14 +85,14 @@ To ensure no rows are unowned, always pass an application name to your clients w
 Before adding a second application to a system database, explicitly transfer ownership of any unowned rows to the first application:
 
 ```shell
-dbos rename-application --to my-app --adopt-unclaimed-rows
+dbosctl sysdb rename-application --to my-app --adopt-unclaimed-rows
 ```
 
 ## Renaming an Application
 
 Because ownership is recorded under the application's name, renaming an application requires transferring ownership of its rows.
-To rename an application, first stop it, then run `dbos rename-application` ([Python](../python/reference/cli.md#dbos-rename-application), [TypeScript](../typescript/reference/cli.md#npx-dbos-rename-application), [Go](../golang/reference/methods.md#renameapplication)), then restart it under its new name:
+To rename an application, first stop it, then run [`dbosctl sysdb rename-application`](../production/dbosctl.md#dbosctl-sysdb-rename-application), then restart it under its new name:
 
 ```shell
-dbos rename-application --from old-name --to new-name
+dbosctl sysdb rename-application --from old-name --to new-name --db-url <Postgres connection URL>
 ```

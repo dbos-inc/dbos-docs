@@ -1,12 +1,8 @@
----
-sidebar_position: 10
-title: Workflows
-toc_max_heading_level: 3
----
+# Workflows
 
-Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
-Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
-If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
+> Workflows provide **durable execution** so you can write programs that are **resilient to any failure**.
+> Workflows are comprised of [steps](./step-tutorial.md), which wrap ordinary Go functions.
+> If a workflow is interrupted for any reason (e.g., an executor restarts or crashes), when your program restarts the workflow automatically resumes execution from the last completed step.
 
 To write a workflow, register a Go function with [`RegisterWorkflow`](../reference/workflows-steps.md#registerworkflow).
 Workflow registration must happen before launching the DBOS context with `dbos.Launch()`
@@ -181,7 +177,6 @@ handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 ```
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling [CancelWorkflow](./workflow-management.md#cancelling-workflows)).
-
 
 ## Durable Sleep
 
@@ -455,4 +450,3 @@ When using versioning, we recommend **blue-green** code upgrades.
 When deploying a new version of your code, launch new processes running your new code version, but retain some processes running your old code version.
 Direct new traffic to your new processes while your old processes "drain" and complete all workflows of the old code version.
 Then, once all workflows of the old version are complete (you can use [`ListWorkflows`](../reference/methods.md#listworkflows) to check), you can retire the old code version.
-

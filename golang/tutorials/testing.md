@@ -1,10 +1,6 @@
----
-sidebar_position: 90
-title: Testing & Mocking
----
+# Testing & Mocking
 
-
-[`Context`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
+> [`Context`](../reference/dbos-context) is a fully mockable interface, which you manually mock, or can generate mocks using tools like [mockery](https://github.com/vektra/mockery).
 
 <details>
 <summary>Sample .mockery.yml v3 configuration</summary>
@@ -38,7 +34,6 @@ Here is an example workflow which:
 - Calls a step
 - Spawns a child workflow
 - Calls a workflow management operation, [ListWorkflows](../reference/methods#listworkflows)
-
 
 ```go
 func step(ctx context.Context) (int, error) {

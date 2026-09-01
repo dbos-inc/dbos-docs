@@ -1,11 +1,8 @@
----
-sidebar_position: 60
-title: Nest.js
----
+# Nest.js
+
+> This guide shows you how to add DBOS durable workflows to your existing [Nest.js](https://nestjs.com/) application to make it resilient to any failure.
 
 # DBOS + Nest.js
-
-This guide shows you how to add DBOS durable workflows to your existing [Nest.js](https://nestjs.com/) application to make it resilient to any failure.
 
 :::info
 This example was bootstrapped with `nest new`.

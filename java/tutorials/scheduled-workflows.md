@@ -1,8 +1,6 @@
----
-sidebar_position: 70
-title: Scheduled Workflows
-description: Learn how to run DBOS workflows on a schedule.
----
+# Scheduled Workflows
+
+> Learn how to run DBOS workflows on a schedule.
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run automatically on a cron schedule.
 Scheduled workflows are **exactly-once**: DBOS assigns each firing a deterministic workflow ID derived from the schedule name and scheduled time, so even if your application restarts mid-execution, each scheduled invocation runs exactly once.

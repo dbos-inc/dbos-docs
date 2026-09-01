@@ -1,8 +1,6 @@
----
-sidebar_position: 5
-title: Workflow Handles
-description: API reference for DBOS workflow handles
----
+# Workflow Handles
+
+> API reference for DBOS workflow handles
 
 A workflow handle represents the state of a particular active or completed workflow execution.
 You obtain a workflow handle when using `DBOS.start_workflow` to start a workflow in the background.
@@ -41,7 +39,6 @@ handle.get_status() -> WorkflowStatus
 ```
 
 Retrieve the [`WorkflowStatus`](./contexts.md#workflow-status) of a workflow.
-
 
 ## WorkflowHandleAsync
 

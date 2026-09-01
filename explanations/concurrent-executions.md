@@ -1,8 +1,6 @@
----
-sidebar_position: 13
-title: Concurrent Executions
-description: How DBOS detects concurrent executions of the same workflow and converges every observer on a single recorded outcome
----
+# Concurrent Executions
+
+> How DBOS detects concurrent executions of the same workflow and converges every observer on a single recorded outcome
 
 DBOS guarantees that every workflow runs to completion: if an executor crashes or becomes unreachable, another executor recovers its `PENDING` workflows and re-executes them from their last completed step.
 

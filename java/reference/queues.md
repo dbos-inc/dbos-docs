@@ -1,10 +1,7 @@
----
-sidebar_position: 40
-title: Queues
----
+# Queues
 
-Workflow queues ensure that workflow functions will be run, without starting them immediately.
-Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
+> Workflow queues ensure that workflow functions will be run, without starting them immediately.
+> Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
 
 Queue configuration is persisted to the system database, so any DBOS process or [`DBOSClient`](./client.md) connected to the same system database can register, retrieve, and reconfigure queues.
 All queue management methods below require `dbos.launch()` to have been called.

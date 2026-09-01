@@ -1,14 +1,12 @@
----
-title: Troubleshooting & FAQ
----
+# Troubleshooting & FAQ
+
+> DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
+> You connect to this database through the `system_database_url` parameter in DBOS configuration.
+> You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
+> Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
+> The system database schema is documented [here](./explanations/system-tables.md).
 
 ### Where do I find the DBOS tables?
-
-DBOS checkpoints information about your workflows in an isolated _system database_ in your Postgres database server.
-You connect to this database through the `system_database_url` parameter in DBOS configuration.
-You can connect to and explore your system database with popular database clients like [psql](https://www.postgresql.org/docs/current/app-psql.html) and [DBeaver](https://dbeaver.io/).
-Note that the tables are in the `dbos` schema in that database, so the tables are accessible at `dbos.workflow_status`, `dbos.operation_outputs`, etc.
-The system database schema is documented [here](./explanations/system-tables.md).
 
 :::tip
 If you're using Supabase, only the `postgres` database is visible from the Supabase web console.
@@ -85,7 +83,11 @@ If you enqueue a workflow with the ID of a workflow that already exists, it's a 
 
 ### How can I reset all my DBOS state during development?
 
-You can reset your DBOS system database and all internal DBOS state with the `dbos reset` command ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
+You can reset your DBOS system database and all internal DBOS state with the [`dbosctl sysdb reset`](./production/dbosctl.md#dbosctl-sysdb-reset) command.
+It empties the DBOS tables and leaves the schema migrated, so nothing has to provision the database again between runs, and it works the same way whatever language your application is written in.
+Pass `--app` to reset just one application's state in a [shared system database](./explanations/sharing-a-system-database.md), or `--drop-database` to drop the database outright.
+
+Each SDK also ships a `dbos reset` command for its own language, which drops the database ([Python](./python/reference/cli.md#dbos-reset), [TypeScript](./typescript/reference/cli.md#npx-dbos-reset), [Go](./golang/reference/cli.md)).
 
 ### How can I reduce the number of Postgres connections DBOS uses?
 
@@ -101,7 +103,7 @@ You can connect a DBOS application to its system database through a connection p
 DBOS creates tables for its internal state in its [system database](./explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, or the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables.
+In that case, the [`dbosctl sysdb migrate`](./production/dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables.
 Then, a DBOS application can run without privilege (requiring only access to the system database).
 
 ### What database privileges does DBOS need, and how do I grant them manually?
@@ -127,7 +129,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT ALL ON SEQUENCES TO "your_app_ro
 ALTER DEFAULT PRIVILEGES IN SCHEMA "dbos" GRANT EXECUTE ON FUNCTIONS TO "your_app_role";
 ```
 
-The [`dbos migrate`](./python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](./golang/reference/cli.md) in Go, and the [`dbos schema`](./typescript/reference/cli.md#npx-dbos-schema) command in TypeScript do this automatically if you supply an application role.
+The [`dbosctl sysdb migrate`](./production/dbosctl.md#dbosctl-sysdb-migrate) command does this automatically if you supply an application role with `-r`/`--app-role`.
 
 ### How does DBOS scale?
 

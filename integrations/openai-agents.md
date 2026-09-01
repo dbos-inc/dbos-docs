@@ -1,11 +1,7 @@
----
-sidebar_position: 31
-title: OpenAI Agents SDK
-hide_table_of_contents: false
----
+# OpenAI Agents SDK
 
-You can use DBOS to add durable execution to an agent built with the [OpenAI Agents SDK](https://platform.openai.com/docs/guides/agents-sdk).
-With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
+> You can use DBOS to add durable execution to an agent built with the [OpenAI Agents SDK](https://platform.openai.com/docs/guides/agents-sdk).
+> With durable execution, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
 
 ## Installation
 
@@ -52,7 +48,6 @@ async def run_agent(user_input: str) -> str:
     return str(result.final_output)
 # highlight-end
 
-
 async def main():
     # highlight-start
     config: DBOSConfig = {
@@ -65,7 +60,6 @@ async def main():
     # highlight-end
     output = await run_agent("How is the weather in San Francisco")
     print(output)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

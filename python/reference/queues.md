@@ -1,10 +1,7 @@
----
-sidebar_position: 4
-title: Queues
----
+# Queues
 
-Queues let you submit functions for durable execution without starting them immediately.
-They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
+> Queues let you submit functions for durable execution without starting them immediately.
+> They are useful for controlling the number of functions run in parallel, or the rate at which functions are started.
 
 Queues are persisted to the system database.
 Register a queue with [`DBOS.register_queue`](./contexts.md#register_queue) and enqueue workflows on it with [`DBOS.enqueue_workflow`](./contexts.md#enqueue_workflow) or [`Queue.enqueue`](#enqueue).
@@ -233,7 +230,6 @@ queue.set_partition_limiter_async(value: Optional[QueueRateLimit]) -> Coroutine[
 queue.set_polling_interval_sec_async(value: float) -> Coroutine[Any, Any, None]
 ```
 
-
 ### SetEnqueueOptions
 
 ```python
@@ -261,7 +257,6 @@ These options are **not propagated** to child workflows.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. Defaults to `None` (no delay).
 - `app_version`: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
 - `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions.
-
 
 **Deduplication Example**
 
@@ -318,7 +313,6 @@ DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 @DBOS.workflow()
 def process_task(task: Task):
   ...
-
 
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a

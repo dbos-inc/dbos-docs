@@ -1,9 +1,6 @@
----
-sidebar_position: 30
-title:  Account Management
-description: Learn how to manage DBOS Cloud users
-toc_max_heading_level: 3
----
+# Account Management
+
+> Learn how to manage DBOS Cloud users
 
 In this guide, you'll learn how to manage DBOS Cloud accounts.
 
@@ -41,7 +38,6 @@ dbos-cloud revoke <token>
 Until they expire or are revoked, refresh tokens can be used to log in to your account.
 Treat them as secrets and keep them safe!
 :::
-
 
 ### Organization Management
 

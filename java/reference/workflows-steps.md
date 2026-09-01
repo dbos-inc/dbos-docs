@@ -1,8 +1,8 @@
----
-sidebar_position: 20
-title: Workflows & Steps
-toc_max_heading_level: 3
----
+# Workflows & Steps
+
+> ```java
+> public @interface Workflow {
+>   String name();
 
 ## Annotations
 
@@ -185,7 +185,6 @@ proxy.workflow();
 - **interfaceClass**: The interface class whose workflows are to be registered.
 - **implementation**: An instance of the class whose workflows to register.
 - **instanceName**: A unique name for this class instance. Use only when you are creating multiple instances of a class and your workflow depends on class instance variables. When DBOS needs to recover a workflow belonging to that class, it looks up the class instance using `instanceName` so it can recover the workflow using the right instance of its class.
-
 
 ### startWorkflow
 
@@ -388,7 +387,6 @@ Create step options and provide a name for this step. By default the step runs o
 - **`withBackoffRate(double rate)`** - Exponential backoff multiplier between retries. Must be greater than or equal to 1.0. Defaults to 2.0.
 
 - **`withShouldRetry(Predicate<Throwable> shouldRetry)`** - Supply a predicate that decides per-exception whether to retry. Return `true` to retry, `false` to fail immediately without consuming remaining attempts. Equivalent to the annotation `shouldRetry` parameter but accepts a lambda directly. See [`StepShouldRetry`](#stepshouldretry).
-
 
 ### WorkflowOptions
 

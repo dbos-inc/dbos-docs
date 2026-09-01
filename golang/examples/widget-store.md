@@ -1,11 +1,8 @@
----
-sidebar_position: 30
-title: Fault-Tolerant Checkout
----
+# Fault-Tolerant Checkout
 
-:::info
-This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store), and [Python](../../python/examples/widget-store.md).
-:::
+> :::info
+> This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store), and [Python](../../python/examples/widget-store.md).
+> :::
 
 In this example, we use DBOS and Gin to build an online storefront that's resilient to any failure.
 
@@ -16,7 +13,6 @@ Within a few seconds, the app will recover and resume as if nothing happened.
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/widget-store).
 
 ![Widget store UI](./assets/widget_store_ui.png)
-
 
 ## Building the Checkout Workflow
 
@@ -167,7 +163,7 @@ Each step performs a database operation, like updating inventory or order status
 These are implemented as regular Go functions that interact with the Postgres database.
 
 <details>
-<summary><strong>Database Operations</strong></summary>
+<summary>Database Operations</summary>
 
 ```go
 // Database operations for inventory management
@@ -376,7 +372,6 @@ func main() {
     }
 }
 ```
-
 
 ## Try it Yourself!
 

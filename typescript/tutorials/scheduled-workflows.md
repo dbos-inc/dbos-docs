@@ -1,11 +1,8 @@
----
-sidebar_position: 60
-title: Scheduling Workflows
----
+# Scheduling Workflows
 
-You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
-Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
-Each time a scheduled fires, its workflow is executed by exactly one worker process.
+> You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
+> Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
+> Each time a scheduled fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow that takes two arguments: a `Date` (the scheduled execution time) and a context object:
 
@@ -212,7 +209,6 @@ For the full API reference, see [Workflow Schedules](../reference/methods.md#wor
 You can use the [`DBOS.registerScheduled`](../reference/workflows-steps.md#dbosregisterscheduled) method or the [`DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator, specifying a schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax, to schedule a workflow to run exactly once per time interval.
 
 For example:
-
 
 ```typescript
 async function scheduledFunction(schedTime: Date, startTime: Date) {

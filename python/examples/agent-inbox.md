@@ -1,9 +1,6 @@
----
-sidebar_position: 24
-title: Human-in-the-Loop
----
+# Human-in-the-Loop
 
-This example shows how to use DBOS to add **human-in-the-loop** to your AI agent.
+> This example shows how to use DBOS to add **human-in-the-loop** to your AI agent.
 
 Production AI agents often need to wait for human approval before performing critical tasks.
 However, because there are real people involved, approval doesn't always happen instantly, and agents need to be able to reliably wait hours or days for human intervention, then seamlessly resume when it arrives.
@@ -13,9 +10,6 @@ We'll see how to build agents that can wait hours or days for human input to arr
 We'll also see how to use workflow introspection to monitor active agents and create an "inbox" of workflows that need approval.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/agent-inbox).
-
-<img src={require('@site/static/img/examples/agent-inbox.png').default} alt="Agent Inbox" width="800" className="custom-img"/>
-
 
 ## Durable Agents
 
@@ -131,7 +125,6 @@ async def list_approved_agents():
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
     return list(statuses)
-
 
 @app.get("/agents/denied", response_model=list[AgentStatus])
 async def list_denied_agents():

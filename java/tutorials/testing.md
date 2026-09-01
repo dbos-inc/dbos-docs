@@ -1,8 +1,6 @@
----
-sidebar_position: 110
-title: Testing Workflows
-description: Unit test DBOS workflows by mocking the DBOS instance.
----
+# Testing Workflows
+
+> Unit test DBOS workflows by mocking the DBOS instance.
 
 Because `DBOS` is a regular Java object injected into your workflow classes — not a global static — it can be mocked with any standard Java mocking library such as [Mockito](https://site.mockito.org/).
 This lets you test your workflow logic in complete isolation, without a PostgreSQL database.

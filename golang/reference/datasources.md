@@ -1,11 +1,8 @@
----
-sidebar_position: 45
-title: Datasources
----
+# Datasources
 
-A datasource is a handle to a database **you** own, over which DBOS can run durable transactions.
-Use [`RunAsTransaction`](#runastransaction) to run a function inside a database transaction where your application writes and the DBOS durability record commit atomically, guaranteeing the transaction executes exactly once even across crashes and recovery.
-See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.md) for a full walkthrough.
+> A datasource is a handle to a database **you** own, over which DBOS can run durable transactions.
+> Use [`RunAsTransaction`](#runastransaction) to run a function inside a database transaction where your application writes and the DBOS durability record commit atomically, guaranteeing the transaction executes exactly once even across crashes and recovery.
+> See the [Transactions & Datasources tutorial](../tutorials/transaction-tutorial.md) for a full walkthrough.
 
 ### NewDataSource
 

@@ -1,10 +1,6 @@
----
-sidebar_position: 5
-title: Production Checklist
-toc_max_heading_level: 3
----
+# Production Checklist
 
-This page describes best practices you should follow when operating a DBOS application in production.
+> This page describes best practices you should follow when operating a DBOS application in production.
 
 ## Managing Postgres
 
@@ -17,12 +13,12 @@ Here are some recommendations for configuring a Postgres database to best work w
 
 **Configure a retention policy** - You should configure a [retention policy](./retention.md) for the workflows in your DBOS application to limit the total amount of storage DBOS uses.
 
-
 **Manage the DBOS schema** - DBOS creates tables for its internal state in its [system database](../explanations/system-tables.md).
 By default, a DBOS application automatically creates these on startup.
 However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
-In that case, the [`dbos migrate`](../python/reference/cli.md#dbos-migrate) command in Python, the [`dbos migrate`](../golang/reference/cli.md) in Go, or the [`dbos schema`](../typescript/reference/cli.md#npx-dbos-schema) command in TypeScript can be run with a privileged user to create all DBOS database tables or migrate them to the latest version.
+In that case, the [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) command can be run with a privileged user to create all DBOS system tables or migrate them to the latest version.
 Then, a DBOS application can run with lower privilege (requiring only access to the DBOS tables in the system database).
+If your database is managed by a DBA, `dbosctl sysdb migrate` can also print the SQL for them to apply instead of running it itself.
 
 ## Scalability
 

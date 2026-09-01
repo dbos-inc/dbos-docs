@@ -1,12 +1,9 @@
----
-sidebar_position: 100
-title: DBOS CLI
----
+# DBOS CLI
+
+> These commands all require the URL of your DBOS system database.
+> You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ## Workflow Management Commands
-
-These commands all require the URL of your DBOS system database.
-You can supply this URL through the `--sys-db-url` argument or through a [`dbos-config.yaml` configuration file](./configuration.md#dbos-configuration-file).
 
 ### npx dbos workflow list
 
@@ -135,7 +132,6 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `output`: If the workflow completed successfuly, its output
 - `error`: If the workflow threw an error, the serialized error object
 
-
 ## Application Management Commands
 
 ### npx dbos schema
@@ -198,9 +194,8 @@ Prints the number of rows transferred, by table.
 This command initializes a new DBOS application from a template into a target directory.
 
 **Arguments:**
-- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 30 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
+- `-n, --appName <app-name>`: The name and directory to which to instantiate the application. Application names should be between 3 and 256 characters and must contain only lowercase letters and numbers, dashes (`-`), and underscores (`_`).
 - `-t, --templateName <template>`: The template to use for project creation. If not provided, will prompt with a list of available templates.
-
 
 ### npx dbos start
 

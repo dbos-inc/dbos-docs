@@ -1,10 +1,6 @@
----
-sidebar_position: 30
-title: Migrating From Temporal
-hide_table_of_contents: false
----
+# Migrating From Temporal
 
-This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
+> This guide explains how to migrate a Temporal application to DBOS, with a focus on how each major Temporal feature translates to DBOS.
 
 :::info
 For a high-level comparison of DBOS and Temporal's architectures, see [Comparing DBOS and Temporal](./comparing-temporal.md).
@@ -41,8 +37,7 @@ class OrderWorkflow:
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 @DBOS.workflow()
@@ -54,8 +49,7 @@ def order_workflow(order: Order) -> str:
 
 Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 async function orderWorkflow(order: Order): Promise<string> {
@@ -68,8 +62,7 @@ const orderWorkflowFn = DBOS.registerWorkflow(orderWorkflow);
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
@@ -88,8 +81,7 @@ func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
 
 Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 @Workflow(name = "orderWorkflow")
@@ -101,9 +93,6 @@ public String orderWorkflow(Order order) {
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
-
-</TabItem>
-</Tabs>
 
 ### Starting Workflows
 
@@ -125,8 +114,7 @@ result = await handle.result()
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 # Starting a workflow from in your application
@@ -144,8 +132,7 @@ result = handle.get_result()
 
 Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 // Starting a workflow from in your application
@@ -164,8 +151,7 @@ await client.enqueue<typeof orderWorkflow>(
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 // Starting a workflow from in your application
@@ -184,8 +170,7 @@ result, err := handle.GetResult()
 
 Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 // Starting a workflow from in your application
@@ -206,9 +191,6 @@ Object result = handle.getResult();
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md).
 
-</TabItem>
-</Tabs>
-
 ### Workflow IDs and Idempotency
 
 Both systems support workflow IDs to provide idempotent execution.
@@ -217,8 +199,7 @@ In Temporal, the workflow ID is passed when starting a workflow. In DBOS, you se
 
 One important difference is how workflow executions are identified. Temporal uniquely identifies an execution using a combination of workflow ID and run ID, so a workflow may have multiple run instances over time. DBOS, by contrast, treats each execution as uniquely identified by its workflow ID, so a workflow ID corresponds to exactly one execution.
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 with SetWorkflowID("payment-idempotency-key"):
@@ -227,8 +208,7 @@ with SetWorkflowID("payment-idempotency-key"):
 
 Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})();
@@ -236,8 +216,7 @@ const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-i
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWorkflowID("payment-idempotency-key"))
@@ -245,8 +224,7 @@ handle, err := dbos.RunWorkflow(dbosContext, OrderWorkflow, order, dbos.WithWork
 
 Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 DBOS.startWorkflow(
@@ -256,9 +234,6 @@ DBOS.startWorkflow(
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).
-
-</TabItem>
-</Tabs>
 
 ### Determinism
 
@@ -275,8 +250,7 @@ await workflow.sleep(timedelta(hours=24))
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 DBOS.sleep(86400)  # seconds
@@ -284,8 +258,7 @@ DBOS.sleep(86400)  # seconds
 
 Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#durable-sleep).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 await DBOS.sleep(86400000);  // milliseconds
@@ -293,8 +266,7 @@ await DBOS.sleep(86400000);  // milliseconds
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#durable-sleep).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 dbos.Sleep(ctx, 24 * time.Hour)
@@ -302,17 +274,13 @@ dbos.Sleep(ctx, 24 * time.Hour)
 
 Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md#durable-sleep).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 DBOS.sleep(Duration.ofHours(24));
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#durable-sleep).
-
-</TabItem>
-</Tabs>
 
 ### Continue-as-New
 
@@ -343,8 +311,7 @@ async def send_email(to: str, body: str) -> bool:
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 @DBOS.step()
@@ -355,8 +322,7 @@ def send_email(to: str, body: str) -> bool:
 
 Learn more in the [steps tutorial](../python/tutorials/step-tutorial.md).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 const sendEmail = DBOS.registerStep(async (to: string, body: string): Promise<boolean> => {
@@ -370,8 +336,7 @@ const sendEmail = DBOS.registerStep(async (to: string, body: string): Promise<bo
 
 Learn more in the [steps tutorial](../typescript/tutorials/step-tutorial.md).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 // Steps are called inline using RunAsStep
@@ -382,8 +347,7 @@ result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
 
 Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 // Steps are called inline using DBOS.runStep
@@ -391,9 +355,6 @@ boolean result = DBOS.runStep(() -> sendEmail(to, body), "sendEmail");
 ```
 
 Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md).
-
-</TabItem>
-</Tabs>
 
 ### Retries
 
@@ -415,8 +376,7 @@ result = await workflow.execute_activity(
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 @DBOS.step(retries_allowed=True, max_attempts=5, interval_seconds=1.0, backoff_rate=2.0)
@@ -427,8 +387,7 @@ def send_email(to: str, body: str) -> bool:
 
 Learn more in the [steps tutorial](../python/tutorials/step-tutorial.md#configurable-retries).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 const sendEmail = DBOS.registerStep(
@@ -445,8 +404,7 @@ const sendEmail = DBOS.registerStep(
 
 Learn more in the [steps tutorial](../typescript/tutorials/step-tutorial.md#configurable-retries).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
@@ -461,8 +419,7 @@ result, err := dbos.RunAsStep(ctx, func(stepCtx context.Context) (bool, error) {
 
 Learn more in the [steps tutorial](../golang/tutorials/step-tutorial.md#configurable-retries).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 boolean result = DBOS.runStep(
@@ -477,9 +434,6 @@ boolean result = DBOS.runStep(
 
 Learn more in the [steps tutorial](../java/tutorials/step-tutorial.md#configurable-retries).
 
-</TabItem>
-</Tabs>
-
 ### Heartbeats
 
 Temporal activities support heartbeats for long-running operations so the server knows the activity is still alive. DBOS does not require heartbeats because there is no central orchestrator monitoring activity execution; instead, steps run directly in your application process.
@@ -489,8 +443,7 @@ Temporal activities support heartbeats for long-running operations so the server
 DBOS provides a special type of step called a transaction that executes database operations in a single database transaction, co-committed with the DBOS checkpoint.
 This provides exactly-once semantics for database writes, which is stronger than the at-least-once semantics offered by Temporal.
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 Learn more in the [transactions tutorial](../python/tutorials/transaction-tutorial.md).
 
@@ -503,8 +456,7 @@ def update_order_status(order_id: str, status: str) -> None:
     )
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 Learn more in the [transactions tutorial](../typescript/tutorials/transaction-tutorial.md).
 
@@ -520,9 +472,6 @@ async function updateOrderStatus(orderId: string, status: string) {
 }
 const updateOrderStatusTx = dataSource.registerTransaction(updateOrderStatus);
 ```
-
-</TabItem>
-</Tabs>
 
 ## Signals &rarr; Messages
 
@@ -556,8 +505,7 @@ await handle.signal(OrderWorkflow.payment_received, "paid")
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 # In the workflow
@@ -576,8 +524,7 @@ DBOS.send("order-123", "paid", topic="payment_status")
 
 Learn more in the [workflow communication tutorial](../python/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 // In the workflow
@@ -598,8 +545,7 @@ await DBOS.send("order-123", "paid", "payment_status");
 
 Learn more in the [workflow communication tutorial](../typescript/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 // In the workflow
@@ -623,8 +569,7 @@ err := dbos.Send(dbosContext, "order-123", "paid", "payment_status")
 
 Learn more in the [workflow communication tutorial](../golang/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 // In the workflow
@@ -645,11 +590,7 @@ DBOS.send("order-123", "paid", "payment_status");
 
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-messaging-and-notifications).
 
-</TabItem>
-</Tabs>
-
 Messages are persisted to the database, so they remain available even after the workflow completes.
-
 
 ## Queries &rarr; Events
 
@@ -681,8 +622,7 @@ progress = await handle.query(OrderWorkflow.get_progress)
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 @DBOS.workflow()
@@ -698,8 +638,7 @@ progress = DBOS.get_event("order-123", "progress")
 
 Learn more in the [workflow communication tutorial](../python/tutorials/workflow-communication.md#workflow-events).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 async function orderWorkflow(order: Order) {
@@ -716,8 +655,7 @@ const progress = await DBOS.getEvent<number>("order-123", "progress");
 
 Learn more in the [workflow communication tutorial](../typescript/tutorials/workflow-communication.md#workflow-events).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 func OrderWorkflow(ctx dbos.DBOSContext, order Order) (string, error) {
@@ -733,8 +671,7 @@ progress, err := dbos.GetEvent[int](dbosContext, "order-123", "progress", 30*tim
 
 Learn more in the [workflow communication tutorial](../golang/tutorials/workflow-communication.md#workflow-events).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 @Workflow(name = "orderWorkflow")
@@ -750,9 +687,6 @@ int progress = (int) DBOS.getEvent("order-123", "progress", Duration.ofSeconds(3
 ```
 
 Learn more in the [workflow communication tutorial](../java/tutorials/workflow-communication.md#workflow-events).
-
-</TabItem>
-</Tabs>
 
 Events are persisted to the database, so they remain available even after the workflow completes.
 
@@ -779,8 +713,7 @@ handle = await client.start_workflow(
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 # Register a queue with concurrency limits
@@ -793,8 +726,7 @@ result = handle.get_result()
 
 Learn more in the [queues tutorial](../python/tutorials/queue-tutorial.md).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 // Register a queue with concurrency limits
@@ -807,8 +739,7 @@ const result = await handle.getResult();
 
 Learn more in the [queues tutorial](../typescript/tutorials/queue-tutorial.md).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 // Define a queue with concurrency limits
@@ -821,8 +752,7 @@ result, err := handle.GetResult()
 
 Learn more in the [queues tutorial](../golang/tutorials/queue-tutorial.md).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 // Define a queue with concurrency limits
@@ -838,9 +768,6 @@ String result = handle.getResult();
 ```
 
 Learn more in the [queues tutorial](../java/tutorials/queue-tutorial.md).
-
-</TabItem>
-</Tabs>
 
 DBOS queues provide features that Temporal task queues don't have out of the box:
 - **Global concurrency limits**: Limit total concurrent executions across all workers.
@@ -872,8 +799,7 @@ await client.create_schedule(
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 DBOS.create_schedule("daily-report", daily_report_workflow, schedule="0 9 * * *")
@@ -882,8 +808,7 @@ DBOS.create_schedule("daily-report", daily_report_workflow, schedule="0 9 * * *"
 DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.
 Learn more in the [scheduling tutorial](../python/tutorials/scheduled-workflows.md).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 await DBOS.createSchedule({
@@ -895,9 +820,6 @@ await DBOS.createSchedule({
 
 DBOS schedules also support pausing, resuming, backfilling missed runs, and triggering immediate execution.
 Learn more in the [scheduling tutorial](../typescript/tutorials/scheduled-workflows.md).
-
-</TabItem>
-</Tabs>
 
 ## Child Workflows
 
@@ -916,8 +838,7 @@ class ParentWorkflow:
 
 **DBOS:**
 
-<Tabs groupId="language" queryString="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 @DBOS.workflow()
@@ -932,8 +853,7 @@ def parent_workflow():
 
 Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 async function parentWorkflow() {
@@ -949,8 +869,7 @@ const parentWorkflowFn = DBOS.registerWorkflow(parentWorkflow);
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
 
-</TabItem>
-<TabItem value="go" label="Go">
+**Go**
 
 ```go
 func ParentWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
@@ -966,8 +885,7 @@ func ParentWorkflow(ctx dbos.DBOSContext, input string) (string, error) {
 
 Learn more in the [workflows tutorial](../golang/tutorials/workflow-tutorial.md).
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 @Workflow(name = "parentWorkflow")
@@ -985,9 +903,6 @@ public String parentWorkflow() {
 ```
 
 Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#starting-workflows-in-the-background).
-
-</TabItem>
-</Tabs>
 
 ## Codecs and Encryption
 

@@ -1,10 +1,6 @@
----
-sidebar_position: 10
-title: DBOS Context & Client
-pagination_prev: null
----
+# DBOS Context & Client
 
-A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](../tutorials/workflow-tutorial.md), [queues](../tutorials/queue-tutorial.md) and perform [workflow management](../tutorials/workflow-management.md) tasks.
+> A DBOS Context is at the center of a DBOS-enabled application. Use it to register [workflows](../tutorials/workflow-tutorial.md), [queues](../tutorials/queue-tutorial.md) and perform [workflow management](../tutorials/workflow-management.md) tasks.
 
 DBOS defines two interfaces:
 

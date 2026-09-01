@@ -1,9 +1,6 @@
----
-sidebar_position: 70
-title: Monitoring Your Applications
----
+# Monitoring Your Applications
 
-The [DBOS Cloud Console](https://console.dbos.dev) provides several tools to monitor your applications.
+> The [DBOS Cloud Console](https://console.dbos.dev) provides several tools to monitor your applications.
 
 ### Logs
 
@@ -20,7 +17,6 @@ Traces are sorted chronologically and displayed hierarchically.
 You can click on a trace or span to see detailed information about it.
 
 ![Logs](./assets/cc-traces.png)
-
 
 ### Grafana Dashboard
 

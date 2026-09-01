@@ -1,9 +1,6 @@
----
-sidebar_position: 33
-title: Conductor API
----
+# Conductor API
 
-Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Conductor and tune their settings, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
+> Conductor is the control plane for your durable workflows, and this HTTP API is how you drive it programmatically: register applications with Conductor and tune their settings, search workflows, cancel or fork them, inspect queues and schedules, drive schedules, read metrics and audit logs, and manage members, roles, and API keys.
 
 This is the Conductor half of the [DBOS console](https://console.dbos.dev) — what the console shows for an application connected to Conductor, whether that application runs on your own infrastructure or on DBOS Cloud. DBOS Cloud's own operations, such as [deploying an application](./dbos-cloud/deploying-to-cloud.md) or [provisioning a database](./dbos-cloud/database-management.md), are not part of this API; they have their own [CLI](./dbos-cloud/cloud-cli.md).
 
@@ -100,7 +97,7 @@ Almost every operation is scoped to an organization, and most are additionally s
 | Path parameter | Constraints |
 | --- | --- |
 | `orgName` | 3–30 characters, matching `^[a-z0-9_]+$` |
-| `appName` | 3–30 characters, matching `^[a-z0-9-_]+$` |
+| `appName` | 3–256 characters, matching `^[a-z0-9-_]+$` |
 
 Only two operations sit outside an organization: `POST /v2/users` and `GET /v2/users/me`.
 

@@ -1,8 +1,6 @@
----
-sidebar_position: 80
-title: Workflows on Class Instances
-description: Register multiple instances of a workflow class to share logic with per-instance configuration.
----
+# Workflows on Class Instances
+
+> Register multiple instances of a workflow class to share logic with per-instance configuration.
 
 DBOS supports registering multiple instances of the same workflow implementation class under different names.
 This is useful when the same workflow logic should run against different configurations — for example, different API endpoints, tenant-specific credentials, or database connections — without duplicating code.

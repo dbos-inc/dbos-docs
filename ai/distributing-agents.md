@@ -1,13 +1,9 @@
----
-sidebar_position: 40
-title: Parallelizing & Scaling Agents
-hide_table_of_contents: false
----
+# Parallelizing & Scaling Agents
 
-AI agents and applications often need to **run many tasks in parallel**.
-A single step of an agentic loop might invoke several tools at once based on an LLM response.
-A document ingestion pipeline using Retrieval-Augmented Generation (RAG) might index tens of thousands of documents concurrently.
-A deep research agent might scrape hundreds of websites at the same time.
+> AI agents and applications often need to **run many tasks in parallel**.
+> A single step of an agentic loop might invoke several tools at once based on an LLM response.
+> A document ingestion pipeline using Retrieval-Augmented Generation (RAG) might index tens of thousands of documents concurrently.
+> A deep research agent might scrape hundreds of websites at the same time.
 
 DBOS workflows make these parallel patterns durable and scalable through a **durable queue** abstraction.
 A workflow can enqueue any number of tasks for concurrent processing, then wait for their results.

@@ -1,8 +1,6 @@
----
-sidebar_position: 40
-title: Database Management
-description: Learn how to manage DBOS Cloud database instances
----
+# Database Management
+
+> Learn how to manage DBOS Cloud database instances
 
 ### Provisioning Database Instances
 

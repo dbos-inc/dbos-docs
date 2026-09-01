@@ -1,9 +1,8 @@
----
-sidebar_position: 34
-title: dbosctl CLI Reference
----
+# dbosctl CLI Reference
 
-`dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
+> `dbosctl` is a command-line client for the [Conductor API](./conductor-api.md). It manages workflows, queues, schedules, applications, and API keys against DBOS-managed Conductor or a [self-hosted Conductor](./hosting-conductor.md), with the target selected by a named **profile**.
+
+The [`dbosctl sysdb`](#system-database-commands) commands are the exception: they manage the Postgres [system database](../explanations/system-tables.md) directly, so they take a database URL rather than a profile.
 
 ## Installation
 
@@ -104,6 +103,7 @@ Each setting is resolved **flag → environment variable → profile**, so a fla
 | Organization | `--org` | `DBOS_ORG` |
 | Application | `-a`, `--app` | `DBOS_APP` |
 | Bearer token | — | `DBOS_TOKEN` |
+| System database ([`sysdb`](#system-database-commands) only) | `-D`, `--db-url` | `DBOS_SYSTEM_DATABASE_URL` |
 | Output format | `-o`, `--output` | — |
 
 Flags are scoped to the command that uses them, so pass them **after** the command name (`dbosctl app list --org acme`). Each command's `--help` lists only the flags it honors.
@@ -117,6 +117,8 @@ These flags are accepted by most commands and are not repeated in the reference 
 - `--org <name>`: Organization. Overrides `$DBOS_ORG` and the profile.
 - `-a, --app <name>`: Application name, for application-scoped commands. Overrides `$DBOS_APP` and the profile.
 - `-o, --output <format>`: Output format — `table` (default), `json`, or `ids`.
+
+The [`dbosctl sysdb`](#system-database-commands) commands accept none of them except `-o`. They do not talk to Conductor, so there is no profile, organization, or application to name. `sysdb reset` and `sysdb rename-application` print row counts, so they honor `-o` like every other command that prints data — `table` or `json`, but not `ids`. (`sysdb reset` has an `--app` flag of its own, read from the command line only.)
 
 ## Output
 
@@ -154,7 +156,8 @@ Conductor answers some commands itself and forwards the rest to your application
 | | Commands |
 | --- | --- |
 | Forwarded to your application | All `workflow`, `queue`, and `schedule` commands — reads as much as mutations — plus `app versions` and `app set-version` |
-| Answered by Conductor | Everything else: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by Conductor | Everything else except `sysdb`: the rest of `app`, plus `api-key`, `permission`, `login`, `logout`, `whoami`, and `config` |
+| Answered by neither | The [`sysdb`](#system-database-commands) commands, which open the system database themselves |
 
 Commands in the first group fail if the application has no healthy executor connected, so a failure there usually means your application is not running rather than that nothing matched.
 
@@ -254,6 +257,7 @@ Registers an application with Conductor. The name must match the application nam
 
 **Arguments:**
 - `<name>`: The application's name.
+- `--private-mode`: Register the application in private mode, so it does not send workflow payload data — inputs, outputs, and events — to Conductor. Omit the flag to take Conductor's default; it can be changed later with [`dbosctl app update`](#dbosctl-app-update).
 
 ---
 
@@ -268,7 +272,7 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
 - `--gc-rows-threshold <int>`: Workflow rows kept before garbage collection. See [Workflow Retention Policies](./retention.md).
 - `--gc-time-threshold-ms <int>`: Age, in milliseconds, before a workflow is garbage-collected.
-- `--private-mode`: Restrict the application to members of the organization.
+- `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
 ---
 
@@ -548,6 +552,159 @@ Deletes an API key, revoking it immediately.
 
 **Description:**
 Lists the permissions that can be granted to an API key or a role.
+
+---
+
+## System Database Commands
+
+`dbosctl sysdb` groups the commands that open a database instead of calling Conductor.
+They connect to a Postgres (or CockroachDB) [system database](../explanations/system-tables.md) directly, so they take a database URL rather than a profile, and accept none of the [common flags](#common-flags) that resolve one.
+
+The system schema is shared by every DBOS SDK and the migrations are built into the `dbosctl` binary.
+
+**Shared arguments:**
+- `-D, --db-url <url>`: The system database URL. Overrides `$DBOS_SYSTEM_DATABASE_URL`.
+- `--schema <name>`: The schema holding the DBOS system tables. Defaults to `dbos`.
+
+Both are defined on `sysdb` itself, so every subcommand takes them:
+
+```shell
+dbosctl sysdb migrate -D postgres://user:password@host:5432/dbos_sys
+DBOS_SYSTEM_DATABASE_URL=postgres://user:password@host:5432/dbos_sys dbosctl sysdb migrate
+```
+
+---
+
+### `dbosctl sysdb migrate`
+
+**Description:**
+Creates or upgrades the DBOS [system database](../explanations/system-tables.md), applying every migration the schema is missing and creating the database and schema if they do not exist yet.
+By default, a DBOS application automatically creates these on startup.
+However, in production environments, a DBOS application may not run with sufficient privilege to create databases or tables.
+In that case, the `migrate` command can be run with a privileged user to create all DBOS database tables.
+
+After creating the DBOS database tables with this command, a DBOS application can run with minimum permissions, requiring only access to the DBOS schema in the application and system databases.
+Use the `-r/--app-role` flag to grant a role access to that schema.
+
+`migrate` is safe to re-run. Migrations already recorded are skipped, so a database that is up to date is left alone.
+
+**Arguments:**
+- `-r, --app-role <role>`: The role your DBOS application runs as. It is granted the minimum permissions needed to use the DBOS schema.
+- `--no-listen-notify`: Leave out the triggers that fire `pg_notify`. See [LISTEN/NOTIFY](#listennotify) below.
+- `--print-migrations <all|NUMBER>`: Instead of running the migrations, print their SQL to standard output — `all` for a fresh database, or a migration number to upgrade an existing one.
+- `--print-user-role`: Instead of running them, print the SQL statements granting `--app-role` access to the DBOS system tables.
+- `--cockroach`: Render the printed SQL for CockroachDB. Print mode only — see [CockroachDB](#cockroachdb) below.
+
+:::info SDK migration config settings
+After running `dbosctl sysdb migrate`, configure your application not to alter the system schema on startup where that option exists:
+
+**Python**
+
+```python
+config: DBOSConfig = {
+  "name": "my-app",
+  "system_database_url": os.environ["DBOS_SYSTEM_DATABASE_URL"],
+  "run_migrations": False,
+}
+```
+
+**TypeScript**
+
+```typescript
+await DBOS.launch({
+  name: "my-app",
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  runMigrations: false,
+});
+```
+
+**Java**
+
+```java
+DBOSConfig config = DBOSConfig.defaults("my-app")
+  .withDatabaseUrl(System.getenv("DBOS_SYSTEM_JDBC_URL"))
+  .withMigrate(false);
+```
+
+:::
+
+#### Printing the SQL
+
+If your database is managed by a DBA, or its DDL goes through review, the print modes emit SQL for someone else to apply:
+
+```shell
+dbosctl sysdb migrate --print-migrations all > migrations.sql
+dbosctl sysdb migrate --print-user-role -r my_app_role > grants.sql
+```
+
+#### LISTEN/NOTIFY
+
+If your system database sites behind a connection pooler in transaction mode, pass `--no-listen-notify` to generate a system scehma that doesn't use `pg_notify`.:
+
+```shell
+dbosctl sysdb migrate -D postgres://user:password@host:5432/dbos_sys --no-listen-notify
+```
+
+#### CockroachDB
+
+Live migration can detect when the system database is running on CockroachDB.
+Since a printed script cannot detect the database engine, use `--cockroach` to specify Cockroach compatible system database migrations.
+
+```shell
+dbosctl sysdb migrate --print-migrations all --cockroach > migrations.sql
+```
+
+---
+
+### `dbosctl sysdb reset`
+
+**Description:**
+Empties the DBOS system database, deleting all the rows in the DBOS system tables.
+
+The schema itself is left migrated and immediately usable, so the database does not have to be provisioned again.
+
+Prompts for confirmation when run interactively.
+
+**Arguments:**
+- `-a, --app <name>`: Empty only the specified application's rows, for a [shared system database](../explanations/sharing-a-system-database.md). Unlike the `--app` argument used by Conductor commands, this argument is only read from the command line — never from `$DBOS_APP` or a profile.
+- `--drop-database`: Drop the whole database instead of emptying the DBOS tables. Cannot be combined with `--app` or `--schema`.
+- `--force`: Skip the confirmation prompt. Required when running non-interactively.
+- `-o, --output <format>`: Output format for the row counts — `table` (default) or `json`.
+
+When not using `--drop-database`, per-table row counts are written to standard output, with progress on standard error, so a scripted reset can read what it removed without parsing log lines.
+
+---
+
+### `dbosctl sysdb rename-application`
+
+**Description:**
+Transfers ownership of everything in the system database from an application's old name to its new one.
+The `rename-app` alias is accepted in place of `rename-application`.
+Prints the number of rows transferred, by table.
+Prompts for confirmation when run interactively.
+
+:::warning
+**Stop the application being renamed before running this.** Nothing here locks it out, and a running one keeps creating new records using its old name.
+:::
+
+**Arguments:**
+- `-f, --from <name>`: The application's previous name. Omit to only adopt unclaimed rows, which then requires `--adopt-unclaimed-rows`.
+- `-t, --to <name>`: The application that ends up owning the rows. Required. Must not be only whitespace.
+- `--adopt-unclaimed-rows`: Also transfer rows no application owns (`application_name` is null).
+- `--batch-size <int>`: Completed workflows and steps transferred per transaction. Defaults to 10000.
+- `--force`: Skip the confirmation prompt and the `--to` name checks. Required when running non-interactively.
+- `-o, --output <format>`: Output format for the row counts — `table` (default) or `json`.
+
+By default, `rename-application` expects the `--to` name to be unused and to be DBOS Conductor compatible (between 3 and 256 characters, only numbers, lowercase ASCII letters, hyphens, and underscores).
+For interactive shells, `rename-application` will confirm with the user before renaming if either of these conditions are false.
+This check can be overridden with the `--force` argument.
+
+#### Schema versions
+
+`reset` and `rename-application` both refuse a schema migrated past what your `dbosctl` version knows.
+Typically, in this case you just need to install a more recent version of `dbosctl`.
+
+`rename-application` also refuses a schema that predates the addition of application names.
 
 ---
 

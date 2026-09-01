@@ -1,11 +1,8 @@
----
-sidebar_position: 20
-title: Document Ingestion Pipeline
----
+# Document Ingestion Pipeline
 
-In this example, we'll use DBOS to build a **reliable and scalable data processing pipeline**.
-We'll show how DBOS can help you horizontally scale an application to process many items concurrently and seamlessly recover from failures.
-Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
+> In this example, we'll use DBOS to build a **reliable and scalable data processing pipeline**.
+> We'll show how DBOS can help you horizontally scale an application to process many items concurrently and seamlessly recover from failures.
+> Specifically, we'll build a pipeline that indexes PDF documents for RAG, though you can use a similar design pattern to build almost any data pipeline.
 
 To show the pipeline works, we'll also build a simple chat agent that can accurately answer questions about the indexed documents.
 For example, after ingesting the last few years of Apple 10-K filings, the chat agent can accurately answer questions about Apple's financials:
@@ -67,7 +64,6 @@ def configure_index():
     chat_engine = index.as_chat_engine()
     return index, chat_engine
 
-
 index, chat_engine = configure_index()
 ```
 
@@ -126,7 +122,6 @@ def download_document(document_url: HttpUrl):
         reader = PDFReader()
         pages = reader.load_data(temp_file_path)
     return pages
-
 
 @DBOS.step()
 def index_page(page: Document):
@@ -203,4 +198,3 @@ cd python/document-detective
 ```
 
 Then follow the instructions in the [README](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/document-detective) to run the app.
-

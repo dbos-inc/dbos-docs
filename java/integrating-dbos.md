@@ -1,23 +1,21 @@
----
-sidebar_position: 20
-title: Add DBOS To Your App
----
+# Add DBOS To Your App
 
-This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-java) library to your existing application to **durably execute** it and make it resilient to any failure.
+> This guide shows you how to add the open-source [DBOS Transact](https://github.com/dbos-inc/dbos-transact-java) library to your existing application to **durably execute** it and make it resilient to any failure.
 
 ### 1. Install DBOS
 
 Add DBOS to your application by including it in your build configuration.
 
-<Tabs groupId="build-tool">
-<TabItem value="gradle" label="Gradle">
+**Gradle**
+
 ```groovy
 dependencies {
     implementation 'dev.dbos:transact:0.8.0'
 }
 ```
-</TabItem>
-<TabItem value="maven" label="Maven">
+
+**Maven**
+
 ```xml
 <dependencies>
     <dependency>
@@ -27,8 +25,6 @@ dependencies {
     </dependency>
 </dependencies>
 ```
-</TabItem>
-</Tabs>
 
 ### 2. Add the DBOS Initializer
 

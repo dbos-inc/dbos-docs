@@ -1,10 +1,7 @@
----
-sidebar_position: 30
-title: AI Model Prompting
----
+# AI Model Prompting
 
-You may want assistance from an AI model in building a DBOS application.
-To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
+> You may want assistance from an AI model in building a DBOS application.
+> To make sure your model has the latest information on how to use DBOS, provide it with this prompt.
 
 You may also want to use the [DBOS MCP server](../integrations/mcp.md) so your model can directly access your application's workflows and steps.
 
@@ -546,7 +543,6 @@ handle, err := dbos.RunWorkflow(timeoutCtx, exampleWorkflow, "wait-for-cancel")
 
 You can also manually cancel the workflow by calling its `cancel` function (or calling CancelWorkflow).
 
-
 ### Durable Sleep
 
 You can use `Sleep` to put your workflow to sleep for any period of time.
@@ -700,7 +696,6 @@ You can use `ResumeWorkflow` to manually resume a workflow that has exceeded its
 // Register a workflow that can be attempted at most 4 times (1 initial + 3 retries)
 dbos.RegisterWorkflow(dbosContext, myWorkflow, dbos.WithMaxRecoveryAttempts(3))
 ```
-
 
 ## Steps
 
@@ -866,12 +861,9 @@ You can:
 - Publish events from workflows for clients to read
 - Stream values from workflows to clients
 
-
 ### Workflow Messaging and Notifications
 You can send messages to a specific workflow.
 This is useful for signaling a workflow or sending notifications to it while it's running.
-
-<img src={require('@site/static/img/workflow-communication/workflow-messages.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ### Send
 
@@ -948,8 +940,6 @@ If you're sending a message from a workflow, DBOS guarantees exactly-once delive
 
 Workflows can publish _events_, which are key-value pairs associated with the workflow.
 They are useful for publishing information about the status of a workflow or to send a result to clients while the workflow is running.
-
-<img src={require('@site/static/img/workflow-communication/workflow-events.png').default} alt="DBOS Steps" width="750" className="custom-img"/>
 
 ### SetEvent
 
@@ -1110,7 +1100,6 @@ for streamValue := range ch {
 
 You can also read from a stream from outside a DBOS application with a DBOS Client using `ReadStream` or `ReadStreamAsync`.
 
-
 ## Cross-Language Interoperability
 
 DBOS supports multiple languages (Python, TypeScript, Go, Java).
@@ -1197,9 +1186,7 @@ The handler receives:
 - **message**: The alert message.
 - **metadata**: Key-value string pairs with additional alert context.
 
-
 ## Queues
-
 
 You can use queues to run many workflows at once with managed concurrency.
 Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
@@ -1347,7 +1334,6 @@ if err != nil {
     log.Fatal(err)
 }
 ```
-
 
 ### Managing Concurrency
 
@@ -1624,7 +1610,6 @@ dbos.Launch(ctx)
 Queues are identified by name; each call to `ListenQueues` replaces the whole listen set (an empty set listens to every queue), and the set may be changed at any time, including after `Launch()`.
 `ListenQueues` only controls what workflows are dequeued, not what workflows can be enqueued.
 
-
 # Reference
 
 DBOS has two interfaces: `Client` and `Context`, where `Context` embeds (extends) `Client`.
@@ -1750,7 +1735,6 @@ func GetExecutorID(ctx Context) string
 
 `GetExecutorID` returns the executor ID for this context.
 
-
 ## Workflow Communication
 
 ### GetEvent
@@ -1768,7 +1752,6 @@ If the event does not yet exist, wait for it to be published, returning an error
 - **key**: The key of the event to retrieve.
 - **timeout**: A timeout. If the wait times out, return an error.
 
-
 ### SetEvent
 
 ```go
@@ -1784,7 +1767,6 @@ Use `WithPortableSetEvent()` for cross-language event consumption.
 - **key**: The key of the event.
 - **message**: The value of the event. Must be serializable.
 - **opts**: Optional `SetEventOption` functions (e.g., `WithPortableSetEvent()`).
-
 
 ### Send
 
@@ -1927,7 +1909,6 @@ func WithFilterAppVersion(appVersion ...string) ListWorkflowsOption
 ```
 
 Retrieve workflows tagged with this application version.
-
 
 #### WithFilterCreatedBefore
 
@@ -2301,7 +2282,6 @@ Return the unique ID of the current step within a workflow. Returns an error if 
 
 **Parameters:**
 - **ctx**: The DBOS context.
-
 
 Workflow queues allow you to ensure that workflow functions will be run, without starting them immediately.
 Queues are useful for controlling the number of workflows run in parallel, or the rate at which they are started.
@@ -2806,7 +2786,6 @@ WorkflowHandle.GetWorkflowID() string
 ```
 
 Retrieve the ID of the workflow.
-
 
 `Client` provides a programmatic way to interact with your DBOS application from external code.
 Because every `Context` **is** a `Client` (the `Context` interface embeds `Client`), all the package-level functions documented above whose first parameter is a `Client` work identically with a standalone client.

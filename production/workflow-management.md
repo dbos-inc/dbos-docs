@@ -1,31 +1,22 @@
----
-sidebar_position: 20
-title: Workflow Management
----
+# Workflow Management
 
-:::info
-Workflow observability and management features are only available for applications connected to [Conductor](./conductor.md).
-:::
+> :::info
+> Workflow observability and management features are only available for applications connected to [Conductor](./conductor.md).
+> :::
 
 ## Viewing Workflows
 
 Navigate to the workflows tab of your application's page on the DBOS Console to see a list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
 This includes **all** your application's workflows: those currently executing, those enqueued for execution, those that have completed successfully, and those that have failed.
 You can filter by time, workflow ID, workflow name, and workflow status (for example, you can search for all failed workflow executions in the past day).
 
 Click on a workflow to see details, including its input and output:
 
-<img src={require('@site/static/img/workflow-management/workflow-details.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 Click "Show Workflow Steps" to view the workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps).
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
 
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
-## Workflow Management
 
 You can manage individual workflows directly from the DBOS console.
 
@@ -56,5 +47,3 @@ Forking a workflow is useful for recovering from outages in downstream services 
 You can export a workflow from one application to another by clicking the "Export" button in the workflow details panel.
 This copies all information on that workflow (and optionally its children) to the other application's system database.
 This is most useful for copying workflows from a production to development environment, for example to examine and (using fork) reproduce a bug that originally occured in production.
-
-<img src={require('@site/static/img/workflow-management/export-workflow.png').default} alt="Workflow List" width="800" className="custom-img"/>

@@ -1,12 +1,8 @@
----
-sidebar_position: 20
-title: Application Management
-pagination_prev: null
----
+# Application Management
+
+> To deploy your application to DBOS Cloud or update an existing application, run this command in its root directory:
 
 ### Deploying Applications
-
-To deploy your application to DBOS Cloud or update an existing application, run this command in its root directory:
 
 ```shell
 dbos-cloud app deploy
@@ -40,25 +36,19 @@ Note that some fields from dbos-config.yaml will be **ignored** during cloud dep
 - **database_url** and **database** connection-related fields. DBOS Cloud automatically applies the connection information of your cloud database server.
 - **runtimeConfig.admin_port**: DBOS Cloud communicates with Transact admin port on port 3001.
 
-
 #### Dependency Management
 
-<Tabs groupId="database-clients">
-<TabItem value="python" label="Python">
+**Python**
 
 For Python applications, DBOS Cloud installs all dependencies from your `requirements.txt` file.
 The maximum size of your application after all dependencies are installed is 2 GB.
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 For TypeScript applications, DBOS Cloud installs all dependencies from your `package-lock.json` file (or from `package.json` if no lockfile is provided).
 The maximum size of your application after all dependencies are installed is 2 GB.
 
 After all dependencies are installed, your application is compiled using `npm run build`.
-
-</TabItem>
-</Tabs>
 
 #### Customizing MicroVM Setup
 
@@ -189,7 +179,6 @@ As each application has its own isolated database, this does not affect your oth
 ```shell
 dbos-cloud app delete <app-name> --dropdb
 ```
-
 
 :::warning
 This is a destructive operation and cannot be undone.

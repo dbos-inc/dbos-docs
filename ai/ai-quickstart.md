@@ -1,11 +1,7 @@
----
-sidebar_position: 10
-title: AI Quickstart
-hide_table_of_contents: true
----
+# AI Quickstart
 
-You can integrate DBOS durable workflows with your AI agents (or other AI systems) to make them reliable, observable, and resilient to failures.
-Rather than bolting on ad-hoc retry logic, DBOS workflows give you one consistent model for ensuring your agents can recover from any failure from exactly where they left off.
+> You can integrate DBOS durable workflows with your AI agents (or other AI systems) to make them reliable, observable, and resilient to failures.
+> Rather than bolting on ad-hoc retry logic, DBOS workflows give you one consistent model for ensuring your agents can recover from any failure from exactly where they left off.
 
 In particular, integrating DBOS to your agents gives you:
 
@@ -19,7 +15,6 @@ In particular, integrating DBOS to your agents gives you:
 
 You can integrate DBOS into an agent built in regular Python or TypeScript, or use native integrations with popular agentic frameworks like [Pydantic AI](https://ai.pydantic.dev/durable_execution/dbos), [LlamaIndex](https://developers.llamaindex.ai/python/llamaagents/workflows/dbos/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/running_agents/#dbos), [Google ADK](https://adk.dev/integrations/dbos/), and the [Vercel AI SDK](https://ai-sdk.dev/).
 
-<LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
 
 ### 1. Install DBOS
@@ -245,28 +240,23 @@ config: DBOSConfig = {
 DBOS(config=config)
 # highlight-end
 
-
 class MyResult(StopEvent):
     output: str = Field(description="Result")
-
 
 class MyWorkflow(Workflow):
     @step
     async def start(self, ctx: Context, ev: StartEvent) -> MyResult:
         return MyResult(output="Hello from a durable workflow!")
 
-
 # highlight-next-line
 runtime = DBOSRuntime()
 workflow = MyWorkflow(runtime=runtime)
-
 
 async def main() -> None:
     # highlight-next-line
     await runtime.launch()
     result = await workflow.run(run_id="my-run-1")
     print(result.output)
-
 
 asyncio.run(main())
 ```
@@ -312,7 +302,6 @@ async def run_agent(user_input: str) -> str:
     return str(result.final_output)
 # highlight-end
 
-
 async def main():
     # highlight-start
     config: DBOSConfig = {
@@ -325,7 +314,6 @@ async def main():
     # highlight-end
     output = await run_agent("How is the weather in San Francisco")
     print(output)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -389,7 +377,6 @@ async def run_agent(user_id: str, session_id: str, message: str) -> str:
             return event.content.parts[0].text
     return ""
 
-
 async def main():
     # highlight-start
     # DBOS checkpoints to SQLite by default. Postgres is recommended for production.
@@ -402,7 +389,6 @@ async def main():
         app_name="my-agent", user_id="u", session_id="s"
     )
     print(await run_agent("u", "s", "How is the weather in San Francisco?"))
-
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -472,7 +458,6 @@ Wrap tool `execute` functions in [`DBOS.runStep`](../typescript/tutorials/step-t
 To learn more, check out the [Vercel AI SDK integration guide](../integrations/vercel-ai.md) and the [Vercel AI SDK documentation](https://ai-sdk.dev/).
 
 </LargeTabItem>
-</LargeTabs>
 
 ## Using Coding Agents
 

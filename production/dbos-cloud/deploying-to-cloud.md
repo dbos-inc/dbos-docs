@@ -1,14 +1,8 @@
----
-sidebar_position: 10
-title: Deploying to DBOS Cloud
-hide_table_of_contents: true
----
-import InstallNode from '/docs/partials/_install_node.mdx';
+# Deploying to DBOS Cloud
 
-
-Any application built with DBOS can be deployed to DBOS Cloud.
-DBOS Cloud is a serverless platform for durably executed applications.
-It provides:
+> Any application built with DBOS can be deployed to DBOS Cloud.
+> DBOS Cloud is a serverless platform for durably executed applications.
+> It provides:
 
 - [**Application hosting and autoscaling**](./application-management.md): Managed hosting of your application in the cloud, automatically scaling to millions of users. Applications are charged only for the CPU time they actually consume.
 - [**Managed workflow recovery**](./application-management.md): If a cloud executor is interrupted, crashed, or restarted, each of its workflows is automatically recovered by another executor.
@@ -16,7 +10,6 @@ It provides:
 
 ## Deploying Your App to DBOS Cloud
 
-<LargeTabs groupId="language" queryString="language">
 <LargeTabItem value="python" label="Python">
 
 #### 1. Install the DBOS Cloud CLI
@@ -31,7 +24,25 @@ The Cloud CLI requires Node.js 20 or later.
 <details>
 <summary>Instructions to install Node.js</summary>
 
-<InstallNode />
+**macOS or Linux**
+
+   Run the following commands in your terminal:
+
+   ```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+nvm install 22
+nvm use 22
+   ```
+
+**Windows**
+
+Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
+After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
+(`%user%` is the Windows user on which you are logged in).
 
 </details>
 </article>
@@ -103,7 +114,6 @@ dbos-cloud app deploy
 </LargeTabItem>
 <LargeTabItem value="typescript" label="TypeScript">
 
-
 #### 1. Install the DBOS Cloud CLI
 <section className="row list">
 
@@ -167,7 +177,6 @@ dbos-cloud app deploy
 
 </LargeTabItem>
 
-
 <LargeTabItem value="golang" label="Go">
 
 #### 1. Install the DBOS Cloud CLI
@@ -182,7 +191,25 @@ The Cloud CLI requires Node.js 20 or later.
 <details>
 <summary>Instructions to install Node.js</summary>
 
-<InstallNode />
+**macOS or Linux**
+
+   Run the following commands in your terminal:
+
+   ```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+
+nvm install 22
+nvm use 22
+   ```
+
+**Windows**
+
+Download Node.js 20 or later from the [official Node.js download page](https://nodejs.org/en/download) and install it.
+After installing Node.js, create the following folder: `C:\Users\%user%\AppData\Roaming\npm`
+(`%user%` is the Windows user on which you are logged in).
 
 </details>
 </article>
@@ -197,7 +224,6 @@ npm i -g @dbos-inc/dbos-cloud@latest
 ```
 </article>
 </section>
-
 
 #### 2. Configure DBOS
 <section className="row list">
@@ -267,8 +293,6 @@ dbos-cloud app deploy
 </section>
 
 </LargeTabItem>
-
-</LargeTabs>
 
 ## DBOS Cloud How-Tos
 

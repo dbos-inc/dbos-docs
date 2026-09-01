@@ -1,8 +1,8 @@
----
-sidebar_position: 30
-title: DBOS Methods & Variables
-toc_max_heading_level: 3
----
+# DBOS Methods & Variables
+
+> ```java
+> <T> Optional<T> getEvent(String workflowId, String key, Duration timeout)
+> ```
 
 ## Workflow Communication Methods
 
@@ -205,7 +205,6 @@ boolean deprecatePatch(String patchName)
 Safely bypass a patch marker at the current point in workflow history if present. 
 Always returns `true`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md) for more detail.
-
 
 ## Workflow Management Methods
 
@@ -522,7 +521,6 @@ ListWorkflowsInput withAttributes(Map<String, Object> attributes)
 ```
 
 Filter to workflows whose custom attributes contain all the specified key-value pairs (PostgreSQL `@>` containment check using a GIN index). Pass a map with the subset of attributes to match.
-
 
 ### listWorkflowSteps
 
@@ -879,7 +877,6 @@ Manually enqueue all executions of a schedule that would have fired between `sta
 ```
 
 Immediately fire a scheduled workflow outside its normal cron cadence. Returns a handle to the enqueued execution.
-
 
 ## Debouncing
 

@@ -1,10 +1,7 @@
----
-sidebar_position: 31
-title: Permissions and API Keys
----
+# Permissions and API Keys
 
-DBOS Conductor controls access to your organization's applications, workflows, and settings using **role-based access control (RBAC)** for users and **scoped API keys** for applications and automation.
-This page describes the permission model, the built-in and custom roles, and how to create and manage API keys.
+> DBOS Conductor controls access to your organization's applications, workflows, and settings using **role-based access control (RBAC)** for users and **scoped API keys** for applications and automation.
+> This page describes the permission model, the built-in and custom roles, and how to create and manage API keys.
 
 You manage permissions and API keys from the [DBOS console](https://console.dbos.dev).
 
@@ -57,7 +54,6 @@ Custom roles require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) 
 Organization admins can create **custom roles** with any combination of permissions.
 This is useful for granting narrower access than the built-in roles; for example, a read-only role that can view applications and metrics but not modify them.
 You can manage custom roles from the [organization settings](https://console.dbos.dev/settings/organization) page in the console.
-
 
 ### Assigning roles to members
 

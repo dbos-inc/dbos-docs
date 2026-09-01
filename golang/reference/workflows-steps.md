@@ -1,7 +1,8 @@
----
-sidebar_position: 20
-title: Workflows & Steps
----
+# Workflows & Steps
+
+> ```go
+> func RegisterWorkflow[P any, R any](ctx Context, fn Workflow[P, R], opts ...WorkflowRegistrationOption)
+> ```
 
 ### RegisterWorkflow
 

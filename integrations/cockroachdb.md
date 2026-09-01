@@ -1,12 +1,7 @@
----
-sidebar_position: 70
-title: CockroachDB
-hide_table_of_contents: true
----
+# CockroachDB
 
-Here's how to connect your DBOS application running on your computer or cloud environment to your CockroachDB database.
+> Here's how to connect your DBOS application running on your computer or cloud environment to your CockroachDB database.
 
-<LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
 
 ### 1. Set up a Local Application
@@ -149,4 +144,3 @@ When you launch your application, DBOS will detect CockroachDB and automatically
 - Schema migrations are adapted for CockroachDB compatibility.
 
 </LargeTabItem>
-</LargeTabs>

@@ -1,11 +1,7 @@
----
-sidebar_position: 10
-title: DBOS Lifecycle
-toc_max_heading_level: 3
----
+# DBOS Lifecycle
 
-You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
-Here, we document the constructor, configuration, and lifecycle methods.
+> You create a `DBOS` instance exactly once in a program's lifetime, register your workflows and queues, then launch it.
+> Here, we document the constructor, configuration, and lifecycle methods.
 
 ### DBOSConfig
 
@@ -15,7 +11,6 @@ The application name, and a system db datasource - specified either as database 
 :::danger
 DBOS requires a PostgreSQL-compatible database. PostgreSQL and CockroachDB are supported. Creating a `DBOSConfig` with any other `DataSource` will throw an exception.
 :::
-
 
 **Constructors:**
 
@@ -83,7 +78,6 @@ Using a data source that doesn't support connection pooling like `PGSimpleDataSo
 - **`withUseListenNotify(boolean enable)`**: Whether to use PostgreSQL `LISTEN`/`NOTIFY` for real-time event delivery (e.g. `recv`, `getEvent`). Defaults to `true`. Automatically set to `false` when CockroachDB is detected, since CockroachDB does not support `LISTEN`/`NOTIFY`. Set this to `false` explicitly if your PostgreSQL configuration does not support it.
 
 - **`withSerializer(DBOSSerializer serializer)`**: A custom serializer for the system database. See the [custom serialization section](#custom-serialization) for details.
-
 
 ### Cloud Environment Variables
 

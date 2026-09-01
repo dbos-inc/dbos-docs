@@ -1,8 +1,6 @@
----
-sidebar_position: 25
-title: Transactions & Datasources
-description: Learn how to perform database operations durably
----
+# Transactions & Datasources
+
+> Learn how to perform database operations durably
 
 A _datasource_ is a handle to a database **you** own, over which DBOS can run durable transactions.
 When you run a transaction through a datasource inside a workflow, your application writes and the DBOS durability record commit atomically in your database, so the transaction executes **exactly once** even if your program crashes and the workflow is recovered.

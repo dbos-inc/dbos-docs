@@ -1,16 +1,12 @@
----
-sidebar_position: 75
-title: Export Logs and Traces
----
+# Export Logs and Traces
 
-This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. If your service accepts the OTEL format, you can skip steps 1 and 2. Simply pass environment variables like `OTEL_EXPORTER_OTLP_HEADERS` as [app secrets](./secrets.md) (see [step 3](#3-set-the-datadog-api-key-to-your-apps-environment)) and then configure logs and traces enpdoints as shown in [step 4](#4-configure-your-app-to-export-logs-and-traces-to-otel-contrib).
+> This tutorial shows how to configure your DBOS Cloud application to export OpenTelemetry logs and traces to a third party observability service. If your service accepts the OTEL format, you can skip steps 1 and 2. Simply pass environment variables like `OTEL_EXPORTER_OTLP_HEADERS` as [app secrets](./secrets.md) (see [step 3](#3-set-the-datadog-api-key-to-your-apps-environment)) and then configure logs and traces enpdoints as shown in [step 4](#4-configure-your-app-to-export-logs-and-traces-to-otel-contrib).
 
 Other services may require additional software. Here we use Datadog as an example. We connect by installing the otel-contrib package in the App VM at deployment time and configuring it with the Datadog API key to export data.
 
 :::info
 These steps require a [DBOS Pro or Enterprise](https://www.dbos.dev/pricing) subscription.
 :::
-
 
 ## 1. Create a Custom VM Setup Script
 
@@ -86,8 +82,8 @@ The script we created in step 1 will read this value and pass it to `otel-contri
 
 In the app code, when creating the `DBOS` object, pass in the Logs and Traces endpoints like so:
 
-<Tabs groupId="languages" className="small-tabs">
-<TabItem value="python" label="Python">
+**Python**
+
 ```python
 from dbos import DBOSConfig
 config: DBOSConfig = {
@@ -98,8 +94,9 @@ config: DBOSConfig = {
 }
 DBOS(fastapi=app, config=config)
 ```
-</TabItem>
-<TabItem value="typescript" label="Typescript">
+
+**Typescript**
+
 ```typescript
 DBOS.setConfig({ 
   "name": "your-app-name",
@@ -109,8 +106,6 @@ DBOS.setConfig({
 });
 await DBOS.launch();
 ```
-</TabItem>
-</Tabs>
 
 ## 5. Add RAM if Needed, and Deploy!
 
@@ -122,4 +117,3 @@ dbos-cloud app deploy
 ```
 
 Within a few minutes of deploying you should see your logs appear in Datadog.
-

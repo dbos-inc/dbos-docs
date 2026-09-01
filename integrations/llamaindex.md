@@ -1,14 +1,9 @@
----
-sidebar_position: 32
-title: LlamaIndex
-hide_table_of_contents: false
----
+# LlamaIndex
 
+> [LlamaIndex Workflows](https://developers.llamaindex.ai/python/llamaagents/workflows/) is a Python framework for orchestrating AI agents by composing steps and events into structured workflows.
+> This guide explains how to build durable LlamaIndex agents using the DBOS runtime, enabling fault-tolerant, persistent AI workflows that can safely recover from crashes or restarts.
 
 # LlamaIndex Durable Workflows with DBOS
-
-[LlamaIndex Workflows](https://developers.llamaindex.ai/python/llamaagents/workflows/) is a Python framework for orchestrating AI agents by composing steps and events into structured workflows.
-This guide explains how to build durable LlamaIndex agents using the DBOS runtime, enabling fault-tolerant, persistent AI workflows that can safely recover from crashes or restarts.
 
 By integrating DBOS with LlamaIndex Workflows through the `llama-agents-dbos` package, every workflow transition is automatically persisted. This allows long-running AI workflows to resume exactly where they left off, without requiring manual checkpointing or snapshot logic.
 
@@ -29,23 +24,21 @@ Also check out the integration guide in [the LlamaIndex docs](https://developers
 
 To get started, install the [`llama-agents-dbos`](https://github.com/run-llama/workflows-py/tree/main/packages/llama-agents-dbos) package.
 
-<Tabs groupId="python-package" className="small-tabs">
-<TabItem value="pip" label="pip">
+**pip**
+
 ```shell
 pip install llama-agents-dbos
 ```
-</TabItem>
-<TabItem value="uv" label="uv">
+
+**uv**
+
 ```shell
 uv add llama-agents-dbos
 ```
-</TabItem>
-</Tabs>
 
 ## Quick Start: Standalone Durable Workflow
 
 The example below defines a simple workflow that counts from 0 to 20. DBOS persists each transition so the workflow can safely resume after a crash or restart.
-
 
 ```python
 import asyncio
@@ -56,7 +49,6 @@ from pydantic import Field
 from workflows import Context, Workflow, step
 from workflows.events import Event, StartEvent, StopEvent
 
-
 # 1. Configure DBOS — SQLite by default
 config: DBOSConfig = {
     "name": "llamaindex-counter-example",
@@ -66,15 +58,12 @@ config: DBOSConfig = {
 }
 DBOS(config=config)
 
-
 # 2. Define events and workflow (nothing DBOS-specific here)
 class Tick(Event):
     count: int = Field(description="Current count")
 
-
 class CounterResult(StopEvent):
     final_count: int = Field(description="Final counter value")
-
 
 class CounterWorkflow(Workflow):
     @step
@@ -95,17 +84,14 @@ class CounterWorkflow(Workflow):
         await asyncio.sleep(0.5)
         return Tick(count=count)
 
-
 # 3. Create runtime, attach to workflow, and launch
 runtime = DBOSRuntime()
 workflow = CounterWorkflow(runtime=runtime)
-
 
 async def main() -> None:
     await runtime.launch()
     result = await workflow.run(run_id="counter-run-1")
     print(f"Result: final_count = {result.final_count}")
-
 
 asyncio.run(main())
 ```
@@ -117,7 +103,6 @@ If you kill the process mid-run (e.g. Ctrl+C at tick 8), calling `workflow.run(r
 1. Workflows must be defined before `runtime.launch()`.
 2. The `run_id` parameter uniquely identifies a workflow run, which is equivalent to DBOS workflow ID.
 3. This example uses SQLite for ease of getting started. Postgres is recommended for production.
-
 
 ## Durable Workflow Server
 
@@ -144,10 +129,8 @@ DBOS(config=config)
 class Tick(Event):
     count: int = Field(description="Current count")
 
-
 class CounterResult(StopEvent):
     final_count: int = Field(description="Final counter value")
-
 
 class CounterWorkflow(Workflow):
     """Counts to 5, emitting stream events along the way."""
@@ -166,7 +149,6 @@ class CounterWorkflow(Workflow):
             return CounterResult(final_count=count)
         return Tick(count=count)
 
-
 async def main() -> None:
     runtime = DBOSRuntime()
 
@@ -184,12 +166,10 @@ async def main() -> None:
     finally:
         await server.stop()
 
-
 asyncio.run(main())
 ```
 
 The LlamaIndex workflow debugger UI at `http://localhost:8000/` works exactly the same as with the default runtime: DBOS is transparent to the LlamaIndex workflow server layer.
-
 
 ## Learn More
 

@@ -1,13 +1,8 @@
----
-sidebar_position: 95
-title: Workflow Retention Policies
----
+# Workflow Retention Policies
 
-You can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
-These settings let you configure how long workflow history is retained in your application's [system database](../../explanations/system-tables.md).
-This is useful for managing the database disk usage of workflow history.
-
-<img src={require('@site/static/img/retention/retention.png').default} alt="Retention Page" width="1000" className="custom-img" />
+> You can configure workflow history retention policies for your application from the Retention Policy page of the DBOS Console.
+> These settings let you configure how long workflow history is retained in your application's [system database](../../explanations/system-tables.md).
+> This is useful for managing the database disk usage of workflow history.
 
 ### Time Threshold
 

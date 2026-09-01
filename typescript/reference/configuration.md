@@ -1,12 +1,9 @@
----
-sidebar_position: 60
-title: Configuration
----
+# Configuration
+
+> To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
+> For example:
 
 ## Configuring DBOS
-
-To configure DBOS, pass in a configuration with `DBOS.setConfig` before you call `DBOS.launch`.
-For example:
 
 ```javascript
 DBOS.setConfig({

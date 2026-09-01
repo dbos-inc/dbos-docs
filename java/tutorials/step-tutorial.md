@@ -1,10 +1,7 @@
----
-sidebar_position: 20
-title: Steps
----
+# Steps
 
-When using DBOS workflows, you should call any method that performs complex operations or accesses external APIs or services as a _step_.
-If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
+> When using DBOS workflows, you should call any method that performs complex operations or accesses external APIs or services as a _step_.
+> If a workflow is interrupted, upon restart it automatically resumes execution from the **last completed step**.
 
 A step can return any serializable value and may throw checked or unchecked exceptions.
 DBOS provides two ways to declare steps: [`runStep`](../reference/workflows-steps.md#runstep) for inline lambdas, and the [`@Step`](../reference/workflows-steps.md#step) annotation for named methods.

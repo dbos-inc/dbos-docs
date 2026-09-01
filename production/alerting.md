@@ -1,11 +1,7 @@
----
-sidebar_position: 25
-title: Alerting
-toc_max_heading_level: 3
----
+# Alerting
 
-If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
-You can configure alerts either in Conductor directly or on [Conductor-exported metrics](#metrics-based-alerts) using your existing observability stack.
+> If you are using [Conductor](./conductor.md), you can configure automatic alerts when certain failure conditions are met.
+> You can configure alerts either in Conductor directly or on [Conductor-exported metrics](#metrics-based-alerts) using your existing observability stack.
 
 :::info
 
@@ -15,8 +11,6 @@ Alerts require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
 ### Creating Alerts
 
 You can create new alerts (or view or update your existing alerts) from your application's "Alerting" page on the DBOS Console.
-
-<img src={require('@site/static/img/alerts/alerts.png').default} alt="Alerts" width="750" className="custom-img"/>
 
 Currently, you can create alerts for the following failure conditions:
 
@@ -58,8 +52,7 @@ The handler receives three arguments:
   - `application_name`: The application name.
   - `connected_executor_count`: The number of executors currently connected to this application.
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 Example logging alerts:
 
@@ -120,8 +113,7 @@ def handle_alert(rule_type: str, message: str, metadata: dict[str, str]) -> None
 
 See the [Python reference](../python/reference/contexts.md#alert_handler) for more details.
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 Example logging alerts:
 
@@ -185,8 +177,7 @@ dbos.SetAlertHandler(dbosContext, func(ruleType string, message string, metadata
 
 See the [Go reference](../golang/reference/methods.md#alerting) for more details.
 
-</TabItem>
-<TabItem value="typescript" label="Typescript">
+**Typescript**
 
 Example logging alerts:
 
@@ -247,8 +238,7 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
 
 See the [TypeScript reference](../typescript/reference/methods.md#dbossetalerthandler) for more details.
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 Example logging alerts:
 
@@ -315,9 +305,6 @@ dbos.registerAlertHandler((ruleType, message, metadata) -> {
     }
 });
 ```
-
-</TabItem>
-</Tabs>
 
 ### Metrics-Based Alerts
 

@@ -1,14 +1,8 @@
----
-sidebar_position: 200
-title: DBOS Plugin Architecture
-toc_max_heading_level: 3
----
-
 # DBOS Plugin Architecture
 
-:::tip
-Unless you intend to extend the DBOS Transact library, you can ignore this topic.
-:::
+> :::tip
+> Unless you intend to extend the DBOS Transact library, you can ignore this topic.
+> :::
 
 DBOS Transact for Java provides extension mechanisms for integrating with Java frameworks and external event sources.
 

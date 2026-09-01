@@ -1,12 +1,9 @@
----
-sidebar_position: 70
-title: Self-Hosting Conductor With Kubernetes
----
+# Self-Hosting Conductor With Kubernetes
 
-:::info
-Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
-Self-hosting Conductor for commercial or production use requires a [license key](./hosting-conductor.md#licensing).
-:::
+> :::info
+> Self-hosted Conductor is released under a [proprietary license](https://www.dbos.dev/conductor-license).
+> Self-hosting Conductor for commercial or production use requires a [license key](./hosting-conductor.md#licensing).
+> :::
 
 ## Overview
 
@@ -77,7 +74,6 @@ This guide uses [ingress-nginx](https://kubernetes.github.io/ingress-nginx/), bu
 
 The DBOS SDK maintains a long-lived WebSocket connection to Conductor, so both the reverse proxy and any cloud load balancer in front of it (e.g., AWS ELB) should have idle timeouts high enough (this guide uses 3600s) to tolerate network hiccups. The DBOS SDK sends periodic pings to keep the connection alive, but a network hiccup that delays pings past the timeout will cause a disconnect. In case of disconnection, the DBOS SDK will reconnect automatically.
 
-
 ## Security Best Practices
 
 **Secret management** — Conductor deployments need credentials for PostgreSQL, a license key, and an API key.
@@ -93,8 +89,7 @@ Conductor validates its license key against `https://cloud.dbos.dev` at startup 
 
 ## Walkthrough (AWS EKS)
 
-<Tabs groupId="cloud-provider">
-<TabItem value="eks" label="EKS (AWS)">
+**EKS (AWS)**
 
 In addition to DBOS Conductor and the DBOS Console, the infrastructure includes the following components:
 
@@ -106,7 +101,7 @@ In addition to DBOS Conductor and the DBOS Console, the infrastructure includes 
 
 <details>
 
-<summary><strong>Set environment variables</strong></summary>
+<summary>Set environment variables</summary>
 
 Set these variables before proceeding — replace the placeholder values with your own:
 
@@ -133,7 +128,7 @@ CONDUCTOR_LICENSE_KEY='your-license-key'
 
 <details>
 
-<summary><strong>CLI tools required on your workstation</strong></summary>
+<summary>CLI tools required on your workstation</summary>
 
 | Tool | Purpose | Install |
 |------|---------|---------|
@@ -163,7 +158,7 @@ Create a managed EKS cluster with two nodes. This takes approximately 15 minutes
 
 <details>
 
-<summary><strong>Create EKS cluster</strong></summary>
+<summary>Create EKS cluster</summary>
 
 ```bash
 eksctl create cluster \
@@ -205,13 +200,11 @@ All resources in this guide are deployed to a dedicated `dbos` namespace:
 kubectl create namespace dbos
 ```
 
-<a id="provision-an-rds-postgresql-instance"></a>
-
 **Provision an RDS PostgreSQL Instance**
 
 <details>
 
-<summary><strong>RDS provisioning commands</strong></summary>
+<summary>RDS provisioning commands</summary>
 
 Find the VPC and private subnets that `eksctl` created:
 
@@ -308,7 +301,7 @@ Create the databases and roles from a pod inside the cluster (since the RDS inst
 
 <details>
 
-<summary><strong>Create databases and roles</strong></summary>
+<summary>Create databases and roles</summary>
 
 ```bash
 kubectl run pg-setup --restart=Never \
@@ -331,15 +324,13 @@ This creates:
 
 </details>
 
-<a id="install-cluster-add-ons"></a>
-
 **Install Cluster Add-ons**
 
 We install two Helm charts that the later sections depend on.
 
 <details>
 
-<summary><strong>Helm installs (Nginx Ingress, Sealed Secrets)</strong></summary>
+<summary>Helm installs (Nginx Ingress, Sealed Secrets)</summary>
 
 **Nginx Ingress Controller** — reverse proxy and TLS termination:
 
@@ -371,8 +362,6 @@ kubectl get pods -n kube-system -l app.kubernetes.io/name=sealed-secrets
 
 </details>
 
-<a id="secrets"></a>
-
 ### Secrets
 
 Several components need sensitive credentials.
@@ -391,7 +380,7 @@ The encrypted form is safe to commit to Git.
 
 <details>
 
-<summary><strong>kubeseal commands</strong></summary>
+<summary>kubeseal commands</summary>
 
 Create each secret, pipe it through `kubeseal`, and save the encrypted form:
 
@@ -454,7 +443,7 @@ Save this value — you'll need it throughout the rest of the guide. It looks li
 
 <details>
 
-<summary><strong>Create a self-signed TLS certificate</strong></summary>
+<summary>Create a self-signed TLS certificate</summary>
 
 ```bash
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -486,7 +475,7 @@ Distribute it using a ConfigMap and configure `SSL_CERT_FILE` (Go, Python) / `NO
 
 <details>
 
-<summary><strong>ingress.yaml</strong></summary>
+<summary>ingress.yaml</summary>
 
 The Ingress routes `/conductor-api/...` to the Conductor service and everything else to the Console.
 A regex rewrite strips the `/conductor-api` prefix so Conductor sees requests at `/`.
@@ -580,14 +569,12 @@ Albeit the SDK will reconnect automatically, increasing the ELB idle timeout wil
 
 ### Deployments
 
-<a id="conductor-and-console"></a>
-
 Conductor is the core service that manages workflow recovery and the application registry.
 It connects to the `dbos_conductor` database using the `dbos_conductor_role` credentials.
 
 <details>
 
-<summary><strong>conductor.yaml</strong></summary>
+<summary>conductor.yaml</summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -672,7 +659,7 @@ In this example, it connects to Conductor via internal cluster DNS.
 
 <details>
 
-<summary><strong>console.yaml</strong></summary>
+<summary>console.yaml</summary>
 
 ```yaml
 apiVersion: apps/v1
@@ -786,7 +773,3 @@ aws ec2 delete-security-group --group-id $RDS_SG --region $AWS_REGION
 # 4. Delete the EKS cluster (includes VPC, security groups, and node group)
 eksctl delete cluster --name dbos-conductor --region $AWS_REGION
 ```
-
-</TabItem>
-</Tabs>
-

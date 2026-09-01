@@ -1,11 +1,6 @@
----
-sidebar_position: 10
-title: Learn DBOS TypeScript
-pagination_next: typescript/tutorials/workflow-tutorial
-pagination_prev: quickstart
----
+# Learn DBOS TypeScript
 
-This guide shows you how to use DBOS to build TypeScript apps that are **resilient to any failure**.
+> This guide shows you how to use DBOS to build TypeScript apps that are **resilient to any failure**.
 
 :::tip
 To teach your AI coding assistant to build with DBOS, try out [skills](./prompting.md) and [MCP](../integrations/mcp.md).

@@ -1,11 +1,8 @@
----
-sidebar_position: 140
-title: DBOS Database Connections
----
+# DBOS Database Connections
 
-DBOS uses a database to durably store workflow and step state.
-This database is called the **system database**.
-Its schema is documented [here](../../explanations/system-tables.md).
+> DBOS uses a database to durably store workflow and step state.
+> This database is called the **system database**.
+> Its schema is documented [here](../../explanations/system-tables.md).
 
 You can use either a SQLite or Postgres database.
 A SQLite database is just a file on disk, while a Postgres database is a server that your application connects to.

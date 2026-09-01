@@ -1,11 +1,7 @@
----
-sidebar_position: 24
-title: Metrics
-toc_max_heading_level: 3
----
+# Metrics
 
-If you are using [Conductor](./conductor.md), you can scrape metrics about your applications' workflows, steps, and executors from a [Prometheus](https://prometheus.io/)-compatible endpoint.
-This lets you monitor your DBOS applications in Prometheus, Grafana, or any other tool that understands the [OpenMetrics](https://prometheus.io/docs/specs/om/open_metrics_spec/) format.
+> If you are using [Conductor](./conductor.md), you can scrape metrics about your applications' workflows, steps, and executors from a [Prometheus](https://prometheus.io/)-compatible endpoint.
+> This lets you monitor your DBOS applications in Prometheus, Grafana, or any other tool that understands the [OpenMetrics](https://prometheus.io/docs/specs/om/open_metrics_spec/) format.
 
 :::info
 Metrics require at least a [DBOS Teams](https://www.dbos.dev/dbos-pricing) plan.
@@ -34,14 +30,11 @@ curl https://cloud.dbos.dev/v1/metrics \
   -H "Accept: application/openmetrics-text"
 ```
 
-
 ### Endpoint Integrations
 
 The endpoint works with any tool that can scrape the OpenMetrics or Prometheus exposition format.
 
-<Tabs groupId="integration" queryString="integration">
-
-<TabItem value="prometheus" label="Prometheus">
+**Prometheus**
 
 To scrape the endpoint from Prometheus, add a job like the following to your `prometheus.yml`. Store your API key in a file and reference it with `authorization.credentials_file` (or use `credentials` directly):
 
@@ -61,9 +54,7 @@ scrape_configs:
 
 Set `honor_timestamps: true` so the window timestamps the endpoint emits are preserved.
 
-</TabItem>
-
-<TabItem value="datadog" label="Datadog">
+**Datadog**
 
 To collect the metrics with Datadog, use the [OpenMetrics integration](https://docs.datadoghq.com/integrations/openmetrics/) built into the Datadog Agent. Add an instance like the following to `conf.d/openmetrics.d/conf.yaml`, then restart the Agent:
 
@@ -80,9 +71,7 @@ instances:
       Accept: application/openmetrics-text
 ```
 
-</TabItem>
-
-<TabItem value="otel" label="OpenTelemetry Collector">
+**OpenTelemetry Collector**
 
 The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)'s [`prometheus` receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/prometheusreceiver) scrapes the endpoint and forwards the metrics to any backend you configure an exporter for. It takes a standard Prometheus `scrape_configs` block, so store your API key in a file and reference it with `authorization.credentials_file`:
 
@@ -116,10 +105,6 @@ service:
 ```
 
 Set `honor_timestamps: true` so the window timestamps the endpoint emits are preserved.
-
-</TabItem>
-
-</Tabs>
 
 ### Filtering metrics
 

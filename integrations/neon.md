@@ -1,12 +1,8 @@
----
-sidebar_position: 20
-title: Neon
-hide_table_of_contents: true
----
+# Neon
+
+> Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 
 # Use DBOS With Neon
-
-Here's how to connect your DBOS application running on your computer or cloud environment to your Neon database.
 
 ### 1. Set up a Local Application
 
@@ -17,8 +13,6 @@ The rest of this guide will assume you have a local application.
 
 Next, open your [Neon dashboard](https://console.neon.tech), select a project, and click "Connect" to retrieve connection information for your Neon database.
 You should see a screen that looks like this:
-
-<img src={require('@site/static/img/neon/neon-connect.png').default} alt="Neon Connection Information" width="800" className="custom-img"/>
 
 This page shows the connection string for your database.
 There are a few settings you may wish to alter before retrieving this connection string:
@@ -43,5 +37,3 @@ Open the "Tables" tab in the Neon console.
 For your database, select the database to which you connected your DBOS application (default `neondb`).
 For your schema, select "dbos". 
 You can now see DBOS durably checkpoint your workflows to your Neon database:
-
-<img src={require('@site/static/img/neon/neon-tables.png').default} alt="Neon Tables Dashboard" width="800" className="custom-img"/>

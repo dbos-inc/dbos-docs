@@ -1,11 +1,8 @@
----
-sidebar_position: 30
-title: Fault-Tolerant Checkout
----
+# Fault-Tolerant Checkout
 
-:::info
-This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store.md), and [Go](../../golang/examples/widget-store.md).
-:::
+> :::info
+> This example is also available in [TypeScript](../../typescript/examples/checkout-tutorial), [Java](../../java/examples/widget-store.md), and [Go](../../golang/examples/widget-store.md).
+> :::
 
 In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
 
@@ -164,7 +161,7 @@ Each is an ordinary Python function that the workflow runs through [`ds.run_tx_s
 We also expose some of them as HTTP endpoints with FastAPI so the frontend can access them.
 
 <details>
-<summary><strong>Database Operations</strong></summary>
+<summary>Database Operations</summary>
 
 ```python
 def reserve_inventory() -> bool:
@@ -176,7 +173,6 @@ def reserve_inventory() -> bool:
     ).rowcount
     return rows_affected > 0
 
-
 def undo_reserve_inventory() -> None:
     ds.sql_session().execute(
         products.update()
@@ -184,13 +180,11 @@ def undo_reserve_inventory() -> None:
         .values(inventory=products.c.inventory + 1)
     )
 
-
 def create_order() -> int:
     result = ds.sql_session().execute(
         orders.insert().values(order_status=OrderStatus.PENDING.value)
     )
     return result.inserted_primary_key[0]
-
 
 def get_order(order_id: int):
     return (
@@ -199,45 +193,36 @@ def get_order(order_id: int):
         .first()
     )
 
-
 @app.get("/order/{order_id}")
 def order_endpoint(order_id: int):
     return ds.run_tx_step({"name": "get_order"}, get_order, order_id)
-
 
 def update_order_status(order_id: int, status: int) -> None:
     ds.sql_session().execute(
         orders.update().where(orders.c.order_id == order_id).values(order_status=status)
     )
 
-
 def get_product():
     return ds.sql_session().execute(products.select()).mappings().first()
-
 
 @app.get("/product")
 def product_endpoint():
     return ds.run_tx_step({"name": "get_product"}, get_product)
 
-
 def get_orders():
     rows = ds.sql_session().execute(orders.select())
     return [dict(row) for row in rows.mappings()]
-
 
 @app.get("/orders")
 def orders_endpoint():
     return ds.run_tx_step({"name": "get_orders"}, get_orders)
 
-
 def restock():
     ds.sql_session().execute(products.update().values(inventory=100))
-
 
 @app.post("/restock")
 def restock_endpoint():
     return ds.run_tx_step({"name": "restock"}, restock)
-
 
 @DBOS.workflow()
 def dispatch_order_workflow(order_id):
@@ -246,7 +231,6 @@ def dispatch_order_workflow(order_id):
         ds.run_tx_step(
             {"name": "update_order_progress"}, update_order_progress, order_id
         )
-
 
 def update_order_progress(order_id):
     # Update the progress of paid orders.
@@ -306,7 +290,6 @@ if __name__ == "__main__":
     DBOS.launch()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
-
 
 ## Try it Yourself!
 

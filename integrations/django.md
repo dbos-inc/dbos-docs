@@ -1,11 +1,8 @@
----
-sidebar_position: 50
-title: Django
----
+# Django
+
+> This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 
 # DBOS + Django
-
-This guide shows you how to add DBOS durable workflows to your existing Django application to make it resilient to any failure.
 
 :::info
 The guide is bootstrapped from the Django [quickstart](https://docs.djangoproject.com/en/5.2/intro/tutorial01/).

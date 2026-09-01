@@ -1,7 +1,14 @@
----
-sidebar_position: 2
-title: Workflows & Steps
----
+# Workflows & Steps
+
+> ```python
+> DBOS.workflow(
+>   *,
+>   name: Optional[str] = None,
+>   max_recovery_attempts: Optional[int] = 100,
+>   serialization_type: Optional[WorkflowSerializationFormat] = None,
+>   validate_args: Optional[ValidateArgsCallable] = None,
+> )
+> ```
 
 ## Function Decorators
 
@@ -73,7 +80,6 @@ def example_step():
 - `should_retry`: Optional predicate called with the raised exception to decide whether the step should be retried. If it returns `False` (or an awaitable resolving to `False`), the exception is re-raised immediately without further retries. Async predicates are only supported for async steps.
 - `preemptible`: If `True`, the step is cancelled immediately when its workflow is cancelled, rather than running to completion. Only supported for async steps.
 - `timeout_seconds`: If set, cancel the step and raise `DBOSStepTimeoutError` if it runs for longer than this many seconds. Only supported for async steps, and must be positive and finite. Each retry attempt gets a fresh timeout. See [Step Timeouts](../tutorials/step-tutorial.md#step-timeouts).
-
 
 ### transaction
 
@@ -150,7 +156,6 @@ The `@DBOS.dbos_required_roles` decorator applies role-based security to the dec
 **Parameters:**
 - `roles`: List of required roles applied to the decorated function.
 
-
 **Example:**
 ```python
 @DBOS.workflow()
@@ -205,7 +210,6 @@ The decorated function must take a KafkaMessage as its only parameter.
 def test_kafka_workflow(msg: KafkaMessage):
     DBOS.logger.info(f"Message received: {msg.value.decode()}")
 ```
-
 
 ## Input Validation and Coercion
 
@@ -311,7 +315,6 @@ class MyClass:
     pass  # Must have "admin" role to access
 ```
 
-
 ### DBOSConfiguredInstance
 
 ```python
@@ -334,4 +337,3 @@ DBOSConfiguredInstance(
         def __init__(self) -> None:
             super().__init__("instance1")
 ```
-

@@ -1,11 +1,7 @@
----
-sidebar_position: 40
-title: Queues & Concurrency
-toc_max_heading_level: 3
----
+# Queues & Concurrency
 
-You can use queues to run many workflows at once with managed concurrency.
-Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
+> You can use queues to run many workflows at once with managed concurrency.
+> Queues provide _flow control_, letting you manage how many workflows run at once or how often workflows are started.
 
 Register a queue with [`DBOS.register_queue`](../reference/contexts.md#register_queue), specifying its name:
 
@@ -115,7 +111,6 @@ result = handle.get_result()
 ```
 
 The [queue worker](../examples/queue-worker.md) example shows this design pattern in more detail.
-
 
 ### Enqueueing from PL/pgSQL
 
@@ -270,7 +265,6 @@ DBOS.register_queue("partitioned_queue", partition_concurrency=1)
 def process_task(task: Task):
   ...
 
-
 def on_user_task_submission(user_id: str, task: Task):
     # Partition the task queue by user ID. As the queue has a
     # per-partition concurrency of 1, this means that at most one
@@ -390,7 +384,6 @@ with SetEnqueueOptions(priority=10):
 with SetEnqueueOptions(priority=1):
     DBOS.enqueue_workflow("priority_queue", first_workflow)
 ```
-
 
 ## Delayed Execution
 

@@ -1,10 +1,7 @@
----
-sidebar_position: 3
-title: DBOS Methods & Variables
----
+# DBOS Methods & Variables
 
-DBOS provides a number of useful context methods and variables.
-All are accessed through the syntax `DBOS.<method>` and can only be used once a DBOS class object has been initialized.
+> DBOS provides a number of useful context methods and variables.
+> All are accessed through the syntax `DBOS.<method>` and can only be used once a DBOS class object has been initialized.
 
 ## Context Methods
 
@@ -302,7 +299,6 @@ DBOS.get_all_events_async(
 
 Coroutine version of [`get_all_events`](#get_all_events).
 
-
 ### sleep
 
 ```python
@@ -491,7 +487,6 @@ DBOS.retrieve_workflow(
 ```
 
 Retrieve the [handle](./workflow_handles.md) of a workflow with identity `workflow_id`.
-
 
 **Parameters:**
 - `workflow_id`: The identifier of the workflow whose handle to retrieve.

@@ -1,9 +1,6 @@
----
-sidebar_position: 1000
-title: Cloud CLI Reference
-description: DBOS Cloud CLI reference
-pagination_next: null
----
+# Cloud CLI Reference
+
+> DBOS Cloud CLI reference
 
 ## Installation
 
@@ -24,7 +21,6 @@ It provides a URL to a secure login portal you can use to create an account from
 **Arguments:**
 - `-u, --username <string>`: Your DBOS Cloud username. Must be between 3 and 30 characters and contain only lowercase letters, numbers, and underscores (`_`).
 - `-s, --secret [string]`: (Optional) An [organization secret](./account-management.md#organization-management) given to you by an organization admin. If supplied, adds your newly registered account to the organization.
-
 
 :::info
 If you register with an email and password, you also need to verify your email through a link we email you.
@@ -239,7 +235,6 @@ For each registered application, emit:
 **Description:**
 Retrieve an application's status.
 If run in an application root directory with no application name provided, retrieve the local application's status.
-
 
 **Arguments:**
 - `--json`: Emit JSON output

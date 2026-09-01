@@ -1,7 +1,10 @@
----
-sidebar_position: 20
-title: Workflows & Steps
----
+# Workflows & Steps
+
+> ```typescript
+> DBOS.workflow(
+>     config: WorkflowConfig = {}
+> )
+> ```
 
 ## Workflows
 
@@ -457,4 +460,3 @@ Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgra
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.
-

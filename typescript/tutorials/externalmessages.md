@@ -1,37 +1,28 @@
----
-sidebar_position: 65
-title: Kafka Integration
----
+# Kafka Integration
 
-In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly-once semantics.
+> In this guide, you'll learn how to use DBOS [workflows](./workflow-tutorial.md) to process [Kafka](https://kafka.apache.org/) messages with exactly-once semantics.
 
 ## Installation
 
 First, install an event receiver library:
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
+**KafkaJS**
 
 ```shell
 npm i @dbos-inc/kafkajs-receive
 ```
 
-</TabItem>
-<TabItem value="confluentkafka" label="Confluent Kafka">
+**Confluent Kafka**
 
 ```shell
 npm i @dbos-inc/confluent-kafka-receive
 ```
 
-</TabItem>
-</Tabs>
-
 ## Creating a Receiver
 
 The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which is requires an underlying library object or configuration:
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
+**KafkaJS**
 
 ```typescript
 import { Kafka } from 'kafkajs';
@@ -42,8 +33,7 @@ const kafkaReceiver = new KafkaReceiver(kafkaConfig);
 
 The `KafkaReceiver` constructor takes a KafkaJS configuration as its argument.
 
-</TabItem>
-<TabItem value="confluentkafka" label="Confluent Kafka">
+**Confluent Kafka**
 
 ```typescript
 import { ConfluentKafkaReceiver } from '..';
@@ -54,15 +44,11 @@ const kafkaReceiver = new ConfluentKafkaReceiver(kafkaConfig);
 
 The `ConfluentKafkaReceiver` constructor takes a configuration as its argument.
 
-</TabItem>
-</Tabs>
-
 ## Registering Workflow Functions
 
 Once a receiver object is created, it can be used to connect specific incoming messages to DBOS [workflow](./workflow-tutorial.md) functions:
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
+**KafkaJS**
 
 The KafkaJS receiver can be used in two ways.  The `@consumer` decorator connects a `static` class workflow method to the receiver:
 ```typescript
@@ -79,9 +65,7 @@ async function myWorkflowFunction(topic: string, partition: number, message: Kaf
 kafkaReceiver.registerConsumer(DBOS.registerWorkflow(myWorkflowFunction), 'my-topic');
 ```
 
-</TabItem>
-
-<TabItem value="confluentkafka" label="Confluent Kafka">
+**Confluent Kafka**
 
 The `ConfluentKafkaReceiver` instance can be used in two ways.  The `@consumer` decorator connects a `static` class workflow method to the receiver:
 ```typescript
@@ -97,9 +81,6 @@ Alternatively, the `registerConsumer` function on the receiver will connect a wo
 async function myWorkflowFunction(topic: string, partition: number, message: ConfluentKafkaJS.Message) { ... }
 kafkaReceiver.registerConsumer(DBOS.registerWorkflow(myWorkflowFunction), 'my-topic');
 ```
-
-</TabItem>
-</Tabs>
 
 Note that the function signatures should match those above, as these match the arguments that are provided by the event receivers.
 
@@ -176,8 +157,7 @@ Two consumers that share both a `group.id` and a topic would each receive only s
 
 The DBOS libraries for Kafka do not include code for sending messages.  Messages should be sent using the underlying messaging library, but wrapped in [DBOS steps](./step-tutorial.md).
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
+**KafkaJS**
 
 ```typescript
 // Setup ...
@@ -193,8 +173,7 @@ await DBOS.runStep(async () => {
 await producer?.disconnect();
 ```
 
-</TabItem>
-<TabItem value="confluentkafka" label="Confluent Kafka">
+**Confluent Kafka**
 
 ```typescript
 // Setup ...
@@ -209,14 +188,10 @@ await DBOS.runStep(async () => {
 // ... shutdown
 await producer?.disconnect();
 ```
-
-</TabItem>
-</Tabs>
 
 ## Configuration Reference
 
-<Tabs groupId="message-clients">
-<TabItem value="kafkajs" label="KafkaJS">
+**KafkaJS**
 
 DBOS receivers consume kafka messages from topics and initiate workflows.  The topic(s) may be specified as a string, regular expression, or an array of strings and regular expressions.
 ```typescript
@@ -255,9 +230,7 @@ consumer(
 
 ```
 
-</TabItem>
-
-<TabItem value="confluentkafka" label="Confluent Kafka">
+**Confluent Kafka**
 
 DBOS receivers consume kafka messages from topics and initiate workflows.  The topic(s) may be specified as a string, regular expression, or an array of strings and regular expressions.
 ```typescript
@@ -269,7 +242,6 @@ Options for the decorator and `registerConsumer` are the same:
  - `config`: Configuration, as specified by the underlying kafka library
  - `ordering`: Whether to process messages in order.  One of `'none'` (the default), `'partition'`, or `'topic'`.
  - `batchSize`: Maximum number of messages durably enqueued per batch.  Defaults to 250.
-
 
 ```typescript
 export type ConsumerTopics = string | RegExp | Array<string | RegExp>;
@@ -297,6 +269,3 @@ consumer(
 );
 
 ```
-
-</TabItem>
-</Tabs>

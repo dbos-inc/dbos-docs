@@ -1,12 +1,8 @@
----
-sidebar_position: 35
-title: DBOS MCP Server
-toc_max_heading_level: 3
----
+# DBOS MCP Server
 
-You can use the [DBOS Model Context Protocol (MCP) server](https://github.com/dbos-inc/dbos-mcp) to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
-This enables your LLM or agent to retrieve information on your applications' workflows and steps, for example to help you debug issues in development or production.
-To use the server, your application should be connected to [Conductor](../production/conductor.md).
+> You can use the [DBOS Model Context Protocol (MCP) server](https://github.com/dbos-inc/dbos-mcp) to augment your LLM or agent with tools that can analyze and manage your DBOS workflows.
+> This enables your LLM or agent to retrieve information on your applications' workflows and steps, for example to help you debug issues in development or production.
+> To use the server, your application should be connected to [Conductor](../production/conductor.md).
 
 You may want to use the MCP server alongside a DBOS prompt or skills ([Python](../python/prompting.md), [TypeScript](../typescript/prompting.md), [Go](../golang/prompting.md), [Java](../java/prompting.md)) so your model has the most up-to-date information on DBOS.
 

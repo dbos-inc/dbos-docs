@@ -1,7 +1,11 @@
----
-sidebar_position: 30
-title: DBOS Methods & Variables
----
+# DBOS Methods & Variables
+
+> ```typescript
+> static startWorkflow<Args extends unknown[], Return>(
+>   target: (...args: Args) => Promise<Return>,
+>   params?: StartWorkflowParams,
+> ): (...args: Args) => Promise<WorkflowHandle<Return>>;
+> ```
 
 ## DBOS Methods
 
@@ -549,7 +553,6 @@ Provide exactly one of `delaySeconds` or `delayUntilEpochMS`.
 - **options**:
   - **delaySeconds**: Delay the workflow by this many seconds from now. Must be greater than 0.
   - **delayUntilEpochMS**: Delay the workflow until this absolute time, specified as a Unix epoch timestamp in milliseconds. Must be greater than 0.
-
 
 ### DBOS.cancelWorkflow
 
@@ -1109,7 +1112,6 @@ DBOS.isInTransaction(): boolean;
 ```
 Returns true if called from within a datasource transaction.
 
-
 ### DBOS.span
 
 ```typescript
@@ -1118,7 +1120,6 @@ DBOS.span: Span | undefined
 
 Retrieve the OpenTelemetry span associated with the current workflow.
 You can use this to set custom attributes in your span.
-
 
 ### DBOS.applicationVersion
 

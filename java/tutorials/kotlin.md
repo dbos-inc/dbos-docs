@@ -1,8 +1,6 @@
----
-sidebar_position: 100
-title: Using DBOS with Kotlin
-description: Write DBOS workflows and steps in Kotlin using idiomatic trailing lambda syntax.
----
+# Using DBOS with Kotlin
+
+> Write DBOS workflows and steps in Kotlin using idiomatic trailing lambda syntax.
 
 DBOS works with Kotlin out of the box — all Java APIs are accessible from Kotlin.
 The `transact` artifact also ships Kotlin extension functions that make the most common calls idiomatic by placing the lambda last, enabling Kotlin's trailing lambda syntax.
@@ -11,15 +9,16 @@ The `transact` artifact also ships Kotlin extension functions that make the most
 
 The Kotlin extensions are included in the main `transact` artifact alongside the Java code; no extra dependency is needed.
 
-<Tabs groupId="build-tool">
-<TabItem value="gradle" label="Gradle">
+**Gradle**
+
 ```kotlin
 dependencies {
     implementation("dev.dbos:transact:0.8.0")
 }
 ```
-</TabItem>
-<TabItem value="maven" label="Maven">
+
+**Maven**
+
 ```xml
 <dependencies>
     <dependency>
@@ -29,8 +28,6 @@ dependencies {
     </dependency>
 </dependencies>
 ```
-</TabItem>
-</Tabs>
 
 ## Writing Workflows and Steps
 

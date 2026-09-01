@@ -1,8 +1,6 @@
----
-sidebar_position: 15
-title: Cross-Language Interaction
-description: DBOS applications and clients in different languages can interoperate using portable JSON serialization
----
+# Cross-Language Interaction
+
+> DBOS applications and clients in different languages can interoperate using portable JSON serialization
 
 DBOS supports multiple languages&mdash;Python, TypeScript, Go, and Java&mdash;each with its own SDK.
 A client in one language can connect to the [system database](./system-tables.md) of an application written in another language to exchange data through workflows, messages, events, and streams.
@@ -68,8 +66,7 @@ If multiple applications [share the system database](./sharing-a-system-database
 You can also enqueue a workflow using the PL/pgSQL function [`dbos.enqueue_workflow`](system-tables.md#dbosenqueue_workflow).
 Only portable serialization is allowed when enqueing using PL/pgSQL.
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 from dbos import DBOSClient, WorkflowSerializationFormat
@@ -89,8 +86,7 @@ handle = client.enqueue(
 )
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
@@ -110,8 +106,7 @@ const handle = await client.enqueue(
 );
 ```
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 import dev.dbos.transact.client.DBOSClient;
@@ -124,8 +119,7 @@ var options = new EnqueueOptions("OrderProcessor", "processOrder", "orders")
 var handle = client.enqueue(options, "order-123");
 ```
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 ```go
 import "github.com/dbos-inc/dbos-transact-golang/dbos"
@@ -144,8 +138,7 @@ handle, err := dbos.Enqueue[any](
 )
 ```
 
-</TabItem>
-<TabItem value="plpgsql" label="PL/pgSQL">
+**PL/pgSQL**
 
 ```sql
 DECLARE workflow_id text;
@@ -157,15 +150,11 @@ workflow_id := dbos.enqueue_workflow(
 )
 ```
 
-</TabItem>
-</Tabs>
-
 ### Per-Workflow (via Annotation or Decorator)
 
 You can set the serialization strategy directly on the workflow annotation or decorator so that the workflow uses portable serialization by default when started:
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 from dbos import DBOS, WorkflowSerializationFormat
@@ -177,8 +166,7 @@ def process_order(order_id: str):
     return f"processed: {order_id}"
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 Using a decorator:
 
@@ -207,8 +195,7 @@ const processOrderWorkflow = DBOS.registerWorkflow(processOrder, {
 });
 ```
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 In Go, portable serialization is set per-invocation using the `WithPortableWorkflow` option on `RunWorkflow`:
 
@@ -218,8 +205,7 @@ handle, err := dbos.RunWorkflow(dbosContext, processOrder, "order-123",
 )
 ```
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 import dev.dbos.transact.workflow.SerializationStrategy;
@@ -233,13 +219,9 @@ public String processOrder(String orderId) {
 }
 ```
 
-</TabItem>
-</Tabs>
-
 :::note
 The default serialization strategy only affects invocations that are aware of the annotation / decorator.  This makes the default useful for unit testing, but the actual serialization strategy used will depend on how the workflow is enqueued by the client.
 :::
-
 
 ### For Workflow Communication
 
@@ -259,8 +241,7 @@ Step outputs always use the native serializer regardless of the workflow's seria
 Steps are internal to a workflow and are not read by other languages, so the native serializer's greater flexibility is preferred.
 :::
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 from dbos import DBOS, WorkflowSerializationFormat
@@ -288,8 +269,7 @@ DBOS.write_stream(
 )
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 import { DBOS } from "@dbos-inc/dbos-sdk";
@@ -318,8 +298,7 @@ await DBOS.writeStream(
 );
 ```
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 ```go
 import "github.com/dbos-inc/dbos-transact-golang/dbos"
@@ -344,8 +323,7 @@ dbos.WriteStream(ctx, "results",
 )
 ```
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 import dev.dbos.transact.DBOS;
@@ -368,8 +346,7 @@ DBOS.setEvent(
 );
 ```
 
-</TabItem>
-<TabItem value="plpgsql" label="PL/pgSQL">
+**PL/pgSQL**
 
 ```sql
 dbos.send_message(
@@ -378,9 +355,6 @@ dbos.send_message(
     topic => "updates"
 )
 ```
-
-</TabItem>
-</Tabs>
 
 ## Portable Errors
 
@@ -406,8 +380,7 @@ When a workflow using portable serialization fails, its error is serialized in a
 
 You can explicitly raise a portable error from a workflow:
 
-<Tabs groupId="language">
-<TabItem value="python" label="Python">
+**Python**
 
 ```python
 from dbos import PortableWorkflowError
@@ -420,8 +393,7 @@ raise PortableWorkflowError(
 )
 ```
 
-</TabItem>
-<TabItem value="typescript" label="TypeScript">
+**TypeScript**
 
 ```typescript
 import { PortableWorkflowError } from "@dbos-inc/dbos-sdk";
@@ -434,8 +406,7 @@ throw new PortableWorkflowError(
 );
 ```
 
-</TabItem>
-<TabItem value="golang" label="Go">
+**Go**
 
 ```go
 import "github.com/dbos-inc/dbos-transact-golang/dbos"
@@ -448,8 +419,7 @@ return nil, &dbos.PortableWorkflowError{
 }
 ```
 
-</TabItem>
-<TabItem value="java" label="Java">
+**Java**
 
 ```java
 import dev.dbos.transact.json.PortableWorkflowException;
@@ -461,9 +431,6 @@ throw new PortableWorkflowException(
     Map.of("orderId", "order-123")
 );
 ```
-
-</TabItem>
-</Tabs>
 
 ### Reading Portable Errors
 

@@ -1,12 +1,8 @@
----
-sidebar_position: 19
-title: Lakebase
-hide_table_of_contents: true
----
+# Lakebase
+
+> Here's how to connect your DBOS application running on your computer or cloud environment to your Databricks Lakebase Postgres database.
 
 # Use DBOS With Lakebase
-
-Here's how to connect your DBOS application running on your computer or cloud environment to your Databricks Lakebase Postgres database.
 
 ### 1. Set up a Local Application
 
@@ -15,17 +11,12 @@ The rest of this guide will assume you have a local application.
 
 ### 2. Connect to Lakebase
 
-<LargeTabs groupId="auth"  queryString="auth">
 <LargeTabItem value="password" label="Native Postgres Password Authentication">
 
 From the "Roles & Databases" tab of your Lakebase console, create a Postgres role that you will use to access your Lakebase database from your DBOS application.
 
-<img src={require('@site/static/img/lakebase/create-role.png').default} alt="Create Role" width="800" className="custom-img"/>
-
 Next, click "Connect" on your Lakebase console to retrieve connection information for your Lakebase database.
 You should see a screen that looks like this:
-
-<img src={require('@site/static/img/lakebase/connect.png').default} alt="Create Role" width="800" className="custom-img"/>
 
 This page shows the connection string for your database.
 There are a few settings you may wish to alter before retrieving this connection string:
@@ -56,7 +47,7 @@ pip install databricks-sdk
 Then, add this code to your application to configure DBOS to retrieve and use a Databricks OAuth token for authentication with your Lakebase database:
 
 <details>
-<summary><strong>Databricks OAuth Authentication</strong></summary>
+<summary>Databricks OAuth Authentication</summary>
 
 ```python
 from databricks.sdk import WorkspaceClient
@@ -79,7 +70,6 @@ def create_databricks_oauth_engine(database_url: str, lakebase_endpoint: str) ->
 
     return sa.create_engine("postgresql+psycopg://", creator=get_connection)
 
-
 if __name__ == "__main__":
     engine = create_databricks_oauth_engine(
         os.environ["DBOS_SYSTEM_DATABASE_URL"],
@@ -97,11 +87,8 @@ if __name__ == "__main__":
 
 </details>
 
-
 Next, click "Connect" on your Lakebase console to retrieve connection information for your Lakebase database.
 You should see a screen that looks like this:
-
-<img src={require('@site/static/img/lakebase/oauth-connect.png').default} alt="Create Role" width="800" className="custom-img"/>
 
 This page shows the connection string for your database.
 There are a few settings you may wish to alter before retrieving this connection string:
@@ -122,7 +109,6 @@ export DATABRICKS_LAKEBASE_ENDPOINT="projects/<project-id>/branches/<branch-id>/
 ```
 
 </LargeTabItem>
-</LargeTabs>
 
 ### 3. Launch Your Application
 
@@ -134,5 +120,3 @@ Open the "Tables" tab in the Lakebase console.
 For your database, select the database to which you connected your DBOS application (default `databricks_postgres`).
 For your schema, select "dbos". 
 You can now see DBOS durably checkpoint your workflows to your Lakebase database:
-
-<img src={require('@site/static/img/lakebase/tables.png').default} alt="Lakebase Tables Dashboard" width="800" className="custom-img"/>

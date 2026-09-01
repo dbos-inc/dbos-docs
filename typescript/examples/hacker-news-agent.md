@@ -1,11 +1,8 @@
----
-sidebar_position: 10
-title: Hacker News Research Agent
----
+# Hacker News Research Agent
 
-:::info
-This example is also available in [Python](../../python/examples/hacker-news-agent).
-:::
+> :::info
+> This example is also available in [Python](../../python/examples/hacker-news-agent).
+> :::
 
 In this example, we use DBOS to build an AI deep research agent that autonomously searches Hacker News for information on any topic.
 
@@ -225,7 +222,7 @@ export const researchQueryWorkflow = DBOS.registerWorkflow(
 The agent's intelligence comes from three key step functions that handle decision-making:
 
 <details>
-<summary><strong>Agent Evaluation Step</strong></summary>
+<summary>Agent Evaluation Step</summary>
 
 ```typescript
 export async function evaluateResults(
@@ -339,7 +336,7 @@ export async function evaluateResults(
 </details>
 
 <details>
-<summary><strong>Follow-up Query Generation Step</strong></summary>
+<summary>Follow-up Query Generation Step</summary>
 
 ```typescript
 
@@ -410,7 +407,7 @@ export async function generateFollowUps(
 </details>
 
 <details>
-<summary><strong>Continuation Decision Step</strong></summary>
+<summary>Continuation Decision Step</summary>
 
 ```typescript
 
@@ -489,7 +486,7 @@ export async function shouldContinue(
 After deciding what terms to search for, the agent calls these steps to retrieve stories and comments from Hacker News.
 
 <details>
-<summary><strong>Hacker News API Steps</strong></summary>
+<summary>Hacker News API Steps</summary>
 
 ```typescript
 export const searchHackerNews = async (
@@ -547,7 +544,7 @@ export const getComments = async (
 Finally, after concluding its research, the agentic workflow calls this step to synthesize its findings into a report.
 
 <details>
-<summary><strong>Synthesize Findings Step</strong></summary>
+<summary>Synthesize Findings Step</summary>
 
 ```typescript
 
@@ -692,7 +689,6 @@ export async function synthesizeFindings(
 ```
 
 </details>
-
 
 ## Try it Yourself!
 

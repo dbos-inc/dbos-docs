@@ -1,16 +1,8 @@
----
-toc_max_heading_level: 2
-hide_table_of_contents: true
----
-
-import InstallNode from '/docs/partials/_install_node.mdx';
-
 # Get Started with DBOS
 
-DBOS is a library for building reliable programs.
-This guide shows you how to install and run it on your computer.
+> DBOS is a library for building reliable programs.
+> This guide shows you how to install and run it on your computer.
 
-<LargeTabs groupId="language"  queryString="language">
 <LargeTabItem value="python" label="Python">
 
 :::tip
@@ -28,29 +20,29 @@ DBOS requires Python 3.9 or later.
 
 <article className="col col--6">
 
-<Tabs groupId="operating-systems" className="small-tabs">
-<TabItem value="maclinux" label="macOS or Linux">
+**macOS or Linux**
+
 ```shell
 python3 -m venv dbos-app-starter/.venv
 cd dbos-app-starter
 source .venv/bin/activate
 ```
-</TabItem>
-<TabItem value="win-ps" label="Windows (PowerShell)">
+
+**Windows (PowerShell)**
+
 ```shell
 python3 -m venv dbos-app-starter/.venv
 cd dbos-app-starter
 .venv\Scripts\activate.ps1
 ```
-</TabItem>
-<TabItem value="win-cmd" label="Windows (cmd)">
+
+**Windows (cmd)**
+
 ```shell
 python3 -m venv dbos-app-starter/.venv
 cd dbos-app-starter
 .venv\Scripts\activate.bat
 ```
-</TabItem>
-</Tabs>
 
 </article>
 </section>
@@ -74,7 +66,6 @@ dbos init --template dbos-app-starter
 </article>
 </section>
 
-
 #### 3. Start Your App
 
 <section className="row list">
@@ -97,15 +88,12 @@ Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
 Then, restart it with `python3 main.py` and watch it seamlessly recover from where it left off.
 
-
 Congratulations, you've run your first durable workflow with DBOS!
 
 </article>
 
 <article className="col col--6">
-<BrowserWindow url="http://localhost:8000/">
-<img src={require('@site/static/img/quickstart/python-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
-</BrowserWindow>
+
 </article>
 
 <article className="col col--6">
@@ -179,7 +167,7 @@ You can view and manage its workflows from the [DBOS console](https://console.db
 </article>
 
 <article className="col col--6">
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+
 </article>
 
 <article className="col col--6">
@@ -235,7 +223,6 @@ npm run build
 </article>
 </section>
 
-
 #### 3. Start Your App
 
 <section className="row list">
@@ -271,16 +258,12 @@ Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
 Then, restart it with `npm run start` and watch it seamlessly recover from where it left off.
 
-
 Congratulations, you've run your first durable workflow with DBOS!
 </article>
 
 <article className="col col--6">
-<BrowserWindow url="http://localhost:3000/">
-<img src={require('@site/static/img/quickstart/node-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
-</BrowserWindow>
-</article>
 
+</article>
 
 </section>
 
@@ -350,7 +333,7 @@ You can view and manage its workflows from the [DBOS console](https://console.db
 </article>
 
 <article className="col col--6">
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+
 </article>
 
 <article className="col col--6">
@@ -435,9 +418,7 @@ Congratulations, you've run your first durable workflow with DBOS!
 </article>
 
 <article className="col col--6">
-<BrowserWindow url="http://localhost:8080/">
-<img src={require('@site/static/img/quickstart/go-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
-</BrowserWindow>
+
 </article>
 </section>
 
@@ -507,7 +488,7 @@ You can view and manage its workflows from the [DBOS console](https://console.db
 </article>
 
 <article className="col col--6">
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+
 </article>
 
 <article className="col col--6">
@@ -588,14 +569,11 @@ Launch a durable workflow and watch it execute its three steps.
 At any point, crash the app.
 Then, restart it with `./gradlew run` and watch it seamlessly recover from where it left off.
 
-
 Congratulations, you've run your first durable workflow with DBOS!
 </article>
 
 <article className="col col--6">
-<BrowserWindow url="http://localhost:7070/">
-<img src={require('@site/static/img/quickstart/java-app-starter.png').default} alt="DBOS Starter App" width="800" className="custom-img"/>
-</BrowserWindow>
+
 </article>
 
 <article className="col col--6">
@@ -669,7 +647,7 @@ You can view and manage its workflows from the [DBOS console](https://console.db
 </article>
 
 <article className="col col--6">
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Conductor Workflow Steps" width="800" className="custom-img"/>
+
 </article>
 
 <article className="col col--6">
@@ -681,5 +659,3 @@ Next:
 
 </section>
 </LargeTabItem>
-
-</LargeTabs>

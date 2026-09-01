@@ -1,12 +1,9 @@
----
-sidebar_position: 80
-title: Logging & Tracing
----
+# Logging & Tracing
+
+> For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
+> For example:
 
 ### Logging
-
-For convenience, DBOS provides a pre-configured logger for you to use available at [`DBOS.logger`](../reference/contexts.md#logger).
-For example:
 
 ```python
 DBOS.logger.info("Welcome to DBOS!")
@@ -65,8 +62,7 @@ There are two steps:
 
 Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
 
-<Tabs groupId="provider" className="small-tabs">
-<TabItem value="otlp" label="OpenTelemetry (OTLP)">
+**OpenTelemetry (OTLP)**
 
 Most observability platforms, such as Honeycomb, Grafana, Logfire, a self-hosted [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/), or local [Jaeger](https://www.jaegertracing.io/docs/latest/getting-started/), accept the OpenTelemetry Protocol (OTLP). Point an OTLP exporter at your endpoint:
 
@@ -95,8 +91,7 @@ DBOS(config=config)
 DBOS.launch()
 ```
 
-</TabItem>
-<TabItem value="datadog" label="Datadog">
+**Datadog**
 
 [`ddtrace`](https://docs.datadoghq.com/tracing/trace_collection/automatic_instrumentation/dd_libraries/python/) exposes an OpenTelemetry-compatible `TracerProvider`. Register it, and run your app under `ddtrace-run` (or `import ddtrace.auto` first) so `ddtrace` initializes:
 
@@ -121,8 +116,7 @@ DBOS.launch()
 
 `ddtrace` then forwards all spans—including DBOS workflow and step spans—to your Datadog agent.
 
-</TabItem>
-<TabItem value="langfuse" label="Langfuse">
+**Langfuse**
 
 [Langfuse](https://langfuse.com/) is an LLM-observability platform that ingests OpenTelemetry. Point an OTLP exporter at its endpoint, authenticated with your project keys:
 
@@ -164,9 +158,6 @@ DBOS.launch()
 Each DBOS workflow becomes a Langfuse trace and each step a nested observation.
 To record LLM-specific data—model, token usage, prompts—attach attributes to the current span from inside your steps (see [Adding custom attributes and events](#adding-custom-attributes-and-events) below).
 For the current endpoint and credentials, see the [Langfuse OpenTelemetry docs](https://langfuse.com/docs/opentelemetry/get-started).
-
-</TabItem>
-</Tabs>
 
 :::tip
 Set up your provider before launching DBOS: DBOS emits spans onto whichever global provider exists.

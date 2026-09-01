@@ -1,12 +1,8 @@
----
-sidebar_position: 20
-title: Reliable Human-in-the-Loop
-hide_table_of_contents: false
----
+# Reliable Human-in-the-Loop
 
-Many agents need a **human in the loop** for decisions that are too important to fully trust an LLM.
-However, it's not easy to design an agent that waits for human feedback.
-The key issue is **time**: a human might take hours or days to respond to an agent, so the agent must be able to reliably wait for a long time (during which the server might be restarted, software might be upgraded, etc.).
+> Many agents need a **human in the loop** for decisions that are too important to fully trust an LLM.
+> However, it's not easy to design an agent that waits for human feedback.
+> The key issue is **time**: a human might take hours or days to respond to an agent, so the agent must be able to reliably wait for a long time (during which the server might be restarted, software might be upgraded, etc.).
 
 Durable workflows help because they provide tools like **durable messaging** and **workflow events** that let agents durably communicate with the outside world.
 

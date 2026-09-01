@@ -1,11 +1,8 @@
----
-sidebar_position: 1
-title: Fault-Tolerant Checkout
----
+# Fault-Tolerant Checkout
 
-:::info
-This example is also available in [Python](../../python/examples/widget-store), [Java](../../java/examples/widget-store), and [Go](../../golang/examples/widget-store.md).
-:::
+> :::info
+> This example is also available in [Python](../../python/examples/widget-store), [Java](../../java/examples/widget-store), and [Go](../../golang/examples/widget-store.md).
+> :::
 
 In this example, we use DBOS and Fastify to deploy an online storefront that's resilient to any failure.
 
@@ -16,7 +13,6 @@ Within a few seconds, the app will recover and resume as if nothing happened.
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/typescript/widget-store).
 
 ![Widget store UI](../../python/examples/assets/widget_store_ui.png)
-
 
 ## Building the Checkout Workflow
 
@@ -36,7 +32,6 @@ This means that customers never lose their order progress, no matter what breaks
 You can try this yourself!
 On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
-
 
 ```javascript
 export const checkoutWorkflow = DBOS.registerWorkflow(
@@ -135,7 +130,7 @@ Each step performs a database operation, like updating inventory or order status
 Because these steps access the database, they are implemented using [datasource transactions](../tutorials/transaction-tutorial.md).
 
 <details>
-<summary><strong>Database Operations</strong></summary>
+<summary>Database Operations</summary>
 
 ```javascript
 
@@ -376,4 +371,4 @@ Then start your app:
 npm run start
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to see your app! 
+Visit [http://localhost:3000](http://localhost:3000) to see your app!

@@ -1,16 +1,13 @@
----
-sidebar_position: 45
-title: Transactions & Datasources
----
+# Transactions & Datasources
+
+> Different JavaScript libraries have different mechanisms for starting transactions and accessing the database. The *DBOS datasource* layer provides plugin packages for popular libraries, offering:
+> - Native access to each library’s database APIs
+> - A consistent transaction control interface
+> - Compile-time type safety
+> - Correct runtime behavior across all supported environments
 
 ## Introduction To Transactions And Datasources
 DBOS [workflows](./workflows-steps.md#workflows) reliably execute a sequence of [steps](./workflows-steps.md#steps).  A *DBOS transaction* is a special kind of step that runs a function within a database transaction and records its return value within that transaction.   This guarantees that the transaction is executed exactly once, even in the face of retries or failures.
-
-Different JavaScript libraries have different mechanisms for starting transactions and accessing the database. The *DBOS datasource* layer provides plugin packages for popular libraries, offering:
-- Native access to each library’s database APIs
-- A consistent transaction control interface
-- Compile-time type safety
-- Correct runtime behavior across all supported environments
 
 ## Setting Up Data Sources
 Each data source is implemented in a separate package.

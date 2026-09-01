@@ -1,11 +1,8 @@
----
-sidebar_position: 71
-title: Deploying With Google Cloud Run
----
+# Deploying With Google Cloud Run
+
+> This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database. It includes best practices for security, availability, and scalability. This guide assumes [DBOS Conductor](./conductor.md) is hosted separately.
 
 # Deploying a DBOS App on Google Cloud Run
-
-This guide covers deploying a DBOS application to [Google Cloud Run](https://cloud.google.com/run) with a [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres) database. It includes best practices for security, availability, and scalability. This guide assumes [DBOS Conductor](./conductor.md) is hosted separately.
 
 ## Choosing a Cloud Run Execution Mode
 
@@ -49,12 +46,12 @@ Deploying a DBOS application to Cloud Run is no different from deploying any oth
 The one DBOS-specific detail is the **database connection string**: it must be provided in `key=value` format (e.g., `user=postgres password=secret database=myappdb host=/cloudsql/...`). On Cloud Run, use the `--add-cloudsql-instances` flag to mount the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-run) Unix socket, then pass the socket path as the `host` parameter. This gives your app a private, encrypted path to the database with no public IP.
 
 :::tip Schema migration
-By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbos migrate`](../golang/reference/cli.md) with a privileged user before deploying.
+By default, DBOS creates its [system tables](../explanations/system-tables.md) on startup. If your Cloud Run service account doesn't have DDL privileges, run [`dbosctl sysdb migrate`](./dbosctl.md#dbosctl-sysdb-migrate) with a privileged user before deploying.
 :::
 
 <details>
 
-<summary><strong>Walkthrough: deploying a DBOS app</strong></summary>
+<summary>Walkthrough: deploying a DBOS app</summary>
 
 This walkthrough deploys a sample DBOS Go application ([source code](https://github.com/dbos-inc/dbos-demo-apps/tree/main/golang/cloudrun)) to Cloud Run with a Cloud SQL PostgreSQL database. It covers project setup, infrastructure, and deployment in both **Service** and **Worker Pool** modes.
 
@@ -239,8 +236,7 @@ Then hit `http://localhost:8080/workflow/1` to start a DBOS workflow.
 
 Deploy from source&mdash;Cloud Build automatically builds your container and pushes it to Artifact Registry.
 
-<Tabs groupId="cloud-run-mode">
-<TabItem value="service" label="Service">
+**Service**
 
 ```bash
 gcloud run deploy my-app \
@@ -267,8 +263,7 @@ Key flags:
 - **`--source .`** Builds your Dockerfile remotely via [Cloud Build](http://cloud.google.com/build).
 - **`--allow-unauthenticated`** Makes the service publicly accessible.
 
-</TabItem>
-<TabItem value="worker-pool" label="Worker Pool">
+**Worker Pool**
 
 ```bash
 gcloud beta run worker-pools deploy my-app \
@@ -291,9 +286,6 @@ Key flags:
 - **`--source .`** Builds your Dockerfile remotely via [Cloud Build](https://cloud.google.com/build).
 - **`--instances=1`** Initial always-on instance count. The [scaling workflow](#scaling-a-worker-pool) adjusts this based on queue depth.
 - **`GCP_PROJECT_ID`**, **`GCP_REGION`**, **`WORKER_POOL_NAME`** Used by the scaling workflow to call the Cloud Run API.
-
-</TabItem>
-</Tabs>
 
 ---
 
@@ -369,7 +361,7 @@ The worker pool's service account needs permission to manage Cloud Run resources
 
 <details>
 
-<summary><strong>IAM commands</strong></summary>
+<summary>IAM commands</summary>
 
 ```bash
 # Grant Cloud Run admin role
@@ -393,7 +385,7 @@ Here's an example in Go (the same approach works in any DBOS-supported language)
 
 <details>
 
-<summary><strong>Scaling workflow snippet</strong></summary>
+<summary>Scaling workflow snippet</summary>
 
 ```go title="main.go"
 func ScalingWorkflow(ctx dbos.DBOSContext, input dbos.ScheduledWorkflowInput) (any, error) {

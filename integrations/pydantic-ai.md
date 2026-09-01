@@ -1,20 +1,14 @@
----
-sidebar_position: 30
-title: Pydantic AI
-hide_table_of_contents: false
----
+# Pydantic AI
 
+> [Pydantic AI](https://ai.pydantic.dev/) is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 
 #  Use DBOS With Pydantic AI
-
-[Pydantic AI](https://ai.pydantic.dev/) is a Python agent framework for building production-grade applications and workflows powered by Generative AI.
 
 :::info
 
 Also check out the integration guide in [the Pydantic docs](https://ai.pydantic.dev/durable_execution/dbos)!
 
 :::
-
 
 This guide shows you how to build a durable AI agent with DBOS and Pydantic AI.
 By combining the two, you can build reliable agents that preserve progress across transient API failures, application errors, and restarts, while also handling long-running, asynchronous, and human-in-the-loop workflows with production-grade reliability.
@@ -67,33 +61,31 @@ The original agent, model, and MCP server can still be used normally outside the
 
 Simply install Pydantic AI with the DBOS optional dependency:
 
-<Tabs groupId="python-package" className="small-tabs">
-<TabItem value="pip" label="pip">
+**pip**
+
 ```shell
 pip install pydantic-ai[dbos]
 ```
-</TabItem>
-<TabItem value="uv" label="uv">
+
+**uv**
+
 ```shell
 uv add pydantic-ai[dbos]
 ```
-</TabItem>
-</Tabs>
 
 Or if you're using the slim package, you can install it with the DBOS optional dependency:
 
-<Tabs groupId="python-package" className="small-tabs">
-<TabItem value="pip" label="pip">
+**pip**
+
 ```shell
 pip install pydantic-ai-slim[dbos]
 ```
-</TabItem>
-<TabItem value="uv" label="uv">
+
+**uv**
+
 ```shell
 uv add pydantic-ai-slim[dbos]
 ```
-</TabItem>
-</Tabs>
 
 ## Using DBOS Agent
 
@@ -144,6 +136,5 @@ if __name__ == "__main__":
 2. [`DBOSAgent.run()`](https://ai.pydantic.dev/api/durable_exec/#pydantic_ai.durable_exec.dbos.DBOSAgent.run) works like [`Agent.run()`](https://ai.pydantic.dev/api/agent/#pydantic_ai.agent.AbstractAgent.run), but runs as a DBOS workflow and executes model requests, decorated tool calls, and MCP communication as DBOS steps.
 3. This example uses SQLite for simplicity. Postgres is recommended for production.
 4. Each agent must have a unique `name`, which DBOS uses to identify its workflows.
-
 
 For more details on building agents, see the [Pydantic AI documentation](https://ai.pydantic.dev/durable_execution/dbos). For information about durable execution and workflow design, see the [DBOS programming guide](../python/programming-guide). Together, these resources cover everything from getting started with simple agents to designing production-ready, fault-tolerant applications.

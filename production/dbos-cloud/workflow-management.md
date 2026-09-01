@@ -1,27 +1,16 @@
----
-sidebar_position: 21
-title: Workflow Management
----
+# Workflow Management
+
+> Navigate to the workflows tab of your application's page on the DBOS Console to see a list of its workflows:
 
 ## Viewing Workflows
-
-Navigate to the workflows tab of your application's page on the DBOS Console to see a list of its workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-list.png').default} alt="Workflow List" width="800" className="custom-img"/>
 
 This includes **all** your application's workflows: those currently executing, those enqueued for execution, those that have completed successfully, and those that have failed.
 You can filter by time, workflow ID, workflow name, and workflow status (for example, you can search for all failed workflow executions in the past day).
 
 Click on a workflow to see details, including its input and output:
 
-<img src={require('@site/static/img/workflow-management/workflow-details.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
 Click "Show Workflow Steps" to view the workflow's execution as a trace timeline (showing the workflow, its steps, and its child workflows and their steps).
 For example, here is the trace of a workflow that processes multiple tasks concurrently by enqueueing child workflows:
-
-<img src={require('@site/static/img/workflow-management/workflow-steps.png').default} alt="Workflow List" width="800" className="custom-img"/>
-
-## Workflow Management
 
 You can manage individual workflows directly from the DBOS console.
 

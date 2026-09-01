@@ -1,12 +1,8 @@
----
-sidebar_position: 1
-title: DBOS Class
-pagination_prev: null
----
+# DBOS Class
 
-The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
-Here, we document its constructor and lifecycle methods.
-Decorators are documented [here](./decorators.md) and context methods and variables [here](./contexts.md).
+> The DBOS class is a singleton&mdash;you must instantiate it (by calling its constructor) exactly once in a program's lifetime.
+> Here, we document its constructor and lifecycle methods.
+> Decorators are documented [here](./decorators.md) and context methods and variables [here](./contexts.md).
 
 ## class dbos.DBOS
 
@@ -19,7 +15,6 @@ DBOS(
 
 **Parameters:**
 - `config`: Configuration parameters for DBOS. See the [configuration docs](./configuration.md).
-
 
 ### launch
 
@@ -92,7 +87,6 @@ Useful for testing.
 **Parameters:**
 - `workflow_completion_timeout_sec`: Wait this many seconds for active workflows to complete before shutting down.
 - `destroy_registry`: Whether to destroy the global registry of decorated functions. If set to `True`, `destroy` will "un-register" all decorated functions. You probably want to leave this `False`.
-
 
 ### reset_system_database
 

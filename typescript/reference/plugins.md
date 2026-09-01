@@ -1,13 +1,8 @@
----
-sidebar_position: 200
-title: DBOS Plugin Architecture
----
-
 # DBOS Plugin Architecture
 
-:::tip
-Unless you intend to extend the DBOS Transact library, you can ignore this topic.
-:::
+> :::tip
+> Unless you intend to extend the DBOS Transact library, you can ignore this topic.
+> :::
 
 DBOS Transact for TypeScript currently provides two explicit extension mechanisms:
 * [Datasources](#datasources) integrate database clients, ORMs, or other resources with the DBOS lifecycle and transaction functions.

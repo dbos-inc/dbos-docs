@@ -1,12 +1,8 @@
----
-sidebar_position: 34
-title: Vercel AI SDK
-hide_table_of_contents: false
----
+# Vercel AI SDK
+
+> You can use DBOS to add [durable execution](../typescript/tutorials/workflow-tutorial.md) to agents built with the [Vercel AI SDK](https://ai-sdk.dev/) through the [`@dbos-inc/vercel-ai`](https://www.npmjs.com/package/@dbos-inc/vercel-ai) package.
 
 # Use DBOS With the Vercel AI SDK
-
-You can use DBOS to add [durable execution](../typescript/tutorials/workflow-tutorial.md) to agents built with the [Vercel AI SDK](https://ai-sdk.dev/) through the [`@dbos-inc/vercel-ai`](https://www.npmjs.com/package/@dbos-inc/vercel-ai) package.
 
 This package makes AI SDK **agents** durable, backed by your Postgres database.
 All you have to do is wrap your model with `durableCalls` and run your generation inside a DBOS workflow.

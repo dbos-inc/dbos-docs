@@ -1,12 +1,8 @@
----
-sidebar_position: 65
-title: Upgrading Workflow Code
-toc_max_heading_level: 3
----
+# Upgrading Workflow Code
 
-A challenge encountered when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
-A breaking change to a workflow is one that changes which steps are run, or the order in which the steps are run.
-If a breaking change was made to a workflow and that workflow is replayed by the recovery system, the checkpoints created by the previous version of the code may not match the steps called by the workflow in the new version of the code, causing recovery to fail.
+> A challenge encountered when operating long-running durable workflows in production is **how to deploy breaking changes without disrupting in-progress workflows.**
+> A breaking change to a workflow is one that changes which steps are run, or the order in which the steps are run.
+> If a breaking change was made to a workflow and that workflow is replayed by the recovery system, the checkpoints created by the previous version of the code may not match the steps called by the workflow in the new version of the code, causing recovery to fail.
 
 DBOS supports two strategies for safely upgrading workflow code: **patching** and **versioning**.
 
@@ -88,7 +84,6 @@ Examples of workflows taking the new code:
 - Entirely new workflows
 - Recovered workflows that executed before the patch point
 - Workflows forked before the patch point
-
 
 ### Deprecating and Removing Patches
 

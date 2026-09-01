@@ -1,12 +1,8 @@
----
-sidebar_position: 65
-title: Kotlin Extensions
-toc_max_heading_level: 3
----
+# Kotlin Extensions
 
-DBOS ships Kotlin extension functions on the `DBOS` class in the `dev.dbos.transact` package.
-They place the lambda argument last so Kotlin's trailing lambda syntax works naturally.
-All extensions are `@JvmSynthetic` and invisible to Java callers.
+> DBOS ships Kotlin extension functions on the `DBOS` class in the `dev.dbos.transact` package.
+> They place the lambda argument last so Kotlin's trailing lambda syntax works naturally.
+> All extensions are `@JvmSynthetic` and invisible to Java callers.
 
 ## Extensions
 

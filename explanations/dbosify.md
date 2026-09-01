@@ -1,15 +1,8 @@
----
-sidebar_position: 40
-title: "DBOSify: Drop-in Temporal Replacement"
-hide_table_of_contents: false
----
+# DBOSify: Drop-in Temporal Replacement
 
-You can run your existing Temporal code on DBOS with [**DBOSify**](https://github.com/dbos-inc/dbosify-py).
-DBOSify is a drop-in replacement for the [Temporal Python SDK](https://github.com/temporalio/sdk-python) that uses Postgres (through [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py)) instead of a Temporal server.
-It runs your workflows, activities, signals, updates, queries, retries, and recovery with no infrastructure except Postgres.
-
-<img src={require('@site/static/img/architecture/dbosify.png').default} alt="DBOSify architecture: a DBOSify Client and Workers coordinate through Postgres, which handles workflow orchestration" width="750" className="custom-img"/>
-
+> You can run your existing Temporal code on DBOS with [**DBOSify**](https://github.com/dbos-inc/dbosify-py).
+> DBOSify is a drop-in replacement for the [Temporal Python SDK](https://github.com/temporalio/sdk-python) that uses Postgres (through [DBOS Transact](https://github.com/dbos-inc/dbos-transact-py)) instead of a Temporal server.
+> It runs your workflows, activities, signals, updates, queries, retries, and recovery with no infrastructure except Postgres.
 
 To migrate, you import `dbosify` instead of `temporalio` and connect your clients and workers to a Postgres database instead of a Temporal server.
 
@@ -33,7 +26,7 @@ pip install dbosify
 Then import `dbosify` instead of `temporalio` and connect to Postgres instead of a Temporal server:
 
 <details>
-<summary><strong>DBOSify Example</strong></summary>
+<summary>DBOSify Example</summary>
 
 ```python
 import asyncio
@@ -47,11 +40,9 @@ from dbosify.worker import Worker
 # A connection string to your Postgres database, instead of a Temporal server address
 DB_URL = os.environ.get("DBOS_SYSTEM_DATABASE_URL")
 
-
 @activity.defn
 async def compose_greeting(name: str) -> str:
     return f"Hello, {name}!"
-
 
 @workflow.defn
 class GreetingWorkflow:
@@ -60,7 +51,6 @@ class GreetingWorkflow:
         return await workflow.execute_activity(
             compose_greeting, name, start_to_close_timeout=timedelta(seconds=10)
         )
-
 
 async def main() -> None:
     worker = Worker(
@@ -75,7 +65,6 @@ async def main() -> None:
                 GreetingWorkflow.run, "World", id="greeting-1", task_queue="greetings"
             )
             print(result)  # Hello, World!
-
 
 if __name__ == "__main__":
     asyncio.run(main())

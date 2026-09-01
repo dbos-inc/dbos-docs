@@ -1,12 +1,8 @@
----
-sidebar_position: 20
-title: Comparing DBOS and Temporal
-hide_table_of_contents: false
----
+# Comparing DBOS and Temporal
 
-DBOS and Temporal both provide durable workflows.
-The main difference is that Temporal implements durable workflows in a heavyweight orchestration service, whereas DBOS implements them in a Postgres-backed library.
-In our opinion, the DBOS architecture is simpler to adopt and operate.
+> DBOS and Temporal both provide durable workflows.
+> The main difference is that Temporal implements durable workflows in a heavyweight orchestration service, whereas DBOS implements them in a Postgres-backed library.
+> In our opinion, the DBOS architecture is simpler to adopt and operate.
 
 :::info
 To learn how to migrate an application from Temporal to DBOS, see the [migration guide](./migrating-from-temporal.md).
@@ -25,15 +21,11 @@ Then, if you self-host Temporal, you must also operate a highly available Tempor
 Alternatively, you can use their managed cloud service, but that places critical workflow state in a third-party service.
 In either case, the Temporal server and its data stores are on the critical path for workflow execution and are single points of failure for your system; if they have downtime your application becomes unavailable.
 
-<img src={require('@site/static/img/architecture/temporal-architecture.png').default} alt="External Orchestrator Architecture" width="750" className="custom-img"/>
-
 By contrast, DBOS is an open-source Postgres-backed library.
 To add DBOS to an application, you install the open-source library and annotate workflows and steps.
 The library uses Postgres to checkpoint workflow progress and recover workflows from failure.
 Because DBOS uses Postgres for orchestration, you don't need to change how your application is architected or deployed&mdash;it can run on any infrastructure connected to any Postgres-compatible database.
 You scale DBOS by scaling Postgres, and Postgres [scales well](https://www.dbos.dev/blog/benchmarking-workflow-execution-scalability-on-postgres).
-
-<img src={require('@site/static/img/architecture/dbos-comparison-architecture.png').default} alt="DBOS Architecture" width="750" className="custom-img"/>
 
 ## Advantages of DBOS
 

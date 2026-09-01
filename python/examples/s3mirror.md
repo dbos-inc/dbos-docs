@@ -1,9 +1,6 @@
----
-sidebar_position: 55
-title: S3 Mirror
----
+# S3 Mirror
 
-S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv [here](https://www.biorxiv.org/content/10.1101/2025.06.13.657723v1).
+> S3Mirror is a DBOS-powered utility for performant, durable and observable data transfers between S3 buckets. This app was created in collaboration with Bristol Myers Squibb for reliable transfers of genomic datasets. Read our joint manuscript, including a performance benchmark, on bioRxiv [here](https://www.biorxiv.org/content/10.1101/2025.06.13.657723v1).
 
 Structurally, the app uses a "fanout" pattern. A transfer starts with a list of files. We use a DBOS queue to process the files as independent tasks. We configure the queue to tune the number of simultaneous API calls we submit to S3 - to achieve peak performance without exceeding the limit. On DBOS Cloud Pro, the app auto-scales based on queue length, automatically launching new VMs to speed up large transfers. Each file is processed as a separate Step, which the queue automatically wraps in its own Workflow. This means that, if the app crashes and restarts, the transfer resumes only the files that have not yet completed. Meanwhile, the [DBOS workflow management API](../tutorials/workflow-management.md) makes it effortless to determine the state of each file at any point. So the app offers instant file-wise transfer observability. 
 
@@ -46,7 +43,6 @@ def s3_transfer_file(buckets: BucketPaths, task: FileTransferTask):
 ```
 
 ## Starting a Transfer
-
 
 We start transferring a batch of files using a [DBOS workflow](../tutorials/workflow-tutorial.md). The workflow enqueues one `s3_transfer_file` step for each file. The queue automatically wraps each step in its own workflow and we capture the list of file-wise Workflow IDs. We then use [DBOS.set_event](../tutorials/workflow-communication.md#set_event) to record those Workflow IDs, along with metadata about the files, for later retrieval. As of this writing, S3 supports up to 3500 concurrent requests per prefix. So we set `concurrency` and `worker_concurrency` on our queue to allow for some parallelism.
 
