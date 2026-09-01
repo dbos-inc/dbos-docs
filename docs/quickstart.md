@@ -3,7 +3,7 @@ toc_max_heading_level: 2
 hide_table_of_contents: true
 ---
 
-import InstallNode from '/docs/partials/_install_node.mdx';
+import InstallNode from '@site/docs/partials/_install_node.mdx';
 
 # Get Started with DBOS
 
