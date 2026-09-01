@@ -705,7 +705,7 @@ Prompts for confirmation when run interactively.
 - `--force`: Skip the confirmation prompt and the `--to` name checks. Required when running non-interactively.
 - `-o, --output <format>`: Output format for the row counts — `table` (default) or `json`.
 
-By default, `rename-application` expects the `--to` name to unsused and to be DBOS Conductor compatible (between 3 and 30 characters, only numvers, lower case ASCII leters, hyphen and underscore).
+By default, `rename-application` expects the `--to` name to be unused and to be DBOS Conductor compatible (between 3 and 256 characters, only numbers, lowercase ASCII letters, hyphens, and underscores).
 For interactive shells, `rename-application` will confirm with the user before renaming if either of these conditions are false.
 This check can be overridden with the `--force` argument.
 

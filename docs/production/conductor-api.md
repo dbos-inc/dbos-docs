@@ -100,7 +100,7 @@ Almost every operation is scoped to an organization, and most are additionally s
 | Path parameter | Constraints |
 | --- | --- |
 | `orgName` | 3–30 characters, matching `^[a-z0-9_]+$` |
-| `appName` | 3–30 characters, matching `^[a-z0-9-_]+$` |
+| `appName` | 3–256 characters, matching `^[a-z0-9-_]+$` |
 
 Only two operations sit outside an organization: `POST /v2/users` and `GET /v2/users/me`.
 
