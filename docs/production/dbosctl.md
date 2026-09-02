@@ -275,6 +275,8 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
 - `--gc-rows-threshold <int>`: Workflow rows kept before garbage collection. See [Workflow Retention Policies](./retention.md).
 - `--gc-time-threshold-ms <int>`: Age, in milliseconds, before a workflow is garbage-collected.
+
+Retention is opt-in: neither threshold is set on a new application, so no history is deleted until you set one. Pass a negative value to clear a threshold.
 - `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
 ---
@@ -538,6 +540,17 @@ Creates an API key and prints its secret. **The secret is shown once and cannot 
 - `<name>`: A name for the key.
 - `--app <strings>`: Scope the key to these applications. Repeatable; defaults to all applications.
 - `--permission <strings>`: Grant these permissions, for example `application.read`. Repeatable.
+
+---
+
+### `dbosctl api-key rename`
+
+**Description:**
+Renames an API key. The secret is unchanged, so anything already using the key keeps working.
+
+**Arguments:**
+- `<name>`: The key's current name.
+- `<new-name>`: The key's new name. Fails if another key in the org already has it.
 
 ---
 
