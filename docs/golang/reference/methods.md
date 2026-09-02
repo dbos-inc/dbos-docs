@@ -218,6 +218,46 @@ func WithEnqueueAuthenticatedRoles(roles ...string) EnqueueOption
 
 Set the authenticated roles for the enqueued workflow.
 
+#### WithEnqueueTransaction
+
+```go
+func WithEnqueueTransaction(tx any) EnqueueOption
+```
+
+Enqueue the workflow on a transaction you own instead of one DBOS opens, so the enqueue commits **atomically** with your own database writes: either both are committed or both are rolled back.
+`tx` must be a `pgx.Tx`, a `*sql.Tx`, or a [`Tx`](./datasources.md#the-tx-interface), and must run against your DBOS system database.
+
+You own the transaction: `Enqueue` does not begin, commit, or roll back it, and does not retry on database errors.
+The returned [`WorkflowHandle`](./workflows-steps.md#workflowhandle) is created immediately, but the workflow is not enqueued until you commit, so do not call `GetResult` on the handle until after the transaction commits.
+If the enqueue fails, the transaction is left in an aborted state: roll it back rather than retrying the call on it.
+
+This option is available from a [standalone client](./dbos-context.md#newclient) or a context outside a workflow.
+It cannot be used inside a workflow, where an enqueue is checkpointed as a step, nor together with [`WithEnqueueDeduplicationPolicy`](#withenqueuededuplicationpolicy) set to `DeduplicationPolicyReturnExisting`, which retries the insert on collision and so would abort your transaction.
+
+```go
+tx, err := pool.Begin(ctx)
+if err != nil {
+    return err
+}
+defer tx.Rollback(ctx)
+
+// Perform your own writes on tx here, in the same transaction...
+_, err = tx.Exec(ctx, "INSERT INTO orders (id) VALUES ($1)", orderID)
+if err != nil {
+    return err
+}
+handle, err := dbos.Enqueue[ProcessOutput](client, "process_queue", "ProcessWorkflow", orderID,
+    dbos.WithEnqueueTransaction(tx))
+if err != nil {
+    return err
+}
+// Until this commits, the workflow does not exist. If you roll back instead, it never does.
+if err := tx.Commit(ctx); err != nil {
+    return err
+}
+result, err := handle.GetResult()
+```
+
 ## Workflow Communication
 
 ### GetEvent
@@ -266,7 +306,7 @@ Messages can optionally be associated with a topic.
 - **destinationID**: The workflow to which to send the message.
 - **message**: The message to send. Must be serializable.
 - **topic**: A topic with which to associate the message. Messages are enqueued per-topic on the receiver.
-- **opts**: Optional `SendOption` functions ([`WithIdempotencyKey`](#withidempotencykey), [`WithPortableSend`](#withportablesend)).
+- **opts**: Optional `SendOption` functions ([`WithIdempotencyKey`](#withidempotencykey), [`WithSendTransaction`](#withsendtransaction), [`WithPortableSend`](#withportablesend)).
 
 #### WithIdempotencyKey
 
@@ -281,6 +321,40 @@ Without a key, every `Send` delivers a new message.
 
 ```go
 err := dbos.Send(ctx, destinationID, payload, "payments", dbos.WithIdempotencyKey("payment-123"))
+```
+
+#### WithSendTransaction
+
+```go
+func WithSendTransaction(tx any) SendOption
+```
+
+Send the message on a transaction you own instead of one DBOS opens, so the message commits **atomically** with your own database writes.
+`tx` must be a `pgx.Tx`, a `*sql.Tx`, or a [`Tx`](./datasources.md#the-tx-interface), and must run against your DBOS system database.
+
+You own the transaction: `Send` does not begin, commit, or roll back it, and does not retry on database errors.
+The message is not visible to the destination workflow until you commit.
+If the send fails, the transaction is left in an aborted state: roll it back rather than retrying the call on it.
+
+This option is available from a [standalone client](./dbos-context.md#newclient) or a context outside a workflow.
+It cannot be used inside a workflow, where a send is checkpointed as a step.
+
+```go
+tx, err := pool.Begin(ctx)
+if err != nil {
+    return err
+}
+defer tx.Rollback(ctx)
+
+_, err = tx.Exec(ctx, "INSERT INTO orders (id) VALUES ($1)", orderID)
+if err != nil {
+    return err
+}
+err = dbos.Send(client, workflowID, orderID, "orders", dbos.WithSendTransaction(tx))
+if err != nil {
+    return err
+}
+return tx.Commit(ctx)
 ```
 
 ### Recv
@@ -998,17 +1072,40 @@ Start a new execution of a workflow from a specific step. The input step ID (`st
 
 ```go
 type ForkWorkflowInput struct {
-    OriginalWorkflowID string // Required: The UUID of the original workflow to fork from
-    ForkedWorkflowID   string // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
-    StartStep          uint   // Optional: Step to start the forked workflow from (default: 0)
-    ApplicationVersion string // Optional: Application version for the forked workflow (inherits from original if empty)
-    QueueName          string // Optional: Queue to enqueue the forked workflow on (defaults to starting immediately)
-    QueuePartitionKey  string // Optional: Partition key when enqueueing onto a partitioned queue (requires QueueName)
+    OriginalWorkflowID  string            // Required: The UUID of the original workflow to fork from
+    ForkedWorkflowID    string            // Optional: Custom workflow ID for the forked workflow (auto-generated if empty)
+    StartStep           uint              // Optional: Step to start the forked workflow from (default: 0)
+    ApplicationVersion  string            // Optional: Application version for the forked workflow (inherits from original if empty)
+    QueueName           string            // Optional: Queue to enqueue the forked workflow on (defaults to starting immediately)
+    QueuePartitionKey   string            // Optional: Partition key when enqueueing onto a partitioned queue (requires QueueName)
+    Timeout             time.Duration     // Optional: Maximum execution time for the forked workflow (default: no timeout)
+    ReplacementChildren map[string]string // Optional: Maps original child workflow IDs to replacement child workflow IDs
 }
 ```
 
 If `QueueName` is set, the forked workflow is enqueued on the specified queue instead of starting immediately.
 Set `QueuePartitionKey` together with `QueueName` to enqueue the forked workflow onto a specific partition of a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
+
+If `Timeout` is set, the forked workflow is cancelled if it runs longer than that duration; the clock starts when the fork begins executing (when it is dequeued, if enqueued).
+The original workflow's timeout is not inherited.
+
+If `ReplacementChildren` is set, it maps original child workflow IDs to replacement child workflow IDs.
+When the forked workflow encounters a copied step that started a child workflow matching an original ID, it substitutes the replacement ID instead.
+This is useful when you need to fork a parent workflow that depends on the results of child workflows that have also been forked:
+
+```go
+// Fork the child first, then fork the parent so its checkpoints point at the new child.
+childHandle, err := dbos.ForkWorkflow[ChildResult](ctx, dbos.ForkWorkflowInput{
+    OriginalWorkflowID: "old-child-id",
+    ForkedWorkflowID:   "new-child-id",
+    StartStep:          2,
+})
+parentHandle, err := dbos.ForkWorkflow[ParentResult](ctx, dbos.ForkWorkflowInput{
+    OriginalWorkflowID:  "parent-workflow-id",
+    StartStep:           6,
+    ReplacementChildren: map[string]string{"old-child-id": "new-child-id"},
+})
+```
 
 ### ForkWorkflows
 
@@ -1026,10 +1123,12 @@ The returned handles are in the same order as `input.Workflows`.
 
 ```go
 type ForkWorkflowsInput struct {
-    Workflows          []ForkWorkflowSpec // Required: The workflows to fork
-    ApplicationVersion string             // Optional: Application version for the forked workflows (inherits from originals if empty)
-    QueueName          string             // Optional: Queue to enqueue the forked workflows on (defaults to the internal queue)
-    QueuePartitionKey  string             // Optional: Partition key when enqueueing the forked workflows onto a partitioned queue
+    Workflows           []ForkWorkflowSpec // Required: The workflows to fork
+    ApplicationVersion  string             // Optional: Application version for the forked workflows (inherits from originals if empty)
+    QueueName           string             // Optional: Queue to enqueue the forked workflows on (defaults to the internal queue)
+    QueuePartitionKey   string             // Optional: Partition key when enqueueing the forked workflows onto a partitioned queue
+    Timeout             time.Duration      // Optional: Maximum execution time for each forked workflow (default: no timeout)
+    ReplacementChildren map[string]string  // Optional: Maps original child workflow IDs to replacement child workflow IDs
 }
 
 type ForkWorkflowSpec struct {
@@ -1039,7 +1138,7 @@ type ForkWorkflowSpec struct {
 }
 ```
 
-The `ApplicationVersion`, `QueueName`, and `QueuePartitionKey` settings apply to every forked workflow in the batch.
+The `ApplicationVersion`, `QueueName`, `QueuePartitionKey`, `Timeout`, and `ReplacementChildren` settings apply to every forked workflow in the batch; they have the same meaning as in [`ForkWorkflow`](#forkworkflow).
 
 **Example:**
 

@@ -64,6 +64,7 @@ Serialization and deadlock conflicts are retried automatically with a fresh tran
 
 :::tip
 If your application tables live in the same database that hosts the DBOS system schema (for example, the [shared-engine setup](../reference/datasources.md#sharing-the-system-database-engine)), you can atomically write application data and enqueue a workflow in one transaction by calling the [`dbos.enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) PL/pgSQL function from within it.
+From outside a workflow (for example, from a [standalone client](../reference/dbos-context.md#newclient)), pass your own open transaction to `Enqueue` or `Send` with [`WithEnqueueTransaction`](../reference/methods.md#withenqueuetransaction) or [`WithSendTransaction`](../reference/methods.md#withsendtransaction) instead.
 :::
 
 ## Guarantees

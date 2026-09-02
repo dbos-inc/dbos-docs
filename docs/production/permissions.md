@@ -76,6 +76,7 @@ Like a role, every API key carries a set of permissions.
 They can also be scoped to specific applications.
 
 API keys do not expire, but can be revoked at any time.
+A key can be renamed after creation without changing its secret, from the console, with [`dbosctl api-key rename`](./dbosctl.md#dbosctl-api-key-rename), or through the [Conductor API](./conductor-api.md#roles-permissions-and-api-keys).
 
 ### Permissions and application scope
 

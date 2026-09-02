@@ -197,6 +197,7 @@ A **domain claim** automatically adds users who register with an email at that d
 | Grant role to a member | `PUT /v2/orgs/{orgName}/members/{username}/roles/{roleName}` |
 | List API keys | `GET /v2/orgs/{orgName}/tokens` |
 | Create API key | `POST /v2/orgs/{orgName}/tokens/{tokenName}` |
+| Rename API key | `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` |
 | Delete API key | `DELETE /v2/orgs/{orgName}/tokens/{tokenName}` |
 
 Create an API key with an optional body scoping it to particular applications and permissions; omitting a field leaves that dimension unscoped:
@@ -208,7 +209,7 @@ Create an API key with an optional body scoping it to particular applications an
 }
 ```
 
-The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. See [Permissions and API Keys](./permissions.md) for the full list of permissions.
+The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. A key can be renamed afterwards with `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` and a body of `{"newName": "..."}`; the secret itself never changes, so rotating it means deleting the key and creating a new one. See [Permissions and API Keys](./permissions.md) for the full list of permissions.
 
 ### Applications
 
@@ -225,6 +226,7 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | List metrics | `GET /v2/orgs/{orgName}/apps/{appName}/metrics` |
 
 `PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](./retention.md), and private mode.
+Retention is opt-in: a new application has no thresholds set and no history is deleted until you set one. Pass a negative value to clear a threshold.
 
 :::info
 `GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](./metrics.md) instead.
