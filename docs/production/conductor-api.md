@@ -226,7 +226,6 @@ The response contains the key's secret. It is returned **once**, at creation, an
 | List metrics | `GET /v2/orgs/{orgName}/apps/{appName}/metrics` |
 
 `PATCH .../apps/{appName}` is where an application's tuning settings live: the executor timeout, the global workflow timeout, the [workflow retention thresholds](./retention.md), and private mode.
-Retention is opt-in: a new application has no thresholds set and no history is deleted until you set one. Pass a negative value to clear a threshold.
 
 :::info
 `GET .../metrics` returns metrics for one application over a time window. If you want to scrape Conductor from Prometheus, Datadog, or Grafana, use the OpenMetrics endpoint described in [Metrics](./metrics.md) instead.

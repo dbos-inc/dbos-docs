@@ -275,8 +275,6 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
 - `--gc-rows-threshold <int>`: Workflow rows kept before garbage collection. See [Workflow Retention Policies](./retention.md).
 - `--gc-time-threshold-ms <int>`: Age, in milliseconds, before a workflow is garbage-collected.
-
-Retention is opt-in: neither threshold is set on a new application, so no history is deleted until you set one. Pass a negative value to clear a threshold.
 - `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
 ---
