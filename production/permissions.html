@@ -13,7 +13,7 @@
 <script async defer="defer" id="hs-script-loader" src="//js.hs-scripts.com/45237820.js"></script>
 <script>window._paq=window._paq||[],window.posthog=window.posthog||[],window.posthog.capture||(window.posthog.capture=function(){})</script>
 <script src="/scripts/reb2b.js"></script><link rel="stylesheet" href="/assets/css/styles.fcbeebee.css">
-<script src="/assets/js/runtime~main.a260389c.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.9d8c22e2.js" defer="defer"></script>
 <script src="/assets/js/main.ae821732.js" defer="defer"></script>
 </head>
 <body>
@@ -54,7 +54,8 @@ You can manage custom roles from the <a href="https://console.dbos.dev/settings/
 API keys are used by running DBOS applications connecting to Conductor, but can also be used by scripts and CI/CD automation that call the Conductor API.
 Like a role, every API key carries a set of permissions.
 They can also be scoped to specific applications.</p>
-<p>API keys do not expire, but can be revoked at any time.</p>
+<p>API keys do not expire, but can be revoked at any time.
+A key can be renamed after creation without changing its secret, from the console, with <a class="" href="/production/dbosctl#dbosctl-api-key-rename"><code>dbosctl api-key rename</code></a>, or through the <a class="" href="/production/conductor-api#roles-permissions-and-api-keys">Conductor API</a>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="permissions-and-application-scope">Permissions and application scope<a href="#permissions-and-application-scope" class="hash-link" aria-label="Direct link to Permissions and application scope" title="Direct link to Permissions and application scope" translate="no">​</a></h3>
 <p>An API key has two independent restrictions:</p>
 <ul>

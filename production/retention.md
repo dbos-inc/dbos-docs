@@ -15,8 +15,8 @@ Time-based retention is disabled by default.
 
 If the rows threshold is set, history is only retained for the last X completed workflows.
 History of additional completed workflows is automatically deleted.
-By default, the rows threshold is set to 1M rows.
-You can set both a rows threshold an a time threshold.
+Rows-based retention is disabled by default.
+You can set both a rows threshold and a time threshold.
 
 ### Global Timeout
 

@@ -185,12 +185,14 @@ type ClientConfig struct {
     DatabaseSchema         string          // Database schema name (defaults to "dbos")
     Logger                 *slog.Logger    // Optional custom logger
     Serializer             Serializer[any] // Optional custom serializer (defaults to JSON). See the serialization reference.
-    SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and migrations (default: 2 minutes)
+    SystemDBStartupTimeout time.Duration   // Maximum time for system database connection and schema verification (default: 2 minutes)
 }
 ```
 
 `NewClient` connects to the system database and starts a notification listener (or a poller on backends without listen/notify support), so every client operation — including blocking ones like `GetEvent` — works without launching the DBOS runtime.
 Startup follows the same rules as `NewContext`, including `SystemDBStartupTimeout` — see [System database startup](./configuration.md#system-database-startup).
+Unlike `NewContext`, a client never creates or migrates the system database: it verifies the schema instead, and `NewClient` fails if the system database is missing or behind the version this build of DBOS requires.
+Migrate it from the application (`NewContext`) or out of band with the `dbos migrate` [CLI command](./cli.md).
 Like `NewContext`, using a SQLite system database requires registering the SQLite driver with a blank import — see [Using SQLite](./configuration.md#using-sqlite).
 
 Because workflows are not registered with a client, operations that take a workflow function reference on a `Context` take a workflow **name** (string) from a client — for example [`Enqueue`](./methods.md#enqueue), or the `WorkflowName` field of [`ScheduleSpec`](./methods.md#schedulespec).

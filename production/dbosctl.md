@@ -538,6 +538,17 @@ Creates an API key and prints its secret. **The secret is shown once and cannot 
 
 ---
 
+### `dbosctl api-key rename`
+
+**Description:**
+Renames an API key. The secret is unchanged, so anything already using the key keeps working.
+
+**Arguments:**
+- `<name>`: The key's current name.
+- `<new-name>`: The key's new name. Fails if another key in the org already has it.
+
+---
+
 ### `dbosctl api-key delete`
 
 **Description:**

@@ -215,6 +215,37 @@ if err != nil {
 }
 ```
 
+If your application tables live in the same database as the DBOS system schema, you can enqueue a workflow **atomically** with your own writes by passing your open transaction with [`WithEnqueueTransaction`](../reference/methods.md#withenqueuetransaction).
+The workflow is enqueued only when you commit; if you roll back, it never existed:
+
+```go
+tx, err := pool.Begin(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+defer tx.Rollback(ctx)
+
+_, err = tx.Exec(ctx, "INSERT INTO tasks (id, data) VALUES ($1, $2)", "task-123", "data")
+if err != nil {
+    log.Fatal(err)
+}
+handle, err := dbos.Enqueue[ProcessOutput](
+    client,
+    "pipelineQueue",
+    "dataPipeline",
+    ProcessInput{TaskID: "task-123", Data: "data"},
+    dbos.WithEnqueueTransaction(tx),
+)
+if err != nil {
+    log.Fatal(err)
+}
+if err := tx.Commit(ctx); err != nil {
+    log.Fatal(err)
+}
+```
+
+[`Send`](../reference/methods.md#send) accepts a transaction the same way, with [`WithSendTransaction`](../reference/methods.md#withsendtransaction).
+
 ### Managing Concurrency
 
 You can control how many workflows from a queue run simultaneously by configuring concurrency limits.
