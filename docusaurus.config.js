@@ -125,8 +125,18 @@ const config = {
   ],
 
   plugins: [
-    CopyMarkdownPlugin,
-    pluginLlmsTxt,
+    [
+      'docusaurus-plugin-llms',
+      {
+        title: 'DBOS Documentation',
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        generateMarkdownFiles: true,
+        includeBlog: false,
+        pathTransformation: { ignorePaths: ['docs'] },
+        preserveComponents: ['LargeTabItem'],
+      },
+    ],
     'docusaurus-plugin-matomo',
     [
       '@docusaurus/plugin-client-redirects',

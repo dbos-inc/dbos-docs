@@ -4,7 +4,7 @@ title: Supabase
 hide_table_of_contents: true
 ---
 
-import InstallNode from '/docs/partials/_install_node.mdx';
+import InstallNode from '@site/docs/partials/_install_node.mdx';
 
 #  Use DBOS With Supabase
 

@@ -100,7 +100,7 @@ Almost every operation is scoped to an organization, and most are additionally s
 | Path parameter | Constraints |
 | --- | --- |
 | `orgName` | 3–30 characters, matching `^[a-z0-9_]+$` |
-| `appName` | 3–30 characters, matching `^[a-z0-9-_]+$` |
+| `appName` | 3–256 characters, matching `^[a-z0-9-_]+$` |
 
 Only two operations sit outside an organization: `POST /v2/users` and `GET /v2/users/me`.
 
@@ -197,6 +197,7 @@ A **domain claim** automatically adds users who register with an email at that d
 | Grant role to a member | `PUT /v2/orgs/{orgName}/members/{username}/roles/{roleName}` |
 | List API keys | `GET /v2/orgs/{orgName}/tokens` |
 | Create API key | `POST /v2/orgs/{orgName}/tokens/{tokenName}` |
+| Rename API key | `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` |
 | Delete API key | `DELETE /v2/orgs/{orgName}/tokens/{tokenName}` |
 
 Create an API key with an optional body scoping it to particular applications and permissions; omitting a field leaves that dimension unscoped:
@@ -208,7 +209,7 @@ Create an API key with an optional body scoping it to particular applications an
 }
 ```
 
-The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. See [Permissions and API Keys](./permissions.md) for the full list of permissions.
+The response contains the key's secret. It is returned **once**, at creation, and cannot be retrieved afterwards. A key can be renamed afterwards with `PATCH /v2/orgs/{orgName}/tokens/{tokenName}` and a body of `{"newName": "..."}`; the secret itself never changes, so rotating it means deleting the key and creating a new one. See [Permissions and API Keys](./permissions.md) for the full list of permissions.
 
 ### Applications
 

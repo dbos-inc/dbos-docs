@@ -24,7 +24,8 @@ type Config struct {
     EnablePatching            bool           // Enable the patching system for Patch/DeprecatePatch (default: false)
     Serializer                Serializer[any] // Custom serializer for workflow inputs, outputs, and events (defaults to a JSON serializer). See the serialization reference.
     SchedulerPollingInterval  time.Duration  // How often database-backed schedules are reconciled (default: 30s)
-    SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and migrations (default: 2 minutes)
+    SystemDBStartupTimeout    time.Duration  // Maximum time for system database connection and schema migration or verification (default: 2 minutes)
+    SkipMigrations            bool           // Verify the system database schema on startup instead of creating and migrating it (default: false)
     AdminServer               bool           // Run the HTTP admin server for workflow management operations (default: false)
     AdminServerPort           int            // Port for the admin server (default: 3001)
 }
@@ -33,6 +34,8 @@ type Config struct {
 `ApplicationVersion` and `ExecutorID` are overridden by the `DBOS__APPVERSION` and `DBOS__VMID` environment variables, respectively, when set.
 
 `AppName` identifies your application.
+It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
+An application connecting to [Conductor](../../production/conductor.md) (with `ConductorAPIKey` set) fails to start with a name outside that rule, because Conductor refuses to register it; a self-hosted application logs a warning and starts.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`RenameApplication`](./methods.md#renameapplication) or the `dbos rename-application` CLI command.
 
@@ -77,5 +80,10 @@ To use different pool settings, construct the pool yourself and pass it via `Con
 
 **Migrations** are versioned and recorded in the `dbos_migrations` table of your system database schema.
 `NewContext` applies only migrations newer than the recorded version, so startup against an up-to-date database performs no schema work, and re-running it is a no-op.
+
+Set `Config.SkipMigrations` to make `NewContext` **verify** the schema instead of creating and migrating it.
+Use it for a process whose database role cannot run DDL, or a deployment that migrates out of band with the `dbos migrate` [CLI command](./cli.md).
+`NewContext` then fails if the system database is missing or its schema is behind the version this build of DBOS requires.
+A [standalone client](./dbos-context.md#newclient) always behaves this way: it never creates or migrates the system database.
 
 After a successful `NewContext`, `Launch` and subsequent runtime operations do not fail fast on database outages: transient database errors are retried (indefinitely, until the context is cancelled or shut down).

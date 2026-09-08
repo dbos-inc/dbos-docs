@@ -3,7 +3,7 @@ sidebar_position: 10
 title: Deploying to DBOS Cloud
 hide_table_of_contents: true
 ---
-import InstallNode from '/docs/partials/_install_node.mdx';
+import InstallNode from '@site/docs/partials/_install_node.mdx';
 
 
 Any application built with DBOS can be deployed to DBOS Cloud.

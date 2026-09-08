@@ -20,6 +20,7 @@
     "@mdx-js/react": "^3.0.0",
     "@stackql/docusaurus-plugin-hubspot": "file:deps/stackql-docusaurus-plugin-hubspot-1.1.0.tgz",
     "clsx": "^1.2.1",
+    "docusaurus-plugin-llms": "^0.6.0",
     "docusaurus-plugin-matomo": "^0.0.8",
     "posthog-docusaurus": "^2.0.1",
     "prism-react-renderer": "^2.1.0",

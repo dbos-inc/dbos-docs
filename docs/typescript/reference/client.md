@@ -820,7 +820,7 @@ A running application would race the rename, creating new work under its old nam
 
 **Parameters:**
 - **oldName**: The application's previous name. If undefined, nothing is transferred except rows owned by no application, so `adoptUnclaimedRows` must be set.
-- **newName**: The application that ends up owning the rows. Must be a valid application name (between 3 and 30 characters, containing only lowercase letters, numbers, dashes, and underscores).
+- **newName**: The application that ends up owning the rows. Must be a valid application name (between 3 and 256 characters, containing only lowercase letters, numbers, dashes, and underscores).
 - **options.batchSize**: The number of completed workflows and steps transferred per transaction. Defaults to 10,000. Pass `null` to transfer everything in a single transaction.
 - **options.adoptUnclaimedRows**: Also transfer rows owned by no application, such as rows created before upgrading to a DBOS version supporting application ownership. Defaults to `false`.
 
