@@ -39,6 +39,15 @@ Deno.serve(async (req) => {
     { queueName: "supabase-queue", workflowName: "processTask" },
     task,
   );
+
+  // Optionally, start the worker immediately instead of waiting for it to poll.
+  EdgeRuntime.waitUntil(
+    fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/worker`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+    }),
+  );
+
   return Response.json({ workflowID: handle.workflowID });
 });
 ```
