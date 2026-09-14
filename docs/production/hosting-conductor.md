@@ -309,6 +309,6 @@ For the best experience, we recommend upgrading Conductor and the DBOS Console t
 
 ## Scaling
 
-Architecturally, Conductor is entirely out-of-band and off the critical path of your application.
+Architecturally, Conductor is entirely off your workflows orchestration path.
 As such, it requires minimal resources to serve large application deployments.
-A single server hosting the Conductor service can serve tens of thousands of application servers processing  millions of workflows per second.
+A single server hosting the Conductor service can serve tens of thousands of application servers processing millions of workflows per second.

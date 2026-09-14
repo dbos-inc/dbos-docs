@@ -14,7 +14,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Observability Integrations**](./metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 - [**Programmatic access**](./conductor-api.md): Conductor's workflow, queue, and schedule management is available over an OpenAPI-described HTTP API and from the [`dbosctl` command-line client](./dbosctl.md), so you can script incident response and wire Conductor into your own tooling.
 
-Architecturally, Conductor is not part of your application's critical path.
+Architecturally, Conductor is not part of your workflows orchestration path.
 If your connection to Conductor is interrupted, your applications will continue operating normally.
 Recovery, observability, and workflow management will automatically resume once connectivity is restored.
 
