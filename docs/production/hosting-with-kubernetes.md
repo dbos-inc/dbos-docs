@@ -52,20 +52,14 @@ In addition to [general tips](./checklist.md) for running a DBOS-enabled app in 
 DBOS workflows can run for weeks or years while the underlying code evolves.
 Two patterns support this:
 
-1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. You should create a separate Deployment per active version. Point the Service selector at the latest version only, such that new HTTP requests creating DBOS workflows go exclusively to the new Deployment. Old deployments will stay alive and keep executing pending workflows. Once workflows for an old version complete, delete its Deployment. Tools like [Flagger](https://flagger.app/) or [Argo Rollouts](https://argoproj.github.io/argo-rollouts/) can automate this lifecycle.
+1. **Application versioning** — DBOS SDKs store a version number alongside each workflow record. You should create a separate Deployment per active version. Point the Service selector at the latest version only, such that new HTTP requests creating DBOS workflows go exclusively to the new Deployment. Old deployments will stay alive and keep executing pending workflows. Once workflows for an old version complete, delete its Deployment.
 
 2. **Workflow patching** — Keep a single Deployment. Add conditional logic (patches) that detect which code path a recovering workflow should take. See the [workflow patching guide](../python/tutorials/upgrading-workflows.md) for details.
 
 ## Scaling with KEDA
 
 [KEDA](https://keda.sh/) scales application pods based on external metrics.
-A simple pattern for scaling based on DBOS queue depth:
-
-1. The application exposes a `/metrics/:queueName` endpoint returning the current queue depth as JSON.
-2. KEDA's `metrics-api` trigger polls this endpoint on an interval.
-3. KEDA computes `desiredReplicas = ceil(queue_length / targetValue)`, where `targetValue` matches the queue's per-worker concurrency.
-
-Since the `metrics-api` trigger polls the application itself, `minReplicaCount` must be at least 1 — KEDA needs a running pod to scrape. For scale-to-zero, use a push-based trigger (e.g., PostgreSQL) or an external metrics endpoint.
+A simple pattern for scaling based on DBOS queue depth. When using [DBOS Conductor](./conductor.md), you can install an [autoscaling policy](./autoscaling.md#attaching-a-policy-with-the-api) for your application and configure a KEDA [ScaledObject](https://keda.sh/docs/latest/concepts/scaling-deployments/) to size your application based on the [policy recommendation](./autoscaling.md#reading-the-desired-executor-count).
 
 ---
 
