@@ -26,7 +26,7 @@ Conductor counts the workflows that are `ENQUEUED` or `PENDING` on the policy qu
 desiredExecutors = ceil(queueDepth / workerConcurrency)
 ```
 
-If the queue also has a global concurrency limit, the recommendation is additionally capped at `ceil(concurrency / workerConcurrency)`, since more executors than that could never dequeue anything.
+If the queue also has a global concurrency limit, the recommendation is additionally capped at `ceil(concurrency / workerConcurrency)`.
 
 Versions matter because a queued workflow is executed only by executors running the version it was enqueued under. (Note that the latest version of your application can also dequeue workflows that have not been assigned a version yet.)
 
