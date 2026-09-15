@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 10
 title: DBOS Class
 pagination_prev: null
 ---
