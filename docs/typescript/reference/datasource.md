@@ -19,7 +19,7 @@ This package, along with its underlying database libraries, should be installed 
 - [@dbos-inc/drizzle-datasource](https://www.npmjs.com/package/@dbos-inc/drizzle-datasource): [drizzle](https://orm.drizzle.team/)
 - [@dbos-inc/knex-datasource](https://www.npmjs.com/package/@dbos-inc/knex-datasource): [Knex.js](https://knexjs.org/)
 - [@dbos-inc/kysely-datasource](https://www.npmjs.com/package/@dbos-inc/kysely-datasource): [Kysely](https://kysely.dev/)
-- [@dbos-inc/nodepg-datasource](https://www.npmjs.com/package/@dbos-inc/nodepg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
+- [@dbos-inc/node-pg-datasource](https://www.npmjs.com/package/@dbos-inc/node-pg-datasource): [node-postgres](https://github.com/brianc/node-postgres)
 - [@dbos-inc/postgres-datasource](https://www.npmjs.com/package/@dbos-inc/postgres-datasource): [Postgres.js](https://github.com/porsager/postgres)
 - [@dbos-inc/prisma-datasource](https://www.npmjs.com/package/@dbos-inc/prisma-datasource): [Prisma](https://www.prisma.io/)
 - [@dbos-inc/typeorm-datasource](https://www.npmjs.com/package/@dbos-inc/typeorm-datasource): [TypeORM](https://typeorm.io/)

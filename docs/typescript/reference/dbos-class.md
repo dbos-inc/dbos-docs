@@ -77,7 +77,8 @@ DBOS.shutdown(
 ```
 
 Shut down DBOS, stopping background processing (such as queue dispatch, schedules, and event receivers) and closing database connections.
-Workflows still running in this process are not interrupted, but shutdown does not wait for them to complete unless `workflowCompletionTimeoutMS` is set.
+Shutdown does not wait for workflows still running in this process to complete unless `workflowCompletionTimeoutMS` is set.
+A workflow still running when database connections close fails in this process at its next database operation, but it remains `PENDING` in the system database so it can be recovered later.
 
 In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.
 [`DBOS.applicationVersion`](./methods.md#dbosapplicationversion) and [`DBOS.executorID`](./methods.md#dbosexecutorid) keep their values from the last launch until DBOS is launched again.

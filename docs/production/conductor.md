@@ -57,6 +57,11 @@ DBOS(config=config)
 <TabItem value="typescript" label="TypeScript">
 
 ```javascript
+DBOS.setConfig({
+    "name": "my-app-name",
+    "applicationVersion": "0.1.0",
+    "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
+});
 const conductorKey = process.env.DBOS_CONDUCTOR_KEY
 await DBOS.launch({conductorKey})
 ```

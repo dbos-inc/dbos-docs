@@ -186,7 +186,7 @@ Using a decorator:
 import { DBOS } from "@dbos-inc/dbos-sdk";
 
 export class Orders {
-  @DBOS.workflow({ serializationType: "portable" })
+  @DBOS.workflow({ serialization: "portable" })
   static async processOrder(orderId: string): Promise<string> {
     // All inputs, outputs, events, and streams for this workflow
     // use portable JSON serialization by default
@@ -203,7 +203,7 @@ async function processOrder(orderId: string): Promise<string> {
 }
 const processOrderWorkflow = DBOS.registerWorkflow(processOrder, {
   name: "processOrder",
-  serializationType: "portable",
+  serialization: "portable",
 });
 ```
 

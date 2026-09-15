@@ -27,6 +27,7 @@ await DBOS.createSchedule({
 });
 ```
 
+Because schedules are stored in the system database, `DBOS.createSchedule` and the other `DBOS` schedule management methods must be called **after** [`DBOS.launch()`](../reference/dbos-class.md#dboslaunch).
 Note that `DBOS.createSchedule` will fail if the schedule already exists.
 If you're defining a set of static schedules to be created on program start, you can instead use `DBOS.applySchedules` to create them atomically, updating them if they already exist:
 
@@ -147,7 +148,7 @@ Alternatively, you can set `automaticBackfill: true` when creating a schedule so
 
 Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
 If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.
-For example, changing a daily schedule to an hourly one and then backfilling yesterday enqueues 24 executions, not 1.
+For example, changing a daily schedule to an hourly one and then backfilling a one-day window enqueues roughly 24 executions (one per hour), not one for the day.
 
 You can also immediately trigger a schedule using [`DBOS.triggerSchedule`](../reference/methods.md#dbostriggerschedule):
 

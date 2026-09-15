@@ -19,11 +19,13 @@ Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new 
 To use patching, you must enable it in the configuration:
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   enablePatching: true,
 };
 ```
+
+If you enable patching and don't set `applicationVersion`, DBOS uses the fixed application version `PATCHING_ENABLED` instead of computing one from your code, so workflows started while patching is enabled can be recovered by processes running newer code.
 
 For example, let's say our original workflow is:
 
@@ -106,7 +108,7 @@ By default, application version is automatically computed from a hash of workflo
 However, you can set your own version through configuration.
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   applicationVersion: '1.0.0',
 }

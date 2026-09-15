@@ -53,7 +53,7 @@ npm i @dbos-inc/prisma-datasource
 <TabItem value="node-postgres" label="node-postgres">
 
 ```shell
-npm i @dbos-inc/nodepg-datasource
+npm i @dbos-inc/node-pg-datasource
 ```
 
 
@@ -127,7 +127,15 @@ const dataSource = new NodePostgresDataSource('app-db', {connectionString: proce
 <TabItem value="pg" label="Postgres.js">
 
 ```typescript
-const dataSource = new PostgresDataSource('app-db', {connection: {url: process.env.DBOS_DATABASE_URL}});
+// Postgres.js options take individual connection settings, not a URL
+const url = new URL(process.env.DBOS_DATABASE_URL!);
+const dataSource = new PostgresDataSource('app-db', {
+  host: url.hostname,
+  port: Number(url.port || 5432),
+  user: decodeURIComponent(url.username),
+  password: decodeURIComponent(url.password),
+  database: url.pathname.slice(1),
+});
 ```
 
 </TabItem>
@@ -135,7 +143,7 @@ const dataSource = new PostgresDataSource('app-db', {connection: {url: process.e
 
 Note that the names `dataSource` and `app-db` are used throughout this page, but were chosen arbitrarily.  It is possible to use several datasource instances, with different names.
 
-You can run a function as a transaction using `dataSource.runTransaction`.  The transaction function should use `dataSource.client` as a client to access the database.  (Note that while some data source classes expose a static `client` property, the data source object instance should be used to get the `client` as the instance asserts that its client is actually available.)
+You can run a function as a transaction using `dataSource.runTransaction`.  The transaction function should use `dataSource.client` (or `dataSource.entityManager` for TypeORM) as a client to access the database.  (Note that while some data source classes expose a static `client` property, the data source object instance should be used to get the `client` as the instance asserts that its client is actually available.)
 
 Examples:
 

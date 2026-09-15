@@ -993,7 +993,7 @@ Learn more in the [workflows tutorial](../java/tutorials/workflow-tutorial.md#st
 
 In Temporal, you can define a codec to encrypt workflow information before it is stored on a Temporal server to limit Temporal's access to sensitive data.
 In DBOS, this is rarely necessary because data is stored **only** in your own database.
-However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/methods.md#serialization-strategy)) to encrypt your data before storing it and decrypt it before retrieving it.
+However, if it is necessary to store sensitive data encrypted, you can use a custom serializer ([Python](../python/reference/contexts.md#custom-serialization), [TypeScript](../typescript/reference/configuration.md#custom-serialization)) to encrypt your data before storing it and decrypt it before retrieving it.
 
 ## What's Different in DBOS
 

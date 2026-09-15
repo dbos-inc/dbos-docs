@@ -34,11 +34,14 @@ export interface DBOSConfig {
   systemDatabasePool?: Pool;
   runMigrations?: boolean;
   observabilityQueryTimeoutMs?: number;
+  useListenNotify?: boolean;
+  notificationCoalesceMs?: number;
 
   tracingEnabled?: boolean;
   otelAttributeFormat?: 'legacy' | 'semconv';
   logLevel?: string;
   logger?: DLogger;
+  addContextMetadata?: boolean;
   enableOTLP?: boolean;
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
@@ -85,6 +88,8 @@ Set to false for a process that must not alter the schema, such as one whose dat
 Launch then verifies the schema instead of changing it: a system database that is missing, or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries (such as [listing workflows](./methods.md#dboslistworkflows), [queued workflows](./methods.md#dboslistqueuedworkflows), and [workflow steps](./methods.md#dboslistworkflowsteps)), so a slow query on a large system database does not hold resources indefinitely. A query that exceeds the timeout throws a `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
+- **useListenNotify**: Whether to use Postgres `LISTEN/NOTIFY` to promptly wake operations waiting on messages, events, or streams (such as [`recv`](./methods.md#dbosrecv), [`getEvent`](./methods.md#dbosgetevent), and [`readStream`](./methods.md#dbosreadstream)). Defaults to true. Set to false if your database does not support `LISTEN/NOTIFY` (for example, [CockroachDB](../../integrations/cockroachdb.md)); DBOS then polls the database instead, which can increase the latency of these operations.
+- **notificationCoalesceMs**: When `useListenNotify` is enabled, the interval, in milliseconds, over which DBOS batches the notifications for events and stream values this process writes before sending them. This bounds the extra latency before waiting readers are woken. Defaults to 10. Must be at least 1.
 
 ### Logging and Tracing Settings
 
@@ -92,7 +97,8 @@ A system database ahead of the required version is accepted, so a process with m
 - **otelAttributeFormat**: Naming convention for DBOS-emitted span attributes. Defaults to `'legacy'`, which emits the original camelCase names (`operationUUID`, `executorID`, …) for backward compatibility. Set to `'semconv'` to emit OTel-style names under the `dbos.*` namespace (`dbos.operation.workflow_id`, `dbos.executor.id`, …), which follow the [OTel attribute naming spec](https://opentelemetry.io/docs/specs/semconv/general/attribute-naming/) and avoid colliding with attributes set by other instrumentation. The flag is process-wide; user-supplied attributes are passed through verbatim either way.
 - **logLevel**: Configure the [DBOS logger](../tutorials/logging.md) severity. Defaults to `info`.
 - **logger**: A [custom logger](../tutorials/logging.md#custom-logger) implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
-- **enableOTLP**: Enable the built-in DBOS OpenTelemetry `TracerProvider`. Defaults to False. Do not set if using an external OTLP `TracerProvider`.
+- **addContextMetadata**: Whether to append the current operation's context (such as its workflow ID and operation name) to log messages emitted from workflows and steps. Defaults to false. Only affects the built-in console output, and only when `enableOTLP` is on.
+- **enableOTLP**: Enable the built-in DBOS OpenTelemetry `TracerProvider`. Defaults to False (True in DBOS Cloud). Do not set if using an external OTLP `TracerProvider`.
 - **otlpTracesEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send traces.
 - **otlpLogsEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send logs.
 

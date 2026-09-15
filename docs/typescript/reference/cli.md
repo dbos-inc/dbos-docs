@@ -115,7 +115,7 @@ Lists all currently enqueued workflows in JSON format ordered by recency (most r
 - `-n, --name <string>`        Retrieve functions with this name
 - `-t, --start-time <string>`  Retrieve functions starting after this timestamp (ISO 8601 format)
 - `-e, --end-time <string>`    Retrieve functions starting before this timestamp (ISO 8601 format)
-- `-S, --status <string>`      Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
+- `-S, --status <string>`      Retrieve functions with this status (`ENQUEUED`, `PENDING`, or `DELAYED`)
 - `-l, --limit <number>`       Limit the results returned
 - `-q, --queue <string>`       Retrieve functions run on this queue
 - `-a, --application-name <string>`  Retrieve functions owned by this application (functions owned by no application are always included)
@@ -131,8 +131,6 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `authenticatedRoles`: All roles which the authenticated user could assume
 - `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
-- `error`: If the workflow threw an error, the serialized error object
 
 
 ## Application Management Commands

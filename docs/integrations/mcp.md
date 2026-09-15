@@ -50,4 +50,4 @@ The DBOS MCP server provides the following tools:
 
 #### Authentication
 - `login` - Start login flow (returns URL to login page)
-- `login_complete` - Complete login after authenticati
+- `login_complete` - Complete login after authenticating

@@ -35,7 +35,7 @@ import { DBOSClient } from '@dbos-inc/dbos-sdk';
 
 export async function enqueueWorkflow() {
     console.log('Enqueueing DBOS workflow');
-    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL });
+    const client = await DBOSClient.create({ systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL! });
     await client.enqueue({
         workflowName: 'exampleWorkflow',
         queueName: 'exampleQueue',

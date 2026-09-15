@@ -84,7 +84,6 @@ await workflow();
 
 **Parameters:**
 - **func**: The function to be wrapped in a workflow.
-- **name**: A name to give the workflow.
 - **config**: Accepts all fields from [`WorkflowConfig`](#dbosworkflow) plus:
   - **name**: The name with which to register the workflow. Defaults to the function name.
   - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
@@ -169,6 +168,7 @@ interface StepConfig {
 ```
 
 A decorator that marks a function as a step in a durable workflow.
+DBOS must be launched before a step is called.
 If a step is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
@@ -214,7 +214,8 @@ DBOS.registerStep<This, Args extends unknown[], Return>(
 
 Wrap a function in a step to safely call it from a durable workflow.
 Returns the wrapped function.
-If the wrapped function is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
+DBOS must be launched before the wrapped function is called.
+If it is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
 
@@ -258,6 +259,7 @@ runStep<Return>(
 ```
 
 Run a function as a step in a workflow.
+DBOS must be launched before `runStep` is called.
 If called outside a workflow, `runStep` runs the function as an ordinary function call, without checkpoints, retries, or a timeout.
 Returns the output of the step.
 
@@ -328,7 +330,7 @@ abstract class ConfiguredInstance {
 }
 ```
 
-You can register or decorate class instance methods.  However, if a class has any workflow methods, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
+You can register or decorate class instance methods.  However, if a class has any workflow methods or instance methods decorated with `@DBOS.step`, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
 
 When you create a new instance of the class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
 This `name` should be unique among instances of the same class.

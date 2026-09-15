@@ -69,7 +69,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 **Parameters:**
 
 - **target**: The workflow to start.
-- **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
+- **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated (for a child workflow started from within a workflow, a deterministic ID derived from the parent workflow's ID is used instead).
 - **queueName**: The name of the queue on which to enqueue this workflow, if any. The queue must be registered with [`DBOS.registerQueue`](./queues.md#dbosregisterqueue); a workflow enqueued on an unregistered queue stays `ENQUEUED` until the queue is registered.
 - **timeoutMS**: The timeout of this workflow in milliseconds.
 - **duplicationPolicy**: How to handle a collision with another workflow that has the same `enqueueOptions.deduplicationID` on the same queue. Defaults to `'reject'`.
@@ -80,7 +80,7 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
   - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
-  - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
+  - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version. If `applicationName` names another application, it is instead left unset by default, so the workflow is only dequeued by an executor of that application running its latest registered version.
   - **applicationName**: The application that owns and runs the enqueued workflow. Defaults to this application. Set to enqueue the workflow on behalf of another application sharing the system database. To enqueue another application's workflow without a reference to its function, use [`DBOS.enqueueWorkflowWithOptions`](./queues.md#dbosenqueueworkflowwithoptions) instead.
 - **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
 - **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with [`DBOS.withAuthedContext`](./plugins.md#setting-authenticated-user-and-roles)).
@@ -249,7 +249,7 @@ DBOS.sleep(
 ```
 
 Sleep for the given number of milliseconds.
-When called from within a workflow, this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+When called from a workflow (outside of a step), this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
@@ -567,7 +567,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 
 **Parameters:**
 - **workflowID**: The ID of the workflow to cancel.
@@ -1226,7 +1226,7 @@ Wait for the workflow to complete, then return its result.
 
 **Parameters:**
 - **options**:
-  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow) or the [DBOS Client](./client.md)), not to a handle from `DBOS.startWorkflow` in the same process.
+  - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting. Only applies to handles that wait by polling the database (such as handles from [`DBOS.retrieveWorkflow`](#dbosretrieveworkflow), from `DBOS.startWorkflow` with a `queueName`, or from the [DBOS Client](./client.md)), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
 
 ### handle.getStatus
 
@@ -1271,10 +1271,6 @@ DBOS.setAlertHandler(async (ruleType: string, message: string, metadata: Record<
 
 Several DBOS methods accept an optional `serializationType` parameter that controls how data is serialized.
 This is useful for cross-language interoperability&mdash;for example, if a Python or Java DBOS application needs to read events or messages set by a TypeScript application.
-
-```typescript
-import { WorkflowSerializationFormat } from "@dbos-inc/dbos-sdk";
-```
 
 The available values are:
 

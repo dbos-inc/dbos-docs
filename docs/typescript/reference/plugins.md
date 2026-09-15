@@ -63,7 +63,7 @@ The primary purpose of this submodule export is to provide the functions datasou
 
 This export also includes some utilities for datasource implementations based on Postgres:
  - `PGIsolationLevel` and `PGTransactionConfig`: These types should be used to represent transaction isolation settings in Postgres-based datasources.
- - `createTransactionCompletionSchemaPG` and `createTransactionCompletionTablePG`: These strings contain the SQL statements used to create the transaction checkpoint table and its schema.
+ - `createTransactionCompletionSchemaPG` and `createTransactionCompletionTablePG`: These functions take a schema name (default `dbos`) and return the SQL statements used to create the transaction checkpoint schema and table.
  - `isPGRetriableTransactionError`: Transactions that throw errors are retried by datasources under some circumstances.  This function establishes whether a transaction is eligible to be retried based on the thrown error.
  - `isPGKeyConflictError`: Indicates if the error is a key conflict.  Such errors, if thrown from the transaction checkpoint insert, indicate that the transaction may already be complete.
 

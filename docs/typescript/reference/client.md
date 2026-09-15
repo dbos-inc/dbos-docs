@@ -4,11 +4,11 @@ title: DBOS Client
 ---
 
 `DBOSClient` provides a programmatic way to interact with your DBOS application from external code.
-`DBOSClient` includes methods similar to `DBOS`.
-that make sense to be used outside of a DBOS workflow or step, such as `enqueueWorkflow` or `getEvent`.
+`DBOSClient` includes methods similar to `DBOS`
+that make sense to be used outside of a DBOS workflow or step, such as `enqueue` or `getEvent`.
 
 :::note 
-`DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package that used by DBOS applications.
+`DBOSClient` is included in the `@dbos-inc/dbos-sdk` package, the same package used by DBOS applications.
 Where DBOS applications use the static `DBOS` class,
 external applications use the `DBOSClient` class instead.
 :::
@@ -56,7 +56,7 @@ class DBOSClient {
     sendInTransaction<T>(client: ClientBase, destinationID: string, message: T, topic?: string, idempotencyKey?: string, options?: ClientSendOptions): Promise<void>;
     getEvent<T>(workflowID: string, key: string, options?: GetEventOptions): Promise<T | null>;
     retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>>;
-    waitFirst(handles: WorkflowHandle<any>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<any>>;
+    waitFirst(handles: WorkflowHandle<unknown>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<unknown>>;
     waitAll<R>(handles: WorkflowHandle<R>[], options?: { pollingIntervalMs?: number }): Promise<WorkflowHandle<R>[]>;
     readStream<T>(workflowID: string, key: string, options?: ReadStreamOptions): AsyncGenerator<T, void, unknown>;
     readStreamOffset<T>(workflowID: string, key: string, offset: number, options?: ReadStreamOffsetOptions): Promise<T>;
@@ -345,7 +345,7 @@ and the [ReturnType Utility Class](https://www.typescriptlang.org/docs/handbook/
 Example:
 
 ```ts
-const handle = client.retrieveWorkflow<ReturnType<IndexDocument>>(documentWFID);
+const handle = client.retrieveWorkflow<ReturnType<typeof DocumentDetective.indexDocument>>(documentWFID);
 const pageCount = await handle.getResult();
 ```
 
@@ -470,22 +470,22 @@ Please see [`DBOS.getWorkflowStatus`](./methods.md#dbosgetworkflowstatus) for mo
 #### `listWorkflows`
 
 Retrieves information about workflow execution history. 
-Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more for more information.
+Please see [`DBOS.listWorkflows`](./methods.md#dboslistworkflows) for more information.
 If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
 Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 #### `listQueuedWorkflows`
 
 Retrieves information about workflow execution history for a given workflow queue. 
-Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more for more information.
+Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more information.
 If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
 Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 #### `listWorkflowSteps`
 
 Retrieves information about the steps executed in a specified workflow. 
-If the specified workflow is not found, `listWorkflowSteps` returns undefined
-Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for more for more information.
+If the specified workflow is not found, `listWorkflowSteps` returns undefined.
+Please see [`DBOS.listWorkflowSteps`](./methods.md#dboslistworkflowsteps) for more information.
 This query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### Workflow Management
@@ -493,7 +493,7 @@ This query is subject to the client's [`observabilityQueryTimeoutMs`](#create) s
 #### `cancelWorkflow`
 
 Cancels a workflow. If the workflow is currently running, `DBOSWorkflowCancelledError` will be thrown from its next DBOS call.
-Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more for more information.
+Please see [`DBOS.cancelWorkflow`](./methods.md#dboscancelworkflow) for more information.
 
 #### `cancelWorkflows`
 
@@ -634,7 +634,7 @@ Similar to [`DBOS.createSchedule`](./methods.md#dboscreateschedule), but takes a
 
 **Parameters:**
 - **scheduleName**: Unique name identifying this schedule.
-- **workflowName**: Fully-qualified name of the workflow function to invoke.
+- **workflowName**: The name of the workflow function to invoke.
 - **workflowClassName**: The class name if the workflow is a static method on a class.
 - **schedule**: A cron expression. Supports seconds as the first field with 6-field format.
 - **context**: An optional context object passed to the workflow function on each invocation. Must be serializable.

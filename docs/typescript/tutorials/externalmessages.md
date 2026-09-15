@@ -28,7 +28,7 @@ npm i @dbos-inc/confluent-kafka-receive
 
 ## Creating a Receiver
 
-The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which is requires an underlying library object or configuration:
+The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which requires an underlying library object or configuration:
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">
@@ -173,6 +173,7 @@ Each consumer's [`group.id`](https://kafka.apache.org/documentation/#consumercon
 You can run multiple consumers on the same topics, including with ordering, by giving each a distinct `group.id`.
 Every consumer group receives its own copy of each message.
 Two consumers that share both a `group.id` and a topic would each receive only some of that topic's messages, so DBOS raises an error at startup if it detects this configuration.
+With KafkaJS, DBOS also raises an error at startup if two consumers share a `group.id` across different topics, as KafkaJS would leave some of their partitions unconsumed; with Confluent Kafka, DBOS logs a warning instead.
 
 ## Sending Messages
 
@@ -185,6 +186,7 @@ The DBOS libraries for Kafka do not include code for sending messages.  Messages
 // Setup ...
 const kafka = new Kafka(kafkaConfig);
 producer = kafka.producer();
+await producer.connect();
 
 // ... produce messages during workflow processing
 await DBOS.runStep(async () => {
@@ -202,6 +204,7 @@ await producer?.disconnect();
 // Setup ...
 const kafka = new ConfluentKafkaJS.Kafka({ kafkaJS: kafkaConfig });
 producer = kafka.producer();
+await producer.connect();
 
 // ... produce messages during workflow processing
 await DBOS.runStep(async () => {
@@ -252,7 +255,7 @@ consumer(
     config?: ConsumerConfig;
     ordering?: KafkaOrdering;
     batchSize?: number;
-  }
+  } = {}
 );
 
 ```
@@ -295,7 +298,7 @@ consumer(
     config?: KafkaJS.ConsumerConstructorConfig;
     ordering?: KafkaOrdering;
     batchSize?: number;
-  }
+  } = {}
 );
 
 ```

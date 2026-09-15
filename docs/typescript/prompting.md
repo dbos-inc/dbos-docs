@@ -610,7 +610,7 @@ This is useful for signaling a workflow or sending notifications to it while it'
 ### Send
 
 ```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
 ```
 
 You can call `DBOS.send()` to send a message to a workflow.
@@ -898,7 +898,7 @@ Retries are configurable through arguments to the step decorator:
 export interface StepConfig {
   retriesAllowed?: boolean; // Should failures be retried? (default false)
   intervalSeconds?: number; // Seconds to wait before the first retry attempt (default 1).
-  maxAttempts?: number;     // Maximum number of retry attempts (default 3). If errors occur more times than this, throw an exception.
+  maxAttempts?: number;     // Maximum number of attempts, including the first (default 3). If every attempt fails, throw an exception.
   backoffRate?: number;     // Multiplier by which the retry interval increases after a retry attempt (default 2).
   timeoutMS?: number;       // Maximum duration in milliseconds of a single attempt of the step.
 }
@@ -941,7 +941,7 @@ static async exampleStep() {
 }
 ```
 
-If a step exhausts all `maxAttempts` retries, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
+If a step fails on all `maxAttempts` attempts, it throws a `DBOSMaxStepRetriesError` to the calling workflow.
 If that exception is not caught, the workflow terminates.
 
 ### Step Timeouts
@@ -1450,8 +1450,9 @@ describe('example integration tests', () => {
   beforeEach(async () => {
     const databaseUrl = process.env.DBOS_TEST_DATABASE_URL;
 
-    // Shut down DBOS (in case a previous test launched it) and reset the database.
+    // Shut down DBOS (in case a previous test launched it).
     await DBOS.shutdown();
+    // Reset the system database here (for example, drop and recreate it).
 
     // Configure and launch DBOS
     const dbosTestConfig: DBOSConfig = {
@@ -1680,7 +1681,7 @@ DBOS.listQueuedWorkflows(
 ```
 
 Retrieve a list of WorkflowStatus of all **currently enqueued** (status `PENDING`, `ENQUEUED`, or `DELAYED`) workflows matching specified criteria.
-The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set.
+The input type is the same as `DBOS.listWorkflows`; this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
 
 ### DBOS.listWorkflowSteps
 ```typescript
@@ -1759,7 +1760,7 @@ cancelWorkflow(
 ```
 
 Cancel a workflow.
-This sets is status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
+This sets its status to `CANCELLED`, removes it from its queue (if it is enqueued) and preempts its execution (interrupting it at the beginning of its next step)
 If `cancelChildren` is true, also cancel all child workflows recursively.
 
 ### DBOS.resumeWorkflow
@@ -1823,7 +1824,7 @@ Therefore, if `DBOS.patch()` returns `true`, the workflow should follow the new 
 To use patching, you MUST enable it in the configuration; otherwise `DBOS.patch()` and `DBOS.deprecatePatch()` throw an error:
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   enablePatching: true,
 }
@@ -1914,11 +1915,11 @@ If any mistakes happen during the process (a breaking change is not patched, or 
 
 When using versioning, DBOS **versions** applications and workflows, and only continues workflow execution with the same application version that started the workflow.
 All workflows are tagged with the application version on which they started.
-By default, application version is automatically computed from a hash of workflow source code.
+By default, application version is automatically computed from a hash of workflow source code (or is fixed to `PATCHING_ENABLED` if patching is enabled).
 However, you can set your own version through configuration.
 
 ```typescript
-config: DBOSConfig = {
+const config: DBOSConfig = {
   // ...
   applicationVersion: '1.0.0',
 }
@@ -1991,11 +1992,11 @@ If the Postgres database referenced by this connection string does not exist, DB
 - **systemDatabaseSchemaName**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **systemDatabasePool**: A custom `node-postgres` connection pool to use to connect to your system database. If provided, DBOS will not create a connection pool but use this instead.
 - **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries against the system database (such as `DBOS.listWorkflows`, `DBOS.listQueuedWorkflows`, and `DBOS.listWorkflowSteps`), so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout throws `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
-- **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
+- **enableOTLP**: Enable DBOS OpenTelemetry tracing and export. Defaults to False (True in DBOS Cloud).
 - **logLevel**: Configure the DBOS logger severity. Defaults to `info`.
 - **logger**: A custom logger implementing the `DLogger` interface, to which DBOS directs all its internal logging, replacing the built-in console and OTLP log sinks. When set, `logLevel` does not filter calls to it (level routing is the logger's job), logs are not exported over OTLP even if `enableOTLP` is on (traces are unaffected), and DBOS never flushes or closes it (the caller owns its lifecycle).
-- **otlpTracesEndpoints**: DBOS operations automatically generate OpenTelemetry Traces. Use this field to declare a list of OTLP-compatible receivers.
-- **otlpLogsEndpoints**: DBOS operations automatically generate OpenTelemetry Logs. Use this field to declare a list of OTLP-compatible receivers.
+- **otlpTracesEndpoints**: A list of OTLP-compatible receivers to which to send traces. Only used when `enableOTLP` is enabled.
+- **otlpLogsEndpoints**: A list of OTLP-compatible receivers to which to send logs. Only used when `enableOTLP` is enabled.
 - **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is a queue name. Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time. This prevents dequeuing from a large queue (especially a partitioned queue with many active partitions) from delaying work on smaller queues. A single queue is never dequeued from twice concurrently in the same process. Does not affect workflow concurrency, rate limits, or `systemDatabasePollingConcurrency`.
 - **enablePatching**: Enable workflow patching with `DBOS.patch()` and `DBOS.deprecatePatch()`. Defaults to false.

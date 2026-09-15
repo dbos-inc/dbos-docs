@@ -18,6 +18,7 @@ await DBOS.registerQueue("example_queue");
 `DBOS.registerQueue` persists the queue's configuration to the system database, so it must be called **after** [`DBOS.launch()`](../reference/dbos-class.md#dboslaunch).
 
 You can then enqueue any workflow by passing the queue name as an argument to `DBOS.startWorkflow`.
+If no queue with that name has been registered, the workflow stays `ENQUEUED` until one is.
 Enqueuing a function submits it for execution and returns a [handle](../reference/methods.md#workflow-handles) to it.
 Queued tasks are started in first-in, first-out (FIFO) order.
 
@@ -329,6 +330,7 @@ async function onUserTaskSubmission(userID: string, task: Task) {
 
 :::warning
 Every enqueue on a partitioned queue must supply a partition key.
+A workflow enqueued on a partitioned queue without a partition key stays `ENQUEUED` and is not dequeued.
 :::
 
 #### Combining Queue-Wide and Per-Partition Limits
@@ -397,7 +399,7 @@ async function main() {
 ### Singleton Workflows
 
 If you want only one instance of a workflow to be active at a time, you can set `duplicationPolicy: 'return-existing'` on `DBOS.startWorkflow`.
-When a workflow with the same `deduplicationID` is already enqueued or executing on the queue, this returns a handle to that existing workflow instead of throwing `DBOSQueueDuplicatedError`.
+When a workflow with the same `deduplicationID` is already enqueued, delayed, or executing on the queue, this returns a handle to that existing workflow instead of throwing `DBOSQueueDuplicatedError`.
 The arguments passed by the colliding caller are discarded, and the returned handle resolves with the original workflow's result.
 
 This requires both a `queueName` and an `enqueueOptions.deduplicationID`.

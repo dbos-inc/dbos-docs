@@ -20,14 +20,14 @@ This is useful for signaling a workflow or sending notifications to it while it'
 #### Send
 
 ```typescript
-DBOS.send<T>(destinationID: string, message: T, topic?: string): Promise<void>;
+DBOS.send<T>(destinationID: string, message: T, topic?: string, idempotencyKey?: string): Promise<void>;
 ```
 
 You can call `DBOS.send()` to send a message to a workflow.
 Messages can optionally be associated with a topic and are queued on the receiver per topic.
 
 You can also call [`send`](../reference/client.md#send) from outside of your DBOS application with the [DBOS Client](../reference/client.md)
-or with the ['dbos.send_message' PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
+or with the [`dbos.send_message` PL/pgSQL function](../../explanations/system-tables.md#dbossend_message)
 
 #### Recv
 
