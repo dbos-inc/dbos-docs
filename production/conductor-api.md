@@ -261,6 +261,18 @@ The semantics of cancelling, resuming, and forking are described in [Workflow Ma
 | List queues | `GET /v2/orgs/{orgName}/apps/{appName}/queues` |
 | Get queue | `GET /v2/orgs/{orgName}/apps/{appName}/queues/{queueName}` |
 
+### Autoscaling
+
+| Operation | Endpoint |
+| --- | --- |
+| Get autoscaling policy | `GET /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
+| Set autoscaling policy | `PUT /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
+| Delete autoscaling policy | `DELETE /v2/orgs/{orgName}/apps/{appName}/autoscaling-policy` |
+| Desired executors, all versions | `GET /v2/orgs/{orgName}/apps/{appName}/autoscale` |
+| Desired executors, one version | `GET /v2/orgs/{orgName}/apps/{appName}/autoscale/versions/{version}` |
+
+The policy names the queue whose backlog drives the executor count; the two `autoscale` operations return how many executors each application version needs right now. `{version}` is a registered version or `latest`. See [Autoscaling and Version Management](./autoscaling.md).
+
 ### Schedules
 
 | Operation | Endpoint |
