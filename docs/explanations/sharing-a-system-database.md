@@ -18,6 +18,8 @@ Ownership determines which application runs what:
 - A schedule is fired only by the application that created it, and its workflows are owned by that application.
 - Application versions are tracked per application, so one application's deployments do not affect which version its peers consider latest.
 
+[Retention policies](../production/retention.md) are an exception: they apply to the entire system database, including workflows owned by other applications.
+
 Queue, schedule, and version names remain globally unique across all applications sharing a system database; registering a name that a different application already owns raises an error.
 Workflow IDs are also unique across the entire system database, so ID-addressed operations (retrieving a workflow's handle, status, or result by ID, and sending messages or reading events and streams) work across applications regardless of ownership.
 Observability queries (`list_workflows`, `list_queues`, `list_schedules`) are scoped to the calling application by default.

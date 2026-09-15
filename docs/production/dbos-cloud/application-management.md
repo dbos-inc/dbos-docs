@@ -38,7 +38,6 @@ You need to provide a valid `dbos-config.yaml` file when deploying an applicatio
 
 Note that some fields from dbos-config.yaml will be **ignored** during cloud deployments:
 - **database_url** and **database** connection-related fields. DBOS Cloud automatically applies the connection information of your cloud database server.
-- **runtimeConfig.admin_port**: DBOS Cloud communicates with Transact admin port on port 3001.
 
 
 #### Dependency Management

@@ -273,8 +273,8 @@ Updates an application's tuning settings. Only the flags you pass are changed.
 - `<name>`: The application's name.
 - `--executor-timeout-secs <int>`: Seconds before an idle executor is considered gone.
 - `--global-timeout-ms <int>`: Global workflow timeout, in milliseconds.
-- `--gc-rows-threshold <int>`: Workflow rows kept before garbage collection. See [Workflow Retention Policies](./retention.md).
-- `--gc-time-threshold-ms <int>`: Age, in milliseconds, before a workflow is garbage-collected.
+- `--gc-rows-threshold <int>`: Number of most recently completed workflows whose history is kept; history of older completed workflows is garbage-collected. See [Workflow Retention Policies](./retention.md).
+- `--gc-time-threshold-ms <int>`: Time, in milliseconds, after a workflow completes before its history is garbage-collected.
 - `--private-mode`: Whether the application is in private mode, in which it does not send workflow payload data — inputs, outputs, and events — to Conductor. Pass `--private-mode=false` to turn it back off.
 
 ---

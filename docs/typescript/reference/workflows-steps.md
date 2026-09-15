@@ -63,6 +63,8 @@ DBOS.registerWorkflow<This, Args extends unknown[], Return>(
 ```typescript
 interface FunctionName {
   name?: string;
+  className?: string;
+  ctorOrProto?: object;
 }
 ```
 
@@ -86,6 +88,11 @@ await workflow();
 - **func**: The function to be wrapped in a workflow.
 - **config**: Accepts all fields from [`WorkflowConfig`](#dbosworkflow) plus:
   - **name**: The name with which to register the workflow. Defaults to the function name.
+  - **ctorOrProto**: If the function is a class method, its class (for a `static` method) or the class's prototype (for an instance method; passing the class itself also works).
+DBOS records the workflow's class so that, when the workflow is dequeued or recovered, it can find the class and, for instance methods, the right [`ConfiguredInstance`](#instance-method-workflows).
+You must set this when registering an instance method; otherwise, the workflow can't be run from a queue or recovered.
+  - **className**: The name of the class the function belongs to. Defaults to the name of the class given in `ctorOrProto`.
+For a `static` method, you can set `className` without `ctorOrProto`. If you set both, `className` must be the class's registered name.
   - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
@@ -350,6 +357,29 @@ class MyClass extends ConfiguredInstance {
     // ... Operations that use this.cfg
   }
 }
+
+const myClassInstance = new MyClass('instanceA', myConfig);
+```
+
+To register an instance method without decorators, register it on the class prototype with [`DBOS.registerWorkflow`](#dbosregisterworkflow), passing the class as `ctorOrProto` so DBOS can find the instance when the workflow is dequeued or recovered:
+
+```typescript
+class MyClass extends ConfiguredInstance {
+  cfg: MyConfig;
+  constructor(name: string, config: MyConfig) {
+    super(name);
+    this.cfg = config;
+  }
+
+  async testWorkflow(p: string): Promise<void> {
+    // ... Operations that use this.cfg
+  }
+}
+
+MyClass.prototype.testWorkflow = DBOS.registerWorkflow(MyClass.prototype.testWorkflow, {
+  name: "testWorkflow",
+  ctorOrProto: MyClass,
+});
 
 const myClassInstance = new MyClass('instanceA', myConfig);
 ```
