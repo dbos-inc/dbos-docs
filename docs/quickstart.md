@@ -203,7 +203,7 @@ To teach your AI coding assistant to build with DBOS, try out [skills](./typescr
 <article className="col col--6">
 
 #### 1. Initialize an Application
-Initalize a starter application and enter its directory.
+Initialize a starter application and enter its directory.
 DBOS requires Node v20 or later.
 </article>
 

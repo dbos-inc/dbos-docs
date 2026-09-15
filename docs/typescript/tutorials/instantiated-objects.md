@@ -34,7 +34,7 @@ When you create a new instance of such a class, the constructor for the base `Co
 This `name` must be unique among instances of the same class.
 Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.launch() is called.
 
-The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+The reason for these requirements is to enable workflow recovery.  When you create a new instance of a `ConfiguredInstance` class, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 
 ## Using Configured Class Instances
 Configured class instances should be created and named when the application starts, before any workflows run.  This ensures that they will all be initialized before any processing begins.

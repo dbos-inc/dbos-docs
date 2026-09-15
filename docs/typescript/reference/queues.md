@@ -171,7 +171,7 @@ class WorkflowQueue {
 ```
 
 A queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) if any of its partition limits is set.
-Each `set` method validates the new value against the queue's other limits: a per-partition concurrency limit must be less than or equal to its queue-wide counterpart, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency`.
+Each `set` method validates the new value against the queue's other limits using the same rules as [`registerQueue`](#dbosregisterqueue): for example, `workerConcurrency` and each per-partition concurrency limit must be less than or equal to `globalConcurrency`, and `partitionWorkerConcurrency` must be less than or equal to `partitionConcurrency` and `workerConcurrency`.
 Pass `undefined` to any `set` method except `setMinPollingIntervalMs` to remove that limit.
 
 ### Reconfiguring Queues

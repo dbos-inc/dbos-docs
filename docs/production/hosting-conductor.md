@@ -161,7 +161,7 @@ DBOS(config=config)
 </TabItem>
 <TabItem value="typescript" label="TypeScript">
 
-```javascript
+```typescript
 DBOS.setConfig({
     "name": "my-app-name",
     "applicationVersion": "0.1.0",

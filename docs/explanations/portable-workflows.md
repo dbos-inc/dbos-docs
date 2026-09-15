@@ -248,6 +248,7 @@ However, individual operations can override this&mdash;for example, a workflow r
 Each language's `setEvent` and `writeStream` methods accept a serialization parameter for this purpose.
 
 Note that `send` is not affected by the current workflow's serialization strategy, because messages target a different workflow and the sender does not know what serialization that workflow expects.
+The exception is TypeScript, where `DBOS.send` called from a workflow defaults to that workflow's serialization format.
 You should always set the serialization format explicitly on `send` when communicating cross-language.
 
 You can also send a message to a workflow using the PL/pgSQL function [`dbos.send_message`](system-tables.md#dbossend_message).

@@ -88,7 +88,7 @@ They are useful for publishing information about the status of a workflow or to 
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 
-Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if has already been published.
+Any workflow can call [`DBOS.setEvent`](../reference/methods.md#dbossetevent) to publish a key-value pair, or update its value if it has already been published.
 
 #### getEvent
 

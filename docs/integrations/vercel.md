@@ -52,6 +52,9 @@ Next, create a DBOS worker in a [Vercel Function](https://vercel.com/docs/functi
 In the Vercel Function, define and register your workflows, steps, and queues:
 
 ```ts title="app/api/dbos/route.ts"
+import { DBOS } from '@dbos-inc/dbos-sdk';
+import { waitUntil } from '@vercel/functions';
+
 // Define a workflow and steps
 async function stepOne() {
   // Sleep 3 seconds

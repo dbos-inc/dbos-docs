@@ -149,7 +149,7 @@ Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md)
 
 ```typescript
 // Starting a workflow from in your application
-const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "order-123"})();
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "order-123"})(order);
 const result = await handle.getResult();
 ```
 
@@ -231,7 +231,7 @@ Learn more in the [workflows tutorial](../python/tutorials/workflow-tutorial.md#
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript
-const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})();
+const handle = await DBOS.startWorkflow(orderWorkflowFn, {workflowID: "payment-idempotency-key"})(order);
 ```
 
 Learn more in the [workflows tutorial](../typescript/tutorials/workflow-tutorial.md#workflow-ids-and-idempotency).

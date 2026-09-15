@@ -35,7 +35,7 @@ For each retrieved workflow, emit a JSON whose fields are:
 - `authenticatedRoles`: All roles which the authenticated user could assume
 - `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
+- `output`: If the workflow completed successfully, its output
 - `error`: If the workflow threw an error, the serialized error object
 
 ### npx dbos workflow get
@@ -58,7 +58,7 @@ A JSON whose fields are:
 - `authenticatedRoles`: All roles which the authenticated user could assume
 - `queueName`: The queue of the workflow, if enqueued.
 - `input`: The input arguments to the workflow, in array format
-- `output`: If the workflow completed successfuly, its output
+- `output`: If the workflow completed successfully, its output
 - `error`: If the workflow threw an error, the serialized error object
 
 ### npx dbos workflow steps

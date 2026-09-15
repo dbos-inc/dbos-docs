@@ -683,7 +683,7 @@ They are useful for publishing information about the status of a workflow or to 
 DBOS.setEvent<T>(key: string, value: T): Promise<void>
 ```
 
-Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if has already been published.
+Any workflow can call `DBOS.setEvent` to publish a key-value pair, or update its value if it has already been published.
 
 ### getEvent
 
@@ -1100,7 +1100,11 @@ For example, this code registers `pipelineQueue` and enqueues the `dataPipeline`
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
+const client = await DBOSClient.create({
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
+    // The name of the application that runs the data pipeline
+    applicationName: "data-processing-service",
+});
 
 await client.registerQueue("pipelineQueue");
 
@@ -1408,7 +1412,7 @@ When you create a new instance of such a class, the constructor for the base `Co
 This `name` should be unique among instances of the same class.
 Additionally, all `ConfiguredInstance` classes must be instantiated before DBOS.launch() is called.
 
-The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+The reason for these requirements is to enable workflow recovery.  When you create a new instance of a `ConfiguredInstance` class, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 You should AVOID using ConfiguredInstance if at all possible and instead use registerWorkflow on regular non-class functions.
 
 
@@ -1509,7 +1513,7 @@ handle.getResult(
 
 Wait for the workflow to complete, then return its result.
 The optional `pollingIntervalMs` sets the interval between system database polls while waiting.
-It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow` or the DBOS Client), not to a handle from `DBOS.startWorkflow` in the same process.
+It only applies to handles that wait by polling the database (such as handles from `DBOS.retrieveWorkflow`, from `DBOS.startWorkflow` with a `queueName`, or from the DBOS Client), not to a handle for a workflow that `DBOS.startWorkflow` runs directly in the same process.
 
 ### handle.getStatus
 
@@ -1610,7 +1614,7 @@ This object has the following properties:
 interface StepStatus {
   // The unique ID of this step in its workflow.
   stepID: number;
-  // For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+  // For steps with automatic retries, which attempt number (starting from 1) is currently executing.
   currentAttempt?: number;
   // For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
   maxAttempts?: number;
@@ -1649,7 +1653,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string; // Retrieve workflows with this name.
-  status?: string; // Retrieve workflows with this status (Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status or any of these statuses (each must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`)
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   authenticatedUser?: string; // Retrieve workflows run by this authenticated user.

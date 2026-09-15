@@ -147,7 +147,7 @@ The [queue worker](../examples/queue-worker.md) example shows this design patter
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
 
-For example, here is the previous example of enqueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
+For example, here is the previous example of enqueueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
 
 ```sql
 DECLARE workflow_id text;

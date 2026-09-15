@@ -298,7 +298,7 @@ DBOS.closeStream(
 ```
 
 Close a stream identified by a key.
-After this is called, no more values can be written to the stream.
+After this is called, readers stop at the close, so any value written to the stream afterward is never read.
 Can only be called from within a workflow or step.
 
 **Parameters:**
@@ -386,7 +386,7 @@ Like [`DBOS.readStream`](#dbosreadstream), a value read from workflow code is ch
 
 :::note
 When a checkpointed timeout is replayed, it is revived as a plain `Error` rather than a `DBOSStreamTimeoutError`, so `instanceof` does not hold.
-Use the exported `isStreamTimeoutError` helper to match it in either case.
+Use the `isStreamTimeoutError` helper, exported in the SDK's `Error` namespace (`import { Error as DBOSErrors } from "@dbos-inc/dbos-sdk"`, then `DBOSErrors.isStreamTimeoutError(e)`), to match it in either case.
 :::
 
 ### DBOS.retrieveWorkflow
@@ -430,7 +430,7 @@ DBOS.listWorkflows(
 interface GetWorkflowsInput {
   workflowIDs?: string[]; // Retrieve workflows with these IDs.
   workflowName?: string | string[]; // Retrieve workflows with this name (or any of these names).
-  status?: string | string[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
+  status?: WorkflowStatusString | WorkflowStatusString[]; // Retrieve workflows with this status (or any of these statuses). Must be `ENQUEUED`, `DELAYED`, `PENDING`, `SUCCESS`, `ERROR`, `CANCELLED`, or `MAX_RECOVERY_ATTEMPTS_EXCEEDED`.
   startTime?: string; // Retrieve workflows started after this (RFC 3339-compliant) timestamp.
   endTime?: string; // Retrieve workflows started before this (RFC 3339-compliant) timestamp.
   completedAfter?: string; // Retrieve workflows completed at or after this (RFC 3339-compliant) timestamp.
@@ -665,7 +665,7 @@ The specified `startStep` is the step from which the new workflow will start, so
 - **workflowID**: The ID of the workflow to fork.
 - **startStep**: The ID of the step from which to start the forked workflow. Must match the `functionID` of the step in the original workflow execution.
 - **newWorkflowID**: The ID of the new workflow created by the fork. If not specified, a random UUID is used.
-- **applicationVersion**: The application version on which the forked workflow will run. Useful for "patching" workflows that failed due to a bug in the previous application version.
+- **applicationVersion**: The application version on which the forked workflow will run. Defaults to the original workflow's application version. Useful for "patching" workflows that failed due to a bug in the previous application version.
 - **timeoutMS**: A timeout for the forked workflow in milliseconds.
 - **queueName**: If provided, the forked workflow is enqueued on the specified queue instead of starting immediately.
 - **queuePartitionKey**: If the queue is partitioned, the partition key for the forked workflow.
@@ -761,7 +761,7 @@ Scheduled workflow functions take two arguments: a `Date` (the scheduled executi
 ```typescript
 DBOS.createSchedule(options: {
   scheduleName: string;
-  workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
+  workflowFn: (scheduledDate: Date, context: any) => Promise<void>;
   schedule: string;
   context?: unknown;
   options?: ScheduleOptions;
@@ -899,7 +899,7 @@ Resume a paused schedule so it begins firing again.
 DBOS.applySchedules(
   schedules: Array<{
     scheduleName: string;
-    workflowFn: (scheduledDate: Date, context: unknown) => Promise<void>;
+    workflowFn: (scheduledDate: Date, context: any) => Promise<void>;
     schedule: string;
     context?: unknown;
     automaticBackfill?: boolean;
@@ -913,7 +913,7 @@ Atomically apply a set of schedules.
 Creates or updates each schedule in the list.
 May not be called from within a workflow.
 
-Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queueName` reverts the schedule to the internal queue), while the schedule's status and last-fired time are preserved.
+Existing schedules are upserted by name: all definition fields are replaced with the new entry's values (so any optional field left unset is cleared, e.g. an omitted `queueName` reverts the schedule to the internal queue), while the schedule's ID, status, and last-fired time are preserved.
 
 **Example:**
 
@@ -1024,7 +1024,7 @@ Submit a workflow for execution but delay it by `debouncePeriodMs`.
 Returns a handle to the workflow.
 The workflow may be debounced again, which further delays its execution (up to `debounceTimeoutMs`).
 When the workflow eventually executes, it uses the **last** set of inputs passed into `debounce`.
-After the workflow begins execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
+Once the debounce delay expires and the workflow is released for execution, the next call to `debounce` starts the debouncing process again for a new workflow execution.
 
 **Parameters:**
 - **debounceKey**: A key used to group workflow executions that will be debounced together. For example, if the debounce key is set to customer ID, each customer's workflows would be debounced separately.
@@ -1062,7 +1062,7 @@ DBOS.logger: DLogger;
 ```
 
 Retrieve the DBOS logger.
-This is a pre-configured Winston logger provided as a convenience.
+By default, it writes to the console (and also exports its logs over OTLP when `enableOTLP` is set); you can replace it with a [custom logger](../tutorials/logging.md#custom-logger).
 You do not need to use it if you have your own logger.
 
 ### DBOS.workflowID
@@ -1101,7 +1101,7 @@ This object has the following properties:
 interface StepStatus {
   // The unique ID of this step in its workflow.
   stepID: number;
-  // For steps with automatic retries, which attempt number (zero-indexed) is currently executing.
+  // For steps with automatic retries, which attempt number (starting from 1) is currently executing.
   currentAttempt?: number;
   // For steps with automatic retries, the maximum number of attempts that will be made before the step fails.
   maxAttempts?: number;
@@ -1274,6 +1274,6 @@ This is useful for cross-language interoperability&mdash;for example, if a Pytho
 
 The available values are:
 
-- **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to JSON).
+- **`undefined`** (default): Uses the serializer configured in [`DBOSConfig`](./configuration.md#custom-serialization) (defaults to SuperJSON). Inside a workflow that uses portable serialization, uses `'portable'` instead.
 - **`'portable'`**: Uses a portable JSON format (`portable_json`) that can be deserialized by DBOS applications in any language.
 - **`'native'`**: Explicitly uses the native TypeScript serializer.

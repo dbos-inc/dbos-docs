@@ -476,7 +476,7 @@ Unless `workflowIDs` is set, this query is subject to the client's [`observabili
 
 #### `listQueuedWorkflows`
 
-Retrieves information about workflow execution history for a given workflow queue. 
+Retrieves information about currently enqueued workflows (status `DELAYED`, `ENQUEUED`, or `PENDING`).
 Please see [`DBOS.listQueuedWorkflows`](./methods.md#dboslistqueuedworkflows) for more information.
 If the `applicationName` filter is unset, it defaults to the client's own [`applicationName`](#create) unless `workflowIDs` is set; a client with no application name retrieves every application's workflows.
 Unless `workflowIDs` is set, this query is subject to the client's [`observabilityQueryTimeoutMs`](#create) statement timeout and throws `DBOSQueryTimeoutError` if it exceeds it.
@@ -783,6 +783,7 @@ client.getLatestApplicationVersion(): Promise<VersionInfo>
 ```
 
 Return the latest application version (the one with the highest timestamp).
+If the client has an [`applicationName`](#create), only versions registered by that application (plus versions owned by no application) are considered; otherwise, every application's versions are.
 Throws if no versions are registered.
 Similar to [`DBOS.getLatestApplicationVersion`](./methods.md#dbosgetlatestapplicationversion).
 

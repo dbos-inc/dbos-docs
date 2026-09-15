@@ -28,7 +28,7 @@ npm i @dbos-inc/confluent-kafka-receive
 
 ## Creating a Receiver
 
-The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which requires an underlying library object or configuration:
+The DBOS event receiver classes connect their underlying client libraries to workflows.  First, construct a DBOS event receiver instance, which requires a configuration for its underlying client library:
 
 <Tabs groupId="message-clients">
 <TabItem value="kafkajs" label="KafkaJS">

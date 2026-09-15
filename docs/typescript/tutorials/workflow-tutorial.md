@@ -167,8 +167,8 @@ This is allowed because each step is started in a well-defined sequence before a
 By contrast, the following is not allowed:
 ```typescript
 const results = await Promise.allSettled([
-  async () => { await step1("arg1"); await step2("arg3"); },
-  async () => { await step3("arg2"); await step4("arg4"); },
+  (async () => { await step1("arg1"); await step2("arg3"); })(),
+  (async () => { await step3("arg2"); await step4("arg4"); })(),
 ]);
 ```
 Here, `step2` and `step4` may be started in either order since their execution depends on the relative time taken by `step1` and `step3`.

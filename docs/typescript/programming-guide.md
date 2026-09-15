@@ -153,7 +153,7 @@ Press Control + C to stop the app...
 Press Control + C to stop the app...
 ```
 
-Now, press CTRL+C stop your app. Then, run `npm run start` to restart it. You should see an output like:
+Now, press CTRL+C to stop your app. Then, run `npm run start` to restart it. You should see an output like:
 
 ```
 🚀 Server is running on http://localhost:3000

@@ -82,7 +82,7 @@ While datasource transactions are generally run inside workflows, this is not st
 runTransaction<T>(
   func: () => Promise<T>,
   config?: TransactionConfig & {name?: string}
-)
+): Promise<T>
 ```
 
 **Parameters:**
@@ -119,7 +119,7 @@ registerTransaction<This, Args extends unknown[], Return>(
 ): (this: This, ...args: Args) => Promise<Return>
 ```
 
-Wrap a function in a tranasction.
+Wrap a function in a transaction.
 Returns the wrapped function.
 
 **Parameters:**
@@ -168,7 +168,7 @@ interface TransactionConfig {
 
 **Parameters:**
 - **config**:
-  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read committed`, `repeatable read`, or `serializable`. Defaults to the database's default isolation level (`read committed` in Postgres).
+  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read uncommitted`, `read committed`, `repeatable read`, or `serializable`. Defaults to the database's default isolation level (`read committed` in Postgres).
   - **readOnly**: Whether this transaction only performs reads. Optimizes checkpointing if so.
 
 **Example:**

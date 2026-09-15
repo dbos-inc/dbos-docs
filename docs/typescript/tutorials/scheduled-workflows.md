@@ -67,7 +67,7 @@ Valid cron schedules contain 5 or 6 items, separated by spaces:
  * * * * * *
 ```
 
-Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
+Cron expressions are evaluated in the system's local timezone by default. You can set the `cronTimezone` option (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) to an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `"America/New_York"`) to evaluate the expression in a specific timezone.
 
 You can dynamically create many schedules for the same workflow.
 For example, if you want to perform certain actions periodically for each of your customers, you can create one schedule per customer, using customer ID as context so each workflow knows which customer to act on:
@@ -144,7 +144,7 @@ await DBOS.backfillSchedule(
 );
 ```
 
-Alternatively, you can set `automaticBackfill: true` when creating a schedule so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
+Alternatively, you can set `automaticBackfill: true` when creating a schedule (inside `options` for `DBOS.createSchedule`, or as a top-level field for `DBOS.applySchedules`) so that missed executions are automatically backfilled whenever your application starts or a paused schedule is resumed.
 
 Backfills (manual or automatic) compute missed executions using the schedule's **current** cron expression.
 If you update a schedule's cron expression and then backfill, the backfill generates one execution per tick of the new expression over the requested window—including times the old expression would never have matched.

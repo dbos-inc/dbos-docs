@@ -197,7 +197,7 @@ export class Example {
 - **config**:
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -244,7 +244,7 @@ const workflow = DBOS.registerWorkflow(workflowFunction, {"name": "exampleWorkfl
   - **name**: A name to give the step. If not provided, use the function name.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -287,7 +287,7 @@ async function exampleWorkflow() {
   - **name**: A name to give the step.
   - **retriesAllowed**: Whether to retry the step if it throws an exception.
   - **intervalSeconds**: How long to wait before the initial retry.
-  - **maxAttempts**: How many times to retry a step that is throwing exceptions.
+  - **maxAttempts**: The maximum number of times to attempt a step that is throwing exceptions, including the first attempt.
   - **backoffRate**: How much to multiplicatively increase `intervalSeconds` between retries.
   - **shouldRetry**: Predicate called with the thrown error to decide whether the step should be retried. If it returns `false` (or a promise resolving to `false`), the error is re-thrown immediately without further retries. Ignored when `retriesAllowed` is `false`.
   - **timeoutMS**: The maximum duration, in milliseconds, of a single attempt of this step. An attempt that exceeds it fails with `DBOSStepTimeoutError`; if `retriesAllowed` is `true`, the timed-out attempt is retried like any other failure. The step is not forcibly terminated; instead, [`DBOS.stepStatus.timeoutSignal`](./methods.md#dbosstepstatus) fires so the step can cooperatively cancel its underlying operation. A step that ignores the signal keeps running in the background and its result is discarded.
@@ -296,7 +296,7 @@ async function exampleWorkflow() {
 
 Workflows are uniquely identified by a class name + function name pair.
 
-If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overriden with the `DBOS.className` decorator.
+If a function is registered through a decorator, by default the class name is taken from the `class` itself, but the name may be overridden with the `DBOS.className` decorator.
 
 This allows:
   - reusing the same `class` identifier across multiple files, or
@@ -330,7 +330,7 @@ abstract class ConfiguredInstance {
 }
 ```
 
-You can register or decorate class instance methods.  However, if a class has any workflow methods or instance methods decorated with `@DBOS.step`, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
+You can register or decorate class instance methods.  However, if a class has any instance methods that are workflows or are decorated with `@DBOS.step`, that class must inherit from `ConfiguredInstance`, which takes an instance name and registers the instance.
 
 When you create a new instance of the class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
 This `name` should be unique among instances of the same class.
@@ -354,7 +354,7 @@ class MyClass extends ConfiguredInstance {
 const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
-The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
+The reason for these requirements is to enable workflow recovery.  When you create a new instance of a `ConfiguredInstance` class, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
 
 ## Patching
 
