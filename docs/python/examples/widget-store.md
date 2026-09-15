@@ -9,8 +9,7 @@ This example is also available in [TypeScript](../../typescript/examples/checkou
 
 In this example, we use DBOS and FastAPI to build an online storefront that's resilient to any failure.
 
-You can see the application live [here](https://demo-widget-store.cloud.dbos.dev/).
-Try playing with it and pressing the crash button as often as you want.
+You can [run the application yourself](#try-it-yourself) and press its crash button as often as you want.
 Within a few seconds, the app will recover and resume as if nothing happened.
 
 All source code is [available on GitHub](https://github.com/dbos-inc/dbos-demo-apps/tree/main/python/widget-store).
@@ -60,7 +59,7 @@ It checkpoints each step in the database so that if the app fails or is interrup
 This means that customers never lose their order progress, no matter what breaks.
 
 You can try this yourself!
-On the [live application](https://demo-widget-store.cloud.dbos.dev/), start an order and press the crash button at any time.
+[Run the application](#try-it-yourself), start an order, and press the crash button at any time.
 Within seconds, your app will recover to exactly the state it was in before the crash and continue as if nothing happened.
 
 ```python

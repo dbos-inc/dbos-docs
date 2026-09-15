@@ -154,7 +154,7 @@ workflow_id := dbos.enqueue_workflow(
     class_name => 'com.example.OrderProcessor',
     queue_name => 'orders', 
     positional_args => ARRAY['"order-123"'::json]
-)
+);
 ```
 
 </TabItem>
@@ -372,11 +372,11 @@ DBOS.setEvent(
 <TabItem value="plpgsql" label="PL/pgSQL">
 
 ```sql
-dbos.send_message(
-    destination_id  => 'workflow-123', 
+PERFORM dbos.send_message(
+    destination_id => 'workflow-123',
     message => '{"status": "complete", "count": 42}'::json,
-    topic => "updates"
-)
+    topic => 'updates'
+);
 ```
 
 </TabItem>
