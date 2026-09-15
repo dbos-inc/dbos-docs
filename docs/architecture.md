@@ -123,6 +123,7 @@ Conductor is the control plane for your durable workflows, providing:
 - [**Workflow and queue observability**](./production/workflow-management.md): Conductor provides dashboards of all active and past workflows and all queued tasks as well as real-time workflow visualization.
 - [**Workflow and queue management**](./production/workflow-management.md): From the Conductor dashboard, you can pause any workflow execution, start any stopped or enqueued workflow, or restart any workflow from a specific step. This is useful for rapidly responding to incidents or debugging.
 - [**Managed Retention Policies**](./production/retention.md): From the Conductor dashboard, manage how much workflow history each of your applications should retain and for how long to retain it.
+- [**Autoscaling and version management**](./production/autoscaling.md): Conductor computes how many executors each version of your application needs from queue utilization, so autoscalers like KEDA can size a deployment per application version, drain old versions down to zero, and drive rollouts.
 - [**Observability Integrations**](./production/metrics.md): Conductor exposes metrics about your applications' workflows, steps, and executors from a Prometheus-compatible endpoint, so you can monitor your DBOS applications in Datadog, Grafana, or any other tool that understands the OpenMetrics format.
 
 Architecturally, Conductor looks like this:
@@ -136,7 +137,7 @@ If one of your application servers fails, Conductor detects the failure through 
 This architecture has two useful implications:
 
 1. Conductor is **secure** and **privacy-preserving**. It does not have access to your database, nor does it need direct access to your application servers. Instead, your servers open outbound websocket connections to it and communicate exclusively through its websocket protocol.
-2. Conductor is **out of band** and **off your critical path**. Conductor is **only** used for observability and recovery and is never involved in workflow execution (unlike the external orchestrators of other workflow systems).
+2. Conductor is **off your workflows orchestration path**. Conductor drives observability, recovery, and retention policies, and is never involved in workflow execution (unlike the external orchestrators of other workflow systems).
 If your application's connection to Conductor is interrupted, it will continue to operate normally, and any failed workflows will automatically be recovered as soon as the connection is restored.
 
 For more information on Conductor, see [its docs](./production/conductor.md).
