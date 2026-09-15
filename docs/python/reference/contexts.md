@@ -769,7 +769,7 @@ DBOS must be launched before calling `register_queue`.
 If the queue already exists in the database, the `on_conflict` parameter controls whether its configuration is overwritten.
 
 **Parameters:**
-- `name`: The name of the queue. Must be unique among all queues in the application.
+- `name`: The name of the queue. Must be unique among all queues in the application. Names starting with `_dbos_` are reserved for DBOS.
 - `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If not provided, any number of functions may run concurrently.
 - `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. Must be less than or equal to `global_concurrency`.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
@@ -1637,20 +1637,6 @@ DBOS.logger: Logger
 
 Retrieve the DBOS logger. This is a pre-configured Python logger provided as a convenience.
 
-### sql_session
-
-```python
-DBOS.sql_session: sqlalchemy.Session
-```
-
-May only be accessed from within a transaction.
-Retrieves the SQLAlchemy session of the transaction, a database connection the transaction can use to interact with the database.
-
-:::tip
-DBOS automatically wraps your transaction functions in a SQLAlchemy ["begin once" block](https://docs.sqlalchemy.org/en/20/core/connections.html#connect-and-begin-once-from-the-engine). Transaction functions automatically commit when they successfully complete and roll back if they throw an exception. Therefore, do not use `DBOS.sql_session.commit()` or `DBOS.sql_session.rollback()` in your transaction functions. Otherwise, you might see a `sqlalchemy.exc.InvalidRequestError: Can't operate on closed transaction inside
-context manager` error.
-:::
-
 ### workflow_id
 
 ```python
@@ -1693,7 +1679,7 @@ class StepStatus:
 DBOS.span: opentelemetry.trace.Span
 ```
 
-Retrieve the OpenTelemetry span associated with the curent request.
+Retrieve the OpenTelemetry span associated with the current workflow or step.
 You can use this to set custom attributes in your span.
 
 ### executor_id

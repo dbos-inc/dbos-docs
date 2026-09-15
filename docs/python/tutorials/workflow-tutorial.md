@@ -193,8 +193,7 @@ async def example_step():
 async def example_workflow(friend: str):
     await DBOS.sleep_async(10)
     body = await example_step()
-    result = await asyncio.to_thread(example_transaction, body)
-    return result
+    return body
 ```
 
 ### Running Async Steps In Parallel

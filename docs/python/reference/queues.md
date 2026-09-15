@@ -328,28 +328,3 @@ def on_user_task_submission(user_id: str, task: Task):
     with SetEnqueueOptions(queue_partition_key=user_id):
         DBOS.enqueue_workflow("partitioned_queue", process_task, task)
 ```
-
-## Legacy: In-Memory Queues
-
-:::warning Deprecated
-The `Queue(...)` constructor registers a queue only in process memory and is **deprecated**.
-Prefer [`DBOS.register_queue`](./contexts.md#register_queue), which persists the queue to the system database and makes it observable through the dashboard and [`DBOSClient`](./client.md).
-:::
-
-```python
-Queue(
-    name: str,
-    *,
-    global_concurrency: Optional[int] = None,
-    worker_concurrency: Optional[int] = None,
-    limiter: Optional[QueueRateLimit] = None,
-    partition_concurrency: Optional[int] = None,
-    partition_worker_concurrency: Optional[int] = None,
-    partition_limiter: Optional[QueueRateLimit] = None,
-    polling_interval_sec: float = 1.0,
-)
-```
-
-Construct an in-memory queue at module load time.
-The constructor takes the same parameters as [`DBOS.register_queue`](./contexts.md#register_queue) (other than `on_conflict`).
-In-memory queues do not support runtime reconfiguration via the `set_*` methods.

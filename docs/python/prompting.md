@@ -552,7 +552,7 @@ Additionally, coroutine workflows should use the asynchronous versions of the wo
 :::tip
 
 For async database operations, use an `AsyncSQLAlchemyDatasource`, which supports `async def` transaction functions (see Datasources below).
-The legacy `@DBOS.transaction` decorator does not support coroutine functions; to call it or any other blocking function from an async workflow without blocking the event loop, use `asyncio.to_thread`.
+To call a blocking function from an async workflow without blocking the event loop, use `asyncio.to_thread`.
 
 :::
 
@@ -1321,7 +1321,7 @@ def reset_dbos():
     config: DBOSConfig = {
         "name": "my-app",
         "application_version": "0.1.0",
-        "database_url": os.environ.get("TESTING_DATABASE_URL"),
+        "system_database_url": os.environ.get("TESTING_DATABASE_URL"),
     }
     DBOS(config=config)
     DBOS.reset_system_database(truncate=True)
@@ -1740,12 +1740,12 @@ class DBOSConfig(TypedDict):
     executor_id: Optional[str]
 
     system_database_url: Optional[str]
-    application_database_url: Optional[str]
     sys_db_pool_size: Optional[int]
     sys_db_polling_concurrency: Optional[int]
     dbos_system_schema: Optional[str]
     system_database_engine: Optional[sqlalchemy.Engine]
     use_listen_notify: Optional[bool]
+    observability_query_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
     conductor_url: Optional[str]
@@ -1755,9 +1755,6 @@ class DBOSConfig(TypedDict):
     otlp_logs_endpoints: Optional[List[str]]
     otlp_attributes: Optional[dict[str, str]]
     log_level: Optional[str]
-
-    run_admin_server: Optional[bool]
-    admin_port: Optional[int]
 
     serializer: Optional[Serializer]
 ```
@@ -1791,15 +1788,12 @@ If no connection string is provided, DBOS uses a SQLite database:
 ```shell
 sqlite:///[application_name].sqlite
 ```
-- **application_database_url**: A connection string to your application database.
-This is the database in which DBOS executes `@DBOS.transaction` functions.
-This parameter has the same format and default as `system_database_url`.
-If you are not using `@DBOS.transaction`, you do not need to supply this parameter.
 - **sys_db_pool_size**: The size of the connection pool used for the DBOS system database. Defaults to 20.
 - **sys_db_polling_concurrency**: The maximum number of database-backed polling reads from wait operations (such as `get_result`, `recv`, `get_event`, and `read_stream`) that may run concurrently against the system database pool. This prevents high-fan-out polling from checking out every connection in the pool and starving control-plane operations (such as enqueue/dequeue, status writes, recovery, and cancellation). Defaults to half the `sys_db_pool_size` (minimum 1). Set to a non-positive value to disable the limit.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to "dbos".
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
 - **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be False in SQLite.
+- **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
 - **conductor_key**: An API key for DBOS Conductor. If provided, application is connected to Conductor. API keys can be created from the DBOS console.
 - **conductor_url**: The URL of the Conductor service to connect to. Only set if you are self-hosting Conductor.
 - **enable_otlp**: Enable DBOS OpenTelemetry tracing and export. Defaults to False.
@@ -1807,8 +1801,6 @@ If you are not using `@DBOS.transaction`, you do not need to supply this paramet
 - **otlp_logs_endpoints**: the DBOS logger can export OTLP-formatted log signals. Use this field to declare a list of OTLP-compatible log receivers. Requires `enable_otlp` to be True.
 - **otlp_attributes**: A set of attributes (key-value pairs) to apply to all OTLP-exported logs and traces.
 - **log_level**: Configure the DBOS logger severity. Defaults to `INFO`.
-- **run_admin_server**: Whether to run an HTTP admin server for workflow management operations. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to False.
-- **admin_port**: The port on which the admin server runs. Deprecated; the admin server will be removed in a future version of DBOS. Defaults to 3001. Has no effect unless `run_admin_server` is set.
 - **serializer**: A custom serializer for the system database.
 
 #### Custom Serialization
@@ -1936,8 +1928,6 @@ async def greeting_workflow(name: str, note: str) -> None:
 ```
 
 `SQLAlchemyDatasource` ONLY supports synchronous (non-`async def`) functions and `AsyncSQLAlchemyDatasource` ONLY supports `async def` functions. Decorating the wrong function type raises a `DBOSException`.
-
-`@DBOS.transaction` is an older, synchronous-only alternative to datasources. Prefer datasources for new code.
 
 ````
 

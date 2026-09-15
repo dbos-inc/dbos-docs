@@ -65,16 +65,16 @@ if __name__ == "__main__":
 
 ```python
 DBOS.listen_queues(
-    queues: Sequence[Union[Queue, str]]
+    queues: Sequence[str]
 )
 ```
 
 Configure this DBOS process to only listen to (dequeue workflows from) specific queues.
-If this is not used, DBOS will listen to all declared queues.
+If this is not used, DBOS will listen to all registered queues.
 Must be called before DBOS is launched.
 
 **Parameters:**
-- `queues`: The queues to listen to, given as [`Queue`](./queues.md#class-dbosqueue) objects or as queue names.
+- `queues`: The names of the queues to listen to.
 
 ### destroy
 
@@ -86,7 +86,7 @@ DBOS.destroy(
 ```
 
 Destroy the DBOS singleton, terminating all active workflows and closing database connections.
-After this completes, the singleton can be re-initialized.
+After this completes, the singleton can be re-initialized: construct a new instance with `DBOS(config=...)` before calling `DBOS.launch()` again.
 Useful for testing.
 
 **Parameters:**

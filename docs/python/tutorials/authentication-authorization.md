@@ -87,7 +87,7 @@ As with the simpler example in [Authorization Decorators](#authorization-decorat
 
 What is different is that `oauth2_scheme` and `decode_jwt` are used to extract token contents.  The resulting information is used to set the DBOS user and roles.  If the user / roles are stored in different fields in the token, adjust the access to `tdata` accordingly.
 
-The user and roles can then be used in decorated DBOS workflow, transaction, and step functions.
+The user and roles can then be used in decorated DBOS workflow and step functions.
 
 ```python
     @app.get("/open/{var1}")

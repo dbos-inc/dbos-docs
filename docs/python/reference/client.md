@@ -28,6 +28,7 @@ DBOSClient(
     lazy: bool = False,
     retry_connection_errors: bool = True,
     application_name: Optional[str] = None,
+    observability_query_timeout_sec: Optional[float] = None,
 )
 ```
 **Parameters:**
@@ -41,6 +42,7 @@ DBOSClient(
 - `lazy`: Whether to defer connecting to the system database until the client is first used. Defaults to `False`, meaning the connection is checked on construction and the constructor raises if the system database is unreachable. If `True`, the constructor does not connect; use [`check_connection`](#check_connection) to check the connection explicitly. Cannot be combined with `use_listen_notify`, whose listener thread connects immediately (raises `DBOSException` if both are set).
 - `retry_connection_errors`: Whether a client operation that loses its database connection blocks and retries until the connection recovers. Defaults to `True`. Set to `False` to raise connection errors instead, so an unreachable database surfaces as an error rather than a wait.
 - `application_name`: The application on whose behalf this client acts. Workflows the client enqueues and queues and schedules it registers are owned by that application, and the client's listing operations default to that application's rows. Always set this if multiple applications share a system database.
+- `observability_query_timeout_sec`: The statement timeout, in seconds, applied to the client's observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout. See [`observability_query_timeout_sec`](./configuration.md#database-connection-settings) in the configuration reference.
 
 **Example syntax:**
 

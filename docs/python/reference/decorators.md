@@ -28,7 +28,7 @@ def greeting_workflow(name: str, note: str):
 ```
 
 **Parameters:**
-- `name`: A name for this workflow. If not provided, the function's fully qualified name is used.
+- `name`: A name for this workflow. If not provided, the function's fully qualified name is used. Workflow names must be unique: registering workflows with the same name from different modules raises a `DBOSException`.
 - `max_recovery_attempts`: The maximum number of times execution of a workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
 If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it may no longer be executed.
@@ -75,68 +75,6 @@ def example_step():
 - `timeout_seconds`: If set, cancel the step and raise `DBOSStepTimeoutError` if it runs for longer than this many seconds. Only supported for async steps, and must be positive and finite. Each retry attempt gets a fresh timeout. See [Step Timeouts](../tutorials/step-tutorial.md#step-timeouts).
 
 
-### transaction
-
-```python
-DBOS.transaction(
-    isolation_level: str = "SERIALIZABLE"
-    *,
-    name: Optional[str] = None,
-)
-```
-
-Transactions are a special type of step that are optimized for database operations.
-They execute as a single [database transaction](https://en.wikipedia.org/wiki/Database_transaction).
-They provide database access through the `DBOS.sql_session` context variable.
-
-**Example:**
-```python
-@DBOS.transaction()
-def example_insert(name: str, note: str) -> None:
-    # Insert a new greeting into the database
-    sql = text("INSERT INTO greetings (name, note) VALUES (:name, :note)")
-    DBOS.sql_session.execute(sql, {"name": name, "note": note})
-```
-
-**Parameters:**
-- `isolation_level`: The isolation level with which to run the transaction. Must be one of `SERIALIZABLE`, `REPEATABLE READ`, or `READ COMMITTED`. Defaults to `SERIALIZABLE`.
-- `name`: A name for this transaction. If not provided, the function's fully qualified name is used.
-
-### scheduled
-
-```python
-DBOS.scheduled(
-    cron: str
-)
-```
-
-Run a function on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax. See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
-
-The annotated function must take in two parameters: The time that the run was scheduled (as a `datetime`) and the time that the run was actually started (also a `datetime`).  Functions within classes may be marked as `@staticmethod` to meet this requirement.
-
-**Example:**
-```python
-@DBOS.scheduled('* * * * *') # crontab syntax to run once every minute
-@DBOS.workflow()
-def example_scheduled_workflow(scheduled_time: datetime, actual_time: datetime):
-    DBOS.logger.info("I am a workflow scheduled to run once a minute. ")
-```
-
-**Parameters:**
-- `cron`: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax. DBOS uses [croniter](https://pypi.org/project/croniter/) to parse cron schedules, which is able to do second repetition and by default we use seconds as the first field ([`second_at_beginning=True`](https://pypi.org/project/croniter/#about-second-repeats)). The DBOS variant contains 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
-
 ### required_roles
 
 ```python
@@ -165,7 +103,6 @@ def my_support_workflow():
 DBOS.kafka_consumer(
         config: dict[str, Any],
         topics: list[str],
-        in_order: bool = False,
         *,
         ordering: Optional[Literal["none", "partition", "topic"]] = None,
         batch_size: int = 250,
@@ -189,8 +126,7 @@ The decorated function must take a KafkaMessage as its only parameter.
   - `"partition"`: messages are processed serially per topic partition (preserving Kafka's per-partition delivery order) and in parallel across partitions.
   - `"topic"`: messages are processed serially per topic.
 - `batch_size`: The maximum number of messages consumed from Kafka and durably enqueued per batch. Defaults to 250.
-- `queue_name`: The name of an optional [queue](./queues.md) on which consumer workflows run, for example to configure concurrency or rate limits. Only valid with `ordering="none"`; ordered consumers share an internal partitioned queue. The named queue must not be a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues).
-- `in_order`: **(Deprecated)** Alias for `ordering="topic"`. Use `ordering` instead.
+- `queue_name`: The name of an optional [queue](./queues.md) on which consumer workflows run, for example to configure concurrency or rate limits. Only valid with `ordering="none"`; ordered consumers share an internal partitioned queue. The named queue must not be a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues). If you use [`DBOS.listen_queues`](./dbos-class.md#listen_queues), you must include this queue.
 
 **Example**
 ```python
@@ -267,7 +203,7 @@ DBOS.dbos_class(
 )
 ```
 
-The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow, transaction, and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
+The `@DBOS.dbos_class` decorator should be applied to all classes with DBOS workflow and step functions.  This decorator assists in making sure all functions are properly registered with the class and provided with class-level configuration information.
 
 **Parameters**
 - `class_name` (Optional): A custom name to register the class with DBOS. By default, DBOS uses the class’s qualified name (`cls.__qualname__`) for identification. This can be overridden by providing a user-defined name, which may differ from the qualified name. All class names registered with DBOS must be globally unique.

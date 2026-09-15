@@ -4,7 +4,7 @@ title: Integrating with Kafka
 description: Overview of using DBOS with Kafka
 ---
 
-In this guide, you'll learn how to use DBOS transactions and workflows to process Kafka messages with exactly-once semantics.
+In this guide, you'll learn how to use DBOS workflows to process Kafka messages with exactly-once semantics.
 
 First, install [Confluent Kafka](https://docs.confluent.io/kafka-clients/python/current/overview.html) in your application:
 
@@ -12,7 +12,7 @@ First, install [Confluent Kafka](https://docs.confluent.io/kafka-clients/python/
 pip install confluent-kafka
 ```
 
-Then, define your transaction or workflow. It must take in a Kafka message as an input parameter:
+Then, define your workflow. It must take in a Kafka message as an input parameter:
 
 ```python
 from dbos import DBOS, KafkaMessage
@@ -46,9 +46,9 @@ def test_kafka_workflow(msg: KafkaMessage):
 
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow or transaction.
+Under the hood, DBOS constructs an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
-Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your transaction or workflow processes it exactly once.
+Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
 ## In-Order Processing
 
