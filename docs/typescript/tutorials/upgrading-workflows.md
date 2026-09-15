@@ -69,7 +69,7 @@ For example, here's how to deprecate the patch above:
 ```typescript
 @DBOS.workflow()
 static async workflow(){
-  if (await DBOS.deprecate_patch("use-baz")) { // always true
+  if (await DBOS.deprecatePatch("use-baz")) { // always true
     await baz();
   }
   await bar();
@@ -154,7 +154,7 @@ You can use [`DBOS.listWorkflows`](../reference/methods.md#dboslistworkflows) to
 ```typescript
 const active = await DBOS.listWorkflows({
   applicationVersion: "1.0.0",
-  status: ["ENQUEUED", "PENDING"],
+  status: ["ENQUEUED", "DELAYED", "PENDING"],
 });
 if (active.length === 0) {
   console.log("Safe to retire version 1.0.0");

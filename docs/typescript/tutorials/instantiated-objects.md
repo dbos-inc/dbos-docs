@@ -4,7 +4,8 @@ title: Using Typescript Objects
 ---
 
 You can use class instance methods as workflows and steps.
-Any class instance method can be freely used as a step using the [`DBOS.step`](../reference/workflows-steps.md#dbosstep) decorator or [`DBOS.runStep`](../reference/workflows-steps.md#dbosrunstep); there are no special requirements.
+Any class instance method can be freely used as a step using [`DBOS.runStep`](../reference/workflows-steps.md#dbosrunstep); there are no special requirements.
+To use the [`DBOS.step`](../reference/workflows-steps.md#dbosstep) decorator on a class instance method, the class must inherit from `ConfiguredInstance`.
 To use a class instance method as a workflow, you must use the [`DBOS.workflow`](../reference/workflows-steps.md#dbosworkflow) decorator and the class must inherit from `ConfiguredInstance`.
 For example:
 
@@ -13,7 +14,7 @@ class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
   constructor(name: string, config: MyConfig) {
     super(name);
-    this.cfg = cfg;
+    this.cfg = config;
   }
 
   override async initialize() : Promise<void> {
@@ -26,7 +27,7 @@ class MyClass extends ConfiguredInstance {
   }
 }
 
-const myClassInstance = new MyClass('instanceA');
+const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
 When you create a new instance of such a class, the constructor for the base `ConfiguredInstance` must be called with a `name`.
@@ -42,10 +43,10 @@ Configured class instances should be created and named when the application star
 All configured classes:
 * Extend from the `ConfiguredInstance` base class
 * Provide a constructor, which can take any arguments, but must provide a name to the base `ConfiguredInstance` constructor
-* May have an `initialize()` method that will be called after all objects have been created, but before request handling commences
+* May have an `initialize()` method that will be called after all objects have been created, but before workflow processing commences
 
 ### `initialize()` Method
-The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before request and workflow processing commences.  [`DBOS`](../reference/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
+The `initialize()` method will be called during application initialization, after the code modules have been loaded, but before workflow processing commences.  [`DBOS`](../reference/dbos-class.md) is available during initialize.  Any validation of connection information (complete with diagnostic logging and reporting of any problems) should be performed in `initialize()`.
 
 ## Notes
-Event registration decorators such as `@DBOS.scheduled` cannot be applied to instance methods.
+Event receiver decorators such as the [Kafka](./externalmessages.md) `@consumer` decorator cannot be applied to instance methods.

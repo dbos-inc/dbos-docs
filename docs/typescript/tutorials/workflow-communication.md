@@ -126,9 +126,9 @@ static async webCheckout(...): Promise<void> {
   const handle = await DBOS.startWorkflow(Shop).checkoutWorkflow(...);
   const url = await DBOS.getEvent<string>(handle.workflowID, PAYMENT_URL, 300);
   if (url === null) {
-    DBOS.koaContext.redirect(`${origin}/checkout/cancel`);
+    ... // Redirect the customer to a cancellation page.
   } else {
-    DBOS.koaContext.redirect(url);
+    ... // Redirect the customer to the payments URL.
   }
 }
 ```

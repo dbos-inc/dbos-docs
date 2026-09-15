@@ -96,7 +96,7 @@ config: DBOSConfig = {
         "otlp_traces_endpoints": [ "http://0.0.0.0:4318/v1/traces" ], #match the config in step 1 above
         "otlp_logs_endpoints": [  "http://0.0.0.0:4318/v1/logs" ]
 }
-DBOS(fastapi=app, config=config)
+DBOS(config=config)
 ```
 </TabItem>
 <TabItem value="typescript" label="Typescript">

@@ -47,7 +47,7 @@ await Example.exampleWorkflow();
   - **name**: The name to use for the workflow function.  If not specified, the method name is used.
   - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) to use for local invocations of this workflow. Set to `"portable"` to test [cross-language interoperability](../../explanations/portable-workflows.md).
   - **inputSchema**: A schema for validating and optionally transforming workflow input arguments. Must have a `.parse()` method, making it compatible with [Zod](https://zod.dev/) schemas, AJV wrappers, or any custom validator. The schema receives the arguments as an array (tuple) and should return the validated/transformed array. Runs before the workflow function on every invocation (direct call, queue dispatch, and recovery). See [Input Validation and Coercion](#input-validation-and-coercion) below for details and examples.
 
@@ -57,7 +57,7 @@ If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it
 DBOS.registerWorkflow<This, Args extends unknown[], Return>(
     func: (this: This, ...args: Args) => Promise<Return>,
     config?: FunctionName & WorkflowConfig,
-  ): (this: This, ...args: Args) => Promise<Return> => Promise<Return> 
+  ): (this: This, ...args: Args) => Promise<Return>
 ```
 
 ```typescript
@@ -89,84 +89,9 @@ await workflow();
   - **name**: The name with which to register the workflow. Defaults to the function name.
   - **maxRecoveryAttempts**: The maximum number of times the workflow may be attempted.
 This acts as a [dead letter queue](https://en.wikipedia.org/wiki/Dead_letter_queue) so that a buggy workflow that crashes its application (for example, by running it out of memory) does not do so infinitely.
-If a workflow exceeds this limit, its status is set to `RETRIES_EXCEEDED` and it is no longer automatically recovered.
+If a workflow exceeds this limit, its status is set to `MAX_RECOVERY_ATTEMPTS_EXCEEDED` and it is no longer automatically recovered.
   - **serialization**: The default [serialization format](../../explanations/portable-workflows.md) for local invocations of this workflow (`"portable"` or `"native"`).
   - **inputSchema**: A schema for validating/transforming input arguments. See [`WorkflowConfig`](#dbosworkflow) above.
-
-### DBOS.scheduled
-
-```typescript
-DBOS.scheduled(
-  schedulerConfig: SchedulerConfig
-);
-```
-
-```typescript
-class SchedulerConfig {
-  crontab: string;
-  mode?: SchedulerMode = SchedulerMode.ExactlyOncePerIntervalWhenActive;
-  queueName?: string;
-}
-```
-
-A decorator directing DBOS to run a workflow on a schedule specified using [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
-See [here](https://docs.gitlab.com/ee/topics/cron/) for a guide to cron syntax and [here](https://crontab.guru/) for a crontab editor.
-
-The annotated function must take in two parameters: The time that the run was scheduled (as a `Date`) and the time that the run was actually started (also a `Date`).
-For example:
-
-```typescript
-import { DBOS } from '@dbos-inc/dbos-sdk';
-
-class ScheduledExample{
-  @DBOS.workflow()
-  @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-  }
-}
-```
-
-**Parameters:**
-- **schedulerConfig**:
-  - **crontab**: The schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax.
-The DBOS variant contains 5 or 6 items, separated by spaces:
-
-```
- ┌────────────── second (optional)
- │ ┌──────────── minute
- │ │ ┌────────── hour
- │ │ │ ┌──────── day of month
- │ │ │ │ ┌────── month
- │ │ │ │ │ ┌──── day of week
- │ │ │ │ │ │
- │ │ │ │ │ │
- * * * * * *
-```
-  - **mode**:  Whether or not to retroactively start workflows that were scheduled during times when the app was not running. Set to `SchedulerMode.ExactlyOncePerInterval` to enable this behavior.
-  - **queueName**: If set, workflows will be enqueued on the named queue, rather than being started immediately.
-
-### DBOS.registerScheduled
-
-```typescript
-registerScheduled<This, Return>(
-    func: (this: This, ...args: ScheduledArgs) => Promise<Return>,
-    config: SchedulerConfig,
-)
-```
-
-Register a workflow to run on a schedule.
-The semantics are the same as for the [`DBOS.scheduled`](#dbosscheduled) decorator.
-For example:
-
-```typescript
-async function scheduledFunction(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-}
-
-const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
-DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
-```
 
 ## Input Validation and Coercion
 
@@ -244,6 +169,7 @@ interface StepConfig {
 ```
 
 A decorator that marks a function as a step in a durable workflow.
+If a step is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
 ```typescript
@@ -261,8 +187,8 @@ export class Example {
   // Call steps from workflows
   @DBOS.workflow()
   static async exampleWorkflow() {
-    await Toolbox.stepOne();
-    await Toolbox.stepTwo();
+    await Example.stepOne();
+    await Example.stepTwo();
   }
 }
 ```
@@ -288,6 +214,7 @@ DBOS.registerStep<This, Args extends unknown[], Return>(
 
 Wrap a function in a step to safely call it from a durable workflow.
 Returns the wrapped function.
+If the wrapped function is called outside a workflow, it runs as an ordinary function call, without checkpoints, retries, or a timeout.
 
 **Example:**
 
@@ -331,7 +258,7 @@ runStep<Return>(
 ```
 
 Run a function as a step in a workflow.
-Can only be called from a durable workflow.
+If called outside a workflow, `runStep` runs the function as an ordinary function call, without checkpoints, retries, or a timeout.
 Returns the output of the step.
 
 **Example:**
@@ -413,7 +340,7 @@ class MyClass extends ConfiguredInstance {
   cfg: MyConfig;
   constructor(name: string, config: MyConfig) {
     super(name);
-    this.cfg = cfg;
+    this.cfg = config;
   }
 
   @DBOS.workflow()
@@ -422,7 +349,7 @@ class MyClass extends ConfiguredInstance {
   }
 }
 
-const myClassInstance = new MyClass('instanceA');
+const myClassInstance = new MyClass('instanceA', myConfig);
 ```
 
 The reason for these requirements is to enable workflow recovery.  When you create a new instance of, DBOS stores it in a global registry indexed by `name`.  When DBOS needs to recover a workflow belonging to that class, it looks up the `name` so it can run the workflow using the right class instance.  While names are used by DBOS Transact internally to find the correct object instance across system restarts, they are also potentially useful for monitoring, tracing, and debugging.
@@ -439,6 +366,7 @@ DBOS.patch(
 
 Insert a patch marker at the current point in workflow history, returning `true` if it was successfully inserted and `false` if there is already a checkpoint present at this point in history indicating that the workflow should run unpatched.
 Used to safely upgrade workflow code, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail.
+Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
 
 **Parameters:**
 - `patchName`: The name to give the patch marker that will be inserted into workflow history.
@@ -454,6 +382,7 @@ DBOS.deprecatePatch(
 Safely bypass a patch marker at the current point in workflow history if present.
 Always returns `true`.
 Used to safely deprecate patches, see the [patching tutorial](../tutorials/upgrading-workflows.md#patching) for more detail. 
+Must be called from a workflow, and requires [`enablePatching`](./configuration.md#application-settings) to be set in your configuration.
 
 **Parameters:**
 - `patchName`: The name of the patch marker to be bypassed.

@@ -46,7 +46,7 @@ The `KafkaReceiver` constructor takes a KafkaJS configuration as its argument.
 <TabItem value="confluentkafka" label="Confluent Kafka">
 
 ```typescript
-import { ConfluentKafkaReceiver } from '..';
+import { ConfluentKafkaReceiver } from '@dbos-inc/confluent-kafka-receive';
 import { KafkaJS as ConfluentKafkaJS } from '@confluentinc/kafka-javascript';
 
 const kafkaReceiver = new ConfluentKafkaReceiver(kafkaConfig);
@@ -151,16 +151,18 @@ Because each workflow's ID is derived from its message's topic, partition, consu
 ## Rate-Limiting Message Processing
 
 Consumer workflows run on a DBOS [queue](./queue-tutorial.md).
-By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits:
+By default they use an internal queue, but you can name your own queue to configure concurrency or rate limits.
+Register the queue with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) after launching DBOS:
 
 ```typescript
-await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
-
 @kafkaReceiver.consumer('example-topic', { queueName: 'kafka_processing_queue' })
 @DBOS.workflow()
 static async processMessages(topic: string, partition: number, message: KafkaMessage) {
   //...
 }
+
+// After DBOS.launch()
+await DBOS.registerQueue("kafka_processing_queue", { globalConcurrency: 10 });
 ```
 
 A custom queue is only supported with `ordering: 'none'`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).
@@ -198,7 +200,7 @@ await producer?.disconnect();
 
 ```typescript
 // Setup ...
-const kafka = new Kafka(kafkaConfig);
+const kafka = new ConfluentKafkaJS.Kafka({ kafkaJS: kafkaConfig });
 producer = kafka.producer();
 
 // ... produce messages during workflow processing

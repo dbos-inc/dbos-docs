@@ -22,9 +22,10 @@ All fields except `name` are optional.
 
 ```javascript
 export interface DBOSConfig {
-  name?: string;
+  name: string;
   applicationVersion?: string;
   executorID?: string;
+  enablePatching?: boolean;
 
   systemDatabaseUrl?: string;
   systemDatabasePoolSize?: number;
@@ -32,6 +33,7 @@ export interface DBOSConfig {
   systemDatabaseSchemaName?: string;
   systemDatabasePool?: Pool;
   runMigrations?: boolean;
+  observabilityQueryTimeoutMs?: number;
 
   tracingEnabled?: boolean;
   otelAttributeFormat?: 'legacy' | 'semconv';
@@ -41,10 +43,7 @@ export interface DBOSConfig {
   otlpLogsEndpoints?: string[];
   otlpTracesEndpoints?: string[];
 
-  runAdminServer?: boolean;
-  adminPort?: number;
-
-  listenQueues?: (WorkflowQueue | string)[];
+  listenQueues?: string[];
   maxConcurrentQueueDispatches?: number;
 
   schedulerPollingIntervalMs?: number;
@@ -53,6 +52,8 @@ export interface DBOSConfig {
 }
 ```
 
+In [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md), DBOS takes your application's name, system database URL, and OTLP endpoints from environment variables supplied by DBOS Cloud (`DBOS_APP_NAME`, `DBOS_SYSTEM_DATABASE_URL`, `DBOS__OTLP_TRACES_ENDPOINT`, and `DBOS__OTLP_LOGS_ENDPOINT`), overriding `name` and `systemDatabaseUrl` and adding to `otlpTracesEndpoints` and `otlpLogsEndpoints`.
+
 ### Application Settings
 
 - **name**: Your application's name.
@@ -60,6 +61,7 @@ Multiple applications (potentially in different languages) may [share a system d
 If you rename an application, transfer ownership of its data with [`npx dbos rename-application`](./cli.md#npx-dbos-rename-application).
 - **applicationVersion**: The code version for this application and its workflows. Workflow versioning is documented [here](../tutorials/upgrading-workflows.md#versioning).
 - **executorID**: A unique process ID used to identify the application instance in distributed environments. If using DBOS Conductor or Cloud, this is set automatically.
+- **enablePatching**: Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code. Required to use [`DBOS.patch`](./workflows-steps.md#patch) and [`DBOS.deprecatePatch`](./workflows-steps.md#deprecatepatch).
 
 ### Database Connection Settings
 
@@ -82,6 +84,7 @@ If the Postgres database referenced by this connection string does not exist, DB
 Set to false for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`npx dbos schema`](./cli.md#npx-dbos-schema).
 Launch then verifies the schema instead of changing it: a system database that is missing, or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
+- **observabilityQueryTimeoutMs**: The statement timeout, in milliseconds, applied to observability queries (such as [listing workflows](./methods.md#dboslistworkflows), [queued workflows](./methods.md#dboslistqueuedworkflows), and [workflow steps](./methods.md#dboslistworkflowsteps)), so a slow query on a large system database does not hold resources indefinitely. A query that exceeds the timeout throws a `DBOSQueryTimeoutError`. Defaults to 30000 (30 seconds). Set to zero or a negative value to disable the timeout.
 
 ### Logging and Tracing Settings
 
@@ -93,18 +96,9 @@ A system database ahead of the required version is accepted, so a process with m
 - **otlpTracesEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send traces.
 - **otlpLogsEndpoints**: If using the built-in DBOS OpenTelemetry `TracerProvider`, a list of receivers to which to send logs.
 
-### Admin Server Settings
-
-:::warning
-The admin server is deprecated and will be removed in a future version of DBOS.
-:::
-
-- **runAdminServer**: Whether to run an HTTP admin server for workflow management operations. Defaults to False.
-- **adminPort**: The port on which the admin server runs. Defaults to 3001. Has no effect unless `runAdminServer` is set.
-
 ### Queue Settings
 
-- **listenQueues**: This process should only listen to (dequeue and execute workflows from) these queues. Each entry is either a `WorkflowQueue` instance or a queue name. Names that do not match any queue at launch are deferred — a database-backed queue registered later under that name will be picked up automatically.
+- **listenQueues**: The names of the queues this process should listen to (dequeue and execute workflows from). Names that do not match any queue at launch are deferred — a queue registered later under that name will be picked up automatically.
 - **maxConcurrentQueueDispatches**: The maximum number of queues this process may dequeue from concurrently. Defaults to 3. Must be a positive integer; set to 1 to dequeue from one queue at a time.
   A process dequeues from each of its queues in turn. Because dequeuing from a large queue (especially a [partitioned queue](../tutorials/queue-tutorial.md#partitioning-queues) with many active partitions) can take a while, allowing several queues to be dequeued from concurrently prevents a busy queue from delaying work on smaller ones. A single queue is never dequeued from twice concurrently in the same process.
   This setting does not affect [workflow concurrency](../tutorials/queue-tutorial.md#managing-concurrency), [rate limits](../tutorials/queue-tutorial.md#rate-limiting), or `systemDatabasePollingConcurrency`.
@@ -161,6 +155,7 @@ await DBOS.launch();
 ## DBOS Configuration File
 
 Some tools in the DBOS ecosystem, including [DBOS Cloud](../../production/dbos-cloud/deploying-to-cloud.md) and the [DBOS CLI](./cli.md), are configured by a `dbos-config.yaml` file.
+Your application itself does not read this file; configure it with [`DBOS.setConfig`](#configuring-dbos).
 
 Here is an example configuration file with default parameters:
 
@@ -181,23 +176,23 @@ You can use environment variables for configuration values through the syntax `f
 
 Each `dbos-config.yaml` file has the following fields and sections:
 
-- **name**: Your application's name.  Must match the name supplied to `DBOS.setConfig()`.
+- **name**: Your application's name.  Should match the `name` supplied to `DBOS.setConfig()`: DBOS Cloud uses it as the name of your deployed application, and the DBOS [CLI](cli.md) uses it to compute the default system database URL.
 - **language**: The application language.  Must be set to `node` for TypeScript applications.
 - **system_database_url**: The connection string to your DBOS system database.
 This connection string is used by the DBOS [CLI](cli.md).
-It has the same format as the `system_database_url` you pass to the DBOS constructor.
+It has the same format as the `systemDatabaseUrl` you pass to `DBOS.setConfig()`.
 - **runtimeConfig**:
   - **start**: (required only in DBOS Cloud) The command(s) with which to start your app. Called from [`npx dbos start`](./cli.md#npx-dbos-start), which is used to start your app in DBOS Cloud.
   - **setup**: (optional) Setup commands to run before your application is built in DBOS Cloud. Used only in DBOS Cloud. Documentation [here](../../production/dbos-cloud/application-management.md#customizing-microvm-setup).
 
 ### Configuration Schema File
 
-There is a schema file available for the DBOS configuration file schema [in GitHub](https://raw.githubusercontent.com/dbos-inc/dbos-ts/main/dbos-config.schema.json).
+There is a schema file available for the DBOS configuration file schema [in GitHub](https://github.com/dbos-inc/dbos-transact-ts/blob/main/dbos-config.schema.json).
 This schema file can be used to provide an improved YAML editing experience for developer tools that leverage it.
 For example, the Visual Studio Code [RedHat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) provides tooltips, statement completion and real-time validation for editing DBOS config files.
 This extension provides [multiple ways](https://github.com/redhat-developer/vscode-yaml#associating-schemas) to associate a YAML file with its schema.
 The easiest is to simply add a comment with a link to the schema at the top of the config file:
 
 ```yaml
-# yaml-language-server: $schema=https://github.com/dbos-inc/dbos-transact-py/blob/main/dbos/dbos-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-ts/main/dbos-config.schema.json
 ```

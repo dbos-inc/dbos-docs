@@ -103,8 +103,8 @@ const dataSource = new DrizzleDataSource<NodePgDatabase>('app-db', config);
 
 ```typescript
 const config = { connectionString: process.env.DBOS_DATABASE_URL };
-const dataSource1 = TypeORMDataSource.createFromConfig('app-db', config, [/*entities*/]);
-const dataSource2 = TypeORMDataSource.createFromDataSource('app-db-2', existingTypeOrmDS);
+const dataSource1 = TypeOrmDataSource.createFromConfig('app-db', config, [/*entities*/]);
+const dataSource2 = TypeOrmDataSource.createFromDataSource('app-db-2', existingTypeOrmDS);
 ```
 
 </TabItem>

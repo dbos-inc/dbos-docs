@@ -37,7 +37,7 @@ class KnexDataSource {
   constructor(name: string, config: Knex.Config)
 }
 
-const config = {client: 'pg', connectionString: process.env.DBOS_DATABASE_URL}
+const config = {client: 'pg', connection: process.env.DBOS_DATABASE_URL}
 const dataSource = new KnexDataSource('knex-ds', config);
 ```
 
@@ -105,7 +105,7 @@ async function workflowFunction() {
     {name: "countRows", readOnly: true}
   );
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow");
+const workflow = DBOS.registerWorkflow(workflowFunction, {name: "workflow"});
 ```
 
 ### dataSource.registerTransaction()
@@ -144,7 +144,7 @@ async function workflowFunction() {
   await insertRowTransaction();
   await countRowsTransaction();
 }
-const workflow = DBOS.registerWorkflow(workflowFunction, "workflow")
+const workflow = DBOS.registerWorkflow(workflowFunction, {name: "workflow"})
 ```
 
 ### dataSource.transaction() Decorators
@@ -168,7 +168,7 @@ interface TransactionConfig {
 
 **Parameters:**
 - **config**:
-  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read committed`, `repeatable read`, or `serializable`. Default is `serializable`.
+  - **isolationLevel**: The Postgres isolation level of the transaction. Must be one of `read committed`, `repeatable read`, or `serializable`. Defaults to the database's default isolation level (`read committed` in Postgres).
   - **readOnly**: Whether this transaction only performs reads. Optimizes checkpointing if so.
 
 **Example:**

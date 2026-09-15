@@ -178,8 +178,6 @@ import { DBOS } from "@dbos-inc/dbos-sdk";
 await DBOS.registerQueue("example_queue", { workerConcurrency: 5 });
 ```
 
-Note that DBOS uses `executorID` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](../reference/configuration.md).
-
 #### Global Concurrency
 
 Global concurrency limits the total number of workflows from a queue that can run concurrently across all DBOS processes in your application.
@@ -222,6 +220,10 @@ app.get("/events/:event", async (req, res) => {
 
 // Launch DBOS, register the queue, and start the server
 async function main() {
+  DBOS.setConfig({
+    name: "my-app",
+    systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  });
   await DBOS.launch();
   await DBOS.registerQueue("in_order_queue", { globalConcurrency: 1 });
   app.listen(3000, () => {});
@@ -366,7 +368,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow as an argument to `DBOS.startWorkflow`.
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued, delayed, or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -427,11 +429,11 @@ async function main() {
 ### Priority
 
 You can set a priority for an enqueued workflow as an argument to `DBOS.startWorkflow`.
-Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**.
+Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**.
 Priority is enabled on every queue; no extra configuration is needed.
 
 :::tip
-Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+Workflows without assigned priorities have priority `0`, the highest priority.
 :::
 
 Example syntax:
@@ -455,10 +457,10 @@ async function main() {
 You can also dynamically update the priority of an already-enqueued workflow using [`DBOS.setWorkflowPriority`](../reference/methods.md#dbossetworkflowpriority):
 
 ```javascript
-await DBOS.setWorkflowPriority(handle.workflowID, 1); // Promote to highest priority
+await DBOS.setWorkflowPriority(handle.workflowID, 0); // Promote to highest priority
 ```
 
-This only affects workflows with `ENQUEUED` status.
+This only affects workflows with `ENQUEUED` or `DELAYED` status.
 
 ### Delayed Execution
 
@@ -499,10 +501,10 @@ await DBOS.setWorkflowDelay(handle.workflowID, { delayUntilEpochMS: Date.now() +
 
 ## Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all declared queues.
+By default, a process running DBOS listens to (dequeues workflows from) all queues owned by its application in its system database.
 However, sometimes you only want a process to listen to a specific list of queues.
 You can configure `listenQueues` in your [DBOS configuration](../reference/configuration.md) to explicitly tell a process running DBOS to only listen to a specific set of queues.
-Each entry is either a `WorkflowQueue` instance or a queue name (in-memory or database-backed); names that don't match any queue at launch are deferred until a database-backed queue is registered with that name.
+Each entry is a queue name; names that don't match any queue at launch are deferred until a queue is registered with that name.
 
 This is particularly useful when managing heterogeneous workers, where specific tasks should execute on specific physical servers.
 For example, say you have a mix of CPU workers and GPU workers and you want CPU tasks to only execute on CPU workers and GPU tasks to only execute on GPU workers.

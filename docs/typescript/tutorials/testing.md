@@ -214,6 +214,7 @@ describe('example integration tests', () => {
 });
 ```
 
+Queues are stored in the system database, so if your tests use queues, register them with [`DBOS.registerQueue`](../reference/queues.md#dbosregisterqueue) after each call to `DBOS.launch()`.
 With the DBOS environment correctly configured between tests, you can freely call your workflows, steps, and DBOS interface methods and test them any way you need.
 
 You can find a complete integration test example on GitHub [here](https://github.com/dbos-inc/dbos-demo-apps/blob/main/typescript/widget-store/tests/shop-integration.test.ts).

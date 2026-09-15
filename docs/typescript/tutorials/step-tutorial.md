@@ -65,6 +65,7 @@ Common nondeterministic operations include:
 You **cannot** call, start, or enqueue workflows from within steps.
 These operations should be performed from workflow functions.
 You can call one step from another step, but the called step becomes part of the calling step's execution rather than functioning as a separate step.
+If you call a step from outside a workflow, it runs as an ordinary function, without checkpoints, retries, or timeouts.
 
 ### Configurable Retries
 
@@ -120,7 +121,7 @@ static async exampleStep() {
 }
 ```
 
-If a step exhausts all `max_attempts` retries, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
+If a step fails on all `maxAttempts` attempts, it throws an exception (`DBOSMaxStepRetriesError`) to the calling workflow.
 If that exception is not caught, the workflow terminates.
 
 #### Filtering Retries With `shouldRetry`

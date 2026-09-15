@@ -78,9 +78,9 @@ npm run start
 Your program should print output like:
 
 ```
-2025-04-16 17:05:01 [info]: DBOS launched!
-2025-04-16 17:05:01 [info]: Step one completed!
-2025-04-16 17:05:01 [info]: Step two completed!
+DBOS launched!
+Step one completed!
+Step two completed!
 ```
 
 To see durable execution in action, let's modify the app to serve a DBOS workflow from an HTTP endpoint using Express.js.
@@ -146,7 +146,7 @@ In your terminal, you should see an output like:
 
 ```
 🚀 Server is running on http://localhost:3000
-2025-02-03 22:42:54 [info]: Step one completed!
+Step one completed!
 Press Control + C to stop the app...
 Press Control + C to stop the app...
 Press Control + C to stop the app...
@@ -162,7 +162,7 @@ Press Control + C to stop the app...
 Press Control + C to stop the app...
 Press Control + C to stop the app...
 Press Control + C to stop the app...
-2025-02-03 22:43:15 [info]: Step two completed!
+Step two completed!
 ```
 
 You can see how DBOS **recovers your workflow from the last completed step**, executing step two without re-executing step one.
@@ -224,7 +224,7 @@ main().catch(console.log);
 
 When you enqueue a function with `DBOS.startWorkflow`, DBOS executes it _asynchronously_, running it in the background without waiting for it to finish.
 `DBOS.startWorkflow` returns a handle representing the state of the enqueued function.
-This example enqueues ten functions, then waits for them all to finish using `.get_result()` to wait for each of their handles.
+This example enqueues ten functions, then waits for them all to finish using `getResult()` to wait for each of their handles.
 
 Now, rebuild and restart your app with:
 
@@ -238,18 +238,18 @@ Wait five seconds and you should see an output like:
 
 ```
 🚀 Server is running on http://localhost:3000
-2025-02-03 22:58:12 [info]: Enqueueing tasks!
-2025-02-03 22:58:18 [info]: Task 0 completed!
-2025-02-03 22:58:18 [info]: Task 1 completed!
-2025-02-03 22:58:18 [info]: Task 2 completed!
-2025-02-03 22:58:18 [info]: Task 3 completed!
-2025-02-03 22:58:18 [info]: Task 4 completed!
-2025-02-03 22:58:18 [info]: Task 5 completed!
-2025-02-03 22:58:18 [info]: Task 6 completed!
-2025-02-03 22:58:18 [info]: Task 7 completed!
-2025-02-03 22:58:18 [info]: Task 8 completed!
-2025-02-03 22:58:18 [info]: Task 9 completed!
-2025-02-03 22:58:19 [info]: Successfully completed 10 tasks
+Enqueueing tasks!
+Task 0 completed!
+Task 1 completed!
+Task 2 completed!
+Task 3 completed!
+Task 4 completed!
+Task 5 completed!
+Task 6 completed!
+Task 7 completed!
+Task 8 completed!
+Task 9 completed!
+Successfully completed 10 tasks
 ```
 
 You can see how all ten steps run concurrently&mdash;even though each takes five seconds, they all finish at the same time.

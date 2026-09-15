@@ -51,7 +51,7 @@ If the workflow is enqueued, cancelling removes it from the queue.
 
 ## Resuming Workflows
 
-You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dboscancelworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
+You can resume a workflow from its last completed step from the web UI, programmatically via [`DBOS.resumeWorkflow`](../reference/methods.md#dbosresumeworkflow), or through the command line with [`npx dbos workflow resume`](../reference/cli.md#npx-dbos-workflow-resume).
 
 You can use this to resume workflows that are cancelled or that have exceeded their maximum recovery attempts.
 You can also use this to start an enqueued workflow immediately, bypassing its queue.
@@ -63,7 +63,7 @@ When you fork a workflow, DBOS generates a new workflow with a new workflow ID, 
 
 Forking a workflow is useful for recovering from outages in downstream services (by forking from the step that failed after the outage is resolved) or for "patching" workflows that failed due to a bug in a previous application version (by forking from the bugged step to an appliation version on which the bug is fixed).
 
-You can fork a workflow programmatically using [`DBOS.fork_workflow`](../reference/methods.md#dbosforkworkflow).
+You can fork a workflow programmatically using [`DBOS.forkWorkflow`](../reference/methods.md#dbosforkworkflow).
 You can also fork a workflow from a step from the web UI by clicking on that step in the workflow's trace timeline:
 
 <img src={require('@site/static/img/workflow-management/workflow-fork.png').default} alt="Workflow List" width="800" className="custom-img"/>

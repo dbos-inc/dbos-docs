@@ -5,7 +5,7 @@ title: Scheduling Workflows
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
 Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
-Each time a scheduled fires, its workflow is executed by exactly one worker process.
+Each time a schedule fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow that takes two arguments: a `Date` (the scheduled execution time) and a context object:
 
@@ -204,43 +204,3 @@ Under the hood, DBOS constructs an [idempotency key](./workflow-tutorial.md#work
 The key is a concatenation of the schedule name and the scheduled time, ensuring each scheduled invocation occurs exactly once while your application is active.
 
 For the full API reference, see [Workflow Schedules](../reference/methods.md#workflow-schedules).
-
----
-
-# Static Scheduling (Deprecated)
-
-You can use the [`DBOS.registerScheduled`](../reference/workflows-steps.md#dbosregisterscheduled) method or the [`DBOS.scheduled`](../reference/workflows-steps.md#dbosscheduled) decorator, specifying a schedule in [crontab](https://en.wikipedia.org/wiki/Cron) syntax, to schedule a workflow to run exactly once per time interval.
-
-For example:
-
-
-```typescript
-async function scheduledFunction(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-}
-
-const scheduledWorkflow = DBOS.registerWorkflow(scheduledFunction);
-DBOS.registerScheduled(scheduledWorkflow, {crontab: '*/30 * * * * *'});
-```
-
-Or using decorators:
-
-```typescript
-class ScheduledExample{
-  @DBOS.workflow()
-  @DBOS.scheduled({crontab: '*/30 * * * * *'})
-  static async scheduledWorkflow(schedTime: Date, startTime: Date) {
-    DBOS.logger.info(`I am a workflow scheduled to run every 30 seconds`);
-  }
-}
-```
-
-Scheduled workflows must take in exactly two arguments: the time that the run was scheduled (as a `Date`) and the time the run was actually started (as a `Date`).
-
-Sometimes, you may require a scheduled workflow run **exactly once** per interval, even if the application was offline when it should have run.
-For example, if your workflow is supposed to run every Friday at 9 PM UTC, but your application is offline for maintenance one Friday, you may want the workflow to launch as soon as your application is restarted.
-You can configure this behavior in the `DBOS.scheduled` decorator:
-
-```typescript
-    @DBOS.scheduled({mode: SchedulerMode.ExactlyOncePerInterval, crontab: '...'})
-```

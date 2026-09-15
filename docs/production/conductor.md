@@ -116,7 +116,7 @@ To facilitate this, pass in your application name as an environment variable, fo
 config: DBOSConfig = {
     "name": os.environ.get("DBOS_APPLICATION_NAME"),
     "application_version": "0.1.0",
-    "database_url": os.environ.get("DBOS_DATABASE_URL"),
+    "system_database_url": os.environ.get("DBOS_SYSTEM_DATABASE_URL"),
     "conductor_key": os.environ.get("DBOS_CONDUCTOR_KEY")
 }
 DBOS(config=config)
@@ -126,7 +126,7 @@ DBOS(config=config)
 
 ```javascript
 DBOS.setConfig({
-    "name": process.env.DBOS_APPLICATION_NAME,
+    "name": process.env.DBOS_APPLICATION_NAME!,
     "applicationVersion": "0.1.0",
     "systemDatabaseUrl": process.env.DBOS_SYSTEM_DATABASE_URL,
 });

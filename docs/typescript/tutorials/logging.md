@@ -12,7 +12,7 @@ For example:
 DBOS.logger.info("Welcome to DBOS!");
 ```
 
-Entries logged to the DBOS logger are automatically augmented with DBOS context information, such as the current workflow state.
+When DBOS [exports logs over OTLP](#letting-dbos-export-traces-directly), entries logged to the DBOS logger are automatically augmented with DBOS context information, such as the current workflow ID.
 
 You can [configure](../reference/configuration.md) the log level of this built-in logger:
 ```javascript

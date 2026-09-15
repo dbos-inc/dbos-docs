@@ -17,6 +17,7 @@ DBOS.setConfig(
 ```
 
 Configure DBOS.
+Must be called before [`DBOS.launch`](#dboslaunch), which throws a `DBOSInitializationError` if no configuration, or no application `name`, was provided.
 Configuration is documented [here](./configuration.md).
 
 **Parameters:**
@@ -75,12 +76,14 @@ DBOS.shutdown(
 ): Promise<void>
 ```
 
-Shut down DBOS, terminating all active workflows and closing database disconnections.
+Shut down DBOS, stopping background processing (such as queue dispatch, schedules, and event receivers) and closing database connections.
+Workflows still running in this process are not interrupted, but shutdown does not wait for them to complete unless `workflowCompletionTimeoutMS` is set.
 
 In a test environment, after this completes DBOS can be re-configured and `launch()` can be called again.
+[`DBOS.applicationVersion`](./methods.md#dbosapplicationversion) and [`DBOS.executorID`](./methods.md#dbosexecutorid) keep their values from the last launch until DBOS is launched again.
 
 **Parameters:**
-- **deregister**: If true, all current function, queue, instance, data source, event receiver, and any other registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Useful for testing.
+- **deregister**: If true, all current function, instance, data source, event receiver, and any other in-process registrations will be cleared, allowing a full set of replacement registrations to be made prior to the next `launch()`. Queues and schedules persisted in the system database are not affected. Useful for testing.
 - **workflowCompletionTimeoutMS**: Wait this many milliseconds for workflows running in this process to complete before shutting down. Defaults to not waiting.
 
 ### DBOS.logRegisteredEndpoints
@@ -89,4 +92,4 @@ In a test environment, after this completes DBOS can be re-configured and `launc
 DBOS.logRegisteredEndpoints(): void
 ```
 
-Logs all DBOS functions that are bound to endpoints, including scheduled workflows, kafka consumers, and any other library event receivers.  This can be a useful diagnostic to call at DBOS launch.
+Logs all DBOS functions that are bound to endpoints, such as Kafka consumers and any other library event receivers.  This can be a useful diagnostic to call after DBOS is launched.

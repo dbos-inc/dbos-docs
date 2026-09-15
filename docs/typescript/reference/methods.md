@@ -22,6 +22,8 @@ interface StartWorkflowParams {
   enqueueOptions?: EnqueueOptions;
   duplicationPolicy?: 'reject' | 'return-existing';
   workflowAttributes?: Record<string, unknown>;
+  authenticatedUser?: string;
+  authenticatedRoles?: string[];
 }
 
 export interface EnqueueOptions {
@@ -68,19 +70,21 @@ const handle = await DBOS.startWorkflow(Example).exampleWorkflow(input);
 
 - **target**: The workflow to start.
 - **workflowID**: An ID to assign to the workflow. If not specified, a random UUID is generated.
-- **queueName**: The name of the queue on which to enqueue this workflow, if any.
+- **queueName**: The name of the queue on which to enqueue this workflow, if any. The queue must be registered with [`DBOS.registerQueue`](./queues.md#dbosregisterqueue); a workflow enqueued on an unregistered queue stays `ENQUEUED` until the queue is registered.
 - **timeoutMS**: The timeout of this workflow in milliseconds.
 - **duplicationPolicy**: How to handle a collision with another workflow that has the same `enqueueOptions.deduplicationID` on the same queue. Defaults to `'reject'`.
   - `'reject'`: throw `DBOSQueueDuplicatedError`.
   - `'return-existing'`: return a handle to the existing workflow instead of throwing. Requires `queueName` and `enqueueOptions.deduplicationID`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - **enqueueOptions**:
-  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
-  - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
+  - **deduplicationID**: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDuplicatedError` exception.
+  - **priority**: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `0` to `2,147,483,647`, where **a low number indicates a higher priority**. Workflows without assigned priorities have priority `0`, the highest priority.
   - **delaySeconds**: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires.
   - **queuePartitionKey**: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one partition limit). A partitioned queue applies its partition limits to each partition separately, while its `globalConcurrency`, `workerConcurrency`, and `rateLimit` still apply across all partitions.
   - **applicationVersion**: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
   - **applicationName**: The application that owns and runs the enqueued workflow. Defaults to this application. Set to enqueue the workflow on behalf of another application sharing the system database. To enqueue another application's workflow without a reference to its function, use [`DBOS.enqueueWorkflowWithOptions`](./queues.md#dbosenqueueworkflowwithoptions) instead.
 - **workflowAttributes**: A record of custom, JSON-serializable key-value attributes to attach to the workflow at creation. Attributes must be a key-value object (not a scalar or array). They are recorded in the workflow's [status](#workflow-status), are **not inherited** by child workflows, and are searchable via the `attributes` filter of [`DBOS.listWorkflows`](#dboslistworkflows). Attributes are stored in Postgres as GIN-indexed JSONB, so they are efficiently searchable.
+- **authenticatedUser**: The authenticated user to record on the workflow. Inside the workflow, it is returned by `DBOS.authenticatedUser`. Defaults to the caller's authenticated user, if any (for example, one set with [`DBOS.withAuthedContext`](./plugins.md#setting-authenticated-user-and-roles)).
+- **authenticatedRoles**: The authenticated roles to record on the workflow. Inside the workflow, they are returned by `DBOS.authenticatedRoles`. Defaults to the caller's authenticated roles, if any.
 
 ### DBOS.waitFirst
 
@@ -101,7 +105,7 @@ Wait for any one of the given workflow handles to complete and return the first 
 This is useful when you have multiple concurrent workflows and want to process results as they complete.
 
 **Parameters:**
-- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty.
+- **handles**: A non-empty array of workflow handles to wait on. Throws an error if the array is empty or contains duplicate workflow IDs.
 - **options**:
   - **pollingIntervalMs**: The interval, in milliseconds, between system database polls while waiting.
 
@@ -245,8 +249,7 @@ DBOS.sleep(
 ```
 
 Sleep for the given number of milliseconds.
-May only be called from within a workflow.
-This sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
+When called from within a workflow, this sleep is durable&mdash;it records its intended wake-up time in the database so if it is interrupted and recovers, it still wakes up at the intended time.
 
 **Parameters:**
 - **durationMS**: The number of milliseconds to sleep.
@@ -446,7 +449,7 @@ interface GetWorkflowsInput {
   hasParent?: boolean; // If true, only return workflows that have a parent. If false, only return workflows without a parent.
   attributes?: Record<string, unknown>; // Retrieve workflows whose custom attributes contain all of these key-value pairs.
   scheduleName?: string | string[]; // Retrieve workflows enqueued by this scheduled workflow (or any of these schedule names).
-  applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows.
+  applicationName?: string | string[]; // Retrieve workflows owned by these applications (workflows owned by no application are always included). If unset, retrieve only this application's workflows, unless workflowIDs is set.
   limit?: number; // Return up to this many workflows IDs. IDs are ordered by workflow creation time.
   offset?: number; // Skip this many workflows IDs. IDs are ordered by workflow creation time.
   sortDesc?: boolean; // Sort the workflows in descending order by creation time (default ascending order).
@@ -456,6 +459,7 @@ interface GetWorkflowsInput {
 ```
 
 Retrieve a list of [`WorkflowStatus`](#workflow-status) of all workflows matching specified criteria.
+Unless `workflowIDs` is set, this query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### DBOS.listQueuedWorkflows
 
@@ -465,8 +469,9 @@ DBOS.listQueuedWorkflows(
 ): Promise<WorkflowStatus[]>
 ```
 
-Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `PENDING` or `ENQUEUED`) workflows matching specified criteria.
-The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set.
+Retrieve a list of [`WorkflowStatus`](#workflow-status) of all **currently enqueued** (status `DELAYED`, `ENQUEUED`, or `PENDING`) workflows matching specified criteria.
+The input type is the same as [`DBOS.listWorkflows`](#dboslistworkflows); this method is equivalent to calling `DBOS.listWorkflows` with `queuesOnly` set and `loadOutput` set to `false`.
+Like `DBOS.listWorkflows`, it is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout unless `workflowIDs` is set.
 
 ### DBOS.listWorkflowSteps
 ```typescript
@@ -485,6 +490,7 @@ interface ListWorkflowStepsOptions {
 
 Retrieve the steps of a workflow. Returns `undefined` if the workflow is not found.
 Steps are ordered by `functionID`. Use `limit` and `offset` to paginate results.
+This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 This is a list of `StepInfo` objects, with the following structure:
 
 ```typescript
@@ -516,11 +522,11 @@ DBOS.setWorkflowPriority(
 ```
 
 Set the priority of a queued workflow.
-Only affects workflows with `ENQUEUED` status.
+Only affects workflows with `ENQUEUED` or `DELAYED` status.
 
 **Parameters:**
 - **workflowID**: The ID of the workflow whose priority to update.
-- **priority**: Priority value (`1` to `2,147,483,647`). Lower values are dequeued first.
+- **priority**: Priority value (`0` to `2,147,483,647`). Lower values are dequeued first.
 
 Throws `DBOSInvalidQueuePriorityError` if the priority is out of range.
 
@@ -687,8 +693,6 @@ export interface WorkflowStatus {
 
   // The user who ran the workflow, if set.
   readonly authenticatedUser?: string;
-  // The role used to run the workflow, if set.
-  readonly assumedRole?: string;
   // All roles the authenticated user has, if set.
   readonly authenticatedRoles?: string[];
 
@@ -715,12 +719,14 @@ export interface WorkflowStatus {
   readonly deadlineEpochMS?: number;
   // Unique queue deduplication ID, if any. Deduplication IDs are unset when the workflow completes.
   readonly deduplicationID?: string;
-  // Priority of the workflow on a queue, starting from 1 ~ 2,147,483,647. Default 0 (highest priority).
+  // Priority of the workflow on a queue, 0 ~ 2,147,483,647. Default 0 (highest priority).
   readonly priority: number;
   // If this workflow is enqueued on a partitioned queue, its partition key
   readonly queuePartitionKey?: string;
   // If this workflow was enqueued, the time it was dequeued (started execution), as a UNIX epoch timestamp in milliseconds.
   readonly dequeuedAt?: number;
+  // If this workflow is delayed, the time at which it will transition to ENQUEUED, as a UNIX epoch timestamp in milliseconds.
+  readonly delayUntilEpochMS?: number;
   // The time the workflow completed (transitioned to SUCCESS, ERROR, or CANCELLED), as a UNIX epoch timestamp in milliseconds. Undefined if the workflow has not completed.
   readonly completedAt?: number;
 
@@ -746,6 +752,7 @@ export interface WorkflowStatus {
 
 You can create, manage, and delete cron schedules at runtime using the DBOS schedule management API.
 Schedules are stored in the database and can be created, paused, resumed, or deleted while the application is running.
+These methods may only be called after `DBOS.launch()`.
 
 Scheduled workflow functions take two arguments: a `Date` (the scheduled execution time) and a context object.
 
@@ -1051,7 +1058,7 @@ async function onUserInputSubmit(userId: string, userInput: string) {
 ### DBOS.logger
 
 ```typescript
-DBOS.logger: Logger;
+DBOS.logger: DLogger;
 ```
 
 Retrieve the DBOS logger.
@@ -1071,6 +1078,7 @@ Return the ID of the current workflow, if in a workflow.
 DBOS.isInStep(): boolean;
 ```
 Returns true if called from within a step.
+A step called outside a workflow runs as an ordinary function, so this returns false inside it.
 
 ### DBOS.stepID
 
@@ -1113,7 +1121,7 @@ Returns true if called from within a datasource transaction.
 ### DBOS.span
 
 ```typescript
-DBOS.span: Span | undefined
+DBOS.span: DBOSSpan | undefined
 ```
 
 Retrieve the OpenTelemetry span associated with the current workflow.
@@ -1163,6 +1171,7 @@ interface VersionInfo {
 
 Return all registered application versions, ordered by timestamp descending (newest first).
 Versions are tracked per application: this returns only versions registered by this application, plus versions owned by no application.
+This query is subject to the [`observabilityQueryTimeoutMs`](./configuration.md#database-connection-settings) statement timeout (30 seconds by default) and throws `DBOSQueryTimeoutError` if it exceeds it.
 
 ### DBOS.getLatestApplicationVersion
 
@@ -1200,7 +1209,7 @@ Workflow handles have the following methods:
 ### handle.workflowID
 
 ```typescript
-handle.workflowID(): string;
+handle.workflowID: string;
 ```
 
 Retrieve the ID of the workflow.

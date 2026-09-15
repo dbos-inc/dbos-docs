@@ -628,11 +628,12 @@ config: DBOSConfig = {
 <TabItem value="typescript" label="TypeScript">
 
 ```typescript
-await DBOS.launch({
+DBOS.setConfig({
   name: "my-app",
   systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
   runMigrations: false,
 });
+await DBOS.launch();
 ```
 
 </TabItem>
