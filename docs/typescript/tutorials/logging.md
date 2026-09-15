@@ -57,7 +57,7 @@ You can also supply a custom logger to the [DBOS Client](../reference/client.md)
 
 ```typescript
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
   logger: myCustomLogger,
 });
 ```

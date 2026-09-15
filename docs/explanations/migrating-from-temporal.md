@@ -155,7 +155,7 @@ const result = await handle.getResult();
 
 ```typescript
 // Starting a workflow from another application using the DBOS Client
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 await client.enqueue<typeof orderWorkflow>(
     { workflowName: "orderWorkflow", queueName: "orders" },
     order,

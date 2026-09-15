@@ -136,7 +136,7 @@ Or using [`DBOSClient`](../reference/client.md#version-management):
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL,
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!,
   applicationName: "my-app",
 });
 

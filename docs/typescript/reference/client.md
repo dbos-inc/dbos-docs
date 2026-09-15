@@ -121,7 +121,7 @@ Example:
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 ```
 
 #### `destroy`
@@ -560,7 +560,7 @@ Options have the same meaning as on `DBOS.registerQueue` except for `onConflict`
 **Example syntax:**
 
 ```ts
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 await client.registerQueue("email", {
   globalConcurrency: 10,
   rateLimit: { limitPerPeriod: 100, periodSec: 60 },
@@ -895,7 +895,7 @@ Similar to [`Debouncer.debounce`](./methods.md#debouncerdebounce).
 import { DBOSClient, DebouncerClient } from "@dbos-inc/dbos-sdk";
 
 const client = await DBOSClient.create({
-  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL
+  systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!
 });
 
 const debouncer = new DebouncerClient(client, {

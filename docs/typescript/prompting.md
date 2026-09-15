@@ -1100,7 +1100,7 @@ For example, this code registers `pipelineQueue` and enqueues the `dataPipeline`
 ```ts
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 
-const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL});
+const client = await DBOSClient.create({systemDatabaseUrl: process.env.DBOS_SYSTEM_DATABASE_URL!});
 
 await client.registerQueue("pipelineQueue");
 
