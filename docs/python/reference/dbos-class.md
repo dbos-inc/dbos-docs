@@ -13,7 +13,7 @@ Decorators are documented [here](./decorators.md) and context methods and variab
 ```python
 DBOS(
     *,
-    config: Optional[DBOSConfig] = None,
+    config: DBOSConfig,
 )
 ```
 
@@ -80,8 +80,9 @@ Must be called before DBOS is launched.
 
 ```python
 DBOS.destroy(
+    *,
+    destroy_registry: bool = False,
     workflow_completion_timeout_sec: int = 0,
-    destroy_registry: bool = False
 )
 ```
 
@@ -109,6 +110,7 @@ Reset the DBOS [system database](../../explanations/system-tables.md), clearing 
 By default, this destroys the system database entirely; pass `truncate=True` to instead empty its tables, which is substantially faster.
 Useful when testing a DBOS application to reset the internal state of DBOS between tests.
 For example, see its use in the [testing tutorial](../tutorials/testing.md).
+It cannot be called after DBOS is launched.
 **This is a destructive operation and should only be used in a test environment.**
 
 **Parameters:**

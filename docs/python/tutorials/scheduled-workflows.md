@@ -5,7 +5,7 @@ title: Scheduling Workflows
 
 You can schedule DBOS [workflows](./workflow-tutorial.md) to run on a cron schedule.
 Schedules are stored in the database and can be created, paused, resumed, and deleted at runtime.
-Each time a scheduled fires, its workflow is executed by exactly one worker process.
+Each time a schedule fires, its workflow is executed by exactly one worker process.
 
 To schedule a workflow, first define a workflow that takes two arguments: a `datetime` (the scheduled execution time) and a context object:
 
@@ -81,7 +81,7 @@ from dbos import DBOS
 
 @DBOS.workflow()
 def customer_workflow(scheduled_time: datetime, customer_id: str):
-    # ...
+    ...
 
 def on_customer_registration(customer_id: str):
     DBOS.create_schedule(
@@ -92,7 +92,7 @@ def on_customer_registration(customer_id: str):
     )
 ```
 
-Note that scheduling is not supported for workflows that are methods on [configured instances](./classes.md). Scheduled workflows should be plain functions or `@staticmethod` class members.
+Note that scheduling is not supported for workflows that are methods on [configured instances](./classes.md). Scheduled workflows should be plain functions or `@staticmethod` or `@classmethod` class members.
 
 ### Managing Schedules
 

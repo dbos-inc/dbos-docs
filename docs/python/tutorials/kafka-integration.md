@@ -46,7 +46,7 @@ def test_kafka_workflow(msg: KafkaMessage):
 
 ```
 
-Under the hood, DBOS constructs an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, and offset and passes it into your workflow.
+Under the hood, DBOS constructs an [idempotency key](../tutorials/workflow-tutorial.md#workflow-ids-and-idempotency) for each Kafka message from its topic, partition, consumer group, and offset and passes it into your workflow.
 This combination is guaranteed to be unique for each Kafka cluster.
 Thus, even if a message is delivered multiple times (e.g., due to transient network failures or application interruptions), your workflow processes it exactly once.
 
@@ -96,8 +96,6 @@ For unordered (`ordering="none"`) consumers, you can also name a custom [queue](
 ```python
 from dbos import DBOS, KafkaMessage
 
-DBOS.register_queue("kafka_processing_queue", global_concurrency=10)
-
 @DBOS.kafka_consumer(
         config=config,
         topics=["example-topic"],
@@ -106,6 +104,10 @@ DBOS.register_queue("kafka_processing_queue", global_concurrency=10)
 @DBOS.workflow()
 def process_messages(msg: KafkaMessage):
     ...
+
+DBOS.launch()
+# Queues are registered after launch
+DBOS.register_queue("kafka_processing_queue", global_concurrency=10)
 ```
 
 A custom queue is only supported with `ordering="none"`&mdash;ordered consumers share an internal partitioned queue&mdash;and it must not be a [partitioned queue](./queue-tutorial.md#partitioning-queues).

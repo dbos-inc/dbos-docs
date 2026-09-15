@@ -83,7 +83,7 @@ In this example, we demonstrate how to use JWT tokens with DBOS declarative secu
             return response
 ```
 
-As with the simpler example in [Authorization Decorators](#authorization-decorators) above, `@app.middleware("http")` is used to insert the `jwtAuthMiddleware` function between the FastAPI `app` and DBOS.  Use of `DBOSContextEnsure`, `DBOS.set_authentication`, and `call_next` is also the same.
+As with the simpler example in [Authentication Middleware](#authentication-middleware) above, `@app.middleware("http")` is used to insert the `jwtAuthMiddleware` function between the FastAPI `app` and DBOS.  Use of `DBOSContextSetAuth` and `call_next` is also the same.
 
 What is different is that `oauth2_scheme` and `decode_jwt` are used to extract token contents.  The resulting information is used to set the DBOS user and roles.  If the user / roles are stored in different fields in the token, adjust the access to `tdata` accordingly.
 

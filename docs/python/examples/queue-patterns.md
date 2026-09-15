@@ -29,6 +29,8 @@ def fair_queue_workflow():
     time.sleep(5)
 ```
 
+Because `DBOS.register_queue` writes the queue's configuration to the system database, call it after `DBOS.launch()`.
+
 Next, let's create an endpoint to enqueue the workflow.
 It does not enqueue the workflow directly, but instead enqueues a "concurrency manager" workflow to the partitioned queue to enforce per-tenant limits:
 
@@ -103,7 +105,7 @@ debouncer = Debouncer.create(debouncer_workflow, queue="debouncer-queue")
 
 Then, we submit the workflow with the debouncer.
 This delays the workflow until a set time has passed since the last input is submitted for a tenant.
-When the workflow starts, it uses the last input receieved by the debouncer.
+When the workflow starts, it uses the last input received by the debouncer.
 
 ```python
 # Each time a new input is submitted for a tenant, debounce debouncer_workflow.

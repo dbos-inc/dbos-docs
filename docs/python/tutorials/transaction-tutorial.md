@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
 The decorator accepts two optional keyword arguments:
 - `name` – a custom step name recorded in the workflow log (defaults to the function's qualified name)
-- `isolation_level` – the SQL transaction isolation level; one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"`
+- `isolation_level` – the SQL transaction isolation level; one of `"SERIALIZABLE"` (default), `"REPEATABLE READ"`, or `"READ COMMITTED"` (SQLite supports only `"SERIALIZABLE"`)
 
 ```python
 @ds.transaction(isolation_level="READ COMMITTED", name="insert_greeting")

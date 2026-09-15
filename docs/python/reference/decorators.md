@@ -83,7 +83,7 @@ DBOS.required_roles(
 )
 ```
 
-The `@DBOS.dbos_required_roles` decorator applies role-based security to the decorated function.  The authenticated user must have at least one of the roles on the `roles` list in order to access the function.
+The `@DBOS.required_roles` decorator applies role-based security to the decorated function.  The authenticated user must have at least one of the roles on the `roles` list in order to access the function.
 
 **Parameters:**
 - `roles`: List of required roles applied to the decorated function.
@@ -92,7 +92,7 @@ The `@DBOS.dbos_required_roles` decorator applies role-based security to the dec
 **Example:**
 ```python
 @DBOS.workflow()
-@DBOS.required_roles(["support","admin")
+@DBOS.required_roles(["support","admin"])
 def my_support_workflow():
   pass # Function accessible only with "support" or "admin" role
 ```
@@ -111,7 +111,7 @@ DBOS.kafka_consumer(
 ```
 
 Runs a function for each Kafka message received on the specified topic(s). 
-Uses the Kafka message's topic, partition and offset to create a unique [workflow id](../reference/contexts#setworkflowid) to ensure once and only once execution.
+Uses the Kafka message's topic, partition, and offset and the consumer group ID to create a unique [workflow id](../reference/contexts#setworkflowid) to ensure once and only once execution.
 Takes a configuration dictionary and a list of topics to consume. 
 The decorated function must take a KafkaMessage as its only parameter.
 
@@ -148,6 +148,7 @@ def test_kafka_workflow(msg: KafkaMessage):
 Python workflows can specify a `validate_args` parameter on `@DBOS.workflow()`.
 The built-in `pydantic_args_validator` sentinel builds a [Pydantic](https://docs.pydantic.dev/) validator from the function's type hints at decoration time.
 This validates argument types and coerces compatible values (for example, ISO date strings to `datetime` objects).
+Validation runs when a workflow is dequeued for execution (for example, after being enqueued, recovered, or forked), not when the workflow function is called directly or started with `DBOS.start_workflow`.
 
 ```python
 from datetime import datetime
@@ -199,7 +200,7 @@ Classes with instance methods should extend from [`DBOSConfiguredInstance`](#dbo
 
 ```python
 DBOS.dbos_class(
-  class_name: Optional[str]
+  class_name: Optional[str] = None
 )
 ```
 
@@ -252,7 +253,7 @@ class MyClass:
 
 ```python
 DBOSConfiguredInstance(
-  instance_name: str
+  config_name: str
 )
 ```
 
@@ -261,7 +262,7 @@ DBOSConfiguredInstance(
 `DBOSConfiguredInstance` also registers the class instance with the DBOS recovery system.
 
 **Parameters:**
-- `instance_name`: The name of the instance, for recording in workflow database records
+- `config_name`: The name of the instance, for recording in workflow database records
 
 **Example:**
 ```python

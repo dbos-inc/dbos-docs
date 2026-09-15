@@ -60,7 +60,7 @@ If you already send telemetry to an observability provider (Datadog, Langfuse, H
 
 There are two steps:
 
-1. Register your provider's OpenTelemetry `TracerProvider` (with `trace.set_tracer_provider(...)`) **before** launching DBOS.
+1. Register your provider's OpenTelemetry `TracerProvider` (with `trace.set_tracer_provider(...)`) **before** configuring and launching DBOS.
 2. Set `enable_otlp: True` in DBOS configuration. This will cause DBOS to emit spans onto your provider.
 
 Set up your provider, then configure and launch DBOS, using whichever option matches your platform:
@@ -169,8 +169,8 @@ For the current endpoint and credentials, see the [Langfuse OpenTelemetry docs](
 </Tabs>
 
 :::tip
-Set up your provider before launching DBOS: DBOS emits spans onto whichever global provider exists.
-If you enable OTLP without registering a provider for a signal (traces or logs), DBOS logs a one-time warning such as `OTLP is enabled but logger provider not set, skipping log exporter setup` and does nothing for that signal. This is harmless; set a global `LoggerProvider` too if you also want to export logs.
+Set up your provider before configuring DBOS with `DBOS(config=...)`: DBOS emits spans onto whichever global provider exists and checks for global providers when it is configured.
+If you enable OTLP without registering a provider for a signal (traces or logs) by then, DBOS logs a warning such as `OTLP is enabled but logger provider not set, skipping log exporter setup` and skips exporter setup for that signal. This is harmless; set a global `LoggerProvider` before configuring DBOS too if you also want to export logs.
 :::
 
 #### Adding custom attributes and events

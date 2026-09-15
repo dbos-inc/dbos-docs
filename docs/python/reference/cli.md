@@ -23,8 +23,9 @@ List workflows run by your application in JSON format ordered by recency (most r
 * `-v, --application-version TEXT`: Retrieve workflows with this application version
 * `-n, --name TEXT`: Retrieve workflows with this name
 * `-a, --application-name TEXT`: Retrieve workflows owned by this application (workflows owned by no application are always included)
-* `-d, --sort-desc`: Sort the results in descending order (older first)
+* `-d, --sort-desc`: Sort the results in descending order (newest first)
 * `-o, --offset INTEGER`: Offset for pagination
+* `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./contexts#workflow-status).
@@ -37,6 +38,7 @@ Retrieve information on a workflow run by your application.
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to retrieve
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted [workflow status](./contexts#workflow-status).
@@ -46,6 +48,7 @@ A JSON-formatted [workflow status](./contexts#workflow-status).
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to retrieve
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow steps](./contexts#list_workflow_steps).
@@ -53,11 +56,13 @@ A JSON-formatted list of [workflow steps](./contexts#list_workflow_steps).
 ### dbos workflow cancel
 
 **Description:**
- Cancel a workflow so it is no longer automatically retried or restarted. Active executions are not halted.
+Cancel a workflow so it is no longer automatically retried or restarted.
+If the workflow is executing, it is interrupted at the beginning of its next step.
 
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to cancel
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 ### dbos workflow resume
 
@@ -69,23 +74,22 @@ You can also use this to start an `ENQUEUED` workflow, bypassing its queue.
 **Arguments:**
 - `<workflow-id>`: The ID of the workflow to resume.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
-
-**Output:**
-A JSON-formatted [workflow status](./contexts#workflow-status).
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 ### dbos workflow fork
 
 **Description:**
 Fork a new execution of a workflow, starting at a given step.
-This new workflow has a new workflow ID but the same code version (you can fork to a different code version [programmatically](./client.md#fork_workflow)).
+This new workflow has a new workflow ID but the same code version, unless you specify a different one with `--application-version`.
 Forking from step N copies the results of all previous steps to the new workflow, which then starts running from step N.
 
 **Arguments:**
-* `<workflow-id>`: The ID of the workflow to restart.
+* `<workflow-id>`: The ID of the workflow to fork.
 - `-s, --sys-db-url URL`: Your DBOS system database URL.
 * `-f, --forked-workflow-id`: Custom ID for the forked workflow
 * `-v, --application-version`: Custom application version for the forked workflow
 * `-S, --step INTEGER`: Restart from this step [default: 1]
+- `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted [workflow status](./contexts#workflow-status).
@@ -102,10 +106,11 @@ Lists all currently enqueued tasks in JSON format ordered by recency (most recen
 * `-e, --end-time TEXT`: Retrieve functions starting before this timestamp (ISO 8601 format)
 * `-S, --status TEXT`: Retrieve functions with this status (PENDING, SUCCESS, ERROR, MAX_RECOVERY_ATTEMPTS_EXCEEDED, ENQUEUED, DELAYED, or CANCELLED)
 * `-q, --queue-name TEXT`: Retrieve functions on this queue
-* `-n, --name TEXT`: Retrieve functions on this queue
+* `-n, --name TEXT`: Retrieve functions with this name
 * `-a, --application-name TEXT`: Retrieve functions owned by this application (functions owned by no application are always included)
-* `-d, --sort-desc`: Sort the results in descending order (older first)
+* `-d, --sort-desc`: Sort the results in descending order (newest first)
 * `-o, --offset INTEGER`: Offset for pagination
+* `--schema TEXT`: The schema name for the DBOS system tables. Defaults to `dbos`.
 
 **Output:**
 A JSON-formatted list of [workflow statuses](./contexts#workflow-status).

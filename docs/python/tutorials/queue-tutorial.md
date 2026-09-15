@@ -122,7 +122,7 @@ The [queue worker](../examples/queue-worker.md) example shows this design patter
 You can also enqueue a workflow from a Postgres trigger or stored procedure.
 The DBOS System Database includes an [`enqueue_workflow`](../../explanations/system-tables.md#dbosenqueue_workflow) method for this scenario.
 
-For example, here is the previous example of enqueing the `dataPipeline` workflow on the `pipelineQueue` queue with arguments, but using PL/pgSQL.
+For example, here is the previous example of enqueing the `data_pipeline` workflow on the `pipeline_queue` queue with arguments, but using PL/pgSQL.
 
 ```sql
 DECLARE workflow_id text;
@@ -149,8 +149,6 @@ For example, this queue has a worker concurrency of 5, so each process will run 
 ```python
 DBOS.register_queue("example_queue", worker_concurrency=5)
 ```
-
-Note that DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](../reference/configuration.md).
 
 #### Global Concurrency
 
@@ -322,7 +320,7 @@ Each per-partition concurrency limit must be less than or equal to its queue-wid
 
 You can set a deduplication ID for an enqueued workflow with [`SetEnqueueOptions`](../reference/queues.md#setenqueueoptions).
 At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue.
-If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
+If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED`, `DELAYED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception.
 
 For example, this is useful if you only want to have one workflow active at a time per user&mdash;set the deduplication ID to the user's ID.
 
@@ -427,7 +425,7 @@ DBOS.set_workflow_delay(handle.workflow_id, delay_until_epoch_ms=int((time.time(
 
 ## Explicit Queue Listening
 
-By default, a process running DBOS listens to (dequeues workflows from) all queues registered in its system database.
+By default, a process running DBOS listens to (dequeues workflows from) all queues owned by its application in its system database.
 However, sometimes you only want a process to listen to a specific list of queues.
 You can use [`DBOS.listen_queues`](../reference/dbos-class.md#listen_queues) to explicitly tell a process running DBOS to only listen to a specific set of queues.
 You must call `DBOS.listen_queues` before DBOS is launched.

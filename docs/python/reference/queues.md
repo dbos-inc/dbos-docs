@@ -8,6 +8,7 @@ They are useful for controlling the number of functions run in parallel, or the 
 
 Queues are persisted to the system database.
 Register a queue with [`DBOS.register_queue`](./contexts.md#register_queue) and enqueue workflows on it with [`DBOS.enqueue_workflow`](./contexts.md#enqueue_workflow) or [`Queue.enqueue`](#enqueue).
+DBOS must be launched before you register a queue.
 
 ```python
 @DBOS.workflow()
@@ -32,7 +33,7 @@ class QueueRateLimit(TypedDict):
 **Properties:**
 - `name`: The name of the queue.
 - `global_concurrency`: The maximum number of functions from this queue that may run concurrently across all DBOS processes. If `None`, any number of functions may run concurrently.
-- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process. DBOS uses `executor_id` to distinguish processes&mdash;this is set automatically by Conductor and Cloud, but if those are not used it must be set to a unique value for each process through [configuration](./configuration.md).
+- `worker_concurrency`: The maximum number of functions from this queue that may run concurrently on a single DBOS process.
 - `limiter`: A limit on the maximum number of functions which may be started in a given period.
 - `partition_concurrency`: The maximum number of functions from any one [partition](../tutorials/queue-tutorial.md#partitioning-queues) of this queue that may run concurrently across all DBOS processes.
 - `partition_worker_concurrency`: The maximum number of functions from any one partition of this queue that may run concurrently on a single DBOS process.
@@ -92,7 +93,7 @@ queue.enqueue_async(
     func: Callable[P, Coroutine[Any, Any, R]],
     *args: P.args,
     **kwargs: P.kwargs,
-) -> WorkflowHandle[R]
+) -> Coroutine[Any, Any, WorkflowHandleAsync[R]]
 ```
 
 Asynchronously enqueue an async function for processing and return an [async handle](./workflow_handles.md#workflowhandleasync) to it.
@@ -165,7 +166,7 @@ queue.set_worker_concurrency(value: Optional[int]) -> None
 ```
 
 Update the queue's per-worker concurrency limit.
-Must be less than or equal to the queue's `global_concurrency`.
+Must be less than or equal to the queue's `global_concurrency` and greater than or equal to its `partition_worker_concurrency`.
 Pass `None` to remove the limit.
 
 #### set_limiter
@@ -184,7 +185,7 @@ queue.set_partition_concurrency(value: Optional[int]) -> None
 ```
 
 Update the queue's per-partition concurrency limit.
-Must be at least 1 and less than or equal to the queue's `global_concurrency`.
+Must be at least 1, less than or equal to the queue's `global_concurrency`, and greater than or equal to its `partition_worker_concurrency`.
 Pass `None` to remove the limit.
 
 #### set_partition_worker_concurrency
@@ -253,14 +254,14 @@ These options are **not propagated** to child workflows.
 
 **Parameters:**
 
-- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently enqueued or actively executing (status `ENQUEUED` or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
+- `deduplication_id`: At any given time, only one workflow with a specific deduplication ID can be enqueued in the specified queue. If a workflow with a deduplication ID is currently delayed, enqueued, or actively executing (status `DELAYED`, `ENQUEUED`, or `PENDING`), subsequent workflow enqueue attempt with the same deduplication ID in the same queue will raise a `DBOSQueueDeduplicatedError` exception. Defaults to `None`.
 - `duplication_policy`: How to handle a collision with another workflow that has the same `deduplication_id` on the same queue. Defaults to `"reject"`.
   - `"reject"`: raise `DBOSQueueDeduplicatedError`.
   - `"return-existing"`: return a handle to the existing workflow instead of raising. Requires a queue and a `deduplication_id`. Arguments passed by the colliding caller are discarded and the returned handle resolves with the original workflow's result. See [Singleton Workflows](../tutorials/queue-tutorial.md#singleton-workflows).
 - `priority`: The priority of the enqueued workflow in the specified queue. Workflows with the same priority are dequeued in **FIFO (first in, first out)** order. Priority values can range from `1` to `2,147,483,647`, where **a low number indicates a higher priority**. Defaults to `None`. Workflows without assigned priorities have the highest priority and are dequeued before workflows with assigned priorities.
 - `delay_seconds`: Delay the workflow by this many seconds before it becomes eligible for execution. The workflow is initially placed in `DELAYED` status and transitions to `ENQUEUED` after the delay expires. Defaults to `None` (no delay).
 - `app_version`: The application version of the workflow to enqueue. The workflow may only be dequeued by processes running that version. Defaults to the current application version.
-- `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions.
+- `queue_partition_key`: The queue partition in which to enqueue this workflow. Use if and only if the queue is [partitioned](../tutorials/queue-tutorial.md#partitioning-queues) (registered with at least one `partition_*` limit). A partitioned queue applies its `partition_*` limits to each partition separately, while its `global_concurrency`, `worker_concurrency`, and `limiter` still apply across all partitions. Cannot be combined with `deduplication_id`.
 
 
 **Deduplication Example**
@@ -276,6 +277,7 @@ with SetEnqueueOptions(deduplication_id="my_dedup_id"):
         handle = DBOS.enqueue_workflow("example_queue", example_workflow, ...)
     except dboserror.DBOSQueueDeduplicatedError as e:
         # Handle deduplication error
+        ...
 ```
 
 **Singleton Workflow Example**

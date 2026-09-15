@@ -32,7 +32,6 @@ We'll see later how this helps us build observability endpoints to list all acti
 def durable_agent(request: AgentStartRequest):
     # Set an agent status the frontend can query
     agent_status: AgentStatus = AgentStatus(
-        agent_id=DBOS.workflow_id,
         name=request.name,
         task=request.task,
         status="working",
@@ -48,7 +47,7 @@ def durable_agent(request: AgentStartRequest):
     # to `pending_approval` and await an approval notification. 
     agent_status.status = "pending_approval"
     DBOS.set_event(AGENT_STATUS, agent_status)
-    approval: Optional[HumanResponseRequest] = DBOS.recv()
+    approval: Optional[HumanResponseRequest] = DBOS.recv(timeout_seconds=3600)
 
     # If approved, continue execution. Otherwise, raise an exception
     # and terminate the agent.
@@ -57,7 +56,7 @@ def durable_agent(request: AgentStartRequest):
         agent_status.status = "denied"
         DBOS.set_event(AGENT_STATUS, agent_status)
         print("Agent timed out:", agent_status)
-        raise Exception("Agent timed out awaiting approvial")
+        raise Exception("Agent timed out awaiting approval")
     elif approval.response == "deny":
         agent_status.status = "denied"
         DBOS.set_event(AGENT_STATUS, agent_status)
@@ -114,6 +113,8 @@ async def list_waiting_agents():
     statuses: list[AgentStatus] = await asyncio.gather(
         *[DBOS.get_event_async(w.workflow_id, AGENT_STATUS) for w in agent_workflows]
     )
+    for s, w in zip(statuses, agent_workflows):
+        s.agent_id = w.workflow_id
     # Only return active agents that are currently awaiting human approval
     return [status for status in statuses if status.status == "pending_approval"]
 ```

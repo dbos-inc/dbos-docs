@@ -36,6 +36,7 @@ class DBOSConfig(TypedDict):
     use_listen_notify: Optional[bool]
     run_migrations: Optional[bool]
     notification_listener_polling_interval_sec: Optional[float]
+    notification_coalesce_sec: Optional[float]
     observability_query_timeout_sec: Optional[float]
 
     conductor_key: Optional[str]
@@ -63,6 +64,7 @@ class DBOSConfig(TypedDict):
 ### Application Settings
 
 - **name**: Your application's name.
+It must be between 3 and 256 characters long and contain only lowercase letters, numbers, dashes, and underscores.
 Multiple applications (potentially in different languages) may [share a system database](../../explanations/sharing-a-system-database.md), in which case each must have a distinct name: the name identifies which application owns each workflow, queue, schedule, and application version, and applications only run their own workflows.
 If you rename an application, transfer ownership of its data with [`dbos rename-application`](./cli.md#dbos-rename-application).
 - **enable_patching** Enable the [patching](../tutorials/upgrading-workflows.md#patching) strategy for safely upgrading workflow code.
@@ -92,7 +94,7 @@ sqlite:///[path to database file]
 Passwords in connection strings must be escaped (for example with [urllib](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote)) if they contain special characters.
 :::
 
-If no connection string is provided, DBOS uses a SQLite database:
+If no connection string is provided, DBOS uses a SQLite database (with any dashes in the application name replaced by underscores):
 
 ```shell
 sqlite:///[application_name].sqlite
@@ -102,12 +104,13 @@ sqlite:///[application_name].sqlite
 - **db_engine_kwargs**: A dictionary of additional keyword arguments passed to the SQLAlchemy [create_engine](https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine) call. Can be used to customize connection pool settings, timeouts, and other engine parameters.
 - **dbos_system_schema**: Postgres schema name for DBOS system tables. Defaults to `dbos`.
 - **system_database_engine**: A custom SQLAlchemy engine to use to connect to your system database. If provided, DBOS will not create an engine but use this instead.
-- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True` in Postgres and must be `False` in SQLite.
+- **use_listen_notify**: Whether to use PostgreSQL LISTEN/NOTIFY (`True`) or polling (`False`) to await notifications and events. Defaults to `True`. Ignored in SQLite, which always uses polling.
 - **run_migrations**: Whether to create and migrate the system database on launch. Defaults to `True`.
 Set to `False` for a process that must not alter the schema, such as one whose database role cannot run DDL, or a deployment that migrates out of band with [`dbos migrate`](./cli.md#dbos-migrate).
-Launch then verifies the schema instead of changing it: a system database that is missing (including a SQLite file that does not exist), or behind the version this build of DBOS requires, fails launch with a `DBOSInitializationError`.
+Launch then verifies the schema instead of changing it: a system database whose DBOS tables are missing (including a SQLite file that does not exist) or behind the version this build of DBOS requires fails launch with a `DBOSInitializationError`, and a Postgres database that does not exist fails launch with a connection error.
 A system database ahead of the required version is accepted, so a process with migrations disabled can run alongside newer peers.
-- **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`. Only used when `use_listen_notify` is `False`.
+- **notification_listener_polling_interval_sec**: Polling interval in seconds for the notification listener background process. Defaults to `1.0`; the minimum is `0.001`. Only used when polling (when `use_listen_notify` is `False` or the system database is SQLite).
+- **notification_coalesce_sec**: Interval in seconds at which DBOS batches and sends the LISTEN/NOTIFY notifications that wake readers of [events](./contexts.md#get_event) and [streams](./contexts.md#read_stream). This bounds how long a waiting reader may be delayed and caps the rate of notifying commits regardless of write throughput. Defaults to `0.01`; the minimum is `0.001`. Only used on Postgres when `use_listen_notify` is `True`.
 - **observability_query_timeout_sec**: The statement timeout, in seconds, applied to observability queries (such as listing workflows, queued workflows, and workflow steps) on a Postgres system database, so a slow query on a large database does not hold resources indefinitely. A query that exceeds the timeout raises `DBOSQueryTimeoutError`. Defaults to 30 seconds. Set to zero or a negative value to disable the timeout.
 
 ### Conductor Settings
@@ -180,5 +183,5 @@ This extension provides [multiple ways](https://github.com/redhat-developer/vsco
 The easiest is to simply add a comment with a link to the schema at the top of the config file:
 
 ```yaml
-# yaml-language-server: $schema=https://github.com/dbos-inc/dbos-transact-py/blob/main/dbos/dbos-config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
 ```

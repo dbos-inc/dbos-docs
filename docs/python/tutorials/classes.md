@@ -43,7 +43,7 @@ For example:
 
 ```python
 @DBOS.dbos_class()
-class ExampleClass()
+class ExampleClass():
         @staticmethod
         @DBOS.workflow()
         def staticmethod_workflow():

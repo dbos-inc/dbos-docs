@@ -177,8 +177,8 @@ See the [debouncing reference](../reference/contexts.md#debouncing) for more det
 
 Coroutinues (functions defined with `async def`, also known as async functions) can also be DBOS workflows.
 Coroutine workflows may invoke [coroutine steps](./step-tutorial.md#coroutine-steps) via [await expressions](https://docs.python.org/3/reference/expressions.html#await).
-You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`enqueue_async`](../reference/queues.md#enqueue_async).
-Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `enqueue_async` starts the workflow in a different event loop.
+You should start coroutine workflows using [`DBOS.start_workflow_async`](../reference/contexts.md#start_workflow_async) and enqueue them using [`DBOS.enqueue_workflow_async`](../reference/contexts.md#enqueue_workflow_async).
+Calling a coroutine workflow or starting it with `DBOS.start_workflow_async` always runs it in the same event loop as its caller, but enqueueing it with `DBOS.enqueue_workflow_async` starts the workflow in a different event loop.
 Additionally, coroutine workflows should use the asynchronous versions of the workflow [communication](./workflow-communication.md) context methods.
 
 

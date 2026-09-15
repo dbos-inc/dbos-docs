@@ -151,7 +151,7 @@ You can use [`DBOS.list_workflows`](../reference/contexts.md#list_workflows) to 
 ```python
 active = DBOS.list_workflows(
     app_version="1.0.0",
-    status=["ENQUEUED", "PENDING"],
+    status=["ENQUEUED", "DELAYED", "PENDING"],
 )
 if not active:
     print("Safe to retire version 1.0.0")

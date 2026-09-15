@@ -77,7 +77,7 @@ def payment_endpoint(payment_id: str, payment_status: str) -> Response:
 
 All messages are persisted to the database, so if `send` completes successfully, the destination workflow is guaranteed to be able to `recv` it.
 If you're sending a message from a workflow, DBOS guarantees exactly-once delivery.
-If you're sending a message from normal Python code, you can use [`SetWorkflowID`](../reference/contexts.md#setworkflowid) with an idempotency key to guarantee exactly-once delivery.
+If you're sending a message from normal Python code, you can pass an `idempotency_key` to [`DBOS.send`](../reference/contexts.md#send) to guarantee exactly-once delivery.
 
 ## Workflow Events
 
@@ -103,7 +103,7 @@ DBOS.get_event(
     workflow_id: str,
     key: str,
     timeout_seconds: float = 60,
-) -> None
+) -> Any
 ```
 
 You can call [`DBOS.get_event`](../reference/contexts.md#get_event) to retrieve the value published by a particular workflow identity for a particular key.
@@ -134,7 +134,7 @@ The payments workflow emits the payment ID using `set_event()`:
 def checkout_workflow():
     ...
     payment_id = ...
-    dbos.set_event(PAYMENT_ID, payment_id)
+    DBOS.set_event(PAYMENT_ID, payment_id)
     ...
 ```
 
