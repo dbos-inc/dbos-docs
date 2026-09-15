@@ -237,13 +237,14 @@ For example, here is the previous example of enqueing the `dataPipeline` workflo
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-  workflow_name => 'dataPipeline', 
+  workflow_name => 'dataPipeline',
   class_name => 'com.example.DataPipelineImpl',
-  queue_name => 'pipelineQueue', 
+  queue_name => 'pipelineQueue',
   positional_args => ARRAY[
-    '"task-123"'::json, 
-    '"data"'::json]
-)
+    '"task-123"'::json,
+    '"data"'::json
+  ]
+);
 ```
 
 ### Managing Concurrency

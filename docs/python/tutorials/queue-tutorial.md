@@ -127,12 +127,13 @@ For example, here is the previous example of enqueing the `data_pipeline` workfl
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-    workflow_name => 'data_pipeline', 
-    queue_name => 'pipeline_queue', 
+    workflow_name => 'data_pipeline',
+    queue_name => 'pipeline_queue',
     positional_args => ARRAY[
-        '"task-123"'::json, 
-        '"data"'::json]
-    )
+        '"task-123"'::json,
+        '"data"'::json
+    ]
+);
 ```
 
 ### Managing Concurrency

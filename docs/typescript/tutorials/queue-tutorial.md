@@ -151,12 +151,13 @@ For example, here is the previous example of enqueing the `dataPipeline` workflo
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-    workflow_name => 'dataPipeline', 
-    queue_name => 'pipelineQueue', 
+    workflow_name => 'dataPipeline',
+    queue_name => 'pipelineQueue',
     positional_args => ARRAY[
-        '"task-123"'::json, 
-        '"data"'::json]
-    )
+        '"task-123"'::json,
+        '"data"'::json
+    ]
+);
 ```
 
 

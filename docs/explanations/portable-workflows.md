@@ -150,9 +150,9 @@ handle, err := dbos.Enqueue[any](
 ```sql
 DECLARE workflow_id text;
 workflow_id := dbos.enqueue_workflow(
-    workflow_name => 'processOrder', 
+    workflow_name => 'processOrder',
     class_name => 'com.example.OrderProcessor',
-    queue_name => 'orders', 
+    queue_name => 'orders',
     positional_args => ARRAY['"order-123"'::json]
 );
 ```
